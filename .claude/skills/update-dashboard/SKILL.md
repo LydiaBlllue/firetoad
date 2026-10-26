@@ -58,8 +58,15 @@ rows. **Read the summary, not the statements.** What it hands back is the whole 
   decided by hand; never write the report in the chat first.
 
 A `--write` run ends with the checkers and reseeds the preflight fingerprint. Exit 1 means it
-stopped before writing; 2 means it wrote and a checker found something — fix that before saying
-the update is done; 3 means pypdf is missing and every file is read by hand this month.
+stopped before writing, or failed while writing and put everything back; 2 means it wrote and a
+checker found something — fix that before saying the update is done; 3 means pypdf is missing
+and every file is read by hand this month.
+
+**A write is all or nothing.** The run copies `findata/` to `.undo/` first; if it fails partway,
+`findata/` and `inbox/` come back exactly as they were, and it says so. **Never take a torn run
+apart by hand** (2026-10-25 had to). To take back a run that finished — a wrong file dropped,
+an answer that changes everything — `update.py . --undo`; it refuses if `findata/` was edited
+after the run, because putting the copy back would throw those edits away.
 
 ---
 
@@ -72,7 +79,11 @@ python3 .claude/skills/update-dashboard/scripts/preflight.py .
 ```
 
 It names every file in `inbox/`, says which `findata/` file each one feeds, finds byte-identical
-pairs, and prints how old everything already on hand is.
+pairs, and prints how old everything already on hand is. For a CSV export it also says when the
+columns differ from the last one in `archive/` — a broker changes its export without notice; a
+column gone is left blank, a new one stops the import until the ledger has a place for it. A
+PDF needs no such line: its parser reconciles against the totals it prints, and a layout it
+does not know fails that check.
 
 **Anything it cannot name stops the run.** Ask the owner. Do not infer an account from a filename
 that does not match a known pattern — `LIGHTHOUSE PUBLICATION` was read as a subscription because

@@ -7,6 +7,7 @@
     ... --hand rows.json    # statements read by the model, transcribed: [{file, doc, account,
                             #   period{from,to}, opening, closing, rows[{date, description,
                             #   amount, balance}], totals{...}}]; amounts signed the ledger's way
+    python3 .claude/skills/update-dashboard/scripts/update.py . --undo     # take the last --write back
 
 WHY. Until 2026-09-14 the import was: a script parsed each statement and PRINTED every row, and
 the model then categorised the rows, typed them, and wrote the ledgers by hand. So the model read
@@ -29,9 +30,18 @@ What it never does: infer an account from a filename (preflight names files, and
 cannot name stops the run), write a row that does not reconcile, or type a repayment as income
 (the counterparty ledger is checked first, the way D10 checks it afterwards).
 
+A write is all or nothing. Before the first byte, findata/ is copied to .undo/<time>/ with the
+list of files the run will move out of inbox/; if anything fails before the update record is
+appended, that copy is put back and the files return to inbox/. On 2026-10-25 a run died after
+the ledgers were written and before the activities merge, and the books had to be taken apart
+by hand. `--undo` puts back the newest copy after a run that did finish — and refuses if
+findata/ has been edited since, because that would throw the edits away. The last UNDO_KEEP
+copies are kept.
+
 Exit 0: done (or, without --write, the plan). 1: stopped before writing — an unnamed file, an
-identical pair that classifies as two documents, a statement that does not follow its ledger.
-2: written, but a checker found something. 3: pypdf is missing; nothing can be parsed.
+identical pair that classifies as two documents, a statement that does not follow its ledger —
+or the write failed and was rolled back. 2: written, but a checker found something. 3: pypdf
+is missing; nothing can be parsed.
 """
 import argparse
 import collections
@@ -864,6 +874,76 @@ def record(ws, plan, changed, noticed):
     return rec
 
 
+# ---------------------------------------------------------------- all or nothing
+UNDO_KEEP = 3
+
+
+def findata_hashes(root):
+    base = os.path.join(root, "findata")
+    out = {}
+    for d, _, fs in os.walk(base):
+        for f in fs:
+            if not f.startswith("."):
+                p = os.path.join(d, f)
+                out[os.path.relpath(p, base)] = hashlib.sha256(open(p, "rb").read()).hexdigest()
+    return out
+
+
+def snapshot(ws, plan):
+    """findata/ as it is, and every file the run will move or delete — taken before the first write."""
+    top = os.path.join(ws.root, ".undo")
+    d = os.path.join(top, datetime.datetime.now().strftime("%Y%m%d-%H%M%S-%f"))
+    shutil.copytree(os.path.join(ws.root, "findata"), os.path.join(d, "findata"))
+    os.makedirs(os.path.join(d, "deleted"))
+    for p in plan.delete:
+        shutil.copy2(p, os.path.join(d, "deleted", os.path.basename(p)))
+    rel = lambda p: os.path.relpath(p, ws.root)
+    jsave(os.path.join(d, "undo.json"), {"moved": [[rel(s), rel(t)] for s, t in plan.archive],
+                                         "deleted": [rel(p) for p in plan.delete], "after": None})
+    for old in sorted(os.listdir(top))[:-UNDO_KEEP]:
+        shutil.rmtree(os.path.join(top, old), ignore_errors=True)
+    return d
+
+
+def restore(root, d):
+    """Put findata/ back from the copy, and every moved or deleted file back in inbox/."""
+    m = jload(os.path.join(d, "undo.json"))
+    for src, dst in m["moved"]:
+        if os.path.exists(os.path.join(root, dst)) and not os.path.exists(os.path.join(root, src)):
+            shutil.move(os.path.join(root, dst), os.path.join(root, src))
+    for p in m["deleted"]:
+        if not os.path.exists(os.path.join(root, p)):
+            shutil.copy2(os.path.join(d, "deleted", os.path.basename(p)), os.path.join(root, p))
+    # swap rather than delete-then-copy, so there is never a moment with no findata/ at all
+    live, back, old = (os.path.join(root, "findata"), os.path.join(root, "findata.restoring"),
+                       os.path.join(root, "findata.replaced"))
+    shutil.rmtree(back, ignore_errors=True); shutil.rmtree(old, ignore_errors=True)
+    shutil.copytree(os.path.join(d, "findata"), back)
+    os.rename(live, old); os.rename(back, live)
+    shutil.rmtree(old, ignore_errors=True)
+
+
+def undo(root):
+    top = os.path.join(root, ".undo")
+    done = [d for d in sorted(os.listdir(top)) if (jload(os.path.join(top, d, "undo.json")) or {}).get("after")] \
+        if os.path.isdir(top) else []
+    if not done:
+        print("  ✗ nothing to undo: no finished import has a copy in .undo/"); return 1
+    d = os.path.join(top, done[-1])
+    after, now = jload(os.path.join(d, "undo.json"))["after"], findata_hashes(root)
+    edited = sorted(k for k in set(after) | set(now) if after.get(k) != now.get(k))
+    if edited:
+        print(f"  ✗ findata/ has changed since the import of {done[-1][:8]}: {', '.join(edited[:6])}"
+              + (" …" if len(edited) > 6 else "") + " — undoing it would throw those edits away. Nothing was changed.")
+        return 1
+    restore(root, d)
+    shutil.rmtree(d, ignore_errors=True)
+    run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
+    run(os.path.join(HERE, "preflight.py"), [".", "--reseed"], root)
+    print(f"  ✓ the import of {done[-1][:8]} is undone: findata/ is as it was before it, and its files are back in inbox/")
+    return 0
+
+
 def run(script, args, root):
     p = subprocess.run([sys.executable, script] + args, cwd=root, capture_output=True, text=True)
     return p.returncode, p.stdout + p.stderr
@@ -876,8 +956,11 @@ def main(argv):
     ap.add_argument("--write", action="store_true", help="apply; without it, only say what would happen")
     ap.add_argument("--json", action="store_true", help="print the summary as JSON")
     ap.add_argument("--hand", help="JSON of statements the model read and transcribed (see above)")
+    ap.add_argument("--undo", action="store_true", help="put findata/ and inbox/ back as they were before the last --write")
     a = ap.parse_args(argv)
     root = os.path.abspath(a.root)
+    if a.undo:
+        return undo(root)
     ws = Workspace(root)
     plan = Plan()
     plan.hand = {}
@@ -949,14 +1032,22 @@ def main(argv):
             print(json.dumps(summary, ensure_ascii=False, indent=1))
         return 0
 
-    before, sp_before = derive(root), spending_by_month(root)
-    write_plan(ws, plan)
-    after, sp_after = derive(root), spending_by_month(root)
-    write_history(ws, after)
-    after = derive(root)
-    changed = changed_lines(before, after, sp_before, sp_after)
-    noticed = noticed_lines(ws, after, plan)
-    rec = record(ws, plan, changed, noticed)
+    snap = snapshot(ws, plan)
+    try:
+        before, sp_before = derive(root), spending_by_month(root)
+        write_plan(ws, plan)
+        after, sp_after = derive(root), spending_by_month(root)
+        write_history(ws, after)
+        after = derive(root)
+        changed = changed_lines(before, after, sp_before, sp_after)
+        noticed = noticed_lines(ws, after, plan)
+        rec = record(ws, plan, changed, noticed)
+    except BaseException as e:            # a crash, a SystemExit, Ctrl-C: none of it may leave the books torn
+        restore(root, snap)
+        shutil.rmtree(snap, ignore_errors=True)
+        run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
+        print(f"  ✗ the write failed ({type(e).__name__}: {e}). findata/ and inbox/ are back as they were — nothing was written.")
+        return 1
     summary.update(written=True, changed=changed, noticed=noticed, record=rec)
 
     rc, out = run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
@@ -967,6 +1058,9 @@ def main(argv):
         findings += [l.strip() for l in out2.splitlines() if l.strip().startswith(("✗", "⚠"))]
     summary["findings"] = findings
     run(os.path.join(HERE, "preflight.py"), [".", "--reseed"], root)
+    # findata/ as this run left it: --undo puts the copy back only while this is still what is there
+    m = jload(os.path.join(snap, "undo.json")); m["after"] = findata_hashes(root)
+    jsave(os.path.join(snap, "undo.json"), m)
     say("")
     for c in changed:
         say(f"  {c['label']}: {c['from']} → {c['to']}")

@@ -18,7 +18,7 @@ with backups, one mistake away from being the fault it was testing for.
 
     selftest.py [root]
 """
-import sys, os, re, csv, json, shutil, tempfile, subprocess, datetime
+import sys, os, re, csv, json, shutil, tempfile, subprocess, datetime, hashlib
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "update-dashboard", "scripts"))
 import layout  # where each findata file lives (schema 6)
@@ -863,6 +863,102 @@ def update_batch_check(root, base):
     return [f"  ✓ update.py batch: " + "; ".join(did)] if did else []
 
 
+def undo_check(root, base):
+    """A write is all or nothing (2026-10-25: a run died after the ledgers were written, and the
+    books had to be taken apart by hand). Make the last step of a run fail — archive/ read-only,
+    so the files cannot be moved once findata/ is written — and expect findata/ back byte for
+    byte and the file still in inbox/. Then let a run finish, take it back with --undo, and
+    expect the same; and expect --undo to refuse once findata/ has been edited by hand."""
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    if not os.path.exists(upd):
+        return []
+    ws = os.path.join(base, "undo"); os.makedirs(ws); stage(root, ws)
+    hold = layout.path(ws, "holdings_latest.csv")
+    if not os.path.exists(hold):
+        return []
+
+    def hashes():
+        out = {}
+        for d, _, fs in os.walk(os.path.join(ws, "findata")):
+            for f in fs:
+                p = os.path.join(d, f)
+                out[os.path.relpath(p, ws)] = hashlib.sha256(open(p, "rb").read()).hexdigest()
+        return out
+
+    def go(*a):
+        r = subprocess.run([sys.executable, upd, ".", *a], cwd=ws, capture_output=True, text=True, timeout=300)
+        return r.returncode, r.stdout + r.stderr
+
+    rows = list(csv.DictReader(open(hold, encoding="utf-8")))
+    rows[0]["Market Value"] = f"{float(rows[0]['Market Value']) + 1000:.2f}"   # so the run has something to change
+    name = "holdings-report-2099-01-01.csv"
+    with open(os.path.join(ws, "inbox", name), "w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), quoting=csv.QUOTE_ALL); w.writeheader(); w.writerows(rows)
+    before = hashes()
+    bad = []
+    arc = os.path.join(ws, "archive")
+    os.makedirs(arc, exist_ok=True)
+    os.chmod(arc, 0o555)
+    try:
+        rc, out = go("--write")
+    finally:
+        os.chmod(arc, 0o755)
+    torn = sorted(k for k in set(before) | set(hashes()) if before.get(k) != hashes().get(k))
+    if rc != 1 or "nothing was written" not in out or torn or not os.path.exists(os.path.join(ws, "inbox", name)):
+        bad.append(f"a run that failed at its last step: exit {rc}, findata/ changed in {torn[:3]}, "
+                   f"file in inbox/ {os.path.exists(os.path.join(ws, 'inbox', name))}")
+    rc, out = go("--write")
+    moved = not os.path.exists(os.path.join(ws, "inbox", name))
+    if rc not in (0, 2) or not moved or hashes() == before:
+        bad.append(f"the run itself: exit {rc}, file archived {moved}")
+    rc, out = go("--undo")
+    torn = sorted(k for k in set(before) | set(hashes()) if before.get(k) != hashes().get(k))
+    if rc != 0 or torn or not os.path.exists(os.path.join(ws, "inbox", name)):
+        bad.append(f"--undo after a finished run: exit {rc}, findata/ still differs in {torn[:3]}")
+    go("--write")
+    tasks = layout.path(ws, "tasks.json")
+    open(tasks, "a", encoding="utf-8").write("\n")              # an edit by hand after the import
+    edited = hashes()
+    rc, out = go("--undo")
+    if rc != 1 or "would throw those edits away" not in out or hashes() != edited:
+        bad.append(f"--undo over a hand edit: exit {rc} (expected a refusal that changes nothing)")
+    if bad:
+        return ["  ✗ update.py all-or-nothing: " + b for b in bad]
+    return ["  ✓ update.py all-or-nothing: a run that failed at its last step left findata/ and inbox/ as they were, "
+            "--undo took a finished run back, and refused once findata/ had been edited by hand"]
+
+
+def drift_check(root, base):
+    """preflight says when a CSV export's columns differ from the last one filed — before the
+    import, not halfway through it. File one activities export, drop the next with a column gone
+    and one new, and expect both named; drop it with the same columns and expect silence."""
+    pre = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "preflight.py"))
+    ws = os.path.join(base, "drift"); os.makedirs(ws); stage(root, ws)
+    act = layout.path(ws, "ws_activities.csv")
+    reg = json.load(open(layout.path(ws, "accounts.json"), encoding="utf-8"))
+    doc = next((d for d in reg.get("documents", []) if d.get("into") == "ws_activities.csv"), None)
+    if not (os.path.exists(pre) and os.path.exists(act) and doc and doc.get("tags")):
+        return []
+    hdr = next(csv.reader(open(act, encoding="utf-8")))
+    with open(os.path.join(ws, "archive", f"20990101_{doc['tags'][0]}_activities-export-2099-01-01.csv"), "w",
+              encoding="utf-8", newline="") as fh:
+        csv.writer(fh).writerows([hdr, ["2099-01-01"] + [""] * (len(hdr) - 1)])
+    name = os.path.join(ws, "inbox", "activities-export-2099-02-01.csv")
+
+    def drop(cols):
+        with open(name, "w", encoding="utf-8", newline="") as fh:
+            csv.writer(fh).writerows([cols, ["2099-02-01"] + [""] * (len(cols) - 1)])
+        r = subprocess.run([sys.executable, pre, "."], cwd=ws, capture_output=True, text=True)
+        return [l.strip() for l in r.stdout.splitlines() if "columns are not the ones" in l]
+
+    gone = hdr[-7]
+    said = drop([c for c in hdr if c != gone] + ["brand new column"])
+    quiet = drop(hdr)
+    if len(said) == 1 and repr(gone) in said[0] and "'brand new column'" in said[0] and not quiet:
+        return ["  ✓ preflight: an export whose columns changed was named before the import, one that did not was not"]
+    return [f"  ✗ preflight: columns changed → {said or 'nothing said'}; columns the same → {quiet or 'nothing said'}"]
+
+
 def csv_rows_of(p):
     return list(csv.DictReader(open(p, encoding="utf-8"))) if os.path.exists(p) else []
 
@@ -909,7 +1005,9 @@ def main(argv):
 
         # the parsers, on statements: the demo owner's, rendered back into PDFs (tools/fixtures.py),
         # and in an owner's workspace every real statement in archive/ that names a parser.
-        for line in parser_checks(root, base) + update_check(root, base) + update_batch_check(root, base):
+        runs = (parser_checks(root, base) + update_check(root, base) + update_batch_check(root, base)
+                + undo_check(root, base) + drift_check(root, base))
+        for line in runs:
             print(line)
             if line.lstrip().startswith("✗"):
                 fails.append(line.strip())
