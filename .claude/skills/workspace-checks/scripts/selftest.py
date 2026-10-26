@@ -723,6 +723,35 @@ def update_check(root, base):
             f"demo had them, banks and filings as they were, a date-only PDF named by its contents, checkers clean, rebuild idempotent, a second drop wrote nothing, a transcribed statement filed and a wrong one refused"]
 
 
+def strip_statement(ws, m):
+    """Take one statement's rows out of its ledger (and the copies of its balance), drop the
+    PDF into inbox/ under the bank's own filename, the way update_check does."""
+    fd = lambda n: layout.path(ws, n)
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    docs = {d["key"]: d for d in reg["documents"]}; by_key = {a["key"]: a for a in reg["accounts"]}
+    LONG = ("January", "February", "March", "April", "May", "June", "July", "August", "September",
+            "October", "November", "December")
+    doc = docs[m["doc"]]; acc = by_key[doc["covers"][0]]
+    tag = re.search(r"(\d{8})\.pdf$", m["file"]).group(1)
+    end = datetime.date(int(tag[:4]), int(tag[4:6]), int(tag[6:]))
+    rows = list(csv.DictReader(open(fd(acc["ledger"]), encoding="utf-8")))
+    keep = [r for r in rows if r["statement"] != f"{acc['stmtTag']}/{tag}"]
+    with open(fd(acc["ledger"]), "w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(keep)
+    for p, side in (("banks.json", "assets"), ("accounts.json", "accounts")):
+        j = json.load(open(fd(p), encoding="utf-8"))
+        for x in j[side]:
+            if x.get("account", x.get("name")) == acc["name"] and (side == "assets" or x["key"] == acc["key"]):
+                x["balance"], x["asof"] = float(keep[-1]["balance"]), keep[-1]["date"]
+        json.dump(j, open(fd(p), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    fl = json.load(open(fd("filings.json"), encoding="utf-8"))
+    fl["filed"][m["doc"]] = [mo for mo in fl["filed"][m["doc"]] if mo != end.strftime("%Y-%m")]
+    json.dump(fl, open(fd("filings.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    name = doc["file"].replace("<Month D, YYYY>", f"{LONG[end.month - 1]} {end.day}, {end.year}").replace("<date>", end.isoformat())
+    shutil.copy(m["file"], os.path.join(ws, "inbox", name))
+    return acc["ledger"]
+
+
 def update_batch_check(root, base):
     """Three ways a real month went wrong (2026-10-25), each planted in a staged copy:
     two months of one account dropped together (the second was checked against the ledger on
@@ -749,28 +778,7 @@ def update_batch_check(root, base):
         r = subprocess.run([sys.executable, upd, ".", "--write", *extra], cwd=ws, capture_output=True, text=True, timeout=300)
         return r.returncode, r.stdout + r.stderr
 
-    def strip(m):
-        """Take one statement's rows out of its ledger (and the copies of its balance), drop the
-        PDF into inbox/ under the bank's own filename, the way update_check does."""
-        doc = docs[m["doc"]]; acc = by_key[doc["covers"][0]]
-        tag = re.search(r"(\d{8})\.pdf$", m["file"]).group(1)
-        end = datetime.date(int(tag[:4]), int(tag[4:6]), int(tag[6:]))
-        rows = list(csv.DictReader(open(fd(acc["ledger"]), encoding="utf-8")))
-        keep = [r for r in rows if r["statement"] != f"{acc['stmtTag']}/{tag}"]
-        with open(fd(acc["ledger"]), "w", encoding="utf-8", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(keep)
-        for p, side in (("banks.json", "assets"), ("accounts.json", "accounts")):
-            j = json.load(open(fd(p), encoding="utf-8"))
-            for x in j[side]:
-                if x.get("account", x.get("name")) == acc["name"] and (side == "assets" or x["key"] == acc["key"]):
-                    x["balance"], x["asof"] = float(keep[-1]["balance"]), keep[-1]["date"]
-            json.dump(j, open(fd(p), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
-        fl = json.load(open(fd("filings.json"), encoding="utf-8"))
-        fl["filed"][m["doc"]] = [mo for mo in fl["filed"][m["doc"]] if mo != end.strftime("%Y-%m")]
-        json.dump(fl, open(fd("filings.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
-        name = doc["file"].replace("<Month D, YYYY>", f"{LONG[end.month - 1]} {end.day}, {end.year}").replace("<date>", end.isoformat())
-        shutil.copy(m["file"], os.path.join(ws, "inbox", name))
-        return acc["ledger"]
+    strip = lambda m: strip_statement(ws, m)
 
     # 1. two months of one account in one batch: the older one has to be filed first, and the
     # newer one checked against the ledger as the older one leaves it
@@ -959,6 +967,50 @@ def drift_check(root, base):
     return [f"  ✗ preflight: columns changed → {said or 'nothing said'}; columns the same → {quiet or 'nothing said'}"]
 
 
+def own_name_check(root, base):
+    """An e-Transfer between the owner's own banks names them — by the legal name the bank
+    holds, which need not be the name in profile.json (2026-10: the two differed, and $1,000 of
+    the owner's own money was counted as income). Render the
+    statements, give the profile a different everyday name, import a statement that carries an
+    own-name e-Transfer, and expect it typed Transfer with nothing asked about it."""
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    ws = os.path.join(base, "ownname"); os.makedirs(ws); stage(root, ws)
+    man = fixtures_for(ws)
+    if not (man and os.path.exists(upd)):
+        return []
+    fd = lambda n: layout.path(ws, n)
+    prof = json.load(open(fd("profile.json"), encoding="utf-8"))
+    legal = re.sub(r"[^A-Z0-9]", "", prof["owner"].upper())
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    docs = {d["key"]: d for d in reg["documents"]}; by_key = {a["key"]: a for a in reg["accounts"]}
+    pick = None
+    for m in sorted(man, key=lambda m: os.path.basename(m["file"]), reverse=True):
+        acc = by_key[docs[m["doc"]]["covers"][0]]
+        if not acc.get("ledger"):
+            continue
+        tag = re.search(r"(\d{8})\.pdf$", m["file"]).group(1)
+        rows = [r for r in csv_rows_of(fd(acc["ledger"])) if r["statement"] == f"{acc['stmtTag']}/{tag}"
+                and "TRANSFER" in r["description"].upper() and legal in re.sub(r"[^A-Z0-9]", "", r["description"].upper())]
+        if rows:
+            pick, ledger, want = m, acc["ledger"], [(r["date"], r["amount"]) for r in rows]
+            break
+    if not pick:
+        return []
+    strip_statement(ws, pick)
+    prof["owner"] = "Em " + prof["owner"].split()[-1]          # the name she goes by, not the bank's
+    json.dump(prof, open(fd("profile.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    subprocess.run([sys.executable, os.path.join(os.path.dirname(upd), "rebuild.py"), ".", "--write"], cwd=ws, capture_output=True)
+    n_dec = len(json.load(open(fd("decisions.json"), encoding="utf-8")).get("decisions", []))
+    r = subprocess.run([sys.executable, upd, ".", "--write"], cwd=ws, capture_output=True, text=True, timeout=300)
+    got = {(x["date"], x["amount"]): x["type"] for x in csv_rows_of(fd(ledger))}
+    asked = [x["what"] for x in json.load(open(fd("decisions.json"), encoding="utf-8"))["decisions"][n_dec:]
+             if x.get("kind") == "transfer" and "no sender" in x["what"]]
+    wrong = [(k, got.get(k)) for k in want if got.get(k) != "Transfer"]
+    if r.returncode in (0, 2) and not wrong and not asked:
+        return [f"  ✓ update.py: an e-Transfer naming the owner by the bank's name, not the profile's, filed as their own money ({len(want)} row(s))"]
+    return [f"  ✗ update.py: own-name e-Transfer under a different profile name: exit {r.returncode}, typed {wrong}, asked {asked[:2]}"]
+
+
 def csv_rows_of(p):
     return list(csv.DictReader(open(p, encoding="utf-8"))) if os.path.exists(p) else []
 
@@ -1006,7 +1058,7 @@ def main(argv):
         # the parsers, on statements: the demo owner's, rendered back into PDFs (tools/fixtures.py),
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = (parser_checks(root, base) + update_check(root, base) + update_batch_check(root, base)
-                + undo_check(root, base) + drift_check(root, base))
+                + undo_check(root, base) + drift_check(root, base) + own_name_check(root, base))
         for line in runs:
             print(line)
             if line.lstrip().startswith("✗"):

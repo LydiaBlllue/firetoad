@@ -184,13 +184,18 @@ def merchant_of_debit(desc):
     return (m.group(1) if m else desc).strip(" ,-")
 
 
-def type_row(ws, acc, desc, amt, when):
+def type_row(ws, acc, desc, amt, when, holder=None):
     """(type, label, ask) for one ledger row. `ask` is a decisions.json item when the row was
     typed by default rather than by evidence; None otherwise. Blank type means: a program cannot
-    tell, the model will."""
+    tell, the model will.
+
+    `holder` is the account holder the statement itself prints. The owner's name in profile.json
+    is the one they go by, and a bank shows the legal one (2026-10: the two differed, and every
+    e-Transfer between the owner's own banks was typed as income), so an e-Transfer naming
+    either is the owner's own money moving."""
     d = desc.upper()
     dn = re.sub(r"[^A-Z0-9]", "", d)
-    own = re.sub(r"[^A-Z0-9]", "", ws.owner)
+    owns = {n for n in (re.sub(r"[^A-Z0-9]", "", x.upper()) for x in (ws.owner, holder or "")) if n}
     broker_n = re.sub(r"[^A-Z0-9]", "", ws.broker.upper())
     cp_first = (ws.cp or "").split()[0].upper() if ws.cp else None
 
@@ -200,7 +205,7 @@ def type_row(ws, acc, desc, amt, when):
     # is a bank's own transfer (the first run typed a card payment as one, 2026-09-14).
     if "INTERAC" in dn or re.search(r"E-TRANSFER", d):
         received = amt > 0
-        if own and own in dn:
+        if any(n in dn for n in owns):
             return "Transfer", "e-Transfer between your own accounts", None
         if received and ws.cp_rows:
             for r in ws.cp_rows:
@@ -496,7 +501,7 @@ def plan_ledger(ws, plan, acc, doc, part, end):
     for r in rows:
         amt = round(float(r["amount"]), 2)
         bal = round(float(r["balance"]), 2) if r.get("balance") is not None else round(bal + amt, 2)
-        t, label, ask = type_row(ws, acc, r["description"], amt, r["date"])
+        t, label, ask = type_row(ws, acc, r["description"], amt, r["date"], part.get("holder"))
         if ask:
             ask.update(source=f"{src}, {short(iso_to_date(r['date']))}")
             plan.decisions.append(ask)
