@@ -189,7 +189,6 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .delta{font-size:12px;margin-top:1px}.delta.up{color:#006300}.delta.down{color:#a3423a}.delta.flat{color:var(--muted)}
 .chip{display:inline-block;font-size:12px;font-weight:600;border-radius:20px;padding:2px 10px;white-space:nowrap}
 .chip.ok{background:#e6f0e6;color:#008300}.chip.warn{background:#fbf1de;color:#c98500}.chip.bad{background:#f6e6e4;color:#a3423a}.chip.info{background:#e5eefa;color:#2a78d6}
-.bb-svg{width:100%;height:auto;display:block}
 .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:12.5px}.legend span{display:flex;align-items:center;gap:6px}
 .dot{width:10px;height:10px;border-radius:3px;display:inline-block}
 .rule{display:flex;gap:11px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start}.rule:last-child{border-bottom:none}
@@ -1589,7 +1588,7 @@ function renderYr(){
 }
 
 
-function drawDonut(svgId, centerId, legendId, rows, totalVal, emptyMsg){
+function drawDonut(svgId, centerId, legendId, rows, totalVal, emptyMsg, withPct){
   $(centerId).textContent = rows.length ? fmt(totalVal) : "—";
   const svg = $(svgId);
   if(!rows.length){ svg.innerHTML=""; $(legendId).innerHTML = '<div class="empty">'+emptyMsg+'</div>'; return; }
@@ -1612,7 +1611,8 @@ function drawDonut(svgId, centerId, legendId, rows, totalVal, emptyMsg){
     hoverable(p, seg.k+"<br>"+fmt2(seg.v)+" — "+Math.round(pc(seg.v, total))+"%");
   });
   $(legendId).innerHTML = rows.map(seg =>
-    '<div class="leg-row"><span class="dot" style="background:'+seg.col+'"></span><span class="nm">'+seg.k+'</span><span class="v num">'+fmt2(seg.v)+'</span></div>').join("");
+    '<div class="leg-row"><span class="dot" style="background:'+seg.col+'"></span><span class="nm">'+seg.k+'</span><span class="v num">'+fmt2(seg.v)+'</span>'
+    + (withPct ? '<span class="v num" style="color:var(--muted);min-width:44px">'+Math.round(pc(seg.v, total))+'%</span>' : '') + '</div>').join("");
 }
 
 
@@ -2926,36 +2926,18 @@ const IV = (function(){
   const segs=[...BUCKETS.map((b,i)=>({k:b.name.split(" \u00b7 ")[0],v:B[b.key],c:BCOL[i%BCOL.length]})),
               {k:"Idle cash",v:idle,c:"#d8dcd9"}];
   function renderBarbell(){
-    const W=880,H=190,cx=W/2,cy=95,maxH=130;
-    const hOf=v=>Math.max(14, cadInv ? v/cadInv*maxH*2.2 : 0);
-    let s;
-    if(ENDS.length >= 3){
-      const bv=k=>B[k]||0;
-      const l1=ENDS[0]?bv(ENDS[0].key):0, l2=ENDS[1]?bv(ENDS[1].key):0, rr=convEnd;
-      const safe=l1+l2, hL1=hOf(l1), hL2=hOf(l2), hR=hOf(rr), hM=hOf(mid);
-      s=`<svg class="bb-svg" viewBox="0 0 ${W} ${H+58}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Portfolio structure: safe end, middle tier, satellite end">`;
-      s+=`<rect x="70" y="${cy-3}" width="${W-140}" height="6" rx="3" fill="#c4c9c6"/>`;
-      s+=`<rect x="80"  y="${cy-hL1/2}" width="52" height="${hL1}" rx="7" fill="#2a78d6"/>`;
-      s+=`<rect x="142" y="${cy-hL2/2}" width="44" height="${hL2}" rx="7" fill="#008300"/>`;
-      s+=`<rect x="${cx-26}" y="${cy-hM/2}" width="52" height="${hM}" rx="7" fill="#b7bfba"/>`;
-      s+=`<rect x="${W-132}" y="${cy-hR/2}" width="52" height="${hR}" rx="7" fill="#eda100"/>`;
-      const lab=(x,txt,val,anchor)=>`<text x="${x}" y="${H+18}" text-anchor="${anchor}" font-size="13" font-weight="700" fill="#1c1c1a">${txt}</text><text x="${x}" y="${H+38}" text-anchor="${anchor}" font-size="12" fill="#6f6f68" font-family="ui-monospace,monospace">${fmt(val)} \u00b7 ${pctS(pc(val, cadInv))}</text>`;
-      s+=lab(80,`Safe end (${ENDS.slice(0,2).map(b=>b.name.split(" \u00b7 ").pop().toLowerCase()).join(" + ")})`,safe,"start");
-      s+=lab(cx,(BUCKETS.find(b=>b.key===CATCH)||{name:"Middle tier"}).name.split(" \u00b7 ")[0],mid,"middle");
-      s+=lab(W-80,ENDS[2]?ENDS[2].name.split(" \u00b7 ")[0]:"Satellite end",rr,"end");
-      s+=`</svg>`;
-    } else {
-      const tot = cadInv || 1; let x0 = 70;
-      s=`<svg class="bb-svg" viewBox="0 0 ${W} 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Portfolio by bucket">`;
-      s+=`<rect x="70" y="40" width="${W-140}" height="26" rx="8" fill="#e6e9e7"/>`;
-      segs.forEach((g,i)=>{ const w=(W-140)*(g.v/tot); if(w>0){ s+=`<rect x="${x0}" y="40" width="${w}" height="26" rx="${i===0?8:0}" fill="${g.c}"/>`; x0+=w; } });
-      if(!cadInv) s+=`<text x="${cx}" y="95" text-anchor="middle" font-size="13" fill="#6b706d">Nothing invested yet. Your first broker report fills this.</text>`;
-      s+=`</svg>`;
-    }
-    $("barbell").innerHTML = s +
-     `<div class="legend">`+segs.map(g=>`<span><i class="dot" style="background:${g.c}"></i>${g.k} <b class="num">${fmt(g.v)}</b> <span style="color:var(--muted)" class="num">${pctS(pc(g.v, cadInv))}</span></span>`).join("")+`</div>
-     ${FGN.rows.length ? `<div class="cn-strip"><span><i class="dot" style="background:#4a3aa7"></i><b>${FGN.label} \u00b7 onshore deployable</b> <span class="num">${fmtFgn(FGN.amount)} \u2248 ${fmt(fgn)}</span></span><span class="cn-note">counted in Portfolio, kept apart from dry powder \u00b7 as of ${FGN.asof}</span></div>` : ""}
-     <div class="foot">${convEnd ? `Your rule: keep the ${CATCHNAME} thin. It is ${pctS(pc(mid, cadInv))} (${midTop}), ${(mid/convEnd).toFixed(1)}\u00d7 the ${convName} at ${pctS(pc(convEnd, cadInv))}.` : (cadInv ? `Whatever no bucket claimed is ${pctS(pc(mid, cadInv))} of the Canadian side${midTop ? " ("+midTop+")" : ""}.` : "")}</div>`;
+    // A donut, like Income by category (the owner, 2026-10-26: the barbell's bar heights were
+    // hard to read as shares). One segment per bucket plus idle cash; the Canadian side in the
+    // middle, each share in the legend.
+    const rows = segs.filter(g => g.v > 0).map(g => ({k:g.k, v:g.v, col:g.c}));
+    $("barbell").innerHTML =
+      `<div class="donut-wrap"><div class="donut-box"><svg id="bbDonut" viewBox="0 0 170 170" width="170" height="170"></svg>`
+      + `<div class="donut-center"><div class="t num" id="bbDonutTotal"></div><div class="s">Canadian side</div></div></div>`
+      + `<div class="legend" id="bbCats"></div></div>`
+      + (FGN.rows.length ? `<div class="cn-strip"><span><i class="dot" style="background:#4a3aa7"></i><b>${FGN.label} \u00b7 onshore deployable</b> <span class="num">${fmtFgn(FGN.amount)} \u2248 ${fmt(fgn)}</span></span><span class="cn-note">counted in Portfolio, kept apart from dry powder \u00b7 as of ${FGN.asof}</span></div>` : "")
+      + `<div class="foot">${convEnd ? `Your rule: keep the ${CATCHNAME} thin. It is ${pctS(pc(mid, cadInv))} (${midTop}), ${(mid/convEnd).toFixed(1)}\u00d7 the ${convName} at ${pctS(pc(convEnd, cadInv))}.` : (cadInv ? `Whatever no bucket claimed is ${pctS(pc(mid, cadInv))} of the Canadian side${midTop ? " ("+midTop+")" : ""}.` : "")}</div>`;
+    drawDonut("bbDonut", "bbDonutTotal", "bbCats", rows, cadInv,
+      "Nothing invested yet. Your first broker report fills this.", true);
   }
 
   // ----- rules: the band(s), the cap, your own notes, the foreign line
