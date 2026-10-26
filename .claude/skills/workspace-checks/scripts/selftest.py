@@ -208,6 +208,28 @@ def m_stated_no_asof(r):
                               "side": "asset", "role": "none", "reach": "locked", "value": "stated",
                               "ledger": None, "feeds": "", "key": "home"})
     edit_json(r, layout.rel("accounts.json"), f)
+def m_loan_axes(r):
+    # Money lent left on the "today" row: it would be counted as cash you can spend.
+    def f(d):
+        for a in d["accounts"]:
+            if a.get("role") == "owed":
+                a["reach"] = "today"
+    edit_json(r, layout.rel("accounts.json"), f)
+def m_loan_copy(r):
+    # A loan's balance typed over by hand: the register says one thing, agreed less repaid another.
+    def f(d):
+        for a in d["accounts"]:
+            if a.get("role") == "owed":
+                a["balance"] = round(float(a["balance"]) + 250, 2)
+    edit_json(r, layout.rel("accounts.json"), f)
+def m_loan_overpaid(r):
+    # An agreed amount set too low: more has come back than was ever owed.
+    def f(d):
+        for a in d["accounts"]:
+            if a.get("role") == "owed":
+                a["agreed"]["amount"] = -1000.0
+                a["balance"] = -1500.0
+    edit_json(r, layout.rel("accounts.json"), f)
 def m_committed_missing(r):
     # A car loan declared in the plan that no ledger ever shows: the waterfall would carry a
     # payment that is a story, not a fact.
@@ -347,6 +369,9 @@ CASES = [
     ("D14", "accounts.json changed but the page did not",   m_acct_drift,      "find"),
     ("D19", "a liability given a role",                     m_axes_illegal,    "find"),
     ("D20", "a stated balance with no date",                m_stated_no_asof,  "find"),
+    ("D19", "money lent placed on the reach-today row",      m_loan_axes,       "find"),
+    ("D23", "a loan's balance edited by hand",              m_loan_copy,       "find"),
+    ("D23", "a borrower paid back more than was owed",      m_loan_overpaid,   "find"),
     ("D21", "a committed flow the ledger never shows",      m_committed_missing, "find"),
     ("P1",  "a statement whose rows do not add up to its total", m_parse_tampered, "parse"),
     ("D14", "a document covers an account that is gone",    m_bad_cover,       "find"),
@@ -1011,6 +1036,78 @@ def own_name_check(root, base):
     return [f"  ✗ update.py: own-name e-Transfer under a different profile name: exit {r.returncode}, typed {wrong}, asked {asked[:2]}"]
 
 
+def loan_import_check(root, base):
+    """A repayment from a borrower, under the name the bank prints, is money back — typed
+    Repayment, attributed to that borrower's loan, and the loan's balance in the register moves
+    by itself. Rename the demo's repayment row to carry the borrower's statement name, render the
+    statements, take that one out, put the loan's copy back to what it was before, import it,
+    and expect the row typed, the copy current, and the checkers clean."""
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    ws = os.path.join(base, "loan"); os.makedirs(ws); stage(root, ws)
+    fd = lambda n: layout.path(ws, n)
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    loan = next((a for a in reg["accounts"] if a.get("role") == "owed" and a.get("names")), None)
+    if not (loan and os.path.exists(upd)):
+        return []
+    # the repayment row, on whichever ledger carries it
+    hit = None
+    for a in reg["accounts"]:
+        if not a.get("ledger"):
+            continue
+        rows = csv_rows_of(fd(a["ledger"]))
+        for r in rows:
+            if r["type"] == "Repayment" and float(r["amount"]) > 0 and loan["name"].upper() in (r["label"] or "").upper():
+                hit = (a, rows, r)
+        if hit:
+            break
+    if not hit:
+        return []
+    acc, rows, rep = hit
+    rep["description"] = f"INTERAC e-Transfer received {loan['names'][0]}"     # the bank prints the name
+    with open(fd(acc["ledger"]), "w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
+    # only the loan row knows the borrower: the counterparty ledger would match the amount, and
+    # its counterparty the first name, so both are made someone else's
+    for d in reg["documents"]:
+        if d.get("counterparty"):
+            d["counterparty"] = "Nobody"
+            if os.path.exists(fd(d["into"])):
+                head = open(fd(d["into"]), encoding="utf-8-sig").readline()
+                open(fd(d["into"]), "w", encoding="utf-8").write(head)
+    json.dump(reg, open(fd("accounts.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    man = fixtures_for(ws)
+    # that statement and every later one of the same account, so the ledger has no hole in it
+    tag = rep["statement"].split("/")[-1]
+    docs_ = [d["key"] for d in reg["documents"] if acc["key"] in d["covers"]]
+    picks = sorted((m for m in (man or []) if m["doc"] in docs_
+                    and re.search(r"(\d{8})\.pdf$", m["file"]).group(1) >= tag),
+                   key=lambda m: os.path.basename(m["file"]), reverse=True)
+    if not picks:
+        return []
+    want = float(loan["balance"])
+    for m in picks:
+        strip_statement(ws, m)
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    for a in reg["accounts"]:
+        if a["key"] == loan["key"]:
+            a["balance"], a["asof"] = round(want + float(rep["amount"]), 2), loan["agreed"]["asof"]   # before the repayment
+    json.dump(reg, open(fd("accounts.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    subprocess.run([sys.executable, os.path.join(os.path.dirname(upd), "rebuild.py"), ".", "--write"], cwd=ws, capture_output=True)
+    r = subprocess.run([sys.executable, upd, ".", "--write"], cwd=ws, capture_output=True, text=True, timeout=300)
+    got = next((x for x in csv_rows_of(fd(acc["ledger"])) if x["date"] == rep["date"] and x["amount"] == rep["amount"]), {})
+    now = next(a for a in json.load(open(fd("accounts.json"), encoding="utf-8"))["accounts"] if a["key"] == loan["key"])
+    d23 = [l.strip() for l in run("check_data.py", ["."], ws).splitlines() if "D23" in l and "✗" in l]
+    if r.returncode in (0, 2) and got.get("type") == "Repayment" and abs(float(now["balance"]) - want) < 0.005 and not d23:
+        return [f"  ✓ update.py: a repayment under the borrower's statement name filed against their loan, "
+                f"{money_s(want + float(rep['amount']))} → {money_s(want)} owed"]
+    return [f"  ✗ update.py: a borrower's repayment: exit {r.returncode}, typed {got.get('type')!r} "
+            f"({got.get('label')!r}), loan balance {now.get('balance')} (expected {want}), {d23[:1]}"]
+
+
+def money_s(v):
+    return f"${v:,.2f}"
+
+
 def csv_rows_of(p):
     return list(csv.DictReader(open(p, encoding="utf-8"))) if os.path.exists(p) else []
 
@@ -1058,7 +1155,8 @@ def main(argv):
         # the parsers, on statements: the demo owner's, rendered back into PDFs (tools/fixtures.py),
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = (parser_checks(root, base) + update_check(root, base) + update_batch_check(root, base)
-                + undo_check(root, base) + drift_check(root, base) + own_name_check(root, base))
+                + undo_check(root, base) + drift_check(root, base) + own_name_check(root, base)
+                + loan_import_check(root, base))
         for line in runs:
             print(line)
             if line.lstrip().startswith("✗"):

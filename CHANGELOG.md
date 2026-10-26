@@ -4,6 +4,16 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Money you lent is in net worth** (2026-10-26). A loan is a register row with `role: owed` and
+  `reach: lent`: the amount the borrower owed on an agreed date, less every repayment the ledgers
+  show since, plus any further lending (`loans.py`, read by the build, the import and the
+  checker). Net worth gains an "Owed to you" row and the reach table a "Lent out" row; the
+  Accounts page has a card per borrower — still owed, paid back so far, last repayment — and a
+  warning once nothing has come back for six months. Any number of borrowers; an e-Transfer
+  naming one is typed `Repayment` coming in and the new type `Lent` going out, never income or
+  spending. D19 knows the two new axis values, D23 re-derives each loan. Before this, a loan
+  vanished from net worth the day it was made, and only its repayments showed, as a grey line.
+
 - **The product is 玉蟾 · Jade Toad** (2026-09-14). It was Jade Rabbit. The owner wanted a name from
   Chinese myth that is a woman's, an animal's and a goal's at once, and the toad is all three: in the
   earliest telling (《淮南子》) Heng'e reaches the moon and becomes its toad, and 蟾宫折桂 — plucking

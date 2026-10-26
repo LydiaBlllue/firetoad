@@ -22,6 +22,7 @@ import datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from flows import totals as flow_totals   # the plan's sums, read from its flows -- one place
 import layout                              # where each findata file lives (schema 6)
+import loans                               # what a borrower still owes, read from the ledgers -- one place
 
 MAIN_NAMES = ("ly_finance_dashboard.html", "finance_dashboard.html")   # an owner's copy, or the template's
 INV_NAME = "investment_dashboard.html"
@@ -31,10 +32,11 @@ FUND_TYPES = ("bond_fund", "equity_fund")
 # the page says, the colour is design (DESIGN.md palette), and both are keyed by the axis value
 # so a row keeps its colour whatever else is present.
 ROLE_ROWS = (("grow", "Invested", "#2a78d6"), ("set-aside", "Earmarked", "#eda100"),
-             ("buffer", "Cash", "#1baf7a"), ("none", "Other assets", "#4a3aa7"))
+             ("buffer", "Cash", "#1baf7a"), ("owed", "Owed to you", "#e87ba4"),
+             ("none", "Other assets", "#4a3aa7"))
 REACH_ROWS = (("today", "Reach today", "#1baf7a"), ("costs", "Reach, but it costs", "#eda100"),
-              ("spoken", "Spoken for", "#eb6834"), ("locked", "Locked in property", "#c98500"),
-              ("abroad", "Across a border", "#4a3aa7"))
+              ("spoken", "Spoken for", "#eb6834"), ("lent", "Lent out", "#e87ba4"),
+              ("locked", "Locked in property", "#c98500"), ("abroad", "Across a border", "#4a3aa7"))
 
 
 # The shape of findata/ this script builds from. profile.json carries the same number; when
@@ -366,11 +368,15 @@ def derive(d):
     for x in fj["accounts"]:
         fgn_inst[x["inst"]] += x["value"]
 
+    all_rows = [r for rows in d["ledgers"].values() for r in rows]
+
     def cad_of(a):
         """One item in CAD, from its source. The register's own balance is a copy D14 verifies;
-        only a `stated` item (a home, a loan with no statement) is read from the register."""
+        only a `stated` item (a home) is read from the register. A loan is what was agreed less
+        what the ledgers show coming back since (loans.py) — its balance is a copy D23 verifies."""
         src = a.get("src")
-        if src == "holdings_latest.csv": v, cur = mv.get(a["id"], 0.0), "CAD"
+        if loans.is_loan(a): v, cur = loans.outstanding(a, all_rows)["owed"], a.get("cur", "CAD")
+        elif src == "holdings_latest.csv": v, cur = mv.get(a["id"], 0.0), "CAD"
         elif src == "banks.json": v, cur = bank_bal.get(a["name"], 0.0), a.get("cur", "CAD")
         elif src == "foreign.json": v, cur = fgn_inst.get(a["inst"], 0.0), fgn_cur
         else: v, cur = (a.get("balance") or 0.0), a.get("cur", "CAD")
@@ -461,8 +467,9 @@ def derive(d):
         by = collections.OrderedDict()
         for a, _ in assets:
             if a.get(axis) == val:
-                by.setdefault(a["inst"], []).append(a["name"])
-        return "; ".join(", ".join(v) + " at " + k for k, v in by.items())
+                by.setdefault("" if loans.is_loan(a) else a["inst"], []).append(a["name"])
+        # a loan is named by who owes it; "Sam at Owed to you" would say nothing
+        return "; ".join(", ".join(v) + (" at " + k if k else "") for k, v in by.items())
     def part(axis, val, tail):
         who = named(axis, val)
         return (who + " — " + tail) if who else tail[:1].upper() + tail[1:]
@@ -470,15 +477,31 @@ def derive(d):
         "Invested": part("role", "grow", "the part whose whole job is to grow"),
         "Earmarked": part("role", "set-aside", "already has a purpose, so it stays outside the portfolio"),
         "Cash": part("role", "buffer", "the day-to-day buffer"),
+        "Owed to you": part("role", "owed", "money you lent, counted until it is paid back"),
         "Other assets": part("role", "none", "owned, but not money that grows or gets spent"),
     }
     generic_reach = {
         "Reach today": "Investment and cash accounts with no age gate and no penalty",
         "Reach, but it costs": "Registered retirement savings: withdrawable, but taxed as income that year",
         "Spoken for": "Earmarked for a purpose. Reachable, but spending it means giving up what it was for",
+        "Lent out": "Money you lent. It comes back only as it is repaid, on the borrower's timetable",
         "Locked in property": "What the property is worth less what is still owed on it. Reachable only by selling",
         "Across a border": "Held abroad. Reachable, but through conversion and transfer limits, which take time",
     }
+    # Money lent, one row per borrower in the loan's own currency (loans.py). `quiet` is how many
+    # days nothing has come back, set only once it is past loans.STALE_DAYS and money is still owed.
+    out["LOANS"] = []
+    for a in accs:
+        if not loans.is_loan(a):
+            continue
+        o = loans.outstanding(a, all_rows)
+        ref = o["last"] or o["since"]
+        days = (datetime.date.fromisoformat(today) - datetime.date.fromisoformat(ref)).days if ref else 0
+        out["LOANS"].append({"name": a["name"], "cur": a.get("cur", "CAD"), "owed": o["owed"],
+                             "agreed": (a.get("agreed") or {}).get("amount"), "since": o["since"],
+                             "back": o["back"], "out": o["out"], "last": o["last"],
+                             "quiet": days if days > loans.STALE_DAYS and o["owed"] > 0 else 0,
+                             "note": a.get("note") or ""})
     out["NWPARTS"] = [{"k": lab, "v": by_role[r], "c": c, "d": desc.get("nwparts", {}).get(lab, generic_parts[lab])}
                       for r, lab, c in ROLE_ROWS if r in roles_present]
     out["REACH"] = [{"k": lab, "v": by_reach[r], "c": c, "d": desc.get("reach", {}).get(lab, generic_reach[lab])}

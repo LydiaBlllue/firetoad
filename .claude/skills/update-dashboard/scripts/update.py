@@ -64,6 +64,7 @@ sys.path.insert(0, HERE)
 import layout  # noqa: E402
 import preflight  # noqa: E402
 import rebuild  # noqa: E402
+import loans  # noqa: E402  what a borrower still owes (loans.py)
 sys.path.insert(0, CHECKS)
 from check_data import merchant_key  # noqa: E402  the one definition of "the same merchant"
 
@@ -148,6 +149,7 @@ class Workspace:
         cp_doc = next((d for d in self.docs if d.get("counterparty")), None)
         self.cp = cp_doc["counterparty"] if cp_doc else None
         self.cp_rows = csv_rows(fd(cp_doc["into"])) if cp_doc and cp_doc.get("into") else []
+        self.loans = [a for a in self.accounts if loans.is_loan(a)]
         flows = self.funds.get("plan", {}).get("flows", [])
         self.rent = [f["amount"] for f in flows if f.get("kind") == "committed"]
         self.cards = [a for a in self.accounts if a.get("kind") == "Credit card"]
@@ -207,6 +209,12 @@ def type_row(ws, acc, desc, amt, when, holder=None):
         received = amt > 0
         if any(n in dn for n in owns):
             return "Transfer", "e-Transfer between your own accounts", None
+        # Someone the owner has lent to, under any name the register knows them by: money back
+        # is a repayment, money out is more lending — neither is income or spending (loans.py).
+        for ln in ws.loans:
+            if any(n in dn for n in loans.names_of(ln)):
+                return ("Repayment", f"Repayment from {ln['name']}", None) if received \
+                    else ("Lent", f"Lent to {ln['name']}", None)
         if received and ws.cp_rows:
             for r in ws.cp_rows:
                 if (r.get("direction") == "in" and abs(float(r.get("amount") or 0) - amt) < 0.01
@@ -214,7 +222,7 @@ def type_row(ws, acc, desc, amt, when, holder=None):
                     return "Repayment", f"e-Transfer from {ws.cp} (repayment)", None
         if cp_first and cp_first in dn:
             return ("Repayment", f"e-Transfer from {ws.cp} (repayment)", None) if received \
-                else ("Repayment", f"e-Transfer to {ws.cp} (loan)", None)
+                else ("Lent", f"e-Transfer to {ws.cp} (loan)", None)
         if received:
             return "Other", "e-Transfer received", {
                 "kind": "transfer", "what": f"A {money(amt)} e-Transfer received on {short(iso_to_date(when))} carries no sender you have named.",
@@ -659,7 +667,8 @@ def write_plan(ws, plan):
     if plan.holdings:
         shutil.copy2(plan.holdings[0], fd("holdings_latest.csv"))
         refresh_holdings_copies(ws, plan.holdings[1])
-    if plan.bank or plan.holdings:
+    lent = refresh_loan_copies(ws) if plan.ledger else False
+    if plan.bank or plan.holdings or lent:
         jsave(fd("accounts.json"), ws.reg)
     for key, months in plan.filed.items():
         have = ws.filings.setdefault("filed", {}).setdefault(key, [])
@@ -731,6 +740,21 @@ def merge_activities(ws, src):
             fx.update(usd_cad=rate, asof=d, quality="broker-rate",
                       source=f"Broker activities export {os.path.basename(src)}: the 'FX Rate:' rows on the latest date. It is the broker's rate, spread included.")
             jsave(ws.fd("fx.json"), fx)
+
+
+def refresh_loan_copies(ws):
+    """Each loan's balance in the register: what was agreed, less what the ledgers now show
+    coming back since (loans.py) — a copy D23 re-derives every run. Dated by the newest row that
+    moved it, or the agreed date when nothing has."""
+    rows = [r for a in ws.accounts if a.get("ledger") for r in csv_rows(ws.fd(a["ledger"]))]
+    changed = False
+    for a in ws.loans:
+        o = loans.outstanding(a, rows)
+        asof = max([o["since"]] + [r["date"] for r in o["rows"]])
+        if (a.get("balance"), a.get("asof")) != (o["owed"], asof):
+            a["balance"], a["asof"] = o["owed"], asof
+            changed = True
+    return changed
 
 
 def refresh_holdings_copies(ws, asof):

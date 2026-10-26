@@ -117,8 +117,8 @@ and needs no special case.
 | axis | values | what reads it |
 |---|---|---|
 | `side` | asset · liability | net worth = Σ assets − Σ liabilities, every currency |
-| `role` | grow · set-aside · buffer · none | Portfolio, the number FIRE is measured on, is `grow`; net worth by purpose is one slice per role; §7's earmarked accounts are `set-aside` |
-| `reach` | today · costs · spoken · locked · abroad | the reach table: no gate; taxed on the way out; reachable but spoken for; not liquid; across a border |
+| `role` | grow · set-aside · buffer · owed · none | Portfolio, the number FIRE is measured on, is `grow`; net worth by purpose is one slice per role; §7's earmarked accounts are `set-aside`; money lent is `owed` |
+| `reach` | today · costs · spoken · lent · locked · abroad | the reach table: no gate; taxed on the way out; reachable but spoken for; back only as it is repaid; not liquid; across a border |
 | `value` | export · statement · stated | how the balance is known: `export` from a file the broker produced, `statement` from any evidence the owner dropped in — a bank statement, a screenshot of an app, a balance read off it and typed into `banks.json` or `foreign.json` — and `stated` typed by hand with an `asof`, the one value nothing can re-derive |
 | `against` | the asset a liability sits on | the reach table shows equity: a home less its mortgage, on the `locked` row |
 
@@ -126,6 +126,14 @@ and needs no special case.
   dry powder. On the reach table it is "Locked in property", net of what is secured against it;
   on the by-purpose card it is "Other assets".
 - A mortgage is `liability` with `against: home`. A credit card is `liability` with no `against`.
+- **Money lent** is `asset · owed · lent · stated`, kind `Lent`, one row per borrower. The owner
+  declares `agreed` — what the borrower owed on a date, in the loan's currency (`cur`) — and
+  `names`, the names the borrower appears under on a statement. What is owed today is derived:
+  the agreed amount, less every ledger row typed `Repayment` that names the borrower after that
+  date, plus every row typed `Lent` that does (`loans.py`). The row's `balance` is a copy the
+  import writes and D23 re-derives. It counts in net worth ("Owed to you", "Lent out"), not in
+  Portfolio, not in dry powder, and a repayment is never income nor a loan spending. Settling
+  a new amount with the borrower means a new `agreed`; nothing before it is counted again.
 - An account a broker export shows that is not the owner's money — opened in their login for
   someone else — is not a row. It goes in the register's `notOwned` list (`id`, `whose`, `why`,
   `asof`), and every read of a broker export drops it, so it reaches no total, position or

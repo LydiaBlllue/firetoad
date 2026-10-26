@@ -13,6 +13,7 @@ import csv, json, os, re, sys, collections, datetime
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "update-dashboard", "scripts"))
 from flows import totals as flow_totals, KINDS as FLOW_KINDS   # the plan's sums, read once, there
 import layout                                                   # where each findata file lives
+import loans                                                    # what a borrower still owes, read once, there
 
 CATEGORIES = {"Grocery","Subscription","Dining","Shopping","Transport","Entertainment","Other"}
 # SOURCES and LEDGERS are read from findata/accounts.json, not written out here. A table
@@ -109,7 +110,7 @@ def check(root):
             "D3":"rules", "D5":"rules", "D6":"rules", "D10":"rules", "D13":"rules", "D14":"rules",
             "D11":"build", "D12":"build", "D17":"build", "T1":"build", "T2":"hygiene", "D15":"build", "D16":"conform",
             "D2":"hygiene", "D4":"hygiene", "D9":"hygiene", "D18":"hygiene",
-            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene"}
+            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile"}
     F = []          # (severity, rule, message, category)
     def err(r, m, cat=None):  F.append(("ERROR", r, m, cat or HOME.get(r, "rules")))
     def warn(r, m, cat=None): F.append(("WARN",  r, m, cat or HOME.get(r, "rules")))
@@ -729,8 +730,8 @@ def check(root):
     # with an `against`, a value that contradicts the source file, an `against` naming nothing:
     # each would make one total read one thing and the page say another (FINANCE.md §8a).
     if ap:
-        SIDES, ROLES = ("asset", "liability"), ("grow", "set-aside", "buffer", "none")
-        REACHES, VALUES = ("today", "costs", "spoken", "locked", "abroad"), ("export", "statement", "stated")
+        SIDES, ROLES = ("asset", "liability"), ("grow", "set-aside", "buffer", "owed", "none")
+        REACHES, VALUES = ("today", "costs", "spoken", "lent", "locked", "abroad"), ("export", "statement", "stated")
         V_OF_SRC = {"holdings_latest.csv": "export", "banks.json": "statement", "foreign.json": "statement"}
         keys_ = {a.get("key") for a in aj["accounts"]}
         side_of = {a.get("key"): a.get("side") for a in aj["accounts"]}
@@ -760,6 +761,14 @@ def check(root):
                     err("D19", f"{who}: reach must be one of {', '.join(REACHES)}, not {a.get('reach')!r}")
                 if a.get("against") is not None:
                     err("D19", f"{who}: only a liability sits against something")
+                # Money lent is one thing on both axes: owed to you, back only as it is repaid.
+                if (a.get("role") == "owed") != (a.get("reach") == "lent"):
+                    err("D19", f"{who}: role owed and reach lent go together — money lent is both")
+                if a.get("role") == "owed":
+                    ag = a.get("agreed") or {}
+                    if ag.get("amount") is None or not ag.get("asof"):
+                        err("D19", f"{who}: a loan needs agreed.amount and agreed.asof — the amount the "
+                                   "borrower owed on a date, which every repayment since comes off")
             n_ax += 1
         # rules.json used to carry an exclude list that said the same thing as role = set-aside.
         # Since schema 7 the Investing pages read the axis, and the list must be gone: a list
@@ -916,6 +925,36 @@ def check(root):
             warn("D22", f"{a['ledger']}: {len(blank)} row(s) with no type ({blank[0]['date']} "
                         f"{blank[0]['description'][:30]!r} …) -- untyped, they are in the balance chain but "
                         "in no income or transfer figure")
+
+    # -- D23 a loan is what was agreed, less what has come back since --------------------------
+    # The register's balance on a loan row is a copy, like every other balance there; loans.py
+    # re-derives it from `agreed` and the bank ledgers. A borrower who has paid back more than
+    # was owed means the agreed amount is wrong, and money typed Lent to nobody the register
+    # knows is a loan the net worth leaves out.
+    if ap:
+        rows23 = []
+        for a in aj["accounts"]:
+            lp23 = load(root, a["ledger"]) if a.get("ledger") else None
+            if lp23:
+                with open(lp23, encoding="utf-8-sig") as fh:
+                    rows23 += [r for r in csv.DictReader(fh) if r.get("date")]
+        lent_ = [a for a in aj["accounts"] if loans.is_loan(a) and (a.get("agreed") or {}).get("asof")]
+        for a in lent_:
+            o = loans.outstanding(a, rows23)
+            who = f"{a['name']}'s loan"
+            if o["owed"] < -0.005:
+                err("D23", f"{who}: {abs(o['owed']):,.2f} more has come back than was owed — the agreed "
+                           f"amount on {o['since']} is wrong; settle it again with the borrower", "rules")
+            if a.get("balance") is None or abs(float(a["balance"]) - o["owed"]) > 0.005:
+                err("D23", f"accounts.json {who} says {a.get('balance')} but agreed less repaid comes to "
+                           f"{o['owed']:,.2f} — run the import, or rebuild after fixing the agreed amount")
+            else:
+                note("D23", f"{who}: {o['owed']:,.2f} owed = agreed {float(a['agreed']['amount']):,.2f} "
+                            f"less {o['back']:,.2f} back plus {o['out']:,.2f} more lent since {o['since']}")
+        for r in rows23:
+            if (r.get("type") or "") == "Lent" and not any(loans.names_row(a, r) for a in lent_):
+                warn("D23", f"{r['date']} {r['description'][:30]!r} is typed Lent but names nobody the register "
+                            "has a loan for — add a loan row, or it is in no net-worth figure", "rules")
 
     # -- D18 what an update leaves behind: the record and the queue ------------------------
     # alerts.json used to hold the sentences one import wrote, and the Portfolio page showed them

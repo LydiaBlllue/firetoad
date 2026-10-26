@@ -117,9 +117,9 @@ mortgage got a net worth with the loan in it and the house nowhere. Each account
 **balance item with five orthogonal axes**, and each derived total reads exactly one of them:
 
 - `side` — asset / liability → net worth = Σ assets − Σ liabilities
-- `role` — grow / set-aside / buffer / none → Portfolio is `grow`; net worth by purpose is one
-  slice per role
-- `reach` — today / costs / spoken / locked / abroad → the reach table
+- `role` — grow / set-aside / buffer / owed / none → Portfolio is `grow`; net worth by purpose is one
+  slice per role; `owed` is money lent (FINANCE.md §8a)
+- `reach` — today / costs / spoken / lent / locked / abroad → the reach table
 - `value` — export / statement / stated (with `asof`) → what D14 can re-derive, and what it can
   only date
 - `against` — a liability names the asset it sits on → the reach table shows equity, not gross
@@ -129,7 +129,10 @@ share), so a fresh row and a migrated one agree; the owner overrides any axis in
 D19 rejects an illegal pair (a liability with a role, an asset with an `against`, a `value` that
 contradicts the source file) and fails a `rules.json` that still carries the old `exclude`
 list — the Investing pages read the set-aside role from the register (schema 7). D20
-insists a `stated` balance carries an `asof` and warns past a year. Selftest plants both.
+insists a `stated` balance carries an `asof` and warns past a year. Money lent is a row with
+`role: owed`, `reach: lent` and an `agreed` amount and date; `loans.py` in the update-dashboard
+scripts derives what is still owed from it and the ledgers, and D23 holds the row's `balance` to
+that and fails a borrower who has paid back more than was owed. Selftest plants all three.
 
 Each line of the monthly plan is a **flow** with `kind` (income / committed / saving /
 allowance), `amount` and, where it applies, `until`, `afterFire` (keep / drop), `pays` (the
@@ -181,9 +184,9 @@ report template are all in that file. **Do not work from memory.**
 
 ## Nothing in a dashboard is typed by hand
 
-<!-- LINT:CONSTS n=44 -->
+<!-- LINT:CONSTS n=45 -->
 `rebuild.py` builds the dashboard from `templates/dashboards/` and `findata/`, deriving
-**44 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DECISIONS, DOC_LATEST, FGN, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RULES, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
+**45 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DECISIONS, DOC_LATEST, FGN, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RULES, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
 applies, and it is idempotent. `--template DIR` writes the page with every constant emptied,
 which is what the template *is*: page code and nobody's numbers.
 
