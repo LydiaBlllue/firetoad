@@ -49,6 +49,8 @@ SYNCED = [
     "docs/hero.png",
     "docs/logo.svg",
     "docs/zh",            # the Chinese guide is the tool's, like README; screens/ stays the demo's
+    ".gitignore",         # not for git: check_design's S4 reads it to skip files an owner writes
+                          # (setup-answers.json), and without it a workspace failed on them
 ]
 NEVER = ("findata", "inbox", "archive", "dashboards", "OWNER.md", "decisions", ".private")
 
