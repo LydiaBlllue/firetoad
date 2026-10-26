@@ -442,6 +442,27 @@ def parse_fault(ws, parser, rule):
     return f"{'·' if ok else '✗'} [{rule}] {detail}"
 
 
+def credit_balance_check(ws):
+    """A Visa paid past zero prints CREDIT BALANCE and no NEW BALANCE line. The parser once
+    refused that statement outright (2026-10), and it had to be read by eye. Render one — a
+    purchase, the previous balance paid, then $100 more — and expect three rows that reconcile
+    to a closing balance of -$100.00."""
+    if not os.path.exists(os.path.join(ws, "tools", "fixtures.py")):
+        return []
+    sys.path.insert(0, os.path.join(ws, "tools"))
+    import fixtures
+    from pdfgen import write_pdf
+    path = os.path.join(ws, "_fixtures", "credit_balance.pdf")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    write_pdf(path, fixtures.rbc_visa("3306", datetime.date(2026, 9, 22), datetime.date(2026, 10, 19), 50.0,
+                                      [{"date": "2026-10-04", "description": "COFFEE SHOP TORONTO ON", "amount": 12.34}],
+                                      "Emma Roy", overpay=100.0))
+    ok, n, detail = parse_one(ws, path, "rbc_visa")
+    if ok and n == 3 and "new balance -100.00" in detail:
+        return ["  ✓ parsers: a Visa statement in credit (CREDIT BALANCE, no NEW BALANCE) read and reconciled"]
+    return [f"  ✗ parsers: a Visa statement in credit: {detail} — expected 3 rows closing at -100.00"]
+
+
 def propose_check(ws, man):
     """The setup's first step drafts the register from the first files dropped (propose.py). Given
     the demo owner's statements (the fixtures) and broker exports, the draft has to find every
@@ -510,6 +531,7 @@ def parser_checks(root, base):
             else:
                 lines.append(f"  ✗ fixture {os.path.basename(m['file'])} ({m['parser']}): {detail} — expected {m['rows']} rows")
         lines.append(f"\n  {'✓' if good == len(man) else '✗'} parsers: {good} of {len(man)} synthetic statements read and reconciled")
+        lines += credit_balance_check(ws)
         lines += propose_check(ws, man)
     arc = os.path.join(root, "archive")
     reg = layout.path(root, "accounts.json")

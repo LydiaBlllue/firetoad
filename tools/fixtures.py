@@ -101,11 +101,16 @@ def bmo_banking(name, acct_digits, start, end, opening, rows, owner):
     return [head + body + tail]
 
 
-def rbc_visa(last4, start, end, previous, rows, owner):
+def rbc_visa(last4, start, end, previous, rows, owner, overpay=0.0):
+    """`overpay` pays that much past the whole balance, so the card closes in credit and the
+    statement prints CREDIT BALANCE where it would print NEW BALANCE — the way a real one did
+    (2026-10)."""
     purchases = round(sum(r["amount"] for r in rows), 2)
-    credits = previous
+    credits = round(previous + purchases + overpay, 2) if overpay else previous
     new = round(previous + purchases - credits, 2)
     up = lambda dt: f"{MON[dt.month - 1].upper()} {dt.day:02d}"
+    signed = lambda v: f"-{money(-v, True)}" if v < 0 else money(v, True)   # "-$312.40", as RBC prints it
+    closing = f"CREDIT BALANCE {signed(new)}" if new < 0 else f"NEW BALANCE {money(new, True)}"
     period = (f"STATEMENT FROM {up(start)}, {start.year} TO {up(end)}, {end.year}" if start.year != end.year
               else f"STATEMENT FROM {up(start)} TO {up(end)}, {end.year}")
     head = [owner.upper(), "Cash Back RBC Visa", f"{owner.upper()}  4510 15** **** {last4}", period,
@@ -113,7 +118,7 @@ def rbc_visa(last4, start, end, previous, rows, owner):
             "CALCULATING YOUR BALANCE", f"Previous Account Balance {money(previous, True)}",
             f"Payments & credits -{money(credits, True)}", f"Purchases & debits {money(purchases, True)}",
             "Cash advances $0.00", "Interest $0.00", "Fees $0.00",
-            f"Total Account Balance {money(new, True)}", f"NEW BALANCE {money(new, True)}",
+            f"Total Account Balance {signed(new)}", closing,
             "TRANSACTION", "DATE", "POSTING", "DATE ACTIVITY DESCRIPTION AMOUNT ($)"]
     body = []
     if previous:
@@ -123,7 +128,9 @@ def rbc_visa(last4, start, end, previous, rows, owner):
         dt = d(r["date"]); post = dt + datetime.timedelta(days=1)
         body += [f"{up(dt)} {up(post)} {r['description']}", f"7408342{dt.strftime('%y%j')}{i:011d}",
                  money(r["amount"], True)]
-    tail = [f"TOTAL ACCOUNT BALANCE {money(new, True)}", "INTEREST RATE CHART"]
+    if overpay:
+        body.append(f"{up(end)} {up(end)} PAYMENT - THANK YOU / PAIEMENT - MERCI -{money(credits - previous, True)}")
+    tail = [f"TOTAL ACCOUNT BALANCE {signed(new)}" if new >= 0 else closing, "INTEREST RATE CHART"]
     return [head + body + tail]
 
 

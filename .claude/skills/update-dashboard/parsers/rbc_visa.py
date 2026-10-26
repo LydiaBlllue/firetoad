@@ -14,6 +14,9 @@ What the text looks like once pypdf has read it:
     $18.60                                                   <- the amount, its own line
     AUG 10 AUG 10 AUTOMATIC PAYMENT -THANK YOU -$55.00       <- or all on one line, no reference
 
+A card paid past zero has no NEW BALANCE line; it prints "CREDIT BALANCE -$312.40" (and
+"Total Account Balance -$312.40") instead, and the closing balance is negative.
+
 A purchase is positive on the statement and money out of the owner's pocket, so it is written
 NEGATIVE the ledger's way; a payment or credit (-$) is positive. Reconciled against the two
 totals the statement prints: purchases & debits + fees + interest on one side, payments &
@@ -50,7 +53,9 @@ def parse(path):
         mm = re.search(r"^" + label + r"\s+(" + AMOUNT + r")\s*$", text, re.M)
         return money(mm.group(1)) if mm else None
     totals = {"purchases": grab(r"Purchases & debits"), "credits": grab(r"Payments & credits"),
-              "interest": grab(r"Interest"), "fees": grab(r"Fees"), "new_balance": grab(r"NEW BALANCE"),
+              "interest": grab(r"Interest"), "fees": grab(r"Fees"),
+              "new_balance": next((v for v in (grab(r"NEW BALANCE"), grab(r"CREDIT BALANCE"),
+                                               grab(r"Total Account Balance")) if v is not None), None),
               "previous": grab(r"Previous Account Balance")}
     if totals["purchases"] is None or totals["new_balance"] is None:
         raise ParseError("the CALCULATING YOUR BALANCE block was not found")
