@@ -1071,7 +1071,12 @@ let BIGM = stNum0("bigm", BMON);
 // "Big" is a size, not a category. A $1,200 monitor and a $400 language course are the same kind
 // of event -- rare, decided on their own terms, and nothing to do with whether this week's
 // groceries were reasonable. Splitting on size is what lets the allowance stay a flat number.
-const isBig      = e  => e.amount >= PLAN.bigThreshold && e.category !== "Subscription";
+// A refund is big when what it gives back was: the purchase it refunds came out of the Big buys
+// fund, so the money goes back there, not onto this month's allowance (FINANCE.md §3c).
+const refundOf   = e  => SPENDING.filter(p => p.amount > 0 && p.acct === e.acct && p.date <= e.date
+                                       && merchantOf(p.note) === merchantOf(e.note)).pop();
+const isBig      = e  => e.amount < 0 ? !!refundOf(e) && isBig(refundOf(e))
+                                      : e.amount >= PLAN.bigThreshold && e.category !== "Subscription";
 const everydayOf = ym => monthOf(ym).filter(e => !isBig(e)).reduce((s,e) => s + e.amount, 0);
 const bigOf      = ym => monthOf(ym).filter(isBig);
 const monthsBetween = (a,b) => { const [y1,m1] = a.split("-").map(Number), [y2,m2] = b.split("-").map(Number); return (y2-y1)*12 + (m2-m1); };

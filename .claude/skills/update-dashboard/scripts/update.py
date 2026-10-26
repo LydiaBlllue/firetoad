@@ -66,7 +66,7 @@ import preflight  # noqa: E402
 import rebuild  # noqa: E402
 import loans  # noqa: E402  what a borrower still owes (loans.py)
 sys.path.insert(0, CHECKS)
-from check_data import merchant_key  # noqa: E402  the one definition of "the same merchant"
+from check_data import merchant_key, refund_pool  # noqa: E402  the one definition of "the same merchant"
 
 MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 LONG = ("January", "February", "March", "April", "May", "June", "July", "August", "September",
@@ -541,7 +541,8 @@ def plan_card(ws, plan, acc, doc, part, end):
         if amt >= 0:
             if re.search(r"PAYMENT|THANK YOU|AUTOPAY|TRSF FROM|TRANSFER FROM", desc, re.I):   # a card payment, not a refund
                 continue
-            plan.credits.append((src, r["date"], desc, amt))
+            if not plan_refund(plan, existing, acc, desc, amt, r["date"], src, tagend):
+                plan.credits.append((src, r["date"], desc, amt))
             continue
         cat, how, key = categorise(ws, desc, table)
         note_merchant(plan, key, cat, how, r["date"], src)
@@ -549,6 +550,26 @@ def plan_card(ws, plan, acc, doc, part, end):
         n += 1
     plan.counts["purchases"] += n
     return n
+
+
+def plan_refund(plan, existing, acc, desc, amt, when, src, tagend):
+    """A credit on a card that gives back a purchase is a negative spending row in that
+    purchase's category, so every total on the page is net of it (FINANCE.md §3c). It has to
+    point at something: an earlier purchase at the same merchant on the same card — or, for a fee
+    or interest credit, a charge the card made — with at least this much not yet refunded. What
+    points at nothing (cash back, a stranger's refund) stays a credit for a person to read."""
+    card = acc["spendTag"]
+    rows = existing + [dict(zip(("date", "amount", "currency", "category", "note"), x)) for x in plan.spend]
+    pool = refund_pool(rows, card, f"{desc} {tagend}", when)
+    bought = [x for x in pool if float(x["amount"]) > 0]
+    if not bought or sum(float(x["amount"]) for x in pool) < amt - 0.005:
+        return False
+    last = max(bought, key=lambda x: x["date"])
+    plan.spend.append([when, f"{-amt:.2f}", acc.get("cur", "CAD"), last["category"], f"{desc} {tagend}"])
+    plan.counts["refunds"] += 1
+    plan.judged.append(f"Took the {amt:,.2f} {merchant_key(desc).title()} refund ({src}, {short(iso_to_date(when))}) "
+                       f"off {last['category']}, where its purchase of {short(iso_to_date(last['date']))} was.")
+    return True
 
 
 def note_merchant(plan, key, cat, how, when, src):
@@ -1021,7 +1042,7 @@ def main(argv):
     for k, v in sorted(plan.counts.items()):
         say(f"  {v} {k}")
     if plan.spend:
-        say(f"  {len(plan.spend)} purchases → spending.csv; {len(plan.new_merchants)} merchant(s) not seen before")
+        say(f"  {len(plan.spend)} rows → spending.csv (refunds negative); {len(plan.new_merchants)} merchant(s) not seen before")
     for name, why in plan.by_hand:
         say(f"  · by hand: {name} — {why}")
     for ledger, d, desc, amt in plan.untyped:

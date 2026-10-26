@@ -105,8 +105,9 @@ def rbc_visa(last4, start, end, previous, rows, owner, overpay=0.0):
     """`overpay` pays that much past the whole balance, so the card closes in credit and the
     statement prints CREDIT BALANCE where it would print NEW BALANCE — the way a real one did
     (2026-10)."""
-    purchases = round(sum(r["amount"] for r in rows), 2)
-    credits = round(previous + purchases + overpay, 2) if overpay else previous
+    purchases = round(sum(r["amount"] for r in rows if r["amount"] > 0), 2)
+    refunds = round(-sum(r["amount"] for r in rows if r["amount"] < 0), 2)     # a refund prints as a credit
+    credits = round(previous + purchases + overpay, 2) if overpay else round(previous + refunds, 2)
     new = round(previous + purchases - credits, 2)
     up = lambda dt: f"{MON[dt.month - 1].upper()} {dt.day:02d}"
     signed = lambda v: f"-{money(-v, True)}" if v < 0 else money(v, True)   # "-$312.40", as RBC prints it
@@ -127,16 +128,16 @@ def rbc_visa(last4, start, end, previous, rows, owner, overpay=0.0):
     for i, r in enumerate(rows):
         dt = d(r["date"]); post = dt + datetime.timedelta(days=1)
         body += [f"{up(dt)} {up(post)} {r['description']}", f"7408342{dt.strftime('%y%j')}{i:011d}",
-                 money(r["amount"], True)]
+                 signed(r["amount"]) if r["amount"] < 0 else money(r["amount"], True)]
     if overpay:
-        body.append(f"{up(end)} {up(end)} PAYMENT - THANK YOU / PAIEMENT - MERCI -{money(credits - previous, True)}")
+        body.append(f"{up(end)} {up(end)} PAYMENT - THANK YOU / PAIEMENT - MERCI -{money(credits - previous - refunds, True)}")
     tail = [f"TOTAL ACCOUNT BALANCE {signed(new)}" if new >= 0 else closing, "INTEREST RATE CHART"]
     return [head + body + tail]
 
 
 def bmo_mastercard(last4, start, end, previous, rows, owner):
-    purchases = round(sum(r["amount"] for r in rows), 2)
-    credits = previous
+    purchases = round(sum(r["amount"] for r in rows if r["amount"] > 0), 2)
+    credits = round(previous - sum(r["amount"] for r in rows if r["amount"] < 0), 2)   # payment + refunds
     new = round(previous + purchases - credits, 2)
     ds = lambda dt: f"{MON[dt.month - 1]}. {dt.day}"
     head = ["BMO CashBack Mastercard", "Summary of your account",
@@ -153,7 +154,8 @@ def bmo_mastercard(last4, start, end, previous, rows, owner):
         body.append(f"{ds(pay)} {ds(pay)} TRSF FROM/DE ACCT/CPT    0006-XXXX-471 {money(previous)} CR")
     for r in rows:
         dt = d(r["date"]); post = dt + datetime.timedelta(days=1)
-        body.append(f"{ds(dt)} {ds(post)} {r['description']:<25} OTTAWA       ON {money(r['amount'])}")
+        amount = f"{money(-r['amount'])} CR" if r["amount"] < 0 else money(r["amount"])
+        body.append(f"{ds(dt)} {ds(post)} {r['description']:<25} OTTAWA       ON {amount}")
     tail = [f"Subtotal for {owner.upper()} {money(purchases)}",
             f"Total for card number XXXX XXXX XXXX {last4} {money(new, True)}"]
     return [head + body + tail]

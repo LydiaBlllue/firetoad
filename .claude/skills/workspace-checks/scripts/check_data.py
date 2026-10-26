@@ -98,6 +98,23 @@ def merchant_key(note):
     n = re.sub(r'\s+(ON|QC|BC|CA|NY|WA)\b.*$', '', n)
     return re.sub(r'\s{2,}', ' ', n).strip(' ,-').upper()
 
+# A refund on a card is filed as a negative spending row, and it has to point at what it gives
+# back: an earlier purchase at the same merchant on the same card. A fee or interest credit has
+# no merchant — it gives back a charge the card made itself, so it points at any of those.
+BANK_CHARGE = re.compile(r"\b(FEE|INTEREST)\b")
+
+def card_of(note):
+    m = re.search(r'\[([A-Z0-9]+)/\d{8}\]\s*$', note)
+    return m.group(1) if m else None
+
+def refund_pool(rows, card, note, when):
+    """The rows a refund on `card` dated `when` can give back: the same merchant's (or, for a
+    fee or interest credit, every bank charge's) rows on that card up to that date, earlier
+    refunds included, so their sum is what is still unrefunded. Empty means it points at nothing."""
+    key = merchant_key(note)
+    same = (lambda k: bool(BANK_CHARGE.search(k))) if BANK_CHARGE.search(key) else (lambda k: k == key)
+    return [r for r in rows if card_of(r["note"]) == card and r["date"] <= when and same(merchant_key(r["note"]))]
+
 def load(root, name):
     p = layout.path(root, name)
     return p if os.path.exists(p) else None
@@ -110,7 +127,7 @@ def check(root):
             "D3":"rules", "D5":"rules", "D6":"rules", "D10":"rules", "D13":"rules", "D14":"rules",
             "D11":"build", "D12":"build", "D17":"build", "T1":"build", "T2":"hygiene", "D15":"build", "D16":"conform",
             "D2":"hygiene", "D4":"hygiene", "D9":"hygiene", "D18":"hygiene",
-            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile"}
+            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules"}
     F = []          # (severity, rule, message, category)
     def err(r, m, cat=None):  F.append(("ERROR", r, m, cat or HOME.get(r, "rules")))
     def warn(r, m, cat=None): F.append(("WARN",  r, m, cat or HOME.get(r, "rules")))
@@ -169,6 +186,28 @@ def check(root):
                 warn("D5", f"{b} is filed as Subscription but appears once ({rs[0]['date']}, "
                            f"${rs[0]['amount']}). A subscription repeats — confirm before it "
                            "hardens into the FIRE baseline.")
+        # D24 a refund gives back a purchase: same card, same merchant (or a bank charge for a
+        # fee or interest credit), on or before its date, in that purchase's category — and never
+        # more than was spent there. One that points at nothing is income or a mistake, and it
+        # would quietly lower the spending baseline.
+        n_bad = sum(1 for f in F if f[1] == "D24")
+        refunds = [(i, r) for i, r in enumerate(sp) if float(r["amount"]) < 0]
+        for i, r in refunds:
+            before = [x for j, x in enumerate(sp) if x["date"] < r["date"] or (x["date"] == r["date"] and j < i)]
+            pool = refund_pool(before, card_of(r["note"]), r["note"], r["date"])
+            bought = [x for x in pool if float(x["amount"]) > 0]
+            what = f"spending.csv {r['date']} {r['amount']} {r['note'][:40]}"
+            if not bought:
+                err("D24", f"{what}: a refund with no earlier purchase it could give back on that card")
+                continue
+            cats = {x["category"] for x in bought}
+            if r["category"] not in cats:
+                err("D24", f"{what}: filed as {r['category']}, but what it refunds is {sorted(cats)}")
+            left = sum(float(x["amount"]) for x in pool) + float(r["amount"])
+            if left < -0.005:
+                err("D24", f"{what}: refunds {-left:,.2f} more than was ever spent there on that card")
+        if refunds and sum(1 for f in F if f[1] == "D24") == n_bad:
+            note("D24", f"all {len(refunds)} refunds in spending.csv give back a purchase on the same card")
         # D6 merchants.json is meant to be the one place a merchant is decided
         mp = load(root, "merchants.json")
         if mp:

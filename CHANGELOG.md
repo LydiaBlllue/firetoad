@@ -4,6 +4,15 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Spending is net of refunds** (2026-10-26). A credit on a card statement that gives back an
+  earlier purchase on the same card — or, for an annual-fee or interest credit, a charge the card
+  made — is filed by the import as a negative `spending.csv` row in that purchase's category, so
+  the month, the categories, the year and the medians are all after refunds. A credit that points
+  at nothing (cash back) stays out and is listed for the owner as before. A refund of a big buy
+  goes back to the Big buys fund. **D24** holds every negative row to a purchase on the same card,
+  in its category, never more than was spent there; FINANCE.md §3c. Before this, every refund the
+  import met was dropped and the purchase stayed in spending at full value.
+
 - **Money you lent is in net worth** (2026-10-26). A loan is a register row with `role: owed` and
   `reach: lent`: the amount the borrower owed on an agreed date, less every repayment the ledgers
   show since, plus any further lending (`loans.py`, read by the build, the import and the

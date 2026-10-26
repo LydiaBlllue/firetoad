@@ -76,6 +76,28 @@ A fund is a **label on an account you already have**, not an account of its own;
 `backing`. The hard constraint is that the claims against an account never exceed its balance
 (D13), and a fund can be renamed, re-backed or removed as data.
 
+## 3c. Refunds
+
+Spending is counted **net of refunds**. A refund is a fact on a card statement, so it is a row in
+`spending.csv` like the purchase it gives back: dated the day it posted, in the statement it came
+from, with a **negative** amount and **the purchase's category**. Every total that adds spending
+rows up — the month, a category, the year, the medians the planning figure is calibrated on — is
+therefore after refunds without any of them knowing refunds exist.
+
+- **A refund points at a purchase**: an earlier row on the same card at the same merchant, with
+  at least that much not yet refunded. A fee or interest credit (an annual-fee rebate) has no
+  merchant; it gives back a charge the card made, so it points at an earlier fee or interest row
+  on that card and takes its category. D24 holds every negative row to this.
+- **What points at nothing is not a refund.** Cash back, a reward, a credit for a purchase made
+  before the books begin: the import leaves it out of spending and lists it (`credit not filed`)
+  for the owner. Counting it would lower the spending baseline with money that was never spent.
+- **A refund lands in the month it posted**, not the month of the purchase, so a category can be
+  negative in a month with a large refund and nothing else. The month's total is still exact; a
+  chart that stacks categories draws a negative category as nothing.
+- **A refund of a big buy goes back to the Big buys fund**, not onto the month's allowance:
+  it is big exactly when the purchase it gives back was (§3b).
+- A card payment (`PAYMENT`, `THANK YOU`, a transfer in) is neither spending nor a refund.
+
 ## 4. The rhythm
 
 - **Import day** (`profile.json` `importDay`): statements and the broker export go into

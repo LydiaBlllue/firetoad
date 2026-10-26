@@ -80,9 +80,9 @@
     {
       "match": "FARM BOY OTTAWA",
       "category": "Grocery",
-      "seen": 33,
+      "seen": 34,
       "first": "2025-12-21",
-      "last": "2026-08-13"
+      "last": "2026-08-16"
     },
     {
       "match": "GOODLIFE FITNESS TORONTO",
@@ -171,9 +171,9 @@
     {
       "match": "THAI EXPRESS OTTAWA",
       "category": "Dining",
-      "seen": 8,
+      "seen": 9,
       "first": "2025-12-29",
-      "last": "2026-07-28"
+      "last": "2026-08-15"
     },
     {
       "match": "TICKETMASTER CANADA TORONTO",
@@ -209,6 +209,13 @@
       "seen": 5,
       "first": "2026-01-04",
       "last": "2026-08-19"
+    },
+    {
+      "match": "ANNUAL FEE",
+      "category": "Other",
+      "seen": 1,
+      "first": "2026-02-01",
+      "last": "2026-02-01"
     }
   ]
 }

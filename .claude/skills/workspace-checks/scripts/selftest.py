@@ -268,6 +268,23 @@ def m_filed_ghost(r):
     edit_json(r, layout.rel("filings.json"), lambda d: d["filed"].__setitem__("Ghost statement", ["2026-01"]))
 
 
+# A refund is a negative spending row that has to give back a purchase on the same card (D24,
+# FINANCE.md §3c). Each of these is a credit counted as a refund when it is not one.
+def plant_refund(r, row):
+    """Append one refund row against the last purchase in spending.csv: `row(last)` returns
+    (amount, category, note) for it."""
+    p = layout.path(r, "spending.csv")
+    last = [x for x in csv.DictReader(open(p, encoding="utf-8")) if float(x["amount"]) > 0][-1]
+    amount, category, note = row(last)
+    open(p, "a", encoding="utf-8").write(f"{last['date']},{amount:.2f},{last['currency']},{category},\"{note}\"\n")
+def m_refund_of_nothing(r):
+    plant_refund(r, lambda x: (-50, x["category"], "CASH BACK REWARD " + x["note"].rsplit(" ", 1)[-1]))
+def m_refund_too_much(r):
+    plant_refund(r, lambda x: (-float(x["amount"]) - 99999, x["category"], x["note"]))
+def m_refund_wrong_category(r):
+    plant_refund(r, lambda x: (-0.01, "Other" if x["category"] != "Other" else "Grocery", x["note"]))
+
+
 def edit(r, rel, fn):
     p = os.path.join(r, rel)
     s = open(p, encoding="utf-8").read()
@@ -373,6 +390,9 @@ CASES = [
     ("D23", "a loan's balance edited by hand",              m_loan_copy,       "find"),
     ("D23", "a borrower paid back more than was owed",      m_loan_overpaid,   "find"),
     ("D21", "a committed flow the ledger never shows",      m_committed_missing, "find"),
+    ("D24", "a card credit counted as a refund of nothing", m_refund_of_nothing, "find"),
+    ("D24", "a refund larger than was ever spent there",    m_refund_too_much,   "find"),
+    ("D24", "a refund filed in another category than its purchase", m_refund_wrong_category, "find"),
     ("P1",  "a statement whose rows do not add up to its total", m_parse_tampered, "parse"),
     ("D14", "a document covers an account that is gone",    m_bad_cover,       "find"),
     ("D14", "SUBMITTED key with no matching document",      m_submitted_orphan,"find"),
