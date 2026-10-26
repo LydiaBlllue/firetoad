@@ -77,6 +77,19 @@ def stamp(d):
     return d.strftime("%Y%m%d")
 
 
+def name_date(path):
+    """The statement date a filename carries ("…2026-09-25.pdf", "October 5, 2026.pdf"), so two
+    months of one account are filed oldest first; a name with no date sorts last."""
+    n = os.path.basename(path)
+    m = re.search(r"(\d{4})-?(\d{2})-?(\d{2})", n)
+    if m:
+        return "".join(m.groups())
+    m = re.search(r"([A-Z][a-z]+) (\d{1,2}), (\d{4})", n)
+    if m and m.group(1) in LONG:
+        return f"{m.group(3)}{LONG.index(m.group(1)) + 1:02d}{int(m.group(2)):02d}"
+    return "99999999"
+
+
 def money(v):
     return f"${v:,.0f}"
 
@@ -446,7 +459,8 @@ def plan_ledger(ws, plan, acc, doc, part, end):
     ledger = acc.get("ledger")
     if not ledger:
         return 0
-    existing = csv_rows(ws.fd(ledger))
+    # the ledger as it will stand: what is on disk, then what an earlier statement in this batch adds
+    existing = csv_rows(ws.fd(ledger)) + [dict(zip(LEDGER_COLS, r)) for r in plan.ledger.get(ledger, [])]
     tag = f"{acc['stmtTag']}/{stamp(end)}"
     if any(r.get("statement") == tag for r in existing):
         plan.judged.append(f"The {ws.doc_name(doc)} statement to {short(end)} was already in the books; nothing was written twice.")
@@ -540,12 +554,33 @@ def plan_export(ws, plan, path, doc):
     if os.path.exists(dst):
         base, ext = os.path.splitext(dst)
         dst = f"{base} (redrop){ext}"
+    if into in ("holdings_latest.csv", "ws_activities.csv"):
+        # An account the register has never heard of would be counted as the owner's (or not at
+        # all) without anyone deciding which. Ask, the way an unnamed file is asked about.
+        col = "Account Number" if into == "holdings_latest.csv" else "account_id"
+        known = {a.get("id") for a in ws.accounts} | {x["id"] for x in ws.reg.get("notOwned", [])}
+        seen = collections.OrderedDict()
+        for r in csv.DictReader(open(path, encoding="utf-8")):
+            n = r.get(col)
+            if n and n not in known:
+                seen.setdefault(n, r.get("Account Name") or r.get("account_type") or "")
+        if seen:
+            plan.stopped.append(f"{name} carries {len(seen)} account(s) the register does not know: "
+                                + ", ".join(f"{n} ({what})" for n, what in seen.items())
+                                + " — add each to accounts.json, or to notOwned if it is not the owner's money")
+            return
     plan.archive.append((path, dst))
     plan.filed[doc["key"]].add(asof[:7])
     if into == "holdings_latest.csv":
         plan.holdings = (path, asof)
         plan.files.append(f"Holdings report of {short(iso_to_date(asof))}")
     elif into == "ws_activities.csv":
+        extra = activities_columns(ws, path)
+        if extra:
+            plan.stopped.append(f"{name} has column(s) ws_activities.csv has never had: {', '.join(extra)} — "
+                                f"merging would drop them; add them to the ledger's header first")
+            plan.archive.pop()
+            return
         plan.activities = (path, asof)
         plan.files.append(f"Activities export of {short(iso_to_date(asof))}")
     elif doc.get("counterparty"):
@@ -629,6 +664,19 @@ def write_plan(ws, plan):
         os.remove(p)
 
 
+def activities_columns(ws, src):
+    """The export's columns the ledger has no place for — checked while planning, before
+    anything is written, because a merge that stops halfway leaves the other files written."""
+    p = ws.fd("ws_activities.csv")
+    if not os.path.exists(p):
+        return []
+    with open(p, encoding="utf-8-sig", newline="") as fh:
+        header = next(csv.reader(fh), None) or []
+    with open(src, encoding="utf-8-sig", newline="") as fh:
+        new_header = next(csv.reader(fh), None) or []
+    return [c for c in new_header if header and c not in header]
+
+
 def merge_activities(ws, src):
     p = ws.fd("ws_activities.csv")
     have = []
@@ -643,9 +691,15 @@ def merge_activities(ws, src):
         new_header = next(rd, None)
         new = [r for r in rd if r]
     if header and new_header and header != new_header:
-        raise SystemExit(f"the activities export's columns differ from ws_activities.csv: {new_header[:4]}…")
-    seen = {tuple(r) for r in have}
-    added = [r for r in new if tuple(r) not in seen]
+        # The broker drops or reorders a column now and then (2026-10: 'underlying symbol' went).
+        # Rows are lined up by column name; a column the export no longer carries is left blank.
+        # A column the ledger has never had is refused while planning (activities_columns), so
+        # nothing reaches here that would be lost.
+        at = {c: i for i, c in enumerate(new_header)}
+        new = [[r[at[c]] if c in at and at[c] < len(r) else "" for c in header] for r in new]
+    common = [i for i, c in enumerate(header or new_header) if c in (new_header or [])]
+    seen = {tuple(r[i] for i in common) for r in have}
+    added = [r for r in new if tuple(r[i] for i in common) not in seen]
     rows = sorted(have + added, key=lambda r: (r[0], r[1]))
     with open(p, "w", encoding="utf-8", newline="") as fh:
         w = csv.writer(fh)
@@ -835,7 +889,7 @@ def main(argv):
             print(f"  ✗ --hand {a.hand}: not a list of transcriptions ({e})"); return 1
     summary = {"date": ws.today.isoformat(), "written": False}
 
-    named = classify_inbox(ws, plan)
+    named = sorted(classify_inbox(ws, plan), key=lambda pd: name_date(pd[0]))
     try:
         for path, doc in named:
             if doc.get("parser") or (doc.get("into") or "").endswith(".csv") and doc.get("into") != "friend_ledger.csv" \

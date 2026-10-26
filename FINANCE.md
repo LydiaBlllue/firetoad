@@ -126,6 +126,11 @@ and needs no special case.
   dry powder. On the reach table it is "Locked in property", net of what is secured against it;
   on the by-purpose card it is "Other assets".
 - A mortgage is `liability` with `against: home`. A credit card is `liability` with no `against`.
+- An account a broker export shows that is not the owner's money — opened in their login for
+  someone else — is not a row. It goes in the register's `notOwned` list (`id`, `whose`, `why`,
+  `asof`), and every read of a broker export drops it, so it reaches no total, position or
+  income figure. An export carrying an account in neither list stops the import until the owner
+  says which it is.
 - Dry powder is not an axis: `rules.json` names the symbols, counted inside `grow`.
 - A fund (§3b) is not an axis either: a label claimed against one `set-aside` item.
 - The two cuts of net worth — by purpose, by reach — read the same rows and agree by

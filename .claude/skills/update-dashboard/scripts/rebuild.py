@@ -102,6 +102,12 @@ def load(root):
          "hist": jd("investment_history.json", {"snapshots": []}),
          "merchants": jd("merchants.json")}
     d["rate"] = d["fx"]["usd_cad"]
+    # A broker's export covers every account the login can see, including one held there that is
+    # not the owner's money (`notOwned` in the register). Those rows are dropped here, once, so no
+    # total, position or income figure can count them.
+    others = {x["id"] for x in accounts.get("notOwned", [])}
+    d["hold"] = [r for r in d["hold"] if r.get("Account Number") not in others]
+    d["acts"] = [r for r in d["acts"] if r.get("account_id") not in others]
     have = int(d["profile"].get("schema", 2))
     if have < SCHEMA:
         raise SystemExit(f"findata/ is schema {have} and this tool builds schema {SCHEMA} — run "

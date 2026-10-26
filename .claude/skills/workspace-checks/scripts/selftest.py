@@ -700,6 +700,146 @@ def update_check(root, base):
             f"demo had them, banks and filings as they were, a date-only PDF named by its contents, checkers clean, rebuild idempotent, a second drop wrote nothing, a transcribed statement filed and a wrong one refused"]
 
 
+def update_batch_check(root, base):
+    """Three ways a real month went wrong (2026-10-25), each planted in a staged copy:
+    two months of one account dropped together (the second was checked against the ledger on
+    disk and refused as "a statement in between is missing"); a broker export carrying an account
+    the register never heard of (counted on the Investing pages without anyone deciding); and an
+    activities export whose columns changed (the run stopped halfway, after the ledgers were
+    written)."""
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    if not os.path.exists(upd):
+        return []
+    ws = os.path.join(base, "batch"); os.makedirs(ws); stage(root, ws)
+    man = fixtures_for(ws)
+    if not man:
+        return []
+    fd = lambda n: layout.path(ws, n)
+    LONG = ("January", "February", "March", "April", "May", "June", "July", "August", "September",
+            "October", "November", "December")
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    by_key = {a["key"]: a for a in reg["accounts"]}
+    docs = {d["key"]: d for d in reg["documents"]}
+    bad, did = [], []
+
+    def go(*extra):
+        r = subprocess.run([sys.executable, upd, ".", "--write", *extra], cwd=ws, capture_output=True, text=True, timeout=300)
+        return r.returncode, r.stdout + r.stderr
+
+    def strip(m):
+        """Take one statement's rows out of its ledger (and the copies of its balance), drop the
+        PDF into inbox/ under the bank's own filename, the way update_check does."""
+        doc = docs[m["doc"]]; acc = by_key[doc["covers"][0]]
+        tag = re.search(r"(\d{8})\.pdf$", m["file"]).group(1)
+        end = datetime.date(int(tag[:4]), int(tag[4:6]), int(tag[6:]))
+        rows = list(csv.DictReader(open(fd(acc["ledger"]), encoding="utf-8")))
+        keep = [r for r in rows if r["statement"] != f"{acc['stmtTag']}/{tag}"]
+        with open(fd(acc["ledger"]), "w", encoding="utf-8", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(keep)
+        for p, side in (("banks.json", "assets"), ("accounts.json", "accounts")):
+            j = json.load(open(fd(p), encoding="utf-8"))
+            for x in j[side]:
+                if x.get("account", x.get("name")) == acc["name"] and (side == "assets" or x["key"] == acc["key"]):
+                    x["balance"], x["asof"] = float(keep[-1]["balance"]), keep[-1]["date"]
+            json.dump(j, open(fd(p), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+        fl = json.load(open(fd("filings.json"), encoding="utf-8"))
+        fl["filed"][m["doc"]] = [mo for mo in fl["filed"][m["doc"]] if mo != end.strftime("%Y-%m")]
+        json.dump(fl, open(fd("filings.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+        name = doc["file"].replace("<Month D, YYYY>", f"{LONG[end.month - 1]} {end.day}, {end.year}").replace("<date>", end.isoformat())
+        shutil.copy(m["file"], os.path.join(ws, "inbox", name))
+        return acc["ledger"]
+
+    # 1. two months of one account in one batch: the older one has to be filed first, and the
+    # newer one checked against the ledger as the older one leaves it
+    two = None
+    for k, d in docs.items():
+        mine = sorted((m for m in man if m["doc"] == k), key=lambda m: os.path.basename(m["file"]))
+        if d.get("parser") and by_key[d["covers"][0]].get("ledger") and len(mine) >= 2:
+            two = mine[-2:]
+            break
+    if two:
+        ledger = by_key[docs[two[0]["doc"]]["covers"][0]]["ledger"]
+        want = list(csv.DictReader(open(fd(ledger), encoding="utf-8")))
+        strip(two[1]); strip(two[0])
+        subprocess.run([sys.executable, os.path.join(os.path.dirname(upd), "rebuild.py"), ".", "--write"], cwd=ws, capture_output=True)
+        rc, out = go()
+        now = list(csv.DictReader(open(fd(ledger), encoding="utf-8")))
+        core = ("date", "description", "amount", "balance", "statement")
+        if rc != 0 or len(now) != len(want) or any(a[c] != b[c] for a, b in zip(want, now) for c in core):
+            bad.append(f"two months of {two[0]['doc']} in one batch: exit {rc}, {len(now)} of {len(want)} rows — "
+                       + " | ".join(l.strip() for l in out.splitlines() if "✗" in l)[:200])
+        else:
+            did.append("two months of one account filed in one batch")
+
+        # 3b. an activities export with a column the ledger never had stops the run BEFORE the
+        # statement dropped beside it is written — a run that stops halfway leaves the books torn
+        act = fd("ws_activities.csv")
+        if os.path.exists(act) and docs.get("Activities"):
+            hdr = next(csv.reader(open(act, encoding="utf-8")))
+            n_led = len(list(csv.DictReader(open(fd(ledger), encoding="utf-8"))))
+            strip(two[1])
+            n_stripped = len(list(csv.DictReader(open(fd(ledger), encoding="utf-8"))))
+            with open(os.path.join(ws, "inbox", "activities-export-2099-01-02.csv"), "w", encoding="utf-8", newline="") as fh:
+                w = csv.writer(fh); w.writerow(hdr + ["brand new column"]); w.writerow(["2099-01-02"] + [""] * len(hdr))
+            rc, out = go()
+            after = len(list(csv.DictReader(open(fd(ledger), encoding="utf-8"))))
+            if rc != 1 or "never had" not in out or after != n_stripped:
+                bad.append(f"an activities export with a new column: exit {rc}, {ledger} {n_stripped} → {after} rows (expected a stop and nothing written)")
+            else:
+                did.append("an export with a new column stopped before anything was written")
+            if os.path.exists(os.path.join(ws, "inbox", "activities-export-2099-01-02.csv")):
+                os.remove(os.path.join(ws, "inbox", "activities-export-2099-01-02.csv"))
+            go()   # the statement alone, so the books are whole again for what follows
+            if len(list(csv.DictReader(open(fd(ledger), encoding="utf-8")))) != n_led:
+                bad.append("the statement left behind by the stopped run did not file on its own")
+
+    # 3a. the broker drops a column: rows are lined up by name, the missing one left blank
+    act = fd("ws_activities.csv")
+    if os.path.exists(act) and docs.get("Activities"):
+        rows = list(csv.DictReader(open(act, encoding="utf-8")))
+        hdr = list(rows[0].keys()); gone = hdr[-7]          # any column but the first
+        new = dict(rows[-1], effective_date="2099-01-01", net_cash_amount="1.23")
+        with open(os.path.join(ws, "inbox", "activities-export-2099-01-01.csv"), "w", encoding="utf-8", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=[c for c in hdr if c != gone]); w.writeheader()
+            w.writerow({c: v for c, v in new.items() if c != gone})
+        rc, out = go()
+        now = list(csv.DictReader(open(act, encoding="utf-8")))
+        last = now[-1] if now else {}
+        if rc not in (0, 2) or list(now[0].keys()) != hdr or len(now) != len(rows) + 1 \
+                or last.get("net_cash_amount") != "1.23" or last.get(gone) != "":
+            bad.append(f"an activities export missing {gone!r}: exit {rc}, {len(now)} rows (expected {len(rows) + 1}, lined up by name)")
+        else:
+            did.append(f"an export missing a column merged by name")
+
+    # 2. a broker account the register does not know stops the run; once it is listed as not the
+    # owner's, the run files the export and no position of it reaches the page
+    hold = fd("holdings_latest.csv")
+    if os.path.exists(hold) and docs.get("Holdings"):
+        rows = list(csv.DictReader(open(hold, encoding="utf-8")))
+        alien = dict(rows[0], **{"Account Name": "someone else", "Account Number": "ZZ0000000CAD",
+                                 "Symbol": "ZZZQ", "Name": "Not the owner's fund"})
+        src = os.path.join(ws, "inbox", "holdings-report-2099-01-01.csv")
+        with open(src, "w", encoding="utf-8", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), quoting=csv.QUOTE_ALL); w.writeheader(); w.writerows(rows + [alien])
+        rc, out = go()
+        if rc != 1 or "ZZ0000000CAD" not in out:
+            bad.append(f"a holdings export with an account the register does not know: exit {rc}, expected a stop naming it")
+        reg2 = json.load(open(fd("accounts.json"), encoding="utf-8"))
+        reg2["notOwned"] = [{"id": "ZZ0000000CAD", "whose": "someone else", "why": "selftest", "asof": "2099-01-01"}]
+        json.dump(reg2, open(fd("accounts.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+        rc, out = go()
+        page = open(os.path.join(ws, dash_args(ws)[0]), encoding="utf-8").read()   # relative to the copy, not to here
+        filed = "ZZZQ" in open(hold, encoding="utf-8").read()
+        if rc not in (0, 2) or not filed or "ZZZQ" in page:
+            bad.append(f"an account listed as not the owner's: exit {rc}, in the export {filed}, on the page {'ZZZQ' in page}")
+        else:
+            did.append("an unknown broker account stopped the run, and one not the owner's stayed off the page")
+
+    if bad:
+        return ["  ✗ update.py batch: " + b for b in bad]
+    return [f"  ✓ update.py batch: " + "; ".join(did)] if did else []
+
+
 def csv_rows_of(p):
     return list(csv.DictReader(open(p, encoding="utf-8"))) if os.path.exists(p) else []
 
@@ -746,7 +886,7 @@ def main(argv):
 
         # the parsers, on statements: the demo owner's, rendered back into PDFs (tools/fixtures.py),
         # and in an owner's workspace every real statement in archive/ that names a parser.
-        for line in parser_checks(root, base) + update_check(root, base):
+        for line in parser_checks(root, base) + update_check(root, base) + update_batch_check(root, base):
             print(line)
             if line.lstrip().startswith("✗"):
                 fails.append(line.strip())
