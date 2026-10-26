@@ -2894,7 +2894,7 @@ const IV = (function(){
     portfolio: `Money actually invested. Canadian side ${fmt(cadInv)}${FGN.rows.length ? " plus foreign funds "+fmt(fgn) : ""}. Bank cash and earmarked accounts are left out.`,
     earmarked: `${EARMARK.map(a=>a+" "+fmt(positions.filter(p=>p.account===a).reduce((s,p)=>s+p.mv,0))).join(" + ")}. Set aside for a purpose, so out of Portfolio.`,
     dry: `${andList(DRY)} outside the earmarked accounts, measured against the Canadian side ${fmt(cadInv)}. Foreign holdings are left out. You want ${DRYLO}\u2013${DRYHI}%.`,
-    holdings: `${(DATA.tickers||[]).length} ${DATA.broker} tickers${FGN.rows.length ? " + "+FGN.rows.length+" foreign funds" : ""}. Cash not counted. Your limit is ${CAP}.`
+    holdings: `${(DATA.tickers||[]).length} ${DATA.broker} tickers${FGN.rows.length ? " + "+FGN.rows.length+" foreign funds" : ""}. Cash not counted.${CAP ? " Your limit is "+CAP+"." : ""}`
   };
   const prev = HIST.length>1 ? HIST[HIST.length-2] : null;
   const deltaLine = (now, was, unit) => {
@@ -2978,9 +2978,10 @@ const IV = (function(){
   const noteRows = (RULES.notes||[]).map(x => ({s:x.status, n:x.name, d:fill(x.text)}));
   const rules=[
    ...bandRows,
-   {s:nTick>CAP?"bad":"ok",n:`Simplify to \u2264${CAP} positions`,d: nTick===0 ? "No positions yet." :
+   // No limit set: the count stands on the Holdings card, and there is no rule here to pass or fail.
+   ...(CAP ? [{s:nTick>CAP?"bad":"ok",n:`Simplify to \u2264${CAP} positions`,d: nTick===0 ? "No positions yet." :
      `${nTick} positions \u2014 ${freeSyms.size} at ${DATA.broker}${FGN.rows.length ? " plus "+FGN.rows.length+" foreign funds" : ""}${nTick>CAP ? ", "+(nTick-CAP)+" over target." : " \u2014 inside the target."}`
-     + (Object.keys(midBy).length ? ` ${cap1(CATCHNAME)} holds ${Object.keys(midBy).length} of them (${fmt(mid)}); ${nTick-Object.keys(midBy).length<=CAP ? "closing every one would bring the count to "+(nTick-Object.keys(midBy).length)+`, which clears the \u2264${CAP} target on its own` : "closing every one still leaves "+(nTick-Object.keys(midBy).length)+", so "+(nTick-Object.keys(midBy).length-CAP)+" more would have to come from the named buckets"}. Smallest first: ${midAsc}.` : "")},
+     + (Object.keys(midBy).length ? ` ${cap1(CATCHNAME)} holds ${Object.keys(midBy).length} of them (${fmt(mid)}); ${nTick-Object.keys(midBy).length<=CAP ? "closing every one would bring the count to "+(nTick-Object.keys(midBy).length)+`, which clears the \u2264${CAP} target on its own` : "closing every one still leaves "+(nTick-Object.keys(midBy).length)+", so "+(nTick-Object.keys(midBy).length-CAP)+" more would have to come from the named buckets"}. Smallest first: ${midAsc}.` : "")}] : []),
    ...noteRows,
    ...(FGN.rows.length ? [{s:"info",n:"Foreign currency kept apart",d:`${fmtFgn(FGN.amount)} \u2248 ${fmt(fgn)} of foreign funds counts inside Portfolio but stays out of the Canadian dry powder: crossing the border costs conversion and transfer friction, so it is not deployable here. The ${fmtFgn(FGN.cash)} in ${FGN.label} bank deposits is cash, not portfolio, and is on the ${FGN.label} page.`}] : [])
   ];
