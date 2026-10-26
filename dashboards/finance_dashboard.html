@@ -1442,6 +1442,16 @@ function catMedian(cat, ym){
   const h = vs.length >> 1;
   return vs.length % 2 ? vs[h] : (vs[h-1] + vs[h]) / 2;
 }
+// A usual month, whole: the median of the monthly totals over the same window. Until
+// 2026-10-26 the card added up only the categories that ran over and let the ones that ran under
+// count for nothing, so it showed a gap no two figures on the page could produce.
+function monthMedian(ym){
+  const win = catWindow(ym);
+  if(win.length < 3) return null;
+  const vs = win.map(m => monthOf(m).reduce((s,e) => s + e.amount, 0)).sort((a,b) => a - b);
+  const h = vs.length >> 1;
+  return vs.length % 2 ? vs[h] : (vs[h-1] + vs[h]) / 2;
+}
 function txRows(items){
   return items.map(e =>
     '<tr><td class="num" style="white-space:nowrap;color:var(--muted)">'+e.date.slice(5)+'</td>'
@@ -1468,31 +1478,35 @@ function renderCatPage(){
   // The right pane always shows something: keep the chosen category when this month has it,
   // otherwise fall back to the biggest one rather than leaving an empty panel.
   if(!rows.some(r => r.k === catSel)) catSel = rows.length ? rows[0].k : null;
-  const excess = rows.reduce((s,r) => s + Math.max(over(r), 0), 0);
   const drivers = rows.filter(isHigh).sort((a,b) => over(b) - over(a));
   const pct = v => total > 0 ? Math.round(pc(v, total)) : 0;
 
   $("catStats").innerHTML =
     '<div class="card"><div class="lab">Spent in '+ymLabel(viewYM)+'</div><div class="big num">'+fmt(total)+'</div>'
-      + '<div class="cap">'+es.length+(es.length===1?' transaction in ':' transactions in ')
+      + '<div class="cap">'+es.length+(es.length===1?' purchase across ':' purchases across ')
         +rows.length+(rows.length===1?' category':' categories')+'</div></div>'
     + (rows.length ?
-      '<div class="card"><div class="lab">Biggest category</div><div class="big num">'+fmt(rows[0].v)+'</div>'
-      + '<div class="cap">'+rows[0].k+', '+pct(rows[0].v)+'% of the month</div></div>' : "")
-    + '<div class="card"><div class="lab">Above typical</div><div class="big num">'
-      + (rows.every(r => r.med === null) ? "—" : (excess > 0 ? "+" : "") + fmt(excess)) + '</div>'
-      + '<div class="cap">'+(rows.every(r => r.med === null) ? "not enough closed months to compare yet"
-          : drivers.length ? "mostly " + drivers.slice(0,2).map(r => r.k).join(" and ")
-          : "every category near its usual level")
-      + qMark("Typical = that category&#39;s median over the last "+CAT_WINDOW+" months whose statements have all closed. Needs at least 3 such months, so a new category shows —. Compared in dollars: two categories normally sit at zero, and a percentage against zero says nothing.")
-      + '</div></div>'
+      '<div class="card"><div class="lab">Biggest category</div><div class="big">'+rows[0].k+'</div>'
+      + '<div class="cap">'+fmt(rows[0].v)+', '+pct(rows[0].v)+'% of the month</div></div>' : "")
     + (function(){
-        // Everyday spending against the allowance: the plan's one question about a month, asked
+        // Whole month against a usual whole month: two figures the reader can subtract.
+        const usual = monthMedian(viewYM), diff = usual === null ? null : total - usual;
+        return '<div class="card"><div class="lab">Compared with a usual month</div><div class="big num">'
+          + (diff === null ? "—" : (diff >= 0 ? "+" : "−") + fmt(Math.abs(diff))) + '</div>'
+          + '<div class="cap'+(diff !== null && diff > 0 ? ' hi' : '')+'">'
+          + (diff === null ? "Needs three full months to compare with."
+             : "A usual month is "+fmt(usual)+"."
+               + (diff > 0 && drivers.length ? " Most of the difference: " + drivers.slice(0,2).map(r => r.k).join(" and ") + "." : ""))
+          + qMark("A usual month is the median of your monthly totals over the last "+catWindow(viewYM).length+" full months, the ones whose statements have all arrived. Months you set aside as unusual are left out. Needs at least three.")
+          + '</div></div>';
+      })()
+    + (function(){
+        // Day-to-day spending against the allowance: the plan's one question about a month, asked
         // here too so the month can be read without leaving the page.
         const ed = everydayOf(viewYM), over = ed - ALW;
-        return '<div class="card"><div class="lab">Everyday</div><div class="big num">'+fmt(ed)+'</div>'
-          + '<div class="cap'+(over > 0 ? ' hi' : '')+'">'+(over > 0 ? fmt(over)+" over" : fmt(-over)+" under")+' the '+fmt(ALW)+' allowance'
-          + qMark("Everything under "+fmt(PLAN.bigThreshold)+" a transaction, subscriptions included. Big buys are paid from the fund and left out.")+'</div></div>';
+        return '<div class="card"><div class="lab">Day-to-day spending</div><div class="big num">'+fmt(ed)+'</div>'
+          + '<div class="cap'+(over > 0 ? ' hi' : '')+'">'+(over > 0 ? fmt(over)+" over" : fmt(-over)+" under")+' your '+fmt(ALW)+' allowance, big buys left out'
+          + qMark("Every purchase under "+fmt(PLAN.bigThreshold)+", subscriptions included. A purchase of "+fmt(PLAN.bigThreshold)+" or more is a big buy, paid from its fund, so it is left out here.")+'</div></div>';
       })();
 
   const mx = Math.max(...rows.map(r => Math.abs(r.v)), 1);
@@ -1522,8 +1536,8 @@ function renderCatPage(){
           ["Share of the month", pct(sel.v)+"%"],
           ["Charges", sel.items.length],
           sel.med === null
-            ? ["vs typical", "not enough closed months yet", "mut"]
-            : ["vs the last "+win.length+" closed months",
+            ? ["vs a usual month", "needs three full months", "mut"]
+            : ["vs a usual month"+qMark("Usual is this category\u2019s median over the last "+win.length+" full months, the ones whose statements have all arrived."),
                (over(sel) >= 0 ? "+" : "−") + fmt(Math.abs(over(sel))),
                isHigh(sel) ? "hi" : ""]
         ])
