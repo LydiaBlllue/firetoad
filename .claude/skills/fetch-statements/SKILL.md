@@ -75,3 +75,26 @@ Each note is what the site actually did, not what it looks like it should do.
 - Files land in the Chrome downloads folder as `<Type> Statement-<last 4> <YYYY-MM-DD>.pdf`. A
   credit card's "last 4" is the card number, which changes when the card is reissued (above).
 - The site keeps seven years, so a missed month can always be fetched later.
+
+### BMO
+
+- Sign-in: `https://www1.bmo.com/banking/digital/login` (it redirects to the sign-in form; the
+  card number may already be remembered — the password and the code are still the owner's).
+- Statements live **per account**: Accounts → the account → the **Statements** tab, a list of
+  dated "PDF file" links for the year. Unlike RBC, a click by element reference downloads.
+- Files land as `<Month D, YYYY>.pdf`. Bank accounts that close the same day download under the
+  **same name**, and the register tells them apart only by the `-2` the second one carries — so
+  fetch one account at a time, `collect` it into inbox/ before the next, and **read each file
+  with `parse.py` before naming it**: the account the statement itself names decides which file
+  gets the `-2`, never the page it was downloaded from.
+- ⚠ **Consolidated statements.** When the Statements tab says *Statement type: Consolidated*,
+  one PDF carries the main account and its member accounts, and every member's page offers a
+  copy of that same statement. The copies differ by a few bytes, so preflight's byte-identical
+  check does not catch them; importing two would book the member accounts twice. Download the
+  consolidated statement **once** (from the main account) — the import files every account in
+  it under its own document. The switch can happen mid-year: the months before it are still
+  separate files.
+- A download can arrive twice (a second copy named `… (1).pdf`, sometimes opened in a tab of
+  its own). Check the downloads folder after each batch; a copy is a duplicate, not a statement.
+- The closing day moves to the business day before a weekend (the 5th became the 4th), which
+  preflight's few-day tolerance absorbs.
