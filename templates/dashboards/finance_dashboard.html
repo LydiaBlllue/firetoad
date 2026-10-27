@@ -457,20 +457,6 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 </section>
 
 
-<section data-pg="foreign" hidden>
-  <div class="grid-stats" id="fgnStats"></div>
-  <div class="card" style="margin-bottom:10px">
-    
-    <div class="donut-wrap">
-      <div class="donut-box">
-        <svg id="fgnDonut" viewBox="0 0 170 170" width="170" height="170"></svg>
-        <div class="donut-center"><div class="t num" id="fgnDonutTotal"></div><div class="s">in yuan</div></div>
-      </div>
-      <div class="legend" id="fgnCats"></div>
-    </div>
-    <div class="cap" id="fgnCap"></div>
-  </div>
-</section>
 
 <section data-pg="fire" hidden>
   <div class="grid-stats" id="fireStats"></div>
@@ -543,6 +529,17 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div class="lab">Every account, by institution</div>
     <table class="dt" id="acctTable"></table>
     <div class="cap" id="acctCap"></div>
+  </div>
+  <div class="card" id="fgnCard" style="margin-bottom:10px" hidden>
+    <div class="lab" id="fgnLab">Held in another currency</div>
+    <div class="donut-wrap">
+      <div class="donut-box">
+        <svg id="fgnDonut" viewBox="0 0 170 170" width="170" height="170"></svg>
+        <div class="donut-center"><div class="t num" id="fgnDonutTotal"></div><div class="s" id="fgnUnit">total</div></div>
+      </div>
+      <div class="legend" id="fgnCats"></div>
+    </div>
+    <div class="cap" id="fgnCap"></div>
   </div>
   <div class="card" id="loanCard" style="margin-bottom:10px" hidden>
     <div class="lab">Money you lent</div>
@@ -727,10 +724,7 @@ const NAV = [
   {sec:"Investing", items:[{k:"port",  n:"Overview",         t:"Investing",            d:"What is invested, how it splits across your buckets, and what your rules say"},
                            {k:"hold",  n:"Holdings",         t:"Holdings",             d:"Every position, by role or by account"},
                            {k:"rules", n:"Rules",            t:"Rules",                d:"Your own triggers, checked one by one"},
-                           {k:"check", n:"Checkpoints",      t:"Checkpoints",          d:"Dates that could change a position"},
-                           // Named by the data: the sidebar and the title say what foreign.json calls it, and the entry
-                           // is hidden in a workspace with no accounts abroad.
-                           {k:"foreign", n:"Foreign",        t:() => FOREIGN.label || "Foreign accounts", d:() => "Held in "+(FOREIGN.currency || "another currency")+", counted on its own"}]},
+                           {k:"check", n:"Checkpoints",      t:"Checkpoints",          d:"Dates that could change a position"}]},
   {sec:"Plan",      items:[{k:"fire",  n:"FIRE",             t:"FIRE",                 d:"Where you are against the target"},
                            {k:"coast", n:"Coast & care",     t:"Coast, drawdown and care", d:"If you stop adding, when you start taking, and what care costs"},
                            {k:"base",  n:"Baseline",         t:"Monthly spending baseline", d:"The number the whole target is built on"}]},
@@ -790,9 +784,7 @@ function drawNav(){
         + (!open && flag ? '<span class="dot-n" style="background:'+flag+'"></span>' : '') + '</div>'
       : '<div class="sec">'+g.sec+'</div>';
     return head + '<div class="grp"'+(open ? "" : " hidden")+'>' + g.items.map(i => {
-      const hide = i.k === "foreign" && !FOREIGN.rows.length;
-      const name = i.k === "foreign" ? (FOREIGN.label || i.n) : i.n;
-      return '<button data-k="'+i.k+'" class="'+(i.k===curPage?"sel":"")+'"'+(hide ? " hidden" : "")+'><span>'+name+'</span>'
+      return '<button data-k="'+i.k+'" class="'+(i.k===curPage?"sel":"")+'"><span>'+i.n+'</span>'
         + (f[i.k] ? '<span class="dot-n" style="background:'+f[i.k]+'"></span>' : '') + '</button>';
     }).join("") + '</div>';
   }).join("");
@@ -1751,7 +1743,13 @@ const PORTFOLIO = INVEST.portfolio;
 const PORT_HISTORY = [];   // one portfolio value per month, from investment_history.json
 const NW_GLOBAL = INVEST.netWorth + FOREIGN_CAD;             // net worth  (2026-08-14: the owner)
 function renderForeign(){
-  if(!$("fgnDonut")) return;          // no foreign-asset page in this build
+  // A card on Accounts since 2026-10-26: money held in another currency is a property of where it
+  // sits, not a page of its own (it used to be one, under Investing, though most of it is cash).
+  if(!$("fgnCard")) return;
+  $("fgnCard").hidden = !FOREIGN.rows.length;
+  if(!FOREIGN.rows.length) return;
+  $("fgnLab").textContent = "Held in " + (FOREIGN.currency || "another currency") + (FOREIGN.label ? ", in " + FOREIGN.label : "");
+  $("fgnUnit").textContent = "in " + (FOREIGN.currency || "its currency");
   const fmtFgn = n => (FOREIGN.symbol || "") + Math.round(n).toLocaleString("en-CA");
   // One segment per account, in the currency it is held in (§7): the owner, 2026-10-26, asked
   // for the yuan side drawn the way the Canadian buckets are.
@@ -1762,7 +1760,8 @@ function renderForeign(){
   const cash = FOREIGN.rows.filter(r => r.cash).reduce((s,r) => s + r.v, 0);
   $("fgnCap").innerHTML = metaList([
     ["As of", FOREIGN.asof],
-    ["Roughly worth", "C$"+FOREIGN_CAD.toLocaleString("en-CA")],
+    ["Roughly worth", "C$"+FOREIGN_CAD.toLocaleString("en-CA")+" at "+FOREIGN.cadPerUnit],
+    ["Share of net worth", Math.round(pc(FOREIGN_CAD, NW_GLOBAL))+"%"],
     ["Sitting in cash", Math.round(pc(cash, FOREIGN.total))+"%"],
     ["Counts toward net worth", "Yes"],
     ["Counts toward dry powder"+qMark("Moving money across the border costs conversion and transfer friction, so yuan is not treated as ammunition you can deploy here."), "No"]
@@ -2278,7 +2277,6 @@ function renderTasks(){
   renderAccounts();
   renderWsInc();
   renderSubStats();
-  renderForeignStats();
   renderInsights();
   renderUpdates();
 }
@@ -2367,16 +2365,6 @@ function renderSubStats(){
 }
 
 // Foreign: the list of accounts never said how much of your net worth sits behind a border.
-function renderForeignStats(){
-  if(!$("fgnStats")) return;
-  const inv = FOREIGN.rows.filter(r => !r.cash).reduce((a,r) => a + r.v, 0);
-  const cash = FOREIGN.total - inv;
-  $("fgnStats").innerHTML =
-    '<div class="card"><div class="lab">Held in '+(FOREIGN.label||"foreign currency")+'</div><div class="big num">'+fmt(FOREIGN_CAD)+'</div><div class="cap">\u00a5'+Math.round(FOREIGN.total).toLocaleString("en-CA")+' at '+FOREIGN.cadPerUnit+'</div></div>'+
-    '<div class="card"><div class="lab">Share of net worth'+qMark("Counted in net worth, but kept apart from dry powder — moving it across the border costs conversion and transfer friction.")+'</div><div class="big num">'+Math.round(pc(FOREIGN_CAD, NW_GLOBAL))+'%</div><div class="cap">of '+fmt(NW_GLOBAL)+'</div></div>'+
-    '<div class="card"><div class="lab">Sitting in cash</div><div class="big num">'+Math.round(pc(cash, FOREIGN.total))+'%</div><div class="cap">\u00a5'+Math.round(cash).toLocaleString("en-CA")+' earning almost nothing</div></div>'+
-    '<div class="card"><div class="lab">Actually invested</div><div class="big num">'+fmt(inv*FOREIGN.cadPerUnit)+'</div><div class="cap">'+(function(){const f=FOREIGN.rows.filter(r=>!r.cash);const w=[...new Set(f.map(r=>r.inst))];return f.length?(f.length===1?"One fund":f.length+" funds")+(w.length?" at "+w.join(", "):""):"No funds held there";})()+'</div></div>';
-}
 
 // ===== Accounts: one row per place the money sits =====
 // Added 2026-09-07. Until now the workspace could answer "which files do I owe you this month"
@@ -3029,8 +3017,8 @@ const IV = (function(){
       else if(p.cash) b="cash";
       else b=bucketOf(p.sym);
       const k=b+"|"+p.sym;
-      if(!agg[k]){ agg[k]={sym:p.sym,mv:0,bv:0,accs:[],earm:b==="earm"}; buckets[b].push(agg[k]); }
-      agg[k].mv+=p.mv; agg[k].bv+=p.bv;
+      if(!agg[k]){ agg[k]={sym:p.sym,name:p.cn?p.name:"",fgn:0,mv:0,bv:0,accs:[],earm:b==="earm"}; buckets[b].push(agg[k]); }
+      agg[k].mv+=p.mv; agg[k].bv+=p.bv; if(p.cn) agg[k].fgn+=p.amount;
       if(!agg[k].accs.includes(p.account)) agg[k].accs.push(p.account);
     }
     let h=`<table class="ht"><tr><th>Position</th><th>Value CAD</th>${showPL?"<th>Unrealized</th>":""}<th>Accounts</th><th>% of Portfolio</th></tr>`;
@@ -3043,7 +3031,10 @@ const IV = (function(){
       for(const r of rows){
         const p=r.mv-r.bv;
         const share = r.earm ? '<span style="color:var(--muted)">\u2014</span>' : pctS(pc(r.mv, portfolio));
-        h+=`<tr><td class="sym">${r.sym}</td><td class="num">${fmt(r.mv)}</td>${showPL?`<td class="num ${p>=0?"pos":"neg"}">${fmtS(p)}</td>`:""}<td><span class="accs">${r.accs.join(" \u00b7 ")}</span></td><td class="num">${share}</td></tr>`;
+        // a fund held abroad is named (its code says nothing) and shown in the currency it is held in too
+        const symCell = r.name ? `${r.sym} <span style="color:var(--muted);font-weight:400">${r.name}</span>` : r.sym;
+        const valCell = r.fgn ? `${fmt(r.mv)} <span style="color:var(--muted)">${fmtFgn(r.fgn)}</span>` : fmt(r.mv);
+        h+=`<tr><td class="sym">${symCell}</td><td class="num">${valCell}</td>${showPL?`<td class="num ${p>=0?"pos":"neg"}">${fmtS(p)}</td>`:""}<td><span class="accs">${r.accs.join(" \u00b7 ")}</span></td><td class="num">${share}</td></tr>`;
       }
     }
     return h+"</table>";

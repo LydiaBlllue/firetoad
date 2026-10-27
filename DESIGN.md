@@ -65,7 +65,7 @@
 - **One dashboard, one left sidebar** (2026-09-10). The investment dashboard, a second file
   with its own sidebar and a link back, was merged into the **Investing** group: Overview
   (the old Portfolio page plus the four stat cards, the bucket picture and the rate behind the
-  numbers), Holdings, Rules, Checkpoints, and the foreign-currency page. Three seams went with
+  numbers), Holdings, Rules and Checkpoints. Three seams went with
   it: two sidebars with different brands, a Portfolio page and an Overview page showing the
   same numbers, and two templates to keep in step. Everything derived for those pages lives
   inside one `IV` object so nothing there collides with the rest of the page.
@@ -73,8 +73,12 @@
     heading or by landing on one of its pages; while closed, its heading carries the strongest
     dot inside. **Data sources was renamed Statements** — what you drop in is a statement, and
     "data source" is the pipeline's word for it.
-  - **The foreign-currency entry is named by the data** (`foreign.json` `label`) and hidden in a
-    workspace with no accounts abroad; the docs and the checks know it as Foreign.
+  - **Money held in another currency is not a page** (the owner, 2026-10-26). It was one, under
+    Investing, though most of it was bank cash: grouped by currency where every other page answers
+    its group's question, and repeating what Accounts, the net-worth reach row and the Investing
+    overview already showed. Its accounts are a donut card on **Accounts** ("Held in CNY", named by
+    `foreign.json`, hidden when there is nothing abroad); its funds are rows in **Holdings**, named,
+    with the held-currency amount beside the CAD value.
   - The old top tabs, the `@media(max-width:520px)` block and the `col-hide-sm` hidden columns
     are all deleted (2026-09-06); the Accounts column of the Holdings table is always visible.
 - **Navigation is the left sidebar** (the owner picked B from two mock-ups on 2026-09-06; the
@@ -96,8 +100,8 @@
   - Month pills appear only on `PILL_PAGES` (home / tx / budget).
   - The foot of the sidebar carries the tool version (`v1.0`) in muted 10.5px. MAJOR.MINOR:
     polish moves the minor, a change of shape moves the major.
-<!-- LINT:PAGES pages=19 sections=5 -->
-- **LY Finance Dashboard is the main dashboard**: 19 pages under 5 sidebar sections (the
+<!-- LINT:PAGES pages=18 sections=5 -->
+- **LY Finance Dashboard is the main dashboard**: 18 pages under 5 sidebar sections (the
   2026-09-06 rebuild, replacing 6 top tabs). **Lint rule S4 checks this table against the `NAV`
   constant, so changing the navigation means changing this table too** — S4 also checks the page
   count, the sidebar list and the minimum width stated in `README.md`, and that every path the
@@ -108,7 +112,7 @@
   | — | Home (net worth, two cuts of it, At a glance) |
   | Spending | This month · Year · Subscriptions · Monthly plan |
   | Income | Overview · Investment income |
-  | Investing | Overview · Holdings · Rules · Checkpoints · Foreign |
+  | Investing | Overview · Holdings · Rules · Checkpoints |
   | Plan | FIRE · Coast & care · Baseline |
   | Records | Updates · Accounts · Statements · Tasks |
   The Insights page was absorbed on 2026-09-10: what stood out about the year is a card on the
@@ -386,7 +390,7 @@ Set after measuring every page at the owner's request. All of them were real pro
     now has three cards and fills a screen on Free to spend + Where each month goes + Your two
     funds (measured at 1,200px+); it does not need a history table for height.
   - Tasks → open and done split into two cards, plus three stat cards
-  - Insights / Subscriptions / Foreign → a row of stat cards each
+  - Insights / Subscriptions → a row of stat cards each
 
 ## 5e. Motion (the owner agreed to it 2026-09-06 — two things only)
 
