@@ -215,8 +215,6 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .ht tr.grp td{background:var(--pill);font-weight:700;font-size:12.5px;padding:5px 8px}.ht tr.grp td .gp{float:right;font-weight:600;color:var(--muted)}
 .pos{color:#008300}.neg{color:#a3423a}
 .foot{font-size:12px;color:var(--muted);margin-top:9px}
-.cn-strip{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);font-size:12.5px}
-.cn-strip span{display:flex;align-items:center;gap:6px}.cn-note{font-size:11.5px;color:var(--muted)}
 /* Records: a secondary group at the foot of the sidebar, closed unless you are in it */
 .side .sec.minor{display:flex;align-items:center;gap:5px;cursor:pointer;margin-top:20px;padding-top:12px;border-top:1px solid var(--border);margin-right:10px}
 .side .sec.minor .tw{font-size:9px;color:var(--muted)}
@@ -2872,8 +2870,6 @@ const IV = (function(){
   const dry = PRIMARY ? B[PRIMARY.key] : 0, mid = B[CATCH] || 0;
   const ENDS = BUCKETS.filter(b => b.key !== CATCH);
   const CATCHNAME = ((BUCKETS.find(b=>b.key===CATCH)||{name:"everything else"}).name.split(" \u00b7 ")[0]).toLowerCase();
-  const convEnd = ENDS.length > 2 ? (B[ENDS[2].key] || 0) : 0;
-  const convName = ENDS.length > 2 ? ENDS[2].name.split(" \u00b7 ")[0].toLowerCase() : "";
   const cadInv    = portCad;
   const portfolio = portCad + fgn;
   const dryPct    = pc(dry, cadInv);
@@ -2887,7 +2883,6 @@ const IV = (function(){
   const freeSyms  = new Set(positions.filter(p=>!EARMARK.includes(p.account) && !p.cash && !p.cn).map(p=>p.sym));
   const nTick     = freeSyms.size + FGN.rows.length;
   const midAsc    = Object.entries(midBy).sort((a,b)=>a[1]-b[1]).map(e=>e[0]+" "+fmt(e[1])).join(", ");
-  const midTop    = Object.entries(midBy).sort((a,b)=>b[1]-a[1]).slice(0,6).map(e=>e[0]+" "+fmt(e[1])).join(", ");
   const symMv     = s => ((DATA.tickers||[]).find(t=>t.sym===s)||{mv:0}).mv;
   const usdExp    = positions.filter(p=>p.usd && !EARMARK.includes(p.account)).reduce((s,p)=>s+p.mv,0);
   const fxAge     = FX.asof ? Math.round((new Date(DATA.today) - new Date(FX.asof))/864e5) : 0;
@@ -2958,9 +2953,7 @@ const IV = (function(){
       + block("bbDonut", "By your buckets, at " + DATA.broker, "at " + DATA.broker)
       + `</div>`
       + (unclassed.length ? noteBox(unclassed.join(", ") + (unclassed.length > 1 ? " have" : " has") + " no kind of asset yet, so "
-          + (unclassed.length > 1 ? "they sit" : "it sits") + " under Not classified. Say what " + (unclassed.length > 1 ? "they hold" : "it holds") + " and it moves.") : "")
-      + (FGN.rows.length ? `<div class="cn-strip"><span><i class="dot" style="background:#4a3aa7"></i><b>${FGN.label} \u00b7 onshore deployable</b> <span class="num">${fmtFgn(FGN.amount)} \u2248 ${fmt(fgn)}</span></span><span class="cn-note">counted in Portfolio, kept apart from dry powder \u00b7 as of ${FGN.asof}</span></div>` : "")
-      + `<div class="foot">${convEnd ? `Your rule: keep the ${CATCHNAME} thin. It is ${pctS(pc(mid, cadInv))} (${midTop}), ${(mid/convEnd).toFixed(1)}\u00d7 the ${convName} at ${pctS(pc(convEnd, cadInv))}.` : (cadInv ? `Whatever no bucket claimed is ${pctS(pc(mid, cadInv))} of the ${DATA.broker} side${midTop ? " ("+midTop+")" : ""}.` : "")}</div>`;
+          + (unclassed.length > 1 ? "they sit" : "it sits") + " under Not classified. Say what " + (unclassed.length > 1 ? "they hold" : "it holds") + " and it moves.") : "");
     const empty = "Nothing invested yet. Your first broker report fills this.";
     drawDonut("spCur", "spCurT", "spCurL", byCur, portfolio, empty, true);
     drawDonut("spType", "spTypeT", "spTypeL", byType, portfolio, empty, true);
