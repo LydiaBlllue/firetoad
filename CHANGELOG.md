@@ -4,6 +4,16 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Spending is what was spent; Budget is the plan** (2026-10-27). Monthly plan held both the
+  month (Free to spend, the paycheque flow) and the plan (the split, the funds), so picking a month
+  at the top changed half the page, and the allowance was judged on two pages. This month now
+  carries the whole month — Free to spend, three stat cards, the paycheque flow, the categories and
+  big buys on a card of their own; Year gains "Inside the allowance, month by month"; the plan and
+  the funds are Budget, in the Plan group, with no month pills. How the plan is holding is gone:
+  its lines were Free to spend, the Rules page's pay-yourself-first and the funds card. The flow
+  now draws refunds as a source coming in, so its total is the one Free to spend shows (it dropped
+  them before and overstated the month), and a category in it opens the detail pane.
+
 - **Net worth by purpose, defined** (2026-10-27). The rows were Invested / Earmarked / Cash /
   Other assets, with no definition on the page, and "Other assets" had become wherever an account
   with no other role landed — deposits abroad included, though they are cash. The rows are now

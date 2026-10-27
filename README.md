@@ -23,7 +23,7 @@ does.
 |---|---|
 | ![Net worth, cut two ways](docs/screens/home.png) | **Home.** Your net worth, cut by what each part is for and by how easily you could reach it. A sentence under it says how far the numbers go and what is still missing. |
 | ![A year of spending](docs/screens/spending.png) | **Spending.** This month opened up by category, then the year by month. No category caps — one allowance, and everything under it is guilt-free. |
-| ![The monthly plan](docs/screens/plan.png) | **Monthly plan.** Where the paycheque goes: what is committed, what is invested first, what is free, what the two funds hold. |
+| ![The budget](docs/screens/plan.png) | **Budget.** What each paycheque is for: what is committed, what is invested first, what is free, what the two funds hold. |
 | ![Your investment rules](docs/screens/rules.png) | **Investing.** Your own rules — a cash band, a cap on holdings, the theses you wrote down — checked one by one against what you actually hold. |
 | ![Which file was filed](docs/screens/sources.png) | **Records.** Which statement arrived which month, every account and what it is still missing, and what each update changed or left waiting for you. |
 

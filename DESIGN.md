@@ -116,13 +116,13 @@
   | Section | Pages |
   |---|---|
   | — | Home (what needs you today, net worth, two cuts of it) |
-  | Spending | This month · Year · Subscriptions · Monthly plan |
+  | Spending | This month · Year · Subscriptions |
   | Income | Overview · Investment income |
   | Investing | Overview · Holdings · Rules |
-  | Plan | FIRE · Coast & care · Baseline |
+  | Plan | Budget · FIRE · Coast & care · Baseline |
   | Records | Updates · Accounts · Statements · Tasks |
   The Insights page was absorbed on 2026-09-10: what stood out about the year is a card on the
-  Spending overview, how the plan is holding is a card on Monthly plan, and the one check that
+  Spending overview, and the one check that
   wants a decision (a subscription seen once) sits on Updates under "Worth a second look".
   **The Accounts page** (the owner asked for it 2026-09-07) is one row per place money sits, grouped
   by institution, with the institution row giving that institution's net position (credit cards
@@ -171,22 +171,32 @@
   2026-08-13); the real net-worth snapshots (`NW_HISTORY`) are drawn as a black line with dots
   that show their value on hover, the three projections continue from the current month, and the
   first legend row is Actual.
-- **Spending is read two ways, in this order** (2026-09-10): **This month** first — one month
-  opened up: four stat cards (spent, biggest category, above typical, everyday against the
-  allowance), the category list on the left and the line-by-line of the chosen category on the
-  right, driven by the month pills — because that is the page looked at every week; **Year**
-  second — the year pills, the yearly stat cards, the year by category, the monthly stacked
-  chart and "What stands out" — looked at now and then. Neither page carries a plan verdict
-  beyond the everyday line; Monthly plan does.
-- **Monthly plan page** (formerly Budget; the owner rebuilt it 2026-09-07: "the budget system isn't
+- **One page, one question, one kind of time** (the owner, 2026-10-27, after the whole-dashboard
+  map in her `decisions/`): a page follows the month cursor, the year cursor or no time at all,
+  never half of each; a thing is judged in one place, and Home only summarises.
+- **Spending is what was actually spent, read two ways, in this order** (2026-09-10, regrouped
+  2026-10-27): **This month** first — the month the cursor is on, all of it: **Free to spend**
+  (the headline, below), three stat cards (spent, biggest category, against a usual month),
+  **Where the paycheque went** (the plan as flows, the allowance fanning out into that month's
+  categories — refunds drawn as a source coming in, an overspend as a second source from the fund
+  that covers it, so every band is its real size and the total is the one Free to spend shows;
+  a category in it opens the same detail pane as the list), the category list and the
+  line-by-line of the chosen category, and **Big buys in \<month\>** on a card of its own.
+  **Year** second — the year pills, the yearly stat cards, "What stands out", the year by
+  category, the monthly stacked chart, and **Inside the allowance, month by month** (everyday
+  spending against today's allowance, the overspend in red, the open month faded). Subscriptions
+  follows no time.
+- **Budget page** (Plan group, follows no time — the month pills are hidden; it was Monthly plan
+  under Spending until 2026-10-27, when it held both the month and the plan; the owner rebuilt it 2026-09-07: "the budget system isn't
   very usable. I need guilt-free spending"). The old version was category caps — Total, Dining,
   Shopping, Subscription, turning red when exceeded — which had always contradicted FINANCE.md §3
-  ("no category budget caps"), so the page was redone. Source: `findata/register/funds.json`. Four cards:
-  - **Free to spend in \<month\>** — the headline, one number: allowance minus this month's
+  ("no category budget caps"), so the page was redone. Source: `findata/register/funds.json`. Free to
+  spend moved to This month on 2026-10-27; Budget keeps the plan and the funds:
+  - **Free to spend in \<month\>** (on This month since 2026-10-27) — the headline, one number: allowance minus this month's
     everyday spending. **No categories at all** (a category cap is a small guilt machine: it
     makes you justify a dinner and never answers whether the month as a whole went well). A track
     bar with an even-pace marker, shown only for the current month.
-  - **Where each month goes** — one horizontal stacked bar cutting take-home into the committed
+  - **How each paycheque is split** — one horizontal stacked bar cutting take-home into the committed
     payments (one segment each: rent, a mortgage, a loan — `funds.json` `plan.flows`, kind
     `committed`, in the neutral `--muted`) / Invest / Everyday / Big buys / Travel / Unallocated,
     with a `metaList` beneath it, one line per part. Take-home, Invest and Everyday are sums of
@@ -398,9 +408,8 @@ Set after measuring every page at the owner's request. All of them were real pro
   pages**. What gets added must answer a question the page already raises, not pad it:
   - Baseline → a 12-month bar chart, the three months in the median highlighted, the median as a
     red dashed line (answering "why is the baseline $1,290 when June was $2,534")
-  - ~~Budget → a 6-month history table~~ **dropped** (the owner, 2026-09-07). The Monthly plan page
-    now has three cards and fills a screen on Free to spend + Where each month goes + Your two
-    funds (measured at 1,200px+); it does not need a history table for height.
+  - ~~Budget → a 6-month history table~~ **dropped** (the owner, 2026-09-07); the month-by-month
+    view is the Year page's "Inside the allowance" chart since 2026-10-27.
   - Tasks → open and done split into two cards, plus three stat cards
   - Insights / Subscriptions → a row of stat cards each
 

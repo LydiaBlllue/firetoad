@@ -21,7 +21,7 @@ Anthropic；解析器读成功的对账单，它从不看。
 |---|---|
 | ![净值，两种拆法](docs/screens/home.png) | **Home。** 净值按「每一部分是干什么的」和「多容易拿到」各切一次。下面一句话告诉你数字截至哪天、还缺什么。 |
 | ![一年的支出](docs/screens/spending.png) | **Spending。** 先看这个月按分类拆开，再看一年按月。没有分类上限 —— 只有一条日常额度，线以下都是 guilt-free。 |
-| ![月计划](docs/screens/plan.png) | **Monthly plan。** 工资去了哪：先付固定支出，先投资，剩下多少自由花，两个基金里有多少。 |
+| ![预算](docs/screens/plan.png) | **Budget。** 每份工资做什么用：先付固定支出，先投资，剩下多少自由花，两个基金里有多少。 |
 | ![你的投资规则](docs/screens/rules.png) | **Investing。** 你自己定的规则 —— 现金区间、持仓上限、写下的论点 —— 逐条对照实际持仓核对。 |
 | ![哪个月交了哪份文件](docs/screens/sources.png) | **Records。** 哪份对账单哪个月到了、每个账户还缺什么、每次更新改了什么、有什么等你确认。 |
 
