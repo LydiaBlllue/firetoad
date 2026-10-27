@@ -242,10 +242,11 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .bud-tick{position:absolute;top:-3px;width:2px;height:18px;background:var(--ink);opacity:.4;border-radius:1px}
 .bud-edit{cursor:pointer;border-bottom:1px dashed var(--muted)}
 .bud-edit:hover{background:var(--pill)}
-.split{display:flex;gap:2px;height:24px;margin:2px 0 4px;max-width:900px}
-.split > div{height:100%}
-.split > div:first-child{border-radius:7px 0 0 7px}
-.split > div:last-child{border-radius:0 7px 7px 0}
+.flow{display:block;width:100%;max-width:980px;height:auto;margin:4px 0 2px}
+.flow text{font-size:12px;fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-width:4px;stroke-linejoin:round}
+.flow text.v{fill:var(--muted)}
+.flow path{opacity:.38}
+.flow path:hover{opacity:.62}
 .fund-row{padding:11px 0;border-bottom:1px solid var(--grid)}
 .fund-row:last-child{border-bottom:none}
 .fund-why{font-size:11.5px;color:var(--muted);margin:3px 0 7px;max-width:720px}
@@ -384,7 +385,8 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   </div>
   <div class="card" style="margin-bottom:10px">
     <div class="lab">Where each month goes</div>
-    <div class="split" id="splitBar"></div>
+    <svg id="flowSvg" class="flow" role="img" aria-label="How take-home pay splits"></svg>
+    <div class="cap" id="flowCap"></div>
     <div id="splitRows"></div>
     <div id="splitNote"></div>
   </div>
@@ -1185,13 +1187,7 @@ function renderSplit(F){
   const rest = PLAN.takeHome - used;
   const segs = alloc.filter(a => a.v > 0).concat(rest > 0 ? [{k:"Unallocated", v:rest, c:"var(--pill)", pk:null,
       d:"Nothing in the plan names this. It stays where the paycheque landed."}] : []);
-  const denom = Math.max(used, PLAN.takeHome);
-  $("splitBar").innerHTML = segs.map(a =>
-    '<div style="width:' + (pc(a.v, denom)) + '%;background:' + a.c + '" data-k="' + a.k + '"></div>').join("");
-  $("splitBar").querySelectorAll("div[data-k]").forEach(el => {
-    const a = segs.find(x => x.k === el.dataset.k);
-    hoverable(el, a.k + "<br>" + fmt(a.v) + " a month<br>" + Math.round(pc(a.v, PLAN.takeHome)) + "% of take-home");
-  });
+  drawFlow(segs, used);
   const rows = alloc.concat(rest > 0 ? [{k:"Unallocated", v:rest, c:"var(--pill)", pk:null,
       d:"Nothing in the plan names this. It stays where the paycheque landed."}] : []);
   $("splitRows").innerHTML = metaList(
@@ -1211,6 +1207,80 @@ function renderSplit(F){
     + (edited ? noteBox("You have changed " + edited + " of these numbers in the browser. That edit rides "
           + "in the page address, not in the file, so it will not survive the next update. <b>Tell Claude the "
           + "number</b> and it becomes part of your plan.") : "");
+}
+
+// The same split drawn as flows, with one more step the bar could not show: where the allowance
+// actually went in the newest month every card has reported. The left and middle columns are the
+// plan; only the right column is what happened. An overspent month draws the extra as a second
+// source, from the fund that covers it (fundRun takes an overspend out of Big buys first), so every
+// band is drawn at its real size and nothing is scaled to fit.
+function drawFlow(segs, used){
+  const svg = $("flowSvg"), ym = covEnd;
+  const ev = ym ? monthOf(ym).filter(e => !isBig(e)) : [];
+  const byCat = CATS.map(c => ({k:c.k, c:c.c,
+      v:ev.filter(e => e.category === c.k).reduce((s,e) => s + e.amount, 0)})).filter(c => c.v > 0.5);
+  const spent = byCat.reduce((s,c) => s + c.v, 0);
+  const alw = segs.find(a => a.pk === "alw");
+  const over = alw && spent > ALW ? spent - ALW : 0;
+  const left = [{k:"Take-home", v:Math.max(PLAN.takeHome, used), c:"var(--ink)"}];
+  if(over) left.push({k:"From " + (BFUND.key ? BFUND.name : "savings"), v:over, c:"#c98500"});
+  const mid = segs.map(a => Object.assign({}, a, {v: a === alw ? a.v + over : a.v}));
+  const right = !alw || !byCat.length ? [] : byCat.concat(spent < ALW
+      ? [{k:"Left over, into the funds", v:ALW - spent, c:"var(--c-other)", left:true}] : []);
+  // A node is drawn at its size but laid out in a slot tall enough for its two-line label, so a
+  // $130 line never sits on top of the one below it.
+  const W = 980, PAD = 10, NW = 10, GAP = 8, SLOT = 34, X = [150, 470, 790];
+  const total = left.reduce((s,n) => s + n.v, 0), k = 220 / total;
+  const place = (col, top) => { let y = top; col.forEach(n => { n.h = Math.max(1.5, n.v * k);
+      n.y = y + Math.max(0, SLOT - n.h) / 2; y += Math.max(n.h, SLOT) + GAP; }); return y - GAP; };
+  let H = Math.max(place(left, PAD), place(mid, PAD));
+  if(alw && right.length){
+    const a = mid.find(n => n.pk === "alw");
+    const span = right.reduce((s,n) => s + Math.max(n.v * k, SLOT) + GAP, -GAP);
+    H = Math.max(H, place(right, Math.max(PAD, a.y + a.h/2 - span/2)));
+  }
+  H += PAD;
+  const band = (x0, y0, x1, y1, h, col, tip) => {
+    const m = (x0 + x1) / 2;
+    return '<path d="M'+x0+' '+y0+' C'+m+' '+y0+' '+m+' '+y1+' '+x1+' '+y1+' L'+x1+' '+(y1+h)
+      +' C'+m+' '+(y1+h)+' '+m+' '+(y0+h)+' '+x0+' '+(y0+h)+' Z" fill="'+col+'" data-tip="'+tip+'"/>';
+  };
+  let g = "";
+  // take-home fans out to every middle node; an overspend feeds the allowance alone
+  let off = 0;
+  mid.forEach(n => {
+    const h = (n.pk === "alw" ? n.v - over : n.v) * k;
+    if(h > 0) g += band(X[0] + NW, left[0].y + off, X[1], n.y, h, n.c, n.k + "<br>" + fmt(n.pk === "alw" ? ALW : n.v) + " a month");
+    off += h;
+  });
+  if(over){
+    const a = mid.find(n => n.pk === "alw");
+    g += band(X[0] + NW, left[1].y, X[1], a.y + ALW * k, over * k, "#c98500",
+      fmt(over) + " over the allowance in " + ymFull(ym));
+  }
+  if(right.length){
+    const a = mid.find(n => n.pk === "alw");
+    let o = 0;
+    right.forEach(n => { g += band(X[1] + NW, a.y + o, X[2], n.y, n.h, n.c,
+      n.k + "<br>" + fmt(n.v) + " in " + ymFull(ym)); o += n.h; });
+  }
+  const node = (n, x, lab) => '<rect x="'+x+'" y="'+n.y+'" width="'+NW+'" height="'+n.h+'" rx="2" fill="'+n.c+'"/>' + lab;
+  const lbl = (x, y, a, name, val) => '<text x="'+x+'" y="'+(y-1)+'" text-anchor="'+a+'">'+name+'</text>'
+    + '<text class="v num" x="'+x+'" y="'+(y+13)+'" text-anchor="'+a+'">'+val+'</text>';
+  left.forEach(n => g += node(n, X[0], lbl(X[0] - 8, n.y + n.h/2, "end", n.k, fmt(n.v))));
+  mid.forEach(n => g += node(n, X[1], lbl(X[1] + NW + 8, n.y + n.h/2, "start", n.k,
+    n.pk === "alw" && byCat.length ? fmt(ALW) + " planned \u00b7 " + fmt(spent) + " spent" : fmt(n.v))));
+  right.forEach(n => g += node(n, X[2], lbl(X[2] + NW + 8, n.y + n.h/2, "start", n.k, fmt(n.v))));
+  svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  svg.innerHTML = g;
+  svg.querySelectorAll("path[data-tip]").forEach(p => hoverable(p, p.dataset.tip));
+  $("flowCap").innerHTML = !alw ? ""
+    : !byCat.length ? "The plan, a month at a time. Once a whole month of spending is in, the allowance splits into where it actually went."
+    : "The plan, a month at a time. The right-hand column is where the allowance actually went in "
+      + ymFull(ym) + ", the newest month every card covers"
+      + (over ? " — " + fmt(over) + " more than the allowance, which came out of "
+          + (BFUND.key ? "the " + BFUND.name + " fund" : "savings") + "."
+        : spent < ALW ? "; what was left over tops up the funds." : ".");
 }
 
 // --- the two funds ----------------------------------------------------------
