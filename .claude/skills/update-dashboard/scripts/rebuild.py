@@ -489,7 +489,10 @@ def derive(d):
         "Invested": part("role", "grow", "the part whose whole job is to grow"),
         "Earmarked": part("role", "set-aside", "already has a purpose, so it stays outside the portfolio"),
         "Cash": part("role", "buffer", "the day-to-day buffer"),
-        "Owed to you": part("role", "owed", "money you lent, counted until it is paid back"),
+        # who owes what, each in CAD, largest first: "Sam $500" (the owner, 2026-10-27)
+        "Owed to you": (", ".join(f"{a['name']} ${v:,.0f}" for a, v in sorted(
+                            ((a, v) for a, v in assets if loans.is_loan(a) and round(v)), key=lambda x: -x[1]))
+                        + " — money you lent, counted until it is paid back"),
         "Other assets": part("role", "none", "owned, but not money that grows or gets spent"),
     }
     generic_reach = {
