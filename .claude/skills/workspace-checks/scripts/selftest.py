@@ -260,6 +260,9 @@ def m_bench_other(r):
 def m_prices_stale(r):
     # A fetch that failed for months: the prices stop well before the newest snapshot.
     edit_json(r, layout.rel("prices.json"), lambda d: d["benchmark"].__setitem__("series", d["benchmark"]["series"][:5]))
+def m_returns_gap(r):
+    # A year lost from the middle of the history: the backtest would run 1973 straight into 1975.
+    edit_json(r, layout.rel("returns.json"), lambda d: d["years"].pop(len(d["years"]) // 2))
 def m_rules_drift(r):
     # rules.json is the strategy; the page copies it. The copy going stale means the Rules page
     # is checking the portfolio against a band nobody chose any more.
@@ -410,6 +413,7 @@ CASES = [
     ("D26", "a principle naming a check the page lacks",   m_principle_unknown, "find"),
     ("D27", "the benchmark changed, the prices did not",    m_bench_other,     "find"),
     ("D27", "the benchmark's prices stop before the newest snapshot", m_prices_stale, "find"),
+    ("D28", "a year is missing from the history of returns", m_returns_gap,  "find"),
     ("D21", "a committed flow the ledger never shows",      m_committed_missing, "find"),
     ("D24", "a card credit counted as a refund of nothing", m_refund_of_nothing, "find"),
     ("D24", "a refund larger than was ever spent there",    m_refund_too_much,   "find"),

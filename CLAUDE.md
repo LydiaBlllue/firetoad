@@ -66,6 +66,7 @@ The rest of `findata/`, and what each carries:
 | `merchants.json` | merchant → category |
 | `fx.json` | a dated exchange rate — absent means "no foreign-currency holdings" |
 | `prices.json` | the benchmark's daily prices (dividends included) and the Bank of Canada's USD/CAD, fetched by `prices.py` at each import for the fund `rules.json` `benchmark` names — the one file in `findata/` that comes from outside the owner's statements; absent until the first fetch |
+| `returns.json` | a year a row since 1928: US stocks, T-bills, 10-year Treasuries and gold (Damodaran, NYU Stern) and US inflation (BLS CPI-U), fetched by the same `prices.py`; the Drawdown page replays the plan through it |
 | `foreign.json` | foreign-currency accounts; an empty list is the supported way to say there are none |
 | `imports.json`, `decisions.json` | one record per update — the files, what changed, what was noticed, what was decided without asking, what the owner was asked; and the queue of items still waiting for the owner to confirm, each with the default applied meanwhile |
 | `investment_history.json`, `networth_history.json` | one snapshot per import / one net-worth point per month |
@@ -185,9 +186,9 @@ report template are all in that file. **Do not work from memory.**
 
 ## Nothing in a dashboard is typed by hand
 
-<!-- LINT:CONSTS n=46 -->
+<!-- LINT:CONSTS n=47 -->
 `rebuild.py` builds the dashboard from `templates/dashboards/` and `findata/`, deriving
-**46 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DECISIONS, DOC_LATEST, FGN, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RULES, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
+**47 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DECISIONS, DOC_LATEST, FGN, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
 applies, and it is idempotent. `--template DIR` writes the page with every constant emptied,
 which is what the template *is*: page code and nobody's numbers.
 

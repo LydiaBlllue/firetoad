@@ -119,7 +119,7 @@
   | Spending | This month · Year · Subscriptions |
   | Income | Income · Investment income |
   | Investing | Portfolio · Performance · Holdings · Rules |
-  | Plan | Budget · FIRE · Coast & care · Baseline |
+  | Plan | Budget · FIRE · Drawdown & care · Spending baseline |
   | Records | Updates · Accounts · Statements · Tasks |
   The Insights page was absorbed on 2026-09-10: what stood out about the year is a card on the
   Spending overview, and the one check that
@@ -145,7 +145,7 @@
   one import as the state of things for months. **The story of an update lives here and nowhere
   else; every other page shows a status computed today.**
   The old Overview split into Home + Budget + Subscriptions, the old Investments into Portfolio +
-  Cash flow + Foreign, the old FIRE into FIRE + Coast + Baseline, and the old Insights/Tasks into
+  Cash flow + Foreign, the old FIRE into FIRE + Drawdown & care + Spending baseline, and the old Insights/Tasks into
   four pages. Investing → Overview is the investment-discipline summary; the detail is the rest
   of the Investing group. **The headline number of the Investing group is Portfolio, "money
   that is actually invested"** (the owner, 2026-08-20): Wealthsimple's non-earmarked accounts plus
@@ -156,14 +156,15 @@
   CLAUDE.md. **The FIRE tab** (the owner asked for it as its own page, 2026-08-13) holds everything
   FIRE: the progress stat cards (progress % / net worth / gap / target), the progress bar, and
   the adjusted monthly baseline — the baseline moved out of Overview and FIRE progress moved out
-  of Investments, and neither is repeated anywhere else. The FIRE page carries the **Coast and
-  drawdown card** (the owner, 2026-09-06): two sliders (age you stop contributing / age you start
+  of Investments, and neither is repeated anywhere else. The Drawdown & care page carries the **drawdown
+  card** (the owner, 2026-09-06): two sliders (age you stop contributing / age you start
   drawing, stored in localStorage `ly_coast`), a three-colour line (blue = still contributing,
   green = compounding on its own, amber = drawing down), an **age** x-axis (the owner was born in
-  2000, `BORN=2000`) drawn to 95; the headline conclusion is a full sentence saying at what age
-  it reaches the target with no further contribution, and a `metaList` underneath gives the
+  2000, `BORN=2000`) drawn to 95; the headline is a full sentence saying whether the money lasts
+  (the coast sentence — the age it reaches the target with no further contribution — is on FIRE
+  since 2026-10-27), and a `metaList` underneath gives the
   portfolio value at drawdown, the annual withdrawal, what share of the portfolio that is, and
-  how long it lasts. It also carries the **Trajectory to FIRE chart** (the owner, 2026-08-13): net
+  how long it lasts. The FIRE page carries the **Trajectory to FIRE chart** (the owner, 2026-08-13): net
   worth under $2,500/month of contributions at 3% / 5% / 7% real, drawn to the target's dashed
   line, each curve stopping and marking the point where it arrives, the legend giving
   "X.X years · month year". The chart has a money y-axis on nice steps; **the x-axis is calendar
@@ -195,6 +196,17 @@
   accounts, the same money in the fund, the difference); and while the comparison covers under a
   year, a note saying it is too short to judge. Then *What you put in, and what the market
   added*, moved from the old Overview.
+- **Plan is when you can stop, and whether it lasts** (2026-10-27). **FIRE** answers *when*:
+  the stats, the progress bar, the trajectory, and *If you stopped adding today* — the coast
+  sentence (the age today's money reaches the target alone) with the year and the return
+  assumed. **Drawdown & care** (was Coast & care) answers *does it last*: a headline sentence, the
+  sliders and the phase chart, then *Would it have lasted?* — the same drawdown replayed through
+  every whole stretch of real years since 1928 (`RET_HIST`, the portfolio's mix today, real
+  returns), three stats (lasted to the end, worst start or closest call, the middle case left
+  over), one bar per start year (green up = what is left, red down = how early it ran out), and
+  a note that this is American history and the stretches overlap. Only the years of taking
+  money out are replayed; the pot on the first day is the steady path's. **Spending baseline**
+  (was Baseline) is unchanged.
 - **Income page** (follows the year only, 2026-10-27): Income / Spent / Kept, the year by source —
   where Investment carries its ? (it is income that never reaches chequing) and a line under the
   list gives what a borrower paid back, which is never income — and the months by source. The

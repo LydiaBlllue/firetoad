@@ -67,7 +67,9 @@ One step goes online: after the write, `prices.py` fetches the benchmark `rules.
 (its adjusted close) and the Bank of Canada's USD/CAD into `findata/ledgers/prices.json`, for the
 Performance page — only when the prices stop short of the newest snapshot. Nothing about the
 owner is sent, only a ticker and dates. A failed fetch is said in the summary and the import goes
-on; D27 then says how far the prices fall short.
+on; D27 then says how far the prices fall short. The same script keeps
+`findata/ledgers/returns.json` — a year a row of returns since 1928 and US inflation, for the
+Drawdown page's backtest — and fetches it only when a new year has closed; D28 checks it.
 
 A `--write` run ends with the checkers and reseeds the preflight fingerprint. Exit 1 means it
 stopped before writing, or failed while writing and put everything back; 2 means it wrote and a

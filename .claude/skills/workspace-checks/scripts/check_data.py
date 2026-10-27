@@ -127,7 +127,7 @@ def check(root):
             "D3":"rules", "D5":"rules", "D6":"rules", "D10":"rules", "D13":"rules", "D14":"rules",
             "D11":"build", "D12":"build", "D17":"build", "T1":"build", "T2":"hygiene", "D15":"build", "D16":"conform",
             "D2":"hygiene", "D4":"hygiene", "D9":"hygiene", "D18":"hygiene",
-            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D25":"hygiene", "D26":"rules", "D27":"hygiene"}
+            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D25":"hygiene", "D26":"rules", "D27":"hygiene", "D28":"hygiene"}
     F = []          # (severity, rule, message, category)
     def err(r, m, cat=None):  F.append(("ERROR", r, m, cat or HOME.get(r, "rules")))
     def warn(r, m, cat=None): F.append(("WARN",  r, m, cat or HOME.get(r, "rules")))
@@ -1072,6 +1072,28 @@ def check(root):
                             "the comparison ends early — fetch again")
             else:
                 note("D27", f"{got} prices to {ser[-1][0]}, {len(ser)} days")
+
+    # -- D28 the history of returns the drawdown is replayed through ----------------------
+    # The Drawdown page runs the plan through every stretch of years on record. A year missing in
+    # the middle would splice two stretches together and still give a rate, so the years must run
+    # without a gap; and a table nobody refreshed quietly stops counting the latest years.
+    rr28 = load(root, "returns.json")
+    if not rr28:
+        warn("D28", "no history of returns yet, so the Drawdown page cannot say how often the plan would have lasted — "
+                    "run .claude/skills/update-dashboard/scripts/prices.py . --write")
+    else:
+        ys28 = json.load(open(rr28, encoding="utf-8")).get("years") or []
+        gaps28 = [b[0] for a_, b in zip(ys28, ys28[1:]) if b[0] != a_[0] + 1]
+        bad28 = [r[0] for r in ys28 if len(r) != 6 or not all(isinstance(v, (int, float)) for v in r)]
+        if not ys28:
+            err("D28", "returns.json has no years in it — fetch again")
+        elif gaps28 or bad28:
+            err("D28", f"returns.json skips or garbles years ({', '.join(map(str, (gaps28 + bad28)[:5]))}): "
+                       "the backtest would join stretches that never followed each other — fetch again")
+        elif ys28[-1][0] < today.year - 2:
+            warn("D28", f"the history of returns stops at {ys28[-1][0]} — fetch again")
+        else:
+            note("D28", f"returns {ys28[0][0]}–{ys28[-1][0]}, {len(ys28)} years")
 
     # -- D18 what an update leaves behind: the record and the queue ------------------------
     # alerts.json used to hold the sentences one import wrote, and the Portfolio page showed them

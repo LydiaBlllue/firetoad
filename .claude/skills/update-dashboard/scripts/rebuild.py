@@ -135,6 +135,7 @@ def load(root):
          "hist": jd("investment_history.json", {"snapshots": []}),
          # the benchmark's daily prices (prices.py); absent until the first fetch
          "prices": jd("prices.json", {}),
+         "returns": jd("returns.json", {}),
          "merchants": jd("merchants.json")}
     d["rate"] = d["fx"]["usd_cad"]
     # A broker's export covers every account the login can see, including one held there that is
@@ -211,6 +212,31 @@ def holdings_by_account(d):
         if r.get("Book Value (CAD)"):
             bv[n] += float(r["Book Value (CAD)"])
     return mv, bv, sym
+
+
+def return_history(d, positions, fgn_funds, by_id):
+    """The Drawdown page's backtest: every year since 1928, as one real return for the portfolio
+    mixed the way it is today. The mix is the growth accounts' holdings by asset class (the same
+    classes as the Portfolio page's split, foreign funds included); each class takes its column of
+    returns.json, and the year's inflation is taken out. Crypto has no century of history, so it is
+    counted as stocks, which understates how much it swings; a holding nobody has classified, or
+    of a class with no history, is counted as stocks too. {} when the returns have not been fetched."""
+    rows = (d.get("returns") or {}).get("years") or []
+    if not rows:
+        return {}
+    mix = collections.defaultdict(float)
+    for p in positions:
+        if (by_id.get(p["_id"]) or {}).get("role") == "grow":
+            mix[p.get("class") or "stocks"] += p["mv"]
+    for f in fgn_funds:
+        mix[CLASS_OF_FUND.get(f["type"]) or "stocks"] += f["value"] * f["_rate"]
+    col = {"stocks": 1, "cash": 2, "bonds": 3, "gold": 4}
+    for k in [k for k in mix if k not in col]:      # crypto, and a class D25 will name
+        mix["stocks"] += mix.pop(k)
+    tot = sum(mix.values()) or 1
+    w = {k: round(v / tot, 4) for k, v in mix.items() if v > 0}
+    real = [[r[0], round((1 + sum(w[k] * r[col[k]] for k in w)) / (1 + r[5]) - 1, 5)] for r in rows]
+    return {"mix": w, "years": real, "source": d["returns"]["source"], "asof": d["returns"]["asof"]}
 
 
 def benchmark_run(d):
@@ -670,6 +696,7 @@ def derive(d):
         if r.get("Security Type") == "CURRENCY": p["cash"] = 1
         p["class"] = asset_class(r["Symbol"], r.get("Security Type"), d["rules"].get("assetClass", {}))
         p["kind"] = (by_id.get(n) or {}).get("kind")      # the account's kind: where rules.json placement says it belongs
+        p["_id"] = n
         positions.append(p)
         if not p.get("cash"):
             t = tick.setdefault(p["sym"], {"sym": p["sym"], "name": p["name"], "mv": 0.0, "bv": 0.0, "accounts": []})
@@ -681,6 +708,9 @@ def derive(d):
         t["pl"] = round(t["mv"] - t["bv"], 2)
     out["DATA"] = {"fx": rate, "asof": hold_asof, "today": today, "broker": broker,
                    "positions": positions, "tickers": ticks}
+    out["RET_HIST"] = return_history(d, positions, [dict(a, _rate=rate_f) for a in fgn_fund_rows], by_id)
+    for p in positions:
+        del p["_id"]
     out["FX"] = {"rate": rate, "asof": d["fx"].get("asof"), "quality": d["fx"].get("quality")}
     out["HIST"] = [{"date": h["date"], "cadInv": h["cadInv"], "dry": h["dry"], "dryPct": h["dryPct"],
                     "tickers": h["tickers"], "fgn": h.get("foreign")} for h in d["hist"]["snapshots"]]

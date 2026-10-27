@@ -53,8 +53,8 @@ before calling a dashboard change done.
 python3 .claude/skills/workspace-checks/scripts/selftest.py .
 ```
 
-<!-- LINT:FAULTS n=55 -->
-Plants 55 specific faults in a **copy** of the workspace and asserts that a named rule fires
+<!-- LINT:FAULTS n=56 -->
+Plants 56 specific faults in a **copy** of the workspace and asserts that a named rule fires
 for each. Run it after changing a linter, and after moving anything the linters read.
 
 It exists because on 2026-09-08 two linter bugs shipped in one afternoon and both were silent: S4

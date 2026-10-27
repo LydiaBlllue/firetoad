@@ -4,6 +4,18 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Plan: when, and whether it lasts** (2026-10-27). Coast & care asked two questions: *when do
+  you get there* and *does the money last*. The coast sentence (the age today's money reaches the
+  target with nothing added) moved to FIRE, under the trajectory; the page is Drawdown & care, and
+  gains *Would it have lasted?* — the same drawdown replayed through every whole stretch of real
+  years since 1928, mixed like the portfolio is today (`RET_HIST`, from the new
+  `findata/ledgers/returns.json`: Damodaran's annual returns and BLS inflation, fetched by
+  `prices.py` once a year). It gives how many stretches lasted, the worst start and the middle
+  case, and says plainly that this is American history and the stretches overlap. Baseline is
+  Spending baseline. The "year you lean hardest" stops once less than a year of spending is left
+  (it read 2,090% on a pot of a few dollars). D28 fails a history with a year missing; the
+  selftest plants it (56 faults).
+
 - **Performance, against one fund you could have bought instead** (2026-10-27). Investing's
   Overview held what you own and how it did on one page. It is Portfolio now (what you hold, how
   it splits, the US-dollar rate), and Performance is a page of its own: the same money bought

@@ -480,12 +480,16 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div class="year-legend" id="trajLegend"></div>
     <div class="cap" id="trajCap"></div>
   </div>
+  <div class="card" style="margin-bottom:10px">
+    <div class="lab">If you stopped adding today</div>
+    <div class="say" id="coastSay"></div>
+    <div id="coastFire"></div>
+  </div>
 </section>
 
 <section data-pg="coast" hidden>
   <div class="card" style="margin-bottom:10px">
-    
-    <div class="say" id="coastSay"></div>
+    <div class="say" id="drawSay"></div>
     <div style="margin:10px 0 2px">
       <div class="ctl"><span class="cl">Stop adding at</span><input type="range" id="stopAge" min="26" max="65" step="1"><span class="cv" id="stopAgeV"></span></div>
       <div class="ctl"><span class="cl">Start taking at</span><input type="range" id="drawAge" min="27" max="75" step="1"><span class="cv" id="drawAgeV"></span></div>
@@ -498,6 +502,14 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div id="coastMeta"></div>
     <div id="careMeta" style="margin-top:10px"></div>
     <div id="coastNote"></div>
+  </div>
+  <div class="card" style="margin-bottom:10px">
+    <div class="lab" id="btLab">Would it have lasted? Every stretch since 1928</div>
+    <div class="grid-stats" id="btStats" style="margin:8px 0 4px"></div>
+    <svg class="year-svg" id="btChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="phase-key" id="btKey"></div>
+    <div id="btMeta"></div>
+    <div id="btNote"></div>
   </div>
 </section>
 
@@ -734,8 +746,8 @@ const NAV = [
                            {k:"rules", n:"Rules",            t:"Rules",                d:"Each of your rules, checked today, with the details and dates under it"}]},
   {sec:"Plan",      items:[{k:"budget",n:"Budget",           t:"Budget",               d:"What each paycheque is for, and what the two funds hold"},
                            {k:"fire",  n:"FIRE",             t:"FIRE",                 d:"Where you are against the target"},
-                           {k:"coast", n:"Coast & care",     t:"Coast, drawdown and care", d:"If you stop adding, when you start taking, and what care costs"},
-                           {k:"base",  n:"Baseline",         t:"Monthly spending baseline", d:"The number the whole target is built on"}]},
+                           {k:"coast", n:"Drawdown & care",  t:"Drawdown and care",    d:"Once you start taking money out: does it last, and what care costs"},
+                           {k:"base",  n:"Spending baseline", t:"Spending baseline",   d:"The monthly figure the whole target is built on, and what you really spend"}]},
   {sec:"Records",   items:[{k:"upd",   n:"Updates",          t:"Updates",              d:"What changed at each update, and what is waiting for you"},
                            {k:"acct",  n:"Accounts",         t:"Accounts",             d:"Every place the money sits, and what is still unaccounted for"},
                            {k:"src",   n:"Statements",       t:"Statements",           d:"What arrives each month, and what is still missing"},
@@ -1027,7 +1039,7 @@ function renderHome(){
   $("reachStack").innerHTML = bar(REACH, rGross);
   $("reachRows").innerHTML = list(REACH, rGross) + debtRow;
   $("reachNote").innerHTML = noteBox(
-    "Only the first row is money you could spend without giving something up. The Coast page still "
+    "Only the first row is money you could spend without giving something up. The Drawdown & care page still "
     + "treats your net worth as one undifferentiated pot \u2014 in practice, stopping early means living "
     + "off that first row until the rest becomes cheap to touch.");
 }
@@ -2070,7 +2082,7 @@ function renderFire(){
   $("fireStats").innerHTML =
     '<div class="card"><div class="lab">FIRE progress</div><div class="big num">'+pct+'%</div><div class="cap">Of the way there</div></div>'+
     '<div class="card"><div class="lab">Still to go</div><div class="big num">'+fmt(gap)+'</div><div class="cap">Before work is optional</div></div>'+
-    '<div class="card"><div class="lab">Your target'+qMark("Your planning spend of "+fmt(adjBase)+" a month, times 12, times 25. The 25 comes from the 4% rule. The planning figure is one you set on the Baseline page — the measured median only checks it.")+'</div><div class="big num">'+fmt(target)+'</div><div class="cap">25 years of your planning spend</div></div>';
+    '<div class="card"><div class="lab">Your target'+qMark("Your planning spend of "+fmt(adjBase)+" a month, times 12, times 25. The 25 comes from the 4% rule. The planning figure is one you set on the Spending baseline page — the measured median only checks it.")+'</div><div class="big num">'+fmt(target)+'</div><div class="cap">25 years of your planning spend</div></div>';
   $("fireProgLab").textContent = "Progress toward " + fmt(target);
   $("fireHero").textContent = fmt(PORTFOLIO) + " / " + fmt(target);
   $("fireFill").style.width = Math.min(pct, 100) + "%";
@@ -2246,6 +2258,9 @@ const BORN = 1995;
 const AGE_NOW = Number(TODAY.slice(0,4)) - BORN;
 const LIFE_TO = 95;
 const COAST_R = 0.05;
+// Every year since 1928 as one real return, for the portfolio mixed the way it is today (rebuild.py
+// return_history). The backtest below runs the drawdown through each stretch of those years.
+const RET_HIST = {"mix": {"stocks": 0.5392, "bonds": 0.4521, "cash": 0.0087}, "years": [[1928, 0.2548], [1929, -0.03116], [1930, -0.05403], [1931, -0.17047], [1932, 0.10698], [1933, 0.2683], [1934, 0.01423], [1935, 0.23537], [1936, 0.17786], [1937, -0.20695], [1938, 0.21054], [1939, 0.01401], [1940, -0.03997], [1941, -0.16126], [1942, 0.02148], [1943, 0.11347], [1944, 0.08927], [1945, 0.18375], [1946, -0.17996], [1947, -0.05157], [1948, 0.00944], [1949, 0.14356], [1950, 0.10276], [1951, 0.0627], [1952, 0.09998], [1953, 0.00483], [1954, 0.30809], [1955, 0.16551], [1956, 0.00027], [1957, -0.05283], [1958, 0.20518], [1959, 0.03543], [1960, 0.04055], [1961, 0.14547], [1962, -0.03441], [1963, 0.1115], [1964, 0.09508], [1965, 0.05026], [1966, -0.07227], [1967, 0.08848], [1968, 0.02515], [1969, -0.12097], [1970, 0.03768], [1971, 0.08584], [1972, 0.07755], [1973, -0.13528], [1974, -0.22553], [1975, 0.13743], [1976, 0.14545], [1977, -0.09218], [1978, -0.05318], [1979, -0.02575], [1980, 0.02973], [1981, -0.07002], [1982, 0.21295], [1983, 0.09422], [1984, 0.05446], [1985, 0.23831], [1986, 0.19686], [1987, -0.03344], [1988, 0.07925], [1989, 0.19492], [1990, -0.04588], [1991, 0.19469], [1992, 0.05248], [1993, 0.08836], [1994, -0.0541], [1995, 0.27487], [1996, 0.09289], [1997, 0.20338], [1998, 0.20133], [1999, 0.04763], [2000, -0.0065], [2001, -0.0531], [2002, -0.07202], [2003, 0.13342], [2004, 0.04433], [2005, 0.00497], [2006, 0.06636], [2007, 0.0339], [2008, -0.1069], [2009, 0.06074], [2010, 0.10169], [2011, 0.05266], [2012, 0.08031], [2013, 0.11547], [2014, 0.11308], [2015, 0.00589], [2016, 0.04493], [2017, 0.10594], [2018, -0.04105], [2019, 0.18497], [2020, 0.13299], [2021, 0.05901], [2022, -0.22756], [2023, 0.12094], [2024, 0.09555], [2025, 0.102]], "source": {"returns": "Damodaran, NYU Stern — annual returns on stocks, bonds and bills", "inflation": "US Bureau of Labor Statistics, CPI-U, December to December"}, "asof": "2026-09-06"};
 const PH = {grow:"#2a78d6", coast:"#1baf7a", draw:"#eda100", care:"#4a3aa7", ltc:"#a8324f"};
 
 // ===== Care at home =====
@@ -2387,15 +2402,22 @@ function renderCoast(target, annualSpend){
   let peakR = safeRate, peakA = drawAge;
   for(let a = drawAge; a <= LIFE_TO - HORIZON; a += 1/12){
     const pot = run.series[Math.round((a-AGE_NOW)*12)];
-    if(!pot || pot <= 0) break;
+    if(!pot || pot < drawM*12) break;   // under a year of spending left, a rate says nothing new
     const r = (drawM + careAt(a, careAge, ltcA, ltc))*12 / pot * 100;
     if(r > peakR){ peakR = r; peakA = a; }
   }
   const lasts = run.dead === null;
 
+  // Coast is a FIRE question (when do you get there), so it is answered on the FIRE page.
+  const rPct = (COAST_R*100).toFixed(0)+"%";
   $("coastSay").innerHTML = reach === null
-    ? "Left alone at 5% a year, today\u2019s <b>"+fmt(PORTFOLIO)+"</b> does not reach the "+fmt(target)+" target within your lifetime."
+    ? "Left alone at "+rPct+" a year, today\u2019s <b>"+fmt(PORTFOLIO)+"</b> does not reach the "+fmt(target)+" target within your lifetime."
     : "If you never added another dollar, today\u2019s <b>"+fmt(PORTFOLIO)+"</b> would grow into the <b>"+fmt(target)+"</b> target on its own by about <b>age "+Math.ceil(reach)+"</b>.";
+  $("coastFire").innerHTML = metaList([
+    reach === null ? null : ["The year that is", String(Number(TODAY.slice(0,4)) + Math.ceil(reach - AGE_NOW))],
+    ["Return assumed"+qMark("A real return, after inflation, so the target stays in today\u2019s money. It is the middle one of the trajectory\u2019s three."), rPct+" a year after inflation"],
+    ["What it means", "every dollar you add from here only brings that date closer", "mut"]
+  ]);
 
   $("coastMeta").innerHTML = metaList([
     ["Pot when you start taking money out", fmt(atDraw)],
@@ -2451,6 +2473,13 @@ function renderCoast(target, annualSpend){
     + "quietly asks you to raise the actual transfer every year. Keep sending a flat "+fmt(MONTHLY_CONTRIB)
     + " forever and you will land short of this line.");
 
+  const bt = backtest(atDraw, drawM, drawAge, careAge, ltcA, ltc);
+  $("drawSay").innerHTML = !lasts
+    ? "Start taking "+fmt(annualSpend/12)+" a month at <b>"+drawAge+"</b> and, at a steady "+rPct+", the money runs out at <b>"+Math.floor(run.dead)+"</b>."
+    : "Start taking "+fmt(annualSpend/12)+" a month at <b>"+drawAge+"</b> and, at a steady "+rPct+", the money lasts to "+LIFE_TO+"."
+      + (bt ? " Through real history it would have lasted in <b>"+bt.ok+" of "+bt.n+"</b> stretches since "+bt.from+"." : "");
+  renderBacktest(bt, atDraw);
+
   // only show a colour that is actually on the chart
   $("coastKey").innerHTML =
     (stopAge > AGE_NOW ? '<span><i style="background:'+PH.grow+'"></i>Still adding money</span>' : "")
@@ -2460,6 +2489,93 @@ function renderCoast(target, annualSpend){
    +(ltcA === null ? "" : '<span><i style="background:'+PH.ltc+'"></i>In a care home</span>');
   drawCoast(run, target, atDraw, careAge, ltcA);
   saveState();
+}
+// The same drawdown, run through history instead of a steady return: for every start year whose
+// whole stretch to LIFE_TO is on record, the pot you start taking from is spent month by month at
+// that stretch's real returns. It says how often the plan would have lasted, not whether it will.
+// The pot on the first day is the steady path's; only the years of taking money out are replayed.
+function backtest(pot0, drawM, drawA, careA, ltcA, ltc){
+  const ys = RET_HIST.years || [];
+  const N = LIFE_TO - drawA;
+  if(!ys.length || pot0 <= 0 || N < 1 || N > ys.length) return null;
+  const runs = [];
+  for(let s = 0; s + N <= ys.length; s++){
+    let v = pot0, dead = null;
+    for(let j = 0; j < N && dead === null; j++){
+      const m = Math.pow(1 + ys[s+j][1], 1/12) - 1;
+      for(let k = 0; k < 12; k++){
+        const age = drawA + j + k/12;
+        v = v*(1+m) - drawM - careAt(age, careA, ltcA, ltc);
+        if(v <= 0){ dead = age; v = 0; break; }
+      }
+    }
+    runs.push({y: ys[s][0], end: v, dead});
+  }
+  const ok = runs.filter(r => r.dead === null).length;
+  return {runs, ok, n: runs.length, N, from: ys[0][0], to: ys[ys.length-1][0]};
+}
+function renderBacktest(bt, pot0){
+  const card = $("btChart").closest(".card");
+  if(!bt){
+    card.querySelector("#btStats").innerHTML = "";
+    $("btChart").innerHTML = ""; $("btKey").innerHTML = ""; $("btMeta").innerHTML = "";
+    $("btNote").innerHTML = '<div class="empty">'+(RET_HIST.years ? "Nothing to replay: the pot never reaches the day you start taking money out."
+      : "No history of returns yet. It is fetched with the next update.")+'</div>';
+    return;
+  }
+  const fails = bt.runs.filter(r => r.dead !== null);
+  const worst = fails.length ? fails.reduce((a,r) => r.dead < a.dead ? r : a)
+                             : bt.runs.reduce((a,r) => r.end < a.end ? r : a);
+  const rate = Math.round(bt.ok / bt.n * 100);
+  const med = [...bt.runs].map(r => r.end).sort((a,b) => a-b)[Math.floor(bt.n/2)];
+  $("btLab").textContent = "Would it have lasted? Every "+bt.N+"-year stretch since "+bt.from;
+  $("btStats").innerHTML =
+    '<div class="card"><div class="lab">Lasted to '+LIFE_TO+'</div><div class="big num">'+rate+'%</div><div class="cap">'+bt.ok+' of '+bt.n+' stretches</div></div>'+
+    '<div class="card"><div class="lab">'+(fails.length ? "Worst start" : "Closest call")+'</div><div class="big num">'+worst.y+'</div><div class="cap">'
+      +(fails.length ? "runs out at "+Math.floor(worst.dead) : fmt(worst.end)+" left at "+LIFE_TO)+'</div></div>'+
+    '<div class="card"><div class="lab">Left at '+LIFE_TO+', middle case</div><div class="big num">'+fmt(med)+'</div><div class="cap">in today\u2019s money</div></div>';
+  // One bar per start year: green above the line is what is left at the end, red below is how
+  // many years short the money fell.
+  const W=940, H=220, padL=58, padR=8, padT=12, padB=28, mid = padT + (H-padT-padB)*0.7;
+  const maxE = Math.max(pot0, ...bt.runs.map(r => r.end));
+  const maxShort = Math.max(1, ...fails.map(r => LIFE_TO - r.dead));
+  const bw = (W-padL-padR)/bt.n;
+  let out = '<line x1="'+padL+'" y1="'+mid+'" x2="'+(W-padR)+'" y2="'+mid+'" stroke="var(--ink)" stroke-width="1"/>';
+  const lab = v => "$"+(v>=1e6?(v/1e6).toFixed(1)+"M":Math.round(v/1e3)+"k");
+  out += '<text x="'+(padL-8)+'" y="'+(padT+10)+'" text-anchor="end" font-size="12" class="num" fill="var(--muted)">'+lab(maxE)+'</text>';
+  out += '<text x="'+(padL-8)+'" y="'+(mid+4)+'" text-anchor="end" font-size="12" class="num" fill="var(--muted)">$0</text>';
+  bt.runs.forEach((r,i) => {
+    const x = padL + i*bw + 1, w = Math.max(1, bw-2);
+    if(r.dead === null){
+      const h = r.end/maxE*(mid-padT);
+      out += '<rect x="'+x+'" y="'+(mid-h)+'" width="'+w+'" height="'+Math.max(1,h)+'" fill="#1baf7a" data-i="'+i+'"/>';
+    } else {
+      const h = (LIFE_TO - r.dead)/maxShort*(H-padB-mid-4);
+      out += '<rect x="'+x+'" y="'+mid+'" width="'+w+'" height="'+Math.max(2,h)+'" fill="#d03b3b" data-i="'+i+'"/>';
+    }
+    if(r.y % 10 === 0) out += '<text x="'+(x+w/2)+'" y="'+(H-9)+'" text-anchor="middle" font-size="12" class="num" fill="var(--muted)">'+r.y+'</text>';
+  });
+  const svg = $("btChart"); svg.innerHTML = out;
+  svg.querySelectorAll("rect[data-i]").forEach(el => {
+    const r = bt.runs[Number(el.dataset.i)];
+    hoverable(el, "Start taking in "+r.y+"<br>"+(r.dead === null ? fmt(r.end)+" left at "+LIFE_TO : "runs out at "+Math.floor(r.dead)));
+  });
+  $("btKey").innerHTML = '<span><i style="background:#1baf7a"></i>Lasted: what is left at '+LIFE_TO+'</span>'
+    + (fails.length ? '<span><i style="background:#d03b3b"></i>Ran out: the longer the bar, the earlier</span>' : "");
+  const mix = RET_HIST.mix || {};
+  const nm = {stocks:"stocks", bonds:"bonds", cash:"cash", gold:"gold"};
+  $("btMeta").innerHTML = metaList([
+    ["Each stretch"+qMark("You start taking money out in that year with the pot the steady path gives you at "+drawAge+", and every year after it earns what the market really earned that year, after inflation."), bt.N+" years, from age "+drawAge+" to "+LIFE_TO],
+    ["Mixed like your portfolio today"+qMark("Each kind of asset earns its own history: stocks the S&P 500, bonds and T-bills the 10-year Treasury, cash the 3-month T-bill, gold gold. Crypto has no century of history and is counted as stocks, which understates how much it swings."),
+      Object.keys(mix).sort((a,b) => mix[b]-mix[a]).map(k => Math.round(mix[k]*100)+"% "+(nm[k]||k)).join(" \u00b7 ")],
+    ["Years on record", RET_HIST.years[0][0]+"\u2013"+RET_HIST.years[RET_HIST.years.length-1][0]],
+    ["Source", RET_HIST.source.returns+"; inflation from "+RET_HIST.source.inflation, "mut"]
+  ]);
+  $("btNote").innerHTML = noteBox(
+    "This is American history, and America had the best stock market of the century. A world fund has done less well, "
+    + "so read the rate as the friendly end of the range. And the stretches overlap: a bad decade shows up in every start "
+    + "year that contains it, so "+bt.n+" stretches are not "+bt.n+" independent tries."
+    + (rate < 90 ? " <b>Under 90% means the plan leans on luck.</b> Starting later, spending less, or holding more when you start all move it." : ""));
 }
 function drawCoast(run, target, atDraw, careA, ltcA){
   const W=940, H=300, padL=58, padR=10, padT=18, padB=30;
