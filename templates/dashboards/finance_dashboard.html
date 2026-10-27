@@ -1726,9 +1726,8 @@ function renderInv(){
   const dep = (cur && (cur.nRule >= 2 || cur.ym < TODAY.slice(0,7))) ? cur
             : ((WSDEP||[]).filter(m => m.ym < TODAY.slice(0,7)).slice(-1)[0] || cur);
   if(dep) rows.push(row(dep.nRule >= 2 ? ASYM.ok : ASYM.warn, ymFull(dep.ym)+": "+dep.nRule+" of 2 transfers of "+fmt(FUNDS.plan.invest/2)+" reached "+BROKER+"."));
-  const fr = fundRun(), groups = backingGroups([fr.t, fr.b]), over = groups.filter(g => g.claim > g.b.balance);
-  if(groups.length)
-    rows.push(row(over.length ? ASYM.bad : ASYM.ok, over.length ? "Your funds claim "+fmt(over[0].claim)+" against "+over[0].b.label+", which holds "+fmt(over[0].b.balance)+"." : "Your funds fit inside the accounts backing them."));
+  // The funds and the account behind them are the Monthly plan's: it shows the claim against the
+  // balance and turns red when they no longer fit. Investing's rules are about investing (2026-10-27).
   if(I.staleDays > 30) rows.push(row(ASYM.warn, "Your "+BROKER+" holdings are "+I.staleDays+" days old."));
   if(!rows.length) rows.push(row(ASYM.ok, "Nothing to check yet."));
   $("invAlerts").innerHTML = rows.join("");
