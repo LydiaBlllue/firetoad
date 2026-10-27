@@ -329,7 +329,7 @@
   `margin-bottom:20px`:
   - Left: an **eyebrow** (the section it belongs to, 10.5px uppercase grey), the **title at
     25px** (up from 19px), and one 13px line of description.
-  - Home's four stat cards answer one question per section — **Invested** (with the band status), **FIRE progress** (on the portfolio, with the on-track year), **This month's transfer** (pay-yourself-first, from the broker's record), **Free to spend** (the allowance today). Net worth is not a card; it is the header line. (2026-09-10)
+  - Home's four stat cards answer one question per section — **Portfolio** (the Portfolio page's own number and name, with the band status), **FIRE progress** (on the portfolio, with the on-track year), **This month's transfer** (pay-yourself-first, from the broker's record), **Free to spend** (the allowance today). Net worth is not a card; it is the header line. (2026-09-10)
   - Right (main dashboard only): **Net worth**, always present — what a banking app does. The
     anchor number is visible from any page, and its definition is in the `?`.
   - **The two rules have to line up** (the owner, 2026-09-06: "the two dividing lines not lining up

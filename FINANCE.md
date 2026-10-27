@@ -20,7 +20,7 @@
 | plan_base | Planning spend | $2,550 /mo | `PLAN_BASE_DEFAULT`, set by hand |
 | fire_target | FIRE target | $765,000 | planning spend × 12 × 25 |
 | net_worth | Net worth | $101,791 | `INVEST.netWorth` + `FOREIGN_CAD`, all currencies |
-| portfolio | Invested | $67,135 | `INVEST.portfolio` — the number FIRE is measured on |
+| portfolio | Portfolio | $67,135 | `INVEST.portfolio` — the number FIRE is measured on |
 | progress | Progress | 8.8% | portfolio ÷ target |
 | gap | Gap | $697,865 | target − portfolio |
 | invest_monthly | Monthly contribution | $800 | `funds.json` flows: `saving` to the broker |

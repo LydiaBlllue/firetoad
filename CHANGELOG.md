@@ -4,6 +4,10 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Home says Portfolio** (2026-10-27). Home's first card read *Invested* while the Investing
+  page showed the same number as *Portfolio*; one figure, two names. It is Portfolio on both now,
+  as it is in FINANCE.md's figures table.
+
 - **To do: one place for what waits on you** (2026-10-27). Three things waited for you on two
   pages, each with its own count: the questions an update left and the checks wanting a decision
   (on Updates), and the open tasks (on Tasks). They are one page now, To do, first in Records,
