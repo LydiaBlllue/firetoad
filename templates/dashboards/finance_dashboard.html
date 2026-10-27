@@ -384,8 +384,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div id="freeBigBuys"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab">Where each month goes</div>
-    <div class="pill-row" id="flowPills" style="margin:6px 0 0"></div>
+    <div class="lab" id="flowLab">Where each month goes</div>
     <svg id="flowSvg" class="flow" role="img" aria-label="How take-home pay splits"></svg>
     <div class="cap" id="flowCap"></div>
     <div id="splitRows"></div>
@@ -1215,18 +1214,12 @@ function renderSplit(F){
 // plan; only the right column is what happened. An overspent month draws the extra as a second
 // source, from the fund that covers it (fundRun takes an overspend out of Big buys first), so every
 // band is drawn at its real size and nothing is scaled to fit.
-// The month is picked on the card itself: the newest whole month by default, any month with
-// records on a tap. A month still open is drawn as it stands, and says so.
-let flowYM = null;
+// The month is the page's: the same month cursor at the top that Free to spend reads, so the
+// whole page is one month. A month still open is drawn as it stands; the note under the cursor
+// already says it is open.
 function drawFlow(segs, used){
-  drawFlow.last = [segs, used];
-  const shown = MONTHS.slice(-12);
-  if(!flowYM || !shown.includes(flowYM)) flowYM = shown.includes(covEnd) ? covEnd : shown[shown.length-1] || null;
-  const svg = $("flowSvg"), ym = flowYM, open = ym && ym > covEnd;
-  $("flowPills").innerHTML = shown.map(m => '<button class="pill num' + (m === ym ? " sel" : "")
-      + (m > covEnd ? " part" : "") + '" data-m="' + m + '"' + (m > covEnd ? ' title="still open \u2014 not every card has reported this month"' : "")
-      + '>' + MN[Number(m.slice(5)) - 1] + (m.slice(0,4) !== TODAY.slice(0,4) ? " " + m.slice(2,4) : "") + (m > covEnd ? " \u00b7" : "") + '</button>').join("");
-  $("flowPills").querySelectorAll(".pill").forEach(b => b.onclick = () => { flowYM = b.dataset.m; drawFlow(...drawFlow.last); });
+  const svg = $("flowSvg"), ym = MONTHS.includes(viewYM) ? viewYM : null, open = ym && ym > covEnd;
+  $("flowLab").textContent = ym ? "Where the paycheque goes \u00b7 " + ymFull(ym) : "Where each month goes";
   const ev = ym ? monthOf(ym).filter(e => !isBig(e)) : [];
   const byCat = CATS.map(c => ({k:c.k, c:c.c,
       v:ev.filter(e => e.category === c.k).reduce((s,e) => s + e.amount, 0)})).filter(c => c.v > 0.5);
@@ -1288,7 +1281,7 @@ function drawFlow(segs, used){
   $("flowCap").innerHTML = !alw ? ""
     : !byCat.length ? "The plan, a month at a time. Once spending is in, the allowance splits into where it actually went."
     : "The plan, a month at a time. The right-hand column is where the allowance actually went in " + ymFull(ym)
-      + (open ? " so far \u2014 not every card has reported the month yet, so these bands will only grow."
+      + (open ? " so far."
         : over ? " \u2014 " + fmt(over) + " more than the allowance, which came out of "
           + (BFUND.key ? "the " + BFUND.name + " fund" : "savings") + "."
         : spent < ALW ? "; what was left over tops up the funds." : ".");
