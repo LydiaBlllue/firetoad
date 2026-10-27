@@ -4,6 +4,11 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Income follows the year** (2026-10-27). The page was "Overview" in the sidebar and half of it
+  followed the month cursor, for a donut of two paycheques. It is Income now, on the year alone;
+  the year by source carries the two notes the month card had (investment income never reaches
+  chequing; what a borrower paid back is not income) and the chart's colours.
+
 - **Spending is what was spent; Budget is the plan** (2026-10-27). Monthly plan held both the
   month (Free to spend, the paycheque flow) and the plan (the split, the funds), so picking a month
   at the top changed half the page, and the allowance was judged on two pages. This month now

@@ -117,7 +117,7 @@
   |---|---|
   | — | Home (what needs you today, net worth, two cuts of it) |
   | Spending | This month · Year · Subscriptions |
-  | Income | Overview · Investment income |
+  | Income | Income · Investment income |
   | Investing | Overview · Holdings · Rules |
   | Plan | Budget · FIRE · Coast & care · Baseline |
   | Records | Updates · Accounts · Statements · Tasks |
@@ -186,6 +186,10 @@
   category, the monthly stacked chart, and **Inside the allowance, month by month** (everyday
   spending against today's allowance, the overspend in red, the open month faded). Subscriptions
   follows no time.
+- **Income page** (follows the year only, 2026-10-27): Income / Spent / Kept, the year by source —
+  where Investment carries its ? (it is income that never reaches chequing) and a line under the
+  list gives what a borrower paid back, which is never income — and the months by source. The
+  this-month income donut is gone: a month of income is two paycheques, and the year says it.
 - **Budget page** (Plan group, follows no time — the month pills are hidden; it was Monthly plan
   under Spending until 2026-10-27, when it held both the month and the plan; the owner rebuilt it 2026-09-07: "the budget system isn't
   very usable. I need guilt-free spending"). The old version was category caps — Total, Dining,

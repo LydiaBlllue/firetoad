@@ -369,18 +369,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 
 <section data-pg="income" hidden>
   <div class="grid-stats" id="incStats"></div>
-  <div class="card donut-card">
-    <div class="lab">Income by category</div>
-    <div class="donut-wrap">
-      <div class="donut-box">
-        <svg id="incDonut" viewBox="0 0 170 170" width="170" height="170"></svg>
-        <div class="donut-center"><div class="t num" id="incDonutTotal"></div><div class="s">total</div></div>
-      </div>
-      <div class="legend" id="incCats"></div>
-    </div>
-    <div class="cap num" id="incCap"></div>
-  </div>
-  <div class="card" style="margin-bottom:10px"><div class="lab">By source, this year</div><div id="yrIncCats"></div></div>
+  <div class="card" style="margin-bottom:10px"><div class="lab" id="yrIncLab">By source</div><div id="yrIncCats"></div></div>
   <div class="card">
     <div class="lab">Income each month, by source</div>
     <svg class="year-svg" id="incChart" viewBox="0 0 940 280" preserveAspectRatio="xMidYMid meet"></svg>
@@ -726,7 +715,7 @@ const NAV = [
   {sec:"Spending",  items:[{k:"cat",   n:"This month",       t:"This month",           d:"How the month is going — what is still free, where the paycheque went, and what is inside each slice"},
                            {k:"trends",n:"Year",             t:"The year",             d:"In total, by category, month by month, and against the allowance"},
                            {k:"subs",  n:"Subscriptions",    t:"Subscriptions",        d:"Charges that come back every month"}]},
-  {sec:"Income",    items:[{k:"income",n:"Overview",         t:"Income",               d:"Where your money comes from, month by month"},
+  {sec:"Income",    items:[{k:"income",n:"Income",           t:"Income",               d:"What came in this year, by source and month by month, and how much of it you kept"},
                            {k:"wsinc", n:"Investment income",t:"Investment income",    d:"What the portfolio paid you, before you sold anything"}]},
   {sec:"Investing", items:[{k:"port",  n:"Overview",         t:"Investing",            d:"What is invested, how it splits across your buckets, and what your rules say"},
                            {k:"hold",  n:"Holdings",         t:"Holdings",             d:"Every position, by role or by account"},
@@ -741,7 +730,7 @@ const NAV = [
                            {k:"tasks", n:"Tasks",            t:"Open tasks",           d:"Waiting on you"}]}
 ];
 const PAGES = NAV.flatMap(g => g.items);
-const PILL_PAGES = ["cat","income"];                          // driven by the month cursor
+const PILL_PAGES = ["cat"];                          // driven by the month cursor
 const YEAR_PAGES = ["cat","income","trends"];                 // driven by the year container
 let curPage = "home";   // real starting page is chosen at boot from ST.p
 
@@ -871,26 +860,6 @@ function render(){
         + qMark("Statement close dates: " + Object.entries(STMT_END).map(([a,d]) => a+" "+d).join(", ") + ". A month joins the spending baseline once every one of them has passed its month end."))
     : "";
 
-  // income from chequing flows; coverage may lag spending
-  const cfm = (INVEST.cashflow||[]).find(m => m.ym === viewYM);
-  const chqEnd = (chqCoverage()).split("→").pop().trim();  // e.g. 2026-07-02
-  const partial = cfm && chqEnd.slice(0,7) === viewYM;
-  const income = incomeOf(cfm);
-  const incomeCap = !cfm ? "" : metaList([
-      cfm.payroll>0 ? ["Pay", fmt(cfm.payroll)] : null,
-      cfm.rent>0    ? ["Rent", fmt(cfm.rent)] : null,
-      cfm.gift>0    ? ["Gift", fmt(cfm.gift)] : null,
-      cfm.other>0   ? ["Other", fmt(cfm.other)] : null,
-      cfm.inv>0     ? ["Investment"+qMark("Dividends, interest and stock-lending from "+BROKER+", after non-resident tax. It is real income, but it stays inside the portfolio rather than landing in chequing."), fmt(cfm.inv)] : null,
-      (CP && cfm.repaid>0) ? [CP.name+" paid back"+qMark(CP.tip||""), fmt(cfm.repaid), "mut"] : null,
-      partial       ? ["Counted up to", chqEnd] : null
-    ]);
-
-  // income by category — same donut form as spending
-  const incRows = cfm ? ICATS.map(c => ({k:c.k, col:c.c, v:cfm[c.f]||0})).filter(r => r.v > 0).sort((a,b) => b.v - a.v) : [];
-  drawDonut("incDonut", "incDonutTotal", "incCats", incRows, income||0,
-    "No income recorded in "+ymFull(viewYM)+(partial?" (data through "+chqEnd+")":(cfm?"":" — no chequing coverage")));
-  $("incCap").innerHTML = incomeCap;
 
   renderYr();
   renderIncChart();
@@ -1709,15 +1678,21 @@ function renderYr(){
     '<div class="inc-row"><span class="dot" style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+r.col+'"></span><span class="nm" style="width:96px">'+r.k+'</span><div class="bar-wrap"><div class="bar" style="width:'+(pc(r.v, mx))+'%;background:'+r.col+'"></div></div><span class="v num">'+fmt2(r.v)+'</span></div>').join("")
     : '<div class="empty">No records in '+viewYear+'</div>';
 
-  const inc = ICATS.map(c => [c.k, cfy.reduce((s,m)=>s+(m[c.f]||0),0)]).filter(x => x[1] > 0);
+  const inc = ICATS.map(c => [c.k, cfy.reduce((s,m)=>s+(m[c.f]||0),0), c.c]).filter(x => x[1] > 0);
   $("incStats").innerHTML =
     '<div class="card"><div class="lab">Income</div><div class="big num">'+(hasIncome?fmt(income):"—")+'</div><div class="cap">In '+viewYear+', across '+cfy.length+' months</div></div>'+
     '<div class="card"><div class="lab">Spent</div><div class="big num">'+fmt(spent)+'</div><div class="cap">Same year, for comparison</div></div>'+
     '<div class="card"><div class="lab">Kept</div><div class="big num">'+(net===null?"—":(net>=0?"+":"−")+fmt(Math.abs(net)))+'</div><div class="cap">'+(net===null?"needs chequing data":"Income minus spending"+(income>0?", "+Math.round(pc(net, income))+"% of what came in":""))+'</div></div>';
   const imx = Math.max(...inc.map(x => x[1]), 1);
-  $("yrIncCats").innerHTML = inc.length ? inc.map(x =>
-    '<div class="inc-row"><span class="nm" style="width:105px">'+x[0]+'</span><div class="bar-wrap"><div class="bar" style="width:'+(pc(x[1], imx))+'%"></div></div><span class="v num">'+fmt2(x[1])+'</span></div>').join("")
-    : '<div class="empty">No income data for '+viewYear+'</div>';
+  // What the month card used to say, said once for the year: investment income is income but
+  // never reaches chequing, and money a borrower pays back is not income at all.
+  const incTip = {Investment:"Dividends, interest and stock-lending from "+BROKER+", after non-resident tax. It is real income, but it stays inside the portfolio rather than landing in chequing."};
+  const repaid = cfy.reduce((s,m) => s + (m.repaid||0), 0);
+  $("yrIncLab").textContent = "By source, " + viewYear;
+  $("yrIncCats").innerHTML = (inc.length ? inc.map(x =>
+    '<div class="inc-row"><span class="dot" style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+x[2]+'"></span><span class="nm" style="width:105px">'+x[0]+(incTip[x[0]] ? qMark(incTip[x[0]]) : "")+'</span><div class="bar-wrap"><div class="bar" style="width:'+(pc(x[1], imx))+'%;background:'+x[2]+'"></div></div><span class="v num">'+fmt2(x[1])+'</span></div>').join("")
+    : '<div class="empty">No income data for '+viewYear+'</div>')
+    + (CP && repaid > 0 ? '<div class="cap" style="margin-top:8px">Not counted as income: '+CP.name+' paid back '+fmt(repaid)+' this year'+qMark(CP.tip||"")+'</div>' : "");
 
   const mLab = m => MN[Number(m.slice(5))-1];
   $("yrCap").textContent = viewYear+" coverage — spending: "+(spendMonths.length?mLab(spendMonths[0])+"–"+mLab(spendMonths[spendMonths.length-1])+" ("+spendMonths.length+" mo)":"none")
