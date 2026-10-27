@@ -43,9 +43,28 @@ def asset_class(sym, sec_type, declared):
 # The two cuts of net worth, one row per value of one axis (FINANCE.md §8a). The label is what
 # the page says, the colour is design (DESIGN.md palette), and both are keyed by the axis value
 # so a row keeps its colour whatever else is present.
-ROLE_ROWS = (("grow", "Invested", "#2a78d6"), ("set-aside", "Earmarked", "#eda100"),
-             ("buffer", "Cash", "#1baf7a"), ("owed", "Owed to you", "#e87ba4"),
-             ("none", "Other assets", "#4a3aa7"))
+ROLES = ("grow", "set-aside", "buffer", "owed", "none")
+# The by-purpose card (the owner, 2026-10-27: "each card has to say clearly what it means"): one
+# row per purpose, read off `role`; cash is split by where it is, because cash abroad is spent
+# through a border. The label says what the money is for, the definition behind its ? says
+# exactly what counts, and the line under it names the accounts. `where`: all / home / abroad.
+PART_ROWS = (
+    ("grow", "all", "For FIRE", "#2a78d6",
+     "Money whose job is to grow until you stop working. FIRE progress is measured on this, whatever it "
+     "holds today: stocks, bonds, or cash waiting to be invested."),
+    ("set-aside", "all", "Set aside", "#eda100",
+     "Money already promised to a goal, such as a first home or a trip. It is left out of FIRE progress "
+     "and out of dry powder."),
+    ("buffer", "home", "Cash", "#1baf7a",
+     "Bank and cash accounts at home that you live on and can spend today."),
+    ("buffer", "abroad", "Cash in {abroad}", "#4a3aa7",
+     "Cash held abroad, in the currency it is held in. It counts in net worth, but spending it here "
+     "means converting and transferring it first."),
+    ("owed", "all", "Owed to you", "#e87ba4",
+     "Money you lent, counted until it is paid back."),
+    ("none", "all", "Other assets", "#b7bfba",
+     "Things you own that are not money, such as a home or a car, at the value you last stated."),
+)
 REACH_ROWS = (("today", "Reach today", "#1baf7a"), ("costs", "Reach, but it costs", "#eda100"),
               ("spoken", "Spoken for", "#eb6834"), ("lent", "Lent out", "#e87ba4"),
               ("locked", "Locked in property", "#c98500"), ("abroad", "Across a border", "#4a3aa7"))
@@ -416,12 +435,12 @@ def derive(d):
         for a, v in rows:
             tot[a.get(axis)] += v
         return tot
-    role_ca = {k: round(v) for k, v in by(ca, "role", [r for r, _, _ in ROLE_ROWS]).items()}
+    role_ca = {k: round(v) for k, v in by(ca, "role", list(ROLES)).items()}
     reach_ca = {k: round(v) for k, v in by(ca, "reach", [r for r, _, _ in REACH_ROWS]).items()}
     if reach_ca:
         big = max(reach_ca, key=lambda k: reach_ca[k])
         reach_ca[big] += sum(role_ca.values()) - sum(reach_ca.values())
-    role_ab = {k: round(v) for k, v in by(ab, "role", [r for r, _, _ in ROLE_ROWS]).items() if v}
+    role_ab = {k: round(v) for k, v in by(ab, "role", list(ROLES)).items() if v}
     if role_ab:
         if "grow" in role_ab:
             role_ab["grow"] = fgn_funds
@@ -430,10 +449,9 @@ def derive(d):
             role_ab[rest[-1]] += fgn_cad - sum(role_ab.values())
         else:
             role_ab["grow"] = fgn_cad
-    by_role = collections.OrderedDict((r, role_ca[r] + role_ab.get(r, 0)) for r, _, _ in ROLE_ROWS)
+    by_role = collections.OrderedDict((r, role_ca[r] + role_ab.get(r, 0)) for r in ROLES)
     by_reach = collections.OrderedDict((r, reach_ca[r]) for r, _, _ in REACH_ROWS)
     by_reach["abroad"] = sum(role_ab.values())
-    roles_present = {a.get("role") for a, _ in assets}
     reach_present = {a.get("reach") for a, _ in assets}
 
     # Debts: one rounding of the total, and the secured part rounded per reach row it is netted
@@ -472,29 +490,8 @@ def derive(d):
     fgn_label = fj.get("label") or "Foreign"
 
     # One line under each row. The owner's own words if plan.json carries them (keyed by the
-    # label), otherwise a description built from the register — never a sentence about somebody
-    # else's accounts.
+    # label), otherwise the accounts the row counts, built from the register.
     desc = plan.get("descriptions", {})
-    def named(axis, val):
-        by = collections.OrderedDict()
-        for a, _ in assets:
-            if a.get(axis) == val:
-                by.setdefault("" if loans.is_loan(a) else a["inst"], []).append(a["name"])
-        # a loan is named by who owes it; "Sam at Owed to you" would say nothing
-        return "; ".join(", ".join(v) + (" at " + k if k else "") for k, v in by.items())
-    def part(axis, val, tail):
-        who = named(axis, val)
-        return (who + " — " + tail) if who else tail[:1].upper() + tail[1:]
-    generic_parts = {
-        "Invested": part("role", "grow", "the part whose whole job is to grow"),
-        "Earmarked": part("role", "set-aside", "already has a purpose, so it stays outside the portfolio"),
-        "Cash": part("role", "buffer", "the day-to-day buffer"),
-        # who owes what, each in CAD, largest first: "Sam $500" (the owner, 2026-10-27)
-        "Owed to you": (", ".join(f"{a['name']} ${v:,.0f}" for a, v in sorted(
-                            ((a, v) for a, v in assets if loans.is_loan(a) and round(v)), key=lambda x: -x[1]))
-                        + " — money you lent, counted until it is paid back"),
-        "Other assets": part("role", "none", "owned, but not money that grows or gets spent"),
-    }
     generic_reach = {
         "Reach today": "Investment and cash accounts with no age gate and no penalty",
         "Reach, but it costs": "Registered retirement savings: withdrawable, but taxed as income that year",
@@ -517,8 +514,26 @@ def derive(d):
                              "back": o["back"], "out": o["out"], "last": o["last"],
                              "quiet": days if days > loans.STALE_DAYS and o["owed"] > 0 else 0,
                              "note": a.get("note") or ""})
-    out["NWPARTS"] = [{"k": lab, "v": by_role[r], "c": c, "d": desc.get("nwparts", {}).get(lab, generic_parts[lab])}
-                      for r, lab, c in ROLE_ROWS if r in roles_present]
+    def accounts_in(role, where):
+        """The accounts a row counts, by name: "TFSA, RRSP at Wealthsimple; …", or "Sam $500" for a loan."""
+        rows = [(a, v) for a, v in assets if a.get("role") == role
+                and (where == "all" or (a.get("reach") == "abroad") == (where == "abroad"))]
+        if role == "owed":
+            return ", ".join(f"{a['name']} ${v:,.0f}" for a, v in sorted(rows, key=lambda x: -x[1]) if round(v))
+        by = collections.OrderedDict()
+        for a, _ in rows:
+            by.setdefault(a["inst"], []).append(a.get("label") or a["name"])
+        return "; ".join(", ".join(v) + " at " + k for k, v in by.items())
+    def part_value(role, where):
+        return by_role[role] if where == "all" else (role_ca[role] if where == "home" else role_ab.get(role, 0))
+    out["NWPARTS"] = []
+    for role, where, lab, c, q in PART_ROWS:
+        names = accounts_in(role, where)
+        if not names:
+            continue
+        lab = lab.replace("{abroad}", fgn_label)
+        out["NWPARTS"].append({"k": lab, "role": role, "v": part_value(role, where), "c": c, "q": q,
+                               "d": desc.get("nwparts", {}).get(lab, names)})
     out["REACH"] = [{"k": lab, "v": by_reach[r], "c": c, "d": desc.get("reach", {}).get(lab, generic_reach[lab])}
                     for r, lab, c in REACH_ROWS if r in reach_present]
     got_parts = sum(r["v"] for r in out["NWPARTS"]) - R_debt

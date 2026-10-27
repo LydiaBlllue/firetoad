@@ -139,7 +139,7 @@ and needs no special case.
 | axis | values | what reads it |
 |---|---|---|
 | `side` | asset · liability | net worth = Σ assets − Σ liabilities, every currency |
-| `role` | grow · set-aside · buffer · owed · none | Portfolio, the number FIRE is measured on, is `grow`; net worth by purpose is one slice per role; §7's earmarked accounts are `set-aside`; money lent is `owed` |
+| `role` | grow · set-aside · buffer · owed · none | Portfolio, the number FIRE is measured on, is `grow`; net worth by purpose is one slice per role (For FIRE, Set aside, Cash — split into home and abroad —, Owed to you, Other assets); §7's earmarked accounts are `set-aside`; money lent is `owed`; `none` is only for what is not money (a home, a car) |
 | `reach` | today · costs · spoken · lent · locked · abroad | the reach table: no gate; taxed on the way out; reachable but spoken for; back only as it is repaid; not liquid; across a border |
 | `value` | export · statement · stated | how the balance is known: `export` from a file the broker produced, `statement` from any evidence the owner dropped in — a bank statement, a screenshot of an app, a balance read off it and typed into `banks.json` or `foreign.json` — and `stated` typed by hand with an `asof`, the one value nothing can re-derive |
 | `against` | the asset a liability sits on | the reach table shows equity: a home less its mortgage, on the `locked` row |

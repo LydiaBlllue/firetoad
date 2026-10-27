@@ -936,7 +936,7 @@ function renderHome(){
   const bar = (rows, tot) => '<div class="stack">' + rows.map(r =>
       '<span style="width:'+(pc(r.v, tot))+'%;background:'+r.c+'" title="'+r.k+' '+fmt(r.v)+'"></span>').join("") + '</div>';
   const list = (rows, tot) => rows.map(r =>
-      '<div class="nw-row"><span class="nm"><span style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+r.c+'"></span>'+r.k+'</span>'
+      '<div class="nw-row"><span class="nm"><span style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+r.c+'"></span>'+r.k+(r.q ? qMark(r.q) : "")+'</span>'
       + '<span class="d">'+r.d+'</span><span class="v num">'+fmt(r.v)+'</span>'
       + '<span class="p num">'+Math.round(pc(r.v, tot))+'%</span></div>').join("");
 
@@ -1739,7 +1739,7 @@ function renderInv(){
         +". Move "+(Object.keys(sym).length > 1 ? "them" : "it")+" when you next rebalance."];
     },
     earmarked: () => {
-      const e = (NWPARTS||[]).find(r => r.k === "Earmarked");
+      const e = (NWPARTS||[]).find(r => r.role === "set-aside");
       const who = (ACCT.accounts||[]).filter(a => a.role === "set-aside").map(a => a.label || a.name);
       return e ? [ASYM.ok, fmt(e.v)+" in "+named(who)+", outside the portfolio and outside dry powder."] : null;
     },

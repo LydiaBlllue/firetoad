@@ -210,8 +210,11 @@
   do not appear there. The old this-month donut and the 6-month income/spending bars were deleted
   (`renderDonut` / `renderTrend` went with them); everything by-month lives in the Spending and
   Income sections.
-  - Home now has three cards: **net worth cut by purpose** (one row per `role` in the register:
-    Invested / Earmarked / Cash / Other assets, less debt), **the same money cut by how easily
+  - Home now has three cards: **net worth cut by purpose** (one row per `role`, cash split by
+    where it is: For FIRE / Set aside / Cash / Cash in <abroad> / Owed to you / Other assets, then
+    total assets, less debt — each row names its accounts and keeps its exact definition behind
+    its `?`; the owner, 2026-10-27: "each card has to say clearly what it means"; Other assets is
+    only for things that are not money), **the same money cut by how easily
     you could reach it** (one row per `reach`: Reach today / Reach but it costs / Spoken for /
     Locked in property / Across a border, a liability netted into the row of the asset it sits
     on, less what is owed free and clear), and At a glance. A row appears only when the register

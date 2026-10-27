@@ -936,7 +936,7 @@ function renderHome(){
   const bar = (rows, tot) => '<div class="stack">' + rows.map(r =>
       '<span style="width:'+(pc(r.v, tot))+'%;background:'+r.c+'" title="'+r.k+' '+fmt(r.v)+'"></span>').join("") + '</div>';
   const list = (rows, tot) => rows.map(r =>
-      '<div class="nw-row"><span class="nm"><span style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+r.c+'"></span>'+r.k+'</span>'
+      '<div class="nw-row"><span class="nm"><span style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+r.c+'"></span>'+r.k+(r.q ? qMark(r.q) : "")+'</span>'
       + '<span class="d">'+r.d+'</span><span class="v num">'+fmt(r.v)+'</span>'
       + '<span class="p num">'+Math.round(pc(r.v, tot))+'%</span></div>').join("");
 
@@ -1739,7 +1739,7 @@ function renderInv(){
         +". Move "+(Object.keys(sym).length > 1 ? "them" : "it")+" when you next rebalance."];
     },
     earmarked: () => {
-      const e = (NWPARTS||[]).find(r => r.k === "Earmarked");
+      const e = (NWPARTS||[]).find(r => r.role === "set-aside");
       const who = (ACCT.accounts||[]).filter(a => a.role === "set-aside").map(a => a.label || a.name);
       return e ? [ASYM.ok, fmt(e.v)+" in "+named(who)+", outside the portfolio and outside dry powder."] : null;
     },
@@ -2049,7 +2049,7 @@ const CARE_ESC = HOME_CARE.esc;
 // copy: an RRSP is not locked, it is taxed, so the second cut grades by FRICTION rather than by
 // access. Both lists are derived at rebuild time from the holdings export, banks.json and
 // foreign.json, and both sum to PORTFOLIO.
-const NWPARTS = [{"k": "Invested", "v": 67135, "c": "#2a78d6", "d": "Non-registered, TFSA, RRSP, Crypto at Wealthsimple — the part whose whole job is to grow"}, {"k": "Earmarked", "v": 23200, "c": "#eda100", "d": "High-yield savings, FHSA at Wealthsimple — already has a purpose, so it stays outside the portfolio"}, {"k": "Cash", "v": 11972, "c": "#1baf7a", "d": "Primary Chequing, Savings Amplifier at BMO; Day to Day Banking, High Interest eSavings at RBC; Chequing at Wealthsimple — the day-to-day buffer"}, {"k": "Owed to you", "v": 500, "c": "#e87ba4", "d": "Sam $500 — money you lent, counted until it is paid back"}];
+const NWPARTS = [{"k": "For FIRE", "role": "grow", "v": 67135, "c": "#2a78d6", "q": "Money whose job is to grow until you stop working. FIRE progress is measured on this, whatever it holds today: stocks, bonds, or cash waiting to be invested.", "d": "Non-registered, TFSA, RRSP, Crypto at Wealthsimple"}, {"k": "Set aside", "role": "set-aside", "v": 23200, "c": "#eda100", "q": "Money already promised to a goal, such as a first home or a trip. It is left out of FIRE progress and out of dry powder.", "d": "High-yield savings, FHSA at Wealthsimple"}, {"k": "Cash", "role": "buffer", "v": 11972, "c": "#1baf7a", "q": "Bank and cash accounts at home that you live on and can spend today.", "d": "Primary Chequing, Savings Amplifier at BMO; Day to Day Banking, High Interest eSavings at RBC; Chequing at Wealthsimple"}, {"k": "Owed to you", "role": "owed", "v": 500, "c": "#e87ba4", "q": "Money you lent, counted until it is paid back.", "d": "Sam $500"}];
 const NW_DEBT = 1016;
 const DEBT_NOTE = "MasterCard and Cash Back Visa — the balances owed today";   // the line under "Less what you owe": the owner's words, or the debts by name
 

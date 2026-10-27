@@ -4,6 +4,13 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Net worth by purpose, defined** (2026-10-27). The rows were Invested / Earmarked / Cash /
+  Other assets, with no definition on the page, and "Other assets" had become wherever an account
+  with no other role landed — deposits abroad included, though they are cash. The rows are now
+  For FIRE, Set aside, Cash, Cash in <abroad>, Owed to you and Other assets (things that are not
+  money), each naming the accounts it counts, with its exact definition behind its ?. The
+  definitions live in rebuild.py PART_ROWS; a row with no accounts is not shown.
+
 - **Every investing rule on one page** (2026-10-27). The rules were in three places: the high-level
   ones on Overview, the detailed ones on Rules, the dates on Checkpoints. Rules now lists each
   high-level rule as it stands today, the detailed rules filed under it (rules.json notes, `under`),
