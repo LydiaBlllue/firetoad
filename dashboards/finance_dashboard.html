@@ -527,8 +527,8 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   </div>
 </section>
 
-<section data-pg="upd" hidden>
-  <div class="grid-stats" id="updStats"></div>
+<section data-pg="todo" hidden>
+  <div class="grid-stats" id="todoStats"></div>
   <div class="card" style="margin-bottom:10px">
     <div class="lab">To confirm</div>
     <div id="updConfirm"></div>
@@ -537,6 +537,18 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div class="lab">Worth a second look</div>
     <div id="updChecks"></div>
   </div>
+  <div class="card" style="margin-bottom:10px">
+    <div class="lab">Open tasks</div>
+    <div id="taskList"></div>
+  </div>
+  <div class="card" style="margin-bottom:10px">
+    <div class="lab">Settled</div>
+    <div id="doneList"></div>
+  </div>
+</section>
+
+<section data-pg="upd" hidden>
+  <div class="grid-stats" id="updStats"></div>
   <div id="updList"></div>
 </section>
 
@@ -591,17 +603,6 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   </div>
 </section>
 
-<section data-pg="tasks" hidden>
-  <div class="grid-stats" id="taskStats"></div>
-  <div class="card">
-    
-    <div id="taskList"></div>
-  </div>
-  <div class="card" style="margin-top:10px">
-    <div class="lab">Closed</div>
-    <div id="doneList"></div>
-  </div>
-</section>
 
 </main>
 </div>
@@ -748,10 +749,10 @@ const NAV = [
                            {k:"fire",  n:"FIRE",             t:"FIRE",                 d:"Where you are against the target"},
                            {k:"coast", n:"Drawdown & care",  t:"Drawdown and care",    d:"Once you start taking money out: does it last, and what care costs"},
                            {k:"base",  n:"Spending baseline", t:"Spending baseline",   d:"The monthly figure the whole target is built on, and what you really spend"}]},
-  {sec:"Records",   items:[{k:"upd",   n:"Updates",          t:"Updates",              d:"What changed at each update, and what is waiting for you"},
+  {sec:"Records",   items:[{k:"todo",  n:"To do",            t:"To do",                d:"Everything waiting for you, in one place"},
+                           {k:"upd",   n:"Updates",          t:"Updates",              d:"What changed at each update"},
                            {k:"acct",  n:"Accounts",         t:"Accounts",             d:"Every place the money sits, and what is still unaccounted for"},
-                           {k:"src",   n:"Statements",       t:"Statements",           d:"What arrives each month, and what is still missing"},
-                           {k:"tasks", n:"Tasks",            t:"Open tasks",           d:"Waiting on you"}]}
+                           {k:"src",   n:"Statements",       t:"Statements",           d:"What arrives each month, and what is still missing"}]}
 ];
 const PAGES = NAV.flatMap(g => g.items);
 const PILL_PAGES = ["cat"];                          // driven by the month cursor
@@ -762,15 +763,15 @@ let curPage = "home";   // real starting page is chosen at boot from ST.p
 function pageFlags(){
   const f = {};
   const open = TASKS.filter(t => t.status !== "done").length;
-  if(open) f.tasks = "#c98500";
-  if(TASKS.some(t => t.status !== "done" && t.due && t.due <= TODAY)) f.tasks = "#d03b3b";
+  // To do: amber while anything waits for you, red once a dated task is due.
+  if(open || openDecisions().length || secondLooks().length) f.todo = "#c98500";
+  if(TASKS.some(t => t.status !== "done" && t.due && t.due <= TODAY)) f.todo = "#d03b3b";
   const chq = Object.values(LEDGER_THRU);
   const stale = [INVEST.asof, INVEST.banksAsof, ...chq, FOREIGN.asof].filter(d => (new Date(TODAY)-new Date(d))/864e5 > 30).length;
   if(stale) f.src = "#c98500";
   // Accounts: red when a gap actually removes money from net worth, amber for the rest.
   if(ACCT.gaps.some(g => g.sev === "bad")) f.acct = "#d03b3b";
   else if(ACCT.gaps.length) f.acct = "#c98500";
-  if(openDecisions().length) f.upd = "#c98500";
   const bd = baseDrift();
   if(bd !== null && Math.abs(bd) > DRIFT_FLAG) f.base = "#c98500";
   // The investing pages: the band and the cap from rules.json, never a literal 40/45/10.
@@ -814,7 +815,9 @@ function drawNav(){
     h.onkeydown = e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); toggle(); } };
   });
 }
+const MOVED = {tasks:"todo"};   // a page merged into another: an old link or saved state still lands
 function setPage(p){
+  p = MOVED[p] || p;
   if(!PAGES.some(x => x.k === p)) p = "home";
   curPage = p;
   document.querySelectorAll("section[data-pg]").forEach(el => el.hidden = el.dataset.pg !== p);
@@ -1061,12 +1064,12 @@ function renderGlance(){
   if(miss.length) items.push({s:"warn", p:"src", t:"<b>"+miss.length+" statement"+(miss.length > 1 ? "s" : "")+" not filed yet</b>: "
     + miss.map(r => r.ep+" "+r.src).join(", ")+"."});
   const openD = openDecisions().length;
-  if(openD) items.push({s:"warn", p:"upd", t:"<b>"+openD+" question"+(openD > 1 ? "s" : "")+" waiting for your answer</b> from the last update."});
+  if(openD) items.push({s:"warn", p:"todo", t:"<b>"+openD+" question"+(openD > 1 ? "s" : "")+" waiting for your answer</b> from the last update."});
   const open = TASKS.filter(t => t.status !== "done");
   const soon = open.filter(t => t.due && days(t.due) <= 14).sort((a,b) => a.due < b.due ? -1 : 1);
   soon.forEach(t => { const d = days(t.due);
-    items.push({s: d < 0 ? "warn" : "info", p:"tasks", t:"<b>"+(d < 0 ? "Overdue by "+(-d)+" day"+(-d > 1 ? "s" : "") : d === 0 ? "Due today" : "Due in "+d+" day"+(d > 1 ? "s" : ""))+"</b>: "+cut(plain(t.text), 110)}); });
-  if(open.length > soon.length) items.push({s:"info", p:"tasks", t:"<b>"+(open.length - soon.length)+" other open task"+(open.length - soon.length > 1 ? "s" : "")+"</b> with no date."});
+    items.push({s: d < 0 ? "warn" : "info", p:"todo", t:"<b>"+(d < 0 ? "Overdue by "+(-d)+" day"+(-d > 1 ? "s" : "") : d === 0 ? "Due today" : "Due in "+d+" day"+(d > 1 ? "s" : ""))+"</b>: "+cut(plain(t.text), 110)}); });
+  if(open.length > soon.length) items.push({s:"info", p:"todo", t:"<b>"+(open.length - soon.length)+" other open task"+(open.length - soon.length > 1 ? "s" : "")+"</b> with no date."});
   const m = MONTHS[MONTHS.length-1];
   if(m && everydayOf(m) > ALW) items.push({s:"warn", p:"cat", t:"<b>You went "+fmt(everydayOf(m) - ALW)+" past your "+fmt(ALW)+" allowance</b> in "+ymFull(m)+"."});
   const fr = fundRun();
@@ -1078,7 +1081,7 @@ function renderGlance(){
   items.sort((a,b) => RANK[a.s] - RANK[b.s]);
   const SYM = {bad:['\u2717','#d03b3b'], warn:['\u26a0','#c98500'], info:['\u25cf','var(--muted)'], ok:['\u2713','#006300']};
   const tag = k => (PAGES.find(x => x.k === k) || {n:""}).n;
-  $("glance").innerHTML = (items.length ? items : [{s:"ok", p:"upd", t:"Nothing needs you today."}]).map(r =>
+  $("glance").innerHTML = (items.length ? items : [{s:"ok", p:"todo", t:"Nothing needs you today."}]).map(r =>
     '<div class="gl-row" data-p="'+r.p+'"><span class="tag">'+tag(r.p)+'</span><span class="sym" style="color:'+SYM[r.s][1]+'">'+SYM[r.s][0]+'</span><span class="tx">'+r.t+'</span><span class="arr">\u203a</span></div>').join("");
   $("glance").querySelectorAll(".gl-row").forEach(el => el.onclick = () => setPage(el.dataset.p));
 }
@@ -2696,14 +2699,20 @@ function renderBaseChart(){
 
 
 // Tasks: closed items were mixed into the open list, which hid how much has actually been settled.
+// To do (2026-10-27): the questions an update left, the checks that want a decision and the open
+// tasks were on two pages, each counting its own. One page, one count.
 function renderTaskExtras(){
   const open = TASKS.filter(t => t.status !== "done"), done = TASKS.filter(t => t.status === "done");
-  const oldest = open.map(t => t.added).sort()[0];
+  const q = openDecisions(), looks = secondLooks(), settledQ = DECISIONS.filter(d => d.status === "confirmed");
+  const waiting = q.length + looks.length + open.length;
+  const oldest = open.map(t => t.added).concat(q.map(d => d.added)).filter(Boolean).sort()[0];
   const age = oldest ? Math.round((new Date(TODAY) - new Date(oldest))/864e5) : 0;
-  $("taskStats").innerHTML =
-    '<div class="card"><div class="lab">Waiting on you</div><div class="big num">'+open.length+'</div><div class="cap">'+(open.length?"Oldest opened "+oldest:"Nothing outstanding")+'</div></div>'+
-    '<div class="card"><div class="lab">Longest open</div><div class="big num">'+(open.length?age+"d":"—")+'</div><div class="cap">'+(open.length?"Since "+oldest:"—")+'</div></div>'+
-    '<div class="card"><div class="lab">Settled</div><div class="big num">'+done.length+'</div><div class="cap">Closed and kept for the record</div></div>';
+  const parts = [[q.length,"question"],[looks.length,"check"],[open.length,"task"]].filter(x => x[0])
+    .map(([n,w]) => n+" "+w+(n > 1 ? "s" : ""));
+  $("todoStats").innerHTML =
+    '<div class="card"><div class="lab">Waiting for you</div><div class="big num">'+waiting+'</div><div class="cap">'+(waiting ? parts.join(" \u00b7 ") : "Nothing outstanding")+'</div></div>'+
+    '<div class="card"><div class="lab">Longest open</div><div class="big num">'+(oldest?age+"d":"\u2014")+'</div><div class="cap">'+(oldest?"Since "+oldest:"\u2014")+'</div></div>'+
+    '<div class="card"><div class="lab">Settled</div><div class="big num">'+(done.length + settledQ.length)+'</div><div class="cap">Answered or closed, kept for the record</div></div>';
   // Dated items first, in date order, then the rest oldest-first.
   const byDue = (a,b) => (a.due?0:1) - (b.due?0:1) || (a.due||"").localeCompare(b.due||"") || a.added.localeCompare(b.added);
   const row = t => {
@@ -2715,10 +2724,12 @@ function renderTaskExtras(){
       +'<div class="cap" style="margin-top:2px">added '+t.added
       +(dueTxt?' <b style="color:'+dueCol+'">· '+dueTxt+'</b>':"")+'</div></span></div>';
   };
-  $("taskList").innerHTML = (open.length ? open.slice().sort(byDue) : TASKS).map(row).join("")
+  $("taskList").innerHTML = open.slice().sort(byDue).map(row).join("")
     || '<div class="empty">No open tasks.</div>';
-  $("doneList").innerHTML = done.length ? done.map(row).join("")
-    : '<div class="empty">Nothing closed yet.</div>';
+  $("doneList").innerHTML = (done.length || settledQ.length)
+    ? done.map(row).join("") + settledQ.slice(-8).reverse().map(d =>
+      '<div class="alert-row"><span class="sym ok">\u2713</span><span>'+d.what+'<div class="cap" style="margin-top:2px">'+d.answer+(d.resolved ? ", "+d.resolved : "")+'</div></span></div>').join("")
+    : '<div class="empty">Nothing settled yet.</div>';
 }
 
 // Subscriptions: a list of charges does not say what they cost you over a year.
@@ -3058,27 +3069,25 @@ function headerLine(){
   const lead = "Numbers as of " + dLong(dates[dates.length-1]) + ".";
   if(!miss && !open) return lead + " Everything is filed and nothing is waiting.";
   const a = n(miss) + " statement" + (miss === 1 ? " is" : "s are") + " still missing";
-  const b = n(open) + " item" + (open === 1 ? " is" : "s are") + " waiting for you";
+  const b = n(open) + " question" + (open === 1 ? " is" : "s are") + " waiting for you";
   return lead + " " + (miss && open ? cap1(a) + ", and " + b : cap1(miss ? a : b)) + ".";
 }
 
 function renderUpdates(){
   if(!$("updStats")) return;
-  const open = openDecisions(), done = DECISIONS.filter(d => d.status === "confirmed");
+  const open = openDecisions();
   const last = IMPORTS[0] || null;
   const age = d => Math.round((new Date(TODAY) - new Date(d))/864e5);
   const nFiles = r => r.files.length ? r.files.length + " file" + (r.files.length === 1 ? "" : "s") : "";
   $("updStats").innerHTML =
     '<div class="card"><div class="lab">Last update</div><div class="big num">'+(last ? dLong(last.date) : "\u2014")+'</div><div class="cap">'+(last ? (age(last.date) === 0 ? "Today" : age(last.date)+" days ago") + (nFiles(last) ? ", "+nFiles(last) : "") : "Nothing filed yet")+'</div></div>'+
-    '<div class="card"><div class="lab">Waiting for you</div><div class="big num">'+open.length+'</div><div class="cap">'+(open.length ? "Say the word and each one is filed" : "Nothing to confirm")+'</div></div>'+
+    '<div class="card"><div class="lab">Files on record</div><div class="big num">'+IMPORTS.reduce((a,r) => a + r.files.length, 0)+'</div><div class="cap">Every one archived under its account</div></div>'+
     '<div class="card"><div class="lab">Updates on file</div><div class="big num">'+IMPORTS.length+'</div><div class="cap">'+(IMPORTS.length ? "Since "+dLong(IMPORTS[IMPORTS.length-1].date) : "The first one comes with your first statements")+'</div></div>';
   const KIND = {merchant:"Merchant", transfer:"Transfer", file:"File", classification:"Classification"};
-  $("updConfirm").innerHTML = (open.length ? open.map(d =>
+  $("updConfirm").innerHTML = open.length ? open.map(d =>
       '<div class="alert-row"><span class="sym" style="color:#c98500">\u25cb</span><span><b>'+d.what+'</b>'
       + '<div class="cap" style="margin-top:1px">For now: '+d.default+(d.source ? ". From "+d.source : "")+'. '+(KIND[d.kind]||d.kind)+', added '+d.added+'</div></span></div>').join("")
-    : '<div class="empty">Nothing is waiting for you.</div>')
-    + (done.length ? '<div class="cap" style="margin-top:10px">Settled</div>' + done.slice(-8).reverse().map(d =>
-      '<div class="alert-row"><span class="sym ok">\u2713</span><span>'+d.what+' <span class="num" style="font-size:11.5px;color:var(--muted)">'+d.answer+(d.resolved ? ", "+d.resolved : "")+'</span></span></div>').join("") : "");
+    : '<div class="empty">Nothing is waiting for you.</div>';
   const SYM = {bad:["\u2717","bad"], warn:["\u26a0","warn"], ok:["\u2713","ok"]};
   $("updList").innerHTML = IMPORTS.length ? IMPORTS.map(r =>
     '<div class="card" style="margin-bottom:10px"><div class="lab">'+dLong(r.date)+(nFiles(r) ? " \u00b7 "+nFiles(r) : "")+'</div>'
@@ -3094,7 +3103,7 @@ function renderUpdates(){
 // What stands out: recomputed from the data on every load, nothing hand-written. Three homes,
 // by what the reader is doing when they see it (2026-09-10, the Insights page absorbed): the
 // year's spending on the Spending overview, how the plan is holding on the Monthly plan page,
-// and a data check that wants a decision on Updates.
+// and a data check that wants a decision on To do.
 const INS_SYM = {w:['\u26a0','#c98500'], g:['\u2713','#006300'], n:['\u25cf','var(--muted)']};
 const insRows = (ins, empty) => ins.length
   ? ins.map(i => '<div class="alert-row"><span class="sym" style="color:'+INS_SYM[i.s][1]+'">'+INS_SYM[i.s][0]+'</span><span>'+i.t+'</span></div>').join("")
@@ -3133,7 +3142,7 @@ function renderYearInsights(){
   $("yrInsights").innerHTML = insRows(ins, "Nothing stands out yet.");
 }
 
-function renderUpdChecks(){
+function secondLooks(){
   const ins = [];
   // Subscription means a charge that repeats. A merchant seen once cannot be one — that is exactly
   // how a notebook shop with PUBLICATION in its name got filed as a subscription on 2026-09-06.
@@ -3151,7 +3160,10 @@ function renderUpdChecks(){
       + " filed as a subscription but that merchant has only ever appeared once: "
       + oneOff.map(([k,v]) => k+" "+fmt2(v[0].amount)).join(", ")
       + ". A subscription is a charge that repeats, so confirm before it hardens into the baseline."});
-  $("updChecks").innerHTML = insRows(ins, "Nothing needs a second look.");
+  return ins;
+}
+function renderUpdChecks(){
+  $("updChecks").innerHTML = insRows(secondLooks(), "Nothing needs a second look.");
 }
 
 function renderInsights(){
@@ -3472,10 +3484,10 @@ renderTasks();
 (function(){
   $("hdrNW").innerHTML = fmt(NW_GLOBAL) + qMark("Everything you own minus what you owe, in every currency. Canadian side "+fmt(INVEST.netWorth)+(FOREIGN.total ? ", "+(FOREIGN.label||"foreign")+" side about "+fmt(FOREIGN_CAD) : "")+".");
   $("hdrSub").innerHTML = '<span class="hdr-line" tabindex="0">'+headerLine()+'</span>';
-  $("hdrSub").querySelector(".hdr-line").onclick = () => setPage("upd");
+  $("hdrSub").querySelector(".hdr-line").onclick = () => setPage(openDecisions().length ? "todo" : overdueSources().length ? "src" : "upd");
   $("brand").onclick = () => setPage("home");
 })();
-setPage(PAGES.some(x => x.k === ST.p) ? ST.p : "home");
+setPage(ST.p || "home");
 </script>
 </body>
 </html>

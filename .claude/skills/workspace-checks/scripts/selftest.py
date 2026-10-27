@@ -73,8 +73,8 @@ def rules_seen(out):
 def m_readme_path(r):
     edit(r, "README.md", lambda s: s.replace("check_data.py", "check_data_MOVED.py"))
 def m_design_pages(r):
-    edit(r, "DESIGN.md", lambda s: s.replace("| Records | Updates · Accounts · Statements · Tasks |",
-                                             "| Records | Insights · Statements · Tasks |"))
+    # The Records row's first page swapped for one that does not exist, whatever the row lists.
+    edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Records \| )[^·|]+·", r"\1Insights ·", s, count=1))
 def m_nav_orphan(r):
     edit(r, main_dash(r),
          lambda s: s.replace('<section data-pg="acct" hidden>', '<section data-pg="acctX" hidden>'))

@@ -4,6 +4,13 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **To do: one place for what waits on you** (2026-10-27). Three things waited for you on two
+  pages, each with its own count: the questions an update left and the checks wanting a decision
+  (on Updates), and the open tasks (on Tasks). They are one page now, To do, first in Records,
+  with one count and one dot; Tasks is gone (an old link to it opens To do), and Updates keeps
+  only the record of each update. The header says "questions" rather than "items", because it
+  counts only those. 18 pages.
+
 - **Plan: when, and whether it lasts** (2026-10-27). Coast & care asked two questions: *when do
   you get there* and *does the money last*. The coast sentence (the age today's money reaches the
   target with nothing added) moved to FIRE, under the trajectory; the page is Drawdown & care, and

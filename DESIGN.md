@@ -98,8 +98,8 @@
     else. `setPage()` is driven entirely by `NAV`; no more hand-written `id` branches.
   - Every page has a `#pgTitle` and a one-line `#pgSub`. **If the page title already says it,
     delete the `.lab` on the card** — do not say it twice.
-  - **Dots**: `pageFlags()` works out which pages have something on them (Tasks has an open
-    item / Freshness has a source past 30 days / Portfolio breaks the dry-powder or holdings
+  - **Dots**: `pageFlags()` works out which pages have something on them (To do has an open
+    question, check or task / Freshness has a source past 30 days / Portfolio breaks the dry-powder or holdings
     rule) and hangs a 6px dot on the right of the sidebar entry — amber `#c98500` = look at
     this, red `#d03b3b` = a rule is broken. This is the sidebar's core advantage over top tabs;
     remember to wire new rules into it.
@@ -120,10 +120,10 @@
   | Income | Income · Investment income |
   | Investing | Portfolio · Performance · Holdings · Rules |
   | Plan | Budget · FIRE · Drawdown & care · Spending baseline |
-  | Records | Updates · Accounts · Statements · Tasks |
+  | Records | To do · Updates · Accounts · Statements |
   The Insights page was absorbed on 2026-09-10: what stood out about the year is a card on the
   Spending overview, and the one check that
-  wants a decision (a subscription seen once) sits on Updates under "Worth a second look".
+  wants a decision (a subscription seen once) sits on To do under "Worth a second look".
   **The Accounts page** (the owner asked for it 2026-09-07) is one row per place money sits, grouped
   by institution, with the institution row giving that institution's net position (credit cards
   negative, currencies listed separately and never added together); **a CAD total on the last
@@ -136,10 +136,15 @@
   the workspace could answer "which files are due this month" (Data sources) but not "where is my
   money", and the account list had to be assembled by hand from four data files every time —
   which is exactly how an account goes missing.
+  **The To do page** (2026-10-27; it took the Updates page's two waiting cards and the whole Tasks
+  page) is everything waiting for you, counted once: three stat cards (waiting for you — questions,
+  checks and tasks together — longest open, settled), then **To confirm** — every item the import
+  could not settle on its own, from `findata/history/decisions.json`, each with what was assumed
+  meanwhile and which statement it came from — **Worth a second look**, **Open tasks** (dated ones
+  first) and **Settled** (closed tasks and answered questions). The header line counts the
+  questions only, and says "questions", so its number never disagrees with the page's.
   **The Updates page** (2026-09-10) is where an update leaves its trace. Three stat cards (last
-  update, waiting for you, updates on file), then **To confirm** — every item the import could not
-  settle on its own, from `findata/history/decisions.json`, each with what was assumed meanwhile and which
-  statement it came from — and then one card per update from `findata/history/imports.json`: what changed
+  update, files on record, updates on file), then one card per update from `findata/history/imports.json`: what changed
   (label, from, to), what was noticed, what was decided without asking, what you were asked. It
   replaced the "Rule status" list on the Portfolio page, which had been showing the sentences of
   one import as the state of things for months. **The story of an update lives here and nowhere
