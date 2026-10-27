@@ -2911,7 +2911,7 @@ const IV = (function(){
     + stat("Dry powder", DEFS.dry, cadInv ? pctS(dryPct)+' <span class="sym '+dryState+'" style="font-size:15px">'+(dryIn?"\u2713":"\u26a0")+'</span>' : "\u2014",
            cadInv ? dryNote : "Nothing invested yet", prev ? deltaLine(dryPct, prev.dryPct, "pts") : "")
     + stat("Holdings", DEFS.holdings, nTick + (CAP && nTick > CAP ? ' <span class="sym bad" style="font-size:15px">\u2717</span>' : ""),
-           !CAP ? "No limit set" : nTick > CAP ? (nTick-CAP)+" more than you want to hold" : "At or under your limit of "+CAP);
+           !CAP ? "" : nTick > CAP ? (nTick-CAP)+" more than you want to hold" : "At or under your limit of "+CAP);
   }
   function renderMeta(){
     $("invMeta").innerHTML = metaList([
