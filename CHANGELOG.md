@@ -4,6 +4,14 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **The portfolio is split three ways** (2026-10-26). The Investing overview's one chart was
+  "the Canadian side across your buckets", though more than half of that side was in US dollars.
+  It is now three donuts of the same portfolio: by currency, by kind of asset, and by the buckets
+  the rules are written in (at the broker, where they apply). A holding's kind comes from the
+  export's security type — cash, crypto, a precious metal, a single stock — and, for an ETF,
+  from rules.json `assetClass`; a fund abroad says it in foreign.json. D25 warns on a holding
+  with no kind and fails a kind the page has no slice for.
+
 - **Spending is net of refunds** (2026-10-26). A credit on a card statement that gives back an
   earlier purchase on the same card — or, for an annual-fee or interest credit, a charge the card
   made — is filed by the import as a negative `spending.csv` row in that purchase's category, so

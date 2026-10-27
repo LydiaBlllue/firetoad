@@ -37,6 +37,14 @@
     }
   ],
   "maxHoldings": 10,
+  "assetClass": {
+    "VEQT": "stocks",
+    "VCN": "stocks",
+    "XAW": "stocks",
+    "ZAG": "bonds",
+    "VSC": "bonds",
+    "SGOV": "bonds"
+  },
   "notes": [
     {
       "status": "ok",

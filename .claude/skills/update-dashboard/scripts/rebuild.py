@@ -27,6 +27,18 @@ import loans                               # what a borrower still owes, read fr
 MAIN_NAMES = ("ly_finance_dashboard.html", "finance_dashboard.html")   # an owner's copy, or the template's
 INV_NAME = "investment_dashboard.html"
 FUND_TYPES = ("bond_fund", "equity_fund")
+# What kind of asset a holding is, for the Investing overview's asset-type split. The broker's
+# export says it for everything but a fund: cash, crypto, a precious metal and a single stock are
+# what they say they are, but an ETF can hold stocks, bonds or gold, so an ETF's class is the
+# owner's word in rules.json `assetClass` (symbol -> class). A fund abroad says it in foreign.json.
+ASSET_CLASSES = ("stocks", "bonds", "cash", "gold", "crypto")
+CLASS_OF_TYPE = {"CURRENCY": "cash", "CRYPTOCURRENCY": "crypto", "PRECIOUS_METAL": "gold", "EQUITY": "stocks"}
+CLASS_OF_FUND = {"bond_fund": "bonds", "equity_fund": "stocks"}
+
+
+def asset_class(sym, sec_type, declared):
+    """A holding's class, or None when nobody has said (an ETF no one has classified)."""
+    return declared.get(sym) or CLASS_OF_TYPE.get(sec_type)
 
 # The two cuts of net worth, one row per value of one axis (FINANCE.md §8a). The label is what
 # the page says, the colour is design (DESIGN.md palette), and both are keyed by the axis value
@@ -572,6 +584,7 @@ def derive(d):
              "bv": round(float(r.get("Book Value (CAD)") or 0), 2)}
         if usd: p["usd"] = 1
         if r.get("Security Type") == "CURRENCY": p["cash"] = 1
+        p["class"] = asset_class(r["Symbol"], r.get("Security Type"), d["rules"].get("assetClass", {}))
         positions.append(p)
         if not p.get("cash"):
             t = tick.setdefault(p["sym"], {"sym": p["sym"], "name": p["name"], "mv": 0.0, "bv": 0.0, "accounts": []})
@@ -590,7 +603,8 @@ def derive(d):
                   "symbol": fj.get("symbol", ""), "label": fgn_label, "cadPerUnit": rate_f,
                   "cash": fj.get("summary", {}).get("cash", 0),
                   "funds": [{"sym": a.get("code") or a["name"], "name": a.get("label") or a["name"],
-                             "inst": a.get("inst", ""), "amount": a["value"], "gain": a.get("gain", 0)}
+                             "inst": a.get("inst", ""), "amount": a["value"], "gain": a.get("gain", 0),
+                             "class": CLASS_OF_FUND.get(a["type"])}
                             for a in fgn_fund_rows]}
     return out
 

@@ -484,6 +484,9 @@ def build(out):
             OrderedDict([("key", "mid"), ("name", "Middle tier · cleanup candidates"), ("catchAll", True)]),
         ]),
         ("maxHoldings", 10),
+        # what an ETF holds, which the export cannot say; stocks, cash and crypto say it themselves
+        ("assetClass", OrderedDict([("VEQT", "stocks"), ("VCN", "stocks"), ("XAW", "stocks"),
+                                    ("ZAG", "bonds"), ("VSC", "bonds"), ("SGOV", "bonds")])),
         ("notes", [
             OrderedDict(status="ok", name="Account placement", text="Growth names in the TFSA: SHOP {mv:SHOP} is TFSA-only since the August consolidation ✓. BN {mv:BN} sits in the RRSP. The one bond ETF outside the dry-powder pair (ZAG {mv:ZAG}) stays non-registered — small enough not to matter."),
             OrderedDict(status="info", name="SHOP — thesis check each quarter", text="Held for merchant growth and take-rate expansion. Review on Q3 results in late October; GMV growth under +20% is the exit trigger."),

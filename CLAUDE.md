@@ -62,7 +62,7 @@ The rest of `findata/`, and what each carries:
 | `profile.json` | the owner (shown under the Jade Toad wordmark and in the tab), the year of birth, the import day |
 | `funds.json` | the monthly plan as **flows** — `income`, `committed` (rent, a mortgage, a loan), `saving` (to the broker, or to a fund by `to`), `allowance`, each with an amount and, where it applies, `until`, `afterFire`, `pays`, `starts` — and the named funds (`role: topup` / `big`), which carry no number of their own |
 | `plan.json` | planning spend, months excluded from comparisons, the retirement assumptions, the owner's one-line descriptions of the net-worth parts |
-| `rules.json` | the investing buckets and their target bands, the owner's theses (`notes`) and `checkpoints` |
+| `rules.json` | the investing buckets and their target bands, the owner's theses (`notes`) and `checkpoints`, and `assetClass` — what each ETF holds (stocks / bonds / cash / gold / crypto), the one thing the broker's export cannot say |
 | `merchants.json` | merchant → category |
 | `fx.json` | a dated exchange rate — absent means "no foreign-currency holdings" |
 | `foreign.json` | foreign-currency accounts; an empty list is the supported way to say there are none |

@@ -127,7 +127,7 @@ def check(root):
             "D3":"rules", "D5":"rules", "D6":"rules", "D10":"rules", "D13":"rules", "D14":"rules",
             "D11":"build", "D12":"build", "D17":"build", "T1":"build", "T2":"hygiene", "D15":"build", "D16":"conform",
             "D2":"hygiene", "D4":"hygiene", "D9":"hygiene", "D18":"hygiene",
-            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules"}
+            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D25":"hygiene"}
     F = []          # (severity, rule, message, category)
     def err(r, m, cat=None):  F.append(("ERROR", r, m, cat or HOME.get(r, "rules")))
     def warn(r, m, cat=None): F.append(("WARN",  r, m, cat or HOME.get(r, "rules")))
@@ -994,6 +994,28 @@ def check(root):
             if (r.get("type") or "") == "Lent" and not any(loans.names_row(a, r) for a in lent_):
                 warn("D23", f"{r['date']} {r['description'][:30]!r} is typed Lent but names nobody the register "
                             "has a loan for — add a loan row, or it is in no net-worth figure", "rules")
+
+    # -- D25 every holding says what kind of asset it is -------------------------------------
+    # The Investing overview splits the portfolio by kind of asset. The export says it for a stock,
+    # cash, crypto and a precious metal; an ETF can hold anything, so its class is rules.json
+    # `assetClass`. An ETF bought since lands under "Not classified" until someone says.
+    rp25, hp25 = load(root, "rules.json"), load(root, "holdings_latest.csv")
+    if rp25 and hp25 and ap:
+        from rebuild import asset_class, ASSET_CLASSES
+        declared = json.load(open(rp25, encoding="utf-8")).get("assetClass", {})
+        for sym_, cls in declared.items():
+            if cls not in ASSET_CLASSES:
+                err("D25", f"rules.json assetClass says {sym_} is {cls!r}; the kinds are {', '.join(ASSET_CLASSES)}", "rules")
+        grow_ = {a.get("id") for a in aj["accounts"] if a.get("role") == "grow"}
+        with open(hp25, encoding="utf-8") as fh:
+            held = {(r["Symbol"], r.get("Security Type")) for r in csv.DictReader(fh)
+                    if r.get("Account Number") in grow_ and r.get("Symbol")}
+        missing = sorted({sym_ for sym_, t in held if not asset_class(sym_, t, declared)})
+        if missing:
+            warn("D25", f"{', '.join(missing)} {'are' if len(missing) > 1 else 'is'} held with no kind of asset: add "
+                        f"{'them' if len(missing) > 1 else 'it'} to rules.json assetClass, or the portfolio's split shows Not classified")
+        else:
+            note("D25", f"every one of {len(held)} holdings says what kind of asset it is")
 
     # -- D18 what an update leaves behind: the record and the queue ------------------------
     # alerts.json used to hold the sentences one import wrote, and the Portfolio page showed them

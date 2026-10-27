@@ -114,6 +114,8 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .donut-wrap{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
 .donut-box{position:relative;width:170px;height:170px;flex-shrink:0}
 .donut-card{max-width:780px}
+.split3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.split3 .sub{font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:8px}
 .donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
 .donut-center .t{font-size:17px;font-weight:700}
 .donut-center .s{font-size:10.5px;color:var(--muted)}
@@ -403,7 +405,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   <div id="invStale"></div>
   <div class="grid-stats" id="invStats"></div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab">How the Canadian side splits across your buckets</div>
+    <div class="lab">How the portfolio splits</div>
     <div id="barbell"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
@@ -2850,7 +2852,7 @@ const IV = (function(){
   const DRYLO    = PRIMARY ? PRIMARY.target[0] : 0, DRYHI = PRIMARY ? PRIMARY.target[1] : 100;
   const CAP      = RULES.maxHoldings;
   FGN.rows = (FGN.funds||[]).map(f => ({
-    account:FGN.label + " \u00b7 " + f.inst, sym:f.sym, name:f.name, fgn:f.amount, amount:f.amount, qty:null, cn:1,
+    account:FGN.label + " \u00b7 " + f.inst, sym:f.sym, name:f.name, fgn:f.amount, amount:f.amount, qty:null, cn:1, class:f.class,
     mv:+(f.amount*FGN.cadPerUnit).toFixed(2), bv:+((f.amount-f.gain)*FGN.cadPerUnit).toFixed(2)
   }));
   FGN.amount = (FGN.funds||[]).reduce((s,f)=>s+f.amount,0);
@@ -2927,19 +2929,44 @@ const IV = (function(){
   const segs=[...BUCKETS.map((b,i)=>({k:b.name.split(" \u00b7 ")[0],v:B[b.key],c:BCOL[i%BCOL.length]})),
               {k:"Idle cash",v:idle,c:"#d8dcd9"}];
   function renderBarbell(){
-    // A donut, like Income by category (the owner, 2026-10-26: the barbell's bar heights were
-    // hard to read as shares). One segment per bucket plus idle cash; the Canadian side in the
-    // middle, each share in the legend.
-    const rows = segs.filter(g => g.v > 0).map(g => ({k:g.k, v:g.v, col:g.c}));
+    // Three cuts of the same portfolio (the owner, 2026-10-26): by the currency it is held in, by
+    // what kind of asset it is, and by the buckets your rules are written in. Until then there was
+    // only the third, titled "the Canadian side" though more than half of it was in US dollars.
+    const port = positions.filter(p => !EARMARK.includes(p.account));
+    const cut = (keyOf, order) => {
+      const m = {};
+      port.forEach(p => { const k = keyOf(p); m[k] = (m[k] || 0) + p.mv; });
+      return order.filter(o => m[o.id] > 0).map(o => ({k:o.n, v:m[o.id], col:o.c}));
+    };
+    const byCur = cut(p => p.cn ? "FGN" : p.usd ? "USD" : "CAD",
+      [{id:"CAD", n:"CAD", c:"#2a78d6"}, {id:"USD", n:"USD", c:"#1baf7a"},
+       {id:"FGN", n:(typeof FOREIGN !== "undefined" && FOREIGN.currency) || FGN.label || "Foreign", c:"#4a3aa7"}]);
+    const byType = cut(p => p.class || "none",
+      [{id:"stocks", n:"Stocks", c:"#2a78d6"}, {id:"bonds", n:"Bonds & T-bills", c:"#eda100"},
+       {id:"cash", n:"Cash", c:"#b7bfba"}, {id:"gold", n:"Gold", c:"#c98500"}, {id:"crypto", n:"Crypto", c:"#e87ba4"},
+       {id:"none", n:"Not classified", c:"#d8dcd9"}]);
+    const byBucket = segs.filter(g => g.v > 0).map(g => ({k:g.k, v:g.v, col:g.c}));
+    const block = (id, title, centre) =>
+      `<div><div class="sub">${title}</div><div class="donut-wrap"><div class="donut-box"><svg id="${id}" viewBox="0 0 170 170" width="170" height="170"></svg>`
+      + `<div class="donut-center"><div class="t num" id="${id}T"></div><div class="s">${centre}</div></div></div>`
+      + `<div class="legend" id="${id}L"></div></div></div>`;
+    const unclassed = [...new Set(port.filter(p => !p.class).map(p => p.sym))];
     $("barbell").innerHTML =
-      `<div class="donut-wrap"><div class="donut-box"><svg id="bbDonut" viewBox="0 0 170 170" width="170" height="170"></svg>`
-      + `<div class="donut-center"><div class="t num" id="bbDonutTotal"></div><div class="s">Canadian side</div></div></div>`
-      + `<div class="legend" id="bbCats"></div></div>`
+      `<div class="split3">`
+      + block("spCur", "By currency", "portfolio")
+      + block("spType", "By kind of asset", "portfolio")
+      + block("bbDonut", "By your buckets, at " + DATA.broker, "at " + DATA.broker)
+      + `</div>`
+      + (unclassed.length ? noteBox(unclassed.join(", ") + (unclassed.length > 1 ? " have" : " has") + " no kind of asset yet, so "
+          + (unclassed.length > 1 ? "they sit" : "it sits") + " under Not classified. Say what " + (unclassed.length > 1 ? "they hold" : "it holds") + " and it moves.") : "")
       + (FGN.rows.length ? `<div class="cn-strip"><span><i class="dot" style="background:#4a3aa7"></i><b>${FGN.label} \u00b7 onshore deployable</b> <span class="num">${fmtFgn(FGN.amount)} \u2248 ${fmt(fgn)}</span></span><span class="cn-note">counted in Portfolio, kept apart from dry powder \u00b7 as of ${FGN.asof}</span></div>` : "")
-      + `<div class="foot">${convEnd ? `Your rule: keep the ${CATCHNAME} thin. It is ${pctS(pc(mid, cadInv))} (${midTop}), ${(mid/convEnd).toFixed(1)}\u00d7 the ${convName} at ${pctS(pc(convEnd, cadInv))}.` : (cadInv ? `Whatever no bucket claimed is ${pctS(pc(mid, cadInv))} of the Canadian side${midTop ? " ("+midTop+")" : ""}.` : "")}</div>`;
-    drawDonut("bbDonut", "bbDonutTotal", "bbCats", rows, cadInv,
-      "Nothing invested yet. Your first broker report fills this.", true);
+      + `<div class="foot">${convEnd ? `Your rule: keep the ${CATCHNAME} thin. It is ${pctS(pc(mid, cadInv))} (${midTop}), ${(mid/convEnd).toFixed(1)}\u00d7 the ${convName} at ${pctS(pc(convEnd, cadInv))}.` : (cadInv ? `Whatever no bucket claimed is ${pctS(pc(mid, cadInv))} of the ${DATA.broker} side${midTop ? " ("+midTop+")" : ""}.` : "")}</div>`;
+    const empty = "Nothing invested yet. Your first broker report fills this.";
+    drawDonut("spCur", "spCurT", "spCurL", byCur, portfolio, empty, true);
+    drawDonut("spType", "spTypeT", "spTypeL", byType, portfolio, empty, true);
+    drawDonut("bbDonut", "bbDonutT", "bbDonutL", byBucket, cadInv, empty, true);
   }
+
 
   // ----- rules: the band(s), the cap, your own notes, the foreign line
   const bandRows = BANDED.map(b => {
