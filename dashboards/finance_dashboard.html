@@ -461,8 +461,13 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   <div class="grid-stats" id="fgnStats"></div>
   <div class="card" style="margin-bottom:10px">
     
-    <div class="baseline-hero num" id="fgnHero"></div>
-    <div id="fgnRows"></div>
+    <div class="donut-wrap">
+      <div class="donut-box">
+        <svg id="fgnDonut" viewBox="0 0 170 170" width="170" height="170"></svg>
+        <div class="donut-center"><div class="t num" id="fgnDonutTotal"></div><div class="s">in yuan</div></div>
+      </div>
+      <div class="legend" id="fgnCats"></div>
+    </div>
     <div class="cap" id="fgnCap"></div>
   </div>
 </section>
@@ -1588,8 +1593,10 @@ function renderYr(){
 }
 
 
-function drawDonut(svgId, centerId, legendId, rows, totalVal, emptyMsg, withPct){
-  $(centerId).textContent = rows.length ? fmt(totalVal) : "—";
+function drawDonut(svgId, centerId, legendId, rows, totalVal, emptyMsg, withPct, fmtV){
+  // fmtV: how an amount is written, for a donut that is not in dollars (the yuan one)
+  const fT = fmtV || fmt, fV = fmtV || fmt2;
+  $(centerId).textContent = rows.length ? fT(totalVal) : "—";
   const svg = $(svgId);
   if(!rows.length){ svg.innerHTML=""; $(legendId).innerHTML = '<div class="empty">'+emptyMsg+'</div>'; return; }
   const total = rows.reduce((s,r) => s + r.v, 0);
@@ -1608,10 +1615,10 @@ function drawDonut(svgId, centerId, legendId, rows, totalVal, emptyMsg, withPct)
   svg.innerHTML = paths;
   svg.querySelectorAll("path").forEach((p,i) => {
     const seg = rows[i];
-    hoverable(p, seg.k+"<br>"+fmt2(seg.v)+" — "+Math.round(pc(seg.v, total))+"%");
+    hoverable(p, seg.k+"<br>"+fV(seg.v)+" — "+Math.round(pc(seg.v, total))+"%");
   });
   $(legendId).innerHTML = rows.map(seg =>
-    '<div class="leg-row"><span class="dot" style="background:'+seg.col+'"></span><span class="nm">'+seg.k+'</span><span class="v num">'+fmt2(seg.v)+'</span>'
+    '<div class="leg-row"><span class="dot" style="background:'+seg.col+'"></span><span class="nm">'+seg.k+'</span><span class="v num">'+fV(seg.v)+'</span>'
     + (withPct ? '<span class="v num" style="color:var(--muted);min-width:44px">'+Math.round(pc(seg.v, total))+'%</span>' : '') + '</div>').join("");
 }
 
@@ -1744,14 +1751,14 @@ const PORTFOLIO = INVEST.portfolio;
 const PORT_HISTORY = [{"ym": "2026-06", "v": 61204}, {"ym": "2026-08", "v": 64852}, {"ym": "2026-09", "v": 67135}];   // one portfolio value per month, from investment_history.json
 const NW_GLOBAL = INVEST.netWorth + FOREIGN_CAD;             // net worth  (2026-08-14: the owner)
 function renderForeign(){
-  if(!$("fgnRows")) return;          // no foreign-asset page in this build
+  if(!$("fgnDonut")) return;          // no foreign-asset page in this build
   const fmtFgn = n => (FOREIGN.symbol || "") + Math.round(n).toLocaleString("en-CA");
-  $("fgnHero").textContent = fmtFgn(FOREIGN.total);
-  let inst = "";
-  $("fgnRows").innerHTML = FOREIGN.rows.map(r => {
-    const head = r.inst !== inst ? (inst = r.inst, '<div class="lab" style="margin:10px 0 4px">'+r.inst+'</div>') : "";
-    return head + '<div class="leg-row"><span class="nm">'+r.n+(r.asof?' <span class="cap">as of '+r.asof+'</span>':'')+'</span><span class="v num">'+fmtFgn(r.v)+'</span></div>';
-  }).join("");
+  // One segment per account, in the currency it is held in (§7): the owner, 2026-10-26, asked
+  // for the yuan side drawn the way the Canadian buckets are.
+  const FCOL = ["#4a3aa7", "#2a78d6", "#1baf7a", "#eda100", "#e87ba4", "#eb6834", "#008300"];
+  const fRows = FOREIGN.rows.filter(r => r.v > 0).sort((a,b) => b.v - a.v)
+    .map((r,i) => ({k: r.inst + " \u00b7 " + r.n + (r.asof ? ' <span class="cap">as of '+r.asof+'</span>' : ""), v: r.v, col: FCOL[i % FCOL.length]}));
+  drawDonut("fgnDonut", "fgnDonutTotal", "fgnCats", fRows, FOREIGN.total, "No accounts abroad.", true, fmtFgn);
   const cash = FOREIGN.rows.filter(r => r.cash).reduce((s,r) => s + r.v, 0);
   $("fgnCap").innerHTML = metaList([
     ["As of", FOREIGN.asof],
