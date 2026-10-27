@@ -176,8 +176,8 @@ the templates and the governing documents into it and touches nothing that is yo
 tool's data shape moves ahead of your folder, `tools/migrate.py <workspace>` brings the folder
 up one step at a time.
 
-<!-- LINT:NAV main=18/5 minwidth=1120 -->
-The page is 18 pages in 5 sidebar groups —
+<!-- LINT:NAV main=17/5 minwidth=1120 -->
+The page is 17 pages in 5 sidebar groups —
 Home · Spending · Income · Investing · Plan · Records
 — desktop only, at least 1120px wide.
 </details>

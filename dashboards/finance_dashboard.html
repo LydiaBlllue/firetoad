@@ -197,13 +197,10 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .rule{display:flex;gap:11px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start}.rule:last-child{border-bottom:none}
 .rule .body{flex:1}.rule .name{font-weight:600;font-size:14px}.rule .det{max-width:880px;font-size:12.5px;color:var(--muted);margin-top:2px}
 .rule-sum{font-size:12px;color:var(--muted);margin:-4px 0 8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-.tl{position:relative;padding-left:20px}.tl::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--border)}
-.ev{position:relative;padding:0 0 13px 8px}.ev:last-child{padding-bottom:0}
-.ev::before{content:"";position:absolute;left:-19px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--surface);border:2px solid var(--muted)}
-.ev.hot::before{border-color:#a3423a;background:#a3423a}.ev.past::before{border-color:#c4c9c6;background:#c4c9c6}
-.ev .d{font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}.ev.hot .d{color:#a3423a}
-.ev .t{font-weight:600;font-size:14px}.ev .w{font-size:12.5px;color:var(--muted)}
-.ev .when{font-size:11px;font-weight:600;color:var(--muted);margin-left:7px;letter-spacing:0;text-transform:none}.ev.past .when{color:#c98500}
+.pr{border-bottom:1px solid var(--border);padding-bottom:4px}.pr:last-child{border-bottom:none}
+.pr .rule{border-bottom:none}.pr-subs{margin:0 0 8px 34px;padding-left:12px;border-left:2px solid var(--border)}
+.rule.sub{padding:7px 0}.rule.sub .name{font-size:13px}.pr-head{font-weight:600;font-size:14px;padding:10px 0 4px}
+.rdate{font-size:12px;color:var(--muted);margin-top:6px}.rdate b{color:var(--ink-2)}.rdate.past b{color:#c98500}.rdate.hot b{color:#a3423a}
 .pill-row{display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap}.pill-row .spacer{flex:1}
 .tab{border:1px solid var(--border);background:var(--surface);border-radius:20px;padding:5px 14px;font-size:13px;cursor:pointer;color:var(--muted);font-family:inherit}
 .tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
@@ -407,10 +404,6 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div id="barbell"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab">Your investing rules, checked today</div>
-    <div id="invAlerts"></div>
-  </div>
-  <div class="card" style="margin-bottom:10px">
     <div class="lab">What you put in, and what the market added</div>
     <div id="bookStack"></div>
     <div id="bookRows"></div>
@@ -439,12 +432,6 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   <div class="card">
     <div class="rule-sum" id="ruleSum"></div>
     <div id="ruleList"></div>
-  </div>
-</section>
-
-<section data-pg="check" hidden>
-  <div class="card">
-    <div class="tl" id="timeline"></div>
   </div>
 </section>
 
@@ -724,8 +711,7 @@ const NAV = [
                            {k:"wsinc", n:"Investment income",t:"Investment income",    d:"What the portfolio paid you, before you sold anything"}]},
   {sec:"Investing", items:[{k:"port",  n:"Overview",         t:"Investing",            d:"What is invested, how it splits across your buckets, and what your rules say"},
                            {k:"hold",  n:"Holdings",         t:"Holdings",             d:"Every position, by role or by account"},
-                           {k:"rules", n:"Rules",            t:"Rules",                d:"Your own triggers, checked one by one"},
-                           {k:"check", n:"Checkpoints",      t:"Checkpoints",          d:"Dates that could change a position"}]},
+                           {k:"rules", n:"Rules",            t:"Rules",                d:"Each of your rules, checked today, with the details and dates under it"}]},
   {sec:"Plan",      items:[{k:"fire",  n:"FIRE",             t:"FIRE",                 d:"Where you are against the target"},
                            {k:"coast", n:"Coast & care",     t:"Coast, drawdown and care", d:"If you stop adding, when you start taking, and what care costs"},
                            {k:"base",  n:"Baseline",         t:"Monthly spending baseline", d:"The number the whole target is built on"}]},
@@ -758,7 +744,6 @@ function pageFlags(){
   const iv = IV.flags();
   if(iv.bad) f.rules = "#d03b3b"; else if(iv.warn) f.rules = "#c98500";
   if(iv.invested && (!iv.dryIn || iv.over)) f.port = iv.bad ? "#d03b3b" : "#c98500";
-  if(iv.past) f.check = "#c98500";
   // The plan page: red when the split asks for more than the paycheque, amber when a fund is
   // short of what it has promised. Both are things you decide, not things the data decides.
   const fr = fundRun();
@@ -1714,8 +1699,6 @@ function renderInv(){
   // Each rule as it stands today, computed on every load. How it got here -- what an update
   // noticed, what moved -- is on Data → Updates, not in this card. (2026-09-10)
   const ASYM = {bad:["✗","bad"], warn:["⚠","warn"], ok:["✓","ok"]};
-  const row = (g, t) => '<div class="alert-row"><span class="sym '+g[1]+'">'+g[0]+'</span><span>'+t+'</span></div>';
-  const rows = [];
   // The month in progress is judged only once both transfers have landed; until then the
   // newest closed month is the rule's status, so early in a month the row is not a false alarm.
   const cur = (WSDEP||[]).slice(-1)[0] || null;
@@ -1766,15 +1749,14 @@ function renderInv(){
       +") counts in net worth, and none of it in dry powder."] : null
   };
   const PRINCIPLES = RULES.principles || [{check:"dryBand"}, {check:"holdingsCap"}, {check:"payFirst"}];
-  PRINCIPLES.forEach(pr => {
+  // Every investing rule lives on one page since 2026-10-27 (the owner: "not in separate places"):
+  // the high-level rules are computed here and drawn on Rules, each with its details under it.
+  // The funds and the account behind them are the Monthly plan's, not an investing rule.
+  const NAMES = {payFirst:"Pay yourself first", dryBand:"Keep enough dry powder", holdingsCap:"Hold no more than your limit"};
+  PRINCIPLE_ROWS = PRINCIPLES.map(pr => {
     const r = CHECKS[pr.check] ? CHECKS[pr.check](pr) : null;
-    if(r) rows.push(row(r[0], (pr.name ? "<b>"+pr.name+"</b> \u2014 " : "")+r[1]));
-  });
-  // The funds and the account behind them are the Monthly plan's: it shows the claim against the
-  // balance and turns red when they no longer fit. Investing's rules are about investing (2026-10-27).
-  if(I.staleDays > 30) rows.push(row(ASYM.warn, "Your "+BROKER+" holdings are "+I.staleDays+" days old."));
-  if(!rows.length) rows.push(row(ASYM.ok, "Nothing to check yet."));
-  $("invAlerts").innerHTML = rows.join("");
+    return r ? {check: pr.check, name: pr.name || NAMES[pr.check] || pr.check, s: r[0][1], text: r[1]} : null;
+  }).filter(Boolean);
 
   // The Cash flow page went on 2026-09-10 (the owner: nothing on it was worth a page). The
   // monthly rows still feed Income → Overview; the pay-yourself-first check lives on Home and
@@ -1834,6 +1816,7 @@ const RULES = {"buckets": [{"key": "dry", "name": "Safe end · dry powder", "sym
 const BAND = (RULES.buckets || []).find(b => Array.isArray(b.target)) || null;
 const BANDLO = BAND ? BAND.target[0] : null, BANDHI = BAND ? BAND.target[1] : null;
 const CAPN = RULES.maxHoldings;
+let PRINCIPLE_ROWS = [];     // the high-level rules as they stand today: computed in renderInv, drawn on Rules
 const bandName = BAND ? BAND.name.split(" \u00b7 ").pop() : "";
 const outOfBand = p => BAND ? (p < BANDLO || p > BANDHI) : false;
 
@@ -2934,7 +2917,7 @@ const IV = (function(){
   const DEFS = {
     portfolio: `Money actually invested. Canadian side ${fmt(cadInv)}${FGN.rows.length ? " plus foreign funds "+fmt(fgn) : ""}. Bank cash and earmarked accounts are left out.`,
     earmarked: `${EARMARK.map(a=>a+" "+fmt(positions.filter(p=>p.account===a).reduce((s,p)=>s+p.mv,0))).join(" + ")}. Set aside for a purpose, so out of Portfolio.`,
-    dry: `${andList(DRY)} outside the earmarked accounts, measured against the Canadian side ${fmt(cadInv)}. Foreign holdings are left out. You want ${DRYLO}\u2013${DRYHI}%.`,
+    dry: `${andList(DRY)} outside the earmarked accounts, measured against the ${DATA.broker} side ${fmt(cadInv)}. Foreign holdings are left out. You want ${DRYLO}\u2013${DRYHI}%.`,
     holdings: `${(DATA.tickers||[]).length} ${DATA.broker} tickers${FGN.rows.length ? " + "+FGN.rows.length+" foreign funds" : ""}. Cash not counted.${CAP ? " Your limit is "+CAP+"." : ""}`
   };
   const prev = HIST.length>1 ? HIST[HIST.length-2] : null;
@@ -3014,34 +2997,58 @@ const IV = (function(){
     if(!cadInv) return {s:"info", n:`${cap1(b.name.split(" \u00b7 ").pop())} band ${lo}\u2013${hi}%`,
       d:`Nothing invested yet, so there is no allocation to check. It starts working after your first holdings import.`};
     return {s: inside?"ok":"warn", n:`${cap1(b.name.split(" \u00b7 ").pop())} band ${lo}\u2013${hi}%`,
-      d:`Currently ${pctS(pct)}${bySym?" ("+bySym+(accs?" across "+accs:"")+")":""} \u2014 ${inside ? "inside the band, with "+fmt(cadInv*hi/100-val)+` of headroom before the ${hi}% ceiling` : (gap>0 ? fmt(gap)+` below the ${lo}% floor` : fmt(over)+` above the ${hi}% ceiling`)}. Measured against the Canadian side ${fmt(cadInv)}; ${andList(EARMARK)} ${EARMARK.length>1?"are":"is"} set aside for a purpose, so nothing held there counts.`};
+      d:`Currently ${pctS(pct)}${bySym?" ("+bySym+(accs?" across "+accs:"")+")":""} \u2014 ${inside ? "inside the band, with "+fmt(cadInv*hi/100-val)+` of headroom before the ${hi}% ceiling` : (gap>0 ? fmt(gap)+` below the ${lo}% floor` : fmt(over)+` above the ${hi}% ceiling`)}. Measured against the ${DATA.broker} side ${fmt(cadInv)}; ${andList(EARMARK)} ${EARMARK.length>1?"are":"is"} set aside for a purpose, so nothing held there counts.`};
   });
   const posOf = s => positions.filter(p=>p.sym===s);
   const fill  = t => String(t)
     .replace(/\{mv:([A-Za-z0-9.\-]+)\}/g, (_,s) => fmt(symMv(s)))
     .replace(/\{n:([A-Za-z0-9.\-]+)\}/g,  (_,s) => posOf(s).length)
     .replace(/\{split:([A-Za-z0-9.\-]+)\}/g, (_,s) => posOf(s).map(p=>p.account+" "+p.qty+" sh").join(" / "));
-  const noteRows = (RULES.notes||[]).map(x => ({s:x.status, n:x.name, d:fill(x.text)}));
+  const noteRows = (RULES.notes||[]).map(x => ({s:x.status, n:x.name, d:fill(x.text), under:x.under||""}));
   const rules=[
-   ...bandRows,
+   ...bandRows.map(r => ({...r, under:"dryBand"})),
    // No limit set: the count stands on the Holdings card, and there is no rule here to pass or fail.
-   ...(CAP ? [{s:nTick>CAP?"bad":"ok",n:`Simplify to \u2264${CAP} positions`,d: nTick===0 ? "No positions yet." :
+   ...(CAP ? [{under:"holdingsCap", s:nTick>CAP?"bad":"ok",n:`Simplify to \u2264${CAP} positions`,d: nTick===0 ? "No positions yet." :
      `${nTick} positions \u2014 ${freeSyms.size} at ${DATA.broker}${FGN.rows.length ? " plus "+FGN.rows.length+" foreign funds" : ""}${nTick>CAP ? ", "+(nTick-CAP)+" over target." : " \u2014 inside the target."}`
      + (Object.keys(midBy).length ? ` ${cap1(CATCHNAME)} holds ${Object.keys(midBy).length} of them (${fmt(mid)}); ${nTick-Object.keys(midBy).length<=CAP ? "closing every one would bring the count to "+(nTick-Object.keys(midBy).length)+`, which clears the \u2264${CAP} target on its own` : "closing every one still leaves "+(nTick-Object.keys(midBy).length)+", so "+(nTick-Object.keys(midBy).length-CAP)+" more would have to come from the named buckets"}. Smallest first: ${midAsc}.` : "")}] : []),
    ...noteRows,
-   ...(FGN.rows.length ? [{s:"info",n:"Foreign currency kept apart",d:`${fmtFgn(FGN.amount)} \u2248 ${fmt(fgn)} of foreign funds counts inside Portfolio but stays out of the Canadian dry powder: crossing the border costs conversion and transfer friction, so it is not deployable here. The ${fmtFgn(FGN.cash)} in ${FGN.label} bank deposits is cash, not portfolio, and is on the ${FGN.label} page.`}] : [])
+   ...(FGN.rows.length ? [{under:"abroad", s:"info",n:"Foreign currency kept apart",d:`${fmtFgn(FGN.amount)} \u2248 ${fmt(fgn)} of foreign funds counts inside Portfolio but stays out of the Canadian dry powder: crossing the border costs conversion and transfer friction, so it is not deployable here. The ${fmtFgn(FGN.cash)} in ${FGN.label} bank deposits is cash, not portfolio, and is on Accounts.`}] : [])
   ];
   const SEV={bad:0,warn:1,info:2,ok:3};
   rules.sort((a,b)=>SEV[a.s]-SEV[b.s]);
   const nOf=s=>rules.filter(r=>r.s===s).length;
   function renderRules(){
-    $("ruleSum").innerHTML =
-      '<span class="sym bad">\u2717</span> '+nOf("bad")+' breached &nbsp;&nbsp; <span class="sym warn">\u26a0</span> '+nOf("warn")+' to watch &nbsp;&nbsp; <span class="sym ok">\u2713</span> '+(nOf("ok")+nOf("info"))+' clear';
-    $("ruleList").innerHTML = rules.map(r=>{
-     const c={ok:["ok","\u2713 not triggered"],warn:["warn","\u26a0 needs attention"],bad:["bad","\u2717 breached"],info:["info","note"]}[r.s];
-     return `<div class="rule"><span class="chip ${c[0]}">${c[1]}</span><div class="body"><div class="name">${r.n}</div><div class="det">${r.d}</div></div></div>`;
+    // One page for every investing rule (the owner, 2026-10-27): each high-level rule as it stands
+    // today, the detailed rules filed under it (rules.json notes, `under`), and under each of those
+    // the dates to look at it again — a date belongs to the rule whose name carries a ticker the
+    // date mentions. What fits under none of them is listed last.
+    const CH = {ok:["ok","\u2713 kept"], warn:["warn","\u26a0 needs attention"], bad:["bad","\u2717 broken"], info:["info","note"]};
+    const known = new Set([...positions.map(p => p.sym), ...(RULES.buckets||[]).flatMap(b => b.symbols||[])]);
+    const own = r => (String(r.n||"").match(/\b[A-Z][A-Z0-9.]{1,5}\b/g)||[]).filter(y => known.has(y));
+    const dated = evs.filter(e => !e.monthly), used = new Set();
+    const datesOf = r => { const ys = own(r); if(!ys.length) return [];
+      const ds = dated.filter(e => !used.has(e) && ys.some(y => (e.t+" "+e.w).toUpperCase().includes(y)));
+      ds.forEach(e => used.add(e)); return ds; };
+    const dateLine = e => '<div class="rdate'+(e.past ? " past" : e.hot ? " hot" : "")+'"><b>'+e.t+'</b>, '+e.label+', '
+      + (e.past ? "passed "+(-e.days)+" days ago" : e.days === 0 ? "today" : "in "+e.days+" days")+'<div>'+e.w+'</div></div>';
+    const line = (st, name, det, extra, sub) => '<div class="rule'+(sub ? " sub" : "")+'"><span class="chip '+CH[st][0]+'">'+CH[st][1]+'</span>'
+      + '<div class="body"><div class="name">'+name+'</div><div class="det">'+det+'</div>'+(extra||"")+'</div></div>';
+    const detail = r => line(r.s, r.n, r.d, datesOf(r).map(dateLine).join(""), true);
+    const checks = new Set(PRINCIPLE_ROWS.map(p => p.check));
+    let h = PRINCIPLE_ROWS.map(p => {
+      const ds = rules.filter(r => r.under === p.check);
+      return '<div class="pr">'+line(p.s, p.name, p.text)+(ds.length ? '<div class="pr-subs">'+ds.map(detail).join("")+'</div>' : "")+'</div>';
     }).join("");
+    const rest = rules.filter(r => !checks.has(r.under)).map(detail).join("");
+    const left = dated.filter(e => !used.has(e)).map(dateLine).join("");
+    if(rest || left) h += '<div class="pr"><div class="pr-head">Other rules and dates</div><div class="pr-subs">'+rest+left+'</div></div>';
+    const all = [...PRINCIPLE_ROWS.map(p => p.s), ...rules.map(r => r.s)];
+    const n = st => all.filter(x => x === st).length;
+    $("ruleSum").innerHTML = '<span class="sym bad">\u2717</span> '+n("bad")+' broken &nbsp;&nbsp; <span class="sym warn">\u26a0</span> '
+      + n("warn")+' need attention &nbsp;&nbsp; <span class="sym ok">\u2713</span> '+(n("ok")+n("info"))+' kept';
+    $("ruleList").innerHTML = h || '<div class="empty">No rules yet. Tell Claude a rule you want to hold yourself to.</div>';
   }
+
 
   // ----- checkpoints: dates you promised to look at something again, plus import day
   const T = new Date(DATA.today);
@@ -3062,16 +3069,7 @@ const IV = (function(){
     e.hot  = !e.past && e.days <= 45;
     return e;
   }).sort((a,b)=>a.days-b.days);
-  function renderTimeline(){
-    $("timeline").innerHTML = (evs.length ? "" :
-      '<div class="ev"><div class="d">Nothing scheduled<span class="when">\u2014</span></div>'
-      + '<div class="t">A checkpoint is a date you promised to look at something again \u2014 quarterly '
-      + 'results, a lock-up ending, the next import day. Tell Claude what to watch and when.</div></div>')
-      + evs.map(e=>{
-      const when = e.past ? "passed "+(-e.days)+"d ago \u00b7 review" : (e.days===0 ? "today" : "in "+e.days+"d");
-      return `<div class="ev ${e.hot?"hot":""} ${e.past?"past":""}"><div class="d">${e.label}<span class="when">${when}</span></div><div class="t">${e.t}</div><div class="w">${e.w}</div></div>`;
-    }).join("");
-  }
+
 
   // ----- holdings: by role or by account; P&L off by default because cost is not a decision input
   let showPL = false, view = "role";
@@ -3141,11 +3139,12 @@ const IV = (function(){
     }));
     $("plToggle").addEventListener("click", e => { showPL=!showPL; e.currentTarget.classList.toggle("on", showPL); drawHoldings(); });
   }
-  function renderAll(){ renderStats(); renderMeta(); renderBarbell(); renderRules(); renderTimeline(); drawHoldings(); wire(); }
+  function renderAll(){ renderStats(); renderMeta(); renderBarbell(); renderRules(); drawHoldings(); wire(); }
   // What the sidebar dots need: the worst rule status, whether the band or the cap is broken,
   // and whether a checkpoint has gone past its date.
-  const flags = () => ({bad: nOf("bad") > 0, warn: nOf("warn") > 0, dryIn, over: CAP ? nTick > CAP : false,
-                        past: evs.some(e => e.past), invested: cadInv > 0});
+  const flags = () => ({bad: nOf("bad") > 0 || PRINCIPLE_ROWS.some(p => p.s === "bad"),
+                        warn: nOf("warn") > 0 || PRINCIPLE_ROWS.some(p => p.s === "warn") || evs.some(e => e.past && !e.monthly),
+                        dryIn, over: CAP ? nTick > CAP : false, invested: cadInv > 0});
   return { renderAll, flags };
 })();
 

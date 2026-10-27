@@ -156,8 +156,8 @@ tools/        demo 数据、迁移脚本、同步进工作区
 —— 是它的一个实例。`tools/sync.py <workspace>` 把技能、模板和纲领文件复制进去，不碰任何属于你
 的东西；工具的数据形状比你的文件夹新时，`tools/migrate.py <workspace>` 会一步一步把文件夹迁上来。
 
-<!-- LINT:NAV main=18/5 minwidth=1120 -->
-页面共 18 页、5 个侧栏分组 ——
+<!-- LINT:NAV main=17/5 minwidth=1120 -->
+页面共 17 页、5 个侧栏分组 ——
 Home · Spending · Income · Investing · Plan · Records
 —— 仅桌面，窗口至少 1120px 宽。
 </details>

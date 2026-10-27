@@ -73,6 +73,12 @@
     heading or by landing on one of its pages; while closed, its heading carries the strongest
     dot inside. **Data sources was renamed Statements** — what you drop in is a statement, and
     "data source" is the pipeline's word for it.
+  - **Every investing rule is on one page, Rules** (the owner, 2026-10-27: "not in separate
+    places"). The high-level rules (rules.json `principles`) are listed as they stand today, each
+    with its detailed rules under it (`notes`, filed by `under`) and, under each of those, the
+    dates to look at it again — a checkpoint belongs to the rule whose name carries a ticker the
+    date mentions. What fits nowhere is listed last. The rules card on Overview and the
+    Checkpoints page are gone; the import day is on Statements, not among the rules.
   - **Money held in another currency is not a page** (the owner, 2026-10-26). It was one, under
     Investing, though most of it was bank cash: grouped by currency where every other page answers
     its group's question, and repeating what Accounts, the net-worth reach row and the Investing
@@ -100,8 +106,8 @@
   - Month pills appear only on `PILL_PAGES` (home / tx / budget).
   - The foot of the sidebar carries the tool version (`v1.0`) in muted 10.5px. MAJOR.MINOR:
     polish moves the minor, a change of shape moves the major.
-<!-- LINT:PAGES pages=18 sections=5 -->
-- **LY Finance Dashboard is the main dashboard**: 18 pages under 5 sidebar sections (the
+<!-- LINT:PAGES pages=17 sections=5 -->
+- **LY Finance Dashboard is the main dashboard**: 17 pages under 5 sidebar sections (the
   2026-09-06 rebuild, replacing 6 top tabs). **Lint rule S4 checks this table against the `NAV`
   constant, so changing the navigation means changing this table too** — S4 also checks the page
   count, the sidebar list and the minimum width stated in `README.md`, and that every path the
@@ -112,7 +118,7 @@
   | — | Home (net worth, two cuts of it, At a glance) |
   | Spending | This month · Year · Subscriptions · Monthly plan |
   | Income | Overview · Investment income |
-  | Investing | Overview · Holdings · Rules · Checkpoints |
+  | Investing | Overview · Holdings · Rules |
   | Plan | FIRE · Coast & care · Baseline |
   | Records | Updates · Accounts · Statements · Tasks |
   The Insights page was absorbed on 2026-09-10: what stood out about the year is a card on the

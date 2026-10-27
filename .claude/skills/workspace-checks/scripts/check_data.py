@@ -1036,6 +1036,10 @@ def check(root):
                            f"the page has {', '.join(sorted(have))}")
             if pr.get("check") == "reasons" and pr.get("bucket") not in bkeys:
                 err("D26", f"rules.json principle {pr.get('name')!r} reads bucket {pr.get('bucket')!r}, which rules.json does not have")
+        pchecks = {pr.get("check") for pr in rj26.get("principles", [])}
+        for nt in rj26.get("notes", []):
+            if nt.get("under") and nt["under"] not in pchecks:
+                err("D26", f"rules.json note {nt.get('name')!r} sits under {nt['under']!r}, which none of the principles checks")
         for sym_, ks in rj26.get("placement", {}).items():
             for k in ks:
                 if k not in kinds:

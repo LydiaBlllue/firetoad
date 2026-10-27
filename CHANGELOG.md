@@ -4,6 +4,13 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Every investing rule on one page** (2026-10-27). The rules were in three places: the high-level
+  ones on Overview, the detailed ones on Rules, the dates on Checkpoints. Rules now lists each
+  high-level rule as it stands today, the detailed rules filed under it (rules.json notes, `under`),
+  and under each of those its dates. The Overview card and the Checkpoints page are gone (17 pages);
+  the sidebar's Rules dot carries a passed date too. D26 fails a note filed under a rule no
+  principle checks.
+
 - **High-level rules on the Investing overview** (2026-10-27). The card showed only what the page
   happened to compute — the band and the transfers — so the owner's most broken rule never
   appeared on it. rules.json `principles` now lists her rules in her words, each naming a check
