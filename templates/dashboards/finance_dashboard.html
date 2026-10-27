@@ -127,6 +127,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .stack > span{display:block;height:100%}
 .nw-row{display:flex;align-items:center;gap:12px;padding:7px 0;font-size:13px;border-bottom:1px solid var(--grid)}
 .nw-row:last-child{border-bottom:none}
+.nw-row.sum{border-top:1.5px solid var(--border);border-bottom:none}.nw-row.sum .v{font-weight:700}
 .nw-row .nm{width:158px;flex-shrink:0;color:var(--ink-2);display:flex;align-items:center;gap:8px;font-weight:600}
 .nw-row .d{flex:1;max-width:620px;color:var(--muted);font-size:12px;line-height:1.45}
 .nw-row .v{width:98px;text-align:right;font-weight:600;flex-shrink:0}
@@ -957,7 +958,12 @@ function renderHome(){
   const gross = NWPARTS.reduce((a,r) => a + r.v, 0);
   $("nwBig").textContent = fmt(NW_GLOBAL);
   $("nwStack").innerHTML = bar(NWPARTS, gross);
+  // The parts add up to what you own; the owner asked to see that figure before the debts come
+  // off (2026-10-26), so the card reads parts, total assets, less what you owe, net worth.
   $("nwRows").innerHTML = list(NWPARTS, gross)
+    + '<div class="nw-row sum"><span class="nm">Total assets</span>'
+    + '<span class="d">Everything you own, in every currency, before what you owe</span>'
+    + '<span class="v num">'+fmt(gross)+'</span><span class="p"></span></div>'
     + '<div class="nw-row"><span class="nm">Less what you owe</span>'
     + '<span class="d">'+DEBT_NOTE+'</span>'
     + '<span class="v num">\u2212'+fmt(NW_DEBT)+'</span><span class="p"></span></div>';
