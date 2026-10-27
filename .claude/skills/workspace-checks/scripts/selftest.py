@@ -253,6 +253,13 @@ def m_class_unknown(r):
 def m_principle_unknown(r):
     # A rule naming a check nobody wrote: it would silently drop off the Investing overview.
     edit_json(r, layout.rel("rules.json"), lambda d: d.__setitem__("principles", [{"check": "neverWritten", "name": "A rule nobody checks"}]))
+def m_bench_other(r):
+    # The owner names another fund and the prices on file are still the old one's: the
+    # Performance page would compare against a fund nobody chose any more.
+    edit_json(r, layout.rel("rules.json"), lambda d: d["benchmark"].__setitem__("symbol", "XEQT"))
+def m_prices_stale(r):
+    # A fetch that failed for months: the prices stop well before the newest snapshot.
+    edit_json(r, layout.rel("prices.json"), lambda d: d["benchmark"].__setitem__("series", d["benchmark"]["series"][:5]))
 def m_rules_drift(r):
     # rules.json is the strategy; the page copies it. The copy going stale means the Rules page
     # is checking the portfolio against a band nobody chose any more.
@@ -401,6 +408,8 @@ CASES = [
     ("D25", "an ETF held with no kind of asset",            m_class_missing,   "find"),
     ("D25", "an asset class the page has no slice for",     m_class_unknown,   "find"),
     ("D26", "a principle naming a check the page lacks",   m_principle_unknown, "find"),
+    ("D27", "the benchmark changed, the prices did not",    m_bench_other,     "find"),
+    ("D27", "the benchmark's prices stop before the newest snapshot", m_prices_stale, "find"),
     ("D21", "a committed flow the ledger never shows",      m_committed_missing, "find"),
     ("D24", "a card credit counted as a refund of nothing", m_refund_of_nothing, "find"),
     ("D24", "a refund larger than was ever spent there",    m_refund_too_much,   "find"),

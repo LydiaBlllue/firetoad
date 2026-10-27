@@ -63,6 +63,12 @@ rows. **Read the summary, not the statements.** What it hands back is the whole 
   `judged`, `asked` — and the report to the owner is that record read out. Add to it what you
   decided by hand; never write the report in the chat first.
 
+One step goes online: after the write, `prices.py` fetches the benchmark `rules.json` names
+(its adjusted close) and the Bank of Canada's USD/CAD into `findata/ledgers/prices.json`, for the
+Performance page — only when the prices stop short of the newest snapshot. Nothing about the
+owner is sent, only a ticker and dates. A failed fetch is said in the summary and the import goes
+on; D27 then says how far the prices fall short.
+
 A `--write` run ends with the checkers and reseeds the preflight fingerprint. Exit 1 means it
 stopped before writing, or failed while writing and put everything back; 2 means it wrote and a
 checker found something — fix that before saying the update is done; 3 means pypdf is missing

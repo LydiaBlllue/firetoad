@@ -4,6 +4,17 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Performance, against one fund you could have bought instead** (2026-10-27). Investing's
+  Overview held what you own and how it did on one page. It is Portfolio now (what you hold, how
+  it splits, the US-dollar rate), and Performance is a page of its own: the same money bought
+  into the fund `rules.json` `benchmark` names (VT in the demo), on the days it actually went in,
+  drawn as that fund's daily line against the growth accounts' snapshots, with the difference and
+  — under a year — a note that the span is too short to judge; then what you put in against what
+  the market added. The prices (adjusted close, and the Bank of Canada's USD/CAD) are fetched by
+  the new `prices.py` into `findata/ledgers/prices.json` when an import needs them, so the page
+  still reads nothing at runtime. D27 fails prices for another fund and warns when they stop more
+  than a week before the newest snapshot; the selftest plants both (55 faults). 18 pages.
+
 - **Income follows the year** (2026-10-27). The page was "Overview" in the sidebar and half of it
   followed the month cursor, for a donut of two paycheques. It is Income now, on the year alone;
   the year by source carries the two notes the month card had (investment income never reaches

@@ -127,7 +127,7 @@ def check(root):
             "D3":"rules", "D5":"rules", "D6":"rules", "D10":"rules", "D13":"rules", "D14":"rules",
             "D11":"build", "D12":"build", "D17":"build", "T1":"build", "T2":"hygiene", "D15":"build", "D16":"conform",
             "D2":"hygiene", "D4":"hygiene", "D9":"hygiene", "D18":"hygiene",
-            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D25":"hygiene", "D26":"rules"}
+            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D25":"hygiene", "D26":"rules", "D27":"hygiene"}
     F = []          # (severity, rule, message, category)
     def err(r, m, cat=None):  F.append(("ERROR", r, m, cat or HOME.get(r, "rules")))
     def warn(r, m, cat=None): F.append(("WARN",  r, m, cat or HOME.get(r, "rules")))
@@ -1046,6 +1046,32 @@ def check(root):
                     err("D26", f"rules.json placement wants {sym_} in a {k!r} account; the register has no account of that kind")
         if rj26.get("principles") and not any(f[1] == "D26" and f[0] == "ERROR" for f in F):
             note("D26", f"{len(rj26['principles'])} principles, each naming a check the page runs")
+
+    # -- D27 the benchmark's prices reach the newest snapshot -----------------------------
+    # The Performance page compares the growth accounts with one fund bought on the same days. Its
+    # prices are fetched (prices.py), not read off a statement, so a fetch that failed or never ran
+    # leaves the comparison ending early with nothing on the page to say so.
+    bench27 = (json.load(open(rp26, encoding="utf-8")).get("benchmark") or {}) if rp26 else {}
+    if bench27.get("symbol"):
+        pp27, hp27 = load(root, "prices.json"), load(root, "investment_history.json")
+        snaps27 = json.load(open(hp27, encoding="utf-8")).get("snapshots", []) if hp27 else []
+        newest = max((h["date"] for h in snaps27), default=None)
+        if not pp27:
+            warn("D27", f"rules.json names {bench27['symbol']} as the benchmark but there are no prices yet — "
+                        "run .claude/skills/update-dashboard/scripts/prices.py . --write")
+        else:
+            pj27 = json.load(open(pp27, encoding="utf-8"))
+            ser = (pj27.get("benchmark") or {}).get("series") or []
+            got = (pj27.get("benchmark") or {}).get("symbol")
+            if got != bench27["symbol"]:
+                err("D27", f"prices.json holds {got}, but rules.json names {bench27['symbol']} as the benchmark — fetch again")
+            elif not ser:
+                err("D27", "prices.json has no prices in it — fetch again")
+            elif newest and (datetime.date.fromisoformat(newest) - datetime.date.fromisoformat(ser[-1][0])).days > 7:
+                warn("D27", f"{got} prices stop at {ser[-1][0]}, more than a week before the newest snapshot ({newest}): "
+                            "the comparison ends early — fetch again")
+            else:
+                note("D27", f"{got} prices to {ser[-1][0]}, {len(ser)} days")
 
     # -- D18 what an update leaves behind: the record and the queue ------------------------
     # alerts.json used to hold the sentences one import wrote, and the Portfolio page showed them

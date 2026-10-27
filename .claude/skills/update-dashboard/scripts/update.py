@@ -1086,6 +1086,10 @@ def main(argv):
     try:
         before, sp_before = derive(root), spending_by_month(root)
         write_plan(ws, plan)
+        # The benchmark's prices, for the Performance page: the one step that goes online, so a
+        # failure is said and the import goes on — the last prices stay, and D27 says how old.
+        prc, pout = run(os.path.join(HERE, "prices.py"), [".", "--write", "--if-needed"], root)
+        say("  prices: " + (pout.strip().splitlines()[-1].strip() if pout.strip() else f"exit {prc}"))
         after, sp_after = derive(root), spending_by_month(root)
         write_history(ws, after)
         after = derive(root)

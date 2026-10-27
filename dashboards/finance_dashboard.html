@@ -413,14 +413,25 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div id="barbell"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
+    <div class="lab">The US-dollar rate behind these numbers</div>
+    <div id="invMeta"></div>
+  </div>
+</section>
+
+<section data-pg="perf" hidden>
+  <div class="grid-stats" id="perfStats"></div>
+  <div class="card" style="margin-bottom:10px">
+    <div class="lab" id="perfLab">Against the benchmark</div>
+    <svg class="year-svg" id="perfChart" viewBox="0 0 940 260" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="year-legend" id="perfLegend"></div>
+    <div id="perfRows"></div>
+    <div id="perfNote" style="margin-top:10px"></div>
+  </div>
+  <div class="card" style="margin-bottom:10px">
     <div class="lab">What you put in, and what the market added</div>
     <div id="bookStack"></div>
     <div id="bookRows"></div>
     <div id="bookNote" style="margin-top:10px"></div>
-  </div>
-  <div class="card" style="margin-bottom:10px">
-    <div class="lab">The rate behind the numbers</div>
-    <div id="invMeta"></div>
   </div>
 </section>
 
@@ -717,7 +728,8 @@ const NAV = [
                            {k:"subs",  n:"Subscriptions",    t:"Subscriptions",        d:"Charges that come back every month"}]},
   {sec:"Income",    items:[{k:"income",n:"Income",           t:"Income",               d:"What came in this year, by source and month by month, and how much of it you kept"},
                            {k:"wsinc", n:"Investment income",t:"Investment income",    d:"What the portfolio paid you, before you sold anything"}]},
-  {sec:"Investing", items:[{k:"port",  n:"Overview",         t:"Investing",            d:"What is invested, how it splits across your buckets, and what your rules say"},
+  {sec:"Investing", items:[{k:"port",  n:"Portfolio",        t:"Portfolio",            d:"What is invested, and how it splits by currency, by kind of asset and across your buckets"},
+                           {k:"perf",  n:"Performance",      t:"Performance",          d:"How the money did — against one fund you could have bought instead, and against what you put in"},
                            {k:"hold",  n:"Holdings",         t:"Holdings",             d:"Every position, by role or by account"},
                            {k:"rules", n:"Rules",            t:"Rules",                d:"Each of your rules, checked today, with the details and dates under it"}]},
   {sec:"Plan",      items:[{k:"budget",n:"Budget",           t:"Budget",               d:"What each paycheque is for, and what the two funds hold"},
@@ -871,6 +883,7 @@ function render(){
   renderPlan();
   renderFire();
   renderBook();
+  renderPerf();
   renderHome();
   renderGlance();
 }
@@ -902,6 +915,67 @@ function renderBook(){
     + "already took and dividends you reinvested sit in the left bar, and it says nothing about "
     + "<b>when</b> the money went in. The " + fmt(incomeYtd) + " of dividends and interest paid out in "
     + TODAY.slice(0,4) + " is in neither bar; it is on the Investment income page.");
+}
+// Performance: the same money in one fund, bought on the days it actually went in. The line is
+// what that would have been worth each day; the dots are what the growth accounts were worth on
+// the days a snapshot was taken. Ten weeks says almost nothing, and the page says so.
+function renderPerf(){
+  if(!PERF.symbol){
+    $("perfStats").innerHTML = "";
+    $("perfChart").innerHTML = '<text x="470" y="130" text-anchor="middle" font-size="13" fill="var(--muted)">No fund to compare against yet. Name one, and the next update fetches its prices.</text>';
+    $("perfLegend").innerHTML = $("perfRows").innerHTML = $("perfNote").innerHTML = "";
+    return;
+  }
+  const pct1 = n => n.toFixed(1) + "%";
+  const P = PERF, diff = P.end - P.shadow, days = Math.round((new Date(P.to) - new Date(P.from)) / 864e5);
+  const span = days < 120 ? Math.round(days/7) + " weeks" : days < 730 ? Math.round(days/30.4) + " months" : (days/365.25).toFixed(1) + " years";
+  $("perfLab").textContent = "Against " + P.symbol + ", " + ymFull(P.from.slice(0,7)) + " to " + ymFull(P.to.slice(0,7));
+  const stat = (lab, q, val, note, col) => '<div class="card"><div class="lab">'+lab+(q ? qMark(q) : "")+'</div><div class="big num"'+(col ? ' style="color:'+col+'"' : '')+'>'+val+'</div><div class="cap">'+note+'</div></div>';
+  $("perfStats").innerHTML =
+      stat("Your growth accounts", "What the " + BROKER + " accounts you hold to grow were worth on " + P.to + ", the newest snapshot. The foreign funds are left out on both sides: their deposits are in no export, so there is nothing to buy the benchmark with.", fmt(P.end), "on " + P.to)
+    + stat("The same money in " + P.symbol, P.name + ". " + P.why, fmt(P.shadow), "had every dollar bought it the same day")
+    + stat("Difference", "", (diff >= 0 ? "+" : "\u2212") + fmt(Math.abs(diff)), (diff >= 0 ? "ahead of " : "behind ") + P.symbol + ", " + pct1(Math.abs(pc(diff, P.shadow))) + " over " + span, diff < 0 ? "#d03b3b" : "");
+  // the chart: the benchmark's daily line, the snapshots as dots on an ink line
+  const W=940, H=260, padL=64, padR=16, padT=16, padB=28;
+  const t = d => new Date(d).getTime(), t0 = t(P.from), t1 = t(P.to);
+  const vals = P.path.map(p => p[1]).concat(P.actual.map(a => a[1]));
+  const lo = Math.min(...vals), hi = Math.max(...vals), pad = (hi - lo) * 0.12 || hi * 0.05;
+  const vmin = lo - pad, vmax = hi + pad;
+  const x = d => padL + (t(d) - t0) / Math.max(t1 - t0, 1) * (W - padL - padR);
+  const y = v => H - padB - (v - vmin) / (vmax - vmin) * (H - padT - padB);
+  const rawStep = (vmax - vmin) / 4, mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const yStep = [1,2,2.5,5,10].map(m => m*mag).find(s2 => s2 >= rawStep);
+  let out = "";
+  for(let v = Math.ceil(vmin / yStep) * yStep; v <= vmax; v += yStep){
+    out += '<line x1="'+padL+'" y1="'+y(v)+'" x2="'+(W-padR)+'" y2="'+y(v)+'" stroke="var(--grid)" stroke-width="1"/>'
+         + '<text x="'+(padL-8)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="12" class="num" fill="var(--muted)">$'+Math.round(v/1e3)+'k</text>';
+  }
+  const months = [];
+  for(let m = P.from.slice(0,7); m <= P.to.slice(0,7); m = ymShift(m, 1)) if(m + "-01" >= P.from) months.push(m);
+  months.forEach(m => out += '<text x="'+x(m+"-01")+'" y="'+(H-9)+'" text-anchor="middle" font-size="12" fill="var(--muted)">'+MN[Number(m.slice(5))-1]+'</text>');
+  out += '<polyline fill="none" stroke="#2a78d6" stroke-width="2" points="'+P.path.map(p => x(p[0])+","+y(p[1])).join(" ")+'"/>';
+  // Between two snapshots nothing is known, so the dots are only joined by a dotted line.
+  out += '<polyline fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="2 4" points="'+P.actual.map(a => x(a[0])+","+y(a[1])).join(" ")+'"/>';
+  out += P.actual.map((a,i) => '<circle cx="'+x(a[0])+'" cy="'+y(a[1])+'" r="4.5" fill="var(--ink)" data-i="'+i+'"/>').join("");
+  out += P.flows.filter(f => Math.abs(f[1]) >= 1000).map(f => '<line x1="'+x(f[0])+'" y1="'+padT+'" x2="'+x(f[0])+'" y2="'+(H-padB)+'" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 4" data-f="'+f[0]+'"/>').join("");
+  const svg = $("perfChart");
+  svg.innerHTML = out;
+  svg.querySelectorAll("circle[data-i]").forEach(c => { const a = P.actual[Number(c.dataset.i)];
+    hoverable(c, a[0] + "<br>Your growth accounts " + fmt(a[1]) + "<br>" + P.symbol + " instead " + fmt((P.path.filter(p => p[0] <= a[0]).pop() || P.path[0])[1])); });
+  svg.querySelectorAll("line[data-f]").forEach(l => { const f = P.flows.find(z => z[0] === l.dataset.f);
+    hoverable(l, f[0] + "<br>" + (f[1] > 0 ? fmt(f[1]) + " moved in" : fmt(-f[1]) + " moved out")); });
+  $("perfLegend").innerHTML = '<div class="leg-row"><span class="dot" style="background:var(--ink)"></span><span class="nm">Your growth accounts, at each snapshot (nothing is known in between)</span></div>'
+    + '<div class="leg-row"><span class="dot" style="background:#2a78d6"></span><span class="nm">The same money in ' + P.symbol + ', each day</span></div>'
+    + '<div class="leg-row"><span class="nm" style="color:var(--muted)">┆ money moving in or out</span></div>';
+  $("perfRows").innerHTML = metaList([
+    ["Worth on " + P.from + ", the first snapshot", fmt(P.start)],
+    ["Moved in since, net" + qMark("Every transfer into or out of the growth accounts after the first snapshot, from the broker's activity export. Moves between two growth accounts cancel out."), (P.put >= 0 ? "" : "\u2212") + fmt(Math.abs(P.put)) + " in " + P.flows.length + " move" + (P.flows.length === 1 ? "" : "s")],
+    [P.symbol + " itself over the same days" + qMark("Its price with dividends folded in, in Canadian dollars at the Bank of Canada rate of each day."), (P.benchRet >= 0 ? "+" : "\u2212") + pct1(Math.abs(P.benchRet * 100))],
+    ["Prices", "to " + P.pricesAsof + " \u00b7 " + (P.source.benchmark || "") + (P.source.usdcad ? "; " + P.source.usdcad : ""), "mut"]
+  ]);
+  $("perfNote").innerHTML = days < 365
+    ? noteBox("<b>" + span + " is far too short to judge.</b> One fund against a whole portfolio swings by more than this from one month to the next. The comparison starts at the first snapshot and grows with every update; read it once it covers a year or more.")
+    : "";
 }
 function renderHome(){
   const yr = TODAY.slice(0,4);
@@ -1924,6 +1998,7 @@ const FOREIGN_CAD = Math.round(FOREIGN.total * FOREIGN.cadPerUnit);   // indicat
 // worth, which also holds a first-home fund, a chequing buffer and money abroad (the owner,
 // 2026-09-10). Net worth stays as the standard reference line in the header and the tables.
 const PORTFOLIO = INVEST.portfolio;
+const PERF = {"symbol": "VT", "name": "Vanguard Total World Stock ETF", "why": "The whole world's stocks in one fund: what the same money would have earned with no choices at all.", "from": "2026-06-15", "to": "2026-09-06", "start": 61204, "end": 67135, "put": 2400, "flows": [["2026-06-18", 800.0], ["2026-07-18", 800.0], ["2026-08-18", 800.0]], "shadow": 64390, "benchRet": 0.0123, "path": [["2026-06-15", 61204], ["2026-06-16", 60984], ["2026-06-17", 60538], ["2026-06-18", 62466], ["2026-06-22", 62563], ["2026-06-23", 61445], ["2026-06-24", 61564], ["2026-06-25", 61669], ["2026-06-26", 61233], ["2026-06-29", 62068], ["2026-06-30", 62532], ["2026-07-01", 62201], ["2026-07-02", 62094], ["2026-07-06", 62914], ["2026-07-07", 62241], ["2026-07-08", 61920], ["2026-07-09", 62371], ["2026-07-10", 62520], ["2026-07-13", 61794], ["2026-07-14", 61836], ["2026-07-15", 61957], ["2026-07-16", 61452], ["2026-07-17", 60817], ["2026-07-20", 61597], ["2026-07-21", 62517], ["2026-07-22", 62438], ["2026-07-23", 61732], ["2026-07-24", 61732], ["2026-07-27", 61924], ["2026-07-28", 61831], ["2026-07-29", 60896], ["2026-07-30", 61883], ["2026-07-31", 62113], ["2026-08-03", 62810], ["2026-08-04", 64120], ["2026-08-05", 63817], ["2026-08-06", 63681], ["2026-08-07", 63887], ["2026-08-10", 63752], ["2026-08-11", 63624], ["2026-08-12", 63918], ["2026-08-13", 64296], ["2026-08-14", 63950], ["2026-08-17", 63738], ["2026-08-18", 63950], ["2026-08-19", 63905], ["2026-08-20", 63420], ["2026-08-21", 63637], ["2026-08-24", 63750], ["2026-08-25", 64090], ["2026-08-26", 64214], ["2026-08-27", 64423], ["2026-08-28", 64325], ["2026-08-31", 64040], ["2026-09-01", 63683], ["2026-09-02", 63850], ["2026-09-03", 64164], ["2026-09-04", 64390]], "actual": [["2026-06-15", 61204], ["2026-08-05", 64852], ["2026-09-06", 67135]], "pricesAsof": "2026-09-06", "source": {"benchmark": "Yahoo Finance, adjusted close (dividends included)", "usdcad": "Bank of Canada, daily average rate"}};   // the benchmark comparison, from prices.json and the snapshots (rebuild.py benchmark_run)
 const PORT_HISTORY = [{"ym": "2026-06", "v": 61204}, {"ym": "2026-08", "v": 64852}, {"ym": "2026-09", "v": 67135}];   // one portfolio value per month, from investment_history.json
 const NW_GLOBAL = INVEST.netWorth + FOREIGN_CAD;             // net worth  (2026-08-14: the owner)
 function renderForeign(){
@@ -1965,7 +2040,7 @@ const COMMITTED_KEEP = 1250;
 // The band and the holdings cap belong to whoever owns this workspace (findata/rules.json).
 // They were the literals 40 / 45 / 10 in four places on this page, so a workspace whose owner
 // chose differently — or chose no band at all — was told it was outside somebody else's.
-const RULES = {"buckets": [{"key": "dry", "name": "Safe end · dry powder", "symbols": ["SGOV", "VSC"], "target": [40, 45]}, {"key": "core", "name": "Core index", "symbols": ["VEQT", "XAW", "VCN"]}, {"key": "sat", "name": "High-conviction satellites", "symbols": ["SHOP", "BN"]}, {"key": "mid", "name": "Middle tier · cleanup candidates", "catchAll": true}], "maxHoldings": 10, "assetClass": {"VEQT": "stocks", "VCN": "stocks", "XAW": "stocks", "ZAG": "bonds", "VSC": "bonds", "SGOV": "bonds"}, "notes": [{"status": "ok", "name": "Account placement", "text": "Growth names in the TFSA: SHOP {mv:SHOP} is TFSA-only since the August consolidation ✓. BN {mv:BN} sits in the RRSP. The one bond ETF outside the dry-powder pair (ZAG {mv:ZAG}) stays non-registered — small enough not to matter."}, {"status": "info", "name": "SHOP — thesis check each quarter", "text": "Held for merchant growth and take-rate expansion. Review on Q3 results in late October; GMV growth under +20% is the exit trigger."}, {"status": "info", "name": "BN — 3–5 year structural position", "text": "{mv:BN} in the RRSP. Checkpoint: investor day and Q3 distributable earnings."}, {"status": "ok", "name": "Options — ≤28 DTE, named catalyst, ≤5 open", "text": "No option positions in this export ✓."}], "checkpoints": [{"title": "BN investor day", "date": "2026-09-24", "label": "Sep 24", "why": "Distributable earnings and the buyback pace — the reasons the position exists"}, {"title": "SHOP Q3 results", "date": "2026-10-29", "label": "Late October", "why": "GMV growth under +20% is the exit trigger; otherwise hold"}, {"title": "RRSP deadline", "date": "2027-03-01", "label": "Mar 1, 2027", "why": "Top up the RRSP before the deadline once the TFSA room is used"}]};
+const RULES = {"buckets": [{"key": "dry", "name": "Safe end · dry powder", "symbols": ["SGOV", "VSC"], "target": [40, 45]}, {"key": "core", "name": "Core index", "symbols": ["VEQT", "XAW", "VCN"]}, {"key": "sat", "name": "High-conviction satellites", "symbols": ["SHOP", "BN"]}, {"key": "mid", "name": "Middle tier · cleanup candidates", "catchAll": true}], "maxHoldings": 10, "assetClass": {"VEQT": "stocks", "VCN": "stocks", "XAW": "stocks", "ZAG": "bonds", "VSC": "bonds", "SGOV": "bonds"}, "notes": [{"status": "ok", "name": "Account placement", "text": "Growth names in the TFSA: SHOP {mv:SHOP} is TFSA-only since the August consolidation ✓. BN {mv:BN} sits in the RRSP. The one bond ETF outside the dry-powder pair (ZAG {mv:ZAG}) stays non-registered — small enough not to matter."}, {"status": "info", "name": "SHOP — thesis check each quarter", "text": "Held for merchant growth and take-rate expansion. Review on Q3 results in late October; GMV growth under +20% is the exit trigger."}, {"status": "info", "name": "BN — 3–5 year structural position", "text": "{mv:BN} in the RRSP. Checkpoint: investor day and Q3 distributable earnings."}, {"status": "ok", "name": "Options — ≤28 DTE, named catalyst, ≤5 open", "text": "No option positions in this export ✓."}], "checkpoints": [{"title": "BN investor day", "date": "2026-09-24", "label": "Sep 24", "why": "Distributable earnings and the buyback pace — the reasons the position exists"}, {"title": "SHOP Q3 results", "date": "2026-10-29", "label": "Late October", "why": "GMV growth under +20% is the exit trigger; otherwise hold"}, {"title": "RRSP deadline", "date": "2027-03-01", "label": "Mar 1, 2027", "why": "Top up the RRSP before the deadline once the TFSA room is used"}], "benchmark": {"symbol": "VT", "name": "Vanguard Total World Stock ETF", "why": "The whole world's stocks in one fund: what the same money would have earned with no choices at all.", "asof": "2026-10-27"}};
 const BAND = (RULES.buckets || []).find(b => Array.isArray(b.target)) || null;
 const BANDLO = BAND ? BAND.target[0] : null, BANDHI = BAND ? BAND.target[1] : null;
 const CAPN = RULES.maxHoldings;

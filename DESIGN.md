@@ -106,8 +106,8 @@
   - Month pills appear only on `PILL_PAGES` (home / tx / budget).
   - The foot of the sidebar carries the tool version (`v1.0`) in muted 10.5px. MAJOR.MINOR:
     polish moves the minor, a change of shape moves the major.
-<!-- LINT:PAGES pages=17 sections=5 -->
-- **LY Finance Dashboard is the main dashboard**: 17 pages under 5 sidebar sections (the
+<!-- LINT:PAGES pages=18 sections=5 -->
+- **LY Finance Dashboard is the main dashboard**: 18 pages under 5 sidebar sections (the
   2026-09-06 rebuild, replacing 6 top tabs). **Lint rule S4 checks this table against the `NAV`
   constant, so changing the navigation means changing this table too** — S4 also checks the page
   count, the sidebar list and the minimum width stated in `README.md`, and that every path the
@@ -118,7 +118,7 @@
   | — | Home (what needs you today, net worth, two cuts of it) |
   | Spending | This month · Year · Subscriptions |
   | Income | Income · Investment income |
-  | Investing | Overview · Holdings · Rules |
+  | Investing | Portfolio · Performance · Holdings · Rules |
   | Plan | Budget · FIRE · Coast & care · Baseline |
   | Records | Updates · Accounts · Statements · Tasks |
   The Insights page was absorbed on 2026-09-10: what stood out about the year is a card on the
@@ -186,6 +186,15 @@
   category, the monthly stacked chart, and **Inside the allowance, month by month** (everyday
   spending against today's allowance, the overspend in red, the open month faded). Subscriptions
   follows no time.
+- **Investing is what you hold, then how it did** (2026-10-27). **Portfolio** (was Overview):
+  the stat cards, the three ways the portfolio splits, and the US-dollar rate card that goes with
+  the by-currency split. **Performance**: *Against \<benchmark\>* — the same money bought into
+  the one fund `rules.json` `benchmark` names, on the days it actually went in (rebuild.py
+  `benchmark_run`, prices from `prices.json`), drawn as that fund's daily line against the growth
+  accounts' snapshots, with dashed marks where money moved; three stat cards (your growth
+  accounts, the same money in the fund, the difference); and while the comparison covers under a
+  year, a note saying it is too short to judge. Then *What you put in, and what the market
+  added*, moved from the old Overview.
 - **Income page** (follows the year only, 2026-10-27): Income / Spent / Kept, the year by source —
   where Investment carries its ? (it is income that never reaches chequing) and a line under the
   list gives what a borrower paid back, which is never income — and the months by source. The

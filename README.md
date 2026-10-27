@@ -100,8 +100,8 @@ line, and a fifth checks the checkers:
   against sections, this README against the real pages.
 - **Does it actually draw** — a headless browser opens every page at three widths and looks for
   anything that failed to render.
-<!-- LINT:FAULTS n=53 -->
-- **Are the checkers still checking** — a selftest plants 53 specific faults in a copy of the
+<!-- LINT:FAULTS n=55 -->
+- **Are the checkers still checking** — a selftest plants 55 specific faults in a copy of the
   workspace and asserts each one is caught. It exists because a checker once linted an empty
   folder and reported success.
 
@@ -176,8 +176,8 @@ the templates and the governing documents into it and touches nothing that is yo
 tool's data shape moves ahead of your folder, `tools/migrate.py <workspace>` brings the folder
 up one step at a time.
 
-<!-- LINT:NAV main=17/5 minwidth=1120 -->
-The page is 17 pages in 5 sidebar groups —
+<!-- LINT:NAV main=18/5 minwidth=1120 -->
+The page is 18 pages in 5 sidebar groups —
 Home · Spending · Income · Investing · Plan · Records
 — desktop only, at least 1120px wide.
 </details>

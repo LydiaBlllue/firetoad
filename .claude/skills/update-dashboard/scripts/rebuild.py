@@ -133,6 +133,8 @@ def load(root):
          # no exchange rate — and should not be made to invent one. 1.0 converts nothing.
          "fx": jd("fx.json", {"usd_cad": 1.0, "asof": None, "quality": "none"}),
          "hist": jd("investment_history.json", {"snapshots": []}),
+         # the benchmark's daily prices (prices.py); absent until the first fetch
+         "prices": jd("prices.json", {}),
          "merchants": jd("merchants.json")}
     d["rate"] = d["fx"]["usd_cad"]
     # A broker's export covers every account the login can see, including one held there that is
@@ -209,6 +211,69 @@ def holdings_by_account(d):
         if r.get("Book Value (CAD)"):
             bv[n] += float(r["Book Value (CAD)"])
     return mv, bv, sym
+
+
+def benchmark_run(d):
+    """The Performance page's one comparison: the same money, put into the benchmark on the days
+    it actually went in. It starts from the first portfolio snapshot — the furthest back the
+    portfolio's value is known — buys the benchmark with that value, then with every amount that
+    moved into or out of a `grow` account afterwards (the broker's MoneyMovement rows, both
+    directions, US dollars at the Bank of Canada rate of the day), and values the units on the
+    newest snapshot's date. Both sides are the broker's growth accounts only: the snapshots'
+    cadInv, which leaves the foreign funds out, because their deposits are not in any export.
+    {} when no benchmark is named or its prices have not been fetched."""
+    bench, pr = d["rules"].get("benchmark") or {}, d.get("prices") or {}
+    sym = bench.get("symbol")
+    if not sym or (pr.get("benchmark") or {}).get("symbol") != sym:
+        return {}
+    snaps, last = [], None
+    for h in sorted(d["hist"]["snapshots"], key=lambda h: h["date"]):
+        if h["cadInv"] != last:            # a snapshot carried from the one before measured nothing new
+            snaps.append(h)
+        last = h["cadInv"]
+    if len(snaps) < 2:
+        return {}
+    px = pr["benchmark"]["series"]
+    usd = pr["benchmark"].get("currency", "USD") == "USD"
+    fx = pr.get("usdcad") or []
+    def at(series, day, default=None):
+        v = default
+        for dd, x in series:
+            if dd > day:
+                break
+            v = x
+        return v
+    rate = lambda day: at(fx, day, d["rate"]) if fx else d["rate"]
+    cad = lambda day: at(px, day) * (rate(day) if usd else 1)
+    t0, t1 = snaps[0]["date"], snaps[-1]["date"]
+    if at(px, t0) is None:
+        return {}
+    grow = {a["id"] for a in d["accounts"]["accounts"] if a.get("role") == "grow" and a.get("id")}
+    flows = []
+    for r in d["acts"]:
+        if r.get("account_id") in grow and r.get("activity_type") == "MoneyMovement" and t0 < r["effective_date"] <= t1:
+            amt = float(r.get("net_cash_amount") or 0)
+            if r.get("currency") == "USD":
+                amt *= rate(r["effective_date"])
+            if amt:
+                flows.append([r["effective_date"], round(amt, 2)])
+    flows.sort()
+    units, path, fi = snaps[0]["cadInv"] / cad(t0), [], 0
+    for day, _ in px:
+        if day < t0 or day > t1:
+            continue
+        while fi < len(flows) and flows[fi][0] <= day:
+            units += flows[fi][1] / cad(flows[fi][0]); fi += 1
+        path.append([day, round(units * cad(day))])
+    while fi < len(flows):
+        units += flows[fi][1] / cad(flows[fi][0]); fi += 1
+    shadow = round(units * cad(t1))
+    return {"symbol": sym, "name": bench.get("name", sym), "why": bench.get("why", ""),
+            "from": t0, "to": t1, "start": round(snaps[0]["cadInv"]), "end": round(snaps[-1]["cadInv"]),
+            "put": round(sum(f[1] for f in flows)), "flows": flows, "shadow": shadow,
+            "benchRet": round(cad(t1) / cad(t0) - 1, 4), "path": path,
+            "actual": [[h["date"], round(h["cadInv"])] for h in snaps],
+            "pricesAsof": pr.get("asof"), "source": pr.get("source", {})}
 
 
 def clean(obj):
@@ -306,6 +371,7 @@ def derive(d):
     for h in d["hist"]["snapshots"]:
         ph[h["date"][:7]] = round(h["cadInv"] + (h.get("foreign") or 0))
     out["PORT_HISTORY"] = [{"ym": k, "v": v} for k, v in sorted(ph.items())]
+    out["PERF"] = benchmark_run(d)
     out["TASKS"] = d["tasks"]["tasks"]
     out["GAPS"] = d["accounts"].get("missing", [])
     out["SUBMITTED"] = d["filings"]["filed"]
