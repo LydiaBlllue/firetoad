@@ -364,6 +364,10 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 
 <section data-pg="subs" hidden>
   <div class="grid-stats" id="subStats"></div>
+  <div class="card" style="margin-bottom:10px">
+    <div class="lab">Coming up in the next 30 days</div>
+    <div id="subsNext"></div>
+  </div>
 <div class="card subs">
   
   <div id="subs"></div>
@@ -1678,6 +1682,35 @@ function renderSubs(){
     const gap = (new Date(dataEnd) - new Date(items[0].date)) / 864e5;
     return {name, n:items.length, last:items[0], active: net > 0.01 && items[0].amount > 0 && gap <= 45};
   }).sort((a,b) => (b.active - a.active) || (b.last.amount - a.last.amount));
+  // What is about to be charged (2026-10-27, after the money apps that list upcoming bills): each
+  // subscription at one price is a series; a series with a steady gap — about a month or about a
+  // year — is projected one step on from its last charge. Statements arrive after the fact, so the
+  // window opens at the newest record, not today: a charge due since then has probably happened.
+  const series = {};
+  Object.entries(map).forEach(([name, items]) => items.filter(e => e.amount > 0).forEach(e => {
+    const k = name+"|"+e.amount.toFixed(2); (series[k] = series[k] || {name, amt:e.amount, dates:[]}).dates.push(e.date); }));
+  const DAY = 864e5, med = xs => { const v = [...xs].sort((a,b) => a-b), h = v.length >> 1; return v.length % 2 ? v[h] : (v[h-1]+v[h])/2; };
+  const until = new Date(new Date(TODAY).getTime() + 30*DAY);
+  const next = Object.values(series).map(sr => {
+    const ds = [...new Set(sr.dates)].sort();
+    if(ds.length < 2) return null;
+    const gaps = ds.slice(1).map((d,i) => (new Date(d) - new Date(ds[i])) / DAY), g = med(gaps);
+    const every = g >= 20 && g <= 40 ? "month" : g >= 350 && g <= 380 ? "year" : null;
+    if(!every) return null;
+    const last = new Date(ds[ds.length-1]), at = new Date(last);
+    if(every === "month") at.setUTCMonth(at.getUTCMonth()+1); else at.setUTCFullYear(at.getUTCFullYear()+1);
+    if(at <= new Date(dataEnd) || at > until) return null;
+    return {name:sr.name, amt:sr.amt, at:at.toISOString().slice(0,10), every, seen:ds.length};
+  }).filter(Boolean).sort((a,b) => a.at < b.at ? -1 : 1);
+  const sum = next.reduce((t,x) => t + x.amt, 0);
+  $("subsNext").innerHTML = next.length
+    ? '<table class="dt"><tr><th style="text-align:left">Expected</th><th style="text-align:left">Subscription</th><th>Amount</th></tr>'
+      + next.map(x => '<tr><td style="text-align:left" class="num">'+x.at+(x.at < TODAY ? ' <span class="cap">probably charged already</span>' : '')+'</td>'
+        + '<td style="text-align:left">'+x.name+' <span class="cap">every '+x.every+', seen '+x.seen+' times</span></td>'
+        + '<td class="num">'+fmt2(x.amt)+'</td></tr>').join("")
+      + '<tr class="tot"><td colspan="2" style="text-align:left">In all</td><td class="num">'+fmt2(sum)+'</td></tr></table>'
+      + '<div class="cap" style="margin-top:6px">Projected from each subscription\u2019s own rhythm since your newest statement ('+dataEnd+'). Cancel before the date and it does not come.</div>'
+    : '<div class="empty">Nothing with a steady rhythm is due in the next 30 days.</div>';
   $("subs").innerHTML = rows.length ? rows.map(s =>
     '<div class="leg-row'+(s.active?"":" off")+'"><span class="nm">'+s.name+(s.active?' <span class="sub-badge">● Active</span>':"")+'</span><span class="meta num">last '+s.last.date+' · ×'+s.n+'</span><span class="v num">'+fmt2(s.last.amount)+'</span></div>').join("")
     : '<div class="empty">No subscriptions detected.</div>';
