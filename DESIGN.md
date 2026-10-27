@@ -115,7 +115,7 @@
   place is worse than saying nothing:
   | Section | Pages |
   |---|---|
-  | — | Home (net worth, two cuts of it, At a glance) |
+  | — | Home (what needs you today, net worth, two cuts of it) |
   | Spending | This month · Year · Subscriptions · Monthly plan |
   | Income | Overview · Investment income |
   | Investing | Overview · Holdings · Rules |
@@ -217,7 +217,7 @@
     only for things that are not money), **the same money cut by how easily
     you could reach it** (one row per `reach`: Reach today / Reach but it costs / Spoken for /
     Locked in property / Across a border, a liability netted into the row of the asset it sits
-    on, less what is owed free and clear), and At a glance. A row appears only when the register
+    on, less what is owed free and clear), and what needs you today. A row appears only when the register
     has an item with that value. **Both cuts must total `NW_GLOBAL`** (rebuild.py refuses to
     build otherwise).
   - The idea came from Irene Zhu's 10-Year Wealth Dashboard (the owner shared it 2026-09-07): **do
@@ -228,9 +228,12 @@
   Transactions — on 2026-08-14): the monthly total is the number in the middle of the donut,
   daily average and transaction count moved into the Budget page's description line, and the
   count and total for transactions sit in the ledger footer. Still **no Month projection**.
-- **"At a glance" card at the top of Overview** (the owner, 2026-08-14): one row per other tab —
-  uppercase grey tab name, a ⚠/✓/● status, one line of the thing that matters, and a › arrow;
-  the whole row is clickable and jumps to that tab. Every word of it is computed from the data.
+- **"What needs you today" card at the top of Home** (the owner, 2026-10-27; it was "At a glance",
+  one status row per tab, 2026-08-14): one row per thing to do, worst first — a rule broken or
+  needing attention, a date this week, a statement not filed, questions waiting, a task due within
+  two weeks (the rest as one count), the allowance overspent, a fund short or overdrawn, spending
+  drifting from the planning figure. Uppercase grey page name, ✗/⚠/● status, the line, a › arrow;
+  the whole row opens that page. With nothing to do it is one ✓ line. Every word is computed.
 - **Compact layout** (the owner asked for "denser information" on 2026-08-14): card padding 12/15px,
   grid gap 10px, big numbers 23px, list rows 3–5.5px apart, less vertical white space on the
   page. Density first, but keep the line height readable.
