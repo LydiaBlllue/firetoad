@@ -407,7 +407,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div id="barbell"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab">Your rules, as they stand today</div>
+    <div class="lab">Your investing rules, checked today</div>
     <div id="invAlerts"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
@@ -1716,16 +1716,60 @@ function renderInv(){
   const ASYM = {bad:["✗","bad"], warn:["⚠","warn"], ok:["✓","ok"]};
   const row = (g, t) => '<div class="alert-row"><span class="sym '+g[1]+'">'+g[0]+'</span><span>'+t+'</span></div>';
   const rows = [];
-  if(I.investable && BAND)
-    rows.push(row(dryBad ? ASYM.warn : ASYM.ok, cap1(bandName)+" is "+I.dryPct+"%, "+(dryBad ? "outside" : "inside")+" your "+BANDLO+"\u2013"+BANDHI+"% band."));
-  if(CAPN && I.holdings)
-    rows.push(row(holdBad ? ASYM.bad : ASYM.ok, I.holdings+" holdings, "+(holdBad ? (I.holdings-CAPN)+" over your limit of "+CAPN+"." : "at or under your limit of "+CAPN+".")));
   // The month in progress is judged only once both transfers have landed; until then the
   // newest closed month is the rule's status, so early in a month the row is not a false alarm.
   const cur = (WSDEP||[]).slice(-1)[0] || null;
   const dep = (cur && (cur.nRule >= 2 || cur.ym < TODAY.slice(0,7))) ? cur
             : ((WSDEP||[]).filter(m => m.ym < TODAY.slice(0,7)).slice(-1)[0] || cur);
-  if(dep) rows.push(row(dep.nRule >= 2 ? ASYM.ok : ASYM.warn, ymFull(dep.ym)+": "+dep.nRule+" of 2 transfers of "+fmt(FUNDS.plan.invest/2)+" reached "+BROKER+"."));
+  // The owner's high-level rules (rules.json `principles`, 2026-10-27): her words, one line each,
+  // and a check the page runs on today's data. The detailed rules under them stay on Rules.
+  const POS = (DATA.positions || []).filter(p => p.mv > 0);
+  const named = xs => xs.length > 2 ? xs.slice(0,-1).join(", ")+" and "+xs[xs.length-1] : xs.join(" and ");
+  const CHECKS = {
+    payFirst: () => dep ? [dep.nRule >= 2 ? ASYM.ok : ASYM.warn,
+      ymFull(dep.ym)+": "+dep.nRule+" of 2 transfers of "+fmt(FUNDS.plan.invest/2)+" reached "+BROKER+"."] : null,
+    dryBand: () => (I.investable && BAND) ? [dryBad ? ASYM.warn : ASYM.ok,
+      cap1(bandName)+" is "+I.dryPct+"%, "+(dryBad ? "outside" : "inside")+" your "+BANDLO+"\u2013"+BANDHI+"% band."] : null,
+    // every holding in the named bucket has a note about it and a date still ahead to look at it again
+    reasons: pr => {
+      const bk = (RULES.buckets||[]).find(b => b.key === pr.bucket);
+      if(!bk) return null;
+      const held = [...new Set(POS.filter(p => (bk.symbols||[]).includes(p.sym)).map(p => p.sym))];
+      if(!held.length) return [ASYM.ok, "Nothing held in "+bk.name.split(" \u00b7 ")[0].toLowerCase()+"."];
+      const says = (t, y) => String(t||"").toUpperCase().includes(y);
+      const noNote = held.filter(y => !(RULES.notes||[]).some(n => says(n.name, y) || says(n.text, y)));
+      const noDate = held.filter(y => !noNote.includes(y) && !(RULES.checkpoints||[]).some(c => c.date >= TODAY && (says(c.title, y) || says(c.why, y))));
+      if(noNote.length) return [ASYM.bad, named(noNote)+(noNote.length>1?" have":" has")+" no written reason. Write down why you hold "+(noNote.length>1?"them":"it")+"."];
+      if(noDate.length) return [ASYM.warn, "The date to look again at "+named(noDate)+" has passed. Set the next one."];
+      return [ASYM.ok, named(held)+": each has a reason and a date ahead."];
+    },
+    // rules.json `placement`: symbol -> the account kinds it belongs in
+    placement: () => {
+      const want = RULES.placement || {};
+      const off = POS.filter(p => want[p.sym] && p.kind && !want[p.sym].includes(p.kind));
+      if(!Object.keys(want).length) return null;
+      if(!off.length) return [ASYM.ok, "Everything you placed is where you want it."];
+      // grouped by where they belong: "MCD $7,384 and O $2,476 belong in the RRSP; …"
+      const sym = {}; off.forEach(p => { sym[p.sym] = (sym[p.sym]||0) + p.mv; });
+      const to = {}; Object.keys(sym).sort((a,b) => sym[b]-sym[a]).forEach(y => { const k = want[y].join(" or "); (to[k] = to[k] || []).push(y+" "+fmt(sym[y])); });
+      return [ASYM.warn, Object.entries(to).map(([k,ys]) => named(ys)+" belong"+(ys.length>1?"":"s")+" in the "+k).join("; ")
+        +". Move "+(Object.keys(sym).length > 1 ? "them" : "it")+" when you next rebalance."];
+    },
+    earmarked: () => {
+      const e = (NWPARTS||[]).find(r => r.k === "Earmarked");
+      const who = (ACCT.accounts||[]).filter(a => a.role === "set-aside").map(a => a.label || a.name);
+      return e ? [ASYM.ok, fmt(e.v)+" in "+named(who)+", outside the portfolio and outside dry powder."] : null;
+    },
+    holdingsCap: () => (CAPN && I.holdings) ? [holdBad ? ASYM.bad : ASYM.ok,
+      I.holdings+" holdings, "+(holdBad ? (I.holdings-CAPN)+" over your limit of "+CAPN+"." : "at or under your limit of "+CAPN+".")] : null,
+    abroad: () => FOREIGN.total ? [ASYM.ok, (FOREIGN.symbol||"")+Math.round(FOREIGN.total).toLocaleString("en-CA")+" (about "+fmt(FOREIGN_CAD)
+      +") counts in net worth, and none of it in dry powder."] : null
+  };
+  const PRINCIPLES = RULES.principles || [{check:"dryBand"}, {check:"holdingsCap"}, {check:"payFirst"}];
+  PRINCIPLES.forEach(pr => {
+    const r = CHECKS[pr.check] ? CHECKS[pr.check](pr) : null;
+    if(r) rows.push(row(r[0], (pr.name ? "<b>"+pr.name+"</b> \u2014 " : "")+r[1]));
+  });
   // The funds and the account behind them are the Monthly plan's: it shows the claim against the
   // balance and turns red when they no longer fit. Investing's rules are about investing (2026-10-27).
   if(I.staleDays > 30) rows.push(row(ASYM.warn, "Your "+BROKER+" holdings are "+I.staleDays+" days old."));

@@ -4,6 +4,15 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **High-level rules on the Investing overview** (2026-10-27). The card showed only what the page
+  happened to compute — the band and the transfers — so the owner's most broken rule never
+  appeared on it. rules.json `principles` now lists her rules in her words, each naming a check
+  run on today's data: pay yourself first, the dry-powder band, a reason and a date ahead for every
+  holding in a named bucket, each holding in the account `placement` says it belongs in, earmarked
+  money kept out, money abroad never dry powder (and the holdings cap, where one is set). Without
+  `principles` the card shows what it always did. The detailed rules stay on Rules. D26 fails a
+  principle naming a check the page lacks, read from the page code.
+
 - **The portfolio is split three ways** (2026-10-26). The Investing overview's one chart was
   "the Canadian side across your buckets", though more than half of that side was in US dollars.
   It is now three donuts of the same portfolio: by currency, by kind of asset, and by the buckets

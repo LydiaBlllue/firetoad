@@ -250,6 +250,9 @@ def m_class_missing(r):
 def m_class_unknown(r):
     # A kind of asset the page has no slice for.
     edit_json(r, layout.rel("rules.json"), lambda d: d["assetClass"].__setitem__(next(iter(d["assetClass"])), "property"))
+def m_principle_unknown(r):
+    # A rule naming a check nobody wrote: it would silently drop off the Investing overview.
+    edit_json(r, layout.rel("rules.json"), lambda d: d.__setitem__("principles", [{"check": "neverWritten", "name": "A rule nobody checks"}]))
 def m_rules_drift(r):
     # rules.json is the strategy; the page copies it. The copy going stale means the Rules page
     # is checking the portfolio against a band nobody chose any more.
@@ -397,6 +400,7 @@ CASES = [
     ("D23", "a borrower paid back more than was owed",      m_loan_overpaid,   "find"),
     ("D25", "an ETF held with no kind of asset",            m_class_missing,   "find"),
     ("D25", "an asset class the page has no slice for",     m_class_unknown,   "find"),
+    ("D26", "a principle naming a check the page lacks",   m_principle_unknown, "find"),
     ("D21", "a committed flow the ledger never shows",      m_committed_missing, "find"),
     ("D24", "a card credit counted as a refund of nothing", m_refund_of_nothing, "find"),
     ("D24", "a refund larger than was ever spent there",    m_refund_too_much,   "find"),

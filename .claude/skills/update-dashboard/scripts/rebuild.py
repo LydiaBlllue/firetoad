@@ -585,6 +585,7 @@ def derive(d):
         if usd: p["usd"] = 1
         if r.get("Security Type") == "CURRENCY": p["cash"] = 1
         p["class"] = asset_class(r["Symbol"], r.get("Security Type"), d["rules"].get("assetClass", {}))
+        p["kind"] = (by_id.get(n) or {}).get("kind")      # the account's kind: where rules.json placement says it belongs
         positions.append(p)
         if not p.get("cash"):
             t = tick.setdefault(p["sym"], {"sym": p["sym"], "name": p["name"], "mv": 0.0, "bv": 0.0, "accounts": []})

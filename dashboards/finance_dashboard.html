@@ -407,7 +407,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div id="barbell"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab">Your rules, as they stand today</div>
+    <div class="lab">Your investing rules, checked today</div>
     <div id="invAlerts"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
@@ -1716,16 +1716,60 @@ function renderInv(){
   const ASYM = {bad:["✗","bad"], warn:["⚠","warn"], ok:["✓","ok"]};
   const row = (g, t) => '<div class="alert-row"><span class="sym '+g[1]+'">'+g[0]+'</span><span>'+t+'</span></div>';
   const rows = [];
-  if(I.investable && BAND)
-    rows.push(row(dryBad ? ASYM.warn : ASYM.ok, cap1(bandName)+" is "+I.dryPct+"%, "+(dryBad ? "outside" : "inside")+" your "+BANDLO+"\u2013"+BANDHI+"% band."));
-  if(CAPN && I.holdings)
-    rows.push(row(holdBad ? ASYM.bad : ASYM.ok, I.holdings+" holdings, "+(holdBad ? (I.holdings-CAPN)+" over your limit of "+CAPN+"." : "at or under your limit of "+CAPN+".")));
   // The month in progress is judged only once both transfers have landed; until then the
   // newest closed month is the rule's status, so early in a month the row is not a false alarm.
   const cur = (WSDEP||[]).slice(-1)[0] || null;
   const dep = (cur && (cur.nRule >= 2 || cur.ym < TODAY.slice(0,7))) ? cur
             : ((WSDEP||[]).filter(m => m.ym < TODAY.slice(0,7)).slice(-1)[0] || cur);
-  if(dep) rows.push(row(dep.nRule >= 2 ? ASYM.ok : ASYM.warn, ymFull(dep.ym)+": "+dep.nRule+" of 2 transfers of "+fmt(FUNDS.plan.invest/2)+" reached "+BROKER+"."));
+  // The owner's high-level rules (rules.json `principles`, 2026-10-27): her words, one line each,
+  // and a check the page runs on today's data. The detailed rules under them stay on Rules.
+  const POS = (DATA.positions || []).filter(p => p.mv > 0);
+  const named = xs => xs.length > 2 ? xs.slice(0,-1).join(", ")+" and "+xs[xs.length-1] : xs.join(" and ");
+  const CHECKS = {
+    payFirst: () => dep ? [dep.nRule >= 2 ? ASYM.ok : ASYM.warn,
+      ymFull(dep.ym)+": "+dep.nRule+" of 2 transfers of "+fmt(FUNDS.plan.invest/2)+" reached "+BROKER+"."] : null,
+    dryBand: () => (I.investable && BAND) ? [dryBad ? ASYM.warn : ASYM.ok,
+      cap1(bandName)+" is "+I.dryPct+"%, "+(dryBad ? "outside" : "inside")+" your "+BANDLO+"\u2013"+BANDHI+"% band."] : null,
+    // every holding in the named bucket has a note about it and a date still ahead to look at it again
+    reasons: pr => {
+      const bk = (RULES.buckets||[]).find(b => b.key === pr.bucket);
+      if(!bk) return null;
+      const held = [...new Set(POS.filter(p => (bk.symbols||[]).includes(p.sym)).map(p => p.sym))];
+      if(!held.length) return [ASYM.ok, "Nothing held in "+bk.name.split(" \u00b7 ")[0].toLowerCase()+"."];
+      const says = (t, y) => String(t||"").toUpperCase().includes(y);
+      const noNote = held.filter(y => !(RULES.notes||[]).some(n => says(n.name, y) || says(n.text, y)));
+      const noDate = held.filter(y => !noNote.includes(y) && !(RULES.checkpoints||[]).some(c => c.date >= TODAY && (says(c.title, y) || says(c.why, y))));
+      if(noNote.length) return [ASYM.bad, named(noNote)+(noNote.length>1?" have":" has")+" no written reason. Write down why you hold "+(noNote.length>1?"them":"it")+"."];
+      if(noDate.length) return [ASYM.warn, "The date to look again at "+named(noDate)+" has passed. Set the next one."];
+      return [ASYM.ok, named(held)+": each has a reason and a date ahead."];
+    },
+    // rules.json `placement`: symbol -> the account kinds it belongs in
+    placement: () => {
+      const want = RULES.placement || {};
+      const off = POS.filter(p => want[p.sym] && p.kind && !want[p.sym].includes(p.kind));
+      if(!Object.keys(want).length) return null;
+      if(!off.length) return [ASYM.ok, "Everything you placed is where you want it."];
+      // grouped by where they belong: "MCD $7,384 and O $2,476 belong in the RRSP; …"
+      const sym = {}; off.forEach(p => { sym[p.sym] = (sym[p.sym]||0) + p.mv; });
+      const to = {}; Object.keys(sym).sort((a,b) => sym[b]-sym[a]).forEach(y => { const k = want[y].join(" or "); (to[k] = to[k] || []).push(y+" "+fmt(sym[y])); });
+      return [ASYM.warn, Object.entries(to).map(([k,ys]) => named(ys)+" belong"+(ys.length>1?"":"s")+" in the "+k).join("; ")
+        +". Move "+(Object.keys(sym).length > 1 ? "them" : "it")+" when you next rebalance."];
+    },
+    earmarked: () => {
+      const e = (NWPARTS||[]).find(r => r.k === "Earmarked");
+      const who = (ACCT.accounts||[]).filter(a => a.role === "set-aside").map(a => a.label || a.name);
+      return e ? [ASYM.ok, fmt(e.v)+" in "+named(who)+", outside the portfolio and outside dry powder."] : null;
+    },
+    holdingsCap: () => (CAPN && I.holdings) ? [holdBad ? ASYM.bad : ASYM.ok,
+      I.holdings+" holdings, "+(holdBad ? (I.holdings-CAPN)+" over your limit of "+CAPN+"." : "at or under your limit of "+CAPN+".")] : null,
+    abroad: () => FOREIGN.total ? [ASYM.ok, (FOREIGN.symbol||"")+Math.round(FOREIGN.total).toLocaleString("en-CA")+" (about "+fmt(FOREIGN_CAD)
+      +") counts in net worth, and none of it in dry powder."] : null
+  };
+  const PRINCIPLES = RULES.principles || [{check:"dryBand"}, {check:"holdingsCap"}, {check:"payFirst"}];
+  PRINCIPLES.forEach(pr => {
+    const r = CHECKS[pr.check] ? CHECKS[pr.check](pr) : null;
+    if(r) rows.push(row(r[0], (pr.name ? "<b>"+pr.name+"</b> \u2014 " : "")+r[1]));
+  });
   // The funds and the account behind them are the Monthly plan's: it shows the claim against the
   // balance and turns red when they no longer fit. Investing's rules are about investing (2026-10-27).
   if(I.staleDays > 30) rows.push(row(ASYM.warn, "Your "+BROKER+" holdings are "+I.staleDays+" days old."));
@@ -2824,7 +2868,7 @@ function renderInsights(){
 // rate, the per-import history and the foreign funds. RULES and IMPORT_DAY are shared with the
 // rest of the page and declared above. Everything derived lives inside IV so nothing here can
 // collide with the names the rest of the page uses.
-const DATA = {"fx": 1.3712, "asof": "2026-09-06", "today": "2026-10-27", "broker": "Wealthsimple", "positions": [{"account": "TFSA", "sym": "VEQT", "name": "Vanguard All-Equity ETF Portfolio - ETF", "qty": 485.9002, "mv": 22400.0, "bv": 18983.05, "class": "stocks"}, {"account": "TFSA", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 336.7983, "mv": 8100.0, "bv": 8181.0, "class": "bonds"}, {"account": "TFSA", "sym": "SHOP", "name": "Shopify Inc.", "qty": 20.4626, "mv": 2300.0, "bv": 1840.0, "class": "stocks"}, {"account": "TFSA", "sym": "CAD", "name": "CAD", "qty": 310.0, "mv": 310.0, "bv": 310.0, "cash": 1, "class": "cash"}, {"account": "RRSP", "sym": "VEQT", "name": "Vanguard All-Equity ETF Portfolio - ETF", "qty": 149.6746, "mv": 6900.0, "bv": 5847.46, "class": "stocks"}, {"account": "RRSP", "sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "qty": 30.502, "mv": 4200.0, "bv": 4221.0, "usd": 1, "class": "bonds"}, {"account": "RRSP", "sym": "BN", "name": "Brookfield Corp.", "qty": 14.3481, "mv": 1150.0, "bv": 1000.0, "class": "stocks"}, {"account": "RRSP", "sym": "CAD", "name": "CAD", "qty": 85.0, "mv": 85.0, "bv": 85.0, "cash": 1, "class": "cash"}, {"account": "FHSA", "sym": "VCN", "name": "Vanguard FTSE Canada All Cap Index ETF", "qty": 187.3805, "mv": 9800.0, "bv": 8990.83, "class": "stocks"}, {"account": "FHSA", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 162.1622, "mv": 3900.0, "bv": 3939.0, "class": "bonds"}, {"account": "Non-registered", "sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "qty": 91.506, "mv": 12600.0, "bv": 12663.0, "usd": 1, "class": "bonds"}, {"account": "Non-registered", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 168.3992, "mv": 4050.0, "bv": 4090.5, "class": "bonds"}, {"account": "Non-registered", "sym": "XAW", "name": "iShares Core MSCI All Country World ex Canada Index ETF", "qty": 69.1964, "mv": 3100.0, "bv": 2767.86, "class": "stocks"}, {"account": "Non-registered", "sym": "ZAG", "name": "BMO Aggregate Bond Index ETF", "qty": 98.5915, "mv": 1400.0, "bv": 1428.0, "class": "bonds"}, {"account": "Non-registered", "sym": "CAD", "name": "CAD", "qty": 190.0, "mv": 190.0, "bv": 190.0, "cash": 1, "class": "cash"}, {"account": "High-yield savings", "sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "qty": 21.0609, "mv": 2900.01, "bv": 2914.51, "usd": 1, "class": "bonds"}, {"account": "High-yield savings", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 274.4283, "mv": 6600.0, "bv": 6666.0, "class": "bonds"}, {"account": "Crypto", "sym": "BTC", "name": "Bitcoin", "qty": 0.00317063, "mv": 350.0, "bv": 318.18, "class": "crypto"}], "tickers": [{"sym": "VEQT", "name": "Vanguard All-Equity ETF Portfolio - ETF", "mv": 29300.0, "bv": 24830.51, "accounts": ["TFSA", "RRSP"], "pl": 4469.49}, {"sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "mv": 22650.0, "bv": 22876.5, "accounts": ["TFSA", "FHSA", "Non-registered", "High-yield savings"], "pl": -226.5}, {"sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "mv": 19700.01, "bv": 19798.51, "accounts": ["RRSP", "Non-registered", "High-yield savings"], "pl": -98.5}, {"sym": "VCN", "name": "Vanguard FTSE Canada All Cap Index ETF", "mv": 9800.0, "bv": 8990.83, "accounts": ["FHSA"], "pl": 809.17}, {"sym": "XAW", "name": "iShares Core MSCI All Country World ex Canada Index ETF", "mv": 3100.0, "bv": 2767.86, "accounts": ["Non-registered"], "pl": 332.14}, {"sym": "SHOP", "name": "Shopify Inc.", "mv": 2300.0, "bv": 1840.0, "accounts": ["TFSA"], "pl": 460.0}, {"sym": "ZAG", "name": "BMO Aggregate Bond Index ETF", "mv": 1400.0, "bv": 1428.0, "accounts": ["Non-registered"], "pl": -28.0}, {"sym": "BN", "name": "Brookfield Corp.", "mv": 1150.0, "bv": 1000.0, "accounts": ["RRSP"], "pl": 150.0}, {"sym": "BTC", "name": "Bitcoin", "mv": 350.0, "bv": 318.18, "accounts": ["Crypto"], "pl": 31.82}]};
+const DATA = {"fx": 1.3712, "asof": "2026-09-06", "today": "2026-10-27", "broker": "Wealthsimple", "positions": [{"account": "TFSA", "sym": "VEQT", "name": "Vanguard All-Equity ETF Portfolio - ETF", "qty": 485.9002, "mv": 22400.0, "bv": 18983.05, "class": "stocks", "kind": "TFSA"}, {"account": "TFSA", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 336.7983, "mv": 8100.0, "bv": 8181.0, "class": "bonds", "kind": "TFSA"}, {"account": "TFSA", "sym": "SHOP", "name": "Shopify Inc.", "qty": 20.4626, "mv": 2300.0, "bv": 1840.0, "class": "stocks", "kind": "TFSA"}, {"account": "TFSA", "sym": "CAD", "name": "CAD", "qty": 310.0, "mv": 310.0, "bv": 310.0, "cash": 1, "class": "cash", "kind": "TFSA"}, {"account": "RRSP", "sym": "VEQT", "name": "Vanguard All-Equity ETF Portfolio - ETF", "qty": 149.6746, "mv": 6900.0, "bv": 5847.46, "class": "stocks", "kind": "RRSP"}, {"account": "RRSP", "sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "qty": 30.502, "mv": 4200.0, "bv": 4221.0, "usd": 1, "class": "bonds", "kind": "RRSP"}, {"account": "RRSP", "sym": "BN", "name": "Brookfield Corp.", "qty": 14.3481, "mv": 1150.0, "bv": 1000.0, "class": "stocks", "kind": "RRSP"}, {"account": "RRSP", "sym": "CAD", "name": "CAD", "qty": 85.0, "mv": 85.0, "bv": 85.0, "cash": 1, "class": "cash", "kind": "RRSP"}, {"account": "FHSA", "sym": "VCN", "name": "Vanguard FTSE Canada All Cap Index ETF", "qty": 187.3805, "mv": 9800.0, "bv": 8990.83, "class": "stocks", "kind": "FHSA"}, {"account": "FHSA", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 162.1622, "mv": 3900.0, "bv": 3939.0, "class": "bonds", "kind": "FHSA"}, {"account": "Non-registered", "sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "qty": 91.506, "mv": 12600.0, "bv": 12663.0, "usd": 1, "class": "bonds", "kind": "Non-registered"}, {"account": "Non-registered", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 168.3992, "mv": 4050.0, "bv": 4090.5, "class": "bonds", "kind": "Non-registered"}, {"account": "Non-registered", "sym": "XAW", "name": "iShares Core MSCI All Country World ex Canada Index ETF", "qty": 69.1964, "mv": 3100.0, "bv": 2767.86, "class": "stocks", "kind": "Non-registered"}, {"account": "Non-registered", "sym": "ZAG", "name": "BMO Aggregate Bond Index ETF", "qty": 98.5915, "mv": 1400.0, "bv": 1428.0, "class": "bonds", "kind": "Non-registered"}, {"account": "Non-registered", "sym": "CAD", "name": "CAD", "qty": 190.0, "mv": 190.0, "bv": 190.0, "cash": 1, "class": "cash", "kind": "Non-registered"}, {"account": "High-yield savings", "sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "qty": 21.0609, "mv": 2900.01, "bv": 2914.51, "usd": 1, "class": "bonds", "kind": "Non-registered"}, {"account": "High-yield savings", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 274.4283, "mv": 6600.0, "bv": 6666.0, "class": "bonds", "kind": "Non-registered"}, {"account": "Crypto", "sym": "BTC", "name": "Bitcoin", "qty": 0.00317063, "mv": 350.0, "bv": 318.18, "class": "crypto", "kind": "Crypto"}], "tickers": [{"sym": "VEQT", "name": "Vanguard All-Equity ETF Portfolio - ETF", "mv": 29300.0, "bv": 24830.51, "accounts": ["TFSA", "RRSP"], "pl": 4469.49}, {"sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "mv": 22650.0, "bv": 22876.5, "accounts": ["TFSA", "FHSA", "Non-registered", "High-yield savings"], "pl": -226.5}, {"sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "mv": 19700.01, "bv": 19798.51, "accounts": ["RRSP", "Non-registered", "High-yield savings"], "pl": -98.5}, {"sym": "VCN", "name": "Vanguard FTSE Canada All Cap Index ETF", "mv": 9800.0, "bv": 8990.83, "accounts": ["FHSA"], "pl": 809.17}, {"sym": "XAW", "name": "iShares Core MSCI All Country World ex Canada Index ETF", "mv": 3100.0, "bv": 2767.86, "accounts": ["Non-registered"], "pl": 332.14}, {"sym": "SHOP", "name": "Shopify Inc.", "mv": 2300.0, "bv": 1840.0, "accounts": ["TFSA"], "pl": 460.0}, {"sym": "ZAG", "name": "BMO Aggregate Bond Index ETF", "mv": 1400.0, "bv": 1428.0, "accounts": ["Non-registered"], "pl": -28.0}, {"sym": "BN", "name": "Brookfield Corp.", "mv": 1150.0, "bv": 1000.0, "accounts": ["RRSP"], "pl": 150.0}, {"sym": "BTC", "name": "Bitcoin", "mv": 350.0, "bv": 318.18, "accounts": ["Crypto"], "pl": 31.82}]};
 const FX = {"rate": 1.3712, "asof": "2026-09-04", "quality": "broker-rate"};
 const HIST = [{"date": "2026-06-15", "cadInv": 61204.4, "dry": 24110.2, "dryPct": 39.4, "tickers": 9, "fgn": null}, {"date": "2026-08-05", "cadInv": 64851.7, "dry": 27302.1, "dryPct": 42.1, "tickers": 8, "fgn": null}, {"date": "2026-09-06", "cadInv": 67135.0, "dry": 28950.0, "dryPct": 43.1, "tickers": 8, "fgn": null}];
 const FGN = {"asof": "2026-09-08", "symbol": "", "label": "Foreign", "cadPerUnit": 0, "cash": 0, "funds": []};

@@ -127,7 +127,7 @@ def check(root):
             "D3":"rules", "D5":"rules", "D6":"rules", "D10":"rules", "D13":"rules", "D14":"rules",
             "D11":"build", "D12":"build", "D17":"build", "T1":"build", "T2":"hygiene", "D15":"build", "D16":"conform",
             "D2":"hygiene", "D4":"hygiene", "D9":"hygiene", "D18":"hygiene",
-            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D25":"hygiene"}
+            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D25":"hygiene", "D26":"rules"}
     F = []          # (severity, rule, message, category)
     def err(r, m, cat=None):  F.append(("ERROR", r, m, cat or HOME.get(r, "rules")))
     def warn(r, m, cat=None): F.append(("WARN",  r, m, cat or HOME.get(r, "rules")))
@@ -1016,6 +1016,32 @@ def check(root):
                         f"{'them' if len(missing) > 1 else 'it'} to rules.json assetClass, or the portfolio's split shows Not classified")
         else:
             note("D25", f"every one of {len(held)} holdings says what kind of asset it is")
+
+    # -- D26 a principle names a check the page can run -------------------------------------
+    # rules.json `principles` are the owner's high-level rules, each naming a check the Investing
+    # overview runs on today's data. A name the page has no check for would just vanish from the
+    # card, so the names are read from the page code itself (const CHECKS), not from a list here.
+    rp26 = load(root, "rules.json")
+    tpl26 = os.path.join(root, "templates", "dashboards", "finance_dashboard.html")
+    if rp26 and ap and os.path.exists(tpl26):
+        rj26 = json.load(open(rp26, encoding="utf-8"))
+        src26 = open(tpl26, encoding="utf-8").read()
+        m26 = re.search(r"const CHECKS = \{(.*?)\n  \};", src26, re.S)
+        have = set(re.findall(r"^    (\w+): ", m26.group(1), re.M)) if m26 else set()
+        kinds = {a.get("kind") for a in aj["accounts"]}
+        bkeys = {b.get("key") for b in rj26.get("buckets", [])}
+        for pr in rj26.get("principles", []):
+            if pr.get("check") not in have:
+                err("D26", f"rules.json principle {pr.get('name') or pr.get('check')!r} names check {pr.get('check')!r}; "
+                           f"the page has {', '.join(sorted(have))}")
+            if pr.get("check") == "reasons" and pr.get("bucket") not in bkeys:
+                err("D26", f"rules.json principle {pr.get('name')!r} reads bucket {pr.get('bucket')!r}, which rules.json does not have")
+        for sym_, ks in rj26.get("placement", {}).items():
+            for k in ks:
+                if k not in kinds:
+                    err("D26", f"rules.json placement wants {sym_} in a {k!r} account; the register has no account of that kind")
+        if rj26.get("principles") and not any(f[1] == "D26" and f[0] == "ERROR" for f in F):
+            note("D26", f"{len(rj26['principles'])} principles, each naming a check the page runs")
 
     # -- D18 what an update leaves behind: the record and the queue ------------------------
     # alerts.json used to hold the sentences one import wrote, and the Portfolio page showed them
