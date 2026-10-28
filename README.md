@@ -21,11 +21,52 @@ does.
 
 | | |
 |---|---|
-| ![Net worth, cut two ways](docs/screens/home.png) | **Home.** Your net worth, cut by what each part is for and by how easily you could reach it. A sentence under it says how far the numbers go and what is still missing. |
-| ![A year of spending](docs/screens/spending.png) | **Spending.** This month opened up by category, then the year by month. No category caps — one allowance, and everything under it is guilt-free. |
-| ![The budget](docs/screens/plan.png) | **Budget.** What each paycheque is for: what is committed, what is invested first, what is free, what the two funds hold. |
-| ![Your investment rules](docs/screens/rules.png) | **Investing.** Your own rules — a cash band, a cap on holdings, the theses you wrote down — checked one by one against what you actually hold. |
-| ![Which file was filed](docs/screens/sources.png) | **Records.** Which statement arrived which month, every account and what it is still missing, and what each update changed or left waiting for you. |
+| ![Home](docs/screens/home.png) | **Home.** What needs you today, worst first, each line opening the page where it is dealt with. Net worth in one card: a row for what each part is for, its bar coloured by how easily you could reach it. Two dates under the net worth: the day every account is complete to, and the last update. |
+| ![A year of spending](docs/screens/spending.png) | **Spending.** This month, opened up by category; the year, month by month and against the allowance; subscriptions, with what is due in the next 30 days. No category caps — one allowance, and everything under it is guilt-free. |
+| ![The budget](docs/screens/plan.png) | **Plan.** What each paycheque is for; how far the portfolio is from the FIRE target and when it gets there; whether the money lasts once you start taking it out, replayed through every stretch of real years since 1928. |
+| ![Your investment rules](docs/screens/rules.png) | **Investing.** What you hold and how it splits; how it did against one fund you could have bought instead; your own rules — a cash band, where each holding belongs, the theses you wrote down — checked one by one. |
+| ![Which file was filed](docs/screens/sources.png) | **Records.** Everything waiting for you in one place; what each update changed; every account; which statement arrived which month; and a glossary of every term the page uses. |
+
+**Every word on a card is chosen.** A card has a label, one number and at most one fact. A
+term with a dotted underline shows its dictionary entry and opens the Glossary; a number with
+one shows the sum behind it. (Home, the header and Spending work this way; the other groups
+follow in the next release — see the [roadmap](ROADMAP.md).)
+
+### Every page
+
+| Section | Page | What it answers |
+|---|---|---|
+| — | Home | What needs you today, and what you are worth |
+| Spending | This month | How much is still free to spend, and where the money went |
+| | Year | How the year went, by category and month by month |
+| | Subscriptions | What repeats, what it costs a year, what is due next |
+| Income | Income | What came in, by source, and how much of it you kept |
+| | Investment income | What the portfolio paid you before you sold anything |
+| Investing | Portfolio | What is invested, by currency, by kind of asset and by bucket |
+| | Performance | How it did against one benchmark fund bought on the same days |
+| | Holdings | Every position, by role or by account |
+| | Rules | Each of your rules, checked today |
+| Plan | Budget | What each paycheque is for, and what the funds hold |
+| | FIRE | How far the portfolio is from the target, and when it gets there |
+| | Drawdown & care | Whether the money lasts, care included, and in how many real stretches of history it would have |
+| | Spending baseline | The monthly figure the target is built on, against what you really spend |
+| Records | To do | Questions, checks and tasks waiting for you |
+| | Updates | What each update changed |
+| | Accounts | Every place the money sits |
+| | Statements | Which statement arrived which month, and what is missing |
+| | Glossary | Every finance term, and every word the page coined |
+
+### New since the first release
+
+- **To do** gathers what waits on you, which used to sit on two pages with two counts.
+- **Performance**: the same money put into one fund you name, on the days it actually went in.
+- **Would it have lasted?** The drawdown replayed through every stretch of real years since
+  1928, mixed the way your portfolio is today.
+- **Coast to FIRE**: the age today's money reaches the target with nothing more added.
+- **Glossary**, dotted-underline terms and numbers that open their sum.
+- **Fetching statements**: once you have signed in to your bank yourself, Claude works out
+  which statements are missing, asks once, downloads them and files them into `inbox/`.
+- Net worth in one card instead of two; negative money reads −$61; the header says two dates.
 
 ## Try it in one minute
 
