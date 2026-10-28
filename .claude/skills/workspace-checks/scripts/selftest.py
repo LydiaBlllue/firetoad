@@ -238,6 +238,11 @@ def m_committed_missing(r):
         d["plan"]["flows"].append({"key": "car", "kind": "committed", "name": "Car loan",
                                    "amount": 410, "until": "2029-06", "afterFire": "drop"})
     edit_json(r, layout.rel("funds.json"), f)
+def m_fx_stale(r):
+    # A rate months older than the statements around it. The demo is judged against its own
+    # newest data rather than the calendar (so a clone checks clean), and that clock must still
+    # see a rate that rotted inside it.
+    edit_json(r, layout.rel("fx.json"), lambda d: d.__setitem__("asof", "2026-06-01"))
 # The setup's data guard (setup/scripts/guard.py). Runner kind "guard": the mutation makes the
 # staged copy a git checkout with a remote, the way a clone of the public repository is, lets the
 # setup's own step write .gitignore and the hook, and then tries to commit. The demo's profile has
@@ -443,6 +448,7 @@ CASES = [
     ("D24", "a refund filed in another category than its purchase", m_refund_wrong_category, "find"),
     ("P1",  "a statement whose rows do not add up to its total", m_parse_tampered, "parse"),
     ("G1",  "real data staged for a repository with a remote", m_guard_data,     "guard"),
+    ("D9",  "an exchange rate months older than the data around it", m_fx_stale, "find"),
     ("D14", "a document covers an account that is gone",    m_bad_cover,       "find"),
     ("D14", "SUBMITTED key with no matching document",      m_submitted_orphan,"find"),
     ("D14", "SOURCES written out instead of derived",       m_sources_literal, "find"),

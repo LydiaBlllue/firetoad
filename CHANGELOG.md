@@ -2,6 +2,14 @@
 
 ## 1.1 — unreleased
 
+- **A fresh clone checks clean** (2026-10-28). The demo is a snapshot nobody imports into, so
+  its exchange rate aged with the calendar while nothing else in it moved, and a clone a few
+  weeks old greeted its first run with a stale-rate warning (D9). For a workspace with
+  `demo: true`, D9 and D20 now count age from the demo's own newest data — the latest bank as-of
+  date or ledger row — instead of today; the data is not touched, so the build stays
+  idempotent. An owner's workspace is measured against today as before. A new fault (D9) plants a
+  rate months older than the demo's data and expects the warning: 57 faults.
+
 - **A first import is already mostly sorted** (2026-10-28, from a first user, whose first import
   put every purchase in Other). `setup/data/starter_merchants.json` maps about ninety common
   Canadian chains — grocery chains and Costco, gas stations, fast food and delivery, pharmacies,
