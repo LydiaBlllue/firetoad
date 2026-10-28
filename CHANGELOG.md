@@ -4,6 +4,13 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **DESIGN.md holds rules only** (2026-10-28). It states what is true today; how each rule came
+  about — the dates, the measurements, what was there before — moved to *How the design rules
+  came about* at the end of this file. Rules that described pages long gone (Overview's donuts,
+  Month by Month, the Cash flow page, the Insights and Tasks tabs) were dropped, and the ones that
+  had drifted from the page were corrected: the sidebar is 210px in five sections, no page has a
+  description line, Home is in no pill list.
+
 - **Spending, written to the card rules** (2026-10-28). This month, Year and Subscriptions keep
   a label, a number and at most one fact per card; the long captions (coverage lines, "click a
   category…", how the 30-day list is projected) are gone, and each number opens its sum. What
@@ -303,3 +310,77 @@ The tool is the repository; every workspace, the author's included, is an instan
   "Everything due has arrived" apart from the two open items, which stay: they are the queue
   the page is for. The unnamed $200 e-Transfer the demo asks about is now a real row in the
   ledger, typed Other income meanwhile, as the record says.
+
+## How the design rules came about
+
+Moved out of DESIGN.md on 2026-10-28, so the rules there can stay short. Newest last.
+
+- **2026-08-11** — The Spending dashboard redesign: DESIGN.md is written from everything the
+  owner said that day. White cards on a pale ground, small grey uppercase labels, big numbers,
+  the seven English categories and their colours, settled against a published dashboard style
+  the owner liked.
+- **2026-08-13** — The dashboard shows data from the start of the owner's first full year. FIRE
+  gets its own page; the trajectory chart's x-axis is anchored at that year so it does not drift
+  across a new year. Income joins the monthly and yearly views in its own blue family. The
+  Overview's charts are made symmetrical: income donut left, spending donut right. (Overview was
+  later split up; see 2026-09-06.)
+- **2026-08-14** — Overview loses its five stat cards. Page subtitles are deleted. "At a
+  glance", one status row per tab, goes on Home. A compact layout: tighter padding, gaps and
+  rows.
+- **2026-08-20** — The investment pages are English too; the one language exception is gone.
+  Definitions go in a `?`, one or two sentences — the first version was too long. The headline
+  number of the investing pages is Portfolio, money actually invested.
+- **2026-09-06** — The big UI review, measured page by page on the owner's 32-inch screen:
+  - Desktop only. The page widened from 1280 to 1760px and the narrow-screen block went; what
+    widens is the charts and tables, not the cards.
+  - Charts lost their fixed heights: a fixed height with a `viewBox` had kept the trend chart at
+    940×190 inside a 1434px box. Removing it took the drawing to 1434×290.
+  - `--muted` went from `#898781` (3.50:1, below AA) to `#75736d` (4.62:1). A rule status line
+    had run 242 characters across 1252px, so long text got caps. A 1306px card wrapped around
+    720px of content looked unfinished, so `.tight`. Four stat cards in grid `auto-fit` fitted
+    three, so flex.
+  - Six pages held under 520px; the direction was to add content that answers the page's own
+    question, not to merge pages.
+  - Navigation moved from six top tabs, which had wrapped onto two lines, to a left sidebar,
+    picked from two mock-ups. Every page got a `.pghead`, 38px of top margin ("the whole thing
+    sits too high up"), and a shared `--headh` so the two dividing lines align.
+  - The sidebar's `data through` line was deleted: it took the newest date of every source while
+    three were past 30 days, reporting the best case as the general one.
+  - Copy: no facts strung on `·` ("splitting sentences with dots… is exhausting to read"); one
+    fact per line; sentences as sentences; warnings in a box. Eight tooltips were split onto
+    lines.
+  - The filing grid, in a paper-planner look: dot, ring, grey dot, judged by each statement's
+    own closing day.
+  - Motion, two things only: a 120ms page fade, and reduced motion honoured. Measured: page
+    change fires it once, a month switch or a slider drag never.
+  - The Transactions page was deleted: by category covers it. Chequing line by line, search by
+    merchant and filter by account went with it, and are on the roadmap.
+- **2026-09-07** — The budget is rebuilt as guilt-free spending: the old category caps had
+  contradicted the money rules all along. The first version rendered a Chinese sentence from the
+  data onto a card, hence `zh_` fields the page never reads. Home drops everything by month. The
+  Accounts page is added, because the account list had to be assembled by hand from four files.
+  Net worth by purpose and by reach on Home, after the idea of reporting the rings inside one
+  net worth from Irene Zhu's 10-Year Wealth Dashboard — layered here by the cost of taking money
+  out, since a Canadian RRSP is taxed rather than locked. Accumulating years: the year selector
+  had never been read by the Year chart, and three years of test data showed 24 month pills on
+  two rows and eighteen labels reading `Aug ’24 2024`; hence year as container, month as cursor,
+  and every rolling statistic stating its window.
+- **2026-09-08** — The Accounts table gets a total in the home currency, the second of the two
+  places currencies are added. The import day moves to the 26th.
+- **2026-09-10** — One dashboard: the investment dashboard, a second file with its own sidebar,
+  becomes the Investing group. Records becomes a secondary group; Data sources is renamed
+  Statements. The Updates page replaces a Rule status list that had shown one import's sentences
+  as the state of things for months. Insights is absorbed. The page stops talking about itself
+  ("the UI language has too much AI in it"): no first person, no provenance, no rule numbers.
+  The header's pipeline strip ("Built · 3 checks ✓ · 10/12 sources fresh") becomes one sentence
+  about the numbers.
+- **2026-10-26** — Money in another currency stops being a page: its accounts move to Accounts,
+  its funds to Holdings.
+- **2026-10-27** — The whole-dashboard map: one page, one question, one kind of time. Spending
+  becomes This month then Year; Investing gains Performance; Plan becomes FIRE, Drawdown & care
+  and Spending baseline; Income follows the year only; every investing rule moves onto Rules.
+  To do takes the waiting cards from Updates and the whole Tasks page. Home's two net-worth
+  cards become one. The header's sentence becomes two dates ("no filler").
+- **2026-10-28** — Words on a card: a label, one number, at most one fact; terms with a dotted
+  underline and a Glossary, numbers that open their sum; no subtitles ("every word is designed").
+
