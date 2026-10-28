@@ -425,7 +425,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div id="barbell"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab">The US-dollar rate behind these numbers</div>
+    <div class="lab">US dollars</div>
     <div id="invMeta"></div>
   </div>
 </section>
@@ -910,6 +910,7 @@ const GLOSSARY = {
   backtest:       {w:"backtest", pos:"noun", def:"Running a plan through real past years to see how it would have done.", also:["sequence_risk"]},
   investment_income: {w:"investment income", pos:"noun", def:"What your investments pay you while you still hold them: dividends, interest and securities lending, after any tax withheld.", eg:"A fund paying $40 of dividends, less $6 withheld, is $34 of investment income.", not:"A gain from selling, which is not paid until you sell.", also:["dividend","securities_lending","withholding_tax"]},
   savings_rate:   {w:"savings rate", pos:"noun", def:"The share of what comes in that you keep instead of spending.", f:"savings rate = (income \u2212 spending) \u00f7 income", eg:"$4,000 in and $3,000 spent is a 25% savings rate.", also:["pay_yourself_first"]},
+  unrealized_gain:{w:"unrealized gain", pos:"noun", def:"How much more an investment is worth today than you paid for it, while you still hold it. It is not money until you sell.", f:"unrealized gain = market value \u2212 book value", eg:"Bought for $1,000, worth $1,200 today: a $200 unrealized gain.", also:["book_value","market_value"]},
   long_term_care: {w:"long-term care", pos:"noun", def:"Help with daily living in later life, at home or in a facility, usually paid for privately."},
   // Words this page coined
   for_fire:       {own:1, w:"For FIRE", pos:"on this page", def:"Money whose job is to grow until you stop working. FIRE progress is measured on it.", also:["portfolio","fire"]},
@@ -928,6 +929,7 @@ const GLOSSARY = {
   big_buy:        {own:1, w:"big buy", pos:"on this page", def:"A single purchase at or above your threshold, paid from the Big buys fund. A subscription never counts as one.", also:["sinking_fund","subscription"]},
   kept:           {own:1, w:"Kept", pos:"on this page", def:"Income minus spending over the same months. Money moved to savings or investments counts as kept.", also:["savings_rate"]},
   repayment:      {own:1, w:"Paid back", pos:"on this page", def:"Money someone returns on a loan you made. It lowers what they owe you, and it is never income.", also:["owed_to_you","lent_out"]},
+  bucket:         {own:1, w:"bucket", pos:"on this page", def:"A group of holdings your investing rules are written about, such as dry powder. What no bucket claims falls into the last one.", also:["dry_powder","target_band"]},
   complete_to:    {own:1, w:"Complete to", pos:"on this page", def:"The day every account’s numbers are in up to. After it, some accounts are still waiting for their next statement."},
 };
 // A term on the page: dotted underline, hover for the entry, click for the Glossary page.
@@ -1062,23 +1064,18 @@ function renderBook(){
   const {mv, bv, incomeYtd} = BOOKV;
   const gain = mv - bv;
   const rows = [
-    {k:"What you put in", v:bv,   c:"#9ec5f4", d:"Book value of everything you hold today — the cash that went in to buy it"},
-    {k:"What the market added", v:gain, c:"#2a78d6", d:"Today's value above that cost, still on paper until you sell"}
+    {k:term("book_value", "What you put in"), v:bv, c:"#9ec5f4"},
+    {k:term("unrealized_gain", "What the market added"), v:gain, c:"#2a78d6"}
   ];
   $("bookStack").innerHTML = '<div class="stack">' + rows.map(r =>
     '<span style="width:'+(Math.max(r.v,0)/mv*100)+'%;background:'+r.c+'"></span>').join("") + '</div>';
   $("bookRows").innerHTML = rows.map(r =>
     '<div class="nw-row"><span class="nm"><span style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+r.c+'"></span>'+r.k+'</span>'
-    + '<span class="d">'+r.d+'</span><span class="v num">'+(r.v<0?"\u2212":"")+fmt(Math.abs(r.v))+'</span>'
+    + '<span class="d"></span><span class="v num">'+(r.v<0?"\u2212":"")+fmt(Math.abs(r.v))+'</span>'
     + '<span class="p num">'+Math.round(pc(r.v, mv))+'%</span></div>').join("")
-    + '<div class="nw-row"><span class="nm">Portfolio today</span>'
-    + '<span class="d">'+BROKER+' non-earmarked accounts'+(FOREIGN.rows.some(r=>!r.cash)?' plus the foreign funds':'')+'</span>'
-    + '<span class="v num"><b>'+fmt(mv)+'</b></span><span class="p"></span></div>';
-  $("bookNote").innerHTML = noteBox(
-    "Cost is not a reason to trade. Book value is the cost of what you hold <b>now</b>, so gains you "
-    + "already took and dividends you reinvested sit in the left bar, and it says nothing about "
-    + "<b>when</b> the money went in. The " + fmt(incomeYtd) + " of dividends and interest paid out in "
-    + TODAY.slice(0,4) + " is in neither bar; it is on the Investment income page.");
+    + '<div class="nw-row"><span class="nm">Portfolio today</span><span class="d"></span>'
+    + '<span class="v num"><b>'+numx(fmt(mv), [], "The " + fmt(incomeYtd) + " of dividends and interest paid out in " + TODAY.slice(0,4) + " is in neither part.")+'</b></span><span class="p"></span></div>';
+  $("bookNote").innerHTML = "";
 }
 // Performance: the same money in one fund, bought on the days it actually went in. The line is
 // what that would have been worth each day; the dots are what the growth accounts were worth on
@@ -1094,11 +1091,12 @@ function renderPerf(){
   const P = PERF, diff = P.end - P.shadow, days = Math.round((new Date(P.to) - new Date(P.from)) / 864e5);
   const span = days < 120 ? Math.round(days/7) + " weeks" : days < 730 ? Math.round(days/30.4) + " months" : (days/365.25).toFixed(1) + " years";
   $("perfLab").textContent = "Against " + P.symbol + ", " + ymFull(P.from.slice(0,7)) + " to " + ymFull(P.to.slice(0,7));
-  const stat = (lab, q, val, note, col) => '<div class="card"><div class="lab">'+lab+(q ? qMark(q) : "")+'</div><div class="big num"'+(col ? ' style="color:'+col+'"' : '')+'>'+val+'</div><div class="cap">'+note+'</div></div>';
+  const stat = (lab, val, note, col) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num"'+(col ? ' style="color:'+col+'"' : '')+'>'+val+'</div>'+(note ? '<div class="cap">'+note+'</div>' : "")+'</div>';
   $("perfStats").innerHTML =
-      stat("Your growth accounts", "What the " + BROKER + " accounts you hold to grow were worth on " + P.to + ", the newest snapshot. The foreign funds are left out on both sides: their deposits are in no export, so there is nothing to buy the benchmark with.", fmt(P.end), "on " + P.to)
-    + stat("The same money in " + P.symbol, P.name + ". " + P.why, fmt(P.shadow), "had every dollar bought it the same day")
-    + stat("Difference", "", (diff >= 0 ? "+" : "\u2212") + fmt(Math.abs(diff)), (diff >= 0 ? "ahead of " : "behind ") + P.symbol + ", " + pct1(Math.abs(pc(diff, P.shadow))) + " over " + span, diff < 0 ? "#d03b3b" : "");
+      stat("Growth accounts", numx(fmt(P.end), [], "The " + BROKER + " accounts held to grow, on " + dLong(P.to) + ". Funds abroad are left out on both sides."), "")
+    + stat("Same money in " + term("benchmark", P.symbol), numx(fmt(P.shadow), [], P.name + ". " + P.why + " Every dollar bought it the day it went in."), "")
+    + stat("Difference", numx((diff >= 0 ? "+" : "\u2212") + fmt(Math.abs(diff)), [["Growth accounts", fmt(P.end)], ["Same money in " + P.symbol, "\u2212" + fmt(P.shadow)]], "", true),
+           (diff >= 0 ? "Ahead by " : "Behind by ") + pct1(Math.abs(pc(diff, P.shadow))) + " over " + span, diff < 0 ? "#d03b3b" : "");
   // the chart: the benchmark's daily line, the snapshots as dots on an ink line
   const W=940, H=260, padL=64, padR=16, padT=16, padB=28;
   const t = d => new Date(d).getTime(), t0 = t(P.from), t1 = t(P.to);
@@ -1128,17 +1126,16 @@ function renderPerf(){
     hoverable(c, a[0] + "<br>Your growth accounts " + fmt(a[1]) + "<br>" + P.symbol + " instead " + fmt((P.path.filter(p => p[0] <= a[0]).pop() || P.path[0])[1])); });
   svg.querySelectorAll("line[data-f]").forEach(l => { const f = P.flows.find(z => z[0] === l.dataset.f);
     hoverable(l, f[0] + "<br>" + (f[1] > 0 ? fmt(f[1]) + " moved in" : fmt(-f[1]) + " moved out")); });
-  $("perfLegend").innerHTML = '<div class="leg-row"><span class="dot" style="background:var(--ink)"></span><span class="nm">Your growth accounts, at each snapshot (nothing is known in between)</span></div>'
-    + '<div class="leg-row"><span class="dot" style="background:#2a78d6"></span><span class="nm">The same money in ' + P.symbol + ', each day</span></div>'
-    + '<div class="leg-row"><span class="nm" style="color:var(--muted)">┆ money moving in or out</span></div>';
+  $("perfLegend").innerHTML = '<div class="leg-row"><span class="dot" style="background:var(--ink)"></span><span class="nm">Growth accounts, at each snapshot</span></div>'
+    + '<div class="leg-row"><span class="dot" style="background:#2a78d6"></span><span class="nm">Same money in ' + P.symbol + ', each day</span></div>'
+    + '<div class="leg-row"><span class="nm" style="color:var(--muted)">┆ Money in or out</span></div>';
   $("perfRows").innerHTML = metaList([
-    ["Worth on " + P.from + ", the first snapshot", fmt(P.start)],
-    ["Moved in since, net" + qMark("Every transfer into or out of the growth accounts after the first snapshot, from the broker's activity export. Moves between two growth accounts cancel out."), (P.put >= 0 ? "" : "\u2212") + fmt(Math.abs(P.put)) + " in " + P.flows.length + " move" + (P.flows.length === 1 ? "" : "s")],
-    [P.symbol + " itself over the same days" + qMark("Its price with dividends folded in, in Canadian dollars at the Bank of Canada rate of each day."), (P.benchRet >= 0 ? "+" : "\u2212") + pct1(Math.abs(P.benchRet * 100))],
-    ["Prices", "to " + P.pricesAsof + " \u00b7 " + (P.source.benchmark || "") + (P.source.usdcad ? "; " + P.source.usdcad : ""), "mut"]
+    ["Worth on " + dLong(P.from), fmt(P.start)],
+    ["Moved in since", numx((P.put >= 0 ? "" : "\u2212") + fmt(Math.abs(P.put)), [], P.flows.length + " move" + (P.flows.length === 1 ? "" : "s") + " in or out, net. Moves between two growth accounts cancel out.")],
+    [P.symbol + " over the same days", numx((P.benchRet >= 0 ? "+" : "\u2212") + pct1(Math.abs(P.benchRet * 100)), [], "Its " + "price with dividends folded in, in Canadian dollars at each day\u2019s rate.")]
   ]);
   $("perfNote").innerHTML = days < 365
-    ? noteBox("<b>" + span + " is far too short to judge.</b> One fund against a whole portfolio swings by more than this from one month to the next. The comparison starts at the first snapshot and grows with every update; read it once it covers a year or more.")
+    ? '<div class="cap">' + cap1(span) + " is too short to judge one fund against a portfolio.</div>"
     : "";
 }
 function renderHome(){
@@ -2055,7 +2052,7 @@ function renderSubs(){
 function renderInv(){
   const I = INVEST;
   $("invStale").innerHTML = I.stale ?
-    '<div class="stale-banner">⚠ Your '+BROKER+' holdings are <b>'+I.staleDays+' days old</b> (as of '+I.asof+'). Drop a fresh holdings report into inbox and say “update dashboards”.</div>' : "";
+    '<div class="stale-banner">⚠ <b>Holdings are '+I.staleDays+' days old</b>, as of '+dLong(I.asof)+'. A fresh holdings export brings them up to date.</div>' : "";
   // No band and no cap means nothing to pass or fail. A green tick against a rule nobody set
   // is the same false reassurance as claiming an empty portfolio is inside its range.
   const dryBad = I.investable ? outOfBand(I.dryPct) : false;   // nothing invested is a state, not a breach
@@ -3355,7 +3352,7 @@ const IV = (function(){
   const dryOver   = dry - cadInv*DRYHI/100;
   const dryIn     = dryGap <= 0 && dryOver <= 0;
   const dryState  = dryIn ? "ok" : "warn";
-  const dryNote   = dryIn ? fmt(cadInv*DRYHI/100-dry)+` of room before the ${DRYHI}% ceiling`
+  const dryNote   = dryIn ? fmt(cadInv*DRYHI/100-dry)+` under the ${DRYHI}% ceiling`
                           : (dryGap > 0 ? fmt(dryGap)+` short of the ${DRYLO}% floor`
                                         : fmt(dryOver)+` above the ${DRYHI}% ceiling`);
   const freeSyms  = new Set(positions.filter(p=>!EARMARK.includes(p.account) && !p.cash && !p.cn).map(p=>p.sym));
@@ -3366,34 +3363,38 @@ const IV = (function(){
   const fxAge     = FX.asof ? Math.round((new Date(DATA.today) - new Date(FX.asof))/864e5) : 0;
 
   // ----- the four stat cards, with the change since the previous import
-  const DEFS = {
-    portfolio: `Money actually invested. Canadian side ${fmt(cadInv)}${FGN.rows.length ? " plus foreign funds "+fmt(fgn) : ""}. Bank cash and earmarked accounts are left out.`,
-    earmarked: `${EARMARK.map(a=>a+" "+fmt(positions.filter(p=>p.account===a).reduce((s,p)=>s+p.mv,0))).join(" + ")}. Set aside for a purpose, so out of Portfolio.`,
-    dry: `${andList(DRY)} outside the earmarked accounts, measured against the ${DATA.broker} side ${fmt(cadInv)}. Foreign holdings are left out. You want ${DRYLO}\u2013${DRYHI}%.`,
-    holdings: `${(DATA.tickers||[]).length} ${DATA.broker} tickers${FGN.rows.length ? " + "+FGN.rows.length+" foreign funds" : ""}. Cash not counted.${CAP ? " Your limit is "+CAP+"." : ""}`
-  };
   const prev = HIST.length>1 ? HIST[HIST.length-2] : null;
   const deltaLine = (now, was, unit) => {
     if(was==null) return "";
     const d = now-was, cls = Math.abs(d)<0.05 ? "flat" : (d>0?"up":"down"), arr = Math.abs(d)<0.05 ? "\u2192" : (d>0?"\u25b2":"\u25bc");
     const txt = unit==="pts" ? Math.abs(d).toFixed(1)+" pts" : fmt(Math.abs(d));
-    return '<div class="delta '+cls+'">'+arr+" "+txt+" since "+prev.date+"</div>";
+    return '<div class="delta '+cls+'">'+arr+" "+txt+" since "+dLong(prev.date)+"</div>";
   };
   function renderStats(){
-    const stat = (lab, def, val, note, extra) => '<div class="card"><div class="lab">'+lab+qMark(def)+'</div><div class="big num">'+val+'</div><div class="cap">'+note+'</div>'+(extra||"")+'</div>';
+    const stat = (lab, val, status) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status||"")+'</div>';
+    const cap = t => t ? '<div class="cap">'+t+'</div>' : "";
+    const accVal = a => positions.filter(p => p.account === a).reduce((s,p) => s + p.mv, 0);
+    const dryWas = prev && prev.dryPct != null ? " "+(dryPct - prev.dryPct >= 0 ? "Up " : "Down ")+Math.abs(dryPct - prev.dryPct).toFixed(1)+" pts since "+dLong(prev.date)+"." : "";
     $("invStats").innerHTML =
-      stat("Portfolio", DEFS.portfolio, fmt(portfolio), FGN.rows.length ? "Canadian side plus the foreign funds" : "Everything that is actually invested", prev ? deltaLine(cadInv, prev.cadInv) : "")
-    + stat("Set aside", DEFS.earmarked, fmt(earm), "Not part of the portfolio")
-    + stat("Dry powder", DEFS.dry, cadInv ? pctS(dryPct)+' <span class="sym '+dryState+'" style="font-size:15px">'+(dryIn?"\u2713":"\u26a0")+'</span>' : "\u2014",
-           cadInv ? dryNote : "Nothing invested yet", prev ? deltaLine(dryPct, prev.dryPct, "pts") : "")
-    + stat("Holdings", DEFS.holdings, nTick + (CAP && nTick > CAP ? ' <span class="sym bad" style="font-size:15px">\u2717</span>' : ""),
-           !CAP ? "" : nTick > CAP ? (nTick-CAP)+" more than you want to hold" : "At or under your limit of "+CAP);
+      stat(term("portfolio", "Portfolio"),
+           numx(fmt(portfolio), FGN.rows.length ? [["At "+DATA.broker, fmt(cadInv)], ["Funds abroad", fmt(fgn)]] : [], "Bank cash and set-aside accounts are left out.", true),
+           prev ? deltaLine(cadInv, prev.cadInv) : "")
+    + stat(term("set_aside", "Set aside"), numx(fmt(earm), EARMARK.map(a => [a, fmt(accVal(a))]), "", true))
+    + stat(term("dry_powder", "Dry powder"),
+           cadInv ? numx(pctS(dryPct), [...DRY.map(y => [y, fmt(positions.filter(p => p.sym === y && !EARMARK.includes(p.account)).reduce((s,p) => s + p.mv, 0))]), ["Out of", fmt(cadInv)]],
+                         "Measured at "+DATA.broker+", set-aside accounts left out. Your band is "+DRYLO+"\u2013"+DRYHI+"%."+dryWas)
+                    +' <span class="sym '+dryState+'" style="font-size:15px">'+(dryIn?"\u2713":"\u26a0")+'</span>' : "\u2014",
+           cap(cadInv ? dryNote : "Nothing invested yet"))
+    + stat("Holdings",
+           numx(String(nTick), [["At "+DATA.broker, String(freeSyms.size)], ...(FGN.rows.length ? [["Funds abroad", String(FGN.rows.length)]] : [])], "Cash is not counted.", true)
+             + (CAP && nTick > CAP ? ' <span class="sym bad" style="font-size:15px">\u2717</span>' : ""),
+           cap(!CAP ? "" : nTick > CAP ? (nTick-CAP)+" over your limit of "+CAP : "Within your limit of "+CAP));
   }
   function renderMeta(){
     $("invMeta").innerHTML = metaList([
-      ["US dollar rate used", FX.rate + (fxAge > 30 ? " (from "+FX.asof+", older than a month)" : FX.quality==="broker-rate" ? " (from the broker, "+FX.asof+")" : " ("+(FX.quality||"set")+", "+FX.asof+")"), fxAge > 30 ? "hi" : ""],
-      ["Held in US dollars", fmt(usdExp) + " (" + pctS(pc(usdExp, cadInv)) + " of the Canadian side)"],
-      ["If that rate is 1% out", "\u00b1" + fmt(usdExp*0.01)]
+      [term("exchange_rate", "Rate"), FX.rate + " on " + dLong(FX.asof) + (fxAge > 30 ? ", older than a month" : ""), fxAge > 30 ? "hi" : ""],
+      ["Held in US dollars", numx(fmt(usdExp), [], pctS(pc(usdExp, cadInv)) + " of what is held at " + DATA.broker + ".")],
+      ["If the rate is 1% off", "\u00b1" + fmt(usdExp*0.01)]
     ]);
   }
 
@@ -3428,7 +3429,7 @@ const IV = (function(){
       `<div class="split3">`
       + block("spCur", "By currency", "portfolio")
       + block("spType", "By kind of asset", "portfolio")
-      + block("bbDonut", "By your buckets, at " + DATA.broker, "at " + DATA.broker)
+      + block("bbDonut", "By " + term("bucket", "bucket"), "at " + DATA.broker)
       + `</div>`
       + (unclassed.length ? noteBox(unclassed.join(", ") + (unclassed.length > 1 ? " have" : " has") + " no kind of asset yet, so "
           + (unclassed.length > 1 ? "they sit" : "it sits") + " under Not classified. Say what " + (unclassed.length > 1 ? "they hold" : "it holds") + " and it moves.") : "");
@@ -3444,12 +3445,12 @@ const IV = (function(){
     const val = B[b.key], pct = pc(val, cadInv), [lo,hi] = b.target;
     const gap = cadInv*lo/100 - val, over = val - cadInv*hi/100, inside = gap<=0 && over<=0;
     const held = positions.filter(p=>(b.symbols||[]).includes(p.sym) && !EARMARK.includes(p.account));
-    const bySym = (b.symbols||[]).map(y => y+" "+fmt(held.filter(p=>p.sym===y).reduce((s,p)=>s+p.mv,0))).join(" + ");
-    const accs  = [...new Set(held.map(p=>p.account))].join(" + ");
+      const accs  = [...new Set(held.map(p=>p.account))].join(" + ");
     if(!cadInv) return {s:"info", n:`${cap1(b.name.split(" \u00b7 ").pop())} band ${lo}\u2013${hi}%`,
-      d:`Nothing invested yet, so there is no allocation to check. It starts working after your first holdings import.`};
+      d:`Nothing invested yet.`};
     return {s: inside?"ok":"warn", n:`${cap1(b.name.split(" \u00b7 ").pop())} band ${lo}\u2013${hi}%`,
-      d:`Currently ${pctS(pct)}${bySym?" ("+bySym+(accs?" across "+accs:"")+")":""} \u2014 ${inside ? "inside the band, with "+fmt(cadInv*hi/100-val)+` of headroom before the ${hi}% ceiling` : (gap>0 ? fmt(gap)+` below the ${lo}% floor` : fmt(over)+` above the ${hi}% ceiling`)}. Measured against the ${DATA.broker} side ${fmt(cadInv)}; ${andList(EARMARK)} ${EARMARK.length>1?"are":"is"} set aside for a purpose, so nothing held there counts.`};
+      d: numx(pctS(pct), [...(b.symbols||[]).map(y => [y, fmt(held.filter(p=>p.sym===y).reduce((s,p)=>s+p.mv,0))]), ["Out of", fmt(cadInv)]], "Measured at "+DATA.broker+(accs ? ", in "+accs : "")+"; set-aside accounts are left out.")
+        + ", " + (inside ? fmt(cadInv*hi/100-val)+` under the ${hi}% ceiling.` : (gap>0 ? fmt(gap)+` short of the ${lo}% floor.` : fmt(over)+` above the ${hi}% ceiling.`))};
   });
   const posOf = s => positions.filter(p=>p.sym===s);
   const fill  = t => String(t)
@@ -3461,10 +3462,10 @@ const IV = (function(){
    ...bandRows.map(r => ({...r, under:"dryBand"})),
    // No limit set: the count stands on the Holdings card, and there is no rule here to pass or fail.
    ...(CAP ? [{under:"holdingsCap", s:nTick>CAP?"bad":"ok",n:`Simplify to \u2264${CAP} positions`,d: nTick===0 ? "No positions yet." :
-     `${nTick} positions \u2014 ${freeSyms.size} at ${DATA.broker}${FGN.rows.length ? " plus "+FGN.rows.length+" foreign funds" : ""}${nTick>CAP ? ", "+(nTick-CAP)+" over target." : " \u2014 inside the target."}`
-     + (Object.keys(midBy).length ? ` ${cap1(CATCHNAME)} holds ${Object.keys(midBy).length} of them (${fmt(mid)}); ${nTick-Object.keys(midBy).length<=CAP ? "closing every one would bring the count to "+(nTick-Object.keys(midBy).length)+`, which clears the \u2264${CAP} target on its own` : "closing every one still leaves "+(nTick-Object.keys(midBy).length)+", so "+(nTick-Object.keys(midBy).length-CAP)+" more would have to come from the named buckets"}. Smallest first: ${midAsc}.` : "")}] : []),
+     `${nTick} positions, ${nTick>CAP ? (nTick-CAP)+" over the limit." : "within the limit."}`
+     + (nTick>CAP && Object.keys(midBy).length ? ` ${cap1(CATCHNAME)}, smallest first: ${midAsc}.` : "")}] : []),
    ...noteRows,
-   ...(FGN.rows.length ? [{under:"abroad", s:"info",n:"Foreign currency kept apart",d:`${fmtFgn(FGN.amount)} \u2248 ${fmt(fgn)} of foreign funds counts inside Portfolio but stays out of the Canadian dry powder: crossing the border costs conversion and transfer friction, so it is not deployable here. The ${fmtFgn(FGN.cash)} in ${FGN.label} bank deposits is cash, not portfolio, and is on Accounts.`}] : [])
+   ...(FGN.rows.length ? [{under:"abroad", s:"info",n:"Foreign currency kept apart",d:`${fmtFgn(FGN.amount)}, about ${fmt(fgn)}, of funds abroad counts in Portfolio and not in dry powder.`}] : [])
   ];
   const SEV={bad:0,warn:1,info:2,ok:3};
   rules.sort((a,b)=>SEV[a.s]-SEV[b.s]);
@@ -3526,7 +3527,7 @@ const IV = (function(){
   // ----- holdings: by role or by account; P&L off by default because cost is not a decision input
   let showPL = false, view = "role";
   function roleView(){
-    const order=[...BUCKETS.map(b=>[b.name,b.key]),["Idle cash","cash"],["onshore deployable","cn"],["Set aside","earm"]];
+    const order=[...BUCKETS.map(b=>[b.name,b.key]),["Idle cash","cash"],["Held abroad","cn"],["Set aside","earm"]];
     const buckets={cash:[],cn:[],earm:[]}; BUCKETS.forEach(b=>buckets[b.key]=[]);
     const agg={};
     for(const p of positions){
@@ -3545,7 +3546,7 @@ const IV = (function(){
       const rows=buckets[key].sort((a,b)=>b.mv-a.mv);
       if(!rows.length) continue;
       const sub=rows.reduce((s,r)=>s+r.mv,0);
-      const gp = key==="earm" ? fmt(sub) : fmt(sub)+" \u00b7 "+pctS(pc(sub, portfolio));
+      const gp = key==="earm" ? fmt(sub) : fmt(sub)+'<span style="margin-left:14px">'+pctS(pc(sub, portfolio))+'</span>';
       h+=`<tr class="grp"><td colspan="5">${label}<span class="gp num">${gp}</span></td></tr>`;
       for(const r of rows){
         const p=r.mv-r.bv;
@@ -3566,8 +3567,8 @@ const IV = (function(){
       const rows=accs[a].sort((x,y)=>y.mv-x.mv);
       const sub=rows.reduce((s,p)=>s+p.mv,0);
       const isE=EARMARK.includes(a);
-      const gp = isE ? fmt(sub) : fmt(sub)+" \u00b7 "+pctS(pc(sub, portfolio));
-      h+=`<tr class="grp"><td colspan="5">${a}${isE?" \u00b7 earmarked, not in Portfolio":""}<span class="gp num">${gp}</span></td></tr>`;
+      const gp = isE ? fmt(sub) : fmt(sub)+'<span style="margin-left:14px">'+pctS(pc(sub, portfolio))+'</span>';
+      h+=`<tr class="grp"><td colspan="5">${a}${isE?' <span style="color:var(--muted);font-weight:400">Set aside</span>':""}<span class="gp num">${gp}</span></td></tr>`;
       for(const p of rows){
         const pl=p.mv-p.bv;
         const share = isE ? '<span style="color:var(--muted)">\u2014</span>' : pctS(pc(p.mv, portfolio));
@@ -3580,9 +3581,7 @@ const IV = (function(){
   function drawHoldings(){
     $("holdTable").innerHTML = positions.length ? (view==="role" ? roleView() : accountView())
       : '<div class="empty">No positions yet. Your first broker report fills this table.</div>';
-    $("tblFoot").textContent = showPL
-      ? "Unrealized P/L is for reference only. Cost is never a reason to trade."
-      : "Values in CAD at USD/CAD " + FX.rate + ".";
+    $("tblFoot").textContent = "US dollars at " + FX.rate + ".";
   }
   function wire(){
     document.querySelectorAll(".tab[data-v]").forEach(t=>t.addEventListener("click",()=>{

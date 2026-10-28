@@ -4,6 +4,17 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Investing, written to the card rules** (2026-10-28). Portfolio's four cards lost their `?`
+  marks and captions: Portfolio, Set aside, Dry powder and Holdings are terms, and each number
+  opens its sum (the accounts, the symbols against the denominator, the band). The US-dollar card
+  is three plain rows. Performance's cards say *Growth accounts*, *Same money in* the benchmark
+  and *Difference*; the price sources are gone from the page, and the note that a short
+  comparison says little is one grey line instead of a warning. What you put in and what the
+  market added are terms (*book value*, *unrealized gain*), and the paragraph under them is gone.
+  Holdings calls the funds abroad *Held abroad* and a set-aside account *Set aside*; the P&L
+  footnote is gone. On Rules, each rule's detail is one sentence, its composition behind the
+  number.
+
 - **Income, written to the card rules** (2026-10-28). Income, Spent and Kept each open their
   sum; *Kept* and *Paid back* are terms, and Investment is the Glossary's *investment income*
   rather than a `?`. The coverage line under the chart (ledger date ranges strung on `·`) is
