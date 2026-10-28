@@ -31,6 +31,10 @@ from scratch: one credit card, nine statements, a cloud session.
 
 ## v1.2 — 2026-11-24 — a first setup that works for someone else
 
+- **Start here, in pictures.** One path from nothing to a first page, a screenshot a step:
+  install the Claude desktop app, open its **Code** tab (not Chat), choose the downloaded folder,
+  say *set this up*. No git, no terminal. The first screen of the README says the same, so
+  someone who opened it in Chat is pointed back to the right place.
 - **Ready before it starts.** *(first user)* Setup checks for Python and the PDF reader first and
   says exactly what to install, and says up front how long it takes and how many steps there
   are; each step says where it is.
