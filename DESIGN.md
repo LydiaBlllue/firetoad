@@ -298,7 +298,8 @@ these jobs is deleted, not shortened.
 - **A term's entry is a dictionary entry**, the same for anyone: the word, its part of speech,
   one sentence, a formula where there is one, an example in round numbers, *see also*. Never the
   owner's numbers, never a name in another language. Words the page coined (`Set aside`, `Held
-  abroad`) get an entry too, saying what they mean on this page.
+  abroad`) get an entry too, saying what they mean on this page — and it does not look like a
+  dictionary entry: no part of speech, a gold rule down its side, headed *A word on this page*.
 - **A number's explanation is a sum**: the parts as label / value rows, a total line only when
   they add up, then one line of what is in it or left out. It is where the owner's own
   descriptions in `plan.json` appear.

@@ -4,6 +4,11 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **A coined word does not look like a dictionary entry** (2026-10-28). *Bucket*, *Set aside*,
+  *Kept* and the rest are this page's own words, not finance terms; their entry drops the part
+  of speech and carries a gold rule and the heading *A word on this page*, in the explanation
+  and on the Glossary page alike.
+
 - **Investing, written to the card rules** (2026-10-28). Portfolio's four cards lost their `?`
   marks and captions: Portfolio, Set aside, Dry powder and Holdings are terms, and each number
   opens its sum (the accounts, the symbols against the denominator, the band). The US-dollar card
