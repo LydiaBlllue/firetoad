@@ -162,6 +162,11 @@ Home · Spending · Income · Investing · Plan · Records
 —— 仅桌面，窗口至少 1120px 宽。
 </details>
 
+## 接下来
+
+接下来几次发布的内容和目标日期见 [`ROADMAP.md`](ROADMAP.md)；已经发布的见
+[`CHANGELOG.md`](CHANGELOG.md)。
+
 ## 许可
 
 MIT —— 见 [`LICENSE`](LICENSE)。

@@ -182,6 +182,11 @@ Home · Spending · Income · Investing · Plan · Records
 — desktop only, at least 1120px wide.
 </details>
 
+## What's next
+
+The next releases and their target dates are in [`ROADMAP.md`](ROADMAP.md); what already
+shipped is in [`CHANGELOG.md`](CHANGELOG.md).
+
 ## Licence
 
 MIT — see [`LICENSE`](LICENSE).
