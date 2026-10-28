@@ -130,6 +130,10 @@
 - **Follows the year only**: Income / Spent / Kept, the year by source — Investment carries its
   explanation, since it never reaches chequing — a line for what a borrower paid back, which is
   never income, and the months by source.
+- **Investment income**: what was paid, a month on average, its share of spending, the tax
+  withheld; the months, each split into dividends, interest, lending and tax; and **By holding**
+  — which funds paid the dividends, how often each pays (every month, every quarter), and its
+  share — because the months swing with the funds' rhythms.
 
 ### Investing
 

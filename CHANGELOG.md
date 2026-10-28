@@ -2,6 +2,11 @@
 
 ## 1.1 — unreleased
 
+- **Investment income fills its page** (2026-10-28). The page was under a screen (R4), and its
+  months swing — January, April and July twice the others — with nothing to say why. A **By
+  holding** card answers it: each fund that paid dividends, how often it pays (every month, every
+  quarter), what it paid and its share. `WSINC` rows carry `by`, the month's dividends by fund.
+
 - **The year's stacked bar counts refunds** (2026-10-28). A refund lands in the month it posted,
   so a category can be below zero in a month; the Year page's "Each month, by category" chart
   drew that category as nothing, and its labels added up to more than "Spent" above them. A

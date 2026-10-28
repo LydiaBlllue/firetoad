@@ -444,6 +444,10 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <table class="dt" id="wsIncTable"></table>
     <div class="cap" id="wsIncCap"></div>
   </div>
+  <div class="card" style="margin-bottom:10px">
+    <div class="lab">By holding</div>
+    <table class="dt" id="wsIncBy"></table>
+  </div>
 </section>
 
 
@@ -2875,6 +2879,27 @@ function renderWsInc(){
       }).join("");
   const lastM = WSINC.length ? WSINC[WSINC.length-1].ym : "";
   $("wsIncCap").textContent = lastM && lastM >= TODAY.slice(0,7) ? ymFull(lastM)+" is still open, so its totals will rise." : "";
+  // The months above swing because funds pay on different rhythms: which ones pay, how often,
+  // and how much of the dividends each brings. The rhythm is read off the months it paid in.
+  const yms = WSINC.map(m => m.ym), by = {};
+  WSINC.forEach(m => Object.entries(m.by || {}).forEach(([k,v]) => (by[k] = by[k] || {v:0, ms:[]}, by[k].v += v, v > 0 && by[k].ms.push(m.ym))));
+  const divs = tot("div"), mIdx = ym => Number(ym.slice(0,4))*12 + Number(ym.slice(5,7));
+  const rhythm = ms => {
+    const gaps = ms.slice(1).map((m,i) => mIdx(m) - mIdx(ms[i]));
+    if(ms.length >= 3 && gaps.every(g => g === 1)) return "Every month";
+    if(ms.length >= 2 && gaps.every(g => g === 3)) return "Every quarter";
+    return ms.length === 1 ? "Once" : ms.length+" times";
+  };
+  // "iShares Trust - iShares 0-3 Month Treasury Bond ETF": the fund's own name is the last part
+  // that is more than the word ETF.
+  const names = {}, fund = n => n.split(" - ").filter(x => !/^ETF$/i.test(x.trim())).pop() || n;
+  ((typeof DATA !== "undefined" && DATA.positions) || []).forEach(p => names[p.sym] = names[p.sym] || fund(p.name));
+  const rows = Object.entries(by).filter(([k,b]) => b.v > 0).sort((a,b) => b[1].v - a[1].v);
+  $("wsIncBy").innerHTML = rows.length
+    ? '<tr><th style="text-align:left">Holding</th><th>Pays</th><th>'+term("dividend", "Dividends")+'</th><th>Share</th></tr>'
+      + rows.map(([k,b]) => '<tr><td><b>'+k+'</b>'+(names[k] ? ' <span style="color:var(--muted)">'+names[k]+'</span>' : "")+'</td>'
+        + '<td class="num">'+rhythm(b.ms)+'</td><td class="num">'+fmt2(b.v)+'</td><td class="num">'+Math.round(pc(b.v, divs))+'%</td></tr>').join("")
+    : '<tr><td class="empty">No dividends on record yet.</td></tr>';
 }
 
 // Coverage scorecard: the five entry points, what is wired in, and what is still missing.

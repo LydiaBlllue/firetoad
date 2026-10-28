@@ -403,16 +403,21 @@ def derive(d):
     out["SUBMITTED"] = d["filings"]["filed"]
 
     # --- WSINC: dividends, interest, stock lending and withholding tax, USD converted
+    # `by` splits the month's dividends by fund, so the page can say which holdings pay and how often.
     inc = collections.defaultdict(lambda: collections.defaultdict(float))
+    by = collections.defaultdict(lambda: collections.defaultdict(float))
     for r in d["acts"]:
         ym = r["effective_date"][:7]
         a = float(r["net_cash_amount"] or 0) * (rate if r["currency"] == "USD" else 1)
         t, desc = r["activity_type"], r["description"].lower()
-        if t == "Dividend": inc[ym]["div"] += a
+        if t == "Dividend":
+            inc[ym]["div"] += a
+            by[ym][r.get("symbol") or "Other"] += a
         elif t == "Interest": inc[ym]["lend" if "lending" in desc else "int"] += a
         elif t == "Tax": inc[ym]["tax"] += a
     out["WSINC"] = [{"ym": k, "div": round(v["div"], 2), "int": round(v["int"], 2),
-                     "lend": round(v["lend"], 2), "tax": round(v["tax"], 2)}
+                     "lend": round(v["lend"], 2), "tax": round(v["tax"], 2),
+                     "by": {s: round(x, 2) for s, x in sorted(by[k].items())}}
                     for k, v in sorted(inc.items())]
 
     # --- WSDEP: only EFT landing in the broker's chequing doorway account. Money paid straight
