@@ -222,11 +222,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .pos{color:#008300}.neg{color:#a3423a}
 .foot{font-size:12px;color:var(--muted);margin-top:9px}
 /* Records: a secondary group at the foot of the sidebar, closed unless you are in it */
-.side .sec.minor{display:flex;align-items:center;gap:5px;cursor:pointer;margin-top:20px;padding-top:12px;border-top:1px solid var(--border);margin-right:10px}
 .side .grp.foot{margin-top:14px}
-.side .sec.minor .tw{font-size:9px;color:var(--muted)}
-.side .sec.minor .dot-n{width:6px;height:6px;border-radius:50%;margin-left:auto}
-.side .sec.minor:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:4px}
 .side [hidden]{display:none!important}
 .dt{width:100%;border-collapse:collapse;font-size:13px}
 .dt th{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 0;border-bottom:1px solid var(--grid)}
@@ -273,14 +269,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 #acctTable tr.grp td{padding-left:0}
 #acctTable tr.tot td{padding-top:12px;border-top:2px solid var(--border);font-weight:700}
 #acctTable tr.tot td.sub{font-weight:400;color:var(--muted);font-size:12px}
-.gl-row{display:flex;align-items:center;gap:10px;padding:5px 6px;border-bottom:1px solid var(--grid);font-size:13px;cursor:pointer;border-radius:6px}
-.gl-row:last-child{border-bottom:none}
-.gl-row:hover{background:var(--pill)}
-.gl-row .tag{width:118px;flex-shrink:0;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .alert-row .tag{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--pill);border-radius:4px;padding:1px 5px;vertical-align:1px;margin-right:2px}
-.gl-row .sym{font-weight:700;flex-shrink:0}
-.gl-row .tx{flex:1;color:var(--ink-2)}
-.gl-row .arr{color:var(--muted);flex-shrink:0}
 </style>
 </head>
 <body>
@@ -312,10 +301,6 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 
 <section data-pg="home" hidden>
 <div class="grid-stats" id="homeStats"></div>
-<div class="card" style="margin-bottom:10px">
-  <div class="lab">What needs you today</div>
-  <div id="glance"></div>
-</div>
 <div class="card" style="margin-bottom:10px">
   <div class="lab" id="bothLab">Net worth</div>
   <div class="baseline-hero num" id="bothBig">—</div>
@@ -684,7 +669,7 @@ const fmt2 = n => (n <= -0.005 ? "\u2212" : "") + "$" + Math.abs(n).toLocaleStri
 const monthOf = ym => SPENDING.filter(e => e.date.startsWith(ym) && e.currency === "CAD");
 const monthTotal = ym => monthOf(ym).reduce((s,e) => s + e.amount, 0);
 function ymShift(ym,d){let[y,m]=ym.split("-").map(Number);m+=d;if(m<1){m=12;y--}if(m>12){m=1;y++}return y+"-"+String(m).padStart(2,"0");}
-// Months from today as a label ("Aug 2039"), shared by Home and the glance rows.
+// Months from today as a label ("Aug 2039").
 const dTxt = m => { if(m === null) return "beyond 25y"; const [Y,M] = TODAY.slice(0,7).split("-").map(Number); const t = M-1+m, yy = Y + Math.floor(t/12); return MN[t%12]+" "+yy; };
 const ymLabel = ym => MN[Number(ym.slice(5))-1] + (ym.slice(0,4) !== TODAY.slice(0,4) ? " ’" + ym.slice(2,4) : "");
 // "Jun 2026", spelled out. ymLabel() abbreviates the year for any month outside the current one
@@ -791,38 +776,21 @@ function pageFlags(){
   else if(fr.b < 0 || fr.t < TFUND.goal) f.budget = "#c98500";
   return f;
 }
-// Records is a secondary group: closed at the foot of the sidebar unless you are on one of its
-// pages or have opened it. Its entries stay in the DOM while closed (hidden, not absent) so a
-// page is always reachable by its key. The foreign-currency entry hides itself in a workspace
-// with no accounts abroad. (2026-09-10)
-const MINOR_SECS = ["Records"];
-let recOpen = false;
-try{ recOpen = localStorage.getItem("ly_records_open") === "1"; }catch(e){}
 function drawNav(){
   const f = pageFlags();
   $("sideNav").innerHTML = NAV.map((g, gi) => {
-    const minor = MINOR_SECS.includes(g.sec);
     if(!g.sec && gi > 0) return '<div class="grp foot">' + g.items.map(i =>
       '<button data-k="'+i.k+'" class="'+(i.k===curPage?"sel":"")+'"><span>'+i.n+'</span></button>').join("") + '</div>';
-    const open = !minor || recOpen || g.items.some(i => i.k === curPage);
-    const flag = g.items.map(i => f[i.k]).find(Boolean);
-    const head = !g.sec ? '' : minor
-      ? '<div class="sec minor" tabindex="0" role="button" aria-expanded="'+open+'">'+g.sec+' <span class="tw">'+(open ? "\u25be" : "\u25b8")+'</span>'
-        + (!open && flag ? '<span class="dot-n" style="background:'+flag+'"></span>' : '') + '</div>'
-      : '<div class="sec">'+g.sec+'</div>';
-    return head + '<div class="grp"'+(open ? "" : " hidden")+'>' + g.items.map(i => {
+    const head = !g.sec ? '' : '<div class="sec">'+g.sec+'</div>';
+    return head + '<div class="grp">' + g.items.map(i => {
       return '<button data-k="'+i.k+'" class="'+(i.k===curPage?"sel":"")+'"><span>'+i.n+'</span>'
         + (f[i.k] ? '<span class="dot-n" style="background:'+f[i.k]+'"></span>' : '') + '</button>';
     }).join("") + '</div>';
   }).join("");
   $("sideNav").querySelectorAll("button").forEach(b => b.onclick = () => setPage(b.dataset.k));
-  $("sideNav").querySelectorAll(".sec.minor").forEach(h => {
-    const toggle = () => { recOpen = !recOpen; try{ localStorage.setItem("ly_records_open", recOpen ? "1" : "0"); }catch(e){} drawNav(); };
-    h.onclick = toggle;
-    h.onkeydown = e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); toggle(); } };
-  });
 }
-const MOVED = {tasks:"todo", rules:"port"};   // Rules was taken off the page 2026-10-28   // a page merged into another: an old link or saved state still lands
+// A page merged into another or taken off: an old link or saved state still lands.
+const MOVED = {tasks:"todo", rules:"port"};
 function setPage(p){
   p = MOVED[p] || p;
   if(!PAGES.some(x => x.k === p)) p = "home";
@@ -1044,7 +1012,6 @@ function render(){
   renderBook();
   renderPerf();
   renderHome();
-  renderGlance();
 }
 // Home is the only page that shows the four sides together: what went out, what came in,
 // how much stuck, and how far that leaves you from the target.
@@ -1185,42 +1152,6 @@ function renderHome(){
     '<span class="it"><i style="background:'+r.c+'"></i>'+term(REACH_TERM[r.r], r.k)+' '+numx(fmt(r.v), [], r.d)+'</span>').join("") + '</div>';
 }
 
-// ===== What needs you today: one line per thing to do, worst first, click to open =====
-// It was "At a glance", one status line per section whether or not anything was wrong
-// (2026-08-14). Since 2026-10-27 it lists only what needs you — the way the money apps that lead
-// with "what matters today" do — each line opening the page where it is dealt with.
-function renderGlance(){
-  const items = [];   // {s: bad / warn / info, p: page, t: the line}
-  const plain = t => String(t||"").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
-  const cut = (t, n) => t.length > n ? t.slice(0, n - 1).trimEnd() + "\u2026" : t;
-  const days = d => Math.round((new Date(d) - new Date(TODAY)) / 864e5);
-  if(BAND && INVEST.investable && outOfBand(INVEST.dryPct)) items.push({s:"warn", p:"port",
-    t:"<b>Dry powder is "+INVEST.dryPct+"%</b>, outside your "+BANDLO+"\u2013"+BANDHI+"% band."});
-  const miss = overdueSources();
-  if(miss.length) items.push({s:"warn", p:"src", t:"<b>"+miss.length+" statement"+(miss.length > 1 ? "s" : "")+" not filed yet</b>: "
-    + miss.map(r => r.ep+" "+r.src).join(", ")+"."});
-  const openD = openDecisions().length;
-  if(openD) items.push({s:"warn", p:"todo", t:"<b>"+openD+" question"+(openD > 1 ? "s" : "")+" waiting for your answer</b> from the last update."});
-  const open = TASKS.filter(t => t.status !== "done");
-  const soon = open.filter(t => t.due && days(t.due) <= 14).sort((a,b) => a.due < b.due ? -1 : 1);
-  soon.forEach(t => { const d = days(t.due);
-    items.push({s: d < 0 ? "warn" : "info", p:"todo", t:"<b>"+(d < 0 ? "Overdue by "+(-d)+" day"+(-d > 1 ? "s" : "") : d === 0 ? "Due today" : "Due in "+d+" day"+(d > 1 ? "s" : ""))+"</b>: "+cut(plain(t.text), 110)}); });
-  if(open.length > soon.length) items.push({s:"info", p:"todo", t:"<b>"+(open.length - soon.length)+" other open task"+(open.length - soon.length > 1 ? "s" : "")+"</b> with no date."});
-  const m = MONTHS[MONTHS.length-1];
-  if(m && everydayOf(m) > ALW) items.push({s:"warn", p:"cat", t:"<b>You went "+fmt(everydayOf(m) - ALW)+" past your "+fmt(ALW)+" allowance</b> in "+ymFull(m)+"."});
-  const fr = fundRun();
-  if(fr.b < 0) items.push({s:"warn", p:"budget", t:"<b>The "+BFUND.name+" fund is overdrawn</b> by "+fmt(-fr.b)+"."});
-  else if(TFUND.goal && fr.t < TFUND.goal) items.push({s:"warn", p:"budget", t:"<b>The "+TFUND.name+" fund is "+fmt(TFUND.goal - fr.t)+" short</b> of its goal."});
-  const bd = baseDrift();
-  if(bd !== null && Math.abs(bd) > DRIFT_FLAG) items.push({s:"info", p:"base", t:"<b>Your spending has drifted "+Math.round(bd*100)+"%</b> from the planning figure the FIRE target is built on."});
-  const RANK = {bad:0, warn:1, info:2};
-  items.sort((a,b) => RANK[a.s] - RANK[b.s]);
-  const SYM = {bad:['\u2717','#d03b3b'], warn:['\u26a0','#c98500'], info:['\u25cf','var(--muted)'], ok:['\u2713','#006300']};
-  const tag = k => (PAGES.find(x => x.k === k) || {n:""}).n;
-  $("glance").innerHTML = (items.length ? items : [{s:"ok", p:"todo", t:"Nothing needs you today."}]).map(r =>
-    '<div class="gl-row" data-p="'+r.p+'"><span class="tag">'+tag(r.p)+'</span><span class="sym" style="color:'+SYM[r.s][1]+'">'+SYM[r.s][0]+'</span><span class="tx">'+r.t+'</span><span class="arr">\u203a</span></div>').join("");
-  $("glance").querySelectorAll(".gl-row").forEach(el => el.onclick = () => setPage(el.dataset.p));
-}
 
 // ===== Monthly plan (2026-09-07: the owner: guilt-free, replaces the category caps) =====
 // The old page put a cap on Dining, Shopping and Subscription and turned them red. That was
@@ -1588,7 +1519,7 @@ function wirePlanEdits(){
         if(k === "alw") ALW = v; else if(k === "invm") INVM = v; else BIGM = v;
         saveState();
       }
-      renderPlan(); drawNav(); renderInsights(); renderGlance();
+      renderPlan(); drawNav(); renderInsights();
     };
     inp.addEventListener("blur", commit);
     inp.onkeydown = e => { if(e.key === "Enter") commit(); if(e.key === "Escape"){ done = true; renderPlan(); } };
@@ -2158,7 +2089,7 @@ function renderFire(){
       if(done) return; done = true;
       const v = Number(inp.value);
       if(v > 0){ PLAN_BASE = v; savePlanBase(); }
-      renderFire(); renderHome(); renderGlance();
+      renderFire(); renderHome();
     };
     inp.onblur = commit;
     inp.onkeydown = e => { if(e.key === "Enter") commit(); if(e.key === "Escape"){ done = true; renderFire(); } };

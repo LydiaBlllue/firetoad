@@ -506,11 +506,24 @@ def derive(d):
         if cur == "USD": v *= rate
         elif cur and cur != "CAD" and cur == fgn_cur: v *= rate_f
         # An asset keeps its sign (an overdrawn chequing account is a negative asset, and it
-        # was one before the axes); a liability is the amount owed, whichever way the file wrote it.
-        return abs(v) if a.get("side") == "liability" else v
+        # was one before the axes). A liability is the amount owed: banks.json debts are read
+        # asset-signed above, so a card in credit is negative there and owed is -v; a stated
+        # debt (a mortgage) is owed whichever way the register wrote it.
+        if a.get("side") == "liability":
+            return -v if src == "banks.json" else abs(v)
+        return v
 
-    items = [(a, cad_of(a)) for a in accs
-             if not (a.get("src") in (None, "none") and a.get("balance") is None)]
+    # A card paid past zero owes nothing: the bank owes the owner the difference. It is counted as
+    # spendable cash, not as a negative debt (2026-10-28: a Visa $928 in credit was being taken off
+    # net worth as $928 owed).
+    def credit_as_cash(a):
+        return dict(a, side="asset", role="buffer", reach="today", against=None)
+    items = []
+    for a in accs:
+        if a.get("src") in (None, "none") and a.get("balance") is None:
+            continue
+        v = cad_of(a)
+        items.append((credit_as_cash(a), -v) if a.get("side") == "liability" and v < 0 else (a, v))
     assets = [(a, v) for a, v in items if a.get("side") != "liability"]
     liabs = [(a, v) for a, v in items if a.get("side") == "liability"]
     by_key = {a["key"]: a for a in accs}

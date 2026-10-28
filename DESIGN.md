@@ -60,9 +60,7 @@
   constant. Home sits above the sections under no heading.
   - **A new page is one entry in `NAV` plus one `<section data-pg="key" hidden>`**, nothing
     else; `setPage()` is driven entirely by `NAV`.
-  - **Records is a secondary group**: closed near the foot of the sidebar, opened by clicking its
-    heading or by landing on one of its pages; while closed, its heading carries the strongest
-    dot inside.
+  - **Every group is open.** No section folds away; Records is listed like the others.
   - **The Glossary is on its own at the foot**, below Records and above the version, under no
     heading: it is a reference for reading the page, not a record.
   - **Dots**: `pageFlags()` hangs a 6px dot on a sidebar entry when its page has something on
@@ -82,7 +80,7 @@
   reader:
   | Section | Pages |
   |---|---|
-  | — | Home (what needs you today, net worth in one card) |
+  | — | Home (four cards, net worth in one card) |
   | Spending | This month · Year · Subscriptions |
   | Income | Income · Investment income |
   | Investing | Portfolio · Performance · Holdings |
@@ -94,11 +92,8 @@
 
 - **Follows no time**: in neither `PILL_PAGES` nor `YEAR_PAGES`. Home answers *where do I stand
   now*; everything by month lives in Spending and Income.
-- **What needs you today**, at the top: one row per thing to do, worst first — a rule broken, a
-  date this week, a statement not filed, questions waiting, a task due within two weeks (the rest
-  as one count), the allowance overspent, a fund short, spending drifting from the planning
-  figure. The page name in grey uppercase, ✗/⚠/● status, the line, a › arrow; the whole row opens
-  that page. With nothing to do it is one ✓ line. Every word is computed.
+- **No list of things to do on Home** (taken off 2026-10-28 with Rules): what waits for the owner
+  is on To do, and a page that needs attention carries its dot in the sidebar.
 - **Four stat cards**, one per section: **Portfolio** (with the band status), **FIRE progress**
   (with the on-track year), **Invested in \<month\>** (pay-yourself-first, from the broker's
   record), **Free to spend** (the allowance today).
