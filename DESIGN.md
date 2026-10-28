@@ -250,21 +250,19 @@
   do not appear there. The old this-month donut and the 6-month income/spending bars were deleted
   (`renderDonut` / `renderTrend` went with them); everything by-month lives in the Spending and
   Income sections.
-  - Home now has three cards: **net worth cut by purpose** (one row per `role`, cash split by
-    where it is: For FIRE / Set aside / Cash / Cash in <abroad> / Owed to you / Other assets, then
-    total assets, less debt — each row names its accounts and keeps its exact definition behind
-    its `?`; the owner, 2026-10-27: "each card has to say clearly what it means"; Other assets is
-    only for things that are not money), **the same money cut by how easily
-    you could reach it** (one row per `reach`: Reach today / Reach but it costs / Spoken for /
-    Locked in property / Across a border, a liability netted into the row of the asset it sits
-    on, less what is owed free and clear), and what needs you today. A row appears only when the register
-    has an item with that value. **Both cuts must total `NW_GLOBAL`** (rebuild.py refuses to
-    build otherwise).
-  - **On trial (2026-10-27): both cuts in one card**, below the two, which stay until the owner
-    chooses. One row per purpose, its bar as long as its share and coloured by reach (each
-    `NWPARTS` row carries `by`, its reach split, rounded per piece and settled on the largest so
-    the pieces sum to the row); a row that spans more than one reach says how it splits; the
-    reach definitions sit behind the legend's `?`; one line under it says what is reachable today.
+  - Home now has two cards: what needs you today, and **net worth in one card, cut both ways at
+    once** (2026-10-27, replacing a by-purpose card and a by-reach card that sliced the same
+    accounts twice). One row per `role`, cash split by where it is: For FIRE / Set aside / Cash /
+    Cash in <abroad> / Owed to you / Other assets (only for things that are not money); each
+    row's bar is as long as its share and coloured by `reach` (Reach today / Reach but it costs /
+    Spoken for / Lent out / Locked in property / Across a border). Each `NWPARTS` row carries
+    `by`, its reach split, rounded per piece and settled on the largest so the pieces sum to the
+    row. Under each row, the accounts it counts; a row that spans more than one reach also says
+    how it splits. Then total assets, less what you owe. Each row keeps its exact definition
+    behind its `?` (the owner, 2026-10-27: "each card has to say clearly what it means"), each
+    reach behind the legend's `?`, and one line says what is reachable today. A row appears only
+    when the register has an item with that value. **Both cuts must total `NW_GLOBAL`**
+    (rebuild.py refuses to build otherwise).
   - The idea came from Irene Zhu's 10-Year Wealth Dashboard (the owner shared it 2026-09-07): **do
     not report one net worth, report the rings inside it.** But it is **not a copy** — hers
     layers by Australian super's "locked until an age" rule, and a Canadian RRSP is not locked,

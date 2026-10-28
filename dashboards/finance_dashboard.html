@@ -134,7 +134,9 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .both-row .nm{color:var(--ink-2);display:flex;align-items:center;gap:8px;font-weight:600}
 .both-row .v{text-align:right;font-weight:600}.both-row .p{text-align:right;color:var(--muted)}
 .both-bar{display:flex;height:12px;border-radius:3px;overflow:hidden;min-width:2px}
-.both-split{grid-column:2/5;color:var(--muted);font-size:12px;margin-top:4px}
+.both-split{grid-column:2/5;color:var(--muted);font-size:12px;line-height:1.45;margin-top:4px}
+.both-split.d{grid-column:2;margin-top:0}
+.both-row.sum{border-top:1.5px solid var(--border);border-bottom:none}.both-row.sum .v{font-weight:700}
 .both-key{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:12px;color:var(--muted)}
 .both-key span{display:flex;align-items:center;gap:6px}.both-key i{width:9px;height:9px;border-radius:3px}
 .nw-row.sum{border-top:1.5px solid var(--border);border-bottom:none}.nw-row.sum .v{font-weight:700}
@@ -315,19 +317,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   <div id="glance"></div>
 </div>
 <div class="card" style="margin-bottom:10px">
-  <div class="lab">Net worth, and what each part is for</div>
-  <div class="baseline-hero num" id="nwBig">—</div>
-  <div id="nwStack"></div>
-  <div id="nwRows"></div>
-</div>
-<div class="card" style="margin-bottom:10px">
-  <div class="lab">The same money, by how easily you could reach it</div>
-  <div id="reachStack"></div>
-  <div id="reachRows"></div>
-  <div id="reachNote" style="margin-top:10px"></div>
-</div>
-<div class="card" style="margin-bottom:10px">
-  <div class="lab">Net worth, what each part is for and how easily you could reach it</div>
+  <div class="lab">Net worth: what each part is for, and how easily you could reach it</div>
   <div class="baseline-hero num" id="bothBig">—</div>
   <div id="bothRows"></div>
   <div id="bothKey" class="both-key"></div>
@@ -1027,42 +1017,13 @@ function renderHome(){
       +(dep ? ymLabel(dep.ym)+" · "+dep.nRule+" of 2 landed "+(dep.nRule>=2?"\u2713\u2713":dep.nRule===1?"\u2713":"") : "no broker report yet")+'</div></div>'+
     '<div class="card"><div class="lab">Free to spend</div><div class="big num">'+fmt(freeNow)+' <span class="cap-v">of '+fmt(ALW)+'</span></div><div class="cap">'+ymLabel(curYM)+" \u00b7 day "+dayNow+" of "+dim+" \u00b7 "+fmt(Math.max(0,freeNow)/Math.max(1,dim-dayNow+1))+" a day left"+'</div></div>';
 
-  const bar = (rows, tot) => '<div class="stack">' + rows.map(r =>
-      '<span style="width:'+(pc(r.v, tot))+'%;background:'+r.c+'" title="'+r.k+' '+fmt(r.v)+'"></span>').join("") + '</div>';
-  const list = (rows, tot) => rows.map(r =>
-      '<div class="nw-row"><span class="nm"><span style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+r.c+'"></span>'+r.k+(r.q ? qMark(r.q) : "")+'</span>'
-      + '<span class="d">'+r.d+'</span><span class="v num">'+fmt(r.v)+'</span>'
-      + '<span class="p num">'+Math.round(pc(r.v, tot))+'%</span></div>').join("");
-
   const gross = NWPARTS.reduce((a,r) => a + r.v, 0);
-  $("nwBig").textContent = fmt(NW_GLOBAL);
-  $("nwStack").innerHTML = bar(NWPARTS, gross);
-  // The parts add up to what you own; the owner asked to see that figure before the debts come
-  // off (2026-10-26), so the card reads parts, total assets, less what you owe, net worth.
-  $("nwRows").innerHTML = list(NWPARTS, gross)
-    + '<div class="nw-row sum"><span class="nm">Total assets</span>'
-    + '<span class="d">Everything you own, in every currency, before what you owe</span>'
-    + '<span class="v num">'+fmt(gross)+'</span><span class="p"></span></div>'
-    + '<div class="nw-row"><span class="nm">Less what you owe</span>'
-    + '<span class="d">'+DEBT_NOTE+'</span>'
-    + '<span class="v num">\u2212'+fmt(NW_DEBT)+'</span><span class="p"></span></div>';
-  // The debt line belongs under BOTH cuts: the four reach rows are gross, and a reader with a
-  // mortgage would otherwise see them add up to far more than the net worth above.
-  // A liability that sits on an asset (a mortgage on the home) is already netted into that
-  // asset's reach row, so only what is owed free and clear is listed here.
-  const owedFree = NW_DEBT - (INVEST.debtsSecured || 0);
-  const debtRow = owedFree ? '<div class="nw-row"><span class="nm">Less what you owe</span><span class="d">'+DEBT_NOTE+'</span><span class="v num">\u2212'+fmt(owedFree)+'</span><span class="p"></span></div>' : "";
-
   const rGross = REACH.reduce((a,r) => a + r.v, 0);
-  $("reachStack").innerHTML = bar(REACH, rGross);
-  $("reachRows").innerHTML = list(REACH, rGross) + debtRow;
-  $("reachNote").innerHTML = noteBox(
-    "Only the first row is money you could spend without giving something up. The Drawdown & care page still "
-    + "treats your net worth as one undifferentiated pot \u2014 in practice, stopping early means living "
-    + "off that first row until the rest becomes cheap to touch.");
 
-  // Both cuts in one card: a row per purpose, its bar coloured by reach. Only a row whose
-  // money sits in more than one kind of reach gets a line saying how it splits.
+  // Net worth in one card, both cuts at once: a row per purpose (`role`), its bar as long as
+  // its share and coloured by reach. Under each row, the accounts it counts; a row that spans
+  // more than one reach also says how it splits. The owner asked to see total assets before
+  // the debts come off (2026-10-26), so the rows end parts, total assets, less what you owe.
   const widest = Math.max(1, ...NWPARTS.map(r => r.v));
   $("bothBig").textContent = fmt(NW_GLOBAL);
   $("bothRows").innerHTML = NWPARTS.map(r => {
@@ -1071,10 +1032,11 @@ function renderHome(){
       + '<span class="both-bar" style="width:'+pc(r.v, widest)+'%">'
       + by.map(b => '<span style="width:'+pc(b[1], r.v)+'%;background:'+b[2]+'" title="'+b[0]+' '+fmt(b[1])+'"></span>').join("")
       + '</span><span class="v num">'+fmt(r.v)+'</span><span class="p num">'+Math.round(pc(r.v, gross))+'%</span>'
-      + (by.length > 1 ? '<span class="both-split">'+by.map(b => fmt(b[1])+" "+b[0].toLowerCase()).join(" \u00b7 ")+'</span>' : "")
+      + '<span class="both-split">'+r.d+(by.length > 1 ? '<br>'+by.map(b => fmt(b[1])+" "+b[0].toLowerCase()).join(" \u00b7 ") : "")+'</span>'
       + '</div>';
   }).join("")
-    + '<div class="both-row"><span class="nm">Less what you owe</span><span class="both-bar"></span><span class="v num">\u2212'+fmt(NW_DEBT)+'</span><span class="p"></span></div>';
+    + '<div class="both-row sum"><span class="nm">Total assets</span><span class="both-split d">Everything you own, in every currency, before what you owe</span><span class="v num">'+fmt(gross)+'</span><span class="p"></span></div>'
+    + '<div class="both-row"><span class="nm">Less what you owe</span><span class="both-split d">'+DEBT_NOTE+'</span><span class="v num">\u2212'+fmt(NW_DEBT)+'</span><span class="p"></span></div>';
   $("bothKey").innerHTML = REACH.map(r =>
     '<span><i style="background:'+r.c+'"></i>'+r.k+(r.d ? qMark(r.d) : "")+'</span>').join("");
   const today = REACH.find(r => r.k === "Reach today");

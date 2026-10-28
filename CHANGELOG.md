@@ -4,10 +4,10 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
-- **Home: both net-worth cuts in one card, on trial** (2026-10-27). The by-purpose and the
-  by-reach cards are the same accounts sliced twice, and the slices nearly coincide. A third
-  card shows them together: a row per purpose, its bar coloured by how easily it can be reached,
-  and one line for what is reachable today. The two old cards stay until the owner chooses.
+- **Home: net worth in one card** (2026-10-27). The by-purpose and the by-reach cards were the
+  same accounts sliced twice, and the slices nearly coincide. One card shows both now: a row per
+  purpose with the accounts it counts, its bar coloured by how easily it can be reached, total
+  assets, less what you owe, and one line for what is reachable today.
 
 - **Home says Portfolio** (2026-10-27). Home's first card read *Invested* while the Investing
   page showed the same number as *Portfolio*; one figure, two names. It is Portfolio on both now,
