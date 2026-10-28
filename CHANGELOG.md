@@ -4,6 +4,14 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Income, written to the card rules** (2026-10-28). Income, Spent and Kept each open their
+  sum; *Kept* and *Paid back* are terms, and Investment is the Glossary's *investment income*
+  rather than a `?`. The coverage line under the chart (ledger date ranges strung on `·`) is
+  now only "Oct 2026 is still open" when it is. Investment income's four cards lost their
+  explanations to their sums and to *tax withheld*; the months read `Jan`, not `2026-01`; tax
+  withheld is no longer green, the colour of money coming back; the source and rate list under
+  the table is gone.
+
 - **DESIGN.md holds rules only** (2026-10-28). It states what is true today; how each rule came
   about — the dates, the measurements, what was there before — moved to *How the design rules
   came about* at the end of this file. Rules that described pages long gone (Overview's donuts,

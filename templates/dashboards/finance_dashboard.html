@@ -383,7 +383,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   <div class="grid-stats" id="incStats"></div>
   <div class="card" style="margin-bottom:10px"><div class="lab" id="yrIncLab">By source</div><div id="yrIncCats"></div></div>
   <div class="card">
-    <div class="lab">Income each month, by source</div>
+    <div class="lab">Each month, by source</div>
     <svg class="year-svg" id="incChart" viewBox="0 0 940 280" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="year-legend" id="incLegend"></div>
     <div class="cap" id="incChartCap"></div>
@@ -635,10 +635,6 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 // ===== Data (regenerated from data/spending.csv on every "update dashboards") =====
 const SPENDING = [];
 const CHEQUING = [];
-// Coverage per ledger, read off the typed rows rather than typed in beside them. Until
-// 2026-09-08 INVEST.chqCoverage carried the same fact as a hand-written string.
-function chqRange(){ const r = {}; for(const x of CHEQUING){ const t = r[x.src] || (r[x.src] = [x.date, x.date]); if(x.date < t[0]) t[0] = x.date; if(x.date > t[1]) t[1] = x.date; } return r; }
-function chqCoverage(){ return Object.entries(chqRange()).map(([k,[a,b]]) => k+" "+a+" \u2192 "+b).join(" \u00b7 "); }
 const INVEST = {};
 const TODAY = "";
 // findata/ws_activities.csv — the broker's own ledger. Dividends, interest and stock-lending in CAD,
@@ -912,6 +908,8 @@ const GLOSSARY = {
   withdrawal_rate:{w:"withdrawal rate", pos:"noun", def:"How much you take out in a year, as a share of the portfolio.", f:"yearly withdrawal ÷ portfolio", also:["four_pct","drawdown"]},
   sequence_risk:  {w:"sequence-of-returns risk", pos:"noun", def:"Bad years soon after you start taking money out do far more damage than the same bad years later on.", also:["drawdown","backtest"]},
   backtest:       {w:"backtest", pos:"noun", def:"Running a plan through real past years to see how it would have done.", also:["sequence_risk"]},
+  investment_income: {w:"investment income", pos:"noun", def:"What your investments pay you while you still hold them: dividends, interest and securities lending, after any tax withheld.", eg:"A fund paying $40 of dividends, less $6 withheld, is $34 of investment income.", not:"A gain from selling, which is not paid until you sell.", also:["dividend","securities_lending","withholding_tax"]},
+  savings_rate:   {w:"savings rate", pos:"noun", def:"The share of what comes in that you keep instead of spending.", f:"savings rate = (income \u2212 spending) \u00f7 income", eg:"$4,000 in and $3,000 spent is a 25% savings rate.", also:["pay_yourself_first"]},
   long_term_care: {w:"long-term care", pos:"noun", def:"Help with daily living in later life, at home or in a facility, usually paid for privately."},
   // Words this page coined
   for_fire:       {own:1, w:"For FIRE", pos:"on this page", def:"Money whose job is to grow until you stop working. FIRE progress is measured on it.", also:["portfolio","fire"]},
@@ -928,6 +926,8 @@ const GLOSSARY = {
   held_abroad:    {own:1, w:"Held abroad", pos:"on this page", def:"Money in another country. Bringing it home takes conversion, transfer limits and time.", also:["exchange_rate","liquidity"]},
   planning_figure:{own:1, w:"planning figure", pos:"on this page", def:"The monthly spending your FIRE target is built on. You set it by hand; what you actually spend only calibrates it.", also:["fire_target","median"]},
   big_buy:        {own:1, w:"big buy", pos:"on this page", def:"A single purchase at or above your threshold, paid from the Big buys fund. A subscription never counts as one.", also:["sinking_fund","subscription"]},
+  kept:           {own:1, w:"Kept", pos:"on this page", def:"Income minus spending over the same months. Money moved to savings or investments counts as kept.", also:["savings_rate"]},
+  repayment:      {own:1, w:"Paid back", pos:"on this page", def:"Money someone returns on a loan you made. It lowers what they owe you, and it is never income.", also:["owed_to_you","lent_out"]},
   complete_to:    {own:1, w:"Complete to", pos:"on this page", def:"The day every account’s numbers are in up to. After it, some accounts are still waiting for their next statement."},
 };
 // A term on the page: dotted underline, hover for the entry, click for the Glossary page.
@@ -1756,7 +1756,8 @@ function renderIncChart(){
     +'<span class="dot" style="background:'+c.c+'"></span><span class="nm">'+c.k+'</span></div>').join("");
   $("incLegend").querySelectorAll(".leg-row[data-cat]").forEach(el =>
     el.onclick = () => { const k = el.dataset.cat; incSel = (!k || incSel === k) ? null : k; renderIncChart(); });
-  $("incChartCap").textContent = "Chequing coverage " + chqCoverage() + " · last month is partial";
+  const openM = months.filter(ym => ym > covEnd && byYm[ym]).pop();
+  $("incChartCap").textContent = openM ? ymFull(openM)+" is still open, so its totals will rise." : "";
 }
 
 // ===== Spending by category, one month at a time =====
@@ -1895,20 +1896,21 @@ function renderYr(){
     : '<div class="empty">No records in '+viewYear+'</div>';
 
   const inc = ICATS.map(c => [c.k, cfy.reduce((s,m)=>s+(m[c.f]||0),0), c.c]).filter(x => x[1] > 0);
+  const icard = (lab, val, status) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status ? '<div class="cap">'+status+'</div>' : "")+'</div>';
   $("incStats").innerHTML =
-    '<div class="card"><div class="lab">Income</div><div class="big num">'+(hasIncome?fmt(income):"—")+'</div><div class="cap">In '+viewYear+', across '+cfy.length+' months</div></div>'+
-    '<div class="card"><div class="lab">Spent</div><div class="big num">'+fmt(spent)+'</div><div class="cap">Same year, for comparison</div></div>'+
-    '<div class="card"><div class="lab">Kept</div><div class="big num">'+(net===null?"—":(net>=0?"+":"−")+fmt(Math.abs(net)))+'</div><div class="cap">'+(net===null?"needs chequing data":"Income minus spending"+(income>0?", "+Math.round(pc(net, income))+"% of what came in":""))+'</div></div>';
+    icard("Income in "+viewYear, hasIncome ? numx(fmt(income), inc.map(x => [x[0], fmt(x[1])]), cfy.length+" month"+(cfy.length === 1 ? "" : "s")+" on record.", true) : "\u2014")
+    + icard("Spent in "+viewYear, numx(fmt(spent), [], "After refunds."))
+    + icard(term("kept", "Kept"), net === null ? "\u2014" : numx((net >= 0 ? "+" : "\u2212") + fmt(Math.abs(net)), [["Income", fmt(income)], ["Spent", "\u2212"+fmt(spent)]], "", true),
+            net !== null && income > 0 ? Math.round(pc(net, income))+"% of income" : "");
   const imx = Math.max(...inc.map(x => x[1]), 1);
   // What the month card used to say, said once for the year: investment income is income but
   // never reaches chequing, and money a borrower pays back is not income at all.
-  const incTip = {Investment:"Dividends, interest and stock-lending from "+BROKER+", after non-resident tax. It is real income, but it stays inside the portfolio rather than landing in chequing."};
   const repaid = cfy.reduce((s,m) => s + (m.repaid||0), 0);
-  $("yrIncLab").textContent = "By source, " + viewYear;
+  $("yrIncLab").textContent = "By source";
   $("yrIncCats").innerHTML = (inc.length ? inc.map(x =>
-    '<div class="inc-row"><span class="dot" style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+x[2]+'"></span><span class="nm" style="width:105px">'+x[0]+(incTip[x[0]] ? qMark(incTip[x[0]]) : "")+'</span><div class="bar-wrap"><div class="bar" style="width:'+(pc(x[1], imx))+'%;background:'+x[2]+'"></div></div><span class="v num">'+fmt2(x[1])+'</span></div>').join("")
+    '<div class="inc-row"><span class="dot" style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+x[2]+'"></span><span class="nm" style="width:105px">'+(x[0] === "Investment" ? term("investment_income", x[0]) : x[0])+'</span><div class="bar-wrap"><div class="bar" style="width:'+(pc(x[1], imx))+'%;background:'+x[2]+'"></div></div><span class="v num">'+fmt2(x[1])+'</span></div>').join("")
     : '<div class="empty">No income data for '+viewYear+'</div>')
-    + (CP && repaid > 0 ? '<div class="cap" style="margin-top:8px">Not counted as income: '+CP.name+' paid back '+fmt(repaid)+' this year'+qMark(CP.tip||"")+'</div>' : "");
+    + (CP && repaid > 0 ? '<div style="margin-top:8px">'+metaList([[term("repayment", "Paid back")+" by "+CP.name, numx(fmt(repaid), [], CP.tip || "")]])+'</div>' : "");
 
   $("yrCap").textContent = "";
 }
@@ -3118,26 +3120,24 @@ function renderWsInc(){
   const closed = WSINC.filter(m => m.ym < TODAY.slice(0,7));
   const perMo = closed.length ? closed.reduce((a,m)=>a+m.div+m.int+m.lend+m.tax,0)/closed.length : 0;
   const base = PLAN_BASE;
+  const wcard = (lab, val) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div></div>';
   $("wsIncStats").innerHTML =
-    '<div class="card"><div class="lab">Paid to you in '+TODAY.slice(0,4)+'</div><div class="big num">'+fmt(net)+'</div><div class="cap">Dividends, interest and lending, after tax</div></div>'+
-    '<div class="card"><div class="lab">Average month</div><div class="big num">'+fmt(perMo)+'</div><div class="cap">Across '+closed.length+' closed months</div></div>'+
-    '<div class="card"><div class="lab">Covers this much of your spending'+qMark("Against the planning baseline of "+(base?fmt(base):"—")+" a month, the number the FIRE target is built on.")+'</div><div class="big num">'+(base?Math.round(pc(perMo, base))+"%":"—")+'</div><div class="cap">Of the '+(base?fmt(base):"—")+' baseline</div></div>'+
-    '<div class="card"><div class="lab">Withheld as tax</div><div class="big num">'+fmt(-tot("tax"))+'</div><div class="cap">Non-resident tax on US payers</div></div>';
+    wcard("Paid to you in "+TODAY.slice(0,4), numx(fmt(net), [["Dividends", fmt(tot("div"))], ["Interest", fmt(tot("int"))], ["Lending", fmt(tot("lend"))], ["Tax withheld", fmt(tot("tax"))]],
+            "US dollars converted at "+INVEST.fx+".", true))
+    + wcard("A month on average", numx(fmt(perMo), [], closed.length+" closed month"+(closed.length === 1 ? "" : "s")+"."))
+    + wcard("Share of spending", base ? numx(Math.round(pc(perMo, base))+"%", [["A month on average", fmt(perMo)], ["Planning figure", fmt(base)]], "") : "\u2014")
+    + wcard(term("withholding_tax", "Tax withheld"), fmt(-tot("tax")));
   $("wsIncTable").innerHTML =
     '<tr><th style="text-align:left">Month</th><th>Dividends</th><th>Interest</th><th>Lending</th><th>Tax</th><th>Net</th></tr>'
     + WSINC.map(m => {
         const n = m.div+m.int+m.lend+m.tax;
         const c = v => v ? fmt2(v) : '<span style="color:var(--muted)">—</span>';
-        return '<tr><td class="num">'+m.ym+'</td><td class="num">'+c(m.div)+'</td><td class="num">'+c(m.int)+'</td>'
-             + '<td class="num">'+c(m.lend)+'</td><td class="num">'+(m.tax?'<span class="tx-neg">−'+fmt2(-m.tax)+'</span>':'<span style="color:var(--muted)">—</span>')+'</td>'
+        return '<tr><td class="num">'+ymLabel(m.ym)+'</td><td class="num">'+c(m.div)+'</td><td class="num">'+c(m.int)+'</td>'
+             + '<td class="num">'+c(m.lend)+'</td><td class="num">'+(m.tax?fmt2(m.tax):'<span style="color:var(--muted)">—</span>')+'</td>'
              + '<td class="num"><b>'+fmt2(n)+'</b></td></tr>';
       }).join("");
-  $("wsIncCap").innerHTML = metaList([
-    ["Source", BROKER+" activities export"],
-    ["Covers", WSINC.length ? WSINC[0].ym + " to " + WSINC[WSINC.length-1].ym : "nothing imported yet"],
-    ["US dollars converted at", INVEST.fx],
-    ["Counted as income anywhere else?", "No — it stays inside the portfolio", "mut"]
-  ]);
+  const lastM = WSINC.length ? WSINC[WSINC.length-1].ym : "";
+  $("wsIncCap").textContent = lastM && lastM >= TODAY.slice(0,7) ? ymFull(lastM)+" is still open, so its totals will rise." : "";
 }
 
 // Coverage scorecard: the five entry points, what is wired in, and what is still missing.
