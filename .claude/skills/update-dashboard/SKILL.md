@@ -49,6 +49,12 @@ rows. **Read the summary, not the statements.** What it hands back is the whole 
   screenshot has no rows: read the balances into `foreign.json` yourself, as before.
 - **A row it could not type** (`untyped:` lines): fill the ledger's `type` and `label` for that
   row; D22 points at it until you do.
+- **A card credit it could not place** (`credit not filed:` lines). A refund that gives back an
+  earlier purchase on the same card — or a fee or interest credit, which gives back a charge
+  the card made — is filed by itself as a negative row in that purchase's category (FINANCE.md
+  §3c) and named in `judged`. What is left points at nothing the books hold: cash back, a refund
+  of a purchase made before the books begin. Ask the owner; if it is a refund, add the negative
+  row by hand the same way — D24 refuses one that gives back nothing.
 - **What it asked** (`?` lines): a merchant seen for the first time, filed as Other meanwhile; an
   e-Transfer with no name on the other side. Each is already a row in `decisions.json`. Put them
   to the owner; when they answer, write `answer` and `resolved` on the row and apply it where it
@@ -57,9 +63,24 @@ rows. **Read the summary, not the statements.** What it hands back is the whole 
   `judged`, `asked` — and the report to the owner is that record read out. Add to it what you
   decided by hand; never write the report in the chat first.
 
+One step goes online: after the write, `prices.py` fetches the benchmark `rules.json` names
+(its adjusted close) and the Bank of Canada's USD/CAD into `findata/ledgers/prices.json`, for the
+Performance page — only when the prices stop short of the newest snapshot. Nothing about the
+owner is sent, only a ticker and dates. A failed fetch is said in the summary and the import goes
+on; D27 then says how far the prices fall short. The same script keeps
+`findata/ledgers/returns.json` — a year a row of returns since 1928 and US inflation, for the
+Drawdown page's backtest — and fetches it only when a new year has closed; D28 checks it.
+
 A `--write` run ends with the checkers and reseeds the preflight fingerprint. Exit 1 means it
-stopped before writing; 2 means it wrote and a checker found something — fix that before saying
-the update is done; 3 means pypdf is missing and every file is read by hand this month.
+stopped before writing, or failed while writing and put everything back; 2 means it wrote and a
+checker found something — fix that before saying the update is done; 3 means pypdf is missing
+and every file is read by hand this month.
+
+**A write is all or nothing.** The run copies `findata/` to `.undo/` first; if it fails partway,
+`findata/` and `inbox/` come back exactly as they were, and it says so. **Never take a torn run
+apart by hand** (2026-10-25 had to). To take back a run that finished — a wrong file dropped,
+an answer that changes everything — `update.py . --undo`; it refuses if `findata/` was edited
+after the run, because putting the copy back would throw those edits away.
 
 ---
 
@@ -72,7 +93,11 @@ python3 .claude/skills/update-dashboard/scripts/preflight.py .
 ```
 
 It names every file in `inbox/`, says which `findata/` file each one feeds, finds byte-identical
-pairs, and prints how old everything already on hand is.
+pairs, and prints how old everything already on hand is. For a CSV export it also says when the
+columns differ from the last one in `archive/` — a broker changes its export without notice; a
+column gone is left blank, a new one stops the import until the ledger has a place for it. A
+PDF needs no such line: its parser reconciles against the totals it prints, and a layout it
+does not know fails that check.
 
 **Anything it cannot name stops the run.** Ask the owner. Do not infer an account from a filename
 that does not match a known pattern — `LIGHTHOUSE PUBLICATION` was read as a subscription because

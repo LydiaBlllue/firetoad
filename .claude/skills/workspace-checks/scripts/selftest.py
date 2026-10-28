@@ -18,7 +18,7 @@ with backups, one mistake away from being the fault it was testing for.
 
     selftest.py [root]
 """
-import sys, os, re, csv, json, shutil, tempfile, subprocess, datetime
+import sys, os, re, csv, json, shutil, tempfile, subprocess, datetime, hashlib
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "update-dashboard", "scripts"))
 import layout  # where each findata file lives (schema 6)
@@ -73,8 +73,8 @@ def rules_seen(out):
 def m_readme_path(r):
     edit(r, "README.md", lambda s: s.replace("check_data.py", "check_data_MOVED.py"))
 def m_design_pages(r):
-    edit(r, "DESIGN.md", lambda s: s.replace("| Records | Updates · Accounts · Statements · Tasks |",
-                                             "| Records | Insights · Statements · Tasks |"))
+    # The Records row's first page swapped for one that does not exist, whatever the row lists.
+    edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Records \| )[^·|]+·", r"\1Insights ·", s, count=1))
 def m_nav_orphan(r):
     edit(r, main_dash(r),
          lambda s: s.replace('<section data-pg="acct" hidden>', '<section data-pg="acctX" hidden>'))
@@ -185,8 +185,9 @@ def m_readme_image_gone(r):
 # on 2026-09-13 the import skill still named `dashboards/ly_finance_dashboard.html` three days
 # after the rename, and the checks skill said "fifteen" faults when the table held 42.
 def m_skill_path(r):
+    # Not the `ly_` name itself: an owner's workspace may still have that page, and S4 accepts it.
     edit(r, ".claude/skills/update-dashboard/SKILL.md",
-         lambda s: s.replace("dashboards/finance_dashboard.html", "dashboards/ly_finance_dashboard.html", 1))
+         lambda s: s.replace("dashboards/finance_dashboard.html", "dashboards/spending_dashboard.html", 1))
 
 def m_skill_faults(r):
     edit(r, ".claude/skills/workspace-checks/SKILL.md",
@@ -207,6 +208,28 @@ def m_stated_no_asof(r):
                               "side": "asset", "role": "none", "reach": "locked", "value": "stated",
                               "ledger": None, "feeds": "", "key": "home"})
     edit_json(r, layout.rel("accounts.json"), f)
+def m_loan_axes(r):
+    # Money lent left on the "today" row: it would be counted as cash you can spend.
+    def f(d):
+        for a in d["accounts"]:
+            if a.get("role") == "owed":
+                a["reach"] = "today"
+    edit_json(r, layout.rel("accounts.json"), f)
+def m_loan_copy(r):
+    # A loan's balance typed over by hand: the register says one thing, agreed less repaid another.
+    def f(d):
+        for a in d["accounts"]:
+            if a.get("role") == "owed":
+                a["balance"] = round(float(a["balance"]) + 250, 2)
+    edit_json(r, layout.rel("accounts.json"), f)
+def m_loan_overpaid(r):
+    # An agreed amount set too low: more has come back than was ever owed.
+    def f(d):
+        for a in d["accounts"]:
+            if a.get("role") == "owed":
+                a["agreed"]["amount"] = -1000.0
+                a["balance"] = -1500.0
+    edit_json(r, layout.rel("accounts.json"), f)
 def m_committed_missing(r):
     # A car loan declared in the plan that no ledger ever shows: the waterfall would carry a
     # payment that is a story, not a fact.
@@ -221,6 +244,25 @@ def m_committed_missing(r):
 # parse.py on the tampered one.
 def m_parse_tampered(r):
     return "rbc_visa"       # which fixture to tamper; the runner does the rest
+def m_class_missing(r):
+    # An ETF bought since anyone said what it holds: the asset-type split would file it nowhere.
+    edit_json(r, layout.rel("rules.json"), lambda d: d["assetClass"].pop(next(iter(d["assetClass"]))))
+def m_class_unknown(r):
+    # A kind of asset the page has no slice for.
+    edit_json(r, layout.rel("rules.json"), lambda d: d["assetClass"].__setitem__(next(iter(d["assetClass"])), "property"))
+def m_principle_unknown(r):
+    # A rule naming a check nobody wrote: it would silently drop off the Investing overview.
+    edit_json(r, layout.rel("rules.json"), lambda d: d.__setitem__("principles", [{"check": "neverWritten", "name": "A rule nobody checks"}]))
+def m_bench_other(r):
+    # The owner names another fund and the prices on file are still the old one's: the
+    # Performance page would compare against a fund nobody chose any more.
+    edit_json(r, layout.rel("rules.json"), lambda d: d["benchmark"].__setitem__("symbol", "XEQT"))
+def m_prices_stale(r):
+    # A fetch that failed for months: the prices stop well before the newest snapshot.
+    edit_json(r, layout.rel("prices.json"), lambda d: d["benchmark"].__setitem__("series", d["benchmark"]["series"][:5]))
+def m_returns_gap(r):
+    # A year lost from the middle of the history: the backtest would run 1973 straight into 1975.
+    edit_json(r, layout.rel("returns.json"), lambda d: d["years"].pop(len(d["years"]) // 2))
 def m_rules_drift(r):
     # rules.json is the strategy; the page copies it. The copy going stale means the Rules page
     # is checking the portfolio against a band nobody chose any more.
@@ -243,6 +285,23 @@ def m_built_by_hand(r):
 def m_filed_ghost(r):
     # A month filed for a document that does not exist: a claim with no evidence behind it.
     edit_json(r, layout.rel("filings.json"), lambda d: d["filed"].__setitem__("Ghost statement", ["2026-01"]))
+
+
+# A refund is a negative spending row that has to give back a purchase on the same card (D24,
+# FINANCE.md §3c). Each of these is a credit counted as a refund when it is not one.
+def plant_refund(r, row):
+    """Append one refund row against the last purchase in spending.csv: `row(last)` returns
+    (amount, category, note) for it."""
+    p = layout.path(r, "spending.csv")
+    last = [x for x in csv.DictReader(open(p, encoding="utf-8")) if float(x["amount"]) > 0][-1]
+    amount, category, note = row(last)
+    open(p, "a", encoding="utf-8").write(f"{last['date']},{amount:.2f},{last['currency']},{category},\"{note}\"\n")
+def m_refund_of_nothing(r):
+    plant_refund(r, lambda x: (-50, x["category"], "CASH BACK REWARD " + x["note"].rsplit(" ", 1)[-1]))
+def m_refund_too_much(r):
+    plant_refund(r, lambda x: (-float(x["amount"]) - 99999, x["category"], x["note"]))
+def m_refund_wrong_category(r):
+    plant_refund(r, lambda x: (-0.01, "Other" if x["category"] != "Other" else "Grocery", x["note"]))
 
 
 def edit(r, rel, fn):
@@ -346,7 +405,19 @@ CASES = [
     ("D14", "accounts.json changed but the page did not",   m_acct_drift,      "find"),
     ("D19", "a liability given a role",                     m_axes_illegal,    "find"),
     ("D20", "a stated balance with no date",                m_stated_no_asof,  "find"),
+    ("D19", "money lent placed on the reach-today row",      m_loan_axes,       "find"),
+    ("D23", "a loan's balance edited by hand",              m_loan_copy,       "find"),
+    ("D23", "a borrower paid back more than was owed",      m_loan_overpaid,   "find"),
+    ("D25", "an ETF held with no kind of asset",            m_class_missing,   "find"),
+    ("D25", "an asset class the page has no slice for",     m_class_unknown,   "find"),
+    ("D26", "a principle naming a check the page lacks",   m_principle_unknown, "find"),
+    ("D27", "the benchmark changed, the prices did not",    m_bench_other,     "find"),
+    ("D27", "the benchmark's prices stop before the newest snapshot", m_prices_stale, "find"),
+    ("D28", "a year is missing from the history of returns", m_returns_gap,  "find"),
     ("D21", "a committed flow the ledger never shows",      m_committed_missing, "find"),
+    ("D24", "a card credit counted as a refund of nothing", m_refund_of_nothing, "find"),
+    ("D24", "a refund larger than was ever spent there",    m_refund_too_much,   "find"),
+    ("D24", "a refund filed in another category than its purchase", m_refund_wrong_category, "find"),
     ("P1",  "a statement whose rows do not add up to its total", m_parse_tampered, "parse"),
     ("D14", "a document covers an account that is gone",    m_bad_cover,       "find"),
     ("D14", "SUBMITTED key with no matching document",      m_submitted_orphan,"find"),
@@ -441,6 +512,27 @@ def parse_fault(ws, parser, rule):
     return f"{'·' if ok else '✗'} [{rule}] {detail}"
 
 
+def credit_balance_check(ws):
+    """A Visa paid past zero prints CREDIT BALANCE and no NEW BALANCE line. The parser once
+    refused that statement outright (2026-10), and it had to be read by eye. Render one — a
+    purchase, the previous balance paid, then $100 more — and expect three rows that reconcile
+    to a closing balance of -$100.00."""
+    if not os.path.exists(os.path.join(ws, "tools", "fixtures.py")):
+        return []
+    sys.path.insert(0, os.path.join(ws, "tools"))
+    import fixtures
+    from pdfgen import write_pdf
+    path = os.path.join(ws, "_fixtures", "credit_balance.pdf")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    write_pdf(path, fixtures.rbc_visa("3306", datetime.date(2026, 9, 22), datetime.date(2026, 10, 19), 50.0,
+                                      [{"date": "2026-10-04", "description": "COFFEE SHOP TORONTO ON", "amount": 12.34}],
+                                      "Emma Roy", overpay=100.0))
+    ok, n, detail = parse_one(ws, path, "rbc_visa")
+    if ok and n == 3 and "new balance -100.00" in detail:
+        return ["  ✓ parsers: a Visa statement in credit (CREDIT BALANCE, no NEW BALANCE) read and reconciled"]
+    return [f"  ✗ parsers: a Visa statement in credit: {detail} — expected 3 rows closing at -100.00"]
+
+
 def propose_check(ws, man):
     """The setup's first step drafts the register from the first files dropped (propose.py). Given
     the demo owner's statements (the fixtures) and broker exports, the draft has to find every
@@ -509,6 +601,7 @@ def parser_checks(root, base):
             else:
                 lines.append(f"  ✗ fixture {os.path.basename(m['file'])} ({m['parser']}): {detail} — expected {m['rows']} rows")
         lines.append(f"\n  {'✓' if good == len(man) else '✗'} parsers: {good} of {len(man)} synthetic statements read and reconciled")
+        lines += credit_balance_check(ws)
         lines += propose_check(ws, man)
     arc = os.path.join(root, "archive")
     reg = layout.path(root, "accounts.json")
@@ -700,6 +793,366 @@ def update_check(root, base):
             f"demo had them, banks and filings as they were, a date-only PDF named by its contents, checkers clean, rebuild idempotent, a second drop wrote nothing, a transcribed statement filed and a wrong one refused"]
 
 
+def strip_statement(ws, m):
+    """Take one statement's rows out of its ledger (and the copies of its balance), drop the
+    PDF into inbox/ under the bank's own filename, the way update_check does."""
+    fd = lambda n: layout.path(ws, n)
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    docs = {d["key"]: d for d in reg["documents"]}; by_key = {a["key"]: a for a in reg["accounts"]}
+    LONG = ("January", "February", "March", "April", "May", "June", "July", "August", "September",
+            "October", "November", "December")
+    doc = docs[m["doc"]]; acc = by_key[doc["covers"][0]]
+    tag = re.search(r"(\d{8})\.pdf$", m["file"]).group(1)
+    end = datetime.date(int(tag[:4]), int(tag[4:6]), int(tag[6:]))
+    rows = list(csv.DictReader(open(fd(acc["ledger"]), encoding="utf-8")))
+    keep = [r for r in rows if r["statement"] != f"{acc['stmtTag']}/{tag}"]
+    with open(fd(acc["ledger"]), "w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(keep)
+    for p, side in (("banks.json", "assets"), ("accounts.json", "accounts")):
+        j = json.load(open(fd(p), encoding="utf-8"))
+        for x in j[side]:
+            if x.get("account", x.get("name")) == acc["name"] and (side == "assets" or x["key"] == acc["key"]):
+                x["balance"], x["asof"] = float(keep[-1]["balance"]), keep[-1]["date"]
+        json.dump(j, open(fd(p), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    fl = json.load(open(fd("filings.json"), encoding="utf-8"))
+    fl["filed"][m["doc"]] = [mo for mo in fl["filed"][m["doc"]] if mo != end.strftime("%Y-%m")]
+    json.dump(fl, open(fd("filings.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    name = doc["file"].replace("<Month D, YYYY>", f"{LONG[end.month - 1]} {end.day}, {end.year}").replace("<date>", end.isoformat())
+    shutil.copy(m["file"], os.path.join(ws, "inbox", name))
+    return acc["ledger"]
+
+
+def update_batch_check(root, base):
+    """Three ways a real month went wrong (2026-10-25), each planted in a staged copy:
+    two months of one account dropped together (the second was checked against the ledger on
+    disk and refused as "a statement in between is missing"); a broker export carrying an account
+    the register never heard of (counted on the Investing pages without anyone deciding); and an
+    activities export whose columns changed (the run stopped halfway, after the ledgers were
+    written)."""
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    if not os.path.exists(upd):
+        return []
+    ws = os.path.join(base, "batch"); os.makedirs(ws); stage(root, ws)
+    man = fixtures_for(ws)
+    if not man:
+        return []
+    fd = lambda n: layout.path(ws, n)
+    LONG = ("January", "February", "March", "April", "May", "June", "July", "August", "September",
+            "October", "November", "December")
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    by_key = {a["key"]: a for a in reg["accounts"]}
+    docs = {d["key"]: d for d in reg["documents"]}
+    bad, did = [], []
+
+    def go(*extra):
+        r = subprocess.run([sys.executable, upd, ".", "--write", *extra], cwd=ws, capture_output=True, text=True, timeout=300)
+        return r.returncode, r.stdout + r.stderr
+
+    strip = lambda m: strip_statement(ws, m)
+
+    # 1. two months of one account in one batch: the older one has to be filed first, and the
+    # newer one checked against the ledger as the older one leaves it
+    two = None
+    for k, d in docs.items():
+        mine = sorted((m for m in man if m["doc"] == k), key=lambda m: os.path.basename(m["file"]))
+        if d.get("parser") and by_key[d["covers"][0]].get("ledger") and len(mine) >= 2:
+            two = mine[-2:]
+            break
+    if two:
+        ledger = by_key[docs[two[0]["doc"]]["covers"][0]]["ledger"]
+        want = list(csv.DictReader(open(fd(ledger), encoding="utf-8")))
+        strip(two[1]); strip(two[0])
+        subprocess.run([sys.executable, os.path.join(os.path.dirname(upd), "rebuild.py"), ".", "--write"], cwd=ws, capture_output=True)
+        rc, out = go()
+        now = list(csv.DictReader(open(fd(ledger), encoding="utf-8")))
+        core = ("date", "description", "amount", "balance", "statement")
+        if rc != 0 or len(now) != len(want) or any(a[c] != b[c] for a, b in zip(want, now) for c in core):
+            bad.append(f"two months of {two[0]['doc']} in one batch: exit {rc}, {len(now)} of {len(want)} rows — "
+                       + " | ".join(l.strip() for l in out.splitlines() if "✗" in l)[:200])
+        else:
+            did.append("two months of one account filed in one batch")
+
+        # 3b. an activities export with a column the ledger never had stops the run BEFORE the
+        # statement dropped beside it is written — a run that stops halfway leaves the books torn
+        act = fd("ws_activities.csv")
+        if os.path.exists(act) and docs.get("Activities"):
+            hdr = next(csv.reader(open(act, encoding="utf-8")))
+            n_led = len(list(csv.DictReader(open(fd(ledger), encoding="utf-8"))))
+            strip(two[1])
+            n_stripped = len(list(csv.DictReader(open(fd(ledger), encoding="utf-8"))))
+            with open(os.path.join(ws, "inbox", "activities-export-2099-01-02.csv"), "w", encoding="utf-8", newline="") as fh:
+                w = csv.writer(fh); w.writerow(hdr + ["brand new column"]); w.writerow(["2099-01-02"] + [""] * len(hdr))
+            rc, out = go()
+            after = len(list(csv.DictReader(open(fd(ledger), encoding="utf-8"))))
+            if rc != 1 or "never had" not in out or after != n_stripped:
+                bad.append(f"an activities export with a new column: exit {rc}, {ledger} {n_stripped} → {after} rows (expected a stop and nothing written)")
+            else:
+                did.append("an export with a new column stopped before anything was written")
+            if os.path.exists(os.path.join(ws, "inbox", "activities-export-2099-01-02.csv")):
+                os.remove(os.path.join(ws, "inbox", "activities-export-2099-01-02.csv"))
+            go()   # the statement alone, so the books are whole again for what follows
+            if len(list(csv.DictReader(open(fd(ledger), encoding="utf-8")))) != n_led:
+                bad.append("the statement left behind by the stopped run did not file on its own")
+
+    # 3a. the broker drops a column: rows are lined up by name, the missing one left blank
+    act = fd("ws_activities.csv")
+    if os.path.exists(act) and docs.get("Activities"):
+        rows = list(csv.DictReader(open(act, encoding="utf-8")))
+        hdr = list(rows[0].keys()); gone = hdr[-7]          # any column but the first
+        new = dict(rows[-1], effective_date="2099-01-01", net_cash_amount="1.23")
+        with open(os.path.join(ws, "inbox", "activities-export-2099-01-01.csv"), "w", encoding="utf-8", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=[c for c in hdr if c != gone]); w.writeheader()
+            w.writerow({c: v for c, v in new.items() if c != gone})
+        rc, out = go()
+        now = list(csv.DictReader(open(act, encoding="utf-8")))
+        last = now[-1] if now else {}
+        if rc not in (0, 2) or list(now[0].keys()) != hdr or len(now) != len(rows) + 1 \
+                or last.get("net_cash_amount") != "1.23" or last.get(gone) != "":
+            bad.append(f"an activities export missing {gone!r}: exit {rc}, {len(now)} rows (expected {len(rows) + 1}, lined up by name)")
+        else:
+            did.append(f"an export missing a column merged by name")
+
+    # 2. a broker account the register does not know stops the run; once it is listed as not the
+    # owner's, the run files the export and no position of it reaches the page
+    hold = fd("holdings_latest.csv")
+    if os.path.exists(hold) and docs.get("Holdings"):
+        rows = list(csv.DictReader(open(hold, encoding="utf-8")))
+        alien = dict(rows[0], **{"Account Name": "someone else", "Account Number": "ZZ0000000CAD",
+                                 "Symbol": "ZZZQ", "Name": "Not the owner's fund"})
+        src = os.path.join(ws, "inbox", "holdings-report-2099-01-01.csv")
+        with open(src, "w", encoding="utf-8", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), quoting=csv.QUOTE_ALL); w.writeheader(); w.writerows(rows + [alien])
+        rc, out = go()
+        if rc != 1 or "ZZ0000000CAD" not in out:
+            bad.append(f"a holdings export with an account the register does not know: exit {rc}, expected a stop naming it")
+        reg2 = json.load(open(fd("accounts.json"), encoding="utf-8"))
+        reg2["notOwned"] = [{"id": "ZZ0000000CAD", "whose": "someone else", "why": "selftest", "asof": "2099-01-01"}]
+        json.dump(reg2, open(fd("accounts.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+        rc, out = go()
+        page = open(os.path.join(ws, dash_args(ws)[0]), encoding="utf-8").read()   # relative to the copy, not to here
+        filed = "ZZZQ" in open(hold, encoding="utf-8").read()
+        if rc not in (0, 2) or not filed or "ZZZQ" in page:
+            bad.append(f"an account listed as not the owner's: exit {rc}, in the export {filed}, on the page {'ZZZQ' in page}")
+        else:
+            did.append("an unknown broker account stopped the run, and one not the owner's stayed off the page")
+
+    if bad:
+        return ["  ✗ update.py batch: " + b for b in bad]
+    return [f"  ✓ update.py batch: " + "; ".join(did)] if did else []
+
+
+def undo_check(root, base):
+    """A write is all or nothing (2026-10-25: a run died after the ledgers were written, and the
+    books had to be taken apart by hand). Make the last step of a run fail — archive/ read-only,
+    so the files cannot be moved once findata/ is written — and expect findata/ back byte for
+    byte and the file still in inbox/. Then let a run finish, take it back with --undo, and
+    expect the same; and expect --undo to refuse once findata/ has been edited by hand."""
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    if not os.path.exists(upd):
+        return []
+    ws = os.path.join(base, "undo"); os.makedirs(ws); stage(root, ws)
+    hold = layout.path(ws, "holdings_latest.csv")
+    if not os.path.exists(hold):
+        return []
+
+    def hashes():
+        out = {}
+        for d, _, fs in os.walk(os.path.join(ws, "findata")):
+            for f in fs:
+                p = os.path.join(d, f)
+                out[os.path.relpath(p, ws)] = hashlib.sha256(open(p, "rb").read()).hexdigest()
+        return out
+
+    def go(*a):
+        r = subprocess.run([sys.executable, upd, ".", *a], cwd=ws, capture_output=True, text=True, timeout=300)
+        return r.returncode, r.stdout + r.stderr
+
+    rows = list(csv.DictReader(open(hold, encoding="utf-8")))
+    rows[0]["Market Value"] = f"{float(rows[0]['Market Value']) + 1000:.2f}"   # so the run has something to change
+    name = "holdings-report-2099-01-01.csv"
+    with open(os.path.join(ws, "inbox", name), "w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), quoting=csv.QUOTE_ALL); w.writeheader(); w.writerows(rows)
+    before = hashes()
+    bad = []
+    arc = os.path.join(ws, "archive")
+    os.makedirs(arc, exist_ok=True)
+    os.chmod(arc, 0o555)
+    try:
+        rc, out = go("--write")
+    finally:
+        os.chmod(arc, 0o755)
+    torn = sorted(k for k in set(before) | set(hashes()) if before.get(k) != hashes().get(k))
+    if rc != 1 or "nothing was written" not in out or torn or not os.path.exists(os.path.join(ws, "inbox", name)):
+        bad.append(f"a run that failed at its last step: exit {rc}, findata/ changed in {torn[:3]}, "
+                   f"file in inbox/ {os.path.exists(os.path.join(ws, 'inbox', name))}")
+    rc, out = go("--write")
+    moved = not os.path.exists(os.path.join(ws, "inbox", name))
+    if rc not in (0, 2) or not moved or hashes() == before:
+        bad.append(f"the run itself: exit {rc}, file archived {moved}")
+    rc, out = go("--undo")
+    torn = sorted(k for k in set(before) | set(hashes()) if before.get(k) != hashes().get(k))
+    if rc != 0 or torn or not os.path.exists(os.path.join(ws, "inbox", name)):
+        bad.append(f"--undo after a finished run: exit {rc}, findata/ still differs in {torn[:3]}")
+    go("--write")
+    tasks = layout.path(ws, "tasks.json")
+    open(tasks, "a", encoding="utf-8").write("\n")              # an edit by hand after the import
+    edited = hashes()
+    rc, out = go("--undo")
+    if rc != 1 or "would throw those edits away" not in out or hashes() != edited:
+        bad.append(f"--undo over a hand edit: exit {rc} (expected a refusal that changes nothing)")
+    if bad:
+        return ["  ✗ update.py all-or-nothing: " + b for b in bad]
+    return ["  ✓ update.py all-or-nothing: a run that failed at its last step left findata/ and inbox/ as they were, "
+            "--undo took a finished run back, and refused once findata/ had been edited by hand"]
+
+
+def drift_check(root, base):
+    """preflight says when a CSV export's columns differ from the last one filed — before the
+    import, not halfway through it. File one activities export, drop the next with a column gone
+    and one new, and expect both named; drop it with the same columns and expect silence."""
+    pre = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "preflight.py"))
+    ws = os.path.join(base, "drift"); os.makedirs(ws); stage(root, ws)
+    act = layout.path(ws, "ws_activities.csv")
+    reg = json.load(open(layout.path(ws, "accounts.json"), encoding="utf-8"))
+    doc = next((d for d in reg.get("documents", []) if d.get("into") == "ws_activities.csv"), None)
+    if not (os.path.exists(pre) and os.path.exists(act) and doc and doc.get("tags")):
+        return []
+    hdr = next(csv.reader(open(act, encoding="utf-8")))
+    with open(os.path.join(ws, "archive", f"20990101_{doc['tags'][0]}_activities-export-2099-01-01.csv"), "w",
+              encoding="utf-8", newline="") as fh:
+        csv.writer(fh).writerows([hdr, ["2099-01-01"] + [""] * (len(hdr) - 1)])
+    name = os.path.join(ws, "inbox", "activities-export-2099-02-01.csv")
+
+    def drop(cols):
+        with open(name, "w", encoding="utf-8", newline="") as fh:
+            csv.writer(fh).writerows([cols, ["2099-02-01"] + [""] * (len(cols) - 1)])
+        r = subprocess.run([sys.executable, pre, "."], cwd=ws, capture_output=True, text=True)
+        return [l.strip() for l in r.stdout.splitlines() if "columns are not the ones" in l]
+
+    gone = hdr[-7]
+    said = drop([c for c in hdr if c != gone] + ["brand new column"])
+    quiet = drop(hdr)
+    if len(said) == 1 and repr(gone) in said[0] and "'brand new column'" in said[0] and not quiet:
+        return ["  ✓ preflight: an export whose columns changed was named before the import, one that did not was not"]
+    return [f"  ✗ preflight: columns changed → {said or 'nothing said'}; columns the same → {quiet or 'nothing said'}"]
+
+
+def own_name_check(root, base):
+    """An e-Transfer between the owner's own banks names them — by the legal name the bank
+    holds, which need not be the name in profile.json (2026-10: the two differed, and $1,000 of
+    the owner's own money was counted as income). Render the
+    statements, give the profile a different everyday name, import a statement that carries an
+    own-name e-Transfer, and expect it typed Transfer with nothing asked about it."""
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    ws = os.path.join(base, "ownname"); os.makedirs(ws); stage(root, ws)
+    man = fixtures_for(ws)
+    if not (man and os.path.exists(upd)):
+        return []
+    fd = lambda n: layout.path(ws, n)
+    prof = json.load(open(fd("profile.json"), encoding="utf-8"))
+    legal = re.sub(r"[^A-Z0-9]", "", prof["owner"].upper())
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    docs = {d["key"]: d for d in reg["documents"]}; by_key = {a["key"]: a for a in reg["accounts"]}
+    pick = None
+    for m in sorted(man, key=lambda m: os.path.basename(m["file"]), reverse=True):
+        acc = by_key[docs[m["doc"]]["covers"][0]]
+        if not acc.get("ledger"):
+            continue
+        tag = re.search(r"(\d{8})\.pdf$", m["file"]).group(1)
+        rows = [r for r in csv_rows_of(fd(acc["ledger"])) if r["statement"] == f"{acc['stmtTag']}/{tag}"
+                and "TRANSFER" in r["description"].upper() and legal in re.sub(r"[^A-Z0-9]", "", r["description"].upper())]
+        if rows:
+            pick, ledger, want = m, acc["ledger"], [(r["date"], r["amount"]) for r in rows]
+            break
+    if not pick:
+        return []
+    strip_statement(ws, pick)
+    prof["owner"] = "Em " + prof["owner"].split()[-1]          # the name she goes by, not the bank's
+    json.dump(prof, open(fd("profile.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    subprocess.run([sys.executable, os.path.join(os.path.dirname(upd), "rebuild.py"), ".", "--write"], cwd=ws, capture_output=True)
+    n_dec = len(json.load(open(fd("decisions.json"), encoding="utf-8")).get("decisions", []))
+    r = subprocess.run([sys.executable, upd, ".", "--write"], cwd=ws, capture_output=True, text=True, timeout=300)
+    got = {(x["date"], x["amount"]): x["type"] for x in csv_rows_of(fd(ledger))}
+    asked = [x["what"] for x in json.load(open(fd("decisions.json"), encoding="utf-8"))["decisions"][n_dec:]
+             if x.get("kind") == "transfer" and "no sender" in x["what"]]
+    wrong = [(k, got.get(k)) for k in want if got.get(k) != "Transfer"]
+    if r.returncode in (0, 2) and not wrong and not asked:
+        return [f"  ✓ update.py: an e-Transfer naming the owner by the bank's name, not the profile's, filed as their own money ({len(want)} row(s))"]
+    return [f"  ✗ update.py: own-name e-Transfer under a different profile name: exit {r.returncode}, typed {wrong}, asked {asked[:2]}"]
+
+
+def loan_import_check(root, base):
+    """A repayment from a borrower, under the name the bank prints, is money back — typed
+    Repayment, attributed to that borrower's loan, and the loan's balance in the register moves
+    by itself. Rename the demo's repayment row to carry the borrower's statement name, render the
+    statements, take that one out, put the loan's copy back to what it was before, import it,
+    and expect the row typed, the copy current, and the checkers clean."""
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    ws = os.path.join(base, "loan"); os.makedirs(ws); stage(root, ws)
+    fd = lambda n: layout.path(ws, n)
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    loan = next((a for a in reg["accounts"] if a.get("role") == "owed" and a.get("names")), None)
+    if not (loan and os.path.exists(upd)):
+        return []
+    # the repayment row, on whichever ledger carries it
+    hit = None
+    for a in reg["accounts"]:
+        if not a.get("ledger"):
+            continue
+        rows = csv_rows_of(fd(a["ledger"]))
+        for r in rows:
+            if r["type"] == "Repayment" and float(r["amount"]) > 0 and loan["name"].upper() in (r["label"] or "").upper():
+                hit = (a, rows, r)
+        if hit:
+            break
+    if not hit:
+        return []
+    acc, rows, rep = hit
+    rep["description"] = f"INTERAC e-Transfer received {loan['names'][0]}"     # the bank prints the name
+    with open(fd(acc["ledger"]), "w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
+    # only the loan row knows the borrower: the counterparty ledger would match the amount, and
+    # its counterparty the first name, so both are made someone else's
+    for d in reg["documents"]:
+        if d.get("counterparty"):
+            d["counterparty"] = "Nobody"
+            if os.path.exists(fd(d["into"])):
+                head = open(fd(d["into"]), encoding="utf-8-sig").readline()
+                open(fd(d["into"]), "w", encoding="utf-8").write(head)
+    json.dump(reg, open(fd("accounts.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    man = fixtures_for(ws)
+    # that statement and every later one of the same account, so the ledger has no hole in it
+    tag = rep["statement"].split("/")[-1]
+    docs_ = [d["key"] for d in reg["documents"] if acc["key"] in d["covers"]]
+    picks = sorted((m for m in (man or []) if m["doc"] in docs_
+                    and re.search(r"(\d{8})\.pdf$", m["file"]).group(1) >= tag),
+                   key=lambda m: os.path.basename(m["file"]), reverse=True)
+    if not picks:
+        return []
+    want = float(loan["balance"])
+    for m in picks:
+        strip_statement(ws, m)
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    for a in reg["accounts"]:
+        if a["key"] == loan["key"]:
+            a["balance"], a["asof"] = round(want + float(rep["amount"]), 2), loan["agreed"]["asof"]   # before the repayment
+    json.dump(reg, open(fd("accounts.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    subprocess.run([sys.executable, os.path.join(os.path.dirname(upd), "rebuild.py"), ".", "--write"], cwd=ws, capture_output=True)
+    r = subprocess.run([sys.executable, upd, ".", "--write"], cwd=ws, capture_output=True, text=True, timeout=300)
+    got = next((x for x in csv_rows_of(fd(acc["ledger"])) if x["date"] == rep["date"] and x["amount"] == rep["amount"]), {})
+    now = next(a for a in json.load(open(fd("accounts.json"), encoding="utf-8"))["accounts"] if a["key"] == loan["key"])
+    d23 = [l.strip() for l in run("check_data.py", ["."], ws).splitlines() if "D23" in l and "✗" in l]
+    if r.returncode in (0, 2) and got.get("type") == "Repayment" and abs(float(now["balance"]) - want) < 0.005 and not d23:
+        return [f"  ✓ update.py: a repayment under the borrower's statement name filed against their loan, "
+                f"{money_s(want + float(rep['amount']))} → {money_s(want)} owed"]
+    return [f"  ✗ update.py: a borrower's repayment: exit {r.returncode}, typed {got.get('type')!r} "
+            f"({got.get('label')!r}), loan balance {now.get('balance')} (expected {want}), {d23[:1]}"]
+
+
+def money_s(v):
+    return f"${v:,.2f}"
+
+
 def csv_rows_of(p):
     return list(csv.DictReader(open(p, encoding="utf-8"))) if os.path.exists(p) else []
 
@@ -746,7 +1199,10 @@ def main(argv):
 
         # the parsers, on statements: the demo owner's, rendered back into PDFs (tools/fixtures.py),
         # and in an owner's workspace every real statement in archive/ that names a parser.
-        for line in parser_checks(root, base) + update_check(root, base):
+        runs = (parser_checks(root, base) + update_check(root, base) + update_batch_check(root, base)
+                + undo_check(root, base) + drift_check(root, base) + own_name_check(root, base)
+                + loan_import_check(root, base))
+        for line in runs:
             print(line)
             if line.lstrip().startswith("✗"):
                 fails.append(line.strip())

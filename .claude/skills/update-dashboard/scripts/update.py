@@ -7,6 +7,7 @@
     ... --hand rows.json    # statements read by the model, transcribed: [{file, doc, account,
                             #   period{from,to}, opening, closing, rows[{date, description,
                             #   amount, balance}], totals{...}}]; amounts signed the ledger's way
+    python3 .claude/skills/update-dashboard/scripts/update.py . --undo     # take the last --write back
 
 WHY. Until 2026-09-14 the import was: a script parsed each statement and PRINTED every row, and
 the model then categorised the rows, typed them, and wrote the ledgers by hand. So the model read
@@ -29,9 +30,18 @@ What it never does: infer an account from a filename (preflight names files, and
 cannot name stops the run), write a row that does not reconcile, or type a repayment as income
 (the counterparty ledger is checked first, the way D10 checks it afterwards).
 
+A write is all or nothing. Before the first byte, findata/ is copied to .undo/<time>/ with the
+list of files the run will move out of inbox/; if anything fails before the update record is
+appended, that copy is put back and the files return to inbox/. On 2026-10-25 a run died after
+the ledgers were written and before the activities merge, and the books had to be taken apart
+by hand. `--undo` puts back the newest copy after a run that did finish — and refuses if
+findata/ has been edited since, because that would throw the edits away. The last UNDO_KEEP
+copies are kept.
+
 Exit 0: done (or, without --write, the plan). 1: stopped before writing — an unnamed file, an
-identical pair that classifies as two documents, a statement that does not follow its ledger.
-2: written, but a checker found something. 3: pypdf is missing; nothing can be parsed.
+identical pair that classifies as two documents, a statement that does not follow its ledger —
+or the write failed and was rolled back. 2: written, but a checker found something. 3: pypdf
+is missing; nothing can be parsed.
 """
 import argparse
 import collections
@@ -54,8 +64,9 @@ sys.path.insert(0, HERE)
 import layout  # noqa: E402
 import preflight  # noqa: E402
 import rebuild  # noqa: E402
+import loans  # noqa: E402  what a borrower still owes (loans.py)
 sys.path.insert(0, CHECKS)
-from check_data import merchant_key  # noqa: E402  the one definition of "the same merchant"
+from check_data import merchant_key, refund_pool  # noqa: E402  the one definition of "the same merchant"
 
 MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 LONG = ("January", "February", "March", "April", "May", "June", "July", "August", "September",
@@ -75,6 +86,19 @@ def short(d):
 
 def stamp(d):
     return d.strftime("%Y%m%d")
+
+
+def name_date(path):
+    """The statement date a filename carries ("…2026-09-25.pdf", "October 5, 2026.pdf"), so two
+    months of one account are filed oldest first; a name with no date sorts last."""
+    n = os.path.basename(path)
+    m = re.search(r"(\d{4})-?(\d{2})-?(\d{2})", n)
+    if m:
+        return "".join(m.groups())
+    m = re.search(r"([A-Z][a-z]+) (\d{1,2}), (\d{4})", n)
+    if m and m.group(1) in LONG:
+        return f"{m.group(3)}{LONG.index(m.group(1)) + 1:02d}{int(m.group(2)):02d}"
+    return "99999999"
 
 
 def money(v):
@@ -125,6 +149,7 @@ class Workspace:
         cp_doc = next((d for d in self.docs if d.get("counterparty")), None)
         self.cp = cp_doc["counterparty"] if cp_doc else None
         self.cp_rows = csv_rows(fd(cp_doc["into"])) if cp_doc and cp_doc.get("into") else []
+        self.loans = [a for a in self.accounts if loans.is_loan(a)]
         flows = self.funds.get("plan", {}).get("flows", [])
         self.rent = [f["amount"] for f in flows if f.get("kind") == "committed"]
         self.cards = [a for a in self.accounts if a.get("kind") == "Credit card"]
@@ -161,13 +186,18 @@ def merchant_of_debit(desc):
     return (m.group(1) if m else desc).strip(" ,-")
 
 
-def type_row(ws, acc, desc, amt, when):
+def type_row(ws, acc, desc, amt, when, holder=None):
     """(type, label, ask) for one ledger row. `ask` is a decisions.json item when the row was
     typed by default rather than by evidence; None otherwise. Blank type means: a program cannot
-    tell, the model will."""
+    tell, the model will.
+
+    `holder` is the account holder the statement itself prints. The owner's name in profile.json
+    is the one they go by, and a bank shows the legal one (2026-10: the two differed, and every
+    e-Transfer between the owner's own banks was typed as income), so an e-Transfer naming
+    either is the owner's own money moving."""
     d = desc.upper()
     dn = re.sub(r"[^A-Z0-9]", "", d)
-    own = re.sub(r"[^A-Z0-9]", "", ws.owner)
+    owns = {n for n in (re.sub(r"[^A-Z0-9]", "", x.upper()) for x in (ws.owner, holder or "")) if n}
     broker_n = re.sub(r"[^A-Z0-9]", "", ws.broker.upper())
     cp_first = (ws.cp or "").split()[0].upper() if ws.cp else None
 
@@ -177,8 +207,14 @@ def type_row(ws, acc, desc, amt, when):
     # is a bank's own transfer (the first run typed a card payment as one, 2026-09-14).
     if "INTERAC" in dn or re.search(r"E-TRANSFER", d):
         received = amt > 0
-        if own and own in dn:
+        if any(n in dn for n in owns):
             return "Transfer", "e-Transfer between your own accounts", None
+        # Someone the owner has lent to, under any name the register knows them by: money back
+        # is a repayment, money out is more lending — neither is income or spending (loans.py).
+        for ln in ws.loans:
+            if any(n in dn for n in loans.names_of(ln)):
+                return ("Repayment", f"Repayment from {ln['name']}", None) if received \
+                    else ("Lent", f"Lent to {ln['name']}", None)
         if received and ws.cp_rows:
             for r in ws.cp_rows:
                 if (r.get("direction") == "in" and abs(float(r.get("amount") or 0) - amt) < 0.01
@@ -186,7 +222,7 @@ def type_row(ws, acc, desc, amt, when):
                     return "Repayment", f"e-Transfer from {ws.cp} (repayment)", None
         if cp_first and cp_first in dn:
             return ("Repayment", f"e-Transfer from {ws.cp} (repayment)", None) if received \
-                else ("Repayment", f"e-Transfer to {ws.cp} (loan)", None)
+                else ("Lent", f"e-Transfer to {ws.cp} (loan)", None)
         if received:
             return "Other", "e-Transfer received", {
                 "kind": "transfer", "what": f"A {money(amt)} e-Transfer received on {short(iso_to_date(when))} carries no sender you have named.",
@@ -446,7 +482,8 @@ def plan_ledger(ws, plan, acc, doc, part, end):
     ledger = acc.get("ledger")
     if not ledger:
         return 0
-    existing = csv_rows(ws.fd(ledger))
+    # the ledger as it will stand: what is on disk, then what an earlier statement in this batch adds
+    existing = csv_rows(ws.fd(ledger)) + [dict(zip(LEDGER_COLS, r)) for r in plan.ledger.get(ledger, [])]
     tag = f"{acc['stmtTag']}/{stamp(end)}"
     if any(r.get("statement") == tag for r in existing):
         plan.judged.append(f"The {ws.doc_name(doc)} statement to {short(end)} was already in the books; nothing was written twice.")
@@ -472,7 +509,7 @@ def plan_ledger(ws, plan, acc, doc, part, end):
     for r in rows:
         amt = round(float(r["amount"]), 2)
         bal = round(float(r["balance"]), 2) if r.get("balance") is not None else round(bal + amt, 2)
-        t, label, ask = type_row(ws, acc, r["description"], amt, r["date"])
+        t, label, ask = type_row(ws, acc, r["description"], amt, r["date"], part.get("holder"))
         if ask:
             ask.update(source=f"{src}, {short(iso_to_date(r['date']))}")
             plan.decisions.append(ask)
@@ -504,7 +541,8 @@ def plan_card(ws, plan, acc, doc, part, end):
         if amt >= 0:
             if re.search(r"PAYMENT|THANK YOU|AUTOPAY|TRSF FROM|TRANSFER FROM", desc, re.I):   # a card payment, not a refund
                 continue
-            plan.credits.append((src, r["date"], desc, amt))
+            if not plan_refund(plan, existing, acc, desc, amt, r["date"], src, tagend):
+                plan.credits.append((src, r["date"], desc, amt))
             continue
         cat, how, key = categorise(ws, desc, table)
         note_merchant(plan, key, cat, how, r["date"], src)
@@ -512,6 +550,26 @@ def plan_card(ws, plan, acc, doc, part, end):
         n += 1
     plan.counts["purchases"] += n
     return n
+
+
+def plan_refund(plan, existing, acc, desc, amt, when, src, tagend):
+    """A credit on a card that gives back a purchase is a negative spending row in that
+    purchase's category, so every total on the page is net of it (FINANCE.md §3c). It has to
+    point at something: an earlier purchase at the same merchant on the same card — or, for a fee
+    or interest credit, a charge the card made — with at least this much not yet refunded. What
+    points at nothing (cash back, a stranger's refund) stays a credit for a person to read."""
+    card = acc["spendTag"]
+    rows = existing + [dict(zip(("date", "amount", "currency", "category", "note"), x)) for x in plan.spend]
+    pool = refund_pool(rows, card, f"{desc} {tagend}", when)
+    bought = [x for x in pool if float(x["amount"]) > 0]
+    if not bought or sum(float(x["amount"]) for x in pool) < amt - 0.005:
+        return False
+    last = max(bought, key=lambda x: x["date"])
+    plan.spend.append([when, f"{-amt:.2f}", acc.get("cur", "CAD"), last["category"], f"{desc} {tagend}"])
+    plan.counts["refunds"] += 1
+    plan.judged.append(f"Took the {amt:,.2f} {merchant_key(desc).title()} refund ({src}, {short(iso_to_date(when))}) "
+                       f"off {last['category']}, where its purchase of {short(iso_to_date(last['date']))} was.")
+    return True
 
 
 def note_merchant(plan, key, cat, how, when, src):
@@ -540,12 +598,33 @@ def plan_export(ws, plan, path, doc):
     if os.path.exists(dst):
         base, ext = os.path.splitext(dst)
         dst = f"{base} (redrop){ext}"
+    if into in ("holdings_latest.csv", "ws_activities.csv"):
+        # An account the register has never heard of would be counted as the owner's (or not at
+        # all) without anyone deciding which. Ask, the way an unnamed file is asked about.
+        col = "Account Number" if into == "holdings_latest.csv" else "account_id"
+        known = {a.get("id") for a in ws.accounts} | {x["id"] for x in ws.reg.get("notOwned", [])}
+        seen = collections.OrderedDict()
+        for r in csv.DictReader(open(path, encoding="utf-8")):
+            n = r.get(col)
+            if n and n not in known:
+                seen.setdefault(n, r.get("Account Name") or r.get("account_type") or "")
+        if seen:
+            plan.stopped.append(f"{name} carries {len(seen)} account(s) the register does not know: "
+                                + ", ".join(f"{n} ({what})" for n, what in seen.items())
+                                + " — add each to accounts.json, or to notOwned if it is not the owner's money")
+            return
     plan.archive.append((path, dst))
     plan.filed[doc["key"]].add(asof[:7])
     if into == "holdings_latest.csv":
         plan.holdings = (path, asof)
         plan.files.append(f"Holdings report of {short(iso_to_date(asof))}")
     elif into == "ws_activities.csv":
+        extra = activities_columns(ws, path)
+        if extra:
+            plan.stopped.append(f"{name} has column(s) ws_activities.csv has never had: {', '.join(extra)} — "
+                                f"merging would drop them; add them to the ledger's header first")
+            plan.archive.pop()
+            return
         plan.activities = (path, asof)
         plan.files.append(f"Activities export of {short(iso_to_date(asof))}")
     elif doc.get("counterparty"):
@@ -609,7 +688,8 @@ def write_plan(ws, plan):
     if plan.holdings:
         shutil.copy2(plan.holdings[0], fd("holdings_latest.csv"))
         refresh_holdings_copies(ws, plan.holdings[1])
-    if plan.bank or plan.holdings:
+    lent = refresh_loan_copies(ws) if plan.ledger else False
+    if plan.bank or plan.holdings or lent:
         jsave(fd("accounts.json"), ws.reg)
     for key, months in plan.filed.items():
         have = ws.filings.setdefault("filed", {}).setdefault(key, [])
@@ -629,6 +709,19 @@ def write_plan(ws, plan):
         os.remove(p)
 
 
+def activities_columns(ws, src):
+    """The export's columns the ledger has no place for — checked while planning, before
+    anything is written, because a merge that stops halfway leaves the other files written."""
+    p = ws.fd("ws_activities.csv")
+    if not os.path.exists(p):
+        return []
+    with open(p, encoding="utf-8-sig", newline="") as fh:
+        header = next(csv.reader(fh), None) or []
+    with open(src, encoding="utf-8-sig", newline="") as fh:
+        new_header = next(csv.reader(fh), None) or []
+    return [c for c in new_header if header and c not in header]
+
+
 def merge_activities(ws, src):
     p = ws.fd("ws_activities.csv")
     have = []
@@ -643,9 +736,15 @@ def merge_activities(ws, src):
         new_header = next(rd, None)
         new = [r for r in rd if r]
     if header and new_header and header != new_header:
-        raise SystemExit(f"the activities export's columns differ from ws_activities.csv: {new_header[:4]}…")
-    seen = {tuple(r) for r in have}
-    added = [r for r in new if tuple(r) not in seen]
+        # The broker drops or reorders a column now and then (2026-10: 'underlying symbol' went).
+        # Rows are lined up by column name; a column the export no longer carries is left blank.
+        # A column the ledger has never had is refused while planning (activities_columns), so
+        # nothing reaches here that would be lost.
+        at = {c: i for i, c in enumerate(new_header)}
+        new = [[r[at[c]] if c in at and at[c] < len(r) else "" for c in header] for r in new]
+    common = [i for i, c in enumerate(header or new_header) if c in (new_header or [])]
+    seen = {tuple(r[i] for i in common) for r in have}
+    added = [r for r in new if tuple(r[i] for i in common) not in seen]
     rows = sorted(have + added, key=lambda r: (r[0], r[1]))
     with open(p, "w", encoding="utf-8", newline="") as fh:
         w = csv.writer(fh)
@@ -662,6 +761,21 @@ def merge_activities(ws, src):
             fx.update(usd_cad=rate, asof=d, quality="broker-rate",
                       source=f"Broker activities export {os.path.basename(src)}: the 'FX Rate:' rows on the latest date. It is the broker's rate, spread included.")
             jsave(ws.fd("fx.json"), fx)
+
+
+def refresh_loan_copies(ws):
+    """Each loan's balance in the register: what was agreed, less what the ledgers now show
+    coming back since (loans.py) — a copy D23 re-derives every run. Dated by the newest row that
+    moved it, or the agreed date when nothing has."""
+    rows = [r for a in ws.accounts if a.get("ledger") for r in csv_rows(ws.fd(a["ledger"]))]
+    changed = False
+    for a in ws.loans:
+        o = loans.outstanding(a, rows)
+        asof = max([o["since"]] + [r["date"] for r in o["rows"]])
+        if (a.get("balance"), a.get("asof")) != (o["owed"], asof):
+            a["balance"], a["asof"] = o["owed"], asof
+            changed = True
+    return changed
 
 
 def refresh_holdings_copies(ws, asof):
@@ -810,6 +924,76 @@ def record(ws, plan, changed, noticed):
     return rec
 
 
+# ---------------------------------------------------------------- all or nothing
+UNDO_KEEP = 3
+
+
+def findata_hashes(root):
+    base = os.path.join(root, "findata")
+    out = {}
+    for d, _, fs in os.walk(base):
+        for f in fs:
+            if not f.startswith("."):
+                p = os.path.join(d, f)
+                out[os.path.relpath(p, base)] = hashlib.sha256(open(p, "rb").read()).hexdigest()
+    return out
+
+
+def snapshot(ws, plan):
+    """findata/ as it is, and every file the run will move or delete — taken before the first write."""
+    top = os.path.join(ws.root, ".undo")
+    d = os.path.join(top, datetime.datetime.now().strftime("%Y%m%d-%H%M%S-%f"))
+    shutil.copytree(os.path.join(ws.root, "findata"), os.path.join(d, "findata"))
+    os.makedirs(os.path.join(d, "deleted"))
+    for p in plan.delete:
+        shutil.copy2(p, os.path.join(d, "deleted", os.path.basename(p)))
+    rel = lambda p: os.path.relpath(p, ws.root)
+    jsave(os.path.join(d, "undo.json"), {"moved": [[rel(s), rel(t)] for s, t in plan.archive],
+                                         "deleted": [rel(p) for p in plan.delete], "after": None})
+    for old in sorted(os.listdir(top))[:-UNDO_KEEP]:
+        shutil.rmtree(os.path.join(top, old), ignore_errors=True)
+    return d
+
+
+def restore(root, d):
+    """Put findata/ back from the copy, and every moved or deleted file back in inbox/."""
+    m = jload(os.path.join(d, "undo.json"))
+    for src, dst in m["moved"]:
+        if os.path.exists(os.path.join(root, dst)) and not os.path.exists(os.path.join(root, src)):
+            shutil.move(os.path.join(root, dst), os.path.join(root, src))
+    for p in m["deleted"]:
+        if not os.path.exists(os.path.join(root, p)):
+            shutil.copy2(os.path.join(d, "deleted", os.path.basename(p)), os.path.join(root, p))
+    # swap rather than delete-then-copy, so there is never a moment with no findata/ at all
+    live, back, old = (os.path.join(root, "findata"), os.path.join(root, "findata.restoring"),
+                       os.path.join(root, "findata.replaced"))
+    shutil.rmtree(back, ignore_errors=True); shutil.rmtree(old, ignore_errors=True)
+    shutil.copytree(os.path.join(d, "findata"), back)
+    os.rename(live, old); os.rename(back, live)
+    shutil.rmtree(old, ignore_errors=True)
+
+
+def undo(root):
+    top = os.path.join(root, ".undo")
+    done = [d for d in sorted(os.listdir(top)) if (jload(os.path.join(top, d, "undo.json")) or {}).get("after")] \
+        if os.path.isdir(top) else []
+    if not done:
+        print("  ✗ nothing to undo: no finished import has a copy in .undo/"); return 1
+    d = os.path.join(top, done[-1])
+    after, now = jload(os.path.join(d, "undo.json"))["after"], findata_hashes(root)
+    edited = sorted(k for k in set(after) | set(now) if after.get(k) != now.get(k))
+    if edited:
+        print(f"  ✗ findata/ has changed since the import of {done[-1][:8]}: {', '.join(edited[:6])}"
+              + (" …" if len(edited) > 6 else "") + " — undoing it would throw those edits away. Nothing was changed.")
+        return 1
+    restore(root, d)
+    shutil.rmtree(d, ignore_errors=True)
+    run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
+    run(os.path.join(HERE, "preflight.py"), [".", "--reseed"], root)
+    print(f"  ✓ the import of {done[-1][:8]} is undone: findata/ is as it was before it, and its files are back in inbox/")
+    return 0
+
+
 def run(script, args, root):
     p = subprocess.run([sys.executable, script] + args, cwd=root, capture_output=True, text=True)
     return p.returncode, p.stdout + p.stderr
@@ -822,8 +1006,11 @@ def main(argv):
     ap.add_argument("--write", action="store_true", help="apply; without it, only say what would happen")
     ap.add_argument("--json", action="store_true", help="print the summary as JSON")
     ap.add_argument("--hand", help="JSON of statements the model read and transcribed (see above)")
+    ap.add_argument("--undo", action="store_true", help="put findata/ and inbox/ back as they were before the last --write")
     a = ap.parse_args(argv)
     root = os.path.abspath(a.root)
+    if a.undo:
+        return undo(root)
     ws = Workspace(root)
     plan = Plan()
     plan.hand = {}
@@ -835,7 +1022,7 @@ def main(argv):
             print(f"  ✗ --hand {a.hand}: not a list of transcriptions ({e})"); return 1
     summary = {"date": ws.today.isoformat(), "written": False}
 
-    named = classify_inbox(ws, plan)
+    named = sorted(classify_inbox(ws, plan), key=lambda pd: name_date(pd[0]))
     try:
         for path, doc in named:
             if doc.get("parser") or (doc.get("into") or "").endswith(".csv") and doc.get("into") != "friend_ledger.csv" \
@@ -855,7 +1042,7 @@ def main(argv):
     for k, v in sorted(plan.counts.items()):
         say(f"  {v} {k}")
     if plan.spend:
-        say(f"  {len(plan.spend)} purchases → spending.csv; {len(plan.new_merchants)} merchant(s) not seen before")
+        say(f"  {len(plan.spend)} rows → spending.csv (refunds negative); {len(plan.new_merchants)} merchant(s) not seen before")
     for name, why in plan.by_hand:
         say(f"  · by hand: {name} — {why}")
     for ledger, d, desc, amt in plan.untyped:
@@ -895,14 +1082,26 @@ def main(argv):
             print(json.dumps(summary, ensure_ascii=False, indent=1))
         return 0
 
-    before, sp_before = derive(root), spending_by_month(root)
-    write_plan(ws, plan)
-    after, sp_after = derive(root), spending_by_month(root)
-    write_history(ws, after)
-    after = derive(root)
-    changed = changed_lines(before, after, sp_before, sp_after)
-    noticed = noticed_lines(ws, after, plan)
-    rec = record(ws, plan, changed, noticed)
+    snap = snapshot(ws, plan)
+    try:
+        before, sp_before = derive(root), spending_by_month(root)
+        write_plan(ws, plan)
+        # The benchmark's prices, for the Performance page: the one step that goes online, so a
+        # failure is said and the import goes on — the last prices stay, and D27 says how old.
+        prc, pout = run(os.path.join(HERE, "prices.py"), [".", "--write", "--if-needed"], root)
+        say("  prices: " + (pout.strip().splitlines()[-1].strip() if pout.strip() else f"exit {prc}"))
+        after, sp_after = derive(root), spending_by_month(root)
+        write_history(ws, after)
+        after = derive(root)
+        changed = changed_lines(before, after, sp_before, sp_after)
+        noticed = noticed_lines(ws, after, plan)
+        rec = record(ws, plan, changed, noticed)
+    except BaseException as e:            # a crash, a SystemExit, Ctrl-C: none of it may leave the books torn
+        restore(root, snap)
+        shutil.rmtree(snap, ignore_errors=True)
+        run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
+        print(f"  ✗ the write failed ({type(e).__name__}: {e}). findata/ and inbox/ are back as they were — nothing was written.")
+        return 1
     summary.update(written=True, changed=changed, noticed=noticed, record=rec)
 
     rc, out = run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
@@ -913,6 +1112,9 @@ def main(argv):
         findings += [l.strip() for l in out2.splitlines() if l.strip().startswith(("✗", "⚠"))]
     summary["findings"] = findings
     run(os.path.join(HERE, "preflight.py"), [".", "--reseed"], root)
+    # findata/ as this run left it: --undo puts the copy back only while this is still what is there
+    m = jload(os.path.join(snap, "undo.json")); m["after"] = findata_hashes(root)
+    jsave(os.path.join(snap, "undo.json"), m)
     say("")
     for c in changed:
         say(f"  {c['label']}: {c['from']} → {c['to']}")

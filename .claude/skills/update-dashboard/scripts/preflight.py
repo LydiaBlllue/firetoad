@@ -123,6 +123,41 @@ def classify(name):
     return (None, None, None, "Filename matches nothing in accounts.json documents[].")
 
 
+def csv_drift(root, path, label):
+    """How a CSV export's columns differ from the newest one of the same document in archive/ —
+    the broker changes its export now and then without a word (2026-10: Wealthsimple dropped
+    'underlying symbol'). Said here, before the import, rather than discovered halfway through
+    it. Nothing is stored: the last file filed is the reference."""
+    if not path.lower().endswith(".csv"):
+        return None
+    x = next((x for x in DOCS if f"{x['doc']['ep']} {x['doc']['key']}" == label), None)
+    arc = os.path.join(root, "archive")
+    if not x or not os.path.isdir(arc):
+        return None
+    mine = set(x["doc"].get("tags") or [])
+    tags = sorted({t for y in DOCS for t in (y["doc"].get("tags") or [])}, key=len, reverse=True)
+    prev = None
+    for f in sorted(os.listdir(arc)):
+        m = re.match(r"\d{8}_(.+)$", f)
+        if m and f.lower().endswith(".csv"):
+            t = next((t for t in tags if m.group(1).startswith(t + "_")), None)
+            if t in mine and os.path.getsize(os.path.join(arc, f)):
+                prev = f
+    if not prev:
+        return None
+    head = lambda p: next(csv.reader(open(p, encoding="utf-8-sig", newline="")), None) or []
+    old, new = head(os.path.join(arc, prev)), head(path)
+    gone, added = [c for c in old if c not in new], [c for c in new if c not in old]
+    if not (gone or added):
+        return None
+    out = f"⚠ its columns are not the ones the last {x['doc']['key']} export had (filed {prev[:8]}):"
+    if gone:
+        out += f" gone {', '.join(repr(c) for c in gone)} (left blank on import);"
+    if added:
+        out += f" new {', '.join(repr(c) for c in added)} (the import stops until the ledger has a place for it);"
+    return out.rstrip(";")
+
+
 def scan(area):
     out = []
     for dirpath, _, files in os.walk(area):
@@ -297,6 +332,9 @@ def main(argv):
         for f, label, acct, feeds, note in plan:
             print(f"  {os.path.basename(f['name']):<{w}}  →  {label}")
             print(f"  {'':<{w}}     feeds {feeds}")
+            drift = csv_drift(root, f["path"], label)
+            if drift:
+                print(f"  {'':<{w}}     {drift}")
             print(f"  {'':<{w}}     {note}\n")
 
     # Byte-identical pairs. This is how a bank's "-2" duplicates are confirmed rather than assumed.

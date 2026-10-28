@@ -13,6 +13,7 @@ import csv, json, os, re, sys, collections, datetime
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "update-dashboard", "scripts"))
 from flows import totals as flow_totals, KINDS as FLOW_KINDS   # the plan's sums, read once, there
 import layout                                                   # where each findata file lives
+import loans                                                    # what a borrower still owes, read once, there
 
 CATEGORIES = {"Grocery","Subscription","Dining","Shopping","Transport","Entertainment","Other"}
 # SOURCES and LEDGERS are read from findata/accounts.json, not written out here. A table
@@ -97,6 +98,23 @@ def merchant_key(note):
     n = re.sub(r'\s+(ON|QC|BC|CA|NY|WA)\b.*$', '', n)
     return re.sub(r'\s{2,}', ' ', n).strip(' ,-').upper()
 
+# A refund on a card is filed as a negative spending row, and it has to point at what it gives
+# back: an earlier purchase at the same merchant on the same card. A fee or interest credit has
+# no merchant — it gives back a charge the card made itself, so it points at any of those.
+BANK_CHARGE = re.compile(r"\b(FEE|INTEREST)\b")
+
+def card_of(note):
+    m = re.search(r'\[([A-Z0-9]+)/\d{8}\]\s*$', note)
+    return m.group(1) if m else None
+
+def refund_pool(rows, card, note, when):
+    """The rows a refund on `card` dated `when` can give back: the same merchant's (or, for a
+    fee or interest credit, every bank charge's) rows on that card up to that date, earlier
+    refunds included, so their sum is what is still unrefunded. Empty means it points at nothing."""
+    key = merchant_key(note)
+    same = (lambda k: bool(BANK_CHARGE.search(k))) if BANK_CHARGE.search(key) else (lambda k: k == key)
+    return [r for r in rows if card_of(r["note"]) == card and r["date"] <= when and same(merchant_key(r["note"]))]
+
 def load(root, name):
     p = layout.path(root, name)
     return p if os.path.exists(p) else None
@@ -109,7 +127,7 @@ def check(root):
             "D3":"rules", "D5":"rules", "D6":"rules", "D10":"rules", "D13":"rules", "D14":"rules",
             "D11":"build", "D12":"build", "D17":"build", "T1":"build", "T2":"hygiene", "D15":"build", "D16":"conform",
             "D2":"hygiene", "D4":"hygiene", "D9":"hygiene", "D18":"hygiene",
-            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene"}
+            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D25":"hygiene", "D26":"rules", "D27":"hygiene", "D28":"hygiene"}
     F = []          # (severity, rule, message, category)
     def err(r, m, cat=None):  F.append(("ERROR", r, m, cat or HOME.get(r, "rules")))
     def warn(r, m, cat=None): F.append(("WARN",  r, m, cat or HOME.get(r, "rules")))
@@ -168,6 +186,28 @@ def check(root):
                 warn("D5", f"{b} is filed as Subscription but appears once ({rs[0]['date']}, "
                            f"${rs[0]['amount']}). A subscription repeats — confirm before it "
                            "hardens into the FIRE baseline.")
+        # D24 a refund gives back a purchase: same card, same merchant (or a bank charge for a
+        # fee or interest credit), on or before its date, in that purchase's category — and never
+        # more than was spent there. One that points at nothing is income or a mistake, and it
+        # would quietly lower the spending baseline.
+        n_bad = sum(1 for f in F if f[1] == "D24")
+        refunds = [(i, r) for i, r in enumerate(sp) if float(r["amount"]) < 0]
+        for i, r in refunds:
+            before = [x for j, x in enumerate(sp) if x["date"] < r["date"] or (x["date"] == r["date"] and j < i)]
+            pool = refund_pool(before, card_of(r["note"]), r["note"], r["date"])
+            bought = [x for x in pool if float(x["amount"]) > 0]
+            what = f"spending.csv {r['date']} {r['amount']} {r['note'][:40]}"
+            if not bought:
+                err("D24", f"{what}: a refund with no earlier purchase it could give back on that card")
+                continue
+            cats = {x["category"] for x in bought}
+            if r["category"] not in cats:
+                err("D24", f"{what}: filed as {r['category']}, but what it refunds is {sorted(cats)}")
+            left = sum(float(x["amount"]) for x in pool) + float(r["amount"])
+            if left < -0.005:
+                err("D24", f"{what}: refunds {-left:,.2f} more than was ever spent there on that card")
+        if refunds and sum(1 for f in F if f[1] == "D24") == n_bad:
+            note("D24", f"all {len(refunds)} refunds in spending.csv give back a purchase on the same card")
         # D6 merchants.json is meant to be the one place a merchant is decided
         mp = load(root, "merchants.json")
         if mp:
@@ -729,8 +769,8 @@ def check(root):
     # with an `against`, a value that contradicts the source file, an `against` naming nothing:
     # each would make one total read one thing and the page say another (FINANCE.md §8a).
     if ap:
-        SIDES, ROLES = ("asset", "liability"), ("grow", "set-aside", "buffer", "none")
-        REACHES, VALUES = ("today", "costs", "spoken", "locked", "abroad"), ("export", "statement", "stated")
+        SIDES, ROLES = ("asset", "liability"), ("grow", "set-aside", "buffer", "owed", "none")
+        REACHES, VALUES = ("today", "costs", "spoken", "lent", "locked", "abroad"), ("export", "statement", "stated")
         V_OF_SRC = {"holdings_latest.csv": "export", "banks.json": "statement", "foreign.json": "statement"}
         keys_ = {a.get("key") for a in aj["accounts"]}
         side_of = {a.get("key"): a.get("side") for a in aj["accounts"]}
@@ -760,6 +800,14 @@ def check(root):
                     err("D19", f"{who}: reach must be one of {', '.join(REACHES)}, not {a.get('reach')!r}")
                 if a.get("against") is not None:
                     err("D19", f"{who}: only a liability sits against something")
+                # Money lent is one thing on both axes: owed to you, back only as it is repaid.
+                if (a.get("role") == "owed") != (a.get("reach") == "lent"):
+                    err("D19", f"{who}: role owed and reach lent go together — money lent is both")
+                if a.get("role") == "owed":
+                    ag = a.get("agreed") or {}
+                    if ag.get("amount") is None or not ag.get("asof"):
+                        err("D19", f"{who}: a loan needs agreed.amount and agreed.asof — the amount the "
+                                   "borrower owed on a date, which every repayment since comes off")
             n_ax += 1
         # rules.json used to carry an exclude list that said the same thing as role = set-aside.
         # Since schema 7 the Investing pages read the axis, and the list must be gone: a list
@@ -916,6 +964,136 @@ def check(root):
             warn("D22", f"{a['ledger']}: {len(blank)} row(s) with no type ({blank[0]['date']} "
                         f"{blank[0]['description'][:30]!r} …) -- untyped, they are in the balance chain but "
                         "in no income or transfer figure")
+
+    # -- D23 a loan is what was agreed, less what has come back since --------------------------
+    # The register's balance on a loan row is a copy, like every other balance there; loans.py
+    # re-derives it from `agreed` and the bank ledgers. A borrower who has paid back more than
+    # was owed means the agreed amount is wrong, and money typed Lent to nobody the register
+    # knows is a loan the net worth leaves out.
+    if ap:
+        rows23 = []
+        for a in aj["accounts"]:
+            lp23 = load(root, a["ledger"]) if a.get("ledger") else None
+            if lp23:
+                with open(lp23, encoding="utf-8-sig") as fh:
+                    rows23 += [r for r in csv.DictReader(fh) if r.get("date")]
+        lent_ = [a for a in aj["accounts"] if loans.is_loan(a) and (a.get("agreed") or {}).get("asof")]
+        for a in lent_:
+            o = loans.outstanding(a, rows23)
+            who = f"{a['name']}'s loan"
+            if o["owed"] < -0.005:
+                err("D23", f"{who}: {abs(o['owed']):,.2f} more has come back than was owed — the agreed "
+                           f"amount on {o['since']} is wrong; settle it again with the borrower", "rules")
+            if a.get("balance") is None or abs(float(a["balance"]) - o["owed"]) > 0.005:
+                err("D23", f"accounts.json {who} says {a.get('balance')} but agreed less repaid comes to "
+                           f"{o['owed']:,.2f} — run the import, or rebuild after fixing the agreed amount")
+            else:
+                note("D23", f"{who}: {o['owed']:,.2f} owed = agreed {float(a['agreed']['amount']):,.2f} "
+                            f"less {o['back']:,.2f} back plus {o['out']:,.2f} more lent since {o['since']}")
+        for r in rows23:
+            if (r.get("type") or "") == "Lent" and not any(loans.names_row(a, r) for a in lent_):
+                warn("D23", f"{r['date']} {r['description'][:30]!r} is typed Lent but names nobody the register "
+                            "has a loan for — add a loan row, or it is in no net-worth figure", "rules")
+
+    # -- D25 every holding says what kind of asset it is -------------------------------------
+    # The Investing overview splits the portfolio by kind of asset. The export says it for a stock,
+    # cash, crypto and a precious metal; an ETF can hold anything, so its class is rules.json
+    # `assetClass`. An ETF bought since lands under "Not classified" until someone says.
+    rp25, hp25 = load(root, "rules.json"), load(root, "holdings_latest.csv")
+    if rp25 and hp25 and ap:
+        from rebuild import asset_class, ASSET_CLASSES
+        declared = json.load(open(rp25, encoding="utf-8")).get("assetClass", {})
+        for sym_, cls in declared.items():
+            if cls not in ASSET_CLASSES:
+                err("D25", f"rules.json assetClass says {sym_} is {cls!r}; the kinds are {', '.join(ASSET_CLASSES)}", "rules")
+        grow_ = {a.get("id") for a in aj["accounts"] if a.get("role") == "grow"}
+        with open(hp25, encoding="utf-8") as fh:
+            held = {(r["Symbol"], r.get("Security Type")) for r in csv.DictReader(fh)
+                    if r.get("Account Number") in grow_ and r.get("Symbol")}
+        missing = sorted({sym_ for sym_, t in held if not asset_class(sym_, t, declared)})
+        if missing:
+            warn("D25", f"{', '.join(missing)} {'are' if len(missing) > 1 else 'is'} held with no kind of asset: add "
+                        f"{'them' if len(missing) > 1 else 'it'} to rules.json assetClass, or the portfolio's split shows Not classified")
+        else:
+            note("D25", f"every one of {len(held)} holdings says what kind of asset it is")
+
+    # -- D26 a principle names a check the page can run -------------------------------------
+    # rules.json `principles` are the owner's high-level rules, each naming a check the Investing
+    # overview runs on today's data. A name the page has no check for would just vanish from the
+    # card, so the names are read from the page code itself (const CHECKS), not from a list here.
+    rp26 = load(root, "rules.json")
+    tpl26 = os.path.join(root, "templates", "dashboards", "finance_dashboard.html")
+    if rp26 and ap and os.path.exists(tpl26):
+        rj26 = json.load(open(rp26, encoding="utf-8"))
+        src26 = open(tpl26, encoding="utf-8").read()
+        m26 = re.search(r"const CHECKS = \{(.*?)\n  \};", src26, re.S)
+        have = set(re.findall(r"^    (\w+): ", m26.group(1), re.M)) if m26 else set()
+        kinds = {a.get("kind") for a in aj["accounts"]}
+        bkeys = {b.get("key") for b in rj26.get("buckets", [])}
+        for pr in rj26.get("principles", []):
+            if pr.get("check") not in have:
+                err("D26", f"rules.json principle {pr.get('name') or pr.get('check')!r} names check {pr.get('check')!r}; "
+                           f"the page has {', '.join(sorted(have))}")
+            if pr.get("check") == "reasons" and pr.get("bucket") not in bkeys:
+                err("D26", f"rules.json principle {pr.get('name')!r} reads bucket {pr.get('bucket')!r}, which rules.json does not have")
+        pchecks = {pr.get("check") for pr in rj26.get("principles", [])}
+        for nt in rj26.get("notes", []):
+            if nt.get("under") and nt["under"] not in pchecks:
+                err("D26", f"rules.json note {nt.get('name')!r} sits under {nt['under']!r}, which none of the principles checks")
+        for sym_, ks in rj26.get("placement", {}).items():
+            for k in ks:
+                if k not in kinds:
+                    err("D26", f"rules.json placement wants {sym_} in a {k!r} account; the register has no account of that kind")
+        if rj26.get("principles") and not any(f[1] == "D26" and f[0] == "ERROR" for f in F):
+            note("D26", f"{len(rj26['principles'])} principles, each naming a check the page runs")
+
+    # -- D27 the benchmark's prices reach the newest snapshot -----------------------------
+    # The Performance page compares the growth accounts with one fund bought on the same days. Its
+    # prices are fetched (prices.py), not read off a statement, so a fetch that failed or never ran
+    # leaves the comparison ending early with nothing on the page to say so.
+    bench27 = (json.load(open(rp26, encoding="utf-8")).get("benchmark") or {}) if rp26 else {}
+    if bench27.get("symbol"):
+        pp27, hp27 = load(root, "prices.json"), load(root, "investment_history.json")
+        snaps27 = json.load(open(hp27, encoding="utf-8")).get("snapshots", []) if hp27 else []
+        newest = max((h["date"] for h in snaps27), default=None)
+        if not pp27:
+            warn("D27", f"rules.json names {bench27['symbol']} as the benchmark but there are no prices yet — "
+                        "run .claude/skills/update-dashboard/scripts/prices.py . --write")
+        else:
+            pj27 = json.load(open(pp27, encoding="utf-8"))
+            ser = (pj27.get("benchmark") or {}).get("series") or []
+            got = (pj27.get("benchmark") or {}).get("symbol")
+            if got != bench27["symbol"]:
+                err("D27", f"prices.json holds {got}, but rules.json names {bench27['symbol']} as the benchmark — fetch again")
+            elif not ser:
+                err("D27", "prices.json has no prices in it — fetch again")
+            elif newest and (datetime.date.fromisoformat(newest) - datetime.date.fromisoformat(ser[-1][0])).days > 7:
+                warn("D27", f"{got} prices stop at {ser[-1][0]}, more than a week before the newest snapshot ({newest}): "
+                            "the comparison ends early — fetch again")
+            else:
+                note("D27", f"{got} prices to {ser[-1][0]}, {len(ser)} days")
+
+    # -- D28 the history of returns the drawdown is replayed through ----------------------
+    # The Drawdown page runs the plan through every stretch of years on record. A year missing in
+    # the middle would splice two stretches together and still give a rate, so the years must run
+    # without a gap; and a table nobody refreshed quietly stops counting the latest years.
+    rr28 = load(root, "returns.json")
+    if not rr28:
+        warn("D28", "no history of returns yet, so the Drawdown page cannot say how often the plan would have lasted — "
+                    "run .claude/skills/update-dashboard/scripts/prices.py . --write")
+    else:
+        ys28 = json.load(open(rr28, encoding="utf-8")).get("years") or []
+        gaps28 = [b[0] for a_, b in zip(ys28, ys28[1:]) if b[0] != a_[0] + 1]
+        bad28 = [r[0] for r in ys28 if len(r) != 6 or not all(isinstance(v, (int, float)) for v in r)]
+        if not ys28:
+            err("D28", "returns.json has no years in it — fetch again")
+        elif gaps28 or bad28:
+            err("D28", f"returns.json skips or garbles years ({', '.join(map(str, (gaps28 + bad28)[:5]))}): "
+                       "the backtest would join stretches that never followed each other — fetch again")
+        elif ys28[-1][0] < today.year - 2:
+            warn("D28", f"the history of returns stops at {ys28[-1][0]} — fetch again")
+        else:
+            note("D28", f"returns {ys28[0][0]}–{ys28[-1][0]}, {len(ys28)} years")
 
     # -- D18 what an update leaves behind: the record and the queue ------------------------
     # alerts.json used to hold the sentences one import wrote, and the Portfolio page showed them

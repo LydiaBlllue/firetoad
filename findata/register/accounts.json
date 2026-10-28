@@ -7,7 +7,7 @@
       "name": "Primary Chequing",
       "kind": "Chequing",
       "cur": "CAD",
-      "balance": 4098.31,
+      "balance": 3598.31,
       "asof": "2026-09-05",
       "src": "banks.json",
       "side": "asset",
@@ -229,6 +229,31 @@
       "ledger": null,
       "feeds": "",
       "key": "ws-chq"
+    },
+    {
+      "inst": "Owed to you",
+      "id": "—",
+      "name": "Sam",
+      "kind": "Lent",
+      "cur": "CAD",
+      "balance": 500.0,
+      "asof": "2026-07-13",
+      "src": null,
+      "side": "asset",
+      "value": "stated",
+      "role": "owed",
+      "reach": "lent",
+      "ledger": null,
+      "feeds": "",
+      "key": "loan-sam",
+      "agreed": {
+        "amount": 0.0,
+        "asof": "2026-03-01"
+      },
+      "names": [
+        "SAM DOE"
+      ],
+      "note": "Lent in March for a deposit on an apartment; the rest is due by the end of the year."
     }
   ],
   "gaps": [

@@ -8,7 +8,9 @@ that decides where a file goes is who writes it:
     findata/register/   the owner's declarations — accounts, profile, funds, plan, rules,
                         merchants, tasks. Written by setup or out loud; edited with a reason.
     findata/ledgers/    the facts the import writes — every ledger CSV, spending.csv, the
-                        broker's exports, banks.json, fx.json, foreign.json.
+                        broker's exports, banks.json, fx.json, foreign.json, prices.json and
+                        returns.json (the benchmark's prices and a century of yearly returns,
+                        the two facts fetched rather than dropped).
                         Appended, every row tagged with its statement.
     findata/history/    what each update left behind — imports, decisions, filings, the two
                         history files. One record per update, never edited.

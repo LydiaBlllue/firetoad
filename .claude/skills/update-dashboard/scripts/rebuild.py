@@ -22,19 +22,52 @@ import datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from flows import totals as flow_totals   # the plan's sums, read from its flows -- one place
 import layout                              # where each findata file lives (schema 6)
+import loans                               # what a borrower still owes, read from the ledgers -- one place
 
 MAIN_NAMES = ("ly_finance_dashboard.html", "finance_dashboard.html")   # an owner's copy, or the template's
 INV_NAME = "investment_dashboard.html"
 FUND_TYPES = ("bond_fund", "equity_fund")
+# What kind of asset a holding is, for the Investing overview's asset-type split. The broker's
+# export says it for everything but a fund: cash, crypto, a precious metal and a single stock are
+# what they say they are, but an ETF can hold stocks, bonds or gold, so an ETF's class is the
+# owner's word in rules.json `assetClass` (symbol -> class). A fund abroad says it in foreign.json.
+ASSET_CLASSES = ("stocks", "bonds", "cash", "gold", "crypto")
+CLASS_OF_TYPE = {"CURRENCY": "cash", "CRYPTOCURRENCY": "crypto", "PRECIOUS_METAL": "gold", "EQUITY": "stocks"}
+CLASS_OF_FUND = {"bond_fund": "bonds", "equity_fund": "stocks"}
+
+
+def asset_class(sym, sec_type, declared):
+    """A holding's class, or None when nobody has said (an ETF no one has classified)."""
+    return declared.get(sym) or CLASS_OF_TYPE.get(sec_type)
 
 # The two cuts of net worth, one row per value of one axis (FINANCE.md §8a). The label is what
 # the page says, the colour is design (DESIGN.md palette), and both are keyed by the axis value
 # so a row keeps its colour whatever else is present.
-ROLE_ROWS = (("grow", "Invested", "#2a78d6"), ("set-aside", "Earmarked", "#eda100"),
-             ("buffer", "Cash", "#1baf7a"), ("none", "Other assets", "#4a3aa7"))
-REACH_ROWS = (("today", "Reach today", "#1baf7a"), ("costs", "Reach, but it costs", "#eda100"),
-              ("spoken", "Spoken for", "#eb6834"), ("locked", "Locked in property", "#c98500"),
-              ("abroad", "Across a border", "#4a3aa7"))
+ROLES = ("grow", "set-aside", "buffer", "owed", "none")
+# The by-purpose card (the owner, 2026-10-27: "each card has to say clearly what it means"): one
+# row per purpose, read off `role`; cash is split by where it is, because cash abroad is spent
+# through a border. The label says what the money is for, the definition behind its ? says
+# exactly what counts, and the line under it names the accounts. `where`: all / home / abroad.
+PART_ROWS = (
+    ("grow", "all", "For FIRE", "#2a78d6",
+     "Money whose job is to grow until you stop working. FIRE progress is measured on this, whatever it "
+     "holds today: stocks, bonds, or cash waiting to be invested."),
+    ("set-aside", "all", "Set aside", "#eda100",
+     "Money already promised to a goal, such as a first home or a trip. It is left out of FIRE progress "
+     "and out of dry powder."),
+    ("buffer", "home", "Cash", "#1baf7a",
+     "Bank and cash accounts at home that you live on and can spend today."),
+    ("buffer", "abroad", "Cash in {abroad}", "#4a3aa7",
+     "Cash held abroad, in the currency it is held in. It counts in net worth, but spending it here "
+     "means converting and transferring it first."),
+    ("owed", "all", "Owed to you", "#e87ba4",
+     "Money you lent, counted until it is paid back."),
+    ("none", "all", "Other assets", "#b7bfba",
+     "Things you own that are not money, such as a home or a car, at the value you last stated."),
+)
+REACH_ROWS = (("today", "Spendable today", "#1baf7a"), ("costs", "Taxed to take out", "#eda100"),
+              ("spoken", "Promised to a goal", "#eb6834"), ("lent", "Lent out", "#e87ba4"),
+              ("locked", "In property", "#c98500"), ("abroad", "Held abroad", "#4a3aa7"))
 
 
 # The shape of findata/ this script builds from. profile.json carries the same number; when
@@ -100,8 +133,17 @@ def load(root):
          # no exchange rate — and should not be made to invent one. 1.0 converts nothing.
          "fx": jd("fx.json", {"usd_cad": 1.0, "asof": None, "quality": "none"}),
          "hist": jd("investment_history.json", {"snapshots": []}),
+         # the benchmark's daily prices (prices.py); absent until the first fetch
+         "prices": jd("prices.json", {}),
+         "returns": jd("returns.json", {}),
          "merchants": jd("merchants.json")}
     d["rate"] = d["fx"]["usd_cad"]
+    # A broker's export covers every account the login can see, including one held there that is
+    # not the owner's money (`notOwned` in the register). Those rows are dropped here, once, so no
+    # total, position or income figure can count them.
+    others = {x["id"] for x in accounts.get("notOwned", [])}
+    d["hold"] = [r for r in d["hold"] if r.get("Account Number") not in others]
+    d["acts"] = [r for r in d["acts"] if r.get("account_id") not in others]
     have = int(d["profile"].get("schema", 2))
     if have < SCHEMA:
         raise SystemExit(f"findata/ is schema {have} and this tool builds schema {SCHEMA} — run "
@@ -170,6 +212,94 @@ def holdings_by_account(d):
         if r.get("Book Value (CAD)"):
             bv[n] += float(r["Book Value (CAD)"])
     return mv, bv, sym
+
+
+def return_history(d, positions, fgn_funds, by_id):
+    """The Drawdown page's backtest: every year since 1928, as one real return for the portfolio
+    mixed the way it is today. The mix is the growth accounts' holdings by asset class (the same
+    classes as the Portfolio page's split, foreign funds included); each class takes its column of
+    returns.json, and the year's inflation is taken out. Crypto has no century of history, so it is
+    counted as stocks, which understates how much it swings; a holding nobody has classified, or
+    of a class with no history, is counted as stocks too. {} when the returns have not been fetched."""
+    rows = (d.get("returns") or {}).get("years") or []
+    if not rows:
+        return {}
+    mix = collections.defaultdict(float)
+    for p in positions:
+        if (by_id.get(p["_id"]) or {}).get("role") == "grow":
+            mix[p.get("class") or "stocks"] += p["mv"]
+    for f in fgn_funds:
+        mix[CLASS_OF_FUND.get(f["type"]) or "stocks"] += f["value"] * f["_rate"]
+    col = {"stocks": 1, "cash": 2, "bonds": 3, "gold": 4}
+    for k in [k for k in mix if k not in col]:      # crypto, and a class D25 will name
+        mix["stocks"] += mix.pop(k)
+    tot = sum(mix.values()) or 1
+    w = {k: round(v / tot, 4) for k, v in mix.items() if v > 0}
+    real = [[r[0], round((1 + sum(w[k] * r[col[k]] for k in w)) / (1 + r[5]) - 1, 5)] for r in rows]
+    return {"mix": w, "years": real, "source": d["returns"]["source"], "asof": d["returns"]["asof"]}
+
+
+def benchmark_run(d):
+    """The Performance page's one comparison: the same money, put into the benchmark on the days
+    it actually went in. It starts from the first portfolio snapshot — the furthest back the
+    portfolio's value is known — buys the benchmark with that value, then with every amount that
+    moved into or out of a `grow` account afterwards (the broker's MoneyMovement rows, both
+    directions, US dollars at the Bank of Canada rate of the day), and values the units on the
+    newest snapshot's date. Both sides are the broker's growth accounts only: the snapshots'
+    cadInv, which leaves the foreign funds out, because their deposits are not in any export.
+    {} when no benchmark is named or its prices have not been fetched."""
+    bench, pr = d["rules"].get("benchmark") or {}, d.get("prices") or {}
+    sym = bench.get("symbol")
+    if not sym or (pr.get("benchmark") or {}).get("symbol") != sym:
+        return {}
+    snaps, last = [], None
+    for h in sorted(d["hist"]["snapshots"], key=lambda h: h["date"]):
+        if h["cadInv"] != last:            # a snapshot carried from the one before measured nothing new
+            snaps.append(h)
+        last = h["cadInv"]
+    if len(snaps) < 2:
+        return {}
+    px = pr["benchmark"]["series"]
+    usd = pr["benchmark"].get("currency", "USD") == "USD"
+    fx = pr.get("usdcad") or []
+    def at(series, day, default=None):
+        v = default
+        for dd, x in series:
+            if dd > day:
+                break
+            v = x
+        return v
+    rate = lambda day: at(fx, day, d["rate"]) if fx else d["rate"]
+    cad = lambda day: at(px, day) * (rate(day) if usd else 1)
+    t0, t1 = snaps[0]["date"], snaps[-1]["date"]
+    if at(px, t0) is None:
+        return {}
+    grow = {a["id"] for a in d["accounts"]["accounts"] if a.get("role") == "grow" and a.get("id")}
+    flows = []
+    for r in d["acts"]:
+        if r.get("account_id") in grow and r.get("activity_type") == "MoneyMovement" and t0 < r["effective_date"] <= t1:
+            amt = float(r.get("net_cash_amount") or 0)
+            if r.get("currency") == "USD":
+                amt *= rate(r["effective_date"])
+            if amt:
+                flows.append([r["effective_date"], round(amt, 2)])
+    flows.sort()
+    units, path, fi = snaps[0]["cadInv"] / cad(t0), [], 0
+    for day, _ in px:
+        if day < t0 or day > t1:
+            continue
+        while fi < len(flows) and flows[fi][0] <= day:
+            units += flows[fi][1] / cad(flows[fi][0]); fi += 1
+        path.append([day, round(units * cad(day))])
+    while fi < len(flows):
+        units += flows[fi][1] / cad(flows[fi][0]); fi += 1
+    shadow = round(units * cad(t1))
+    return {"symbol": sym, "name": bench.get("name", sym), "why": bench.get("why", ""),
+            "from": t0, "to": t1, "start": round(snaps[0]["cadInv"]), "end": round(snaps[-1]["cadInv"]),
+            "put": round(sum(f[1] for f in flows)), "flows": flows, "shadow": shadow,
+            "benchRet": round(cad(t1) / cad(t0) - 1, 4), "path": path,
+            "actual": [[h["date"], round(h["cadInv"])] for h in snaps],
+            "pricesAsof": pr.get("asof"), "source": pr.get("source", {})}
 
 
 def clean(obj):
@@ -267,6 +397,7 @@ def derive(d):
     for h in d["hist"]["snapshots"]:
         ph[h["date"][:7]] = round(h["cadInv"] + (h.get("foreign") or 0))
     out["PORT_HISTORY"] = [{"ym": k, "v": v} for k, v in sorted(ph.items())]
+    out["PERF"] = benchmark_run(d)
     out["TASKS"] = d["tasks"]["tasks"]
     out["GAPS"] = d["accounts"].get("missing", [])
     out["SUBMITTED"] = d["filings"]["filed"]
@@ -360,11 +491,15 @@ def derive(d):
     for x in fj["accounts"]:
         fgn_inst[x["inst"]] += x["value"]
 
+    all_rows = [r for rows in d["ledgers"].values() for r in rows]
+
     def cad_of(a):
         """One item in CAD, from its source. The register's own balance is a copy D14 verifies;
-        only a `stated` item (a home, a loan with no statement) is read from the register."""
+        only a `stated` item (a home) is read from the register. A loan is what was agreed less
+        what the ledgers show coming back since (loans.py) — its balance is a copy D23 verifies."""
         src = a.get("src")
-        if src == "holdings_latest.csv": v, cur = mv.get(a["id"], 0.0), "CAD"
+        if loans.is_loan(a): v, cur = loans.outstanding(a, all_rows)["owed"], a.get("cur", "CAD")
+        elif src == "holdings_latest.csv": v, cur = mv.get(a["id"], 0.0), "CAD"
         elif src == "banks.json": v, cur = bank_bal.get(a["name"], 0.0), a.get("cur", "CAD")
         elif src == "foreign.json": v, cur = fgn_inst.get(a["inst"], 0.0), fgn_cur
         else: v, cur = (a.get("balance") or 0.0), a.get("cur", "CAD")
@@ -392,12 +527,12 @@ def derive(d):
         for a, v in rows:
             tot[a.get(axis)] += v
         return tot
-    role_ca = {k: round(v) for k, v in by(ca, "role", [r for r, _, _ in ROLE_ROWS]).items()}
+    role_ca = {k: round(v) for k, v in by(ca, "role", list(ROLES)).items()}
     reach_ca = {k: round(v) for k, v in by(ca, "reach", [r for r, _, _ in REACH_ROWS]).items()}
     if reach_ca:
         big = max(reach_ca, key=lambda k: reach_ca[k])
         reach_ca[big] += sum(role_ca.values()) - sum(reach_ca.values())
-    role_ab = {k: round(v) for k, v in by(ab, "role", [r for r, _, _ in ROLE_ROWS]).items() if v}
+    role_ab = {k: round(v) for k, v in by(ab, "role", list(ROLES)).items() if v}
     if role_ab:
         if "grow" in role_ab:
             role_ab["grow"] = fgn_funds
@@ -406,10 +541,9 @@ def derive(d):
             role_ab[rest[-1]] += fgn_cad - sum(role_ab.values())
         else:
             role_ab["grow"] = fgn_cad
-    by_role = collections.OrderedDict((r, role_ca[r] + role_ab.get(r, 0)) for r, _, _ in ROLE_ROWS)
+    by_role = collections.OrderedDict((r, role_ca[r] + role_ab.get(r, 0)) for r in ROLES)
     by_reach = collections.OrderedDict((r, reach_ca[r]) for r, _, _ in REACH_ROWS)
     by_reach["abroad"] = sum(role_ab.values())
-    roles_present = {a.get("role") for a, _ in assets}
     reach_present = {a.get("reach") for a, _ in assets}
 
     # Debts: one rounding of the total, and the secured part rounded per reach row it is netted
@@ -448,34 +582,68 @@ def derive(d):
     fgn_label = fj.get("label") or "Foreign"
 
     # One line under each row. The owner's own words if plan.json carries them (keyed by the
-    # label), otherwise a description built from the register — never a sentence about somebody
-    # else's accounts.
+    # label), otherwise the accounts the row counts, built from the register.
     desc = plan.get("descriptions", {})
-    def named(axis, val):
-        by = collections.OrderedDict()
-        for a, _ in assets:
-            if a.get(axis) == val:
-                by.setdefault(a["inst"], []).append(a["name"])
-        return "; ".join(", ".join(v) + " at " + k for k, v in by.items())
-    def part(axis, val, tail):
-        who = named(axis, val)
-        return (who + " — " + tail) if who else tail[:1].upper() + tail[1:]
-    generic_parts = {
-        "Invested": part("role", "grow", "the part whose whole job is to grow"),
-        "Earmarked": part("role", "set-aside", "already has a purpose, so it stays outside the portfolio"),
-        "Cash": part("role", "buffer", "the day-to-day buffer"),
-        "Other assets": part("role", "none", "owned, but not money that grows or gets spent"),
-    }
     generic_reach = {
-        "Reach today": "Investment and cash accounts with no age gate and no penalty",
-        "Reach, but it costs": "Registered retirement savings: withdrawable, but taxed as income that year",
-        "Spoken for": "Earmarked for a purpose. Reachable, but spending it means giving up what it was for",
-        "Locked in property": "What the property is worth less what is still owed on it. Reachable only by selling",
-        "Across a border": "Held abroad. Reachable, but through conversion and transfer limits, which take time",
+        "Spendable today": "Investment and cash accounts with no age gate and no penalty",
+        "Taxed to take out": "Registered retirement savings: withdrawable, but taxed as income that year",
+        "Promised to a goal": "Earmarked for a purpose. Reachable, but spending it means giving up what it was for",
+        "Lent out": "Money you lent. It comes back only as it is repaid, on the borrower's timetable",
+        "In property": "What the property is worth less what is still owed on it. Reachable only by selling",
+        "Held abroad": "Held abroad. Reachable, but through conversion and transfer limits, which take time",
     }
-    out["NWPARTS"] = [{"k": lab, "v": by_role[r], "c": c, "d": desc.get("nwparts", {}).get(lab, generic_parts[lab])}
-                      for r, lab, c in ROLE_ROWS if r in roles_present]
-    out["REACH"] = [{"k": lab, "v": by_reach[r], "c": c, "d": desc.get("reach", {}).get(lab, generic_reach[lab])}
+    # Money lent, one row per borrower in the loan's own currency (loans.py). `quiet` is how many
+    # days nothing has come back, set only once it is past loans.STALE_DAYS and money is still owed.
+    out["LOANS"] = []
+    for a in accs:
+        if not loans.is_loan(a):
+            continue
+        o = loans.outstanding(a, all_rows)
+        ref = o["last"] or o["since"]
+        days = (datetime.date.fromisoformat(today) - datetime.date.fromisoformat(ref)).days if ref else 0
+        out["LOANS"].append({"name": a["name"], "cur": a.get("cur", "CAD"), "owed": o["owed"],
+                             "agreed": (a.get("agreed") or {}).get("amount"), "since": o["since"],
+                             "back": o["back"], "out": o["out"], "last": o["last"],
+                             "quiet": days if days > loans.STALE_DAYS and o["owed"] > 0 else 0,
+                             "note": a.get("note") or ""})
+    def accounts_in(role, where):
+        """The accounts a row counts, by name: "TFSA, RRSP at Wealthsimple; …", or "Sam $500" for a loan."""
+        rows = [(a, v) for a, v in assets if a.get("role") == role
+                and (where == "all" or (a.get("reach") == "abroad") == (where == "abroad"))]
+        if role == "owed":
+            return ", ".join(f"{a['name']} ${v:,.0f}" for a, v in sorted(rows, key=lambda x: -x[1]) if round(v))
+        by = collections.OrderedDict()
+        for a, _ in rows:
+            by.setdefault(a["inst"], []).append(a.get("label") or a["name"])
+        return "; ".join(", ".join(v) + " at " + k for k, v in by.items())
+    def part_value(role, where):
+        return by_role[role] if where == "all" else (role_ca[role] if where == "home" else role_ab.get(role, 0))
+    reach_lab = {r: (lab, c) for r, lab, c in REACH_ROWS}
+    def part_by_reach(role, where, total):
+        """The row split by reach, for the card that shows both cuts at once: rounded per piece,
+        the dollar it can drift settled on the largest piece, so the pieces sum to the row."""
+        t = collections.OrderedDict((r, 0.0) for r, _, _ in REACH_ROWS)
+        if where != "abroad":
+            for a, v in ca:
+                if a.get("role") == role:
+                    t[a.get("reach")] += v
+        if where != "home":
+            t["abroad"] += role_ab.get(role, 0)
+        t = {r: round(v) for r, v in t.items() if round(v)}
+        if t:
+            big = max(t, key=lambda r: t[r])
+            t[big] += total - sum(t.values())
+        return [[reach_lab[r][0], v, reach_lab[r][1], r] for r, v in t.items() if v]
+    out["NWPARTS"] = []
+    for role, where, lab, c, q in PART_ROWS:
+        names = accounts_in(role, where)
+        if not names:
+            continue
+        lab = lab.replace("{abroad}", fgn_label)
+        out["NWPARTS"].append({"k": lab, "role": role, "v": part_value(role, where), "c": c, "q": q,
+                               "d": desc.get("nwparts", {}).get(lab, names),
+                               "by": part_by_reach(role, where, part_value(role, where))})
+    out["REACH"] = [{"k": lab, "r": r, "v": by_reach[r], "c": c, "d": desc.get("reach", {}).get(lab, generic_reach[lab])}
                     for r, lab, c in REACH_ROWS if r in reach_present]
     got_parts = sum(r["v"] for r in out["NWPARTS"]) - R_debt
     got_reach = sum(r["v"] for r in out["REACH"]) - (R_debt - secured)
@@ -543,6 +711,9 @@ def derive(d):
              "bv": round(float(r.get("Book Value (CAD)") or 0), 2)}
         if usd: p["usd"] = 1
         if r.get("Security Type") == "CURRENCY": p["cash"] = 1
+        p["class"] = asset_class(r["Symbol"], r.get("Security Type"), d["rules"].get("assetClass", {}))
+        p["kind"] = (by_id.get(n) or {}).get("kind")      # the account's kind: where rules.json placement says it belongs
+        p["_id"] = n
         positions.append(p)
         if not p.get("cash"):
             t = tick.setdefault(p["sym"], {"sym": p["sym"], "name": p["name"], "mv": 0.0, "bv": 0.0, "accounts": []})
@@ -554,6 +725,9 @@ def derive(d):
         t["pl"] = round(t["mv"] - t["bv"], 2)
     out["DATA"] = {"fx": rate, "asof": hold_asof, "today": today, "broker": broker,
                    "positions": positions, "tickers": ticks}
+    out["RET_HIST"] = return_history(d, positions, [dict(a, _rate=rate_f) for a in fgn_fund_rows], by_id)
+    for p in positions:
+        del p["_id"]
     out["FX"] = {"rate": rate, "asof": d["fx"].get("asof"), "quality": d["fx"].get("quality")}
     out["HIST"] = [{"date": h["date"], "cadInv": h["cadInv"], "dry": h["dry"], "dryPct": h["dryPct"],
                     "tickers": h["tickers"], "fgn": h.get("foreign")} for h in d["hist"]["snapshots"]]
@@ -561,7 +735,8 @@ def derive(d):
                   "symbol": fj.get("symbol", ""), "label": fgn_label, "cadPerUnit": rate_f,
                   "cash": fj.get("summary", {}).get("cash", 0),
                   "funds": [{"sym": a.get("code") or a["name"], "name": a.get("label") or a["name"],
-                             "inst": a.get("inst", ""), "amount": a["value"], "gain": a.get("gain", 0)}
+                             "inst": a.get("inst", ""), "amount": a["value"], "gain": a.get("gain", 0),
+                             "class": CLASS_OF_FUND.get(a["type"])}
                             for a in fgn_fund_rows]}
     return out
 

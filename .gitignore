@@ -15,3 +15,8 @@ __pycache__/
 # the owner's private deny list, if a workspace is ever opened here
 .private/
 findata/register/setup-answers.json
+
+# update.py --write keeps a copy of findata/ here so a failed or unwanted run can be taken back
+.undo/
+findata.restoring/
+findata.replaced/

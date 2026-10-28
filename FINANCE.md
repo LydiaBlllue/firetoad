@@ -20,7 +20,7 @@
 | plan_base | Planning spend | $2,550 /mo | `PLAN_BASE_DEFAULT`, set by hand |
 | fire_target | FIRE target | $765,000 | planning spend × 12 × 25 |
 | net_worth | Net worth | $101,791 | `INVEST.netWorth` + `FOREIGN_CAD`, all currencies |
-| portfolio | Invested | $67,135 | `INVEST.portfolio` — the number FIRE is measured on |
+| portfolio | Portfolio | $67,135 | `INVEST.portfolio` — the number FIRE is measured on |
 | progress | Progress | 8.8% | portfolio ÷ target |
 | gap | Gap | $697,865 | target − portfolio |
 | invest_monthly | Monthly contribution | $800 | `funds.json` flows: `saving` to the broker |
@@ -76,6 +76,28 @@ A fund is a **label on an account you already have**, not an account of its own;
 `backing`. The hard constraint is that the claims against an account never exceed its balance
 (D13), and a fund can be renamed, re-backed or removed as data.
 
+## 3c. Refunds
+
+Spending is counted **net of refunds**. A refund is a fact on a card statement, so it is a row in
+`spending.csv` like the purchase it gives back: dated the day it posted, in the statement it came
+from, with a **negative** amount and **the purchase's category**. Every total that adds spending
+rows up — the month, a category, the year, the medians the planning figure is calibrated on — is
+therefore after refunds without any of them knowing refunds exist.
+
+- **A refund points at a purchase**: an earlier row on the same card at the same merchant, with
+  at least that much not yet refunded. A fee or interest credit (an annual-fee rebate) has no
+  merchant; it gives back a charge the card made, so it points at an earlier fee or interest row
+  on that card and takes its category. D24 holds every negative row to this.
+- **What points at nothing is not a refund.** Cash back, a reward, a credit for a purchase made
+  before the books begin: the import leaves it out of spending and lists it (`credit not filed`)
+  for the owner. Counting it would lower the spending baseline with money that was never spent.
+- **A refund lands in the month it posted**, not the month of the purchase, so a category can be
+  negative in a month with a large refund and nothing else. The month's total is still exact; a
+  chart that stacks categories draws a negative category as nothing.
+- **A refund of a big buy goes back to the Big buys fund**, not onto the month's allowance:
+  it is big exactly when the purchase it gives back was (§3b).
+- A card payment (`PAYMENT`, `THANK YOU`, a transfer in) is neither spending nor a refund.
+
 ## 4. The rhythm
 
 - **Import day** (`profile.json` `importDay`): statements and the broker export go into
@@ -117,15 +139,28 @@ and needs no special case.
 | axis | values | what reads it |
 |---|---|---|
 | `side` | asset · liability | net worth = Σ assets − Σ liabilities, every currency |
-| `role` | grow · set-aside · buffer · none | Portfolio, the number FIRE is measured on, is `grow`; net worth by purpose is one slice per role; §7's earmarked accounts are `set-aside` |
-| `reach` | today · costs · spoken · locked · abroad | the reach table: no gate; taxed on the way out; reachable but spoken for; not liquid; across a border |
+| `role` | grow · set-aside · buffer · owed · none | Portfolio, the number FIRE is measured on, is `grow`; net worth by purpose is one slice per role (For FIRE, Set aside, Cash — split into home and abroad —, Owed to you, Other assets); §7's earmarked accounts are `set-aside`; money lent is `owed`; `none` is only for what is not money (a home, a car) |
+| `reach` | today · costs · spoken · lent · locked · abroad | the reach table: no gate; taxed on the way out; reachable but spoken for; back only as it is repaid; not liquid; across a border |
 | `value` | export · statement · stated | how the balance is known: `export` from a file the broker produced, `statement` from any evidence the owner dropped in — a bank statement, a screenshot of an app, a balance read off it and typed into `banks.json` or `foreign.json` — and `stated` typed by hand with an `asof`, the one value nothing can re-derive |
 | `against` | the asset a liability sits on | the reach table shows equity: a home less its mortgage, on the `locked` row |
 
 - A home is `asset · none · locked · stated`. It counts in net worth, not in Portfolio and not in
-  dry powder. On the reach table it is "Locked in property", net of what is secured against it;
+  dry powder. On the reach cut it is "In property", net of what is secured against it;
   on the by-purpose card it is "Other assets".
 - A mortgage is `liability` with `against: home`. A credit card is `liability` with no `against`.
+- **Money lent** is `asset · owed · lent · stated`, kind `Lent`, one row per borrower. The owner
+  declares `agreed` — what the borrower owed on a date, in the loan's currency (`cur`) — and
+  `names`, the names the borrower appears under on a statement. What is owed today is derived:
+  the agreed amount, less every ledger row typed `Repayment` that names the borrower after that
+  date, plus every row typed `Lent` that does (`loans.py`). The row's `balance` is a copy the
+  import writes and D23 re-derives. It counts in net worth ("Owed to you", "Lent out"), not in
+  Portfolio, not in dry powder, and a repayment is never income nor a loan spending. Settling
+  a new amount with the borrower means a new `agreed`; nothing before it is counted again.
+- An account a broker export shows that is not the owner's money — opened in their login for
+  someone else — is not a row. It goes in the register's `notOwned` list (`id`, `whose`, `why`,
+  `asof`), and every read of a broker export drops it, so it reaches no total, position or
+  income figure. An export carrying an account in neither list stops the import until the owner
+  says which it is.
 - Dry powder is not an axis: `rules.json` names the symbols, counted inside `grow`.
 - A fund (§3b) is not an axis either: a label claimed against one `set-aside` item.
 - The two cuts of net worth — by purpose, by reach — read the same rows and agree by

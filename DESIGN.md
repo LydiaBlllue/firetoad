@@ -65,7 +65,7 @@
 - **One dashboard, one left sidebar** (2026-09-10). The investment dashboard, a second file
   with its own sidebar and a link back, was merged into the **Investing** group: Overview
   (the old Portfolio page plus the four stat cards, the bucket picture and the rate behind the
-  numbers), Holdings, Rules, Checkpoints, and the foreign-currency page. Three seams went with
+  numbers), Holdings, Rules and Checkpoints. Three seams went with
   it: two sidebars with different brands, a Portfolio page and an Overview page showing the
   same numbers, and two templates to keep in step. Everything derived for those pages lives
   inside one `IV` object so nothing there collides with the rest of the page.
@@ -73,8 +73,18 @@
     heading or by landing on one of its pages; while closed, its heading carries the strongest
     dot inside. **Data sources was renamed Statements** — what you drop in is a statement, and
     "data source" is the pipeline's word for it.
-  - **The foreign-currency entry is named by the data** (`foreign.json` `label`) and hidden in a
-    workspace with no accounts abroad; the docs and the checks know it as Foreign.
+  - **Every investing rule is on one page, Rules** (the owner, 2026-10-27: "not in separate
+    places"). The high-level rules (rules.json `principles`) are listed as they stand today, each
+    with its detailed rules under it (`notes`, filed by `under`) and, under each of those, the
+    dates to look at it again — a checkpoint belongs to the rule whose name carries a ticker the
+    date mentions. What fits nowhere is listed last. The rules card on Overview and the
+    Checkpoints page are gone; the import day is on Statements, not among the rules.
+  - **Money held in another currency is not a page** (the owner, 2026-10-26). It was one, under
+    Investing, though most of it was bank cash: grouped by currency where every other page answers
+    its group's question, and repeating what Accounts, the net-worth reach row and the Investing
+    overview already showed. Its accounts are a donut card on **Accounts** ("Held in CNY", named by
+    `foreign.json`, hidden when there is nothing abroad); its funds are rows in **Holdings**, named,
+    with the held-currency amount beside the CAD value.
   - The old top tabs, the `@media(max-width:520px)` block and the `col-hide-sm` hidden columns
     are all deleted (2026-09-06); the Accounts column of the Holdings table is always visible.
 - **Navigation is the left sidebar** (the owner picked B from two mock-ups on 2026-09-06; the
@@ -88,8 +98,8 @@
     else. `setPage()` is driven entirely by `NAV`; no more hand-written `id` branches.
   - Every page has a `#pgTitle` and a one-line `#pgSub`. **If the page title already says it,
     delete the `.lab` on the card** — do not say it twice.
-  - **Dots**: `pageFlags()` works out which pages have something on them (Tasks has an open
-    item / Freshness has a source past 30 days / Portfolio breaks the dry-powder or holdings
+  - **Dots**: `pageFlags()` works out which pages have something on them (To do has an open
+    question, check or task / Freshness has a source past 30 days / Portfolio breaks the dry-powder or holdings
     rule) and hangs a 6px dot on the right of the sidebar entry — amber `#c98500` = look at
     this, red `#d03b3b` = a rule is broken. This is the sidebar's core advantage over top tabs;
     remember to wire new rules into it.
@@ -105,15 +115,15 @@
   place is worse than saying nothing:
   | Section | Pages |
   |---|---|
-  | — | Home (net worth, two cuts of it, At a glance) |
-  | Spending | This month · Year · Subscriptions · Monthly plan |
-  | Income | Overview · Investment income |
-  | Investing | Overview · Holdings · Rules · Checkpoints · Foreign |
-  | Plan | FIRE · Coast & care · Baseline |
-  | Records | Updates · Accounts · Statements · Tasks |
+  | — | Home (what needs you today, net worth in one card) |
+  | Spending | This month · Year · Subscriptions |
+  | Income | Income · Investment income |
+  | Investing | Portfolio · Performance · Holdings · Rules |
+  | Plan | Budget · FIRE · Drawdown & care · Spending baseline |
+  | Records | To do · Updates · Accounts · Statements · Glossary |
   The Insights page was absorbed on 2026-09-10: what stood out about the year is a card on the
-  Spending overview, how the plan is holding is a card on Monthly plan, and the one check that
-  wants a decision (a subscription seen once) sits on Updates under "Worth a second look".
+  Spending overview, and the one check that
+  wants a decision (a subscription seen once) sits on To do under "Worth a second look".
   **The Accounts page** (the owner asked for it 2026-09-07) is one row per place money sits, grouped
   by institution, with the institution row giving that institution's net position (credit cards
   negative, currencies listed separately and never added together); **a CAD total on the last
@@ -126,16 +136,21 @@
   the workspace could answer "which files are due this month" (Data sources) but not "where is my
   money", and the account list had to be assembled by hand from four data files every time —
   which is exactly how an account goes missing.
+  **The To do page** (2026-10-27; it took the Updates page's two waiting cards and the whole Tasks
+  page) is everything waiting for you, counted once: three stat cards (waiting for you — questions,
+  checks and tasks together — longest open, settled), then **To confirm** — every item the import
+  could not settle on its own, from `findata/history/decisions.json`, each with what was assumed
+  meanwhile and which statement it came from — **Worth a second look**, **Open tasks** (dated ones
+  first) and **Settled** (closed tasks and answered questions). The header line counts the
+  questions only, and says "questions", so its number never disagrees with the page's.
   **The Updates page** (2026-09-10) is where an update leaves its trace. Three stat cards (last
-  update, waiting for you, updates on file), then **To confirm** — every item the import could not
-  settle on its own, from `findata/history/decisions.json`, each with what was assumed meanwhile and which
-  statement it came from — and then one card per update from `findata/history/imports.json`: what changed
+  update, files on record, updates on file), then one card per update from `findata/history/imports.json`: what changed
   (label, from, to), what was noticed, what was decided without asking, what you were asked. It
   replaced the "Rule status" list on the Portfolio page, which had been showing the sentences of
   one import as the state of things for months. **The story of an update lives here and nowhere
   else; every other page shows a status computed today.**
   The old Overview split into Home + Budget + Subscriptions, the old Investments into Portfolio +
-  Cash flow + Foreign, the old FIRE into FIRE + Coast + Baseline, and the old Insights/Tasks into
+  Cash flow + Foreign, the old FIRE into FIRE + Drawdown & care + Spending baseline, and the old Insights/Tasks into
   four pages. Investing → Overview is the investment-discipline summary; the detail is the rest
   of the Investing group. **The headline number of the Investing group is Portfolio, "money
   that is actually invested"** (the owner, 2026-08-20): Wealthsimple's non-earmarked accounts plus
@@ -146,14 +161,15 @@
   CLAUDE.md. **The FIRE tab** (the owner asked for it as its own page, 2026-08-13) holds everything
   FIRE: the progress stat cards (progress % / net worth / gap / target), the progress bar, and
   the adjusted monthly baseline — the baseline moved out of Overview and FIRE progress moved out
-  of Investments, and neither is repeated anywhere else. The FIRE page carries the **Coast and
-  drawdown card** (the owner, 2026-09-06): two sliders (age you stop contributing / age you start
+  of Investments, and neither is repeated anywhere else. The Drawdown & care page carries the **drawdown
+  card** (the owner, 2026-09-06): two sliders (age you stop contributing / age you start
   drawing, stored in localStorage `ly_coast`), a three-colour line (blue = still contributing,
   green = compounding on its own, amber = drawing down), an **age** x-axis (the owner was born in
-  2000, `BORN=2000`) drawn to 95; the headline conclusion is a full sentence saying at what age
-  it reaches the target with no further contribution, and a `metaList` underneath gives the
+  2000, `BORN=2000`) drawn to 95; the headline is a full sentence saying whether the money lasts
+  (the coast sentence — the age it reaches the target with no further contribution — is on FIRE
+  since 2026-10-27), and a `metaList` underneath gives the
   portfolio value at drawdown, the annual withdrawal, what share of the portfolio that is, and
-  how long it lasts. It also carries the **Trajectory to FIRE chart** (the owner, 2026-08-13): net
+  how long it lasts. The FIRE page carries the **Trajectory to FIRE chart** (the owner, 2026-08-13): net
   worth under $2,500/month of contributions at 3% / 5% / 7% real, drawn to the target's dashed
   line, each curve stopping and marking the point where it arrives, the legend giving
   "X.X years · month year". The chart has a money y-axis on nice steps; **the x-axis is calendar
@@ -161,22 +177,56 @@
   2026-08-13); the real net-worth snapshots (`NW_HISTORY`) are drawn as a black line with dots
   that show their value on hover, the three projections continue from the current month, and the
   first legend row is Actual.
-- **Spending is read two ways, in this order** (2026-09-10): **This month** first — one month
-  opened up: four stat cards (spent, biggest category, above typical, everyday against the
-  allowance), the category list on the left and the line-by-line of the chosen category on the
-  right, driven by the month pills — because that is the page looked at every week; **Year**
-  second — the year pills, the yearly stat cards, the year by category, the monthly stacked
-  chart and "What stands out" — looked at now and then. Neither page carries a plan verdict
-  beyond the everyday line; Monthly plan does.
-- **Monthly plan page** (formerly Budget; the owner rebuilt it 2026-09-07: "the budget system isn't
+- **One page, one question, one kind of time** (the owner, 2026-10-27, after the whole-dashboard
+  map in her `decisions/`): a page follows the month cursor, the year cursor or no time at all,
+  never half of each; a thing is judged in one place, and Home only summarises.
+- **Spending is what was actually spent, read two ways, in this order** (2026-09-10, regrouped
+  2026-10-27): **This month** first — the month the cursor is on, all of it: **Free to spend**
+  (the headline, below), three stat cards (spent, biggest category, against a usual month),
+  **Where the paycheque went** (the plan as flows, the allowance fanning out into that month's
+  categories — refunds drawn as a source coming in, an overspend as a second source from the fund
+  that covers it, so every band is its real size and the total is the one Free to spend shows;
+  a category in it opens the same detail pane as the list), the category list and the
+  line-by-line of the chosen category, and **Big buys in \<month\>** on a card of its own.
+  **Year** second — the year pills, the yearly stat cards, "What stands out", the year by
+  category, the monthly stacked chart, and **Inside the allowance, month by month** (everyday
+  spending against today's allowance, the overspend in red, the open month faded). Subscriptions
+  follows no time.
+- **Investing is what you hold, then how it did** (2026-10-27). **Portfolio** (was Overview):
+  the stat cards, the three ways the portfolio splits, and the US-dollar rate card that goes with
+  the by-currency split. **Performance**: *Against \<benchmark\>* — the same money bought into
+  the one fund `rules.json` `benchmark` names, on the days it actually went in (rebuild.py
+  `benchmark_run`, prices from `prices.json`), drawn as that fund's daily line against the growth
+  accounts' snapshots, with dashed marks where money moved; three stat cards (your growth
+  accounts, the same money in the fund, the difference); and while the comparison covers under a
+  year, a note saying it is too short to judge. Then *What you put in, and what the market
+  added*, moved from the old Overview.
+- **Plan is when you can stop, and whether it lasts** (2026-10-27). **FIRE** answers *when*:
+  the stats, the progress bar, the trajectory, and *If you stopped adding today* — the coast
+  sentence (the age today's money reaches the target alone) with the year and the return
+  assumed. **Drawdown & care** (was Coast & care) answers *does it last*: a headline sentence, the
+  sliders and the phase chart, then *Would it have lasted?* — the same drawdown replayed through
+  every whole stretch of real years since 1928 (`RET_HIST`, the portfolio's mix today, real
+  returns), three stats (lasted to the end, worst start or closest call, the middle case left
+  over), one bar per start year (green up = what is left, red down = how early it ran out), and
+  a note that this is American history and the stretches overlap. Only the years of taking
+  money out are replayed; the pot on the first day is the steady path's. **Spending baseline**
+  (was Baseline) is unchanged.
+- **Income page** (follows the year only, 2026-10-27): Income / Spent / Kept, the year by source —
+  where Investment carries its ? (it is income that never reaches chequing) and a line under the
+  list gives what a borrower paid back, which is never income — and the months by source. The
+  this-month income donut is gone: a month of income is two paycheques, and the year says it.
+- **Budget page** (Plan group, follows no time — the month pills are hidden; it was Monthly plan
+  under Spending until 2026-10-27, when it held both the month and the plan; the owner rebuilt it 2026-09-07: "the budget system isn't
   very usable. I need guilt-free spending"). The old version was category caps — Total, Dining,
   Shopping, Subscription, turning red when exceeded — which had always contradicted FINANCE.md §3
-  ("no category budget caps"), so the page was redone. Source: `findata/register/funds.json`. Four cards:
-  - **Free to spend in \<month\>** — the headline, one number: allowance minus this month's
+  ("no category budget caps"), so the page was redone. Source: `findata/register/funds.json`. Free to
+  spend moved to This month on 2026-10-27; Budget keeps the plan and the funds:
+  - **Free to spend in \<month\>** (on This month since 2026-10-27) — the headline, one number: allowance minus this month's
     everyday spending. **No categories at all** (a category cap is a small guilt machine: it
     makes you justify a dinner and never answers whether the month as a whole went well). A track
     bar with an even-pace marker, shown only for the current month.
-  - **Where each month goes** — one horizontal stacked bar cutting take-home into the committed
+  - **How each paycheque is split** — one horizontal stacked bar cutting take-home into the committed
     payments (one segment each: rent, a mortgage, a loan — `funds.json` `plan.flows`, kind
     `committed`, in the neutral `--muted`) / Invest / Everyday / Big buys / Travel / Unallocated,
     with a `metaList` beneath it, one line per part. Take-home, Invest and Everyday are sums of
@@ -200,24 +250,33 @@
   do not appear there. The old this-month donut and the 6-month income/spending bars were deleted
   (`renderDonut` / `renderTrend` went with them); everything by-month lives in the Spending and
   Income sections.
-  - Home now has three cards: **net worth cut by purpose** (one row per `role` in the register:
-    Invested / Earmarked / Cash / Other assets, less debt), **the same money cut by how easily
-    you could reach it** (one row per `reach`: Reach today / Reach but it costs / Spoken for /
-    Locked in property / Across a border, a liability netted into the row of the asset it sits
-    on, less what is owed free and clear), and At a glance. A row appears only when the register
-    has an item with that value. **Both cuts must total `NW_GLOBAL`** (rebuild.py refuses to
-    build otherwise).
+  - Home now has two cards: what needs you today, and **net worth in one card, cut both ways at
+    once** (2026-10-27, replacing a by-purpose card and a by-reach card that sliced the same
+    accounts twice). One row per `role`, cash split by where it is: For FIRE / Set aside / Cash /
+    Cash in <abroad> / Owed to you / Other assets (only for things that are not money); each
+    row's bar is as long as its share and coloured by `reach` (Spendable today / Taxed to take out /
+    Promised to a goal / Lent out / In property / Held abroad). Each `NWPARTS` row carries
+    `by`, its reach split, rounded per piece and settled on the largest so the pieces sum to the
+    row. Under each row, the accounts it counts; a row that spans more than one reach also says
+    how it splits. Then total assets, less what you owe. Each row keeps its exact definition
+    behind its `?` (the owner, 2026-10-27: "each card has to say clearly what it means"), each
+    reach behind the legend's `?`, and one line says what is reachable today. A row appears only
+    when the register has an item with that value. **Both cuts must total `NW_GLOBAL`**
+    (rebuild.py refuses to build otherwise).
   - The idea came from Irene Zhu's 10-Year Wealth Dashboard (the owner shared it 2026-09-07): **do
     not report one net worth, report the rings inside it.** But it is **not a copy** — hers
     layers by Australian super's "locked until an age" rule, and a Canadian RRSP is not locked,
-    it is taxed. So the second card layers by **friction cost**, not by age.
+    it is taxed. So the reach colours layer by **friction cost**, not by age.
 - Overview **has no stat cards** (the owner removed all five — Income, Spent, Net, Daily average,
   Transactions — on 2026-08-14): the monthly total is the number in the middle of the donut,
   daily average and transaction count moved into the Budget page's description line, and the
   count and total for transactions sit in the ledger footer. Still **no Month projection**.
-- **"At a glance" card at the top of Overview** (the owner, 2026-08-14): one row per other tab —
-  uppercase grey tab name, a ⚠/✓/● status, one line of the thing that matters, and a › arrow;
-  the whole row is clickable and jumps to that tab. Every word of it is computed from the data.
+- **"What needs you today" card at the top of Home** (the owner, 2026-10-27; it was "At a glance",
+  one status row per tab, 2026-08-14): one row per thing to do, worst first — a rule broken or
+  needing attention, a date this week, a statement not filed, questions waiting, a task due within
+  two weeks (the rest as one count), the allowance overspent, a fund short or overdrawn, spending
+  drifting from the planning figure. Uppercase grey page name, ✗/⚠/● status, the line, a › arrow;
+  the whole row opens that page. With nothing to do it is one ✓ line. Every word is computed.
 - **Compact layout** (the owner asked for "denser information" on 2026-08-14): card padding 12/15px,
   grid gap 10px, big numbers 23px, list rows 3–5.5px apart, less vertical white space on the
   page. Density first, but keep the line height readable.
@@ -273,7 +332,7 @@
   `margin-bottom:20px`:
   - Left: an **eyebrow** (the section it belongs to, 10.5px uppercase grey), the **title at
     25px** (up from 19px), and one 13px line of description.
-  - Home's four stat cards answer one question per section — **Invested** (with the band status), **FIRE progress** (on the portfolio, with the on-track year), **This month's transfer** (pay-yourself-first, from the broker's record), **Free to spend** (the allowance today). Net worth is not a card; it is the header line. (2026-09-10)
+  - Home's four stat cards answer one question per section — **Portfolio** (the Portfolio page's own number and name, with the band status), **FIRE progress** (on the portfolio, with the on-track year), **This month's transfer** (pay-yourself-first, from the broker's record), **Free to spend** (the allowance today). Net worth is not a card; it is the header line. (2026-09-10)
   - Right (main dashboard only): **Net worth**, always present — what a banking app does. The
     anchor number is visible from any page, and its definition is in the `?`.
   - **The two rules have to line up** (the owner, 2026-09-06: "the two dividing lines not lining up
@@ -292,10 +351,12 @@
   cards to three.
 - Under the sidebar title, one line of `data through <newest data date>`, the maximum of every
   source's as-of.
-- **Under the net worth in the page header sits one sentence** (2026-09-10): the newest date any
-  statement reaches, whether a statement is still owed this year, and how many items are waiting
-  to be confirmed — "Numbers as of Sep 6. Two statements are still missing, and three items are
-  waiting for you." / "Everything is filed and nothing is waiting." Clicking it opens Updates. It
+- **Under the net worth in the page header sit two dates, nothing else** (the owner, 2026-10-27:
+  "no filler"): *Complete to* — the oldest of every required source's newest statement, the day
+  all accounts are in up to — and *Updated* — the day of the last update; each with its `?`.
+  What is missing or waiting is said once, on To do and Statements, never here. Clicking it opens
+  Statements. It began as one sentence (2026-09-10, "Numbers as of Sep 6. Two statements are
+  still missing…"), which itself
   replaced a pipeline strip ("Built · 3 checks ✓ · 10/12 sources fresh · 3 decisions") the owner
   rejected: it talked about the tool. Checks never appear on the page — a page whose checks fail
   is not built.
@@ -343,6 +404,34 @@ own prose in the data:
 The prose fields of `imports.json`, `decisions.json`, `plan.json` and `rules.json` reach the page
 too and are written by the import to the same rules (update-dashboard, Step 7).
 
+## 5b′. Words on a card (the owner, 2026-10-28: "every word is designed; no messy subtitles")
+
+A card carries at most three lines of text, and each has one job. Anything that does none of
+these jobs is deleted, not shortened.
+
+| line | job | rule |
+|---|---|---|
+| **label** | names the thing | a noun phrase of at most four words: `Net worth`, `Free to spend`. No verb, no sentence, no colon, no "your". |
+| **value** | answers it | one number with its unit; `$838 of $1,300` is still one number. |
+| **status** | the one fact the value cannot show | optional; at most seven words, one fact, no `·`, never a restatement of the label, never where a number came from. `On track for May 2039`, `Both transfers landed`. |
+
+- **Explanations are never on the card.** A word that needs one is a **term**: dotted underline,
+  hover for its entry, click for the Glossary page. A number that needs one is **tappable**:
+  hover or tap it for how yours is worked out. A `?` is what is left on pages not yet moved over.
+- **A term's entry is a dictionary entry**, the same for anyone: the word, its part of speech,
+  one sentence, a formula where there is one, an example in round numbers, *see also*. Never the
+  owner's numbers, never a Chinese name. Words the page coined (`Set aside`, `Held abroad`) get
+  an entry too, saying what they mean on this page.
+- **A number's explanation is a sum**: the parts as label / value rows, then one line of what is
+  in it or left out. It is where the owner's own descriptions in `plan.json` appear.
+- **One name per thing, everywhere.** The Glossary is the authority: a word that is in it is
+  spelled that way on every page (`Set aside`, never `Earmarked`).
+- **A summary is a row, not a warning.** `noteBox()` is for something that needs action.
+- **Money is written one way**: `$1,300`, `−$48.15` (a real minus, before the dollar sign, never
+  `$-48.15`), a date as `Oct 25`.
+- **No instructions and no provenance in the text.** Not "Click a category to read it on the
+  right", not "Projected from each subscription's own rhythm since your newest statement".
+
 ## 5c. The filing grid (the owner, 2026-09-06 — the paper-planner look)
 
 - The first card on the Data sources page is **Filed each month**: one row per source going down,
@@ -382,11 +471,10 @@ Set after measuring every page at the owner's request. All of them were real pro
   pages**. What gets added must answer a question the page already raises, not pad it:
   - Baseline → a 12-month bar chart, the three months in the median highlighted, the median as a
     red dashed line (answering "why is the baseline $1,290 when June was $2,534")
-  - ~~Budget → a 6-month history table~~ **dropped** (the owner, 2026-09-07). The Monthly plan page
-    now has three cards and fills a screen on Free to spend + Where each month goes + Your two
-    funds (measured at 1,200px+); it does not need a history table for height.
+  - ~~Budget → a 6-month history table~~ **dropped** (the owner, 2026-09-07); the month-by-month
+    view is the Year page's "Inside the allowance" chart since 2026-10-27.
   - Tasks → open and done split into two cards, plus three stat cards
-  - Insights / Subscriptions / Foreign → a row of stat cards each
+  - Insights / Subscriptions → a row of stat cards each
 
 ## 5e. Motion (the owner agreed to it 2026-09-06 — two things only)
 

@@ -4,6 +4,129 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Spending, written to the card rules** (2026-10-28). This month, Year and Subscriptions keep
+  a label, a number and at most one fact per card; the long captions (coverage lines, "click a
+  category…", how the 30-day list is projected) are gone, and each number opens its sum. What
+  stands out names the merchant that takes a quarter of Dining or more, whichever it is, instead
+  of one written into the page. Negative money reads `−$61`, never `$-61`. The explanations are
+  a light card with a heading, a formula, a labelled example, and a total line on a sum.
+
+- **Words on a card, and a Glossary** (2026-10-28). DESIGN.md §5b′ sets what a card may say: a
+  label of at most four words, one number, and at most one fact under it; no subtitles, on a
+  card or under a page title. A word that needs explaining is a term (dotted underline, hover for
+  its dictionary entry, click for the new Glossary page under Records); a number that needs
+  explaining opens its sum when hovered or tapped. Home and the header are written that way;
+  `Earmarked` is `Set aside` everywhere, and the reach cut is Spendable today / Taxed to take
+  out / Promised to a goal / Lent out / In property / Held abroad. 19 pages.
+
+- **The header says two dates** (2026-10-27). "Numbers as of Oct 25. Everything is filed and
+  nothing is waiting." is now *Complete to* (the day every account is in up to) and *Updated*
+  (the last update), each explained behind its `?`. What is missing or waiting is To do's to say.
+
+- **Home: net worth in one card** (2026-10-27). The by-purpose and the by-reach cards were the
+  same accounts sliced twice, and the slices nearly coincide. One card shows both now: a row per
+  purpose with the accounts it counts, its bar coloured by how easily it can be reached, total
+  assets, less what you owe, and one line for what is reachable today.
+
+- **Home says Portfolio** (2026-10-27). Home's first card read *Invested* while the Investing
+  page showed the same number as *Portfolio*; one figure, two names. It is Portfolio on both now,
+  as it is in FINANCE.md's figures table.
+
+- **To do: one place for what waits on you** (2026-10-27). Three things waited for you on two
+  pages, each with its own count: the questions an update left and the checks wanting a decision
+  (on Updates), and the open tasks (on Tasks). They are one page now, To do, first in Records,
+  with one count and one dot; Tasks is gone (an old link to it opens To do), and Updates keeps
+  only the record of each update. The header says "questions" rather than "items", because it
+  counts only those. 18 pages.
+
+- **Plan: when, and whether it lasts** (2026-10-27). Coast & care asked two questions: *when do
+  you get there* and *does the money last*. The coast sentence (the age today's money reaches the
+  target with nothing added) moved to FIRE, under the trajectory; the page is Drawdown & care, and
+  gains *Would it have lasted?* — the same drawdown replayed through every whole stretch of real
+  years since 1928, mixed like the portfolio is today (`RET_HIST`, from the new
+  `findata/ledgers/returns.json`: Damodaran's annual returns and BLS inflation, fetched by
+  `prices.py` once a year). It gives how many stretches lasted, the worst start and the middle
+  case, and says plainly that this is American history and the stretches overlap. Baseline is
+  Spending baseline. The "year you lean hardest" stops once less than a year of spending is left
+  (it read 2,090% on a pot of a few dollars). D28 fails a history with a year missing; the
+  selftest plants it (56 faults).
+
+- **Performance, against one fund you could have bought instead** (2026-10-27). Investing's
+  Overview held what you own and how it did on one page. It is Portfolio now (what you hold, how
+  it splits, the US-dollar rate), and Performance is a page of its own: the same money bought
+  into the fund `rules.json` `benchmark` names (VT in the demo), on the days it actually went in,
+  drawn as that fund's daily line against the growth accounts' snapshots, with the difference and
+  — under a year — a note that the span is too short to judge; then what you put in against what
+  the market added. The prices (adjusted close, and the Bank of Canada's USD/CAD) are fetched by
+  the new `prices.py` into `findata/ledgers/prices.json` when an import needs them, so the page
+  still reads nothing at runtime. D27 fails prices for another fund and warns when they stop more
+  than a week before the newest snapshot; the selftest plants both (55 faults). 18 pages.
+
+- **Income follows the year** (2026-10-27). The page was "Overview" in the sidebar and half of it
+  followed the month cursor, for a donut of two paycheques. It is Income now, on the year alone;
+  the year by source carries the two notes the month card had (investment income never reaches
+  chequing; what a borrower paid back is not income) and the chart's colours.
+
+- **Spending is what was spent; Budget is the plan** (2026-10-27). Monthly plan held both the
+  month (Free to spend, the paycheque flow) and the plan (the split, the funds), so picking a month
+  at the top changed half the page, and the allowance was judged on two pages. This month now
+  carries the whole month — Free to spend, three stat cards, the paycheque flow, the categories and
+  big buys on a card of their own; Year gains "Inside the allowance, month by month"; the plan and
+  the funds are Budget, in the Plan group, with no month pills. How the plan is holding is gone:
+  its lines were Free to spend, the Rules page's pay-yourself-first and the funds card. The flow
+  now draws refunds as a source coming in, so its total is the one Free to spend shows (it dropped
+  them before and overstated the month), and a category in it opens the detail pane.
+
+- **Net worth by purpose, defined** (2026-10-27). The rows were Invested / Earmarked / Cash /
+  Other assets, with no definition on the page, and "Other assets" had become wherever an account
+  with no other role landed — deposits abroad included, though they are cash. The rows are now
+  For FIRE, Set aside, Cash, Cash in <abroad>, Owed to you and Other assets (things that are not
+  money), each naming the accounts it counts, with its exact definition behind its ?. The
+  definitions live in rebuild.py PART_ROWS; a row with no accounts is not shown.
+
+- **Every investing rule on one page** (2026-10-27). The rules were in three places: the high-level
+  ones on Overview, the detailed ones on Rules, the dates on Checkpoints. Rules now lists each
+  high-level rule as it stands today, the detailed rules filed under it (rules.json notes, `under`),
+  and under each of those its dates. The Overview card and the Checkpoints page are gone (17 pages);
+  the sidebar's Rules dot carries a passed date too. D26 fails a note filed under a rule no
+  principle checks.
+
+- **High-level rules on the Investing overview** (2026-10-27). The card showed only what the page
+  happened to compute — the band and the transfers — so the owner's most broken rule never
+  appeared on it. rules.json `principles` now lists her rules in her words, each naming a check
+  run on today's data: pay yourself first, the dry-powder band, a reason and a date ahead for every
+  holding in a named bucket, each holding in the account `placement` says it belongs in, earmarked
+  money kept out, money abroad never dry powder (and the holdings cap, where one is set). Without
+  `principles` the card shows what it always did. The detailed rules stay on Rules. D26 fails a
+  principle naming a check the page lacks, read from the page code.
+
+- **The portfolio is split three ways** (2026-10-26). The Investing overview's one chart was
+  "the Canadian side across your buckets", though more than half of that side was in US dollars.
+  It is now three donuts of the same portfolio: by currency, by kind of asset, and by the buckets
+  the rules are written in (at the broker, where they apply). A holding's kind comes from the
+  export's security type — cash, crypto, a precious metal, a single stock — and, for an ETF,
+  from rules.json `assetClass`; a fund abroad says it in foreign.json. D25 warns on a holding
+  with no kind and fails a kind the page has no slice for.
+
+- **Spending is net of refunds** (2026-10-26). A credit on a card statement that gives back an
+  earlier purchase on the same card — or, for an annual-fee or interest credit, a charge the card
+  made — is filed by the import as a negative `spending.csv` row in that purchase's category, so
+  the month, the categories, the year and the medians are all after refunds. A credit that points
+  at nothing (cash back) stays out and is listed for the owner as before. A refund of a big buy
+  goes back to the Big buys fund. **D24** holds every negative row to a purchase on the same card,
+  in its category, never more than was spent there; FINANCE.md §3c. Before this, every refund the
+  import met was dropped and the purchase stayed in spending at full value.
+
+- **Money you lent is in net worth** (2026-10-26). A loan is a register row with `role: owed` and
+  `reach: lent`: the amount the borrower owed on an agreed date, less every repayment the ledgers
+  show since, plus any further lending (`loans.py`, read by the build, the import and the
+  checker). Net worth gains an "Owed to you" row and the reach table a "Lent out" row; the
+  Accounts page has a card per borrower — still owed, paid back so far, last repayment — and a
+  warning once nothing has come back for six months. Any number of borrowers; an e-Transfer
+  naming one is typed `Repayment` coming in and the new type `Lent` going out, never income or
+  spending. D19 knows the two new axis values, D23 re-derives each loan. Before this, a loan
+  vanished from net worth the day it was made, and only its repayments showed, as a grey line.
+
 - **The product is 玉蟾 · Jade Toad** (2026-09-14). It was Jade Rabbit. The owner wanted a name from
   Chinese myth that is a woman's, an animal's and a goal's at once, and the toad is all three: in the
   earliest telling (《淮南子》) Heng'e reaches the moon and becomes its toad, and 蟾宫折桂 — plucking

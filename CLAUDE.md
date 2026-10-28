@@ -62,9 +62,11 @@ The rest of `findata/`, and what each carries:
 | `profile.json` | the owner (shown under the Jade Toad wordmark and in the tab), the year of birth, the import day |
 | `funds.json` | the monthly plan as **flows** — `income`, `committed` (rent, a mortgage, a loan), `saving` (to the broker, or to a fund by `to`), `allowance`, each with an amount and, where it applies, `until`, `afterFire`, `pays`, `starts` — and the named funds (`role: topup` / `big`), which carry no number of their own |
 | `plan.json` | planning spend, months excluded from comparisons, the retirement assumptions, the owner's one-line descriptions of the net-worth parts |
-| `rules.json` | the investing buckets and their target bands, the owner's theses (`notes`) and `checkpoints` |
+| `rules.json` | the investing buckets and their target bands, the owner's theses (`notes`) and `checkpoints`, `assetClass` — what each ETF holds (stocks / bonds / cash / gold / crypto), the one thing the broker's export cannot say — and `principles`, the owner's high-level rules, each naming a check the Investing overview runs today (with `placement`, which account each holding belongs in) |
 | `merchants.json` | merchant → category |
 | `fx.json` | a dated exchange rate — absent means "no foreign-currency holdings" |
+| `prices.json` | the benchmark's daily prices (dividends included) and the Bank of Canada's USD/CAD, fetched by `prices.py` at each import for the fund `rules.json` `benchmark` names — the one file in `findata/` that comes from outside the owner's statements; absent until the first fetch |
+| `returns.json` | a year a row since 1928: US stocks, T-bills, 10-year Treasuries and gold (Damodaran, NYU Stern) and US inflation (BLS CPI-U), fetched by the same `prices.py`; the Drawdown page replays the plan through it |
 | `foreign.json` | foreign-currency accounts; an empty list is the supported way to say there are none |
 | `imports.json`, `decisions.json` | one record per update — the files, what changed, what was noticed, what was decided without asking, what the owner was asked; and the queue of items still waiting for the owner to confirm, each with the default applied meanwhile |
 | `investment_history.json`, `networth_history.json` | one snapshot per import / one net-worth point per month |
@@ -117,9 +119,9 @@ mortgage got a net worth with the loan in it and the house nowhere. Each account
 **balance item with five orthogonal axes**, and each derived total reads exactly one of them:
 
 - `side` — asset / liability → net worth = Σ assets − Σ liabilities
-- `role` — grow / set-aside / buffer / none → Portfolio is `grow`; net worth by purpose is one
-  slice per role
-- `reach` — today / costs / spoken / locked / abroad → the reach table
+- `role` — grow / set-aside / buffer / owed / none → Portfolio is `grow`; net worth by purpose is one
+  slice per role; `owed` is money lent (FINANCE.md §8a)
+- `reach` — today / costs / spoken / lent / locked / abroad → the reach table
 - `value` — export / statement / stated (with `asof`) → what D14 can re-derive, and what it can
   only date
 - `against` — a liability names the asset it sits on → the reach table shows equity, not gross
@@ -129,7 +131,10 @@ share), so a fresh row and a migrated one agree; the owner overrides any axis in
 D19 rejects an illegal pair (a liability with a role, an asset with an `against`, a `value` that
 contradicts the source file) and fails a `rules.json` that still carries the old `exclude`
 list — the Investing pages read the set-aside role from the register (schema 7). D20
-insists a `stated` balance carries an `asof` and warns past a year. Selftest plants both.
+insists a `stated` balance carries an `asof` and warns past a year. Money lent is a row with
+`role: owed`, `reach: lent` and an `agreed` amount and date; `loans.py` in the update-dashboard
+scripts derives what is still owed from it and the ledgers, and D23 holds the row's `balance` to
+that and fails a borrower who has paid back more than was owed. Selftest plants all three.
 
 Each line of the monthly plan is a **flow** with `kind` (income / committed / saving /
 allowance), `amount` and, where it applies, `until`, `afterFire` (keep / drop), `pays` (the
@@ -181,9 +186,9 @@ report template are all in that file. **Do not work from memory.**
 
 ## Nothing in a dashboard is typed by hand
 
-<!-- LINT:CONSTS n=44 -->
+<!-- LINT:CONSTS n=47 -->
 `rebuild.py` builds the dashboard from `templates/dashboards/` and `findata/`, deriving
-**44 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DECISIONS, DOC_LATEST, FGN, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RULES, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
+**47 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DECISIONS, DOC_LATEST, FGN, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
 applies, and it is idempotent. `--template DIR` writes the page with every constant emptied,
 which is what the template *is*: page code and nobody's numbers.
 

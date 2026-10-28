@@ -155,7 +155,7 @@ def gen_ledgers(rng, spend):
         if (y, m) >= (2026, 5):
             A((D(y, m, 5), f"OnlineTransfer,TF0006#{ID['bmo_chq']}-{ID['bmo_sav']}", -500.0, "Transfer to savings", "Transfer"))
     A((D(2026, 3, 3), f"INTERAC e-Transfer sent {P['friend_upper']}", -1500.0, f"e-Transfer to {P['friend']} (loan)", "Friend"))
-    A((D(2026, 7, 13), "INTERACe-TransferReceived", 1500.0, f"e-Transfer from {P['friend']} (repayment)", "Friend"))
+    A((D(2026, 7, 13), "INTERACe-TransferReceived", 1000.0, f"e-Transfer from {P['friend']} (repayment)", "Friend"))
     # The $200 nobody named: the open item on Data → Updates, typed Other income meanwhile.
     A((D(2026, 8, 11), "INTERACe-TransferReceived", 200.0, "e-Transfer received", "Other"))
     A((D(2026, 3, 25), "Contactless Interac purchase,SHOPPERS DRUG MART 0781", -24.60, "Debit purchase — Shoppers Drug Mart", "Debit purchase"))
@@ -360,7 +360,7 @@ def build(out):
         with W(name) as f:
             w = csv.writer(f); w.writerow(["date", "description", "amount", "balance", "statement", "type", "label"])
             for r in rows:
-                t = "Repayment" if r["type"] == "Friend" else r["type"]
+                t = ("Lent" if r["amount"] < 0 else "Repayment") if r["type"] == "Friend" else r["type"]
                 w.writerow([iso(r["date"]), r["description"], f"{r['amount']:.2f}", f"{r['balance']:.2f}", r["statement"],
                             t, r["tdesc"] if r["tdesc"] != r["description"] else ""])
 
@@ -439,6 +439,11 @@ def build(out):
         acc("Wealthsimple", ID["rrsp"], "RRSP", "RRSP", "CAD", r2(by_acct["RRSP"]), "2026-09-06", "holdings_latest.csv", None, "Portfolio, Dry powder, Net worth", "ws-rrsp"),
         acc("Wealthsimple", ID["crypto"], "Crypto", "Crypto", "CAD", r2(by_acct["Crypto"]), "2026-09-06", "holdings_latest.csv", None, "Portfolio, Net worth", "ws-crypto"),
         acc("Wealthsimple", ID["chq"], "Chequing", "Chequing", "CAD", wschq_bal, "2026-09-08", "banks.json", None, "Pay-yourself-first doorway, Bank cash", "ws-chq"),
+        # A loan (FINANCE.md §8a): what was agreed owed on a date, less what the ledgers show
+        # coming back since; the balance is the copy D23 re-derives. $1,500 lent in March, $1,000 back in July.
+        acc("Owed to you", "—", P["friend"], "Lent", "CAD", 500.0, "2026-07-13", None, None, "", "loan-" + P["friend"].lower(),
+            agreed=OrderedDict(amount=0.0, asof="2026-03-01"), names=[P["friend_upper"]],
+            note="Lent in March for a deposit on an apartment; the rest is due by the end of the year."),
     ]
     def doc(key, ep, file, closes, feeds, covers, tags, into, reconcile, **extra):
         d = OrderedDict(key=key, ep=ep, file=file, closes=closes, feeds=feeds, covers=covers, tags=tags, into=into, reconcile=reconcile)
@@ -479,6 +484,9 @@ def build(out):
             OrderedDict([("key", "mid"), ("name", "Middle tier · cleanup candidates"), ("catchAll", True)]),
         ]),
         ("maxHoldings", 10),
+        # what an ETF holds, which the export cannot say; stocks, cash and crypto say it themselves
+        ("assetClass", OrderedDict([("VEQT", "stocks"), ("VCN", "stocks"), ("XAW", "stocks"),
+                                    ("ZAG", "bonds"), ("VSC", "bonds"), ("SGOV", "bonds")])),
         ("notes", [
             OrderedDict(status="ok", name="Account placement", text="Growth names in the TFSA: SHOP {mv:SHOP} is TFSA-only since the August consolidation ✓. BN {mv:BN} sits in the RRSP. The one bond ETF outside the dry-powder pair (ZAG {mv:ZAG}) stays non-registered — small enough not to matter."),
             OrderedDict(status="info", name="SHOP — thesis check each quarter", text="Held for merchant growth and take-rate expansion. Review on Q3 results in late October; GMV growth under +20% is the exit trigger."),
@@ -556,7 +564,7 @@ def build(out):
     with W("friend_ledger.csv") as f:
         w = csv.writer(f); w.writerow(["date", "time", "direction", "currency", "amount", "channel", "counterparty", "status", "counted", "note", "txn_id"])
         w.writerow(["2026-03-03", "18:42:10", "out", "CAD", "1500.00", "Interac", P["friend"], "accepted", "yes", "loan, to be repaid in the summer", "CA1A2B3C4D5E"])
-        w.writerow(["2026-07-13", "09:15:33", "in", "CAD", "1500.00", "Interac", P["friend"], "accepted", "yes", "repayment of the March loan", "CA6F7G8H9J0K"])
+        w.writerow(["2026-07-13", "09:15:33", "in", "CAD", "1000.00", "Interac", P["friend"], "accepted", "yes", "first repayment of the March loan", "CA6F7G8H9J0K"])
 
     # --------------------------------------------------- what an import writes
     inc = defaultdict(float)
