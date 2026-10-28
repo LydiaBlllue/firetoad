@@ -5,7 +5,8 @@ inbox/*
 archive/*
 !archive/.gitkeep
 
-# The findata/ shipped here is synthetic. If you replace it with your own, add it here:
+# The findata/ shipped here is synthetic. When setup writes your own, it takes this line out of
+# the comment (with dashboards/ and decisions/) and installs a pre-commit guard (setup/scripts/guard.py):
 # findata/
 
 .DS_Store

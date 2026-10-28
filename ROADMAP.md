@@ -12,9 +12,6 @@ from scratch: one credit card, nine statements, a cloud session.
 
 ## v1.1 — 2026-11-04
 
-- **Your data stays out of a public clone.** *(first user)* Setup adds `findata/` to
-  `.gitignore` the moment the data is yours, and a commit carrying real data into a repository
-  with a public remote is refused.
 - **The first import is already sorted.** *(first user)* A starter map of common Canadian
   merchants suggests a category for each one seen for the first time, and every suggestion is
   confirmed in one table, instead of every purchase waiting as Other.

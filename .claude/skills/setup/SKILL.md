@@ -203,6 +203,12 @@ Two steps: the scaffold writes `findata/`, the rebuild builds the dashboard from
 previous owner to clear out: the template holds nobody's numbers (lint T1 says so), so the new
 owner's first view is their own empty workspace.
 
+From this write on the data is theirs, so the scaffold also keeps it off the internet when the
+workspace is a git clone: it adds `findata/`, `dashboards/` and `decisions/` to `.gitignore`, and
+puts `scripts/guard.py` in the clone's pre-commit hook, which refuses a commit that carries any of
+them (or `OWNER.md`, `inbox/`, `archive/`) while the repository has a remote. Say so in one line.
+The demo's own data, with `demo: true`, still commits.
+
 ## Proving it
 
 **This is not optional, and a ✗ here is a bug in the setup, not in the checkers:**

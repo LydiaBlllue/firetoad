@@ -238,6 +238,32 @@ def m_committed_missing(r):
         d["plan"]["flows"].append({"key": "car", "kind": "committed", "name": "Car loan",
                                    "amount": 410, "until": "2029-06", "afterFire": "drop"})
     edit_json(r, layout.rel("funds.json"), f)
+# The setup's data guard (setup/scripts/guard.py). Runner kind "guard": the mutation makes the
+# staged copy a git checkout with a remote, the way a clone of the public repository is, lets the
+# setup's own step write .gitignore and the hook, and then tries to commit. The demo's profile has
+# to go through (a guard that refuses everything would also "fire"); the owner's has to be refused.
+def m_guard_data(r):
+    g = lambda *a: subprocess.run(["git", "-C", r, "-c", "user.name=Emma Roy", "-c", "user.email=emma@example.com", *a],
+                                  capture_output=True, text=True)
+    g("init", "-q"); g("remote", "add", "origin", "https://github.com/example/jade-toad.git")
+    sys.path.insert(0, os.path.join(r, ".claude", "skills", "setup", "scripts"))
+    import importlib
+    import scaffold
+    importlib.reload(scaffold)
+    import contextlib, io
+    with contextlib.redirect_stdout(io.StringIO()):
+        scaffold.keep_private(r, "2026-11-01")
+    if "findata/" not in open(os.path.join(r, ".gitignore"), encoding="utf-8").read().splitlines():
+        return "setup did not add findata/ to .gitignore"
+    prof = layout.rel("profile.json")
+    g("add", "-f", prof)
+    c = g("commit", "-q", "-m", "demo")
+    if c.returncode != 0:
+        return "the demo's own profile was refused too:\n" + c.stdout + c.stderr
+    edit_json(r, prof, lambda d: d.pop("demo"))
+    g("add", "-f", prof)
+    c = g("commit", "-q", "-m", "mine")
+    return c.stdout + c.stderr + ("" if c.returncode else "\n(committed — nothing refused it)")
 # The parsers (update-dashboard/parsers). A fixture is one of the demo owner's own statements
 # rendered back into the text shape the real one has (tools/fixtures.py); the fault is a
 # statement whose printed total disagrees with its rows — the parser has to say so, not
@@ -416,6 +442,7 @@ CASES = [
     ("D24", "a refund larger than was ever spent there",    m_refund_too_much,   "find"),
     ("D24", "a refund filed in another category than its purchase", m_refund_wrong_category, "find"),
     ("P1",  "a statement whose rows do not add up to its total", m_parse_tampered, "parse"),
+    ("G1",  "real data staged for a repository with a remote", m_guard_data,     "guard"),
     ("D14", "a document covers an account that is gone",    m_bad_cover,       "find"),
     ("D14", "SUBMITTED key with no matching document",      m_submitted_orphan,"find"),
     ("D14", "SOURCES written out instead of derived",       m_sources_literal, "find"),
@@ -1184,6 +1211,8 @@ def main(argv):
                 if out is None:
                     print(f"  · [{rule}] {what} — no tools/fixtures.py here, not exercised")
                     continue
+            elif which == "guard":
+                out = mut(d)
             else:
                 mut(d)
                 script = {"dash": "check_design.py", "find": "check_data.py",

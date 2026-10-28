@@ -74,6 +74,8 @@ OWNER_STUB = """# OWNER.md — this workspace's notes
 GUARD = """#!/bin/sh
 # Installed by tools/sync.py --install-guard. Refuses a commit whose staged files contain any
 # identifier from the owner's private deny list, which lives OUTSIDE this repository.
+# It also runs the setup's data guard: real findata/ is refused when this checkout has a remote.
+python3 "$(git rev-parse --show-toplevel)/.claude/skills/setup/scripts/guard.py" || exit 1
 DENY="__DENY__"
 [ -f "$DENY" ] || { echo "pre-commit guard: $DENY is missing — refusing to commit blind"; exit 1; }
 python3 - "$DENY" <<'PY'

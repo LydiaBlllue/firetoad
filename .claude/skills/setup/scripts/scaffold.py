@@ -479,6 +479,31 @@ def build(a, today):
     return out
 
 
+# What setup writes is the owner's own money from here on. A clone of the public repository
+# tracks findata/ (the demo's), so a `git commit -a` and a push would publish it (a first user
+# came within a click of that, 2026-10). Two layers: .gitignore keeps new data files out of
+# `git add`, and guard.py — in the clone's pre-commit hook — refuses data that is already tracked.
+PRIVATE = ("findata/", "dashboards/", "decisions/")
+
+
+def keep_private(root, today):
+    gi = os.path.join(root, ".gitignore")
+    lines = open(gi, encoding="utf-8").read().splitlines() if os.path.exists(gi) else []
+    have = {l.strip() for l in lines if not l.startswith("#")}
+    add = [p for p in PRIVATE if p not in have]
+    if add:
+        # The shipped file suggests the line commented out; the suggestion goes once it is taken.
+        lines = [l for l in lines if l.strip() not in ("# " + p for p in add)]
+        lines += ["", f"# Your own data from here on (setup, {today}): never in a remote."] + add
+        open(gi, "w", encoding="utf-8").write("\n".join(lines).lstrip("\n") + "\n")
+        print("  → .gitignore: " + ", ".join(add))
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import guard
+    hook = guard.install(root)
+    if hook:
+        print(f"  → pre-commit data guard: {hook} (a commit carrying findata/ into a repository with a remote is refused)")
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("root", nargs="?", default=".")
@@ -526,6 +551,7 @@ def main(argv):
         os.makedirs(os.path.dirname(full), exist_ok=True)
         with open(full, "w", encoding="utf-8") as fh:
             fh.write(text)
+    keep_private(root, today)
     print("\n  written. Now run rebuild.py --write, then the four checkers — they are the "
           "acceptance test for this scaffold.")
     return 0

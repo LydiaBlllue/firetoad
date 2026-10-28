@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1 — unreleased
+
+- **Your data stays out of a public clone** (2026-10-28, from a first user). Setup, when it
+  writes a real workspace, adds `findata/`, `dashboards/` and `decisions/` to `.gitignore` and
+  installs `setup/scripts/guard.py` in the clone's pre-commit hook: a commit carrying the owner's
+  data while the repository has any remote is refused (G1). `.gitignore` alone could not do it —
+  the demo's `findata/` is tracked, and a tracked file stays tracked. The demo's data, with
+  `demo: true`, commits as before; `sync.py --install-guard` chains the same check in front of
+  the deny list. Selftest makes a clone with a remote and expects the demo through and the owner
+  refused.
+
 ## 1.0 — unreleased
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
