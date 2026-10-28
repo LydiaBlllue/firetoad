@@ -1514,10 +1514,18 @@ function renderYear(){
     return agg;
   });
   const cats = yearCat ? CATS.filter(c => c.k === yearCat) : CATS;
+  // A refund lands in the month it posted, so a category can be below zero in a month (FINANCE.md
+  // §3c). Its segment cannot stack, but it is not nothing: it is drawn as a hatched band taken off
+  // the top of the bar, and the month is labelled with its net, so the twelve labels add up to
+  // "Spent" above.
   const shown = YM12.map((m,i) => cats.reduce((s,c) => s + Math.max(byMonthCat[i][c.k]||0, 0), 0));
+  const back = YM12.map((m,i) => cats.filter(c => (byMonthCat[i][c.k]||0) < 0).map(c => ({k:c.k, v:-byMonthCat[i][c.k]})));
+  const net = shown.map((v,i) => v - back[i].reduce((s,b) => s + b.v, 0));
   const mx = Math.max(...shown, 1);
   const scale = v => v/mx*(H-padB-padT);
-  let out = '<line x1="0" y1="'+(H-padB)+'" x2="'+W+'" y2="'+(H-padB)+'" stroke="var(--grid)" stroke-width="1"/>';
+  let out = '<defs><pattern id="yrBack" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
+    + '<rect width="6" height="6" fill="var(--surface)" opacity=".7"/><line x1="0" y1="0" x2="0" y2="6" stroke="var(--muted)" stroke-width="2"/></pattern></defs>'
+    + '<line x1="0" y1="'+(H-padB)+'" x2="'+W+'" y2="'+(H-padB)+'" stroke="var(--grid)" stroke-width="1"/>';
   const segMeta = [];
   YM12.forEach((m,i) => {
     const x = step*i + (step-bw)/2;
@@ -1531,14 +1539,23 @@ function renderYear(){
       segMeta.push({m, cat:c.k, v, tot:totals[i]});
       yCur -= gap;
     });
-    out += '<text x="'+(x+bw/2)+'" y="'+(yCur-5)+'" text-anchor="middle" font-size="12" class="num" fill="var(--ink-2)">'+(shown[i]>0?fmt(shown[i]):"")+'</text>';
+    const top = yCur + (shown[i] > 0 ? gap : 0), off = back[i].reduce((s,b) => s + b.v, 0);
+    if(off > 0 && shown[i] > 0){
+      const h = Math.max(Math.min(scale(off), H - padB - top), 1.5);
+      out += '<rect x="'+x+'" y="'+top+'" width="'+bw+'" height="'+h+'" fill="url(#yrBack)" data-s="'+segMeta.length+'"/>';
+      segMeta.push({m, back:back[i], net:net[i]});
+    }
+    const lab = net[i] > 0 ? fmt(net[i]) : net[i] < 0 ? "\u2212"+fmt(-net[i]) : "";
+    out += '<text x="'+(x+bw/2)+'" y="'+(top-5)+'" text-anchor="middle" font-size="12" class="num" fill="var(--ink-2)">'+lab+'</text>';
     out += '<text x="'+(x+bw/2)+'" y="'+(H-9)+'" text-anchor="middle" font-size="12" fill="var(--muted)">'+MN[i]+'</text>';
   });
   const svg = $("yearChart");
   svg.innerHTML = out;
   svg.querySelectorAll("rect[data-s]").forEach(rc => {
     const s = segMeta[Number(rc.dataset.s)];
-    hoverable(rc, ymFull(s.m)+"<br>"+s.cat+" "+fmt2(s.v)+"<br>"+Math.round(pc(s.v, s.tot))+"% of that month");
+    hoverable(rc, s.back
+      ? ymFull(s.m)+"<br>"+s.back.map(b => b.k+" refunds \u2212"+fmt2(b.v)).join("<br>")+"<br>Net "+fmt2(s.net)+" after them"
+      : ymFull(s.m)+"<br>"+s.cat+" "+fmt2(s.v)+"<br>"+Math.round(pc(s.v, s.tot))+"% of that month");
   });
   $("yearLegend").innerHTML =
     '<div class="leg-row all'+(yearCat?"":" on")+'" data-cat=""><span class="nm">All</span></div>'

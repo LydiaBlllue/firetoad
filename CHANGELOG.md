@@ -2,6 +2,12 @@
 
 ## 1.1 — unreleased
 
+- **The year's stacked bar counts refunds** (2026-10-28). A refund lands in the month it posted,
+  so a category can be below zero in a month; the Year page's "Each month, by category" chart
+  drew that category as nothing, and its labels added up to more than "Spent" above them. A
+  month's refunds are now a hatched band taken off the top of its bar, the month is labelled
+  with its net, and hovering the band names what came back. FINANCE.md §3c says so.
+
 - **A fresh clone checks clean** (2026-10-28). The demo is a snapshot nobody imports into, so
   its exchange rate aged with the calendar while nothing else in it moved, and a clone a few
   weeks old greeted its first run with a stale-rate warning (D9). For a workspace with

@@ -93,7 +93,9 @@ therefore after refunds without any of them knowing refunds exist.
   for the owner. Counting it would lower the spending baseline with money that was never spent.
 - **A refund lands in the month it posted**, not the month of the purchase, so a category can be
   negative in a month with a large refund and nothing else. The month's total is still exact; a
-  chart that stacks categories draws a negative category as nothing.
+  chart that stacks categories cannot stack a negative one, so it takes it off the top of the
+  month's bar as a hatched band and labels the month with its net — the bars add up to the
+  year's total.
 - **A refund of a big buy goes back to the Big buys fund**, not onto the month's allowance:
   it is big exactly when the purchase it gives back was (§3b).
 - A card payment (`PAYMENT`, `THANK YOU`, a transfer in) is neither spending nor a refund.

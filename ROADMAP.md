@@ -12,7 +12,6 @@ from scratch: one credit card, nine statements, a cloud session.
 
 ## v1.1 — 2026-11-04
 
-- **The year's stacked bar counts refunds**, so it adds up to the cards above it.
 - **Investment income fills its page.**
 
 ## v1.2 — 2026-11-24 — a first setup that works for someone else
