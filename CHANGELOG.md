@@ -2,6 +2,15 @@
 
 ## 1.1 — unreleased
 
+- **A first import is already mostly sorted** (2026-10-28, from a first user, whose first import
+  put every purchase in Other). `setup/data/starter_merchants.json` maps about ninety common
+  Canadian chains — grocery chains and Costco, gas stations, fast food and delivery, pharmacies,
+  transit, streaming — to a category. For a merchant the workspace's own `merchants.json` does
+  not know, the import files it as the starter map suggests and still asks it in
+  `decisions.json`, the suggestion as the default; a merchant neither knows stays Other. No
+  pattern suggests Subscription (a first sighting never repeats yet), so a streaming service
+  starts as Entertainment. Public chain names only.
+
 - **A chequing statement with long descriptions is read** (2026-10-28, from a first user, whose
   nine BMO chequing statements were all refused). A description that wraps so its amounts land
   on the second or third line is joined back into one row (`bmo_banking`; `rbc_banking` already

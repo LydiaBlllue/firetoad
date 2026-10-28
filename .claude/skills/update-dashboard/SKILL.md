@@ -55,8 +55,9 @@ rows. **Read the summary, not the statements.** What it hands back is the whole 
   §3c) and named in `judged`. What is left points at nothing the books hold: cash back, a refund
   of a purchase made before the books begin. Ask the owner; if it is a refund, add the negative
   row by hand the same way — D24 refuses one that gives back nothing.
-- **What it asked** (`?` lines): a merchant seen for the first time, filed as Other meanwhile; an
-  e-Transfer with no name on the other side. Each is already a row in `decisions.json`. Put them
+- **What it asked** (`?` lines): a merchant seen for the first time, filed as Other meanwhile —
+  or, for a common chain, as the starter map suggests (`setup/data/starter_merchants.json`; the
+  workspace's own `merchants.json` always wins over it); an e-Transfer with no name on the other side. Each is already a row in `decisions.json`. Put them
   to the owner; when they answer, write `answer` and `resolved` on the row and apply it where it
   belongs (`merchants.json`, the ledger's `type` column).
 - **The record.** It has appended one to `imports.json` — `files`, `changed`, `noticed`,

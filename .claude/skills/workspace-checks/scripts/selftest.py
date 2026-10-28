@@ -617,6 +617,32 @@ def wrap_check(ws):
     return out
 
 
+def starter_check(root, base):
+    """A first import put every purchase in Other (a first user, 2026-10). The starter map of
+    common chains (setup/data/starter_merchants.json) suggests a category for a merchant the
+    workspace does not know yet: the suggestion is filed and the question is still asked; the
+    workspace's own merchants.json wins over it; a merchant it does not know stays Other; and no
+    pattern may suggest Subscription, which a first sighting can never be."""
+    import types
+    sys.path.insert(0, os.path.join(root, ".claude", "skills", "update-dashboard", "scripts"))
+    import update
+    from check_data import CATEGORIES
+    pats = json.load(open(update.STARTER, encoding="utf-8"))["patterns"]
+    bad = [p["match"] for p in pats if p["category"] not in CATEGORIES or p["category"] == "Subscription"]
+    ws, plan = types.SimpleNamespace(row_cats={}), update.Plan()
+    got = []
+    for merchant, table in (("TIM HORTONS #1234 OTTAWA ON", {}), ("UBER* EATS", {}), ("LIGHTHOUSE PUBLICATION", {}),
+                            ("TIM HORTONS #1234 OTTAWA ON", {"TIM HORTONS OTTAWA": {"category": "Grocery"}})):
+        cat, how, key = update.categorise(ws, merchant, table)
+        update.note_merchant(plan, key, cat, how, "2026-10-03", "Card 5518 statement")
+        got.append((cat, how))
+    asked = {d["what"].split(",")[0]: d["default"] for d in plan.decisions}
+    want = [("Dining", "starter"), ("Dining", "starter"), ("Other", "new"), ("Grocery", "hit")]
+    if got == want and asked == {"TIM HORTONS OTTAWA": "Dining", "UBER* EATS": "Dining", "LIGHTHOUSE PUBLICATION": "Other"} and not bad:
+        return [f"  ✓ starter map: {len(pats)} chains, none suggesting Subscription; a known chain filed as suggested and still asked, the workspace's own entry first, a stranger Other"]
+    return [f"  ✗ starter map: got {got}, asked {asked}" + (f"; patterns outside the seven categories or Subscription: {bad}" if bad else "")]
+
+
 def propose_check(ws, man):
     """The setup's first step drafts the register from the first files dropped (propose.py). Given
     the demo owner's statements (the fixtures) and broker exports, the draft has to find every
@@ -1288,7 +1314,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = (parser_checks(root, base) + update_check(root, base) + update_batch_check(root, base)
                 + undo_check(root, base) + drift_check(root, base) + own_name_check(root, base)
-                + loan_import_check(root, base))
+                + loan_import_check(root, base) + starter_check(root, base))
         for line in runs:
             print(line)
             if line.lstrip().startswith("✗"):

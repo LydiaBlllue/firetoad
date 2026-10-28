@@ -17,7 +17,8 @@ not need a model. This script does Steps 0–7 of the update-dashboard skill for
 parser can read, and prints a summary: what was filed, and the short list of things a program
 cannot decide. Those — and only those — are what the model reads:
 
-  · a merchant seen for the first time (filed as Other meanwhile, queued in decisions.json);
+  · a merchant seen for the first time (filed as Other meanwhile — or as the starter map of
+    common chains suggests — and queued in decisions.json);
   · an e-Transfer whose other side it cannot name (typed by default, queued the same way);
   · a ledger row it could not type (left blank; D22 keeps pointing at it);
   · a file no parser reads: a statement that does not reconcile, a layout nobody wrote a parser
@@ -74,6 +75,27 @@ LONG = ("January", "February", "March", "April", "May", "June", "July", "August"
 LEDGER_COLS = ["date", "description", "amount", "balance", "statement", "type", "label"]
 SPEND_COLS = ["date", "amount", "currency", "category", "note"]
 NEW_MERCHANT_CATEGORY = "Other"      # merchants.json's rule: a first sighting is never a Subscription
+# Common Canadian chains, shipped with the setup and owned by nobody: a first sighting the starter
+# map knows is filed under its category instead of Other, and is still asked (a first user's
+# first import put every purchase in Other, 2026-10).
+STARTER = os.path.join(os.path.dirname(SKILL), "setup", "data", "starter_merchants.json")
+
+
+def _words(s):
+    return " " + re.sub(r"[^A-Z0-9&]+", " ", s.upper().replace("'", "").replace("\u2019", "")).strip() + " "
+
+
+def starter_category(key, patterns=None):
+    """The starter map's category for a merchant, or None: the longest pattern whose words all
+    appear, in order and whole, in the merchant's."""
+    if patterns is None:
+        try:
+            patterns = json.load(open(STARTER, encoding="utf-8")).get("patterns", [])
+        except (OSError, ValueError):
+            patterns = []
+    w = _words(key)
+    hits = [p for p in patterns if _words(p["match"]) in w]
+    return max(hits, key=lambda p: len(p["match"]))["category"] if hits else None
 
 
 def iso_to_date(s):
@@ -257,7 +279,9 @@ def type_row(ws, acc, desc, amt, when, holder=None):
 # ---------------------------------------------------------------- categorising a purchase
 def categorise(ws, merchant, table):
     """(category, how): 'hit' reuses merchants.json, 'brand' reuses the one category every entry
-    of the same first word carries, 'new' is a merchant nobody has decided — Other meanwhile."""
+    of the same first word carries, 'starter' is the starter map's suggestion for a chain it
+    knows, 'new' is a merchant nobody has decided — Other meanwhile. 'starter' and 'new' are
+    both asked."""
     key = merchant_key(merchant)
     if key in table:
         return table[key]["category"], "hit", key
@@ -267,6 +291,9 @@ def categorise(ws, merchant, table):
     kin = {e["category"] for k, e in table.items() if first and k.split()[0] == first}
     if len(kin) == 1:
         return kin.pop(), "brand", key
+    cat = starter_category(key)
+    if cat:
+        return cat, "starter", key
     return NEW_MERCHANT_CATEGORY, "new", key
 
 
@@ -577,9 +604,10 @@ def note_merchant(plan, key, cat, how, when, src):
     plan.cat_used[key] = cat
     f, l = plan.merchant_dates.get(key, (when, when))
     plan.merchant_dates[key] = (min(f, when), max(l, when))
-    if how == "new" and key not in plan.new_merchants:
+    if how in ("new", "starter") and key not in plan.new_merchants:
         plan.new_merchants[key] = (cat, src)
-        plan.decisions.append({"kind": "merchant", "what": f"{key}, seen for the first time.",
+        why = " The starter map of common chains suggests " + cat + "." if how == "starter" else ""
+        plan.decisions.append({"kind": "merchant", "what": f"{key}, seen for the first time.{why}",
                                "default": cat, "source": f"{src}, {short(iso_to_date(when))}"})
     elif how == "brand" and key not in plan.new_merchants:
         plan.new_merchants[key] = (cat, src)

@@ -12,9 +12,6 @@ from scratch: one credit card, nine statements, a cloud session.
 
 ## v1.1 — 2026-11-04
 
-- **The first import is already sorted.** *(first user)* A starter map of common Canadian
-  merchants suggests a category for each one seen for the first time, and every suggestion is
-  confirmed in one table, instead of every purchase waiting as Other.
 - **A fresh clone checks clean.** The demo's exchange rate is dated, so a clone a few weeks old
   greets its first run with a stale-rate warning. The demo dates it relative to today.
 - **The year's stacked bar counts refunds**, so it adds up to the cards above it.
@@ -22,6 +19,9 @@ from scratch: one credit card, nine statements, a cloud session.
 
 ## v1.2 — 2026-11-24 — a first setup that works for someone else
 
+- **Every suggestion confirmed in one table.** *(first user)* The starter map now files a common
+  chain under its category on the first import (1.1); what is left is asking all of them at
+  once, in one table on the panel, instead of one question each.
 - **Start here, in pictures.** One path from nothing to a first page, a screenshot a step:
   install the Claude desktop app, open its **Code** tab (not Chat), choose the downloaded folder,
   say *set this up*. No git, no terminal. The first screen of the README says the same, so
