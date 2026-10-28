@@ -23,10 +23,6 @@ from scratch: one credit card, nine statements, a cloud session.
 - **A chequing statement with long descriptions is read.** *(first user)* A description that
   wraps onto a second line, and a number the PDF reader splits with a space, no longer stop the
   parser; the fixtures carry both.
-- **Words on a card, everywhere.** Income, Investing, Plan and Records follow the card rules
-  (DESIGN.md §5b′) the way Home, the header and Spending already do: a label, one number, at
-  most one fact; terms with a Glossary entry, numbers that open their sum. The last `?` marks
-  and page subtitles go.
 - **A fresh clone checks clean.** The demo's exchange rate is dated, so a clone a few weeks old
   greets its first run with a stale-rate warning. The demo dates it relative to today.
 - **The year's stacked bar counts refunds**, so it adds up to the cards above it.

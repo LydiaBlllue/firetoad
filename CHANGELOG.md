@@ -4,6 +4,15 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Records, written to the card rules, and the last `?` goes** (2026-10-28). To do's cards open
+  their counts, and a task says when it is due rather than when it was added. Updates puts the
+  file count with the files. Accounts names each account's role and reach in the page's own
+  words instead of the register's (`grow · today` became *For FIRE*, *Spendable today*), dates
+  read `Oct 25`, and the total in dollars opens its conversion; the lines about where balances
+  come from and how currencies are kept are gone, as are the yes/no rows under money held abroad
+  and under money lent. Statements keeps the import day and how many sources are older than a
+  month. With every group moved over, the `?` mark and its code are gone from the page.
+
 - **Rules comes off the page, for now** (2026-10-28). The owner's call: rules done well are hard,
   and the basics come first. The page, its sidebar dot and the rule lines on Home are gone; the
   dry-powder band is still judged on Portfolio and, when it is broken, on Home. `rules.json` keeps

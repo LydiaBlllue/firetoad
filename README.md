@@ -29,8 +29,7 @@ does.
 
 **Every word on a card is chosen.** A card has a label, one number and at most one fact. A
 term with a dotted underline shows its dictionary entry and opens the Glossary; a number with
-one shows the sum behind it. (Home, the header and Spending work this way; the other groups
-follow in the next release — see the [roadmap](ROADMAP.md).)
+one shows the sum behind it. Every page works this way.
 
 ### Every page
 

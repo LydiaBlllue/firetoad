@@ -227,10 +227,7 @@
 - **Explanations** (§5b′): a term with a dotted underline shows its dictionary entry on hover
   and opens the Glossary on click; a tappable number shows its sum. Both use one floating light
   card, clamped to the viewport, closed by clicking away or Esc.
-- **On a page not yet moved to §5b′**, a definition is a 14px grey circled `?` after a card label
-  or section title: hover or focus shows it, click toggles it. It states the measure itself —
-  what is counted, what is not, the denominator — in one or two sentences, never a paragraph, and
-  never explains an interaction.
+- **There is no `?` mark.** Every explanation is a term or a sum.
 
 ## 5a. The top of the page, and the page header
 
@@ -299,7 +296,7 @@ these jobs is deleted, not shortened.
 
 - **Explanations are never on the card.** A word that needs one is a **term**: dotted underline,
   hover for its entry, click for the Glossary page. A number that needs one is **tappable**:
-  hover or tap it for how yours is worked out. A `?` is what is left on pages not yet moved over.
+  hover or tap it for how yours is worked out.
 - **A term's entry is a dictionary entry**, the same for anyone: the word, its part of speech,
   one sentence, a formula where there is one, an example in round numbers, *see also*. Never the
   owner's numbers, never a name in another language. Words the page coined (`Set aside`, `Held
