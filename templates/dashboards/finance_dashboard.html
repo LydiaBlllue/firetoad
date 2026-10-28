@@ -338,12 +338,12 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   <div class="card" style="margin-bottom:10px"><div class="lab">Spending by category</div><div id="yrSpendCats"></div></div>
   <div class="cap num" id="yrCap" style="margin-bottom:10px"></div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab">Spending each month, by category</div>
+    <div class="lab">Each month, by category</div>
     <svg class="year-svg" id="yearChart" viewBox="0 0 940 280" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="year-legend" id="yearLegend"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab" id="alwYrLab">Inside the allowance, month by month</div>
+    <div class="lab" id="alwYrLab">Against the allowance</div>
     <svg class="year-svg" id="alwYrChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="cap" id="alwYrCap"></div>
   </div>
@@ -393,11 +393,11 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 <section data-pg="subs" hidden>
   <div class="grid-stats" id="subStats"></div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab">Coming up in the next 30 days</div>
+    <div class="lab">Next 30 days</div>
     <div id="subsNext"></div>
   </div>
 <div class="card subs">
-  
+  <div class="lab">Every subscription</div>
   <div id="subs"></div>
 </div>
 </section>
@@ -696,8 +696,9 @@ function saveState(){
   try{ history.replaceState(null, "", "#" + Object.entries(st)
         .map(([k,v]) => k+"="+encodeURIComponent(v)).join("&")); }catch(e){}
 }
-const fmt = n => "$" + (Math.round(n) + 0).toLocaleString("en-CA");   // +0 turns -0 into 0
-const fmt2 = n => "$" + n.toLocaleString("en-CA",{minimumFractionDigits:2,maximumFractionDigits:2});
+// A negative amount reads "−$61", never "$-61". The +0 turns -0 into 0.
+const fmt = n => { const r = Math.round(n) + 0; return (r < 0 ? "\u2212" : "") + "$" + Math.abs(r).toLocaleString("en-CA"); };
+const fmt2 = n => (n <= -0.005 ? "\u2212" : "") + "$" + Math.abs(n).toLocaleString("en-CA",{minimumFractionDigits:2,maximumFractionDigits:2});
 const monthOf = ym => SPENDING.filter(e => e.date.startsWith(ym) && e.currency === "CAD");
 const monthTotal = ym => monthOf(ym).reduce((s,e) => s + e.amount, 0);
 function ymShift(ym,d){let[y,m]=ym.split("-").map(Number);m+=d;if(m<1){m=12;y--}if(m>12){m=1;y++}return y+"-"+String(m).padStart(2,"0");}
@@ -1032,8 +1033,7 @@ function render(){
   const es = monthOf(viewYM);
   const spent = es.reduce((s,e) => s + e.amount, 0);
   $("partNote").innerHTML = viewYM > covEnd
-    ? noteBox(ymLabel(viewYM)+" is still open. Your statements have not closed for the whole month yet, so this total will only go up."
-        + qMark("Statement close dates: " + Object.entries(STMT_END).map(([a,d]) => a+" "+d).join(", ") + ". A month joins the spending baseline once every one of them has passed its month end."))
+    ? '<div class="cap">'+ymFull(viewYM)+" is still open, so its totals will rise.</div>"
     : "";
 
 
@@ -1361,33 +1361,28 @@ function renderFree(F){
   const dim = new Date(Y, M, 0).getDate();
   const open = viewYM >= TODAY.slice(0,7);
   const frac = de/dim;
-  $("freeLab").innerHTML = "Free to spend in " + ymFull(viewYM)
-    + qMark("Your " + fmt(ALW) + " allowance minus every transaction under " + fmt(PLAN.bigThreshold)
-          + ". No category caps \u2014 under that line, what you buy is your own business.");
-  $("freeBig").innerHTML = '<span style="color:' + (left < 0 ? "#d03b3b" : "var(--ink)") + '">'
+  $("freeLab").textContent = "Free to spend";
+  $("freeBig").innerHTML = numx('<span style="color:' + (left < 0 ? "#d03b3b" : "var(--ink)") + '">'
     + (left < 0 ? "\u2212" + fmt(-left) : fmt(left)) + '</span>'
-    + ' <span style="font-size:13px;font-weight:400;color:var(--muted)">of ' + fmt(ALW) + '</span>';
+    + ' <span style="font-size:13px;font-weight:400;color:var(--muted)">of ' + fmt(ALW) + '</span>',
+    [["Allowance", fmt(ALW)], ["Everyday spending", "\u2212" + fmt2(ed)]],
+    "Every purchase under " + fmt(PLAN.bigThreshold) + ". Big buys are paid from their own fund.", true);
   $("freeFill").style.width = Math.min(pc(ed, ALW), 100) + "%";
   $("freeFill").style.background = left < 0 ? "#d03b3b" : "var(--c-dining)";
   $("freeTick").style.left = (open ? frac*100 : 100) + "%";
   $("freeTick").style.display = open ? "block" : "none";
-  $("freeMeta").innerHTML = metaList([
-    [open ? "Everyday spending so far" : "Everyday spending", fmt2(ed)],
-    ["Your allowance" + qMark("You set this. It is the only line the everyday side has, and it already assumes rent is not being paid."),
-     '<span class="bud-edit num" data-pk="alw">' + fmt(ALW) + '</span>'],
-    open ? ["Day of the month", de + " of " + dim] : null,
-    open ? ["Left per day for the rest of the month", left > 0 && de < dim ? fmt2(left/(dim-de)) : "\u2014"] : null,
-    [open ? "Average a day so far" : "Average a day", ed > 0 ? fmt2(ed/de) : "\u2014"],
-    open ? ["The mark on the bar" + qMark("Where you would be if the allowance were spent evenly through the month."), "Even pace", "mut"] : null
-  ]);
+  $("freeTick").title = "An even pace";
+  // One fact under the bar: what a day can take for the rest of the month, or how it ended.
+  const daysLeft = dim - de;
+  $("freeMeta").innerHTML = '<div class="cap" style="margin-top:8px">' + (open
+      ? (left > 0 && daysLeft > 0 ? fmt(left/daysLeft) + " a day for " + daysLeft + " day" + (daysLeft > 1 ? "s" : "") : left > 0 ? "Last day of the month" : "Allowance used up")
+      : (left >= 0 ? fmt(left) + " left unspent" : "Over by " + fmt(-left))) + '</div>';
   const bsum = big.reduce((a,e) => a + e.amount, 0);
-  $("bigLab").textContent = "Big buys in " + ymFull(viewYM);
+  $("bigLab").innerHTML = term("big_buy", "Big buys");
   $("freeBigBuys").innerHTML = big.length
     ? metaList(big.map(e => [merchantOf(e.note).slice(0,58), fmt2(e.amount)]).concat([
-          [(bsum < 0 ? "Given back to the " : "Taken from the ") + (BFUND.key ? BFUND.name : "Big buys") + " fund" + qMark("Anything at or over " + fmt(PLAN.bigThreshold)
-            + " a transaction is kept out of the allowance above, so one large purchase cannot turn an otherwise normal month red."),
-           fmt(Math.abs(bsum)) + " in total", "mut"]]))
-    : '<div class="empty">Nothing at or over ' + fmt(PLAN.bigThreshold) + ' this month, so the ' + (BFUND.key ? BFUND.name + ' fund' : 'fund') + ' was not touched.</div>';
+          [(bsum < 0 ? "Given back to the " : "Paid from the ") + (BFUND.key ? BFUND.name : "Big buys") + " fund", fmt(Math.abs(bsum)), "mut"]]))
+    : '<div class="empty">None this month.</div>';
 }
 
 // --- where the paycheque goes ----------------------------------------------
@@ -1455,7 +1450,7 @@ function renderSplit(F){
 // everydayOf(month), the same figure Free to spend shows.
 function drawFlow(){
   const svg = $("flowSvg"), ym = MONTHS.includes(viewYM) ? viewYM : null, open = ym && ym > covEnd;
-  $("flowLab").textContent = ym ? "Where the paycheque went · " + ymFull(ym) : "Where the paycheque goes";
+  $("flowLab").textContent = ym ? "Where the paycheque went" : "Where the paycheque goes";
   const alloc = planAlloc(), used = alloc.reduce((s,a) => s + a.v, 0), rest = PLAN.takeHome - used;
   const segs = alloc.filter(a => a.v > 0).concat(rest > 0 ? [UNALLOC(rest)] : []);
   const ev = ym ? monthOf(ym).filter(e => !isBig(e)) : [];
@@ -1520,14 +1515,7 @@ function drawFlow(){
   const cats = right.filter(n => !n.rest).map(n => n.k);
   svg.querySelectorAll("path.hit").forEach((p, i) => p.onclick = () => pickCat(cats[i]));
   svg.querySelectorAll("text.hit").forEach(t => t.onclick = () => pickCat(t.dataset.k));
-  $("flowCap").innerHTML = !a ? ""
-    : !byCat.length ? "The plan, a month at a time. Once spending is in, the allowance splits into where it actually went."
-    : "Left and middle are the plan; the right-hand column is where the allowance actually went"
-      + (open ? ", so far." : over ? " — " + fmt(over) + " more than the allowance, which came out of "
-          + (BFUND.key ? "the " + BFUND.name + " fund" : "savings") + "."
-        : spent < ALW ? "; what was left over tops up the funds." : ".")
-      + (back > 0.5 ? " Refunds that came back are drawn on the left, coming in." : "")
-      + " Click a category to see each purchase.";
+  $("flowCap").innerHTML = a && over ? "Over the allowance by " + fmt(over) : "";
 }
 function pickCat(k){
   catSel = k; renderCatPage(); drawFlow();
@@ -1712,12 +1700,7 @@ function renderAlwYear(){
   const closed = meta.filter(d => !d.open), kept = closed.filter(d => d.v <= ALW);
   // Only months since the plan began had a fund behind them to pay for an overspend.
   const overSum = closed.filter(d => d.m >= PLAN.start).reduce((s,d) => s + Math.max(d.v - ALW, 0), 0);
-  $("alwYrCap").textContent = closed.length
-    ? "Inside the allowance in " + kept.length + " of " + closed.length + " closed months"
-      + (overSum > 0 ? "; since the plan began in " + ymFull(PLAN.start) + ", the months over it took " + fmt(overSum)
-          + ", which came out of " + (BFUND.key ? "the " + BFUND.name + " fund" : "savings") : "")
-      + ". Measured against today's " + fmt(ALW) + "; big buys are left out, since their fund pays for them."
-    : "No month of " + viewYear + " has closed yet.";
+  $("alwYrCap").textContent = closed.length ? "Inside it in " + kept.length + " of " + closed.length + " closed months" : "No month has closed yet";
 }
 
 // ===== Income month-by-month: stacked by source (blue family = income domain) =====
@@ -1818,7 +1801,7 @@ function txRows(items){
     + (e.amount < 0 ? '<span class="tx-neg">−'+fmt2(Math.abs(e.amount))+'</span>' : fmt2(e.amount))
     + '</td></tr>').join("");
 }
-const TX_HEAD = '<tr><th>Date</th><th style="text-align:left">Description</th><th>Acct</th><th>Amount</th></tr>';
+const TX_HEAD = '<tr><th>Date</th><th style="text-align:left">Description</th><th>Account</th><th>Amount</th></tr>';
 
 function renderCatPage(){
   const es = monthOf(viewYM);
@@ -1838,25 +1821,18 @@ function renderCatPage(){
   const drivers = rows.filter(isHigh).sort((a,b) => over(b) - over(a));
   const pct = v => total > 0 ? Math.round(pc(v, total)) : 0;
 
+  const card = (lab, val, status, cls) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status ? '<div class="cap'+(cls ? " "+cls : "")+'">'+status+'</div>' : "")+'</div>';
+  const usual = monthMedian(viewYM), diff = usual === null ? null : total - usual;
+  const nWin = catWindow(viewYM).length;
   $("catStats").innerHTML =
-    '<div class="card"><div class="lab">Spent in '+ymLabel(viewYM)+'</div><div class="big num">'+fmt(total)+'</div>'
-      + '<div class="cap">'+es.length+(es.length===1?' purchase across ':' purchases across ')
-        +rows.length+(rows.length===1?' category':' categories')+'</div></div>'
-    + (rows.length ?
-      '<div class="card"><div class="lab">Biggest category</div><div class="big">'+rows[0].k+'</div>'
-      + '<div class="cap">'+fmt(rows[0].v)+', '+pct(rows[0].v)+'% of the month</div></div>' : "")
-    + (function(){
-        // Whole month against a usual whole month: two figures the reader can subtract.
-        const usual = monthMedian(viewYM), diff = usual === null ? null : total - usual;
-        return '<div class="card"><div class="lab">Compared with a usual month</div><div class="big num">'
-          + (diff === null ? "—" : (diff >= 0 ? "+" : "−") + fmt(Math.abs(diff))) + '</div>'
-          + '<div class="cap'+(diff !== null && diff > 0 ? ' hi' : '')+'">'
-          + (diff === null ? "Needs three full months to compare with."
-             : "A usual month is "+fmt(usual)+"."
-               + (diff > 0 && drivers.length ? " Most of the difference: " + drivers.slice(0,2).map(r => r.k).join(" and ") + "." : ""))
-          + qMark("A usual month is the median of your monthly totals over the last "+catWindow(viewYM).length+" full months, the ones whose statements have all arrived. Months you set aside as unusual are left out. Needs at least three.")
-          + '</div></div>';
-      })();
+    card("Spent in "+ymLabel(viewYM), numx(fmt(total), [], es.length+" purchase"+(es.length === 1 ? "" : "s")+" in "+rows.length+" categor"+(rows.length === 1 ? "y" : "ies")+"."), "")
+    + (rows.length ? card("Biggest category", rows[0].k, fmt(rows[0].v)+", "+pct(rows[0].v)+"% of the month") : "")
+    + card("Against a usual month",
+        diff === null ? "\u2014" : numx((diff >= 0 ? "+" : "\u2212") + fmt(Math.abs(diff)),
+          [["This month", fmt(total)], ["A usual month", "\u2212"+fmt(usual)]],
+          "A usual month is the median of the last "+nWin+" full months. Months you set aside as unusual are left out.", true),
+        diff === null ? "Needs three full months" : diff > 0 && drivers.length ? "Mostly " + drivers.slice(0,2).map(r => r.k).join(" and ") : "",
+        diff !== null && diff > 0 ? "hi" : "");
 
   const mx = Math.max(...rows.map(r => Math.abs(r.v)), 1);
   // The left list carries only what you scan by: colour, name, size, amount. Share and the
@@ -1873,21 +1849,22 @@ function renderCatPage(){
     catSel = b.dataset.k;
     renderCatPage(); drawFlow();
   });
-  $("catCap").textContent = rows.length ? "Click a category to read it on the right." : "";
+  $("catCap").textContent = "";
 
   const sel = rows.find(r => r.k === catSel);
   const win = catWindow(viewYM);
-  $("catDetLab").textContent = sel ? sel.k + " · " + ymFull(viewYM) : "Detail";
+  $("catDetLab").textContent = sel ? sel.k : "Detail";
   $("catDetail").innerHTML = !sel
     ? '<div class="empty">Nothing to show for '+ymLabel(viewYM)+' '+viewYM.slice(0,4)+'.</div>'
     : '<div class="big num" style="margin-bottom:8px">'+fmt2(sel.v)+'</div>'
       + metaList([
           ["Share of the month", pct(sel.v)+"%"],
-          ["Charges", sel.items.length],
+          ["Purchases", sel.items.length],
           sel.med === null
-            ? ["vs a usual month", "needs three full months", "mut"]
-            : ["vs a usual month"+qMark("Usual is this category\u2019s median over the last "+win.length+" full months, the ones whose statements have all arrived."),
-               (over(sel) >= 0 ? "+" : "−") + fmt(Math.abs(over(sel))),
+            ? ["Against a usual month", "Needs three full months", "mut"]
+            : ["Against a usual month",
+               numx((over(sel) >= 0 ? "+" : "\u2212") + fmt(Math.abs(over(sel))), [["This month", fmt(sel.v)], ["A usual month", "\u2212"+fmt(sel.med)]],
+                 "A usual month is this category\u2019s median over the last "+win.length+" full months.", true),
                isHigh(sel) ? "hi" : ""]
         ])
       + '<table class="dt" style="margin-top:12px">'+TX_HEAD+txRows(sel.items)+'</table>';
@@ -1905,9 +1882,9 @@ function renderYr(){
 
   renderYearInsights();
   $("yrStats").innerHTML =
-    '<div class="card"><div class="lab">Spent</div><div class="big num">'+fmt(spent)+'</div><div class="cap">In '+viewYear+', after refunds</div></div>'+
-    '<div class="card"><div class="lab">Monthly avg spend</div><div class="big num">'+(spendMonths.length?fmt(spent/spendMonths.length):"—")+'</div><div class="cap">over '+spendMonths.length+' months with data</div></div>'+
-    '<div class="card"><div class="lab">Transactions</div><div class="big num">'+es.length+'</div><div class="cap">this year</div></div>';
+    '<div class="card"><div class="lab">Spent in '+viewYear+'</div><div class="big num">'+numx(fmt(spent), [], "After refunds.")+'</div></div>'+
+    '<div class="card"><div class="lab">A month on average</div><div class="big num">'+(spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], "Months with spending on record.") : "\u2014")+'</div></div>'+
+    '<div class="card"><div class="lab">Purchases</div><div class="big num">'+es.length+'</div></div>';
 
   const byCat = {};
   es.forEach(e => byCat[e.category] = (byCat[e.category]||0) + e.amount);
@@ -1933,9 +1910,7 @@ function renderYr(){
     : '<div class="empty">No income data for '+viewYear+'</div>')
     + (CP && repaid > 0 ? '<div class="cap" style="margin-top:8px">Not counted as income: '+CP.name+' paid back '+fmt(repaid)+' this year'+qMark(CP.tip||"")+'</div>' : "");
 
-  const mLab = m => MN[Number(m.slice(5))-1];
-  $("yrCap").textContent = viewYear+" coverage — spending: "+(spendMonths.length?mLab(spendMonths[0])+"–"+mLab(spendMonths[spendMonths.length-1])+" ("+spendMonths.length+" mo)":"none")
-    +" · income: "+(cfy.length?mLab(cfy[0].ym)+"–"+mLab(cfy[cfy.length-1].ym)+" ("+cfy.length+" mo)":"none");
+  $("yrCap").textContent = "";
 }
 
 
@@ -2064,14 +2039,13 @@ function renderSubs(){
   const sum = next.reduce((t,x) => t + x.amt, 0);
   $("subsNext").innerHTML = next.length
     ? '<table class="dt"><tr><th style="text-align:left">Expected</th><th style="text-align:left">Subscription</th><th>Amount</th></tr>'
-      + next.map(x => '<tr><td style="text-align:left" class="num">'+x.at+(x.at < TODAY ? ' <span class="cap">probably charged already</span>' : '')+'</td>'
-        + '<td style="text-align:left">'+x.name+' <span class="cap">every '+x.every+', seen '+x.seen+' times</span></td>'
+      + next.map(x => '<tr><td style="text-align:left" class="num">'+dLong(x.at)+(x.at < TODAY ? ' <span class="cap">likely charged</span>' : '')+'</td>'
+        + '<td style="text-align:left">'+x.name+' <span class="cap">every '+x.every+'</span></td>'
         + '<td class="num">'+fmt2(x.amt)+'</td></tr>').join("")
       + '<tr class="tot"><td colspan="2" style="text-align:left">In all</td><td class="num">'+fmt2(sum)+'</td></tr></table>'
-      + '<div class="cap" style="margin-top:6px">Projected from each subscription\u2019s own rhythm since your newest statement ('+dataEnd+'). Cancel before the date and it does not come.</div>'
-    : '<div class="empty">Nothing with a steady rhythm is due in the next 30 days.</div>';
+    : '<div class="empty">Nothing due.</div>';
   $("subs").innerHTML = rows.length ? rows.map(s =>
-    '<div class="leg-row'+(s.active?"":" off")+'"><span class="nm">'+s.name+(s.active?' <span class="sub-badge">● Active</span>':"")+'</span><span class="meta num">last '+s.last.date+' · ×'+s.n+'</span><span class="v num">'+fmt2(s.last.amount)+'</span></div>').join("")
+    '<div class="leg-row'+(s.active?"":" off")+'"><span class="nm">'+s.name+(s.active?' <span class="sub-badge">● Active</span>':"")+'</span><span class="meta num">'+s.n+' charge'+(s.n === 1 ? "" : "s")+', last '+dLong(s.last.date)+'</span><span class="v num">'+fmt2(s.last.amount)+'</span></div>').join("")
     : '<div class="empty">No subscriptions detected.</div>';
 }
 
@@ -2894,11 +2868,14 @@ function renderSubStats(){
   const byBrand = SUB_KEYS.map(b => ({name:b.name, v: subs.filter(e => b.k.some(k => (e.note||"").toLowerCase().includes(k))).reduce((a,e)=>a+e.amount,0)}))
                           .sort((a,b)=>b.v-a.v)[0];
   const base = PLAN_BASE;
+  const card = (lab, val, status) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status ? '<div class="cap">'+status+'</div>' : "")+'</div>';
   $("subStats").innerHTML =
-    '<div class="card"><div class="lab">Subscriptions in '+yr+'</div><div class="big num">'+fmt(ytd)+'</div><div class="cap">Across '+closed+' closed months</div></div>'+
-    '<div class="card"><div class="lab">Per month</div><div class="big num">'+fmt(perMo)+'</div><div class="cap">Averaged</div></div>'+
-    '<div class="card"><div class="lab">A year at that rate'+qMark("Twelve months of the current average. Useful because subscriptions renew whether or not you use them.")+'</div><div class="big num">'+fmt(perMo*12)+'</div><div class="cap">'+(base?Math.round(pc(perMo, base))+"% of your planning baseline":"")+'</div></div>'+
-    '<div class="card"><div class="lab">Biggest one</div><div class="big num" style="font-size:20px">'+(byBrand && byBrand.v ? byBrand.name : "—")+'</div><div class="cap">'+(byBrand && byBrand.v ? fmt(byBrand.v)+" this year, "+Math.round(pc(byBrand.v, ytd))+"% of subscriptions" : "no subscriptions yet")+'</div></div>';
+    card(term("subscription", "Subscriptions")+" in "+yr, numx(fmt(ytd), [], "Every charge that repeats, this year."), "") +
+    card("Per month", numx(fmt(perMo), [["This year", fmt(ytd)], ["Closed months", closed]], ""), "") +
+    card("A full year", numx(fmt(perMo*12), [["Per month", fmt(perMo)], ["Months", "12"]], "Subscriptions renew whether or not you use them."),
+      base ? Math.round(pc(perMo, base))+"% of your "+term("planning_figure") : "") +
+    '<div class="card"><div class="lab">Biggest one</div><div class="big num" style="font-size:20px">'+(byBrand && byBrand.v ? byBrand.name : "\u2014")+'</div>'
+      +(byBrand && byBrand.v ? '<div class="cap">'+fmt(byBrand.v)+", "+Math.round(pc(byBrand.v, ytd))+"% of subscriptions"+'</div>' : "")+'</div>';
 }
 
 // Foreign: the list of accounts never said how much of your net worth sits behind a border.
@@ -3264,7 +3241,7 @@ function renderYearInsights(){
   const byCat = {};
   yes.forEach(e => byCat[e.category] = (byCat[e.category]||0) + e.amount);
   const top = Object.entries(byCat).sort((a,b) => b[1]-a[1])[0];
-  if(top) ins.push({s:"n", t:top[0]+" is the largest "+yr+" category: "+fmt(top[1])+" \u2014 "+Math.round(pc(top[1], ytd))+"% of "+fmt(ytd)+" spent"});
+  if(top) ins.push({s:"n", t:"<b>"+top[0]+"</b> is the biggest category: "+fmt(top[1])+", "+Math.round(pc(top[1], ytd))+"% of the year."});
   const subYtd = byCat["Subscription"]||0;
   // The biggest subscription brand, read off SUB_KEYS (derived from merchants.json) rather
   // than a vendor list written into the page.
@@ -3273,18 +3250,21 @@ function renderYearInsights(){
     const hay = (e.note||"").toLowerCase(), hit = SUB_KEYS.find(s => s.k.some(k => hay.includes(k)));
     const nm = hit ? hit.name : "Other"; byBrand[nm] = (byBrand[nm]||0) + e.amount; });
   const topBrand = Object.entries(byBrand).sort((a,b) => b[1]-a[1])[0];
-  if(subYtd > 0) ins.push({s:"w", t:"Subscriptions are "+fmt(subYtd)+" in "+yr+" ("+Math.round(pc(subYtd, ytd))+"% of spending)"
-    + (topBrand ? " \u2014 "+topBrand[0]+" alone "+fmt(topBrand[1])+", "+Math.round(pc(topBrand[1], subYtd))+"% of that" : "")});
-  const din = byCat["Dining"]||0;
-  const ue = yes.filter(e => /UBEREATS/i.test(e.note||"")).reduce((s,e) => s + e.amount, 0);
-  if(din > 0 && ue > 0) ins.push({s:"w", t:"Uber Eats is "+fmt(ue)+" of "+fmt(din)+" Dining ("+Math.round(pc(ue, din))+"%) \u2014 the single biggest cut if Dining needs one"});
+  if(subYtd > 0) ins.push({s:"w", t:"<b>"+term("subscription", "Subscriptions")+"</b> cost "+fmt(subYtd)+", "+Math.round(pc(subYtd, ytd))+"% of spending."
+    + (topBrand && topBrand[0] !== "Other" ? " The biggest is "+topBrand[0]+", at "+fmt(topBrand[1])+"." : "")});
+  // The merchant that takes the largest share of one category, whichever it is.
+  const byMer = {};
+  const shortName = n => merchantOf(n).split(/[\/*#,]|\s{2,}/)[0].trim().split(/\s+/).slice(0, 2).join(" ").toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  yes.filter(e => e.category === "Dining").forEach(e => { const m = shortName(e.note); byMer[m] = (byMer[m]||0) + e.amount; });
+  const din = byCat["Dining"]||0, topMer = Object.entries(byMer).sort((a,b) => b[1]-a[1])[0];
+  if(din > 0 && topMer && topMer[1] / din >= 0.25)
+    ins.push({s:"w", t:"<b>"+topMer[0]+"</b> is "+Math.round(pc(topMer[1], din))+"% of Dining: "+fmt(topMer[1])+" of "+fmt(din)+"."});
   const mt = MONTHS.filter(m => m.startsWith(yr)).map(m => ({m, v: monthTotal(m)})).filter(x => x.v > 0);
   const win = usableMonths().slice(-12).map(monthTotal).filter(v => v > 0).sort((a,b)=>a-b);
   if(mt.length > 1 && win.length){
     const peak = mt.reduce((a,b) => b.v > a.v ? b : a);
     const med = win[Math.floor(win.length/2)];
-    ins.push({s:"n", t:"Highest month: "+ymFull(peak.m)+" at "+fmt(peak.v)
-      +" ("+(peak.v/med).toFixed(1)+"\u00d7 the median of the last "+win.length+" closed months)"});
+    ins.push({s:"n", t:"<b>"+ymFull(peak.m)+"</b> was the biggest month: "+fmt(peak.v)+", "+(peak.v/med).toFixed(1)+"\u00d7 a usual month."});
   }
   $("yrInsights").innerHTML = insRows(ins, "Nothing stands out yet.");
 }

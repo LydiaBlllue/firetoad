@@ -427,6 +427,10 @@ these jobs is deleted, not shortened.
 - **One name per thing, everywhere.** The Glossary is the authority: a word that is in it is
   spelled that way on every page (`Set aside`, never `Earmarked`).
 - **A summary is a row, not a warning.** `noteBox()` is for something that needs action.
+- **Money is written one way**: `$1,300`, `−$48.15` (a real minus, before the dollar sign, never
+  `$-48.15`), a date as `Oct 25`.
+- **No instructions and no provenance in the text.** Not "Click a category to read it on the
+  right", not "Projected from each subscription's own rhythm since your newest statement".
 
 ## 5c. The filing grid (the owner, 2026-09-06 — the paper-planner look)
 

@@ -4,6 +4,13 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Spending, written to the card rules** (2026-10-28). This month, Year and Subscriptions keep
+  a label, a number and at most one fact per card; the long captions (coverage lines, "click a
+  category…", how the 30-day list is projected) are gone, and each number opens its sum. What
+  stands out names the merchant that takes a quarter of Dining or more, whichever it is, instead
+  of one written into the page. Negative money reads `−$61`, never `$-61`. The explanations are
+  a light card with a heading, a formula, a labelled example, and a total line on a sum.
+
 - **Words on a card, and a Glossary** (2026-10-28). DESIGN.md §5b′ sets what a card may say: a
   label of at most four words, one number, and at most one fact under it; no subtitles, on a
   card or under a page title. A word that needs explaining is a term (dotted underline, hover for
