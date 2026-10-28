@@ -649,6 +649,52 @@ def starter_check(root, base):
     return [f"  ✗ starter map: got {got}, asked {asked}" + (f"; patterns outside the seven categories or Subscription: {bad}" if bad else "")]
 
 
+def demo_clear_check(root, base):
+    """Setup on a fresh clone leaves nothing of the demo owner behind (2026-10: their statements
+    stayed in archive/ and their OWNER.md stayed loaded). Run the scaffold on a demo copy, with a
+    file of the new owner's already in archive/ and one with no tag at all: every file carrying a
+    demo tag goes, those two stay, and OWNER.md is the empty stub. A setup refused for bad answers
+    first has to leave archive/ exactly as it was."""
+    sc = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "setup", "scripts", "scaffold.py"))
+    stub = os.path.join(os.path.dirname(os.path.dirname(sc)), "data", "owner_stub.md")
+    if not (os.path.exists(sc) and os.path.exists(stub)):
+        return []
+    ws = os.path.join(base, "democlear"); os.makedirs(ws); stage(root, ws)
+    edit_json(ws, layout.rel("profile.json"), lambda d: d.__setitem__("demo", True))
+    arc = os.path.join(ws, "archive")
+    keep = ["20261026_TD_CHQ4021_Chequing Statement-4021 2026-10-26.pdf", "README.txt"]
+    for f in keep:
+        open(os.path.join(arc, f), "w").close()
+    tags = {t for d in json.load(open(layout.path(ws, "accounts.json"), encoding="utf-8"))["documents"]
+            for t in d.get("tags", [])}
+    demo = lambda: [f for f in os.listdir(arc) if re.match(r"\d{8}_", f) and any(f[9:].startswith(t + "_") for t in tags)]
+    before = len(demo())
+    ans = os.path.join(base, "democlear-answers.json")
+    answers = {"owner": "Alex Chen", "born": 1993, "currency": "CAD", "importDay": 26, "accounts": []}
+    json.dump(answers, open(ans, "w", encoding="utf-8"))
+    refused = subprocess.run([sys.executable, sc, ws, "--answers", ans, "--write"], capture_output=True, text=True)
+    after_refusal = len(demo())
+    answers.update({
+        "accounts": [{"inst": "TD", "name": "Everyday Chequing", "kind": "Chequing", "id": "…4021",
+                      "balance": 4210.55, "asof": "2026-08-31", "ledger": "chequing.csv",
+                      "feeds": "Income, Cash flow, Bank cash",
+                      "doc": {"file": "Chequing Statement-4021 <date>.pdf", "closes": 31}}],
+        "plan": {"takeHome": 4200, "invest": 900, "everyday": 1800, "bigThreshold": 300},
+        "funds": [], "rules": {"buckets": [{"key": "rest", "name": "Holdings", "catchAll": True}], "maxHoldings": 8},
+        "foreign": None})
+    json.dump(answers, open(ans, "w", encoding="utf-8"))
+    r = subprocess.run([sys.executable, sc, ws, "--answers", ans, "--write"], capture_output=True, text=True)
+    left, kept = demo(), [f for f in keep if os.path.exists(os.path.join(arc, f))]
+    op = os.path.join(ws, "OWNER.md")
+    is_stub = os.path.exists(op) and open(op, encoding="utf-8").read() == open(stub, encoding="utf-8").read()
+    if before and refused.returncode != 0 and after_refusal == before and r.returncode == 0 and not left and kept == keep and is_stub:
+        return [f"  ✓ setup on the demo: {before} demo statement(s) cleared from archive/, the owner's own and an untagged file kept, OWNER.md the empty stub; a refused setup cleared nothing"]
+    tail = (r.stdout + r.stderr).strip().splitlines()[-1:]
+    return [f"  ✗ setup on the demo: {before} demo file(s), {after_refusal} after a refused run (exit {refused.returncode}), "
+            f"{len(left)} left after setup (exit {r.returncode}{': ' + tail[0] if r.returncode and tail else ''}), "
+            f"kept {kept}, OWNER.md {'the stub' if is_stub else 'not the stub'}"]
+
+
 def propose_check(ws, man):
     """The setup's first step drafts the register from the first files dropped (propose.py). Given
     the demo owner's statements (the fixtures) and broker exports, the draft has to find every
@@ -1320,7 +1366,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = (parser_checks(root, base) + update_check(root, base) + update_batch_check(root, base)
                 + undo_check(root, base) + drift_check(root, base) + own_name_check(root, base)
-                + loan_import_check(root, base) + starter_check(root, base))
+                + loan_import_check(root, base) + starter_check(root, base) + demo_clear_check(root, base))
         for line in runs:
             print(line)
             if line.lstrip().startswith("✗"):

@@ -21,6 +21,7 @@ import datetime
 import json
 import os
 import re
+import shutil
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
@@ -486,6 +487,33 @@ def build(a, today):
 PRIVATE = ("findata/", "dashboards/", "decisions/")
 
 
+OWNER_STUB = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "owner_stub.md")
+
+
+def clear_demo(root):
+    """The rest of the demo owner: the originals in archive/ and their OWNER.md. Left behind, the
+    statements of a person who does not exist sat beside the new owner's own, and CLAUDE.md went on
+    loading their notes (2026-10). Only files carrying one of the demo register's archive tags go —
+    read before the new register replaces it — so anything else in archive/ stays."""
+    tags = set()
+    try:
+        reg = json.load(open(layout.path(root, "accounts.json"), encoding="utf-8"))
+        tags = {t for d in reg.get("documents", []) for t in d.get("tags", [])}
+    except (OSError, ValueError):
+        pass
+    arc = os.path.join(root, "archive")
+    gone = []
+    for f in sorted(os.listdir(arc) if os.path.isdir(arc) else []):
+        m = re.match(r"\d{8}_(.+)$", f)
+        if m and any(m.group(1).startswith(t + "_") for t in tags):
+            os.remove(os.path.join(arc, f))
+            gone.append(f)
+    if gone:
+        print(f"  − demo statements cleared from archive/: {len(gone)} file(s)")
+    shutil.copyfile(OWNER_STUB, os.path.join(root, "OWNER.md"))
+    print("  → OWNER.md: an empty one, yours to fill (the demo owner's notes are gone)")
+
+
 def keep_private(root, today):
     gi = os.path.join(root, ".gitignore")
     lines = open(gi, encoding="utf-8").read().splitlines() if os.path.exists(gi) else []
@@ -546,6 +574,7 @@ def main(argv):
             os.remove(os.path.join(led, f))
         if stale:
             print("  − demo ledgers cleared: " + ", ".join(stale))
+        clear_demo(root)
     for path, text in files.items():
         full = os.path.join(root, path)
         os.makedirs(os.path.dirname(full), exist_ok=True)

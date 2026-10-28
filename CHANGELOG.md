@@ -2,6 +2,14 @@
 
 ## 1.1 — unreleased
 
+- **Setup leaves nothing of the demo owner behind** (2026-10-28). On a fresh clone it cleared the
+  demo's ledgers and rewrote the register, but the demo's statements stayed in `archive/` beside
+  the new owner's and `CLAUDE.md` went on loading the demo's `OWNER.md`. The scaffold now removes
+  every `archive/` file carrying one of the demo register's tags (anything else there stays) and
+  writes an empty `OWNER.md` from `setup/data/owner_stub.md` — the same stub `tools/sync.py`
+  gives a workspace that has none, now kept in one place. Only after the answers have built
+  without error, so a refused setup changes nothing; the selftest runs it on a demo copy both ways.
+
 - **Investment income fills its page** (2026-10-28). The page was under a screen (R4), and its
   months swing — January, April and July twice the others — with nothing to say why. A **By
   holding** card answers it: each fund that paid dividends, how often it pays (every month, every
