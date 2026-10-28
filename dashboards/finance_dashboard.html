@@ -766,8 +766,6 @@ function pageFlags(){
   const bd = baseDrift();
   if(bd !== null && Math.abs(bd) > DRIFT_FLAG) f.base = "#c98500";
   // The investing pages: the band and the cap from rules.json, never a literal 40/45/10.
-  const iv = IV.flags();
-  if(iv.invested && (!iv.dryIn || iv.over)) f.port = iv.over ? "#d03b3b" : "#c98500";
   // The plan page: red when the split asks for more than the paycheque, amber when a fund is
   // short of what it has promised. Both are things you decide, not things the data decides.
   const fr = fundRun();
@@ -1104,7 +1102,6 @@ function renderHome(){
   const invested = INVEST.portfolio;   // every account held to grow, the foreign funds included; 0 until the first holdings export
   // Four questions, one per section: is the money growing, how far along, did this month's rule
   // hold, and what is free to spend today. Net worth is the header line; "reach" is the table.
-  const inBand = BAND && INVEST.investable ? !outOfBand(INVEST.dryPct) : null;
   const pctP = Math.round(PORTFOLIO/target*1000)/10;
   const crossP = crossMonth(project(PORTFOLIO, 0.05, 300), target);
   const dep = (WSDEP||[]).slice(-1)[0] || null, half = FUNDS.plan.invest/2;
@@ -1121,8 +1118,7 @@ function renderHome(){
   $("homeStats").innerHTML =
     card(term("portfolio", "Portfolio"),
       numx(fmt(PORTFOLIO), split(grow.by), "Every account you hold to grow. Set-aside accounts and bank cash are not in it.", true),
-      !INVEST.investable ? "Nothing invested yet" : inBand === null ? "" :
-        term("dry_powder", "Dry powder")+" "+INVEST.dryPct+"%, "+(inBand ? "inside " : (INVEST.dryPct < BANDLO ? "below " : "above "))+BANDLO+"–"+BANDHI+"%"+(inBand ? "" : " ⚠")) +
+      !INVEST.investable ? "Nothing invested yet" : term("dry_powder", "Dry powder")+" "+INVEST.dryPct+"%") +
     card(term("fire", "FIRE")+" progress",
       numx(pctP+"%", [["Portfolio", fmt(PORTFOLIO)], ["Target", fmt(target)]], "The target is your planning figure × 12 × 25."),
       crossP ? "On track for "+dTxt(crossP) : "") +
@@ -2014,15 +2010,9 @@ function renderForeign(){
 // with the gap spelled out. Seeded at 2790 = the value the old formula produced, so nothing
 // jumped on the day it changed.
 const COMMITTED_KEEP = 1250;
-// The band and the holdings cap belong to whoever owns this workspace (findata/rules.json).
-// They were the literals 40 / 45 / 10 in four places on this page, so a workspace whose owner
-// chose differently — or chose no band at all — was told it was outside somebody else's.
+// The owner's buckets (findata/rules.json): which symbols are dry powder, and how holdings group.
+// No band or cap is judged on the page since 2026-10-28.
 const RULES = {"buckets": [{"key": "dry", "name": "Safe end · dry powder", "symbols": ["SGOV", "VSC"], "target": [40, 45]}, {"key": "core", "name": "Core index", "symbols": ["VEQT", "XAW", "VCN"]}, {"key": "sat", "name": "High-conviction satellites", "symbols": ["SHOP", "BN"]}, {"key": "mid", "name": "Middle tier · cleanup candidates", "catchAll": true}], "maxHoldings": 10, "assetClass": {"VEQT": "stocks", "VCN": "stocks", "XAW": "stocks", "ZAG": "bonds", "VSC": "bonds", "SGOV": "bonds"}, "notes": [{"status": "ok", "name": "Account placement", "text": "Growth names in the TFSA: SHOP {mv:SHOP} is TFSA-only since the August consolidation ✓. BN {mv:BN} sits in the RRSP. The one bond ETF outside the dry-powder pair (ZAG {mv:ZAG}) stays non-registered — small enough not to matter."}, {"status": "info", "name": "SHOP — thesis check each quarter", "text": "Held for merchant growth and take-rate expansion. Review on Q3 results in late October; GMV growth under +20% is the exit trigger."}, {"status": "info", "name": "BN — 3–5 year structural position", "text": "{mv:BN} in the RRSP. Checkpoint: investor day and Q3 distributable earnings."}, {"status": "ok", "name": "Options — ≤28 DTE, named catalyst, ≤5 open", "text": "No option positions in this export ✓."}], "checkpoints": [{"title": "BN investor day", "date": "2026-09-24", "label": "Sep 24", "why": "Distributable earnings and the buyback pace — the reasons the position exists"}, {"title": "SHOP Q3 results", "date": "2026-10-29", "label": "Late October", "why": "GMV growth under +20% is the exit trigger; otherwise hold"}, {"title": "RRSP deadline", "date": "2027-03-01", "label": "Mar 1, 2027", "why": "Top up the RRSP before the deadline once the TFSA room is used"}], "benchmark": {"symbol": "VT", "name": "Vanguard Total World Stock ETF", "why": "The whole world's stocks in one fund: what the same money would have earned with no choices at all.", "asof": "2026-10-27"}};
-const BAND = (RULES.buckets || []).find(b => Array.isArray(b.target)) || null;
-const BANDLO = BAND ? BAND.target[0] : null, BANDHI = BAND ? BAND.target[1] : null;
-const CAPN = RULES.maxHoldings;
-const bandName = BAND ? BAND.name.split(" \u00b7 ").pop() : "";
-const outOfBand = p => BAND ? (p < BANDLO || p > BANDHI) : false;
 
 const PLAN_BASE_DEFAULT = 2550;
 const DRIFT_FLAG = 0.10;                  // measured vs planned gap that is worth flagging
@@ -3115,8 +3105,6 @@ const IV = (function(){
   const BANDED   = BUCKETS.filter(b => Array.isArray(b.target));
   const PRIMARY  = BANDED[0] || null;
   const DRY      = PRIMARY ? (PRIMARY.symbols||[]) : [];
-  const DRYLO    = PRIMARY ? PRIMARY.target[0] : 0, DRYHI = PRIMARY ? PRIMARY.target[1] : 100;
-  const CAP      = RULES.maxHoldings;
   FGN.rows = (FGN.funds||[]).map(f => ({
     account:FGN.label + " \u00b7 " + f.inst, sym:f.sym, name:f.name, fgn:f.amount, amount:f.amount, qty:null, cn:1, class:f.class,
     mv:+(f.amount*FGN.cadPerUnit).toFixed(2), bv:+((f.amount-f.gain)*FGN.cadPerUnit).toFixed(2)
@@ -3139,13 +3127,6 @@ const IV = (function(){
   const cadInv    = portCad;
   const portfolio = portCad + fgn;
   const dryPct    = pc(dry, cadInv);
-  const dryGap    = cadInv*DRYLO/100 - dry;
-  const dryOver   = dry - cadInv*DRYHI/100;
-  const dryIn     = dryGap <= 0 && dryOver <= 0;
-  const dryState  = dryIn ? "ok" : "warn";
-  const dryNote   = dryIn ? fmt(cadInv*DRYHI/100-dry)+` under the ${DRYHI}% ceiling`
-                          : (dryGap > 0 ? fmt(dryGap)+` short of the ${DRYLO}% floor`
-                                        : fmt(dryOver)+` above the ${DRYHI}% ceiling`);
   const freeSyms  = new Set(positions.filter(p=>!EARMARK.includes(p.account) && !p.cash && !p.cn).map(p=>p.sym));
   const nTick     = freeSyms.size + FGN.rows.length;
   const symMv     = s => ((DATA.tickers||[]).find(t=>t.sym===s)||{mv:0}).mv;
@@ -3172,13 +3153,10 @@ const IV = (function(){
     + stat(term("set_aside", "Set aside"), numx(fmt(earm), EARMARK.map(a => [a, fmt(accVal(a))]), "", true))
     + stat(term("dry_powder", "Dry powder"),
            cadInv ? numx(pctS(dryPct), [...DRY.map(y => [y, fmt(positions.filter(p => p.sym === y && !EARMARK.includes(p.account)).reduce((s,p) => s + p.mv, 0))]), ["Out of", fmt(cadInv)]],
-                         "Measured at "+DATA.broker+", set-aside accounts left out. Your band is "+DRYLO+"\u2013"+DRYHI+"%."+dryWas)
-                    +' <span class="sym '+dryState+'" style="font-size:15px">'+(dryIn?"\u2713":"\u26a0")+'</span>' : "\u2014",
-           cap(cadInv ? dryNote : "Nothing invested yet"))
+                         "Measured at "+DATA.broker+", set-aside accounts left out."+dryWas) : "\u2014",
+           cap(cadInv ? "" : "Nothing invested yet"))
     + stat("Holdings",
-           numx(String(nTick), [["At "+DATA.broker, String(freeSyms.size)], ...(FGN.rows.length ? [["Funds abroad", String(FGN.rows.length)]] : [])], "Cash is not counted.", true)
-             + (CAP && nTick > CAP ? ' <span class="sym bad" style="font-size:15px">\u2717</span>' : ""),
-           cap(!CAP ? "" : nTick > CAP ? (nTick-CAP)+" over your limit of "+CAP : "Within your limit of "+CAP));
+           numx(String(nTick), [["At "+DATA.broker, String(freeSyms.size)], ...(FGN.rows.length ? [["Funds abroad", String(FGN.rows.length)]] : [])], "Cash is not counted.", true));
   }
   function renderMeta(){
     $("invMeta").innerHTML = metaList([
@@ -3297,9 +3275,7 @@ const IV = (function(){
     $("plToggle").addEventListener("click", e => { showPL=!showPL; e.currentTarget.classList.toggle("on", showPL); drawHoldings(); });
   }
   function renderAll(){ renderStats(); renderMeta(); renderBarbell(); drawHoldings(); wire(); }
-  // What the sidebar dot on Portfolio needs: the band and the cap.
-  const flags = () => ({dryIn, over: CAP ? nTick > CAP : false, invested: cadInv > 0});
-  return { renderAll, flags };
+  return { renderAll };
 })();
 
 

@@ -4,6 +4,11 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **The dry-powder band is not judged any more** (2026-10-28, with Rules). Home's Portfolio card
+  and Portfolio's Dry powder card show the share as a number; the ✓/⚠, the "short of the floor"
+  line, the holdings-limit mark and the Portfolio dot in the sidebar are gone. `rules.json` keeps
+  the band.
+
 - **One sign for every balance** (2026-10-28, findata schema 10). The register wrote what the
   owner owes as negative; `banks.json` wrote a card's balance as the amount owed, and the build
   turned it back with an absolute value that assumed a card can only be owed. A card paid past

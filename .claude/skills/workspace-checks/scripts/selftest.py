@@ -262,8 +262,8 @@ def m_returns_gap(r):
     # A year lost from the middle of the history: the backtest would run 1973 straight into 1975.
     edit_json(r, layout.rel("returns.json"), lambda d: d["years"].pop(len(d["years"]) // 2))
 def m_rules_drift(r):
-    # rules.json is the strategy; the page copies it. The copy going stale means the Rules page
-    # is checking the portfolio against a band nobody chose any more.
+    # rules.json is the strategy; the page copies it. The copy going stale means the page groups
+    # the portfolio by rules nobody chose any more.
     edit_json(r, layout.rel("rules.json"), lambda d: d.__setitem__("maxHoldings", 99))
 
 

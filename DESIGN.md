@@ -94,7 +94,7 @@
   now*; everything by month lives in Spending and Income.
 - **No list of things to do on Home** (taken off 2026-10-28 with Rules): what waits for the owner
   is on To do, and a page that needs attention carries its dot in the sidebar.
-- **Four stat cards**, one per section: **Portfolio** (with the band status), **FIRE progress**
+- **Four stat cards**, one per section: **Portfolio** (with its dry-powder share), **FIRE progress**
   (with the on-track year), **Invested in \<month\>** (pay-yourself-first, from the broker's
   record), **Free to spend** (the allowance today).
 - **Net worth in one card, cut both ways at once**: one row per `role`, cash split by where it
@@ -144,9 +144,10 @@
   is too short to judge. Then *What you put in, and what the market added*.
 - **Holdings**: every position, by role or by account; the Accounts column is always visible.
   A fund held in another currency shows that amount beside its home-currency value.
-- **No Rules page** (taken off 2026-10-28, until the basics are finished). `rules.json` still
-  carries the buckets, the band and the principles; the band is judged on Portfolio and on Home,
-  and the old link to Rules opens Portfolio.
+- **No Rules page, and no rule judged anywhere** (taken off 2026-10-28, until the basics are
+  finished). `rules.json` still carries the buckets, the band and the principles; the page shows
+  the dry-powder share as a number, with no band, mark or dot, and the old link to Rules opens
+  Portfolio.
 - Money held in another currency is not a page: its accounts are a card on **Accounts**, its
   funds are rows in **Holdings**.
 
