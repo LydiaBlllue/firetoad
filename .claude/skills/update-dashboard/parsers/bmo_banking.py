@@ -12,6 +12,13 @@ turns that back into text before anything else looks at it. What it then looks l
     Jul 31 Interest Earned 0.30 2,000.55
     Aug 05 Closing totals 0.00 2,000.30                   <- deducted total, added total
 
+A long description wraps, and the amounts come on the line where it ends — the second or the
+third (a first user's statements, 2026-10):
+
+    Oct 03 INTERAC e-Transfer Sent                        <- dated, no amounts yet
+    SOMEONE WITH A LONG NAME                              <- more description
+    CA2Kx7Q 1,215.05 4,000.00                             <- the rest, then movement and balance
+
 Every row prints its balance, so the sign of a movement is the balance's own difference.
 Reconciled per account: the chain closes on the printed closing balance, and the deducted and
 added totals match the summary.
@@ -19,7 +26,8 @@ added totals match the summary.
 import datetime
 import re
 
-from ._pdf import AMOUNT, ParseError, date_in_period, holder_after, long_date, money, month_no, result, text_lines
+from ._pdf import (AMOUNT, ParseError, date_in_period, holder_after, join_split, long_date, money, month_no,
+                   result, text_lines)
 
 NAME = "bmo_banking"
 RULE = "balance chain closes; deducted and added match the printed totals"
@@ -28,6 +36,9 @@ PUNCT = {"2c", "2e", "2d", "28", "29", "3a", "3b", "2f", "26", "27", "23", "24",
 DATE = re.compile(r"^([A-Z][a-z]{2}) (\d{2}) (.*)$")
 ROW = re.compile(r"^(.*?)\s+(" + AMOUNT + r")\s+(" + AMOUNT + r")\s*$")
 SECTION = re.compile(r"^(.+?) Account # (\d{4}) (\d{4}-\d{3})\s*(.*)$")
+# What a page break repeats inside a section; never part of a description that wraps across it.
+FURNITURE = re.compile(r"\(\$\)|^Page \d+ of \d+|^Amounts (?:deducted|added)|^Here's what happened")
+WRAP = 3                # lines a description may run to before its amounts, beyond its first
 
 
 def decode(s):
@@ -42,7 +53,7 @@ def decode(s):
 
 
 def parse(path):
-    lines = [decode(l) for l in text_lines(path)]
+    lines = [join_split(decode(l)) for l in text_lines(path)]
     text = "\n".join(lines)
     pm = re.search(r"For the period ending ([A-Za-z]+ \d{1,2}, \d{4})", text)
     if not pm:
@@ -73,12 +84,26 @@ def parse(path):
         start = None
         rows = []
         t_out = t_in = None
+        wrap = None             # a dated row whose amounts have not come yet: [date, description, lines]
         for l in sec["lines"]:
             # pypdf sometimes splits a month name ("M ar 16"); close the gap before matching.
             l = re.sub(r"^([A-Z]) ?([a-z]) ?([a-z]) (\d{2}) ", r"\1\2\3 \4 ", l)
             dm = DATE.match(l)
             if not dm:
+                if wrap is None or FURNITURE.search(l):
+                    continue
+                rm = ROW.match(l)
+                if rm:
+                    rows.append({"date": wrap[0], "description": (wrap[1] + " " + rm.group(1)).strip(),
+                                 "amount": abs(money(rm.group(2))), "balance": money(rm.group(3))})
+                    wrap = None
+                elif wrap[2] >= WRAP:
+                    raise ParseError(f"{sec['name']}: a description runs past {WRAP + 1} lines with no amounts: {wrap[1]!r}")
+                else:
+                    wrap = [wrap[0], (wrap[1] + " " + l).strip(), wrap[2] + 1]
                 continue
+            if wrap is not None:
+                raise ParseError(f"{sec['name']}: row without amount and balance: {wrap[1]!r}")
             date = date_in_period(month_no(dm.group(1)), int(dm.group(2)), end.replace(day=1), end)
             rest = dm.group(3)
             if rest.startswith("Opening balance"):
@@ -90,9 +115,12 @@ def parse(path):
                 break
             rm = ROW.match(rest)
             if not rm:
-                raise ParseError(f"{sec['name']}: row without amount and balance: {l!r}")
+                wrap = [date, rest.strip(), 0]
+                continue
             rows.append({"date": date, "description": rm.group(1).strip(),
                          "amount": abs(money(rm.group(2))), "balance": money(rm.group(3))})
+        if wrap is not None:
+            raise ParseError(f"{sec['name']}: row without amount and balance: {wrap[1]!r}")
         if opening is None:
             raise ParseError(f"{sec['name']}: no opening balance row")
         bal = opening

@@ -575,6 +575,48 @@ def credit_balance_check(ws):
     return out
 
 
+def wrap_check(ws):
+    """A first user's chequing statements were all refused (2026-10): a long description wrapped
+    so its amounts landed on the second or third line, and pypdf read '1 ,215.05' and
+    '3, 000.00'. Render a BMO and an RBC statement with both, and expect every row back, signed
+    and reconciled, with the whole description."""
+    if not os.path.exists(os.path.join(ws, "tools", "fixtures.py")):
+        return []
+    sys.path.insert(0, os.path.join(ws, "tools"))
+    import fixtures
+    from pdfgen import write_pdf
+    rows = [{"date": "2026-10-03", "description": "PAYROLL DEPOSIT EXAMPLE CO", "amount": 3000.0, "split": ", "},
+            {"date": "2026-10-09", "description": "INTERAC e-Transfer Sent SOMEONE WITH A LONG NAME CA2Kx7Q",
+             "amount": -1215.05, "wrap": 2, "split": " ,"},
+            {"date": "2026-10-14", "description": "Bill payment CITY OF EXAMPLE PROPERTY TAX", "amount": -82.10, "wrap": 1}]
+    bal = 1000.0
+    for r in rows:
+        bal = round(bal + r["amount"], 2); r["balance"] = bal
+    start, end = datetime.date(2026, 10, 1), datetime.date(2026, 10, 31)
+    out, good = [], 0
+    for parser, pages in (("bmo_banking", fixtures.bmo_banking("Primary Chequing", "4471", start, end, 1000.0, rows, "Emma Roy")),
+                          ("rbc_banking", fixtures.rbc_banking("1234", start, end, 1000.0, rows, "Emma Roy"))):
+        p = os.path.join(ws, "_fixtures", f"wrapped_{parser}.pdf")
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        write_pdf(p, pages)
+        r = subprocess.run([sys.executable, os.path.normpath(PARSE), p, "--parser", parser, "--json"],
+                           capture_output=True, text=True, cwd=ws)
+        try:
+            res = json.loads(r.stdout)
+        except ValueError:
+            out.append(f"  ✗ parsers: a wrapped {parser} statement: {(r.stdout or r.stderr).strip().splitlines()[-1:]}")
+            continue
+        got = [(x["amount"], x["description"]) for x in res["rows"]]
+        want = [(x["amount"], x["description"]) for x in rows]
+        if res["reconcile"]["ok"] and got == want:
+            good += 1
+        else:
+            out.append(f"  ✗ parsers: a wrapped {parser} statement: {res['reconcile']['detail']}; rows {got}")
+    if good == 2:
+        out.append("  ✓ parsers: chequing rows whose description wraps onto a second and third line, and numbers read as '1 ,215.05' and '3, 000.00' (BMO, RBC), read and reconciled")
+    return out
+
+
 def propose_check(ws, man):
     """The setup's first step drafts the register from the first files dropped (propose.py). Given
     the demo owner's statements (the fixtures) and broker exports, the draft has to find every
@@ -644,6 +686,7 @@ def parser_checks(root, base):
                 lines.append(f"  ✗ fixture {os.path.basename(m['file'])} ({m['parser']}): {detail} — expected {m['rows']} rows")
         lines.append(f"\n  {'✓' if good == len(man) else '✗'} parsers: {good} of {len(man)} synthetic statements read and reconciled")
         lines += credit_balance_check(ws)
+        lines += wrap_check(ws)
         lines += propose_check(ws, man)
     arc = os.path.join(root, "archive")
     reg = layout.path(root, "accounts.json")

@@ -15,9 +15,6 @@ from scratch: one credit card, nine statements, a cloud session.
 - **The first import is already sorted.** *(first user)* A starter map of common Canadian
   merchants suggests a category for each one seen for the first time, and every suggestion is
   confirmed in one table, instead of every purchase waiting as Other.
-- **A chequing statement with long descriptions is read.** *(first user)* A description that
-  wraps onto a second line, and a number the PDF reader splits with a space, no longer stop the
-  parser; the fixtures carry both.
 - **A fresh clone checks clean.** The demo's exchange rate is dated, so a clone a few weeks old
   greets its first run with a stale-rate warning. The demo dates it relative to today.
 - **The year's stacked bar counts refunds**, so it adds up to the cards above it.

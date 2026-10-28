@@ -2,6 +2,14 @@
 
 ## 1.1 — unreleased
 
+- **A chequing statement with long descriptions is read** (2026-10-28, from a first user, whose
+  nine BMO chequing statements were all refused). A description that wraps so its amounts land
+  on the second or third line is joined back into one row (`bmo_banking`; `rbc_banking` already
+  did this), and a number pypdf reads with a space beside its comma — `1 ,215.05`, `3, 000.00` —
+  closes up for every parser before it is matched. `tools/fixtures.py` rows can ask for both
+  (`wrap`, `split`); the selftest renders a BMO and an RBC statement with them and expects every
+  row back whole.
+
 - **A Mastercard in credit is read** (2026-10-28, from a first user). A BMO Mastercard paid past
   zero prints its balances with `CR` — "Total balance $100.00 CR", and on the next statement
   "Previous total balance … CR" — and the parser could not find its summary, so the statement

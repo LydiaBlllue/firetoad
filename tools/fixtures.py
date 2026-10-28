@@ -48,6 +48,21 @@ def long_date(dt):
     return f"{LONG[dt.month - 1]} {dt.day}, {dt.year}"
 
 
+def wrapped(desc, amounts, row):
+    """A row may ask to look the way a long one does on a real statement (2026-10): `wrap` = n
+    puts the last n words of the description on lines of their own, the amounts after the last;
+    `split` puts the space pypdf sometimes reads into a number on one side of its comma
+    (" ," → "1 ,215.05", ", " → "3, 000.00"). Returns the description's first line and the
+    lines that follow it."""
+    if row.get("split"):
+        amounts = re.sub(r"(\d),(\d{3}\.\d{2})", lambda m: m.group(1) + row["split"] + m.group(2), amounts, count=1)
+    words, n = desc.split(), int(row.get("wrap") or 0)
+    if not n or len(words) <= n:
+        return f"{desc} {amounts}", []
+    more = words[-n:]
+    return " ".join(words[:-n]), more[:-1] + [f"{more[-1]} {amounts}"]
+
+
 # ---------------------------------------------------------------- the four layouts
 def rbc_banking(acct_digits, start, end, opening, rows, owner):
     dep = sum(r["amount"] for r in rows if r["amount"] > 0)
@@ -71,10 +86,9 @@ def rbc_banking(acct_digits, start, end, opening, rows, owner):
         last_day = day
         # The real statement prints a balance on the last row of each day only.
         last_of_day = i + 1 == len(rows) or rows[i + 1]["date"] != day
-        line = f"{prefix}{r['description']} {money(abs(r['amount']))}"
-        if last_of_day:
-            line += f" {money(r['balance'])}"
-        body.append(line)
+        amounts = money(abs(r["amount"])) + (f" {money(r['balance'])}" if last_of_day else "")
+        first, more = wrapped(r["description"], amounts, r)
+        body += [f"{prefix}{first}"] + more
     tail = [f"Closing Balance {money(closing, True)}",
             "Please check this Account Statement without delay and advise us of any error or omission within 45 days."]
     return [head + body + tail]
@@ -94,8 +108,10 @@ def bmo_banking(name, acct_digits, start, end, opening, rows, owner):
             "Date Description from your account ($) to your account ($) Balance ($)",
             f"{name} Account # {number}", "Owner:", owner.upper(),
             f"{MON[start.month - 1]} {start.day:02d} Opening balance {money(opening)}"]
-    body = [f"{MON[d(r['date']).month - 1]} {d(r['date']).day:02d} {r['description']} "
-            f"{money(abs(r['amount']))} {money(r['balance'])}" for r in rows]
+    body = []
+    for r in rows:
+        first, more = wrapped(r["description"], f"{money(abs(r['amount']))} {money(r['balance'])}", r)
+        body += [f"{MON[d(r['date']).month - 1]} {d(r['date']).day:02d} {first}"] + more
     tail = [f"{MON[end.month - 1]} {end.day:02d} Closing totals {money(out)} {money(inn)}",
             "Please report any errors, omissions or irregularities in writing within 30 days of the statement date."]
     return [head + body + tail]
