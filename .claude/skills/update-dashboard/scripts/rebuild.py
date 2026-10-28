@@ -65,9 +65,9 @@ PART_ROWS = (
     ("none", "all", "Other assets", "#b7bfba",
      "Things you own that are not money, such as a home or a car, at the value you last stated."),
 )
-REACH_ROWS = (("today", "Reach today", "#1baf7a"), ("costs", "Reach, but it costs", "#eda100"),
-              ("spoken", "Spoken for", "#eb6834"), ("lent", "Lent out", "#e87ba4"),
-              ("locked", "Locked in property", "#c98500"), ("abroad", "Across a border", "#4a3aa7"))
+REACH_ROWS = (("today", "Spendable today", "#1baf7a"), ("costs", "Taxed to take out", "#eda100"),
+              ("spoken", "Promised to a goal", "#eb6834"), ("lent", "Lent out", "#e87ba4"),
+              ("locked", "In property", "#c98500"), ("abroad", "Held abroad", "#4a3aa7"))
 
 
 # The shape of findata/ this script builds from. profile.json carries the same number; when
@@ -585,12 +585,12 @@ def derive(d):
     # label), otherwise the accounts the row counts, built from the register.
     desc = plan.get("descriptions", {})
     generic_reach = {
-        "Reach today": "Investment and cash accounts with no age gate and no penalty",
-        "Reach, but it costs": "Registered retirement savings: withdrawable, but taxed as income that year",
-        "Spoken for": "Earmarked for a purpose. Reachable, but spending it means giving up what it was for",
+        "Spendable today": "Investment and cash accounts with no age gate and no penalty",
+        "Taxed to take out": "Registered retirement savings: withdrawable, but taxed as income that year",
+        "Promised to a goal": "Earmarked for a purpose. Reachable, but spending it means giving up what it was for",
         "Lent out": "Money you lent. It comes back only as it is repaid, on the borrower's timetable",
-        "Locked in property": "What the property is worth less what is still owed on it. Reachable only by selling",
-        "Across a border": "Held abroad. Reachable, but through conversion and transfer limits, which take time",
+        "In property": "What the property is worth less what is still owed on it. Reachable only by selling",
+        "Held abroad": "Held abroad. Reachable, but through conversion and transfer limits, which take time",
     }
     # Money lent, one row per borrower in the loan's own currency (loans.py). `quiet` is how many
     # days nothing has come back, set only once it is past loans.STALE_DAYS and money is still owed.
@@ -633,7 +633,7 @@ def derive(d):
         if t:
             big = max(t, key=lambda r: t[r])
             t[big] += total - sum(t.values())
-        return [[reach_lab[r][0], v, reach_lab[r][1]] for r, v in t.items() if v]
+        return [[reach_lab[r][0], v, reach_lab[r][1], r] for r, v in t.items() if v]
     out["NWPARTS"] = []
     for role, where, lab, c, q in PART_ROWS:
         names = accounts_in(role, where)
@@ -643,7 +643,7 @@ def derive(d):
         out["NWPARTS"].append({"k": lab, "role": role, "v": part_value(role, where), "c": c, "q": q,
                                "d": desc.get("nwparts", {}).get(lab, names),
                                "by": part_by_reach(role, where, part_value(role, where))})
-    out["REACH"] = [{"k": lab, "v": by_reach[r], "c": c, "d": desc.get("reach", {}).get(lab, generic_reach[lab])}
+    out["REACH"] = [{"k": lab, "r": r, "v": by_reach[r], "c": c, "d": desc.get("reach", {}).get(lab, generic_reach[lab])}
                     for r, lab, c in REACH_ROWS if r in reach_present]
     got_parts = sum(r["v"] for r in out["NWPARTS"]) - R_debt
     got_reach = sum(r["v"] for r in out["REACH"]) - (R_debt - secured)

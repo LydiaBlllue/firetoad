@@ -155,7 +155,14 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .subs .meta{font-size:11.5px;color:var(--muted)}
 .sub-badge{font-size:10.5px;font-weight:600;color:#006300;background:rgba(0,131,0,.09);border-radius:999px;padding:2px 8px;flex-shrink:0}
 #tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--page);font-size:12px;padding:5px 9px;border-radius:6px;opacity:0;transition:opacity .08s;z-index:9;white-space:nowrap}
-#tip.def{white-space:normal;width:max-content;max-width:300px;line-height:1.5;padding:8px 11px}#tip.def p{margin:0}#tip.def p+p{margin-top:5px}
+#tip.def{white-space:normal;width:max-content;max-width:300px;line-height:1.5;padding:8px 11px}#tip.def p{margin:0}#tip.def p+p{margin-top:5px}#tip.def i{opacity:.7}#tip .f{font-family:ui-monospace,Menlo,monospace;opacity:.9}#tip .eg,#tip .cn{opacity:.75}#tip .calc{display:grid;grid-template-columns:1fr auto;gap:2px 14px}#tip .calc span:nth-child(odd){opacity:.75}
+.term{border-bottom:1px dotted var(--muted);cursor:help}.term:hover,.term:focus-visible{color:var(--ink);border-bottom-style:solid;outline:none}
+.numx{cursor:pointer;border-bottom:1px dotted var(--border)}.numx:hover,.numx:focus-visible{border-bottom-color:var(--muted);outline:none}
+.gl-letter{font-size:12px;font-weight:700;color:var(--muted);margin:16px 0 4px;letter-spacing:.06em}.gl-letter:first-child{margin-top:0}
+.gl-entry{padding:10px 0;border-bottom:1px solid var(--grid);font-size:13px;line-height:1.55;max-width:680px;transition:background .3s}.gl-entry:last-child{border-bottom:none}
+.gl-entry p{margin:0}.gl-entry p+p{margin-top:3px}.gl-entry i{color:var(--muted)}.gl-entry .f{font-family:ui-monospace,Menlo,monospace;font-size:12px}.gl-entry .eg,.gl-entry .also{color:var(--muted)}.gl-entry.hit{background:var(--grid)}
+.both-sum{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:12px;font-size:13px}.both-sum span.it{display:flex;align-items:center;gap:7px}.both-sum i{width:9px;height:9px;border-radius:3px}.both-sum .num{font-weight:600}
+.ph-r .s .gap{display:inline-block;width:14px}
 .empty{color:var(--muted);font-size:13px;padding:14px 0}
 .tabs{display:flex;gap:16px;margin-top:12px;border-bottom:1px solid var(--grid);flex-wrap:wrap}
 #pageOverview,#pageTrends,#pageTx,#pageInv,#pageFire,#pageTask{margin-top:14px}
@@ -318,11 +325,10 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   <div id="glance"></div>
 </div>
 <div class="card" style="margin-bottom:10px">
-  <div class="lab">Net worth: what each part is for, and how easily you could reach it</div>
+  <div class="lab" id="bothLab">Net worth</div>
   <div class="baseline-hero num" id="bothBig">—</div>
   <div id="bothRows"></div>
-  <div id="bothKey" class="both-key"></div>
-  <div id="bothNote" style="margin-top:10px"></div>
+  <div id="bothKey"></div>
 </div>
 </section>
 
@@ -590,6 +596,16 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   </div>
 </section>
 
+<section data-pg="gloss" hidden>
+<div class="card" style="margin-bottom:10px">
+  <div class="lab">Finance terms</div>
+  <div id="glossList"></div>
+</div>
+<div class="card" style="margin-bottom:10px">
+  <div class="lab">Words this page uses</div>
+  <div id="glossOwn"></div>
+</div>
+</section>
 <section data-pg="src" hidden>
   <div class="card" style="margin-bottom:10px">
     <div class="lab">Filed each month</div>
@@ -624,7 +640,7 @@ const CHEQUING = [{"date": "2025-12-15", "desc": "Payroll deposit (ADP)", "type"
 function chqRange(){ const r = {}; for(const x of CHEQUING){ const t = r[x.src] || (r[x.src] = [x.date, x.date]); if(x.date < t[0]) t[0] = x.date; if(x.date > t[1]) t[1] = x.date; } return r; }
 function chqCoverage(){ return Object.entries(chqRange()).map(([k,[a,b]]) => k+" "+a+" \u2192 "+b).join(" \u00b7 "); }
 const INVEST = {"netWorth": 101791, "assets": 102307, "debts": 1016, "dryPct": 43.1, "dryCad": 28950, "investable": 67135, "earmarked": 23200, "other": 0, "debtsSecured": 0, "holdings": 8, "asof": "2026-09-06", "fxAsof": "2026-09-04", "fx": 1.3712, "banksAsof": "2026-09-05", "cashflow": [{"ym": "2025-12", "payroll": 3600.0, "wsOut": 400.0, "wsIn": 0.0, "rent": 0.0, "gift": 0.0, "other": 0.0, "repaid": 0.0, "inv": 0.0, "nRule": 1}, {"ym": "2026-01", "payroll": 3600.0, "wsOut": 800.0, "wsIn": 0.0, "rent": 0.0, "gift": 0.0, "other": 0.0, "repaid": 0.0, "inv": 268.5, "nRule": 2}, {"ym": "2026-02", "payroll": 3600.0, "wsOut": 800.0, "wsIn": 0.0, "rent": 0.0, "gift": 0.0, "other": 0.0, "repaid": 0.0, "inv": 129.43, "nRule": 2}, {"ym": "2026-03", "payroll": 3600.0, "wsOut": 800.0, "wsIn": 0.0, "rent": 0.0, "gift": 0.0, "other": 0.0, "repaid": 0.0, "inv": 129.25, "nRule": 2}, {"ym": "2026-04", "payroll": 3600.0, "wsOut": 800.0, "wsIn": 0.0, "rent": 0.0, "gift": 0.0, "other": 0.0, "repaid": 0.0, "inv": 268.58, "nRule": 2}, {"ym": "2026-05", "payroll": 3600.0, "wsOut": 800.0, "wsIn": 0.0, "rent": 0.0, "gift": 0.0, "other": 0.0, "repaid": 0.0, "inv": 129.45, "nRule": 2}, {"ym": "2026-06", "payroll": 3600.0, "wsOut": 800.0, "wsIn": 0.0, "rent": 0.0, "gift": 0.0, "other": 0.0, "repaid": 0.0, "inv": 155.59, "nRule": 2}, {"ym": "2026-07", "payroll": 3600.0, "wsOut": 800.0, "wsIn": 0.0, "rent": 0.0, "gift": 0.0, "other": 0.0, "repaid": 1000.0, "inv": 268.48, "nRule": 2}, {"ym": "2026-08", "payroll": 3600.0, "wsOut": 800.0, "wsIn": 0.0, "rent": 0.0, "gift": 0.0, "other": 200.0, "repaid": 0.0, "inv": 129.24, "nRule": 2}, {"ym": "2026-09", "payroll": 0.0, "wsOut": 400.0, "wsIn": 0.0, "rent": 0.0, "gift": 0.0, "other": 0.0, "repaid": 0.0, "inv": 0.0, "nRule": 1}], "portfolio": 67135, "foreignFunds": 0, "counterparty": {"name": "Sam"}};
-const TODAY = "2026-10-27";
+const TODAY = "2026-10-28";
 // findata/ws_activities.csv — the broker's own ledger. Dividends, interest and stock-lending in CAD,
 // net of non-resident withholding tax; and the deposits the broker actually received.
 const WSINC = [{"ym": "2026-01", "div": 276.06, "int": 0.52, "lend": 0.05, "tax": -8.13}, {"ym": "2026-02", "div": 136.89, "int": 0.61, "lend": 0.06, "tax": -8.13}, {"ym": "2026-03", "div": 136.89, "int": 0.43, "lend": 0.06, "tax": -8.13}, {"ym": "2026-04", "div": 276.06, "int": 0.59, "lend": 0.06, "tax": -8.13}, {"ym": "2026-05", "div": 136.89, "int": 0.65, "lend": 0.04, "tax": -8.13}, {"ym": "2026-06", "div": 163.24, "int": 0.44, "lend": 0.04, "tax": -8.13}, {"ym": "2026-07", "div": 276.06, "int": 0.51, "lend": 0.04, "tax": -8.13}, {"ym": "2026-08", "div": 136.89, "int": 0.41, "lend": 0.07, "tax": -8.13}];
@@ -742,23 +758,24 @@ const NAV = [
   {sec:"",          items:[{k:"home",  n:"Home",             t:"Home",                 d:""}]},
   // Spending is read two ways and in this order (2026-09-10): this month, opened up, is what
   // you look at every week; the year is what you look at now and then.
-  {sec:"Spending",  items:[{k:"cat",   n:"This month",       t:"This month",           d:"How the month is going — what is still free, where the paycheque went, and what is inside each slice"},
-                           {k:"trends",n:"Year",             t:"The year",             d:"In total, by category, month by month, and against the allowance"},
-                           {k:"subs",  n:"Subscriptions",    t:"Subscriptions",        d:"Charges that come back every month"}]},
-  {sec:"Income",    items:[{k:"income",n:"Income",           t:"Income",               d:"What came in this year, by source and month by month, and how much of it you kept"},
-                           {k:"wsinc", n:"Investment income",t:"Investment income",    d:"What the portfolio paid you, before you sold anything"}]},
-  {sec:"Investing", items:[{k:"port",  n:"Portfolio",        t:"Portfolio",            d:"What is invested, and how it splits by currency, by kind of asset and across your buckets"},
-                           {k:"perf",  n:"Performance",      t:"Performance",          d:"How the money did — against one fund you could have bought instead, and against what you put in"},
-                           {k:"hold",  n:"Holdings",         t:"Holdings",             d:"Every position, by role or by account"},
-                           {k:"rules", n:"Rules",            t:"Rules",                d:"Each of your rules, checked today, with the details and dates under it"}]},
-  {sec:"Plan",      items:[{k:"budget",n:"Budget",           t:"Budget",               d:"What each paycheque is for, and what the two funds hold"},
-                           {k:"fire",  n:"FIRE",             t:"FIRE",                 d:"Where you are against the target"},
-                           {k:"coast", n:"Drawdown & care",  t:"Drawdown and care",    d:"Once you start taking money out: does it last, and what care costs"},
-                           {k:"base",  n:"Spending baseline", t:"Spending baseline",   d:"The monthly figure the whole target is built on, and what you really spend"}]},
-  {sec:"Records",   items:[{k:"todo",  n:"To do",            t:"To do",                d:"Everything waiting for you, in one place"},
-                           {k:"upd",   n:"Updates",          t:"Updates",              d:"What changed at each update"},
-                           {k:"acct",  n:"Accounts",         t:"Accounts",             d:"Every place the money sits, and what is still unaccounted for"},
-                           {k:"src",   n:"Statements",       t:"Statements",           d:"What arrives each month, and what is still missing"}]}
+  {sec:"Spending",  items:[{k:"cat",   n:"This month",       t:"This month",           d:""},
+                           {k:"trends",n:"Year",             t:"The year",             d:""},
+                           {k:"subs",  n:"Subscriptions",    t:"Subscriptions",        d:""}]},
+  {sec:"Income",    items:[{k:"income",n:"Income",           t:"Income",               d:""},
+                           {k:"wsinc", n:"Investment income",t:"Investment income",    d:""}]},
+  {sec:"Investing", items:[{k:"port",  n:"Portfolio",        t:"Portfolio",            d:""},
+                           {k:"perf",  n:"Performance",      t:"Performance",          d:""},
+                           {k:"hold",  n:"Holdings",         t:"Holdings",             d:""},
+                           {k:"rules", n:"Rules",            t:"Rules",                d:""}]},
+  {sec:"Plan",      items:[{k:"budget",n:"Budget",           t:"Budget",               d:""},
+                           {k:"fire",  n:"FIRE",             t:"FIRE",                 d:""},
+                           {k:"coast", n:"Drawdown & care",  t:"Drawdown and care",    d:""},
+                           {k:"base",  n:"Spending baseline", t:"Spending baseline",   d:""}]},
+  {sec:"Records",   items:[{k:"todo",  n:"To do",            t:"To do",                d:""},
+                           {k:"upd",   n:"Updates",          t:"Updates",              d:""},
+                           {k:"acct",  n:"Accounts",         t:"Accounts",             d:""},
+                           {k:"src",   n:"Statements",       t:"Statements",           d:""},
+                           {k:"gloss", n:"Glossary",         t:"Glossary",             d:""}]}
 ];
 const PAGES = NAV.flatMap(g => g.items);
 const PILL_PAGES = ["cat"];                          // driven by the month cursor
@@ -844,6 +861,116 @@ function setPage(p){
 }
 
 
+// ===== Glossary: one dictionary entry per term, the same for anyone (DESIGN.md §5b′) =====
+// A word in here is spelled this way on every page. `own` marks a word this page coined; its
+// entry says what it means here. `here` is one line on how this page uses a standard term.
+const GLOSSARY = {
+  net_worth:      {w:"net worth", pos:"noun", def:"What you own minus what you owe.", f:"assets − liabilities", eg:"A $500k home with a $300k mortgage adds $200k.", also:["assets","liabilities"]},
+  assets:         {w:"assets", pos:"noun", def:"Everything you own that has a money value: cash, investments, property, money others owe you.", also:["net_worth","liabilities"]},
+  liabilities:    {w:"liabilities", pos:"noun", def:"Everything you owe: card balances, loans, a mortgage.", also:["net_worth","assets"]},
+  liquidity:      {w:"liquidity", pos:"noun", def:"How quickly something can be turned into cash without losing value. Cash is the most liquid; a house is one of the least.", also:["spendable_today","held_abroad"]},
+  grace_period:   {w:"grace period", pos:"noun", def:"On a credit card, the days between the statement and the due date. Pay the whole balance in that window and no interest is charged."},
+  equity:         {w:"equity", pos:"noun", def:"The part of something you own outright once what is borrowed against it is taken off.", eg:"A $500k home with a $300k mortgage is $200k of equity.", also:["in_property"]},
+  pay_yourself_first: {w:"pay yourself first", pos:"phrase", def:"Moving your saving out on payday, before any spending, so saving does not depend on what is left over."},
+  sinking_fund:   {w:"sinking fund", pos:"noun", def:"Money put aside a little at a time for a known future cost, such as a trip or a new laptop.", also:["big_buy"]},
+  subscription:   {w:"subscription", pos:"noun", def:"A charge that repeats on a schedule. A purchase seen once is not a subscription, whatever the merchant is called."},
+  median:         {w:"median", pos:"noun", def:"The middle value once a list is sorted. Unlike the average, one unusual month barely moves it.", eg:"The median of 1, 2 and 30 is 2."},
+  inflation:      {w:"inflation", pos:"noun", def:"The rise in prices over time, so the same money buys less each year.", also:["real_return"]},
+  tfsa:           {w:"TFSA", pos:"noun", def:"Tax-Free Savings Account. Investments grow tax-free and nothing is taxed when you take money out. How much you can put in is capped by your contribution room.", also:["contribution_room","rrsp"]},
+  rrsp:           {w:"RRSP", pos:"noun", def:"Registered Retirement Savings Plan. What you put in lowers your taxable income now; what you take out is taxed as income that year.", also:["tfsa","taxed_to_take_out"]},
+  fhsa:           {w:"FHSA", pos:"noun", def:"First Home Savings Account. What you put in is deductible like an RRSP; money taken out for a first home is tax-free like a TFSA. It stays open fifteen years at most.", also:["tfsa","rrsp"]},
+  non_registered: {w:"non-registered account", pos:"noun", def:"An ordinary investment account with no tax shelter. Dividends, interest and gains are taxed each year."},
+  contribution_room: {w:"contribution room", pos:"noun", def:"How much a registered account still lets you put in. Room you do not use carries forward."},
+  portfolio:      {w:"portfolio", pos:"noun", def:"All the investments a person holds, taken together.", here:"The accounts you hold to grow. Money set aside for a goal is not in it.", also:["for_fire","asset_class"]},
+  asset_class:    {w:"asset class", pos:"noun", def:"A group of investments that behave alike: stocks, bonds, cash, gold."},
+  stock:          {w:"stock", pos:"noun", def:"A share of ownership in a company. Its price follows the company’s prospects."},
+  bond:           {w:"bond", pos:"noun", def:"A loan to a government or a company that pays interest and returns the money on a set date.", also:["t_bill"]},
+  t_bill:         {w:"T-bill", pos:"noun", def:"Treasury bill: a government loan of a year or less, sold below its face value and repaid at face value.", also:["bond"]},
+  etf:            {w:"ETF", pos:"noun", def:"Exchange-traded fund: a basket of investments that trades on the stock market like a single stock.", also:["index_fund"]},
+  index_fund:     {w:"index fund", pos:"noun", def:"A fund that holds a whole market index instead of picking stocks, so it rises and falls with that market.", eg:"A fund that tracks the S&P 500.", also:["etf","core_satellite"]},
+  core_satellite: {w:"core and satellite", pos:"phrase", def:"Most of the money in broad index funds (the core), a smaller part in individual picks (the satellites).", also:["index_fund"]},
+  dry_powder:     {w:"dry powder", pos:"noun", def:"Cash or near-cash kept ready to invest when prices fall.", also:["target_band"]},
+  money_market:   {w:"money market fund", pos:"noun", def:"A fund that holds very short, very safe loans. It pays close to short-term interest rates and its price barely moves."},
+  target_band:    {w:"target band", pos:"noun", def:"The range a part of the portfolio may drift within before you rebalance.", eg:"A 40–45% band means rebalance below 40% or above 45%.", also:["rebalance"]},
+  rebalance:      {w:"rebalance", pos:"verb", def:"To buy and sell so each part of a portfolio is back at its target share.", also:["target_band"]},
+  benchmark:      {w:"benchmark", pos:"noun", def:"A standard investment you compare your own results against.", eg:"Did the portfolio beat a world index fund?", also:["total_return"]},
+  total_return:   {w:"total return", pos:"noun", def:"The change in price plus everything paid out, dividends and interest, over a period.", also:["dividend"]},
+  book_value:     {w:"book value", pos:"noun", def:"What you paid for an investment.", f:"market value − book value = gain", also:["market_value"]},
+  market_value:   {w:"market value", pos:"noun", def:"What an investment would sell for today.", also:["book_value"]},
+  dividend:       {w:"dividend", pos:"noun", def:"Part of a company’s profit paid out to its shareholders.", also:["withholding_tax"]},
+  securities_lending: {w:"securities lending", pos:"noun", def:"Your broker lends your shares to other traders and gives you part of the fee. The shares stay yours."},
+  withholding_tax:{w:"withholding tax", pos:"noun", def:"Tax taken out before a payment reaches you.", eg:"15% is usually kept from US dividends paid to Canadians.", also:["dividend"]},
+  exchange_rate:  {w:"exchange rate", pos:"noun", def:"How much of one currency buys one unit of another.", eg:"1.39 Canadian dollars to one US dollar."},
+  fire:           {w:"FIRE", pos:"noun", def:"Financial Independence, Retire Early: saving and investing until the returns can pay your living costs, so work becomes optional.", also:["fire_target","four_pct"]},
+  fire_target:    {w:"FIRE target", pos:"noun", def:"The portfolio that can pay your yearly spending indefinitely, by the 4% rule.", f:"yearly spending × 25", eg:"$40k a year needs $1M.", also:["four_pct","planning_figure"]},
+  four_pct:       {w:"4% rule", pos:"noun", def:"A finding from US market history: taking 4% of the portfolio in the first year, then the same amount raised with inflation, lasted at least 30 years in almost every past period.", also:["fire_target","withdrawal_rate"]},
+  real_return:    {w:"real return", pos:"noun", def:"A return after inflation.", f:"≈ return − inflation", eg:"7% with 2% inflation is about 5% real.", also:["inflation","compound_growth"]},
+  compound_growth:{w:"compound growth", pos:"noun", def:"Growth earned on earlier growth, so money grows faster the longer it is left alone.", also:["real_return"]},
+  coast_fire:     {w:"coast FIRE", pos:"noun", def:"Having enough invested that, with nothing more added, growth alone reaches your target by the age you want to stop.", also:["fire_target"]},
+  drawdown:       {w:"drawdown", pos:"noun", def:"The years when you live off your investments by taking money out.", not:"a market drawdown, a fall from a peak", also:["withdrawal_rate","sequence_risk"]},
+  withdrawal_rate:{w:"withdrawal rate", pos:"noun", def:"How much you take out in a year, as a share of the portfolio.", f:"yearly withdrawal ÷ portfolio", also:["four_pct","drawdown"]},
+  sequence_risk:  {w:"sequence-of-returns risk", pos:"noun", def:"Bad years soon after you start taking money out do far more damage than the same bad years later on.", also:["drawdown","backtest"]},
+  backtest:       {w:"backtest", pos:"noun", def:"Running a plan through real past years to see how it would have done.", also:["sequence_risk"]},
+  long_term_care: {w:"long-term care", pos:"noun", def:"Help with daily living in later life, at home or in a facility, usually paid for privately."},
+  // Words this page coined
+  for_fire:       {own:1, w:"For FIRE", pos:"on this page", def:"Money whose job is to grow until you stop working. FIRE progress is measured on it.", also:["portfolio","fire"]},
+  set_aside:      {own:1, w:"Set aside", pos:"on this page", def:"Money promised to a goal, such as a first home or a trip. It is left out of FIRE progress and out of dry powder.", also:["promised_to_a_goal"]},
+  cash:           {own:1, w:"Cash", pos:"on this page", def:"Bank and cash accounts you live on and can spend today.", also:["spendable_today"]},
+  cash_abroad:    {own:1, w:"Cash abroad", pos:"on this page", def:"Cash held in another country, in its own currency. It counts in net worth; spending it here takes conversion.", also:["held_abroad"]},
+  owed_to_you:    {own:1, w:"Owed to you", pos:"on this page", def:"Money you lent that has not come back yet.", also:["lent_out"]},
+  other_assets:   {own:1, w:"Other assets", pos:"on this page", def:"Things you own that are not money, such as a home or a car.", also:["in_property"]},
+  spendable_today:{own:1, w:"Spendable today", pos:"on this page", def:"Money you could spend today with no tax, no penalty and no wait.", also:["liquidity"]},
+  taxed_to_take_out: {own:1, w:"Taxed to take out", pos:"on this page", def:"Money you can take out at any time, but what you take is taxed as income that year.", eg:"An RRSP.", also:["rrsp","liquidity"]},
+  promised_to_a_goal: {own:1, w:"Promised to a goal", pos:"on this page", def:"Money you could take out, but only by giving up the goal it is set aside for.", also:["set_aside","liquidity"]},
+  lent_out:       {own:1, w:"Lent out", pos:"on this page", def:"Money someone owes you. It comes back on their schedule, not yours.", also:["owed_to_you"]},
+  in_property:    {own:1, w:"In property", pos:"on this page", def:"What a property is worth minus what is still owed on it. You reach it only by selling or borrowing against it.", also:["equity"]},
+  held_abroad:    {own:1, w:"Held abroad", pos:"on this page", def:"Money in another country. Bringing it home takes conversion, transfer limits and time.", also:["exchange_rate","liquidity"]},
+  planning_figure:{own:1, w:"planning figure", pos:"on this page", def:"The monthly spending your FIRE target is built on. You set it by hand; what you actually spend only calibrates it.", also:["fire_target","median"]},
+  big_buy:        {own:1, w:"big buy", pos:"on this page", def:"A single purchase at or above your threshold, paid from the Big buys fund. A subscription never counts as one.", also:["sinking_fund","subscription"]},
+  complete_to:    {own:1, w:"Complete to", pos:"on this page", def:"The day every account’s numbers are in up to. After it, some accounts are still waiting for their next statement."},
+};
+// A term on the page: dotted underline, hover for the entry, click for the Glossary page.
+function term(key, text){
+  const g = GLOSSARY[key];
+  return g ? '<span class="term" data-term="'+key+'" tabindex="0">'+(text || g.w)+'</span>' : (text || key);
+}
+function entryHtml(key){
+  const g = GLOSSARY[key]; if(!g) return "";
+  return '<p><b>'+g.w+'</b> <i>'+g.pos+'</i></p><p>'+g.def+'</p>'
+    + (g.f ? '<p class="f">'+g.f+'</p>' : "")
+    + (g.eg ? '<p class="eg">e.g. '+g.eg+'</p>' : "")
+    + (g.not ? '<p class="eg">Not to be confused with '+g.not+'.</p>' : "")
+    + (g.here ? '<p class="eg">On this page: '+g.here+'</p>' : "");
+}
+// A number with its working: hover or tap it for the sum behind it (DESIGN.md §5b′).
+function numx(html, rows, note){
+  const c = JSON.stringify({r: rows || [], n: note || ""}).replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+  return '<span class="numx" data-calc="'+c+'" tabindex="0">'+html+'</span>';
+}
+function calcHtml(c){
+  return (c.r.length ? '<div class="calc">'+c.r.map(r => '<span>'+r[0]+'</span><span class="num">'+r[1]+'</span>').join("")+'</div>' : "")
+    + (c.n ? '<p class="cn">'+c.n+'</p>' : "");
+}
+function openTerm(key){
+  setPage("gloss");
+  const el = document.getElementById("g-"+key);
+  if(el){ el.scrollIntoView({block:"center"}); el.classList.add("hit"); setTimeout(() => el.classList.remove("hit"), 1400); }
+}
+function renderGlossary(){
+  if(!$("glossList")) return;
+  const keys = Object.keys(GLOSSARY);
+  const block = (list) => {
+    let letter = "";
+    return list.sort((a,b) => GLOSSARY[a].w.toLowerCase().localeCompare(GLOSSARY[b].w.toLowerCase())).map(k => {
+      const g = GLOSSARY[k], L = g.w[0].toUpperCase(), head = L !== letter ? (letter = L, '<div class="gl-letter">'+L+'</div>') : "";
+      return head + '<div class="gl-entry" id="g-'+k+'">'+entryHtml(k)
+        + (g.also ? '<p class="also">See also '+g.also.map(a => term(a)).join(", ")+'</p>' : "") + '</div>';
+    }).join("");
+  };
+  $("glossList").innerHTML = block(keys.filter(k => !GLOSSARY[k].own));
+  $("glossOwn").innerHTML = block(keys.filter(k => GLOSSARY[k].own));
+}
+
 // tooltip
 const tip = $("tip");
 // One fact per row. Replaces the old "a · b · c" caption chains.
@@ -853,7 +980,7 @@ function metaList(rows){
 }
 function noteBox(text){ return '<div class="note-box"><span class="sym">!</span><span>'+text+'</span></div>'; }
 function qMark(def){ return '<span class="hint" data-tip="'+String(def).replace(/"/g,"&quot;")+'" tabindex="0">?</span>'; }
-function showTip(ev, html, def){ tip.classList.toggle("def", !!def); tip.innerHTML = def ? defHtml(html) : html; tip.style.opacity = 1; moveTip(ev); }
+function showTip(ev, html, def){ tip.classList.toggle("def", !!def); tip.innerHTML = def === true ? defHtml(html) : html; tip.style.opacity = 1; moveTip(ev); }
 // A "?" explanation wraps in a narrow box, one sentence a line, below the pointer (above it when
 // there is no room); a chart's hover label stays one short line above it.
 function defHtml(t){ return String(t).split(/(?<=[.:])\s+(?=[A-Z$\u2014(])/).map(x => "<p>"+x+"</p>").join(""); }
@@ -864,13 +991,19 @@ function moveTip(ev){
 }
 function hideTip(){ tip.style.opacity = 0; }
 // "?" definitions: hover on desktop, tap to toggle on mobile, Esc or outside-tap to close.
-document.addEventListener("mouseover", ev => { const h = ev.target.closest?.(".hint"); if(h) showTip(ev, h.dataset.tip, true); });
-document.addEventListener("mousemove", ev => { if(ev.target.closest?.(".hint")) moveTip(ev); });
-document.addEventListener("mouseout",  ev => { if(ev.target.closest?.(".hint")) hideTip(); });
+// A term shows its entry and opens the Glossary on click; a number shows its working.
+const tipOf = el => el.classList.contains("hint") ? [el.dataset.tip, true]
+  : el.classList.contains("term") ? [entryHtml(el.dataset.term), "raw"] : [calcHtml(JSON.parse(el.dataset.calc)), "raw"];
+const TIPPED = ".hint, .term, .numx";
+document.addEventListener("mouseover", ev => { const h = ev.target.closest?.(TIPPED); if(h) showTip(ev, ...tipOf(h)); });
+document.addEventListener("mousemove", ev => { if(ev.target.closest?.(TIPPED)) moveTip(ev); });
+document.addEventListener("mouseout",  ev => { if(ev.target.closest?.(TIPPED)) hideTip(); });
 document.addEventListener("click", ev => {
-  const h = ev.target.closest?.(".hint");
-  if(h){ ev.preventDefault(); showTip(ev, h.dataset.tip, true); } else hideTip();
-});
+  const h = ev.target.closest?.(TIPPED);
+  if(!h){ hideTip(); return; }
+  ev.preventDefault(); ev.stopPropagation();
+  if(h.classList.contains("term")){ hideTip(); openTerm(h.dataset.term); } else showTip(ev, ...tipOf(h));
+}, true);
 document.addEventListener("keydown", ev => { if(ev.key === "Escape") hideTip(); });
 function hoverable(el, html){
   el.addEventListener("mousemove", ev => showTip(ev, html));
@@ -1017,38 +1150,48 @@ function renderHome(){
   const dep = (WSDEP||[]).slice(-1)[0] || null, half = FUNDS.plan.invest/2;
   const curYM = TODAY.slice(0,7), dayNow = Number(TODAY.slice(8)), dim = new Date(Number(curYM.slice(0,4)), Number(curYM.slice(5)), 0).getDate();
   const spentNow = everydayOf(curYM), freeNow = ALW - spentNow;
-  $("homeStats").innerHTML =
-    '<div class="card"><div class="lab">Portfolio'+qMark("The same number as the Portfolio page: every "+BROKER+" account you hold to grow"+(FOREIGN.rows.some(r=>!r.cash)?", plus the foreign funds":"")+". Earmarked accounts and bank cash are left out. This is the number FIRE is measured on.")+'</div><div class="big num">'+fmt(PORTFOLIO)+'</div><div class="cap">'
-      +(!INVEST.investable ? "nothing invested yet" : inBand===null ? "no target range set" : INVEST.dryPct+"% "+bandName+" · "+(inBand ? "inside" : "outside")+" your "+BANDLO+"–"+BANDHI+"% band "+(inBand?"\u2713":"\u26a0"))+'</div></div>'+
-    '<div class="card"><div class="lab">FIRE progress</div><div class="big num">'+pctP+'%</div><div class="cap">of '+fmt(target)+(crossP ? " · on track for "+dTxt(crossP) : "")+'</div></div>'+
-    '<div class="card"><div class="lab">This month\u2019s transfer'+qMark("Pay-yourself-first: two transfers of "+fmt(half)+" reaching "+BROKER+" each month, judged on the broker\u2019s own record. The newest month it has closed is shown.")+'</div><div class="big num">'+(dep ? fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>' : "\u2014")+'</div><div class="cap">'
-      +(dep ? ymLabel(dep.ym)+" · "+dep.nRule+" of 2 landed "+(dep.nRule>=2?"\u2713\u2713":dep.nRule===1?"\u2713":"") : "no broker report yet")+'</div></div>'+
-    '<div class="card"><div class="lab">Free to spend</div><div class="big num">'+fmt(freeNow)+' <span class="cap-v">of '+fmt(ALW)+'</span></div><div class="cap">'+ymLabel(curYM)+" \u00b7 day "+dayNow+" of "+dim+" \u00b7 "+fmt(Math.max(0,freeNow)/Math.max(1,dim-dayNow+1))+" a day left"+'</div></div>';
-
   const gross = NWPARTS.reduce((a,r) => a + r.v, 0);
-  const rGross = REACH.reduce((a,r) => a + r.v, 0);
+  const grow = NWPARTS.find(r => r.role === "grow") || {by: []};
+  const left = Math.max(1, dim - dayNow + 1), perDay = Math.max(0, freeNow) / left;
+  const ROLE_TERM = {grow:"for_fire", "set-aside":"set_aside", buffer:"cash", owed:"owed_to_you", none:"other_assets"};
+  const REACH_TERM = {today:"spendable_today", costs:"taxed_to_take_out", spoken:"promised_to_a_goal", lent:"lent_out", locked:"in_property", abroad:"held_abroad"};
+  const partTerm = r => term(r.role === "buffer" && r.k !== "Cash" ? "cash_abroad" : ROLE_TERM[r.role], r.k);
+  const split = by => by.map(b => [b[0], fmt(b[1])]);
+  // Four cards, each a label, a number and at most one fact (DESIGN.md §5b′). How a number is
+  // made opens from the number; what a word means opens from the word.
+  const card = (lab, val, status) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status ? '<div class="cap">'+status+'</div>' : "")+'</div>';
+  $("homeStats").innerHTML =
+    card(term("portfolio", "Portfolio"),
+      numx(fmt(PORTFOLIO), split(grow.by), "Every account you hold to grow. Set-aside accounts and bank cash are not in it."),
+      !INVEST.investable ? "Nothing invested yet" : inBand === null ? "" :
+        term("dry_powder", "Dry powder")+" "+INVEST.dryPct+"%, "+(inBand ? "inside " : (INVEST.dryPct < BANDLO ? "below " : "above "))+BANDLO+"–"+BANDHI+"%"+(inBand ? "" : " ⚠")) +
+    card(term("fire", "FIRE")+" progress",
+      numx(pctP+"%", [["Portfolio", fmt(PORTFOLIO)], ["Target", fmt(target)]], "The target is your planning figure × 12 × 25."),
+      crossP ? "On track for "+dTxt(crossP) : "") +
+    card(dep ? "Invested in "+ymLabel(dep.ym) : "Invested this month",
+      dep ? numx(fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>', [["Planned", fmt(FUNDS.plan.invest)], ["Arrived", fmt(dep.amt)]], "Two transfers of "+fmt(half)+", counted the day "+BROKER+" receives them.") : "\u2014",
+      dep ? (dep.nRule >= 2 ? "Both transfers arrived \u2713" : dep.nRule === 1 ? "One of two transfers arrived" : "No transfer arrived yet") : "") +
+    card("Free to spend",
+      numx(fmt(freeNow)+' <span class="cap-v">of '+fmt(ALW)+'</span>', [["Allowance", fmt(ALW)], ["Spent in "+ymLabel(curYM), "\u2212"+fmt(spentNow)]], "Everyday spending only. Big buys come from their own fund."),
+      fmt(perDay)+" a day for "+left+" day"+(left > 1 ? "s" : ""));
 
-  // Net worth in one card, both cuts at once: a row per purpose (`role`), its bar as long as
-  // its share and coloured by reach. Under each row, the accounts it counts; a row that spans
-  // more than one reach also says how it splits. The owner asked to see total assets before
-  // the debts come off (2026-10-26), so the rows end parts, total assets, less what you owe.
+  // Net worth, both cuts in one card: a row per purpose, its bar as long as its share and
+  // coloured by reach; the row's number opens the accounts in it. Then total assets and what is
+  // owed (the owner, 2026-10-26), and the reach totals, each a term and a number.
   const widest = Math.max(1, ...NWPARTS.map(r => r.v));
-  $("bothBig").textContent = fmt(NW_GLOBAL);
+  $("bothLab").innerHTML = term("net_worth", "Net worth");
+  $("bothBig").innerHTML = numx(fmt(NW_GLOBAL), [["You own", fmt(gross)], ["You owe", "\u2212"+fmt(NW_DEBT)]], "");
   $("bothRows").innerHTML = NWPARTS.map(r => {
     const by = r.by || [];
-    return '<div class="both-row"><span class="nm">'+r.k+(r.q ? qMark(r.q) : "")+'</span>'
+    return '<div class="both-row"><span class="nm">'+partTerm(r)+'</span>'
       + '<span class="both-bar" style="width:'+pc(r.v, widest)+'%">'
-      + by.map(b => '<span style="width:'+pc(b[1], r.v)+'%;background:'+b[2]+'" title="'+b[0]+' '+fmt(b[1])+'"></span>').join("")
-      + '</span><span class="v num">'+fmt(r.v)+'</span><span class="p num">'+Math.round(pc(r.v, gross))+'%</span>'
-      + '<span class="both-split">'+r.d+(by.length > 1 ? '<br>'+by.map(b => fmt(b[1])+" "+b[0].toLowerCase()).join(" \u00b7 ") : "")+'</span>'
-      + '</div>';
+      + by.map(b => '<span style="width:'+pc(b[1], r.v)+'%;background:'+b[2]+'"></span>').join("")
+      + '</span><span class="v num">'+numx(fmt(r.v), by.length > 1 ? split(by) : [], r.d)+'</span><span class="p num">'+Math.round(pc(r.v, gross))+'%</span></div>';
   }).join("")
-    + '<div class="both-row sum"><span class="nm">Total assets</span><span class="both-split d">Everything you own, in every currency, before what you owe</span><span class="v num">'+fmt(gross)+'</span><span class="p"></span></div>'
-    + '<div class="both-row"><span class="nm">Less what you owe</span><span class="both-split d">'+DEBT_NOTE+'</span><span class="v num">\u2212'+fmt(NW_DEBT)+'</span><span class="p"></span></div>';
-  $("bothKey").innerHTML = REACH.map(r =>
-    '<span><i style="background:'+r.c+'"></i>'+r.k+(r.d ? qMark(r.d) : "")+'</span>').join("");
-  const today = REACH.find(r => r.k === "Reach today");
-  $("bothNote").innerHTML = today ? noteBox(fmt(today.v)+" ("+Math.round(pc(today.v, rGross))+"%) you could spend today without giving anything up.") : "";
+    + '<div class="both-row sum"><span class="nm">'+term("assets", "Total assets")+'</span><span></span><span class="v num">'+fmt(gross)+'</span><span class="p"></span></div>'
+    + '<div class="both-row"><span class="nm">Less what you owe</span><span></span><span class="v num">'+numx("\u2212"+fmt(NW_DEBT), [], DEBT_NOTE)+'</span><span class="p"></span></div>';
+  $("bothKey").innerHTML = '<div class="both-sum">' + REACH.map(r =>
+    '<span class="it"><i style="background:'+r.c+'"></i>'+term(REACH_TERM[r.r], r.k)+' '+numx(fmt(r.v), [], r.d)+'</span>').join("") + '</div>';
 }
 
 // ===== What needs you today: one line per thing to do, worst first, click to open =====
@@ -2299,12 +2442,12 @@ const CARE_ESC = HOME_CARE.esc;
 // copy: an RRSP is not locked, it is taxed, so the second cut grades by FRICTION rather than by
 // access. Both lists are derived at rebuild time from the holdings export, banks.json and
 // foreign.json, and both sum to PORTFOLIO.
-const NWPARTS = [{"k": "For FIRE", "role": "grow", "v": 67135, "c": "#2a78d6", "q": "Money whose job is to grow until you stop working. FIRE progress is measured on this, whatever it holds today: stocks, bonds, or cash waiting to be invested.", "d": "Non-registered, TFSA, RRSP, Crypto at Wealthsimple", "by": [["Reach today", 54800, "#1baf7a"], ["Reach, but it costs", 12335, "#eda100"]]}, {"k": "Set aside", "role": "set-aside", "v": 23200, "c": "#eda100", "q": "Money already promised to a goal, such as a first home or a trip. It is left out of FIRE progress and out of dry powder.", "d": "High-yield savings, FHSA at Wealthsimple", "by": [["Spoken for", 23200, "#eb6834"]]}, {"k": "Cash", "role": "buffer", "v": 11972, "c": "#1baf7a", "q": "Bank and cash accounts at home that you live on and can spend today.", "d": "Primary Chequing, Savings Amplifier at BMO; Day to Day Banking, High Interest eSavings at RBC; Chequing at Wealthsimple", "by": [["Reach today", 11972, "#1baf7a"]]}, {"k": "Owed to you", "role": "owed", "v": 500, "c": "#e87ba4", "q": "Money you lent, counted until it is paid back.", "d": "Sam $500", "by": [["Lent out", 500, "#e87ba4"]]}];
+const NWPARTS = [{"k": "For FIRE", "role": "grow", "v": 67135, "c": "#2a78d6", "q": "Money whose job is to grow until you stop working. FIRE progress is measured on this, whatever it holds today: stocks, bonds, or cash waiting to be invested.", "d": "Non-registered, TFSA, RRSP, Crypto at Wealthsimple", "by": [["Spendable today", 54800, "#1baf7a", "today"], ["Taxed to take out", 12335, "#eda100", "costs"]]}, {"k": "Set aside", "role": "set-aside", "v": 23200, "c": "#eda100", "q": "Money already promised to a goal, such as a first home or a trip. It is left out of FIRE progress and out of dry powder.", "d": "High-yield savings, FHSA at Wealthsimple", "by": [["Promised to a goal", 23200, "#eb6834", "spoken"]]}, {"k": "Cash", "role": "buffer", "v": 11972, "c": "#1baf7a", "q": "Bank and cash accounts at home that you live on and can spend today.", "d": "Primary Chequing, Savings Amplifier at BMO; Day to Day Banking, High Interest eSavings at RBC; Chequing at Wealthsimple", "by": [["Spendable today", 11972, "#1baf7a", "today"]]}, {"k": "Owed to you", "role": "owed", "v": 500, "c": "#e87ba4", "q": "Money you lent, counted until it is paid back.", "d": "Sam $500", "by": [["Lent out", 500, "#e87ba4", "lent"]]}];
 const NW_DEBT = 1016;
 const DEBT_NOTE = "MasterCard and Cash Back Visa — the balances owed today";   // the line under "Less what you owe": the owner's words, or the debts by name
 
 // What you could actually put your hands on, and what it would cost you to do it.
-const REACH = [{"k": "Reach today", "v": 66772, "c": "#1baf7a", "d": "Investment and cash accounts with no age gate and no penalty"}, {"k": "Reach, but it costs", "v": 12335, "c": "#eda100", "d": "Registered retirement savings: withdrawable, but taxed as income that year"}, {"k": "Spoken for", "v": 23200, "c": "#eb6834", "d": "Earmarked for a purpose. Reachable, but spending it means giving up what it was for"}, {"k": "Lent out", "v": 500, "c": "#e87ba4", "d": "Money you lent. It comes back only as it is repaid, on the borrower's timetable"}];
+const REACH = [{"k": "Spendable today", "r": "today", "v": 66772, "c": "#1baf7a", "d": "Investment and cash accounts with no age gate and no penalty"}, {"k": "Taxed to take out", "r": "costs", "v": 12335, "c": "#eda100", "d": "Registered retirement savings: withdrawable, but taxed as income that year"}, {"k": "Promised to a goal", "r": "spoken", "v": 23200, "c": "#eb6834", "d": "Earmarked for a purpose. Reachable, but spending it means giving up what it was for"}, {"k": "Lent out", "r": "lent", "v": 500, "c": "#e87ba4", "d": "Money you lent. It comes back only as it is repaid, on the borrower's timetable"}];
 
 // Money lent: per borrower, what was agreed as owed on a date and what has come back since —
 // derived at rebuild time from the register's loan rows and the bank ledgers (loans.py).
@@ -3069,9 +3212,9 @@ function headerLine(){
   const req = SOURCES.filter(r => !r.optional).map(r => DOC_LATEST[r.src]).filter(Boolean).sort();
   const last = (IMPORTS[0] || {}).date || Object.values(DOC_LATEST).filter(Boolean).sort().pop();
   if(!req.length && !last) return "Nothing filed yet. Drop your first statements into inbox and say \u201cupdate dashboards\u201d.";
-  return (req.length ? "Complete to " + dLong(req[0]) + qMark("Every account\u2019s numbers are in up to this day. After it, some accounts are still waiting for their next statement.") : "")
-    + (req.length && last ? " \u00b7 " : "")
-    + (last ? "Updated " + dLong(last) + qMark("The last day new statements or exports were added.") : "");
+  return (req.length ? term("complete_to") + " " + dLong(req[0]) : "")
+    + (req.length && last ? '<span class="gap"></span>' : "")
+    + (last ? "Updated " + dLong(last) : "");
 }
 
 function renderUpdates(){
@@ -3177,7 +3320,7 @@ function renderInsights(){
 // rate, the per-import history and the foreign funds. RULES and IMPORT_DAY are shared with the
 // rest of the page and declared above. Everything derived lives inside IV so nothing here can
 // collide with the names the rest of the page uses.
-const DATA = {"fx": 1.3712, "asof": "2026-09-06", "today": "2026-10-27", "broker": "Wealthsimple", "positions": [{"account": "TFSA", "sym": "VEQT", "name": "Vanguard All-Equity ETF Portfolio - ETF", "qty": 485.9002, "mv": 22400.0, "bv": 18983.05, "class": "stocks", "kind": "TFSA"}, {"account": "TFSA", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 336.7983, "mv": 8100.0, "bv": 8181.0, "class": "bonds", "kind": "TFSA"}, {"account": "TFSA", "sym": "SHOP", "name": "Shopify Inc.", "qty": 20.4626, "mv": 2300.0, "bv": 1840.0, "class": "stocks", "kind": "TFSA"}, {"account": "TFSA", "sym": "CAD", "name": "CAD", "qty": 310.0, "mv": 310.0, "bv": 310.0, "cash": 1, "class": "cash", "kind": "TFSA"}, {"account": "RRSP", "sym": "VEQT", "name": "Vanguard All-Equity ETF Portfolio - ETF", "qty": 149.6746, "mv": 6900.0, "bv": 5847.46, "class": "stocks", "kind": "RRSP"}, {"account": "RRSP", "sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "qty": 30.502, "mv": 4200.0, "bv": 4221.0, "usd": 1, "class": "bonds", "kind": "RRSP"}, {"account": "RRSP", "sym": "BN", "name": "Brookfield Corp.", "qty": 14.3481, "mv": 1150.0, "bv": 1000.0, "class": "stocks", "kind": "RRSP"}, {"account": "RRSP", "sym": "CAD", "name": "CAD", "qty": 85.0, "mv": 85.0, "bv": 85.0, "cash": 1, "class": "cash", "kind": "RRSP"}, {"account": "FHSA", "sym": "VCN", "name": "Vanguard FTSE Canada All Cap Index ETF", "qty": 187.3805, "mv": 9800.0, "bv": 8990.83, "class": "stocks", "kind": "FHSA"}, {"account": "FHSA", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 162.1622, "mv": 3900.0, "bv": 3939.0, "class": "bonds", "kind": "FHSA"}, {"account": "Non-registered", "sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "qty": 91.506, "mv": 12600.0, "bv": 12663.0, "usd": 1, "class": "bonds", "kind": "Non-registered"}, {"account": "Non-registered", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 168.3992, "mv": 4050.0, "bv": 4090.5, "class": "bonds", "kind": "Non-registered"}, {"account": "Non-registered", "sym": "XAW", "name": "iShares Core MSCI All Country World ex Canada Index ETF", "qty": 69.1964, "mv": 3100.0, "bv": 2767.86, "class": "stocks", "kind": "Non-registered"}, {"account": "Non-registered", "sym": "ZAG", "name": "BMO Aggregate Bond Index ETF", "qty": 98.5915, "mv": 1400.0, "bv": 1428.0, "class": "bonds", "kind": "Non-registered"}, {"account": "Non-registered", "sym": "CAD", "name": "CAD", "qty": 190.0, "mv": 190.0, "bv": 190.0, "cash": 1, "class": "cash", "kind": "Non-registered"}, {"account": "High-yield savings", "sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "qty": 21.0609, "mv": 2900.01, "bv": 2914.51, "usd": 1, "class": "bonds", "kind": "Non-registered"}, {"account": "High-yield savings", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 274.4283, "mv": 6600.0, "bv": 6666.0, "class": "bonds", "kind": "Non-registered"}, {"account": "Crypto", "sym": "BTC", "name": "Bitcoin", "qty": 0.00317063, "mv": 350.0, "bv": 318.18, "class": "crypto", "kind": "Crypto"}], "tickers": [{"sym": "VEQT", "name": "Vanguard All-Equity ETF Portfolio - ETF", "mv": 29300.0, "bv": 24830.51, "accounts": ["TFSA", "RRSP"], "pl": 4469.49}, {"sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "mv": 22650.0, "bv": 22876.5, "accounts": ["TFSA", "FHSA", "Non-registered", "High-yield savings"], "pl": -226.5}, {"sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "mv": 19700.01, "bv": 19798.51, "accounts": ["RRSP", "Non-registered", "High-yield savings"], "pl": -98.5}, {"sym": "VCN", "name": "Vanguard FTSE Canada All Cap Index ETF", "mv": 9800.0, "bv": 8990.83, "accounts": ["FHSA"], "pl": 809.17}, {"sym": "XAW", "name": "iShares Core MSCI All Country World ex Canada Index ETF", "mv": 3100.0, "bv": 2767.86, "accounts": ["Non-registered"], "pl": 332.14}, {"sym": "SHOP", "name": "Shopify Inc.", "mv": 2300.0, "bv": 1840.0, "accounts": ["TFSA"], "pl": 460.0}, {"sym": "ZAG", "name": "BMO Aggregate Bond Index ETF", "mv": 1400.0, "bv": 1428.0, "accounts": ["Non-registered"], "pl": -28.0}, {"sym": "BN", "name": "Brookfield Corp.", "mv": 1150.0, "bv": 1000.0, "accounts": ["RRSP"], "pl": 150.0}, {"sym": "BTC", "name": "Bitcoin", "mv": 350.0, "bv": 318.18, "accounts": ["Crypto"], "pl": 31.82}]};
+const DATA = {"fx": 1.3712, "asof": "2026-09-06", "today": "2026-10-28", "broker": "Wealthsimple", "positions": [{"account": "TFSA", "sym": "VEQT", "name": "Vanguard All-Equity ETF Portfolio - ETF", "qty": 485.9002, "mv": 22400.0, "bv": 18983.05, "class": "stocks", "kind": "TFSA"}, {"account": "TFSA", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 336.7983, "mv": 8100.0, "bv": 8181.0, "class": "bonds", "kind": "TFSA"}, {"account": "TFSA", "sym": "SHOP", "name": "Shopify Inc.", "qty": 20.4626, "mv": 2300.0, "bv": 1840.0, "class": "stocks", "kind": "TFSA"}, {"account": "TFSA", "sym": "CAD", "name": "CAD", "qty": 310.0, "mv": 310.0, "bv": 310.0, "cash": 1, "class": "cash", "kind": "TFSA"}, {"account": "RRSP", "sym": "VEQT", "name": "Vanguard All-Equity ETF Portfolio - ETF", "qty": 149.6746, "mv": 6900.0, "bv": 5847.46, "class": "stocks", "kind": "RRSP"}, {"account": "RRSP", "sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "qty": 30.502, "mv": 4200.0, "bv": 4221.0, "usd": 1, "class": "bonds", "kind": "RRSP"}, {"account": "RRSP", "sym": "BN", "name": "Brookfield Corp.", "qty": 14.3481, "mv": 1150.0, "bv": 1000.0, "class": "stocks", "kind": "RRSP"}, {"account": "RRSP", "sym": "CAD", "name": "CAD", "qty": 85.0, "mv": 85.0, "bv": 85.0, "cash": 1, "class": "cash", "kind": "RRSP"}, {"account": "FHSA", "sym": "VCN", "name": "Vanguard FTSE Canada All Cap Index ETF", "qty": 187.3805, "mv": 9800.0, "bv": 8990.83, "class": "stocks", "kind": "FHSA"}, {"account": "FHSA", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 162.1622, "mv": 3900.0, "bv": 3939.0, "class": "bonds", "kind": "FHSA"}, {"account": "Non-registered", "sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "qty": 91.506, "mv": 12600.0, "bv": 12663.0, "usd": 1, "class": "bonds", "kind": "Non-registered"}, {"account": "Non-registered", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 168.3992, "mv": 4050.0, "bv": 4090.5, "class": "bonds", "kind": "Non-registered"}, {"account": "Non-registered", "sym": "XAW", "name": "iShares Core MSCI All Country World ex Canada Index ETF", "qty": 69.1964, "mv": 3100.0, "bv": 2767.86, "class": "stocks", "kind": "Non-registered"}, {"account": "Non-registered", "sym": "ZAG", "name": "BMO Aggregate Bond Index ETF", "qty": 98.5915, "mv": 1400.0, "bv": 1428.0, "class": "bonds", "kind": "Non-registered"}, {"account": "Non-registered", "sym": "CAD", "name": "CAD", "qty": 190.0, "mv": 190.0, "bv": 190.0, "cash": 1, "class": "cash", "kind": "Non-registered"}, {"account": "High-yield savings", "sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "qty": 21.0609, "mv": 2900.01, "bv": 2914.51, "usd": 1, "class": "bonds", "kind": "Non-registered"}, {"account": "High-yield savings", "sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "qty": 274.4283, "mv": 6600.0, "bv": 6666.0, "class": "bonds", "kind": "Non-registered"}, {"account": "Crypto", "sym": "BTC", "name": "Bitcoin", "qty": 0.00317063, "mv": 350.0, "bv": 318.18, "class": "crypto", "kind": "Crypto"}], "tickers": [{"sym": "VEQT", "name": "Vanguard All-Equity ETF Portfolio - ETF", "mv": 29300.0, "bv": 24830.51, "accounts": ["TFSA", "RRSP"], "pl": 4469.49}, {"sym": "VSC", "name": "Vanguard Investments Canada Inc. - Canadian Short-term Corporate Bond Index ETF", "mv": 22650.0, "bv": 22876.5, "accounts": ["TFSA", "FHSA", "Non-registered", "High-yield savings"], "pl": -226.5}, {"sym": "SGOV", "name": "iShares Trust - iShares 0-3 Month Treasury Bond ETF", "mv": 19700.01, "bv": 19798.51, "accounts": ["RRSP", "Non-registered", "High-yield savings"], "pl": -98.5}, {"sym": "VCN", "name": "Vanguard FTSE Canada All Cap Index ETF", "mv": 9800.0, "bv": 8990.83, "accounts": ["FHSA"], "pl": 809.17}, {"sym": "XAW", "name": "iShares Core MSCI All Country World ex Canada Index ETF", "mv": 3100.0, "bv": 2767.86, "accounts": ["Non-registered"], "pl": 332.14}, {"sym": "SHOP", "name": "Shopify Inc.", "mv": 2300.0, "bv": 1840.0, "accounts": ["TFSA"], "pl": 460.0}, {"sym": "ZAG", "name": "BMO Aggregate Bond Index ETF", "mv": 1400.0, "bv": 1428.0, "accounts": ["Non-registered"], "pl": -28.0}, {"sym": "BN", "name": "Brookfield Corp.", "mv": 1150.0, "bv": 1000.0, "accounts": ["RRSP"], "pl": 150.0}, {"sym": "BTC", "name": "Bitcoin", "mv": 350.0, "bv": 318.18, "accounts": ["Crypto"], "pl": 31.82}]};
 const FX = {"rate": 1.3712, "asof": "2026-09-04", "quality": "broker-rate"};
 const HIST = [{"date": "2026-06-15", "cadInv": 61204.4, "dry": 24110.2, "dryPct": 39.4, "tickers": 9, "fgn": null}, {"date": "2026-08-05", "cadInv": 64851.7, "dry": 27302.1, "dryPct": 42.1, "tickers": 8, "fgn": null}, {"date": "2026-09-06", "cadInv": 67135.0, "dry": 28950.0, "dryPct": 43.1, "tickers": 8, "fgn": null}];
 const FGN = {"asof": "2026-09-08", "symbol": "", "label": "Foreign", "cadPerUnit": 0, "cash": 0, "funds": []};
@@ -3257,7 +3400,7 @@ const IV = (function(){
     const stat = (lab, def, val, note, extra) => '<div class="card"><div class="lab">'+lab+qMark(def)+'</div><div class="big num">'+val+'</div><div class="cap">'+note+'</div>'+(extra||"")+'</div>';
     $("invStats").innerHTML =
       stat("Portfolio", DEFS.portfolio, fmt(portfolio), FGN.rows.length ? "Canadian side plus the foreign funds" : "Everything that is actually invested", prev ? deltaLine(cadInv, prev.cadInv) : "")
-    + stat("Earmarked", DEFS.earmarked, fmt(earm), "Set aside, not part of the portfolio")
+    + stat("Set aside", DEFS.earmarked, fmt(earm), "Not part of the portfolio")
     + stat("Dry powder", DEFS.dry, cadInv ? pctS(dryPct)+' <span class="sym '+dryState+'" style="font-size:15px">'+(dryIn?"\u2713":"\u26a0")+'</span>' : "\u2014",
            cadInv ? dryNote : "Nothing invested yet", prev ? deltaLine(dryPct, prev.dryPct, "pts") : "")
     + stat("Holdings", DEFS.holdings, nTick + (CAP && nTick > CAP ? ' <span class="sym bad" style="font-size:15px">\u2717</span>' : ""),
@@ -3400,7 +3543,7 @@ const IV = (function(){
   // ----- holdings: by role or by account; P&L off by default because cost is not a decision input
   let showPL = false, view = "role";
   function roleView(){
-    const order=[...BUCKETS.map(b=>[b.name,b.key]),["Idle cash","cash"],["onshore deployable","cn"],["Earmarked \u00b7 not part of Portfolio","earm"]];
+    const order=[...BUCKETS.map(b=>[b.name,b.key]),["Idle cash","cash"],["onshore deployable","cn"],["Set aside","earm"]];
     const buckets={cash:[],cn:[],earm:[]}; BUCKETS.forEach(b=>buckets[b.key]=[]);
     const agg={};
     for(const p of positions){
@@ -3481,9 +3624,13 @@ IV.renderAll();
 renderGlance();     // again, now that the rules are computed (render() draws it before they are)
 renderFire();
 renderTasks();
+renderGlossary();
 // header band: the one number worth carrying on every page
 (function(){
-  $("hdrNW").innerHTML = fmt(NW_GLOBAL) + qMark("Everything you own minus what you owe, in every currency. Canadian side "+fmt(INVEST.netWorth)+(FOREIGN.total ? ", "+(FOREIGN.label||"foreign")+" side about "+fmt(FOREIGN_CAD) : "")+".");
+  const owned = NWPARTS.reduce((a,r) => a + r.v, 0);
+  document.querySelector(".ph-r .k").innerHTML = term("net_worth", "Net worth");
+  $("hdrNW").innerHTML = numx(fmt(NW_GLOBAL), [["You own", fmt(owned)], ["You owe", "\u2212"+fmt(NW_DEBT)]],
+    FOREIGN_CAD ? "Includes "+fmt(FOREIGN_CAD)+" held abroad, at the rate of "+dLong(FOREIGN.asof || TODAY)+"." : "");
   $("hdrSub").innerHTML = '<span class="hdr-line" tabindex="0">'+headerLine()+'</span>';
   $("hdrSub").querySelector(".hdr-line").onclick = ev => { if(!ev.target.closest(".hint")) setPage("src"); };
   $("brand").onclick = () => setPage("home");

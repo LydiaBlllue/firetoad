@@ -145,7 +145,7 @@ and needs no special case.
 | `against` | the asset a liability sits on | the reach table shows equity: a home less its mortgage, on the `locked` row |
 
 - A home is `asset · none · locked · stated`. It counts in net worth, not in Portfolio and not in
-  dry powder. On the reach table it is "Locked in property", net of what is secured against it;
+  dry powder. On the reach cut it is "In property", net of what is secured against it;
   on the by-purpose card it is "Other assets".
 - A mortgage is `liability` with `against: home`. A credit card is `liability` with no `against`.
 - **Money lent** is `asset · owed · lent · stated`, kind `Lent`, one row per borrower. The owner

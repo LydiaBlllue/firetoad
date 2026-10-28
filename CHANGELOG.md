@@ -4,6 +4,14 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Words on a card, and a Glossary** (2026-10-28). DESIGN.md §5b′ sets what a card may say: a
+  label of at most four words, one number, and at most one fact under it; no subtitles, on a
+  card or under a page title. A word that needs explaining is a term (dotted underline, hover for
+  its dictionary entry, click for the new Glossary page under Records); a number that needs
+  explaining opens its sum when hovered or tapped. Home and the header are written that way;
+  `Earmarked` is `Set aside` everywhere, and the reach cut is Spendable today / Taxed to take
+  out / Promised to a goal / Lent out / In property / Held abroad. 19 pages.
+
 - **The header says two dates** (2026-10-27). "Numbers as of Oct 25. Everything is filed and
   nothing is waiting." is now *Complete to* (the day every account is in up to) and *Updated*
   (the last update), each explained behind its `?`. What is missing or waiting is To do's to say.

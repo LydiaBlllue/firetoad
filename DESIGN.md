@@ -106,8 +106,8 @@
   - Month pills appear only on `PILL_PAGES` (home / tx / budget).
   - The foot of the sidebar carries the tool version (`v1.0`) in muted 10.5px. MAJOR.MINOR:
     polish moves the minor, a change of shape moves the major.
-<!-- LINT:PAGES pages=18 sections=5 -->
-- **LY Finance Dashboard is the main dashboard**: 18 pages under 5 sidebar sections (the
+<!-- LINT:PAGES pages=19 sections=5 -->
+- **LY Finance Dashboard is the main dashboard**: 19 pages under 5 sidebar sections (the
   2026-09-06 rebuild, replacing 6 top tabs). **Lint rule S4 checks this table against the `NAV`
   constant, so changing the navigation means changing this table too** — S4 also checks the page
   count, the sidebar list and the minimum width stated in `README.md`, and that every path the
@@ -115,12 +115,12 @@
   place is worse than saying nothing:
   | Section | Pages |
   |---|---|
-  | — | Home (what needs you today, net worth, two cuts of it) |
+  | — | Home (what needs you today, net worth in one card) |
   | Spending | This month · Year · Subscriptions |
   | Income | Income · Investment income |
   | Investing | Portfolio · Performance · Holdings · Rules |
   | Plan | Budget · FIRE · Drawdown & care · Spending baseline |
-  | Records | To do · Updates · Accounts · Statements |
+  | Records | To do · Updates · Accounts · Statements · Glossary |
   The Insights page was absorbed on 2026-09-10: what stood out about the year is a card on the
   Spending overview, and the one check that
   wants a decision (a subscription seen once) sits on To do under "Worth a second look".
@@ -254,8 +254,8 @@
     once** (2026-10-27, replacing a by-purpose card and a by-reach card that sliced the same
     accounts twice). One row per `role`, cash split by where it is: For FIRE / Set aside / Cash /
     Cash in <abroad> / Owed to you / Other assets (only for things that are not money); each
-    row's bar is as long as its share and coloured by `reach` (Reach today / Reach but it costs /
-    Spoken for / Lent out / Locked in property / Across a border). Each `NWPARTS` row carries
+    row's bar is as long as its share and coloured by `reach` (Spendable today / Taxed to take out /
+    Promised to a goal / Lent out / In property / Held abroad). Each `NWPARTS` row carries
     `by`, its reach split, rounded per piece and settled on the largest so the pieces sum to the
     row. Under each row, the accounts it counts; a row that spans more than one reach also says
     how it splits. Then total assets, less what you owe. Each row keeps its exact definition
@@ -403,6 +403,30 @@ own prose in the data:
 
 The prose fields of `imports.json`, `decisions.json`, `plan.json` and `rules.json` reach the page
 too and are written by the import to the same rules (update-dashboard, Step 7).
+
+## 5b′. Words on a card (the owner, 2026-10-28: "every word is designed; no messy subtitles")
+
+A card carries at most three lines of text, and each has one job. Anything that does none of
+these jobs is deleted, not shortened.
+
+| line | job | rule |
+|---|---|---|
+| **label** | names the thing | a noun phrase of at most four words: `Net worth`, `Free to spend`. No verb, no sentence, no colon, no "your". |
+| **value** | answers it | one number with its unit; `$838 of $1,300` is still one number. |
+| **status** | the one fact the value cannot show | optional; at most seven words, one fact, no `·`, never a restatement of the label, never where a number came from. `On track for May 2039`, `Both transfers landed`. |
+
+- **Explanations are never on the card.** A word that needs one is a **term**: dotted underline,
+  hover for its entry, click for the Glossary page. A number that needs one is **tappable**:
+  hover or tap it for how yours is worked out. A `?` is what is left on pages not yet moved over.
+- **A term's entry is a dictionary entry**, the same for anyone: the word, its part of speech,
+  one sentence, a formula where there is one, an example in round numbers, *see also*. Never the
+  owner's numbers, never a Chinese name. Words the page coined (`Set aside`, `Held abroad`) get
+  an entry too, saying what they mean on this page.
+- **A number's explanation is a sum**: the parts as label / value rows, then one line of what is
+  in it or left out. It is where the owner's own descriptions in `plan.json` appear.
+- **One name per thing, everywhere.** The Glossary is the authority: a word that is in it is
+  spelled that way on every page (`Set aside`, never `Earmarked`).
+- **A summary is a row, not a warning.** `noteBox()` is for something that needs action.
 
 ## 5c. The filing grid (the owner, 2026-09-06 — the paper-planner look)
 
