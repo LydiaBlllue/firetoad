@@ -266,7 +266,7 @@
   - The idea came from Irene Zhu's 10-Year Wealth Dashboard (the owner shared it 2026-09-07): **do
     not report one net worth, report the rings inside it.** But it is **not a copy** — hers
     layers by Australian super's "locked until an age" rule, and a Canadian RRSP is not locked,
-    it is taxed. So the second card layers by **friction cost**, not by age.
+    it is taxed. So the reach colours layer by **friction cost**, not by age.
 - Overview **has no stat cards** (the owner removed all five — Income, Spent, Net, Daily average,
   Transactions — on 2026-08-14): the monthly total is the number in the middle of the donut,
   daily average and transaction count moved into the Budget page's description line, and the
