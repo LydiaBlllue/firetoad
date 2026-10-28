@@ -79,10 +79,11 @@ because the checkers would not have let the page build otherwise.
 
 ## Make it yours in twenty minutes
 
-You need [Claude Code](https://claude.com/claude-code), Python 3.9 or newer, a folder that syncs
+You need a Claude plan that includes [Claude Code](https://claude.com/claude-code), used from the
+Claude desktop app's **Code** tab (Chat cannot open a folder), Python 3.9 or newer, a folder that syncs
 between your devices (iCloud Drive, OneDrive, Dropbox — so a statement photographed on your phone
-is on your laptop), and last month's statements. That is all; no bank connection and no
-subscription.
+is on your laptop), and last month's statements. That is all: no bank connection, and no subscription but
+Claude's.
 
 1. **Drop last month's files into `inbox/`**, filenames untouched: every bank statement, your
    broker's holdings and activities exports, a screenshot of anything held abroad.
@@ -103,7 +104,7 @@ Two things worth knowing before you start:
   and `archive/`, but the demo's `findata/` is tracked; the moment yours is real, run
   `git rm -r --cached findata` and uncomment the `findata/` line in `.gitignore`.
 
-> **Who it is for.** Someone in Canada with a paycheque, a few accounts at one or two of the big
+> **Who it is for.** Someone in Canada working toward financial independence, with a paycheque, a few accounts at one or two of the big
 > five banks, a broker, and a plan they want held to. The tax-sheltered accounts it knows are the
 > TFSA, RRSP and FHSA, the money is Canadian dollars, and the retirement arithmetic assumes CPP
 > and OAS. Statements are read by parsers, one per bank and kind of statement: today RBC and BMO,

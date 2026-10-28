@@ -73,9 +73,10 @@ Spending 已经这样；其他几组下一个版本跟上，见[路线图](ROADM
 
 ## 二十分钟做成你自己的
 
-你需要 [Claude Code](https://claude.com/claude-code)、Python 3.9 或更新、一个在你设备之间同步的
+你需要一个包含 [Claude Code](https://claude.com/claude-code) 的 Claude 套餐，在 Claude desktop app 的
+**Code** 标签里用（Chat 打不开文件夹）；还要 Python 3.9 或更新、一个在你设备之间同步的
 文件夹（iCloud Drive、OneDrive、Dropbox —— 手机拍的对账单，电脑上就能处理），以及上个月的对账单。
-就这些；不连银行，不订阅任何服务。
+就这些：不连银行，除了 Claude 不订阅别的服务。
 
 1. **把上个月的文件丢进 `inbox/`**，文件名保持银行默认的样子：每份银行对账单、券商的持仓和活动导出、
    海外资产的截图。
@@ -93,7 +94,7 @@ Spending 已经这样；其他几组下一个版本跟上，见[路线图](ROADM
   `findata/` 是被 git 跟踪的；你的一旦是真的，先跑 `git rm -r --cached findata`，再把
   `.gitignore` 里 `findata/` 那一行取消注释。
 
-> **给谁用。** 在加拿大领工资、在五大行之一或之二有几个账户、有一个券商账户、想让自己的计划被盯住的人。
+> **给谁用。** 在加拿大朝财务自由努力、领工资、在五大行之一或之二有几个账户、有一个券商账户、想让自己的计划被盯住的人。
 > 它认识的免税账户是 TFSA、RRSP 和 FHSA，金额是加元，退休那部分的算法假设了 CPP 和 OAS。对账单由解析器
 > 读，每家银行每种对账单一个：现在有 RBC 和 BMO，加 Wealthsimple 的导出；接下来按顺序是 TD、Scotiabank、
 > CIBC，然后 Questrade 和 Interactive Brokers。你的银行还没有解析器之前，那些对账单由 Claude 手读 ——

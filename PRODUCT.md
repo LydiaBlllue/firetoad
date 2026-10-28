@@ -203,6 +203,15 @@ What the principles ask and the page does not do yet. Each is on the roadmap.
 
 - Income, Investing, Plan and Records still use the older `?` marks and long captions;
   principle 6 is kept so far on Home, the header and Spending.
-- The monthly import panel exists in the owner's workspace only; it ships after one real import.
+- Nothing stops real data being committed to a public clone (principle 9): `findata/` is
+  tracked until the owner untracks it by hand. v1.1.
+- A first import files every purchase as Other until each merchant is confirmed one by one, so
+  the first page a new owner sees is not worth reading. v1.1.
+- A setup question skipped becomes a default shown as a fact — income $0 — where principle 8
+  asks for a question. v1.2.
+- Income, Investing, Plan and Records still use the older `?` marks and long captions;
+  principle 6 is kept so far on Home, the header and Spending. v1.1.
 - A fresh clone of the demo warns about a stale exchange rate on its first run, which principle
-  1 says it should not.
+  1 says it should not. v1.1.
+- The monthly import panel exists in the owner's workspace only; it ships after one real
+  import. v1.3.

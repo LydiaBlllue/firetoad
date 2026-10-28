@@ -107,7 +107,7 @@
   - The foot of the sidebar carries the tool version (`v1.0`) in muted 10.5px. MAJOR.MINOR:
     polish moves the minor, a change of shape moves the major.
 <!-- LINT:PAGES pages=19 sections=5 -->
-- **LY Finance Dashboard is the main dashboard**: 19 pages under 5 sidebar sections (the
+- **The dashboard is one page**: 19 pages under 5 sidebar sections (the
   2026-09-06 rebuild, replacing 6 top tabs). **Lint rule S4 checks this table against the `NAV`
   constant, so changing the navigation means changing this table too** — S4 also checks the page
   count, the sidebar list and the minimum width stated in `README.md`, and that every path the
@@ -151,10 +151,10 @@
   else; every other page shows a status computed today.**
   The old Overview split into Home + Budget + Subscriptions, the old Investments into Portfolio +
   Cash flow + Foreign, the old FIRE into FIRE + Drawdown & care + Spending baseline, and the old Insights/Tasks into
-  four pages. Investing → Overview is the investment-discipline summary; the detail is the rest
+  four pages. Investing → Portfolio is the investment-discipline summary; the detail is the rest
   of the Investing group. **The headline number of the Investing group is Portfolio, "money
   that is actually invested"** (the owner, 2026-08-20): Wealthsimple's non-earmarked accounts plus
-  the foreign funds; not FHSA, not High-yield savings (those get their own Earmarked card), and no
+  the foreign funds; not FHSA, not High-yield savings (those get their own Set aside card), and no
   bank balance or Chinese demand deposit. The page keeps that as its only denominator (the old
   Investable capital was folded into it); the dry-powder denominator is its Canadian part, and
   the foreign-currency assets are listed separately under the structure chart. Full definitions are in
@@ -291,12 +291,8 @@
 - The income domain is a single blue family (Payroll `#1c5cab` / Rent `#5598e7` / Gift `#9ec5f4`),
   set against the multi-colour category palette used for spending so the two domains read apart.
   Both legends isolate on click.
-- **Insights / Tasks tab** (the owner, 2026-08-13): three cards — ① Insights, every line computed
-  live and never hand-written (largest category share, subscription and AI-tool share, delivery
-  share of Dining, peak month, contribution status, budget overrun; ⚠/✓/● at three levels);
-  ② Data freshness (each source's data-through date and its age, ⚠ past 30 days); ③ Open tasks
-  (the `TASKS` constant — the owner adds and closes them out loud, Claude maintains them on rebuild;
-  ○ open / ✓ done, with the date added).
+- ~~Insights / Tasks tab~~ **gone**: Insights was absorbed 2026-09-10 (above); Tasks became
+  part of To do 2026-10-27, and data freshness lives on Statements.
 - ~~Transactions page~~ **deleted** (the owner, 2026-09-06: "by category already covers what it did").
   The line-by-line for a month now appears only in the right-hand column of **This month**,
   entered through a category. ⚠ Three things went with it: **the chequing line-by-line**
@@ -312,7 +308,8 @@
 - Charts have hover tooltips by default (dark bubble, white text). **One fact per line inside the
   bubble too** — break with `<br>`, never string them on `·`. (Eight places were fixed on
   2026-09-06.)
-- **Definitions go in a "?"** (the owner, 2026-08-20): a 14px grey circled `?` follows a stat card
+- **Definitions go in a "?"** (the owner, 2026-08-20) — *on pages not yet moved to §5b′, where
+  a term carries a dotted underline and a number opens its sum instead*: a 14px grey circled `?` follows a stat card
   label or a section title; hover or focus shows the definition in a bubble (dark, white text,
   same as the chart tooltip), click toggles it, clicking away or Esc closes it. The definition
   states the measure itself — what is counted, what is not, what the denominator is, which rule
@@ -331,8 +328,8 @@
 - **Every page has a `.pghead`**, with a 1px rule below it and
   `margin-bottom:20px`:
   - Left: an **eyebrow** (the section it belongs to, 10.5px uppercase grey), the **title at
-    25px** (up from 19px), and one 13px line of description.
-  - Home's four stat cards answer one question per section — **Portfolio** (the Portfolio page's own number and name, with the band status), **FIRE progress** (on the portfolio, with the on-track year), **This month's transfer** (pay-yourself-first, from the broker's record), **Free to spend** (the allowance today). Net worth is not a card; it is the header line. (2026-09-10)
+    25px** (up from 19px). No line of description under it (§5b′, 2026-10-28).
+  - Home's four stat cards answer one question per section — **Portfolio** (the Portfolio page's own number and name, with the band status), **FIRE progress** (on the portfolio, with the on-track year), **Invested in <month>** (pay-yourself-first, from the broker's record), **Free to spend** (the allowance today). Net worth is not a card; it is the header line. (2026-09-10)
   - Right (main dashboard only): **Net worth**, always present — what a banking app does. The
     anchor number is visible from any page, and its definition is in the `?`.
   - **The two rules have to line up** (the owner, 2026-09-06: "the two dividing lines not lining up
@@ -340,7 +337,7 @@
     both blocks are a fixed height with a `border-bottom`, so whichever page you are on, with or
     without an eyebrow, both rules land on the same y. Changing one height means changing the
     variable, not one side of it.
-  - The top of the sidebar holds only **LY Finance** (21px, clicks back to Home) and a 23px flat
+  - The top of the sidebar holds only **Jade Toad**, the owner's name in small type beneath (21px, clicks back to Home), and a 23px flat
     gold coin (outer `#c8971a`, inner `#f0c649`, `$` stroked `#a87c11`; no gradients or shadows,
     in keeping with the restrained light style). The old `data through <date>` line was deleted:
     it took the **newest** date across all sources at a moment when three of them were past 30
@@ -349,8 +346,6 @@
 - **A number in the page header is not repeated in the page.** The main dashboard's FIRE and
   Portfolio pages each had a Net worth card; both are gone, taking those pages from four stat
   cards to three.
-- Under the sidebar title, one line of `data through <newest data date>`, the maximum of every
-  source's as-of.
 - **Under the net worth in the page header sit two dates, nothing else** (the owner, 2026-10-27:
   "no filler"): *Complete to* — the oldest of every required source's newest statement, the day
   all accounts are in up to — and *Updated* — the day of the last update; each with its `?`.
@@ -543,7 +538,7 @@ What actually breaks is **how much fits on one screen**.
   "hard to read and some of them are redundant").
 - Explanatory text appears only where it is needed, within one line, in small grey type.
 - **No subtitle under a title** (the owner deleted them 2026-08-14); the source and update date
-  appear only in the Data freshness table on Insights/Tasks.
+  appear only on Statements.
 
 ## 7. Principles for presenting data
 
