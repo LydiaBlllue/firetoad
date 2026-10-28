@@ -60,9 +60,11 @@
   constant. Home sits above the sections under no heading.
   - **A new page is one entry in `NAV` plus one `<section data-pg="key" hidden>`**, nothing
     else; `setPage()` is driven entirely by `NAV`.
-  - **Records is a secondary group**: closed at the foot of the sidebar, opened by clicking its
+  - **Records is a secondary group**: closed near the foot of the sidebar, opened by clicking its
     heading or by landing on one of its pages; while closed, its heading carries the strongest
     dot inside.
+  - **The Glossary is on its own at the foot**, below Records and above the version, under no
+    heading: it is a reference for reading the page, not a record.
   - **Dots**: `pageFlags()` hangs a 6px dot on a sidebar entry when its page has something on
     it — amber `#c98500` = look at this, red `#d03b3b` = a rule is broken or something is due.
     A new rule is wired into it.
@@ -85,7 +87,8 @@
   | Income | Income · Investment income |
   | Investing | Portfolio · Performance · Holdings · Rules |
   | Plan | Budget · FIRE · Drawdown & care · Spending baseline |
-  | Records | To do · Updates · Accounts · Statements · Glossary |
+  | Records | To do · Updates · Accounts · Statements |
+  | — | Glossary, at the foot of the sidebar |
 
 ### Home
 
@@ -208,8 +211,11 @@
   why, and how to fix it. The source is `findata/register/accounts.json`, **a register, not a
   second set of books**.
 - **Statements**: the filing grid (§5c), and every source's date.
-- **Glossary**: every finance term and every coined word (§5b′), finance terms first, grouped by
-  letter.
+
+### Glossary
+
+- At the foot of the sidebar, in no group: every finance term and every coined word (§5b′),
+  finance terms first, grouped by letter.
 
 ## 5. Interaction
 

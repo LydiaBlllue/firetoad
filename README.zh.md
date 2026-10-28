@@ -23,7 +23,7 @@ Anthropic；解析器读成功的对账单，它从不看。
 | ![一年的支出](docs/screens/spending.png) | **Spending。** 这个月按分类拆开；一年按月看、和日常额度比；订阅，以及接下来 30 天要扣的。没有分类上限 —— 只有一条日常额度，线以下都是 guilt-free。 |
 | ![预算](docs/screens/plan.png) | **Plan。** 每份工资做什么用；投资组合离 FIRE 目标还有多远、哪年到；开始取钱以后钱够不够用 —— 用 1928 年以来每一段真实年份重放一遍。 |
 | ![你的投资规则](docs/screens/rules.png) | **Investing。** 持有什么、怎么分布；和「当初买一只基金」相比表现如何；你自己定的规则 —— 现金区间、每只持仓该放哪个账户、写下的论点 —— 逐条核对。 |
-| ![哪个月交了哪份文件](docs/screens/sources.png) | **Records。** 等你处理的事集中在一页；每次更新改了什么；每个账户；哪份对账单哪个月到了；以及页面上每个术语的词典。 |
+| ![哪个月交了哪份文件](docs/screens/sources.png) | **Records。** 等你处理的事集中在一页；每次更新改了什么；每个账户；哪份对账单哪个月到了。页面上每个术语的词典单独放在侧栏最底部。 |
 
 **卡片上的每个字都是挑过的。** 一张卡只有一个标题、一个数字、最多一句话。带虚线下划线的
 术语会显示词典释义、点开进 Glossary；带虚线的数字会显示它是怎么算出来的。（Home、页眉和
@@ -51,7 +51,7 @@ Spending 已经这样；其他几组下一个版本跟上，见[路线图](ROADM
 | | Updates | 每次更新改了什么 |
 | | Accounts | 钱放在哪些地方 |
 | | Statements | 哪份对账单哪个月到了，还缺什么 |
-| | Glossary | 每个金融术语，以及页面自己起的每个词 |
+| — | Glossary | 每个金融术语，以及页面自己起的每个词 |
 
 ### 第一次发布以后新增的
 
@@ -198,7 +198,7 @@ tools/        demo 数据、迁移脚本、同步进工作区
 
 <!-- LINT:NAV main=19/5 minwidth=1120 -->
 页面共 19 页、5 个侧栏分组 ——
-Home · Spending · Income · Investing · Plan · Records
+Home · Spending · Income · Investing · Plan · Records · Glossary
 —— 仅桌面，窗口至少 1120px 宽。
 </details>
 

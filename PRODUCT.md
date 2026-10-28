@@ -86,7 +86,8 @@ What ships today. What is planned is in [`ROADMAP.md`](ROADMAP.md); when each ar
 | Income | Income by source and how much of it was kept · investment income — dividends, interest, lending, withholding tax — on its own page |
 | Investing | The portfolio by currency, kind of asset and bucket · performance against one benchmark fund bought on the same days · every holding, by role or by account · the owner's rules checked today: the cash band, where each holding belongs, the theses and checkpoints · accounts held abroad, when there are any |
 | Plan | What each paycheque is for, and what each fund holds · the FIRE target, progress, the year it is reached and coast to FIRE · whether the money lasts, late-life care included, replayed through every stretch of real years since 1928 · the planning figure against what is really spent |
-| Records | To do: questions, checks and tasks in one list · Updates: what each import changed, noticed and decided · Accounts: every place money sits, with its balance and date · Statements: which file arrived which month, and what is missing · Glossary: every finance term and every coined word |
+| Records | To do: questions, checks and tasks in one list · Updates: what each import changed, noticed and decided · Accounts: every place money sits, with its balance and date · Statements: which file arrived which month, and what is missing |
+| Glossary | Every finance term and every coined word, at the foot of the sidebar in no group; a coined word's entry looks different from a dictionary entry |
 | Everywhere | Terms with a dotted underline open their dictionary entry · numbers that need it open their sum · the planning figure and the toggles are tried out in the browser and never written back |
 
 ### Behind the page

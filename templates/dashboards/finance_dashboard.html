@@ -232,6 +232,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .foot{font-size:12px;color:var(--muted);margin-top:9px}
 /* Records: a secondary group at the foot of the sidebar, closed unless you are in it */
 .side .sec.minor{display:flex;align-items:center;gap:5px;cursor:pointer;margin-top:20px;padding-top:12px;border-top:1px solid var(--border);margin-right:10px}
+.side .grp.foot{margin-top:14px}
 .side .sec.minor .tw{font-size:9px;color:var(--muted)}
 .side .sec.minor .dot-n{width:6px;height:6px;border-radius:50%;margin-left:auto}
 .side .sec.minor:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:4px}
@@ -771,8 +772,9 @@ const NAV = [
   {sec:"Records",   items:[{k:"todo",  n:"To do",            t:"To do",                d:""},
                            {k:"upd",   n:"Updates",          t:"Updates",              d:""},
                            {k:"acct",  n:"Accounts",         t:"Accounts",             d:""},
-                           {k:"src",   n:"Statements",       t:"Statements",           d:""},
-                           {k:"gloss", n:"Glossary",         t:"Glossary",             d:""}]}
+                           {k:"src",   n:"Statements",       t:"Statements",           d:""}]},
+  // The Glossary is a reference, not a record: on its own at the foot of the sidebar (2026-10-28).
+  {sec:"",          items:[{k:"gloss", n:"Glossary",         t:"Glossary",             d:""}]}
 ];
 const PAGES = NAV.flatMap(g => g.items);
 const PILL_PAGES = ["cat"];                          // driven by the month cursor
@@ -815,8 +817,10 @@ let recOpen = false;
 try{ recOpen = localStorage.getItem("ly_records_open") === "1"; }catch(e){}
 function drawNav(){
   const f = pageFlags();
-  $("sideNav").innerHTML = NAV.map(g => {
+  $("sideNav").innerHTML = NAV.map((g, gi) => {
     const minor = MINOR_SECS.includes(g.sec);
+    if(!g.sec && gi > 0) return '<div class="grp foot">' + g.items.map(i =>
+      '<button data-k="'+i.k+'" class="'+(i.k===curPage?"sel":"")+'"><span>'+i.n+'</span></button>').join("") + '</div>';
     const open = !minor || recOpen || g.items.some(i => i.k === curPage);
     const flag = g.items.map(i => f[i.k]).find(Boolean);
     const head = !g.sec ? '' : minor

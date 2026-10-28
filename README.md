@@ -25,7 +25,7 @@ does.
 | ![A year of spending](docs/screens/spending.png) | **Spending.** This month, opened up by category; the year, month by month and against the allowance; subscriptions, with what is due in the next 30 days. No category caps — one allowance, and everything under it is guilt-free. |
 | ![The budget](docs/screens/plan.png) | **Plan.** What each paycheque is for; how far the portfolio is from the FIRE target and when it gets there; whether the money lasts once you start taking it out, replayed through every stretch of real years since 1928. |
 | ![Your investment rules](docs/screens/rules.png) | **Investing.** What you hold and how it splits; how it did against one fund you could have bought instead; your own rules — a cash band, where each holding belongs, the theses you wrote down — checked one by one. |
-| ![Which file was filed](docs/screens/sources.png) | **Records.** Everything waiting for you in one place; what each update changed; every account; which statement arrived which month; and a glossary of every term the page uses. |
+| ![Which file was filed](docs/screens/sources.png) | **Records.** Everything waiting for you in one place; what each update changed; every account; which statement arrived which month. A glossary of every term sits on its own at the foot of the sidebar. |
 
 **Every word on a card is chosen.** A card has a label, one number and at most one fact. A
 term with a dotted underline shows its dictionary entry and opens the Glossary; a number with
@@ -54,7 +54,7 @@ follow in the next release — see the [roadmap](ROADMAP.md).)
 | | Updates | What each update changed |
 | | Accounts | Every place the money sits |
 | | Statements | Which statement arrived which month, and what is missing |
-| | Glossary | Every finance term, and every word the page coined |
+| — | Glossary | Every finance term, and every word the page coined |
 
 ### New since the first release
 
@@ -221,7 +221,7 @@ up one step at a time.
 
 <!-- LINT:NAV main=19/5 minwidth=1120 -->
 The page is 19 pages in 5 sidebar groups —
-Home · Spending · Income · Investing · Plan · Records
+Home · Spending · Income · Investing · Plan · Records · Glossary
 — desktop only, at least 1120px wide.
 </details>
 
