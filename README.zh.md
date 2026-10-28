@@ -176,6 +176,7 @@ tools/        demo 数据、迁移脚本、同步进工作区
 
 | 文件 | 管什么 |
 |---|---|
+| [`PRODUCT.md`](PRODUCT.md) | 产品为谁、回答什么问题、原则，以及刻意不做什么 |
 | `CLAUDE.md` | Claude 在这里怎么工作：信息模型、导入、检查器 |
 | `FINANCE.md` | 钱的逻辑：FIRE 目标、pay-yourself-first、什么算收入 |
 | `DESIGN.md` | 页面长什么样、怎么说话：配色、导航、文案 |

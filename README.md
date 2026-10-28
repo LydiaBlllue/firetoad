@@ -198,6 +198,7 @@ The folder is called `findata/` because iCloud for Windows refuses to sync any f
 
 | File | Owns |
 |---|---|
+| [`PRODUCT.md`](PRODUCT.md) | what the product is for, its principles, and what it deliberately is not |
 | `CLAUDE.md` | how Claude works here: the information model, the import, the checkers |
 | `FINANCE.md` | the money logic: the FIRE target, pay-yourself-first, what counts as income |
 | `DESIGN.md` | how the page looks and talks: palette, navigation, copy |
