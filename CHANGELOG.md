@@ -4,6 +4,10 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **To do comes off the page** (2026-10-28). The owner's call. The page, its sidebar dot and the
+  "Worth a second look" check are gone; an old link opens Updates. The import still writes its
+  questions to `decisions.json` and asks them in the conversation. 17 pages.
+
 - **The dry-powder band is not judged any more** (2026-10-28, with Rules). Home's Portfolio card
   and Portfolio's Dry powder card show the share as a number; the ✓/⚠, the "short of the floor"
   line, the holdings-limit mark and the Portfolio dot in the sidebar are gone. `rules.json` keeps

@@ -66,7 +66,7 @@ list is README's *Every page*).
 | Income | What came in, and how much of it did I keep? |
 | Investing | What do I hold, and how did it do? |
 | Plan | Does the plan hold — each paycheque, the FIRE target, and the years after it? |
-| Records | What is waiting for me, what changed, and is everything filed? |
+| Records | What changed, and is everything filed? |
 
 A page that answers no question a person would ask is not added; a page whose question another
 page already answers is merged into it.
@@ -86,7 +86,7 @@ What ships today. What is planned is in [`ROADMAP.md`](ROADMAP.md); when each ar
 | Income | Income by source and how much of it was kept · investment income — dividends, interest, lending, withholding tax — on its own page |
 | Investing | The portfolio by currency, kind of asset and bucket · performance against one benchmark fund bought on the same days · every holding, by role or by account |
 | Plan | What each paycheque is for, and what each fund holds · the FIRE target, progress, the year it is reached and coast to FIRE · whether the money lasts, late-life care included, replayed through every stretch of real years since 1928 · the planning figure against what is really spent |
-| Records | To do: questions, checks and tasks in one list · Updates: what each import changed, noticed and decided · Accounts: every place money sits, with its balance and date · Statements: which file arrived which month, and what is missing |
+| Records | Updates: what each import changed, noticed and decided · Accounts: every place money sits, with its balance and date · Statements: which file arrived which month, and what is missing |
 | Glossary | Every finance term and every coined word, at the foot of the sidebar in no group; a coined word's entry looks different from a dictionary entry |
 | Everywhere | Terms with a dotted underline open their dictionary entry · numbers that need it open their sum · the planning figure and the toggles are tried out in the browser and never written back |
 
@@ -117,8 +117,8 @@ The product is built around one rhythm, the import day the owner chose.
 3. **One local run** names, parses, reconciles, files and rebuilds. A file it cannot name stops
    the run; a statement that does not add up is refused.
 4. **What a program cannot decide** comes back as a short list: a merchant seen for the first
-   time, an e-Transfer with no name on the other side. Each waits on To do with a default
-   applied meanwhile.
+   time, an e-Transfer with no name on the other side. Each is asked in the conversation, with a
+   default applied meanwhile.
 5. **The page is read.** Updates says what this month changed; the header says how complete the
    numbers are.
 

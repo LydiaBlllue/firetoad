@@ -25,7 +25,7 @@ does.
 | ![A year of spending](docs/screens/spending.png) | **Spending.** This month, opened up by category; the year, month by month and against the allowance; subscriptions, with what is due in the next 30 days. No category caps — one allowance, and everything under it is guilt-free. |
 | ![The budget](docs/screens/plan.png) | **Plan.** What each paycheque is for; how far the portfolio is from the FIRE target and when it gets there; whether the money lasts once you start taking it out, replayed through every stretch of real years since 1928. |
 | ![Your portfolio](docs/screens/portfolio.png) | **Investing.** What you hold and how it splits, by currency, by kind of asset and by bucket; how much is kept ready as dry powder; how it did against one fund you could have bought instead. |
-| ![Which file was filed](docs/screens/sources.png) | **Records.** Everything waiting for you in one place; what each update changed; every account; which statement arrived which month. A glossary of every term sits on its own at the foot of the sidebar. |
+| ![Which file was filed](docs/screens/sources.png) | **Records.** What each update changed; every account; which statement arrived which month. A glossary of every term sits on its own at the foot of the sidebar. |
 
 **Every word on a card is chosen.** A card has a label, one number and at most one fact. A
 term with a dotted underline shows its dictionary entry and opens the Glossary; a number with
@@ -48,15 +48,13 @@ one shows the sum behind it. Every page works this way.
 | | FIRE | How far the portfolio is from the target, and when it gets there |
 | | Drawdown & care | Whether the money lasts, care included, and in how many real stretches of history it would have |
 | | Spending baseline | The monthly figure the target is built on, against what you really spend |
-| Records | To do | Questions, checks and tasks waiting for you |
-| | Updates | What each update changed |
+| Records | Updates | What each update changed |
 | | Accounts | Every place the money sits |
 | | Statements | Which statement arrived which month, and what is missing |
 | — | Glossary | Every finance term, and every word the page coined |
 
 ### New since the first release
 
-- **To do** gathers what waits on you, which used to sit on two pages with two counts.
 - **Performance**: the same money put into one fund you name, on the days it actually went in.
 - **Would it have lasted?** The drawdown replayed through every stretch of real years since
   1928, mixed the way your portfolio is today.
@@ -217,8 +215,8 @@ the templates and the governing documents into it and touches nothing that is yo
 tool's data shape moves ahead of your folder, `tools/migrate.py <workspace>` brings the folder
 up one step at a time.
 
-<!-- LINT:NAV main=18/5 minwidth=1120 -->
-The page is 18 pages in 5 sidebar groups —
+<!-- LINT:NAV main=17/5 minwidth=1120 -->
+The page is 17 pages in 5 sidebar groups —
 Home · Spending · Income · Investing · Plan · Records · Glossary
 — desktop only, at least 1120px wide.
 </details>

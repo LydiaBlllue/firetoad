@@ -73,8 +73,8 @@
   or no time at all, never half of each; a thing is judged in one place, and Home only
   summarises.
 
-<!-- LINT:PAGES pages=18 sections=5 -->
-- **The pages**: 18 pages under 5 sidebar sections. **Lint rule S4 checks this table against
+<!-- LINT:PAGES pages=17 sections=5 -->
+- **The pages**: 17 pages under 5 sidebar sections. **Lint rule S4 checks this table against
   `NAV`**, so changing the navigation means changing this table too — and the page count, the
   sidebar list and the minimum width stated in `README.md`, and every path the README hands the
   reader:
@@ -85,7 +85,7 @@
   | Income | Income · Investment income |
   | Investing | Portfolio · Performance · Holdings |
   | Plan | Budget · FIRE · Drawdown & care · Spending baseline |
-  | Records | To do · Updates · Accounts · Statements |
+  | Records | Updates · Accounts · Statements |
   | — | Glossary, at the foot of the sidebar |
 
 ### Home
@@ -93,7 +93,8 @@
 - **Follows no time**: in neither `PILL_PAGES` nor `YEAR_PAGES`. Home answers *where do I stand
   now*; everything by month lives in Spending and Income.
 - **No list of things to do on Home** (taken off 2026-10-28 with Rules): what waits for the owner
-  is on To do, and a page that needs attention carries its dot in the sidebar.
+  is asked in the conversation with Claude at each import, and a page that needs attention
+  carries its dot in the sidebar.
 - **Four stat cards**, one per section: **Portfolio** (with its dry-powder share), **FIRE progress**
   (with the on-track year), **Invested in \<month\>** (pay-yourself-first, from the broker's
   record), **Free to spend** (the allowance today).
@@ -187,11 +188,8 @@
 
 ### Records
 
-- **To do**: everything waiting for you, counted once — three stat cards (waiting, longest open,
-  settled), then **To confirm** (every item an import could not settle, from
-  `findata/history/decisions.json`, each with what was assumed meanwhile and the statement it
-  came from), **Worth a second look**, **Open tasks** (dated first) and **Settled**. The header
-  counts the questions only, and says "questions".
+- **No To do page** (taken off 2026-10-28). `tasks.json` and `decisions.json` are still
+  written and read by the import; nothing on the page lists them, and an old link opens Updates.
 - **Updates**: where an update leaves its trace — three stat cards (last update, files on record,
   updates on file), then one card per update from `findata/history/imports.json`: what changed
   (label, from, to), what was noticed, what was decided without asking, what you were asked.
@@ -235,7 +233,7 @@
   - Right: **Net worth**, on every page, a tappable sum, and under it **two dates, nothing
     else** — *Complete to* (the oldest of every required source's newest statement: the day all
     accounts are in up to) and *Updated* (the last update). Clicking them opens Statements. What
-    is missing or waiting is said once, on To do and Statements.
+    is missing is said once, on Statements.
   - **The two rules line up**: the sidebar wordmark and `.pghead` share `--headh:92px` and are
     both fixed-height with a bottom border, so both rules land on the same y on every page.
     Change the variable, never one side of it.

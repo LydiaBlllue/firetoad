@@ -510,26 +510,6 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   </div>
 </section>
 
-<section data-pg="todo" hidden>
-  <div class="grid-stats" id="todoStats"></div>
-  <div class="card" style="margin-bottom:10px">
-    <div class="lab">To confirm</div>
-    <div id="updConfirm"></div>
-  </div>
-  <div class="card" style="margin-bottom:10px">
-    <div class="lab">Worth a second look</div>
-    <div id="updChecks"></div>
-  </div>
-  <div class="card" style="margin-bottom:10px">
-    <div class="lab">Open tasks</div>
-    <div id="taskList"></div>
-  </div>
-  <div class="card" style="margin-bottom:10px">
-    <div class="lab">Settled</div>
-    <div id="doneList"></div>
-  </div>
-</section>
-
 <section data-pg="upd" hidden>
   <div class="grid-stats" id="updStats"></div>
   <div id="updList"></div>
@@ -738,8 +718,7 @@ const NAV = [
                            {k:"fire",  n:"FIRE",             t:"FIRE",                 d:""},
                            {k:"coast", n:"Drawdown & care",  t:"Drawdown and care",    d:""},
                            {k:"base",  n:"Spending baseline", t:"Spending baseline",   d:""}]},
-  {sec:"Records",   items:[{k:"todo",  n:"To do",            t:"To do",                d:""},
-                           {k:"upd",   n:"Updates",          t:"Updates",              d:""},
+  {sec:"Records",   items:[{k:"upd",   n:"Updates",          t:"Updates",              d:""},
                            {k:"acct",  n:"Accounts",         t:"Accounts",             d:""},
                            {k:"src",   n:"Statements",       t:"Statements",           d:""}]},
   // The Glossary is a reference, not a record: on its own at the foot of the sidebar (2026-10-28).
@@ -753,10 +732,6 @@ let curPage = "home";   // real starting page is chosen at boot from ST.p
 // A dot next to a page name means that page has something you should look at.
 function pageFlags(){
   const f = {};
-  const open = TASKS.filter(t => t.status !== "done").length;
-  // To do: amber while anything waits for you, red once a dated task is due.
-  if(open || openDecisions().length || secondLooks().length) f.todo = "#c98500";
-  if(TASKS.some(t => t.status !== "done" && t.due && t.due <= TODAY)) f.todo = "#d03b3b";
   const chq = Object.values(LEDGER_THRU);
   const stale = [INVEST.asof, INVEST.banksAsof, ...chq, FOREIGN.asof].filter(d => (new Date(TODAY)-new Date(d))/864e5 > 30).length;
   if(stale) f.src = "#c98500";
@@ -788,7 +763,7 @@ function drawNav(){
   $("sideNav").querySelectorAll("button").forEach(b => b.onclick = () => setPage(b.dataset.k));
 }
 // A page merged into another or taken off: an old link or saved state still lands.
-const MOVED = {tasks:"todo", rules:"port"};
+const MOVED = {tasks:"upd", todo:"upd", rules:"port"};
 function setPage(p){
   p = MOVED[p] || p;
   if(!PAGES.some(x => x.k === p)) p = "home";
@@ -2577,14 +2552,9 @@ function drawCoast(run, target, atDraw, careA, ltcA){
   renderFire();
 }));
 
-// ===== Tasks tab: data freshness + open items (tasks added/closed by the owner via Claude on rebuild) =====
+// The owner's tasks (tasks.json). No page lists them since the To do page went (2026-10-28).
 const TASKS = [{"added": "2026-09-06", "tag": "Money", "text": "Decide whether the emergency fund stays in RBC eSavings ($5,000, balance only) or moves to the high-yield account beside the two funds.", "status": "open"}, {"added": "2026-09-07", "tag": "Plan", "text": "Big buys: the $429.99 monitor in June came out of the fund. Confirm the $250/month top-up still makes sense.", "status": "open"}, {"added": "2026-09-07", "due": "2027-03-01", "tag": "Money", "text": "RRSP top-up before the March 1 deadline — decide the amount once the January pay stubs are in.", "status": "open"}, {"added": "2026-08-20", "tag": "Data", "text": "RBC eSavings has a balance but no ledger — decide whether the PDF is worth parsing line by line.", "status": "open"}, {"added": "2026-08-12", "tag": "Money", "text": "Consolidate SHOP into the TFSA. <b>Done 2026-08-12</b> — bought 20.46 shares in the TFSA.", "status": "done"}];
 function renderTasks(){
-  $("taskList").innerHTML = TASKS.length ? TASKS.map(t =>
-    '<div class="alert-row"><span class="sym" style="color:'+(t.status==="done"?"#006300":"var(--muted)")+'">'+(t.status==="done"?"✓":"○")+'</span>'
-    +'<span>'+t.text+'</span></div>').join("")
-    : '<div class="empty">No open tasks.</div>';
-  renderTaskExtras();
   renderSources();
   renderAccounts();
   renderWsInc();
@@ -2630,38 +2600,6 @@ function renderBaseChart(){
   $("baseChartCap").innerHTML = '<div class="cap">'+ymFull(months[vals.indexOf(Math.max(...vals))])+' was the highest month, at '+fmt(Math.max(...vals))+'; one month does not move a median.</div>';
 }
 
-
-// Tasks: closed items were mixed into the open list, which hid how much has actually been settled.
-// To do (2026-10-27): the questions an update left, the checks that want a decision and the open
-// tasks were on two pages, each counting its own. One page, one count.
-function renderTaskExtras(){
-  const open = TASKS.filter(t => t.status !== "done"), done = TASKS.filter(t => t.status === "done");
-  const q = openDecisions(), looks = secondLooks(), settledQ = DECISIONS.filter(d => d.status === "confirmed");
-  const waiting = q.length + looks.length + open.length;
-  const oldest = open.map(t => t.added).concat(q.map(d => d.added)).filter(Boolean).sort()[0];
-  const age = oldest ? Math.round((new Date(TODAY) - new Date(oldest))/864e5) : 0;
-  const tcard = (lab, val, status) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status ? '<div class="cap">'+status+'</div>' : "")+'</div>';
-  $("todoStats").innerHTML =
-      tcard("Waiting", waiting ? numx(String(waiting), [["Questions", String(q.length)], ["Checks", String(looks.length)], ["Tasks", String(open.length)]], "", true) : "0", waiting ? "" : "Nothing outstanding")
-    + tcard("Longest open", oldest ? age+" days" : "\u2014", oldest ? "Since "+dLong(oldest) : "")
-    + tcard("Settled", String(done.length + settledQ.length), "");
-  // Dated items first, in date order, then the rest oldest-first.
-  const byDue = (a,b) => (a.due?0:1) - (b.due?0:1) || (a.due||"").localeCompare(b.due||"") || a.added.localeCompare(b.added);
-  const row = t => {
-    const d = t.due ? Math.round((new Date(t.due) - new Date(TODAY))/864e5) : null;
-    const dueTxt = d === null ? "" : d < 0 ? "Overdue by "+(-d)+" days" : d === 0 ? "Due today" : "Due "+dLong(t.due)+", in "+d+" days";
-    const dueCol = d === null ? "" : d < 0 ? "#d03b3b" : d <= 14 ? "#c98500" : "var(--muted)";
-    return '<div class="alert-row"><span class="sym" style="color:'+(t.status==="done"?"#006300":"var(--muted)")+'">'+(t.status==="done"?"\u2713":"\u25cb")+'</span>'
-      +'<span>'+(t.tag?'<span class="tag">'+t.tag+'</span> ':"")+t.text
-      +'<div class="cap" style="margin-top:2px">'+(dueTxt ? '<b style="color:'+dueCol+'">'+dueTxt+'</b>' : "Added "+dLong(t.added))+'</div></span></div>';
-  };
-  $("taskList").innerHTML = open.slice().sort(byDue).map(row).join("")
-    || '<div class="empty">No open tasks.</div>';
-  $("doneList").innerHTML = (done.length || settledQ.length)
-    ? done.map(row).join("") + settledQ.slice(-8).reverse().map(d =>
-      '<div class="alert-row"><span class="sym ok">\u2713</span><span>'+d.what+'<div class="cap" style="margin-top:2px">'+d.answer+(d.resolved ? ", "+d.resolved : "")+'</div></span></div>').join("")
-    : '<div class="empty">Nothing settled yet.</div>';
-}
 
 // Subscriptions: a list of charges does not say what they cost you over a year.
 function renderSubStats(){
@@ -2931,7 +2869,6 @@ function renderWsInc(){
 // else: every other page shows a status computed today. (2026-09-10)
 const IMPORTS = [{"date": "2026-09-06", "files": ["Cash Back Visa statement to Aug 19", "MasterCard statement to Aug 20", "Chequing and savings statements to Sep 5", "Holdings report of Sep 6", "Activities export of Sep 6"], "changed": [{"label": "Dry powder", "from": "44.4%", "to": "43.1%"}, {"label": "Holdings", "from": 9, "to": 8}, {"label": "Spending in August", "from": "$0", "to": "$1,244"}], "noticed": [{"sev": "ok", "text": "Dry powder is 43.1%, inside your 40–45% band: SGOV and VSC hold $28,950 of the $67,135 Canadian side."}, {"sev": "ok", "text": "8 holdings, inside your limit of 10. The middle tier is one bond ETF, ZAG at $1,400."}, {"sev": "ok", "text": "August kept the rule: two deposits of $400 reached the broker on Aug 2 and Aug 17."}, {"sev": "ok", "text": "Every statement due has arrived. The next to close are the MasterCard on Sep 20 and the RBC pair on Sep 25."}, {"sev": "warn", "text": "The $1,500 e-Transfer from Sam on Jul 13 is the March loan coming back, so it is not income."}, {"sev": "warn", "text": "June went over the everyday allowance even with the $429.99 monitor set aside as a big buy."}], "judged": ["Filed the $429.99 monitor in June as a big buy rather than everyday spending.", "Typed the Jul 13 e-Transfer from Sam as a repayment, matching the friend ledger."], "asked": ["Whether FARM BOY OTTAWA stays in Grocery, and what the unnamed $200 e-Transfer of Aug 11 was."]}];
 const DECISIONS = [{"added": "2026-09-06", "kind": "merchant", "what": "FARM BOY OTTAWA has appeared 33 times and is filed as Grocery.", "default": "Grocery", "source": "Cash Back Visa, most recently Aug 14", "status": "open"}, {"added": "2026-09-06", "kind": "transfer", "what": "A $200 e-Transfer received on Aug 11 carries no sender name.", "default": "Other income", "source": "Chequing statement to Sep 5", "status": "open"}, {"added": "2026-08-12", "kind": "merchant", "what": "STEAM PURCHASE SEATTLE, seen for the first time.", "default": "Shopping", "source": "Cash Back Visa, Aug 3", "status": "confirmed", "answer": "Entertainment", "resolved": "2026-08-12"}];
-const openDecisions = () => DECISIONS.filter(d => d.status !== "confirmed");
 const dLong = d => { const p = String(d).split("-"); return MN[Number(p[1])-1] + " " + Number(p[2]); };
 
 // The sources that owe a month this year and have not delivered it. Shared by the filing grid
@@ -2981,7 +2918,6 @@ function headerLine(){
 
 function renderUpdates(){
   if(!$("updStats")) return;
-  const open = openDecisions();
   const last = IMPORTS[0] || null;
   const age = d => Math.round((new Date(TODAY) - new Date(d))/864e5);
   const nFiles = r => r.files.length ? r.files.length + " file" + (r.files.length === 1 ? "" : "s") : "";
@@ -2989,10 +2925,6 @@ function renderUpdates(){
     '<div class="card"><div class="lab">Last update</div><div class="big num">'+(last ? dLong(last.date) : "\u2014")+'</div><div class="cap">'+(last ? (age(last.date) === 0 ? "Today" : age(last.date)+" days ago") : "Nothing filed yet")+'</div></div>'+
     '<div class="card"><div class="lab">Files on record</div><div class="big num">'+IMPORTS.reduce((a,r) => a + r.files.length, 0)+'</div></div>'+
     '<div class="card"><div class="lab">Updates on file</div><div class="big num">'+IMPORTS.length+'</div><div class="cap">'+(IMPORTS.length ? "Since "+dLong(IMPORTS[IMPORTS.length-1].date) : "The first one comes with your first statements")+'</div></div>';
-  $("updConfirm").innerHTML = open.length ? open.map(d =>
-      '<div class="alert-row"><span class="sym" style="color:#c98500">\u25cb</span><span><b>'+d.what+'</b>'
-      + '<div class="cap" style="margin-top:1px">For now: '+d.default+'.'+(d.source ? " From "+d.source+"." : "")+'</div></span></div>').join("")
-    : '<div class="empty">Nothing is waiting for you.</div>';
   const SYM = {bad:["\u2717","bad"], warn:["\u26a0","warn"], ok:["\u2713","ok"]};
   $("updList").innerHTML = IMPORTS.length ? IMPORTS.map(r =>
     '<div class="card" style="margin-bottom:10px"><div class="lab">'+dLong(r.date)+'</div>'
@@ -3050,33 +2982,8 @@ function renderYearInsights(){
   $("yrInsights").innerHTML = insRows(ins, "Nothing stands out yet.");
 }
 
-function secondLooks(){
-  const ins = [];
-  // Subscription means a charge that repeats. A merchant seen once cannot be one — that is exactly
-  // how a notebook shop with PUBLICATION in its name got filed as a subscription on 2026-09-06.
-  // Match on the brand token, not the whole descriptor: "VENDOR VENDOR.COMCA" and
-  // "VENDOR* SERVICE SUB" are the same vendor. Card prefixes (SP, SQ, WL, TST-) are not brands.
-  const NOISE = new Set(["SP","SQ","WL","TST","TST-","PADDLE.NET","LS"]);
-  const brand = n => {
-    const t = n.toUpperCase().replace(/[*,]/g," ").split(/\s+/).filter(Boolean);
-    return t.length > 1 && NOISE.has(t[0].replace(/-$/,"")) ? t[1] : (t[0]||n);
-  };
-  const seen = {};
-  SPENDING.forEach(e => { const k = brand(e.note); (seen[k] = seen[k] || []).push(e); });
-  const oneOff = Object.entries(seen).filter(([k,v]) => v.length === 1 && v[0].category === "Subscription");
-  if(oneOff.length) ins.push({s:"w", t:(oneOff.length>1 ? oneOff.length+" charges are" : "One charge is")
-      + " filed as a subscription from a merchant seen only once: "
-      + oneOff.map(([k,v]) => k+" "+fmt2(v[0].amount)).join(", ")
-      + ". Confirm what "+(oneOff.length>1 ? "they are." : "it is.")});
-  return ins;
-}
-function renderUpdChecks(){
-  $("updChecks").innerHTML = insRows(secondLooks(), "Nothing needs a second look.");
-}
-
 function renderInsights(){
   if($("yrInsights")) renderYearInsights();
-  if($("updChecks")) renderUpdChecks();
 }
 
 // ===== Investing detail (merged from investment_dashboard.html, 2026-09-10) =====
