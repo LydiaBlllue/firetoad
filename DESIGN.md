@@ -260,6 +260,11 @@
     on, less what is owed free and clear), and what needs you today. A row appears only when the register
     has an item with that value. **Both cuts must total `NW_GLOBAL`** (rebuild.py refuses to
     build otherwise).
+  - **On trial (2026-10-27): both cuts in one card**, below the two, which stay until the owner
+    chooses. One row per purpose, its bar as long as its share and coloured by reach (each
+    `NWPARTS` row carries `by`, its reach split, rounded per piece and settled on the largest so
+    the pieces sum to the row); a row that spans more than one reach says how it splits; the
+    reach definitions sit behind the legend's `?`; one line under it says what is reachable today.
   - The idea came from Irene Zhu's 10-Year Wealth Dashboard (the owner shared it 2026-09-07): **do
     not report one net worth, report the rings inside it.** But it is **not a copy** — hers
     layers by Australian super's "locked until an age" rule, and a Canadian RRSP is not locked,

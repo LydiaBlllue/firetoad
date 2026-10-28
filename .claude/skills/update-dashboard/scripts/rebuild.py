@@ -618,6 +618,22 @@ def derive(d):
         return "; ".join(", ".join(v) + " at " + k for k, v in by.items())
     def part_value(role, where):
         return by_role[role] if where == "all" else (role_ca[role] if where == "home" else role_ab.get(role, 0))
+    reach_lab = {r: (lab, c) for r, lab, c in REACH_ROWS}
+    def part_by_reach(role, where, total):
+        """The row split by reach, for the card that shows both cuts at once: rounded per piece,
+        the dollar it can drift settled on the largest piece, so the pieces sum to the row."""
+        t = collections.OrderedDict((r, 0.0) for r, _, _ in REACH_ROWS)
+        if where != "abroad":
+            for a, v in ca:
+                if a.get("role") == role:
+                    t[a.get("reach")] += v
+        if where != "home":
+            t["abroad"] += role_ab.get(role, 0)
+        t = {r: round(v) for r, v in t.items() if round(v)}
+        if t:
+            big = max(t, key=lambda r: t[r])
+            t[big] += total - sum(t.values())
+        return [[reach_lab[r][0], v, reach_lab[r][1]] for r, v in t.items() if v]
     out["NWPARTS"] = []
     for role, where, lab, c, q in PART_ROWS:
         names = accounts_in(role, where)
@@ -625,7 +641,8 @@ def derive(d):
             continue
         lab = lab.replace("{abroad}", fgn_label)
         out["NWPARTS"].append({"k": lab, "role": role, "v": part_value(role, where), "c": c, "q": q,
-                               "d": desc.get("nwparts", {}).get(lab, names)})
+                               "d": desc.get("nwparts", {}).get(lab, names),
+                               "by": part_by_reach(role, where, part_value(role, where))})
     out["REACH"] = [{"k": lab, "v": by_reach[r], "c": c, "d": desc.get("reach", {}).get(lab, generic_reach[lab])}
                     for r, lab, c in REACH_ROWS if r in reach_present]
     got_parts = sum(r["v"] for r in out["NWPARTS"]) - R_debt

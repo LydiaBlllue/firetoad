@@ -129,6 +129,14 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .stack > span{display:block;height:100%}
 .nw-row{display:flex;align-items:center;gap:12px;padding:7px 0;font-size:13px;border-bottom:1px solid var(--grid)}
 .nw-row:last-child{border-bottom:none}
+.both-row{display:grid;grid-template-columns:158px minmax(0,1fr) 110px 44px;column-gap:12px;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid var(--grid)}
+.both-row:last-child{border-bottom:none}
+.both-row .nm{color:var(--ink-2);display:flex;align-items:center;gap:8px;font-weight:600}
+.both-row .v{text-align:right;font-weight:600}.both-row .p{text-align:right;color:var(--muted)}
+.both-bar{display:flex;height:12px;border-radius:3px;overflow:hidden;min-width:2px}
+.both-split{grid-column:2/5;color:var(--muted);font-size:12px;margin-top:4px}
+.both-key{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:12px;color:var(--muted)}
+.both-key span{display:flex;align-items:center;gap:6px}.both-key i{width:9px;height:9px;border-radius:3px}
 .nw-row.sum{border-top:1.5px solid var(--border);border-bottom:none}.nw-row.sum .v{font-weight:700}
 .nw-row .nm{width:158px;flex-shrink:0;color:var(--ink-2);display:flex;align-items:center;gap:8px;font-weight:600}
 .nw-row .d{flex:1;max-width:620px;color:var(--muted);font-size:12px;line-height:1.45}
@@ -317,6 +325,13 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   <div id="reachStack"></div>
   <div id="reachRows"></div>
   <div id="reachNote" style="margin-top:10px"></div>
+</div>
+<div class="card" style="margin-bottom:10px">
+  <div class="lab">Net worth, what each part is for and how easily you could reach it</div>
+  <div class="baseline-hero num" id="bothBig">—</div>
+  <div id="bothRows"></div>
+  <div id="bothKey" class="both-key"></div>
+  <div id="bothNote" style="margin-top:10px"></div>
 </div>
 </section>
 
@@ -1045,6 +1060,25 @@ function renderHome(){
     "Only the first row is money you could spend without giving something up. The Drawdown & care page still "
     + "treats your net worth as one undifferentiated pot \u2014 in practice, stopping early means living "
     + "off that first row until the rest becomes cheap to touch.");
+
+  // Both cuts in one card: a row per purpose, its bar coloured by reach. Only a row whose
+  // money sits in more than one kind of reach gets a line saying how it splits.
+  const widest = Math.max(1, ...NWPARTS.map(r => r.v));
+  $("bothBig").textContent = fmt(NW_GLOBAL);
+  $("bothRows").innerHTML = NWPARTS.map(r => {
+    const by = r.by || [];
+    return '<div class="both-row"><span class="nm">'+r.k+(r.q ? qMark(r.q) : "")+'</span>'
+      + '<span class="both-bar" style="width:'+pc(r.v, widest)+'%">'
+      + by.map(b => '<span style="width:'+pc(b[1], r.v)+'%;background:'+b[2]+'" title="'+b[0]+' '+fmt(b[1])+'"></span>').join("")
+      + '</span><span class="v num">'+fmt(r.v)+'</span><span class="p num">'+Math.round(pc(r.v, gross))+'%</span>'
+      + (by.length > 1 ? '<span class="both-split">'+by.map(b => fmt(b[1])+" "+b[0].toLowerCase()).join(" \u00b7 ")+'</span>' : "")
+      + '</div>';
+  }).join("")
+    + '<div class="both-row"><span class="nm">Less what you owe</span><span class="both-bar"></span><span class="v num">\u2212'+fmt(NW_DEBT)+'</span><span class="p"></span></div>';
+  $("bothKey").innerHTML = REACH.map(r =>
+    '<span><i style="background:'+r.c+'"></i>'+r.k+(r.d ? qMark(r.d) : "")+'</span>').join("");
+  const today = REACH.find(r => r.k === "Reach today");
+  $("bothNote").innerHTML = today ? noteBox(fmt(today.v)+" ("+Math.round(pc(today.v, rGross))+"%) you could spend today without giving anything up.") : "";
 }
 
 // ===== What needs you today: one line per thing to do, worst first, click to open =====
@@ -2295,7 +2329,7 @@ const CARE_ESC = HOME_CARE.esc;
 // copy: an RRSP is not locked, it is taxed, so the second cut grades by FRICTION rather than by
 // access. Both lists are derived at rebuild time from the holdings export, banks.json and
 // foreign.json, and both sum to PORTFOLIO.
-const NWPARTS = [{"k": "For FIRE", "role": "grow", "v": 67135, "c": "#2a78d6", "q": "Money whose job is to grow until you stop working. FIRE progress is measured on this, whatever it holds today: stocks, bonds, or cash waiting to be invested.", "d": "Non-registered, TFSA, RRSP, Crypto at Wealthsimple"}, {"k": "Set aside", "role": "set-aside", "v": 23200, "c": "#eda100", "q": "Money already promised to a goal, such as a first home or a trip. It is left out of FIRE progress and out of dry powder.", "d": "High-yield savings, FHSA at Wealthsimple"}, {"k": "Cash", "role": "buffer", "v": 11972, "c": "#1baf7a", "q": "Bank and cash accounts at home that you live on and can spend today.", "d": "Primary Chequing, Savings Amplifier at BMO; Day to Day Banking, High Interest eSavings at RBC; Chequing at Wealthsimple"}, {"k": "Owed to you", "role": "owed", "v": 500, "c": "#e87ba4", "q": "Money you lent, counted until it is paid back.", "d": "Sam $500"}];
+const NWPARTS = [{"k": "For FIRE", "role": "grow", "v": 67135, "c": "#2a78d6", "q": "Money whose job is to grow until you stop working. FIRE progress is measured on this, whatever it holds today: stocks, bonds, or cash waiting to be invested.", "d": "Non-registered, TFSA, RRSP, Crypto at Wealthsimple", "by": [["Reach today", 54800, "#1baf7a"], ["Reach, but it costs", 12335, "#eda100"]]}, {"k": "Set aside", "role": "set-aside", "v": 23200, "c": "#eda100", "q": "Money already promised to a goal, such as a first home or a trip. It is left out of FIRE progress and out of dry powder.", "d": "High-yield savings, FHSA at Wealthsimple", "by": [["Spoken for", 23200, "#eb6834"]]}, {"k": "Cash", "role": "buffer", "v": 11972, "c": "#1baf7a", "q": "Bank and cash accounts at home that you live on and can spend today.", "d": "Primary Chequing, Savings Amplifier at BMO; Day to Day Banking, High Interest eSavings at RBC; Chequing at Wealthsimple", "by": [["Reach today", 11972, "#1baf7a"]]}, {"k": "Owed to you", "role": "owed", "v": 500, "c": "#e87ba4", "q": "Money you lent, counted until it is paid back.", "d": "Sam $500", "by": [["Lent out", 500, "#e87ba4"]]}];
 const NW_DEBT = 1016;
 const DEBT_NOTE = "MasterCard and Cash Back Visa — the balances owed today";   // the line under "Less what you owe": the owner's words, or the debts by name
 
