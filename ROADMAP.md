@@ -20,6 +20,9 @@ from scratch: one credit card, nine statements, a cloud session.
   confirmed in one table, instead of every purchase waiting as Other.
 - **A credit card in credit is read.** *(first user)* A Mastercard statement whose balance ends
   in `CR` reconciles like any other, and the selftest carries one.
+- **A chequing statement with long descriptions is read.** *(first user)* A description that
+  wraps onto a second line, and a number the PDF reader splits with a space, no longer stop the
+  parser; the fixtures carry both.
 - **Words on a card, everywhere.** Income, Investing, Plan and Records follow the card rules
   (DESIGN.md §5b′) the way Home, the header and Spending already do: a label, one number, at
   most one fact; terms with a Glossary entry, numbers that open their sum. The last `?` marks
@@ -47,6 +50,14 @@ from scratch: one credit card, nine statements, a cloud session.
 - **No false alarms on a first import.** *(first user)* Two identical charges on one statement
   are two purchases, not a duplicate; negative amounts are compared in one format; a workspace
   with no broker is not asked for a broker's file.
+- **A second account after the first.** *(first user)* Adding an account once setup is done is
+  something you say, not a file you edit: it reads the new statements, drafts the row, and the
+  first import creates its balance, so net worth moves with it.
+- **Every chequing row gets a type.** *(first user)* Bills — property tax, insurance, a phone
+  plan — a government refund, a cash withdrawal and a transfer between banks are recognised, and
+  Bill is a type of its own.
+- **The selftest never crashes on an owner's own data.** *(first user)* A workspace with no
+  fund, or anything else the demo has and an owner may not, gets an answer, not an error.
 - **Setup, tested end to end.** A fresh workspace set up the way a new owner would, then
   compared with a real one: what the interview misses becomes the next list.
 
@@ -58,8 +69,13 @@ from scratch: one credit card, nine statements, a cloud session.
 - **A renamed file is still recognised.** *(first user)* A statement whose spaces and commas
   were turned into underscores on the way in is named the same as the original.
 - **An account seen only in payments is offered.** *(first user)* When the statements show money
-  arriving from an account nobody registered, setup asks whether to add it, so a card-only
+  moving to or from an account nobody registered, setup asks whether to add it, so a card-only
   owner's net worth is not just the card's debt.
+- **A regular e-Transfer may be pay.** *(first user)* When the same amount arrives every month
+  from no named sender, the question offers it as income first.
+- **Which file is which.** *(first user)* Two statements that share a filename pattern, a card
+  and a chequing account, are named for the account the statement prints, so the owner can tell
+  them apart in `inbox/` and `archive/`.
 - **Cashback has a home.** *(first user)* A redemption is filed as a reward, not left as a credit
   nobody claimed.
 - **The selftest passes on a fresh machine.** *(first user)* One case failed in a cloud session
