@@ -3054,19 +3054,16 @@ function overdueSources(){
   });
 }
 
-// One sentence under the net worth: how far the numbers reach, what is still owed, what is
-// waiting to be confirmed. It talks about statements and money, never about the pipeline.
+// Two dates under the net worth, nothing else: the day every account's numbers are complete
+// to (the oldest of the newest statements, optional ones left out), and the day of the last
+// update. What is missing or waiting is the To do page's to say (the owner, 2026-10-27).
 function headerLine(){
-  const dates = Object.values(DOC_LATEST).filter(Boolean).sort();
-  if(!dates.length) return "Nothing filed yet. Drop your first statements into inbox and say \u201cupdate dashboards\u201d.";
-  const miss = overdueSources().length, open = openDecisions().length;
-  const W = ["no","one","two","three","four","five","six","seven","eight","nine"];
-  const n = k => k < 10 ? W[k] : String(k);
-  const lead = "Numbers as of " + dLong(dates[dates.length-1]) + ".";
-  if(!miss && !open) return lead + " Everything is filed and nothing is waiting.";
-  const a = n(miss) + " statement" + (miss === 1 ? " is" : "s are") + " still missing";
-  const b = n(open) + " question" + (open === 1 ? " is" : "s are") + " waiting for you";
-  return lead + " " + (miss && open ? cap1(a) + ", and " + b : cap1(miss ? a : b)) + ".";
+  const req = SOURCES.filter(r => !r.optional).map(r => DOC_LATEST[r.src]).filter(Boolean).sort();
+  const last = (IMPORTS[0] || {}).date || Object.values(DOC_LATEST).filter(Boolean).sort().pop();
+  if(!req.length && !last) return "Nothing filed yet. Drop your first statements into inbox and say \u201cupdate dashboards\u201d.";
+  return (req.length ? "Complete to " + dLong(req[0]) + qMark("Every account\u2019s numbers are in up to this day. After it, some accounts are still waiting for their next statement.") : "")
+    + (req.length && last ? " \u00b7 " : "")
+    + (last ? "Updated " + dLong(last) + qMark("The last day new statements or exports were added.") : "");
 }
 
 function renderUpdates(){
@@ -3480,7 +3477,7 @@ renderTasks();
 (function(){
   $("hdrNW").innerHTML = fmt(NW_GLOBAL) + qMark("Everything you own minus what you owe, in every currency. Canadian side "+fmt(INVEST.netWorth)+(FOREIGN.total ? ", "+(FOREIGN.label||"foreign")+" side about "+fmt(FOREIGN_CAD) : "")+".");
   $("hdrSub").innerHTML = '<span class="hdr-line" tabindex="0">'+headerLine()+'</span>';
-  $("hdrSub").querySelector(".hdr-line").onclick = () => setPage(openDecisions().length ? "todo" : overdueSources().length ? "src" : "upd");
+  $("hdrSub").querySelector(".hdr-line").onclick = ev => { if(!ev.target.closest(".hint")) setPage("src"); };
   $("brand").onclick = () => setPage("home");
 })();
 setPage(ST.p || "home");

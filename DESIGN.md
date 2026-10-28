@@ -351,10 +351,12 @@
   cards to three.
 - Under the sidebar title, one line of `data through <newest data date>`, the maximum of every
   source's as-of.
-- **Under the net worth in the page header sits one sentence** (2026-09-10): the newest date any
-  statement reaches, whether a statement is still owed this year, and how many items are waiting
-  to be confirmed — "Numbers as of Sep 6. Two statements are still missing, and three items are
-  waiting for you." / "Everything is filed and nothing is waiting." Clicking it opens Updates. It
+- **Under the net worth in the page header sit two dates, nothing else** (the owner, 2026-10-27:
+  "no filler"): *Complete to* — the oldest of every required source's newest statement, the day
+  all accounts are in up to — and *Updated* — the day of the last update; each with its `?`.
+  What is missing or waiting is said once, on To do and Statements, never here. Clicking it opens
+  Statements. It began as one sentence (2026-09-10, "Numbers as of Sep 6. Two statements are
+  still missing…"), which itself
   replaced a pipeline strip ("Built · 3 checks ✓ · 10/12 sources fresh · 3 decisions") the owner
   rejected: it talked about the tool. Checks never appear on the page — a page whose checks fail
   is not built.

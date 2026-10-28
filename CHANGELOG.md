@@ -4,6 +4,10 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **The header says two dates** (2026-10-27). "Numbers as of Oct 25. Everything is filed and
+  nothing is waiting." is now *Complete to* (the day every account is in up to) and *Updated*
+  (the last update), each explained behind its `?`. What is missing or waiting is To do's to say.
+
 - **Home: net worth in one card** (2026-10-27). The by-purpose and the by-reach cards were the
   same accounts sliced twice, and the slices nearly coincide. One card shows both now: a row per
   purpose with the accounts it counts, its bar coloured by how easily it can be reached, total
