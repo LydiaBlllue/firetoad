@@ -43,6 +43,9 @@ SYNCED = [
     "CLAUDE.md",
     "FINANCE.md",
     "DESIGN.md",
+    "PRODUCT.md",         # the product and its features, readable in the workspace
+    "ROADMAP.md",
+    "CHANGELOG.md",       # PRODUCT.md links both
     "docs/pipeline.py",
     "docs/pipeline.svg",
     "docs/pipeline.drawio",
@@ -52,7 +55,7 @@ SYNCED = [
     ".gitignore",         # not for git: check_design's S4 reads it to skip files an owner writes
                           # (setup-answers.json), and without it a workspace failed on them
 ]
-NEVER = ("findata", "inbox", "archive", "dashboards", "OWNER.md", "decisions", ".private")
+NEVER = ("findata", "inbox", "archive", "dashboards", "OWNER.md", "decisions", ".private", "feedback")
 
 OWNER_STUB = """# OWNER.md — this workspace's notes
 

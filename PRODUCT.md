@@ -1,6 +1,6 @@
 # PRODUCT.md — what Jade Toad is, and why it is shaped this way
 
-> This file owns **the product**: who it is for, what it answers, the principles every page and
+> This file owns **the product**: who it is for, what it answers, what it does, the principles every page and
 > script is held to, and what it deliberately is not. It states no rule in detail and no figure.
 > The rules are elsewhere and win where this file is shorter: the money in
 > [`FINANCE.md`](FINANCE.md), the page in [`DESIGN.md`](DESIGN.md), the work in
@@ -45,7 +45,41 @@ list is README's *Every page*).
 A page that answers no question a person would ask is not added; a page whose question another
 page already answers is merged into it.
 
-## 4. The month
+## 4. Features
+
+What ships today. What is planned is in [`ROADMAP.md`](ROADMAP.md); when each arrived is in
+[`CHANGELOG.md`](CHANGELOG.md).
+
+### On the page
+
+| group | features |
+|---|---|
+| Header | Net worth across every currency, visible from any page; under it two dates — the day every account is complete to, and the last update |
+| Home | What needs the owner today, worst first, each line opening the page where it is dealt with · net worth in one card, a row per purpose, each bar coloured by how easily the money can be reached · four cards: Portfolio, FIRE progress, this month's investing transfer, Free to spend |
+| Spending | Free to spend today, and for how many days · this month by category, each opening its purchases · big buys apart from everyday spending · the year month by month, by category and against the allowance · subscriptions: what repeats, a year's cost, what is due in the next 30 days |
+| Income | Income by source and how much of it was kept · investment income — dividends, interest, lending, withholding tax — on its own page |
+| Investing | The portfolio by currency, kind of asset and bucket · performance against one benchmark fund bought on the same days · every holding, by role or by account · the owner's rules checked today: the cash band, where each holding belongs, the theses and checkpoints · accounts held abroad, when there are any |
+| Plan | What each paycheque is for, and what each fund holds · the FIRE target, progress, the year it is reached and coast to FIRE · whether the money lasts, late-life care included, replayed through every stretch of real years since 1928 · the planning figure against what is really spent |
+| Records | To do: questions, checks and tasks in one list · Updates: what each import changed, noticed and decided · Accounts: every place money sits, with its balance and date · Statements: which file arrived which month, and what is missing · Glossary: every finance term and every coined word |
+| Everywhere | Terms with a dotted underline open their dictionary entry · numbers that need it open their sum · the planning figure and the toggles are tried out in the browser and never written back |
+
+### Behind the page
+
+| feature | what it does |
+|---|---|
+| Setup | Drafts the accounts, the monthly files and the plan from the first statements dropped in, asks only what the files cannot say, then writes the workspace |
+| Fetching statements | Once the owner has signed in to the bank, works out which statements are missing, asks once, downloads them and files them into `inbox/` (RBC, BMO) |
+| The monthly import | One local run: names every file and finds duplicates, reads each statement with its parser, refuses one that does not reconcile, files purchases by merchant, rebuilds the page, archives the originals and writes the update record |
+| Parsers | RBC chequing and savings, RBC Visa, BMO chequing and savings, BMO Mastercard, and the broker's two exports; a statement no parser reads is transcribed and held to the same reconciliation |
+| The To confirm queue | Every new merchant or unnamed transfer gets a default and a question; the answer is filed where it belongs |
+| Undo | A failed run puts everything back; a finished one can be taken back whole |
+| Prices | The benchmark's daily prices, the Bank of Canada's exchange rate, and yearly returns and inflation since 1928, fetched at each import |
+| Money lent | What a borrower still owes, derived from the agreed amount and every repayment since |
+| Checkers | Whether the money reconciles, the rules hold, the page is current, the data is clean and the page follows its design; a selftest plants faults to prove each checker still fires |
+| Keeping a workspace current | Sync carries a new version of the tool into a workspace without touching the owner's data; migrations move the data one schema at a time; a commit guard refuses the owner's names |
+| The demo | A complete synthetic owner, so a fresh clone opens to a full page |
+
+## 5. The month
 
 The product is built around one rhythm, the import day the owner chose.
 
@@ -64,7 +98,7 @@ The product is built around one rhythm, the import day the owner chose.
 Between import days nothing moves on its own. The page is a picture of the last import, and says
 which day that was.
 
-## 5. Principles
+## 6. Principles
 
 Every one of these has already been broken once; each line in the three rule files says where.
 
@@ -92,7 +126,7 @@ Every one of these has already been broken once; each line in the three rule fil
    The tool's repository holds no one's data; an owner's decisions live only in their own
    `OWNER.md` and `findata/`.
 
-## 6. The model behind the page
+## 7. The model behind the page
 
 Two ideas carry everything, so a new kind of thing needs a row, not new code.
 
@@ -109,7 +143,7 @@ Everything in the workspace sits in one of five layers — evidence, facts, hist
 declarations, derived — and the layer decides who may write it and which checker guards it.
 (CLAUDE.md, *How information is stored and reached*.)
 
-## 7. How the page speaks
+## 8. How the page speaks
 
 - **Three lines a card**: a label of at most four words, one number, at most one status of at
   most seven words.
@@ -123,7 +157,7 @@ declarations, derived — and the layer decides who may write it and which check
 
 The full rules are DESIGN.md §5b and §5b′.
 
-## 8. What it deliberately is not
+## 9. What it deliberately is not
 
 - **Not financial advice.** It shows the owner's own rules checked against their own data; it
   recommends nothing.
@@ -137,7 +171,7 @@ The full rules are DESIGN.md §5b and §5b′.
 - **Not multi-user.** One owner per workspace; money in the owner's login that is not theirs is
   kept out of every figure.
 
-## 9. Known gaps between this file and the pages
+## 10. Known gaps between this file and the pages
 
 What the principles ask and the page does not do yet. Each is on the roadmap.
 
