@@ -135,29 +135,37 @@ def rbc_visa(last4, start, end, previous, rows, owner, overpay=0.0):
     return [head + body + tail]
 
 
-def bmo_mastercard(last4, start, end, previous, rows, owner):
+def bmo_mastercard(last4, start, end, previous, rows, owner, overpay=0.0):
+    """`overpay` pays that much past the whole balance, so the card closes in credit and every
+    balance the statement prints about it ends in CR — "Total balance $100.00 CR" — the way a
+    real one did (2026-10). A `previous` below zero is a card that opened in credit."""
     purchases = round(sum(r["amount"] for r in rows if r["amount"] > 0), 2)
-    credits = round(previous - sum(r["amount"] for r in rows if r["amount"] < 0), 2)   # payment + refunds
+    refunds = round(-sum(r["amount"] for r in rows if r["amount"] < 0), 2)
+    paid = max(previous, 0.0) + (round(purchases + overpay, 2) if overpay else 0.0)
+    credits = round(paid + refunds, 2)                                                 # payments + refunds
     new = round(previous + purchases - credits, 2)
     ds = lambda dt: f"{MON[dt.month - 1]}. {dt.day}"
+    bal = lambda v: f"{money(-v, True)} CR" if v < 0 else money(v, True)
     head = ["BMO CashBack Mastercard", "Summary of your account",
-            f"Previous total balance, {ds(start - datetime.timedelta(days=1))}, {start.year} {money(previous, True)}",
+            f"Previous total balance, {ds(start - datetime.timedelta(days=1))}, {start.year} {bal(previous)}",
             f"Payments and credits -{money(credits)}", f"Purchases and other charges +{money(purchases)}",
             "New installments 0.00", "Cash advances1 0.00", "Total interest charges 0.00", "Fees 0.00",
-            f"Total balance {money(new, True)}", owner, f"Card number XXXX XXXX XXXX {last4}",
+            f"Total balance {bal(new)}", owner, f"Card number XXXX XXXX XXXX {last4}",
             f"Statement date {ds(end)}, {end.year}", f"Statement period {ds(start)}, {start.year} - {ds(end)}, {end.year}",
             "Transactions since your last statement", "TRANS", "DATE", "POSTING", "DATE DESCRIPTION AMOUNT ($)",
             f"Card number: XXXX XXXX XXXX {last4}    {owner.upper()}"]
     body = []
-    if previous:
+    if previous > 0:
         pay = start + datetime.timedelta(days=6)
         body.append(f"{ds(pay)} {ds(pay)} TRSF FROM/DE ACCT/CPT    0006-XXXX-471 {money(previous)} CR")
     for r in rows:
         dt = d(r["date"]); post = dt + datetime.timedelta(days=1)
         amount = f"{money(-r['amount'])} CR" if r["amount"] < 0 else money(r["amount"])
         body.append(f"{ds(dt)} {ds(post)} {r['description']:<25} OTTAWA       ON {amount}")
+    if overpay:
+        body.append(f"{ds(end)} {ds(end)} TRSF FROM/DE ACCT/CPT    0006-XXXX-471 {money(paid - max(previous, 0.0))} CR")
     tail = [f"Subtotal for {owner.upper()} {money(purchases)}",
-            f"Total for card number XXXX XXXX XXXX {last4} {money(new, True)}"]
+            f"Total for card number XXXX XXXX XXXX {last4} {bal(new)}"]
     return [head + body + tail]
 
 

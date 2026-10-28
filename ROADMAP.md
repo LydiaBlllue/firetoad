@@ -15,8 +15,6 @@ from scratch: one credit card, nine statements, a cloud session.
 - **The first import is already sorted.** *(first user)* A starter map of common Canadian
   merchants suggests a category for each one seen for the first time, and every suggestion is
   confirmed in one table, instead of every purchase waiting as Other.
-- **A credit card in credit is read.** *(first user)* A Mastercard statement whose balance ends
-  in `CR` reconciles like any other, and the selftest carries one.
 - **A chequing statement with long descriptions is read.** *(first user)* A description that
   wraps onto a second line, and a number the PDF reader splits with a space, no longer stop the
   parser; the fixtures carry both.

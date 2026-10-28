@@ -553,8 +553,26 @@ def credit_balance_check(ws):
                                       "Emma Roy", overpay=100.0))
     ok, n, detail = parse_one(ws, path, "rbc_visa")
     if ok and n == 3 and "new balance -100.00" in detail:
-        return ["  ✓ parsers: a Visa statement in credit (CREDIT BALANCE, no NEW BALANCE) read and reconciled"]
-    return [f"  ✗ parsers: a Visa statement in credit: {detail} — expected 3 rows closing at -100.00"]
+        out = ["  ✓ parsers: a Visa statement in credit (CREDIT BALANCE, no NEW BALANCE) read and reconciled"]
+    else:
+        out = [f"  ✗ parsers: a Visa statement in credit: {detail} — expected 3 rows closing at -100.00"]
+    # A Mastercard prints the same thing as "Total balance $100.00 CR" (a first user's card,
+    # 2026-10), and the statement after it opens in credit: "Previous total balance … CR".
+    got = []
+    for name, start, end, prev, rows, over, want_n, want in (
+            ("mc_credit.pdf", datetime.date(2026, 9, 21), datetime.date(2026, 10, 20), 50.0,
+             [{"date": "2026-10-04", "description": "COFFEE SHOP", "amount": 12.34}], 100.0, 3, "-100.00"),
+            ("mc_from_credit.pdf", datetime.date(2026, 10, 21), datetime.date(2026, 11, 20), -100.0,
+             [{"date": "2026-11-02", "description": "BOOK STORE", "amount": 30.0}], 0.0, 1, "-70.00")):
+        p = os.path.join(ws, "_fixtures", name)
+        write_pdf(p, fixtures.bmo_mastercard("5518", start, end, prev, rows, "Emma Roy", overpay=over))
+        ok, n, detail = parse_one(ws, p, "bmo_mastercard")
+        got.append(ok and n == want_n and f"total balance {want}" in detail)
+        if not got[-1]:
+            out.append(f"  ✗ parsers: a Mastercard statement in credit ({name}): {detail} — expected {want_n} rows closing at {want}")
+    if all(got):
+        out.append("  ✓ parsers: a Mastercard closing in credit, and the next one opening in credit (balances ending in CR), read and reconciled")
+    return out
 
 
 def propose_check(ws, man):

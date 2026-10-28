@@ -2,6 +2,14 @@
 
 ## 1.1 — unreleased
 
+- **A Mastercard in credit is read** (2026-10-28, from a first user). A BMO Mastercard paid past
+  zero prints its balances with `CR` — "Total balance $100.00 CR", and on the next statement
+  "Previous total balance … CR" — and the parser could not find its summary, so the statement
+  went to be read by eye. It now reads them as a closing balance below zero, the way the Visa's
+  CREDIT BALANCE is read, and the import stores it as credit (schema 10). `tools/fixtures.py`
+  can render a Mastercard that closes in credit (`overpay`) or opens in it; the selftest reads
+  one of each.
+
 - **Your data stays out of a public clone** (2026-10-28, from a first user). Setup, when it
   writes a real workspace, adds `findata/`, `dashboards/` and `decisions/` to `.gitignore` and
   installs `setup/scripts/guard.py` in the clone's pre-commit hook: a commit carrying the owner's
