@@ -155,12 +155,12 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .subs .meta{font-size:11.5px;color:var(--muted)}
 .sub-badge{font-size:10.5px;font-weight:600;color:#006300;background:rgba(0,131,0,.09);border-radius:999px;padding:2px 8px;flex-shrink:0}
 #tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--page);font-size:12px;padding:5px 9px;border-radius:6px;opacity:0;transition:opacity .08s;z-index:9;white-space:nowrap}
-#tip.def{white-space:normal;width:max-content;max-width:300px;line-height:1.5;padding:8px 11px}#tip.def p{margin:0}#tip.def p+p{margin-top:5px}#tip.def i{opacity:.7}#tip .f{font-family:ui-monospace,Menlo,monospace;opacity:.9}#tip .eg,#tip .cn{opacity:.75}#tip .calc{display:grid;grid-template-columns:1fr auto;gap:2px 14px}#tip .calc span:nth-child(odd){opacity:.75}
+#tip.def{white-space:normal;width:max-content;max-width:320px;background:var(--surface);color:var(--ink-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.55;box-shadow:0 10px 28px rgba(0,0,0,.10),0 2px 6px rgba(0,0,0,.06)}#tip.def p{margin:0}#tip.def p+p{margin-top:6px}#tip .t-h{display:flex;align-items:baseline;gap:7px;margin-bottom:2px}#tip .t-h b{font-size:14px;color:var(--ink)}#tip .t-h i{font-size:11.5px;color:var(--muted)}#tip .f{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--ink);background:var(--grid);border-radius:6px;padding:3px 8px}#tip .k{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:1px}#tip .eg{color:var(--ink-2)}#tip .here{border-top:1px solid var(--grid);padding-top:7px;margin-top:8px}#tip .calc{display:grid;grid-template-columns:1fr auto;gap:4px 18px;min-width:210px}#tip .calc span:nth-child(odd){color:var(--muted)}#tip .calc .num{color:var(--ink);font-weight:600;text-align:right}#tip .calc .t-rule{grid-column:1/-1;height:0;border-top:1px solid var(--border);margin:2px 0}#tip .calc .tot{color:var(--ink)!important;font-weight:700}#tip .cn{color:var(--muted)}#tip .calc+.cn{border-top:1px solid var(--grid);padding-top:7px;margin-top:8px}
 .term{border-bottom:1px dotted var(--muted);cursor:help}.term:hover,.term:focus-visible{color:var(--ink);border-bottom-style:solid;outline:none}
 .numx{cursor:pointer;border-bottom:1px dotted var(--border)}.numx:hover,.numx:focus-visible{border-bottom-color:var(--muted);outline:none}
 .gl-letter{font-size:12px;font-weight:700;color:var(--muted);margin:16px 0 4px;letter-spacing:.06em}.gl-letter:first-child{margin-top:0}
 .gl-entry{padding:10px 0;border-bottom:1px solid var(--grid);font-size:13px;line-height:1.55;max-width:680px;transition:background .3s}.gl-entry:last-child{border-bottom:none}
-.gl-entry p{margin:0}.gl-entry p+p{margin-top:3px}.gl-entry i{color:var(--muted)}.gl-entry .f{font-family:ui-monospace,Menlo,monospace;font-size:12px}.gl-entry .eg,.gl-entry .also{color:var(--muted)}.gl-entry.hit{background:var(--grid)}
+.gl-entry p{margin:0}.gl-entry p+p{margin-top:4px}.gl-entry .t-h{display:flex;align-items:baseline;gap:7px}.gl-entry .t-h b{font-size:14px;color:var(--ink)}.gl-entry .t-h i{font-size:11.5px;color:var(--muted)}.gl-entry .f{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--grid);border-radius:6px;padding:2px 8px}.gl-entry .k{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:8px}.gl-entry .eg,.gl-entry .also{color:var(--ink-2)}.gl-entry .here{border:0;padding:0;margin-top:4px}.gl-entry.hit{background:var(--grid)}
 .both-sum{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:12px;font-size:13px}.both-sum span.it{display:flex;align-items:center;gap:7px}.both-sum i{width:9px;height:9px;border-radius:3px}.both-sum .num{font-weight:600}
 .ph-r .s .gap{display:inline-block;width:14px}
 .empty{color:var(--muted);font-size:13px;padding:14px 0}
@@ -936,19 +936,22 @@ function term(key, text){
 }
 function entryHtml(key){
   const g = GLOSSARY[key]; if(!g) return "";
-  return '<p><b>'+g.w+'</b> <i>'+g.pos+'</i></p><p>'+g.def+'</p>'
-    + (g.f ? '<p class="f">'+g.f+'</p>' : "")
-    + (g.eg ? '<p class="eg">e.g. '+g.eg+'</p>' : "")
-    + (g.not ? '<p class="eg">Not to be confused with '+g.not+'.</p>' : "")
-    + (g.here ? '<p class="eg">On this page: '+g.here+'</p>' : "");
+  return '<div class="t-h"><b>'+g.w+'</b><i>'+g.pos+'</i></div><p>'+g.def+'</p>'
+    + (g.f ? '<p><span class="f">'+g.f+'</span></p>' : "")
+    + (g.eg ? '<p class="eg"><span class="k">Example</span>'+g.eg+'</p>' : "")
+    + (g.not ? '<p class="eg"><span class="k">Not to be confused with</span>'+g.not+'</p>' : "")
+    + (g.here ? '<p class="eg here"><span class="k">On this page</span>'+g.here+'</p>' : "");
 }
 // A number with its working: hover or tap it for the sum behind it (DESIGN.md §5b′).
-function numx(html, rows, note){
-  const c = JSON.stringify({r: rows || [], n: note || ""}).replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+function numx(html, rows, note, sum){
+  const c = JSON.stringify({r: rows || [], n: note || "", s: !!sum}).replace(/&/g,"&amp;").replace(/"/g,"&quot;");
   return '<span class="numx" data-calc="'+c+'" tabindex="0">'+html+'</span>';
 }
-function calcHtml(c){
-  return (c.r.length ? '<div class="calc">'+c.r.map(r => '<span>'+r[0]+'</span><span class="num">'+r[1]+'</span>').join("")+'</div>' : "")
+// Two or more parts are a sum, so the number itself closes it as the total line.
+function calcHtml(c, total){
+  const sum = c.s && c.r.length > 1 && total;
+  return (c.r.length ? '<div class="calc">'+c.r.map(r => '<span>'+r[0]+'</span><span class="num">'+r[1]+'</span>').join("")
+      + (sum ? '<span class="t-rule"></span><span class="tot">Total</span><span class="num tot">'+total+'</span>' : "")+'</div>' : "")
     + (c.n ? '<p class="cn">'+c.n+'</p>' : "");
 }
 function openTerm(key){
@@ -993,7 +996,7 @@ function hideTip(){ tip.style.opacity = 0; }
 // "?" definitions: hover on desktop, tap to toggle on mobile, Esc or outside-tap to close.
 // A term shows its entry and opens the Glossary on click; a number shows its working.
 const tipOf = el => el.classList.contains("hint") ? [el.dataset.tip, true]
-  : el.classList.contains("term") ? [entryHtml(el.dataset.term), "raw"] : [calcHtml(JSON.parse(el.dataset.calc)), "raw"];
+  : el.classList.contains("term") ? [entryHtml(el.dataset.term), "raw"] : [calcHtml(JSON.parse(el.dataset.calc), el.textContent.split(" of ")[0]), "raw"];
 const TIPPED = ".hint, .term, .numx";
 document.addEventListener("mouseover", ev => { const h = ev.target.closest?.(TIPPED); if(h) showTip(ev, ...tipOf(h)); });
 document.addEventListener("mousemove", ev => { if(ev.target.closest?.(TIPPED)) moveTip(ev); });
@@ -1162,7 +1165,7 @@ function renderHome(){
   const card = (lab, val, status) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status ? '<div class="cap">'+status+'</div>' : "")+'</div>';
   $("homeStats").innerHTML =
     card(term("portfolio", "Portfolio"),
-      numx(fmt(PORTFOLIO), split(grow.by), "Every account you hold to grow. Set-aside accounts and bank cash are not in it."),
+      numx(fmt(PORTFOLIO), split(grow.by), "Every account you hold to grow. Set-aside accounts and bank cash are not in it.", true),
       !INVEST.investable ? "Nothing invested yet" : inBand === null ? "" :
         term("dry_powder", "Dry powder")+" "+INVEST.dryPct+"%, "+(inBand ? "inside " : (INVEST.dryPct < BANDLO ? "below " : "above "))+BANDLO+"–"+BANDHI+"%"+(inBand ? "" : " ⚠")) +
     card(term("fire", "FIRE")+" progress",
@@ -1172,7 +1175,7 @@ function renderHome(){
       dep ? numx(fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>', [["Planned", fmt(FUNDS.plan.invest)], ["Arrived", fmt(dep.amt)]], "Two transfers of "+fmt(half)+", counted the day "+BROKER+" receives them.") : "\u2014",
       dep ? (dep.nRule >= 2 ? "Both transfers arrived \u2713" : dep.nRule === 1 ? "One of two transfers arrived" : "No transfer arrived yet") : "") +
     card("Free to spend",
-      numx(fmt(freeNow)+' <span class="cap-v">of '+fmt(ALW)+'</span>', [["Allowance", fmt(ALW)], ["Spent in "+ymLabel(curYM), "\u2212"+fmt(spentNow)]], "Everyday spending only. Big buys come from their own fund."),
+      numx(fmt(freeNow)+' <span class="cap-v">of '+fmt(ALW)+'</span>', [["Allowance", fmt(ALW)], ["Spent in "+ymLabel(curYM), "\u2212"+fmt(spentNow)]], "Everyday spending only. Big buys come from their own fund.", true),
       fmt(perDay)+" a day for "+left+" day"+(left > 1 ? "s" : ""));
 
   // Net worth, both cuts in one card: a row per purpose, its bar as long as its share and
@@ -1180,13 +1183,13 @@ function renderHome(){
   // owed (the owner, 2026-10-26), and the reach totals, each a term and a number.
   const widest = Math.max(1, ...NWPARTS.map(r => r.v));
   $("bothLab").innerHTML = term("net_worth", "Net worth");
-  $("bothBig").innerHTML = numx(fmt(NW_GLOBAL), [["You own", fmt(gross)], ["You owe", "\u2212"+fmt(NW_DEBT)]], "");
+  $("bothBig").innerHTML = numx(fmt(NW_GLOBAL), [["You own", fmt(gross)], ["You owe", "\u2212"+fmt(NW_DEBT)]], "", true);
   $("bothRows").innerHTML = NWPARTS.map(r => {
     const by = r.by || [];
     return '<div class="both-row"><span class="nm">'+partTerm(r)+'</span>'
       + '<span class="both-bar" style="width:'+pc(r.v, widest)+'%">'
       + by.map(b => '<span style="width:'+pc(b[1], r.v)+'%;background:'+b[2]+'"></span>').join("")
-      + '</span><span class="v num">'+numx(fmt(r.v), by.length > 1 ? split(by) : [], r.d)+'</span><span class="p num">'+Math.round(pc(r.v, gross))+'%</span></div>';
+      + '</span><span class="v num">'+numx(fmt(r.v), by.length > 1 ? split(by) : [], r.d, true)+'</span><span class="p num">'+Math.round(pc(r.v, gross))+'%</span></div>';
   }).join("")
     + '<div class="both-row sum"><span class="nm">'+term("assets", "Total assets")+'</span><span></span><span class="v num">'+fmt(gross)+'</span><span class="p"></span></div>'
     + '<div class="both-row"><span class="nm">Less what you owe</span><span></span><span class="v num">'+numx("\u2212"+fmt(NW_DEBT), [], DEBT_NOTE)+'</span><span class="p"></span></div>';
@@ -3629,8 +3632,8 @@ renderGlossary();
 (function(){
   const owned = NWPARTS.reduce((a,r) => a + r.v, 0);
   document.querySelector(".ph-r .k").innerHTML = term("net_worth", "Net worth");
-  $("hdrNW").innerHTML = numx(fmt(NW_GLOBAL), [["You own", fmt(owned)], ["You owe", "\u2212"+fmt(NW_DEBT)]],
-    FOREIGN_CAD ? "Includes "+fmt(FOREIGN_CAD)+" held abroad, at the rate of "+dLong(FOREIGN.asof || TODAY)+"." : "");
+  $("hdrNW").innerHTML = numx(fmt(NW_GLOBAL), [["You own", fmt(owned)], ["You owe", "\u2212"+fmt(NW_DEBT)]], 
+    FOREIGN_CAD ? fmt(FOREIGN_CAD)+" of it is held abroad, converted at the "+dLong(FOREIGN.asof || TODAY).replace(" ", "\u00a0")+" rate." : "", true);
   $("hdrSub").innerHTML = '<span class="hdr-line" tabindex="0">'+headerLine()+'</span>';
   $("hdrSub").querySelector(".hdr-line").onclick = ev => { if(!ev.target.closest(".hint")) setPage("src"); };
   $("brand").onclick = () => setPage("home");
