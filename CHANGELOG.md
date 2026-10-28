@@ -4,6 +4,22 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
+- **Rules comes off the page, for now** (2026-10-28). The owner's call: rules done well are hard,
+  and the basics come first. The page, its sidebar dot and the rule lines on Home are gone; the
+  dry-powder band is still judged on Portfolio and, when it is broken, on Home. `rules.json` keeps
+  everything it held, and D26 stands down while no page runs a principle (its planted fault
+  goes with it: 55). 18 pages.
+
+- **Plan, written to the card rules** (2026-10-28). Budget's rows lost their `?` marks: Invest,
+  Everyday, Big buys, the travel fund, committed payments and Unallocated are terms, and each
+  fixed amount opens what it is for. The funds' descriptions moved behind their balances. FIRE's
+  three cards open their sums (portfolio over target, target less portfolio, the planning figure
+  times 12 times 25). The returns on the trajectory are read from the scenarios rather than
+  written out. Drawdown & care and the replay keep their numbers and lose their paragraphs: one
+  grey line says every figure is in today's money, one says the history is American and the
+  stretches overlap, and a warning box is left only where the plan needs action. Spending
+  baseline gets a label, and its comparison rows open their working.
+
 - **The Glossary leaves Records** (2026-10-28). It is a reference for reading the page, not a
   record, so it sits on its own at the foot of the sidebar, below Records and above the version.
   Still 19 pages in 5 groups; S4 now reads every heading-less group in the order a reader sees it.

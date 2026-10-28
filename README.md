@@ -24,7 +24,7 @@ does.
 | ![Home](docs/screens/home.png) | **Home.** What needs you today, worst first, each line opening the page where it is dealt with. Net worth in one card: a row for what each part is for, its bar coloured by how easily you could reach it. Two dates under the net worth: the day every account is complete to, and the last update. |
 | ![A year of spending](docs/screens/spending.png) | **Spending.** This month, opened up by category; the year, month by month and against the allowance; subscriptions, with what is due in the next 30 days. No category caps — one allowance, and everything under it is guilt-free. |
 | ![The budget](docs/screens/plan.png) | **Plan.** What each paycheque is for; how far the portfolio is from the FIRE target and when it gets there; whether the money lasts once you start taking it out, replayed through every stretch of real years since 1928. |
-| ![Your investment rules](docs/screens/rules.png) | **Investing.** What you hold and how it splits; how it did against one fund you could have bought instead; your own rules — a cash band, where each holding belongs, the theses you wrote down — checked one by one. |
+| ![Your portfolio](docs/screens/portfolio.png) | **Investing.** What you hold and how it splits, by currency, by kind of asset and by bucket; whether the cash you keep ready is inside your band; how it did against one fund you could have bought instead. |
 | ![Which file was filed](docs/screens/sources.png) | **Records.** Everything waiting for you in one place; what each update changed; every account; which statement arrived which month. A glossary of every term sits on its own at the foot of the sidebar. |
 
 **Every word on a card is chosen.** A card has a label, one number and at most one fact. A
@@ -45,7 +45,6 @@ follow in the next release — see the [roadmap](ROADMAP.md).)
 | Investing | Portfolio | What is invested, by currency, by kind of asset and by bucket |
 | | Performance | How it did against one benchmark fund bought on the same days |
 | | Holdings | Every position, by role or by account |
-| | Rules | Each of your rules, checked today |
 | Plan | Budget | What each paycheque is for, and what the funds hold |
 | | FIRE | How far the portfolio is from the target, and when it gets there |
 | | Drawdown & care | Whether the money lasts, care included, and in how many real stretches of history it would have |
@@ -142,8 +141,8 @@ line, and a fifth checks the checkers:
   against sections, this README against the real pages.
 - **Does it actually draw** — a headless browser opens every page at three widths and looks for
   anything that failed to render.
-<!-- LINT:FAULTS n=56 -->
-- **Are the checkers still checking** — a selftest plants 56 specific faults in a copy of the
+<!-- LINT:FAULTS n=55 -->
+- **Are the checkers still checking** — a selftest plants 55 specific faults in a copy of the
   workspace and asserts each one is caught. It exists because a checker once linted an empty
   folder and reported success.
 
@@ -219,8 +218,8 @@ the templates and the governing documents into it and touches nothing that is yo
 tool's data shape moves ahead of your folder, `tools/migrate.py <workspace>` brings the folder
 up one step at a time.
 
-<!-- LINT:NAV main=19/5 minwidth=1120 -->
-The page is 19 pages in 5 sidebar groups —
+<!-- LINT:NAV main=18/5 minwidth=1120 -->
+The page is 18 pages in 5 sidebar groups —
 Home · Spending · Income · Investing · Plan · Records · Glossary
 — desktop only, at least 1120px wide.
 </details>

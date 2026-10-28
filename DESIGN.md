@@ -75,8 +75,8 @@
   or no time at all, never half of each; a thing is judged in one place, and Home only
   summarises.
 
-<!-- LINT:PAGES pages=19 sections=5 -->
-- **The pages**: 19 pages under 5 sidebar sections. **Lint rule S4 checks this table against
+<!-- LINT:PAGES pages=18 sections=5 -->
+- **The pages**: 18 pages under 5 sidebar sections. **Lint rule S4 checks this table against
   `NAV`**, so changing the navigation means changing this table too — and the page count, the
   sidebar list and the minimum width stated in `README.md`, and every path the README hands the
   reader:
@@ -85,7 +85,7 @@
   | — | Home (what needs you today, net worth in one card) |
   | Spending | This month · Year · Subscriptions |
   | Income | Income · Investment income |
-  | Investing | Portfolio · Performance · Holdings · Rules |
+  | Investing | Portfolio · Performance · Holdings |
   | Plan | Budget · FIRE · Drawdown & care · Spending baseline |
   | Records | To do · Updates · Accounts · Statements |
   | — | Glossary, at the foot of the sidebar |
@@ -149,10 +149,9 @@
   is too short to judge. Then *What you put in, and what the market added*.
 - **Holdings**: every position, by role or by account; the Accounts column is always visible.
   A fund held in another currency shows that amount beside its home-currency value.
-- **Rules**: every investing rule on one page. The high-level rules (`rules.json` `principles`)
-  as they stand today, each with its detailed rules under it (`notes`, filed by `under`) and,
-  under each of those, the dates to look at it again — a checkpoint belongs to the rule whose
-  name carries a ticker the date mentions. What fits nowhere is listed last.
+- **No Rules page** (taken off 2026-10-28, until the basics are finished). `rules.json` still
+  carries the buckets, the band and the principles; the band is judged on Portfolio and on Home,
+  and the old link to Rules opens Portfolio.
 - Money held in another currency is not a page: its accounts are a card on **Accounts**, its
   funds are rows in **Holdings**.
 

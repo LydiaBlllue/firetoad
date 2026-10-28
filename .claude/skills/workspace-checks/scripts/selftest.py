@@ -251,9 +251,6 @@ def m_class_missing(r):
 def m_class_unknown(r):
     # A kind of asset the page has no slice for.
     edit_json(r, layout.rel("rules.json"), lambda d: d["assetClass"].__setitem__(next(iter(d["assetClass"])), "property"))
-def m_principle_unknown(r):
-    # A rule naming a check nobody wrote: it would silently drop off the Investing overview.
-    edit_json(r, layout.rel("rules.json"), lambda d: d.__setitem__("principles", [{"check": "neverWritten", "name": "A rule nobody checks"}]))
 def m_bench_other(r):
     # The owner names another fund and the prices on file are still the old one's: the
     # Performance page would compare against a fund nobody chose any more.
@@ -411,7 +408,6 @@ CASES = [
     ("D23", "a borrower paid back more than was owed",      m_loan_overpaid,   "find"),
     ("D25", "an ETF held with no kind of asset",            m_class_missing,   "find"),
     ("D25", "an asset class the page has no slice for",     m_class_unknown,   "find"),
-    ("D26", "a principle naming a check the page lacks",   m_principle_unknown, "find"),
     ("D27", "the benchmark changed, the prices did not",    m_bench_other,     "find"),
     ("D27", "the benchmark's prices stop before the newest snapshot", m_prices_stale, "find"),
     ("D28", "a year is missing from the history of returns", m_returns_gap,  "find"),

@@ -35,9 +35,9 @@ Anthropic,解析器读成功的对账单它从不看。**
 
 ![哪个月交了哪份文件](../screens/sources.png)
 
-### 你自己定的投资规则,逐条核对
+### 你的投资组合,三种分法
 
-![你自己定的投资规则,逐条核对](../screens/rules.png)
+![你的投资组合,三种分法](../screens/portfolio.png)
 
 ---
 

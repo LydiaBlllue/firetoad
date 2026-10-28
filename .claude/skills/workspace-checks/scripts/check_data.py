@@ -1027,7 +1027,11 @@ def check(root):
         rj26 = json.load(open(rp26, encoding="utf-8"))
         src26 = open(tpl26, encoding="utf-8").read()
         m26 = re.search(r"const CHECKS = \{(.*?)\n  \};", src26, re.S)
-        have = set(re.findall(r"^    (\w+): ", m26.group(1), re.M)) if m26 else set()
+        # No page runs the principles while Rules is off the page (2026-10-28): they are kept in
+        # rules.json and nothing names a check, so there is nothing to hold them to.
+        have = set(re.findall(r"^    (\w+): ", m26.group(1), re.M)) if m26 else None
+        if have is None:
+            rj26 = dict(rj26, principles=[], notes=[])
         kinds = {a.get("kind") for a in aj["accounts"]}
         bkeys = {b.get("key") for b in rj26.get("buckets", [])}
         for pr in rj26.get("principles", []):

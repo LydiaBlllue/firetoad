@@ -64,7 +64,7 @@ list is README's *Every page*).
 | Home | What needs me today, and what am I worth? |
 | Spending | How much is still free to spend, and where did the money go? |
 | Income | What came in, and how much of it did I keep? |
-| Investing | What do I hold, how did it do, and are my own rules still kept? |
+| Investing | What do I hold, and how did it do? |
 | Plan | Does the plan hold — each paycheque, the FIRE target, and the years after it? |
 | Records | What is waiting for me, what changed, and is everything filed? |
 
@@ -84,7 +84,7 @@ What ships today. What is planned is in [`ROADMAP.md`](ROADMAP.md); when each ar
 | Home | What needs the owner today, worst first, each line opening the page where it is dealt with · net worth in one card, a row per purpose, each bar coloured by how easily the money can be reached · four cards: Portfolio, FIRE progress, this month's investing transfer, Free to spend |
 | Spending | Free to spend today, and for how many days · this month by category, each opening its purchases · big buys apart from everyday spending · the year month by month, by category and against the allowance · subscriptions: what repeats, a year's cost, what is due in the next 30 days |
 | Income | Income by source and how much of it was kept · investment income — dividends, interest, lending, withholding tax — on its own page |
-| Investing | The portfolio by currency, kind of asset and bucket · performance against one benchmark fund bought on the same days · every holding, by role or by account · the owner's rules checked today: the cash band, where each holding belongs, the theses and checkpoints · accounts held abroad, when there are any |
+| Investing | The portfolio by currency, kind of asset and bucket · performance against one benchmark fund bought on the same days · every holding, by role or by account · the cash band, judged today |
 | Plan | What each paycheque is for, and what each fund holds · the FIRE target, progress, the year it is reached and coast to FIRE · whether the money lasts, late-life care included, replayed through every stretch of real years since 1928 · the planning figure against what is really spent |
 | Records | To do: questions, checks and tasks in one list · Updates: what each import changed, noticed and decided · Accounts: every place money sits, with its balance and date · Statements: which file arrived which month, and what is missing |
 | Glossary | Every finance term and every coined word, at the foot of the sidebar in no group; a coined word's entry looks different from a dictionary entry |
