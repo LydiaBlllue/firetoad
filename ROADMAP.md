@@ -12,6 +12,7 @@ from scratch: one credit card, nine statements, a cloud session.
 
 ## v1.1 — 2026-11-04
 
+Everything planned here is built, on the `v1.1` branch (CHANGELOG, 1.1).
 
 ## v1.2 — 2026-11-24 — a first setup that works for someone else
 
