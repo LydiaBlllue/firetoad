@@ -17,16 +17,42 @@ anywhere and no app: a folder of plain CSV and JSON, and one self-contained HTML
 
 ## 2. Who it is for
 
+**The target user** (decided 2026-10-28): someone in Canada working toward financial
+independence (FIRE — enough invested to live off it), with a paycheque, accounts at a bank the
+parsers read, and a broker, who wants to know each month whether the plan still holds. Not
+someone who only wants to see where their spending went; tools with a lower entry cost already
+do that well, and this one's reason to exist is the plan, the portfolio and numbers that
+reconcile.
+
 - **One owner, one workspace.** Not a household ledger and not a service: a workspace is one
   person's folder, and the tool is the repository that folder is an instance of.
-- **Someone working toward financial independence** (FIRE — enough invested to live off it),
-  who wants to know each month whether the plan still holds, not to log every coffee.
-- **Several banks, a broker and money in more than one country**, so no single app shows the
-  whole picture.
+- **Several banks, a broker and often money in more than one country**, so no single app shows
+  the whole picture.
 - **A desktop reader** on a wide screen, once a month and on the days in between when a
   question comes up.
 - **Someone who will not type numbers by hand.** Every number comes from a file the owner
   dropped, or from a declaration they made out loud.
+
+### What they have to bring
+
+Claude is what reads, files and asks; without it there is no product. Everything else on the
+way in is a cost to remove, not a requirement.
+
+| what | kind | where it stands |
+|---|---|---|
+| A Claude plan that includes Claude Code | essential — said up front | the price of the product |
+| The Claude desktop app | essential for now — no terminal needed | the only way that keeps statements on the owner's computer |
+| Git and a GitHub account | to remove | a download of the folder is enough |
+| Python and the PDF reader | to remove | setup checks and says what to install (v1.2) |
+| A terminal | removed | everything is said to Claude in the desktop app |
+
+### What success looks like
+
+| measure | target |
+|---|---|
+| From the first statement dropped in to a page worth reading | under 20 minutes |
+| Purchases with a category after the first import | most of them, before anyone confirms anything |
+| Owners who come back for a second month's import | the one that matters: the tool is monthly, and one use proves nothing |
 
 ## 3. The questions it answers
 
