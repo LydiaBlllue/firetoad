@@ -155,6 +155,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .subs .meta{font-size:11.5px;color:var(--muted)}
 .sub-badge{font-size:10.5px;font-weight:600;color:#006300;background:rgba(0,131,0,.09);border-radius:999px;padding:2px 8px;flex-shrink:0}
 #tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--page);font-size:12px;padding:5px 9px;border-radius:6px;opacity:0;transition:opacity .08s;z-index:9;white-space:nowrap}
+#tip.def{white-space:normal;width:max-content;max-width:300px;line-height:1.5;padding:8px 11px}#tip.def p{margin:0}#tip.def p+p{margin-top:5px}
 .empty{color:var(--muted);font-size:13px;padding:14px 0}
 .tabs{display:flex;gap:16px;margin-top:12px;border-bottom:1px solid var(--grid);flex-wrap:wrap}
 #pageOverview,#pageTrends,#pageTx,#pageInv,#pageFire,#pageTask{margin-top:14px}
@@ -852,16 +853,23 @@ function metaList(rows){
 }
 function noteBox(text){ return '<div class="note-box"><span class="sym">!</span><span>'+text+'</span></div>'; }
 function qMark(def){ return '<span class="hint" data-tip="'+String(def).replace(/"/g,"&quot;")+'" tabindex="0">?</span>'; }
-function showTip(ev, html){ tip.innerHTML = html; tip.style.opacity = 1; moveTip(ev); }
-function moveTip(ev){ tip.style.left = Math.min(ev.clientX+12, innerWidth-tip.offsetWidth-8)+"px"; tip.style.top = (ev.clientY-34)+"px"; }
+function showTip(ev, html, def){ tip.classList.toggle("def", !!def); tip.innerHTML = def ? defHtml(html) : html; tip.style.opacity = 1; moveTip(ev); }
+// A "?" explanation wraps in a narrow box, one sentence a line, below the pointer (above it when
+// there is no room); a chart's hover label stays one short line above it.
+function defHtml(t){ return String(t).split(/(?<=[.:])\s+(?=[A-Z$\u2014(])/).map(x => "<p>"+x+"</p>").join(""); }
+function moveTip(ev){
+  tip.style.left = Math.max(8, Math.min(ev.clientX+12, innerWidth-tip.offsetWidth-8))+"px";
+  const below = ev.clientY+18, h = tip.offsetHeight;
+  tip.style.top = (!tip.classList.contains("def") ? ev.clientY-34 : below+h > innerHeight-8 ? Math.max(8, ev.clientY-h-12) : below)+"px";
+}
 function hideTip(){ tip.style.opacity = 0; }
 // "?" definitions: hover on desktop, tap to toggle on mobile, Esc or outside-tap to close.
-document.addEventListener("mouseover", ev => { const h = ev.target.closest?.(".hint"); if(h) showTip(ev, h.dataset.tip); });
+document.addEventListener("mouseover", ev => { const h = ev.target.closest?.(".hint"); if(h) showTip(ev, h.dataset.tip, true); });
 document.addEventListener("mousemove", ev => { if(ev.target.closest?.(".hint")) moveTip(ev); });
 document.addEventListener("mouseout",  ev => { if(ev.target.closest?.(".hint")) hideTip(); });
 document.addEventListener("click", ev => {
   const h = ev.target.closest?.(".hint");
-  if(h){ ev.preventDefault(); showTip(ev, h.dataset.tip); } else hideTip();
+  if(h){ ev.preventDefault(); showTip(ev, h.dataset.tip, true); } else hideTip();
 });
 document.addEventListener("keydown", ev => { if(ev.key === "Escape") hideTip(); });
 function hoverable(el, html){
