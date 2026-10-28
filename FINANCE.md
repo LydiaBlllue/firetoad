@@ -144,6 +144,11 @@ and needs no special case.
 | `value` | export · statement · stated | how the balance is known: `export` from a file the broker produced, `statement` from any evidence the owner dropped in — a bank statement, a screenshot of an app, a balance read off it and typed into `banks.json` or `foreign.json` — and `stated` typed by hand with an `asof`, the one value nothing can re-derive |
 | `against` | the asset a liability sits on | the reach table shows equity: a home less its mortgage, on the `locked` row |
 
+- **Every balance is signed from the owner's side**, in every file: what she has is positive,
+  what she owes is negative. A credit card owing $500 is −500; one paid $90 past zero is +90,
+  and counts as spendable cash, because the bank owes her the difference. A statement prints a
+  card's balance as the amount owed; the import turns it once, when it writes the file, and
+  nothing downstream turns it again.
 - A home is `asset · none · locked · stated`. It counts in net worth, not in Portfolio and not in
   dry powder. On the reach cut it is "In property", net of what is secured against it;
   on the by-purpose card it is "Other assets".

@@ -193,7 +193,7 @@ def build(a, today):
     out[layout.rel("profile.json")] = json.dumps({
         "note": "Who this workspace belongs to. The FIRST thing to change when you make it yours: "
                 "the name appears in the browser tab and under the Jade Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. Jade Toad itself is the product, not a setting.",
-        "schema": 9,
+        "schema": 10,
         "owner": a["owner"],
         "born": a.get("born", 1990),
         "importDay": int(a.get("importDay", 26)),
@@ -317,7 +317,7 @@ def build(a, today):
     assets = [{"inst": x["inst"], "account": x["name"], "balance": x["balance"] or 0,
                "currency": x["cur"], "asof": x["asof"]}
               for x in accounts if x["kind"] in CASH_KINDS and x["src"] == "banks.json"]
-    debts = [{"inst": x["inst"], "account": x["name"], "balance": abs(x["balance"] or 0),
+    debts = [{"inst": x["inst"], "account": x["name"], "balance": x["balance"] or 0,
               "currency": x["cur"], "asof": x["asof"], "limit": x.get("limit")}
              for x in accounts if x["kind"] in DEBT_KINDS and x["src"] == "banks.json"]
     out[layout.rel("banks.json")] = json.dumps({

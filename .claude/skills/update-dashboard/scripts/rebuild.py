@@ -78,7 +78,7 @@ REACH_ROWS = (("today", "Spendable today", "#1baf7a"), ("costs", "Taxed to take 
 # 5 = the monthly plan is flows (income / committed / saving / allowance) and plan.json's
 # imputedRent is a committed flow that starts after FIRE (2026-09-10, FINANCE.md §8b); 6 =
 # findata/ is three folders, register / ledgers / history, one per layer (2026-09-10, layout.py).
-SCHEMA = 9
+SCHEMA = 10
 
 
 def same(a, b):
@@ -485,8 +485,9 @@ def derive(d):
     fgn_cad = round(fj["total"] * rate_f)
     fgn_fund_rows = [a for a in fj["accounts"] if a["type"] in FUND_TYPES]
     fgn_funds = round(sum(a["value"] for a in fgn_fund_rows) * rate_f)
-    bank_bal = {x["account"]: x["balance"] for x in bank["assets"] if x.get("balance") is not None}
-    bank_bal.update({x["account"]: -x["balance"] for x in bank["debts"]})
+    # Every balance is signed from the owner's side: what she has is positive, what she owes is
+    # negative, a card paid past zero is positive (schema 10). Nothing is flipped on the way in.
+    bank_bal = {x["account"]: x["balance"] for x in bank["assets"] + bank["debts"] if x.get("balance") is not None}
     fgn_inst = collections.defaultdict(float)
     for x in fj["accounts"]:
         fgn_inst[x["inst"]] += x["value"]
@@ -505,17 +506,11 @@ def derive(d):
         else: v, cur = (a.get("balance") or 0.0), a.get("cur", "CAD")
         if cur == "USD": v *= rate
         elif cur and cur != "CAD" and cur == fgn_cur: v *= rate_f
-        # An asset keeps its sign (an overdrawn chequing account is a negative asset, and it
-        # was one before the axes). A liability is the amount owed: banks.json debts are read
-        # asset-signed above, so a card in credit is negative there and owed is -v; a stated
-        # debt (a mortgage) is owed whichever way the register wrote it.
-        if a.get("side") == "liability":
-            return -v if src == "banks.json" else abs(v)
-        return v
+        # Signed from the owner's side everywhere, so a liability's amount owed is -v.
+        return -v if a.get("side") == "liability" else v
 
-    # A card paid past zero owes nothing: the bank owes the owner the difference. It is counted as
-    # spendable cash, not as a negative debt (2026-10-28: a Visa $928 in credit was being taken off
-    # net worth as $928 owed).
+    # A card paid past zero owes nothing: the bank owes the owner the difference, so it is counted
+    # as spendable cash rather than as a debt below zero.
     def credit_as_cash(a):
         return dict(a, side="asset", role="buffer", reach="today", against=None)
     items = []

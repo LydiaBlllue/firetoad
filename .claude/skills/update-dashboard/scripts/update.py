@@ -671,14 +671,17 @@ def write_plan(ws, plan):
         ws.merchants["merchants"].sort(key=lambda e: e["match"])
         jsave(fd("merchants.json"), ws.merchants)
     # banks.json and the register's copies of it
+    # A statement prints a card's balance as what is owed; every file stores it signed from the
+    # owner's side (owed is negative, a card in credit positive), so it is turned once, here.
     for name, (bal, asof, is_debt) in plan.bank.items():
+        signed = -bal if is_debt else bal
         for side in ("assets", "debts"):
             for x in ws.banks.get(side, []):
                 if x.get("account") == name and (not x.get("asof") or x["asof"] <= asof):
-                    x["balance"], x["asof"] = bal, asof
+                    x["balance"], x["asof"] = signed, asof
         for a in ws.accounts:
             if a.get("src") == "banks.json" and a.get("name") == name and (not a.get("asof") or a["asof"] <= asof):
-                a["balance"], a["asof"] = (-bal if is_debt else bal), asof
+                a["balance"], a["asof"] = signed, asof
     if plan.bank:
         jsave(fd("banks.json"), ws.banks)
     if plan.friend:

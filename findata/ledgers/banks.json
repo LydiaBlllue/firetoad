@@ -45,7 +45,7 @@
     {
       "inst": "BMO",
       "account": "MasterCard",
-      "balance": 153.43,
+      "balance": -153.43,
       "currency": "CAD",
       "asof": "2026-08-20",
       "limit": 5000
@@ -53,7 +53,7 @@
     {
       "inst": "RBC",
       "account": "Cash Back Visa",
-      "balance": 862.98,
+      "balance": -862.98,
       "currency": "CAD",
       "asof": "2026-08-19",
       "limit": 3000,

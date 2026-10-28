@@ -637,7 +637,7 @@ def check(root):
                 if x.get("balance") is not None:
                     bank_bal[x["account"]] = x["balance"]
             for x in bj2["debts"]:
-                bank_bal[x["account"]] = -x["balance"]
+                bank_bal[x["account"]] = x["balance"]
         hp3 = load(root, "holdings_latest.csv")
         if hp3:
             fxp2 = load(root, "fx.json")

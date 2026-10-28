@@ -4,10 +4,14 @@
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
-- **A card in credit is not a debt** (2026-10-28). A credit card paid past zero was taken off net
-  worth as if the balance were owed, so a card $928 in credit lowered net worth by $928 instead of
-  raising it, and the Accounts total stood $1,857 apart from the header. Such a card now counts as
-  spendable cash, and the two agree.
+- **One sign for every balance** (2026-10-28, findata schema 10). The register wrote what the
+  owner owes as negative; `banks.json` wrote a card's balance as the amount owed, and the build
+  turned it back with an absolute value that assumed a card can only be owed. A card paid past
+  zero was therefore subtracted from net worth: one $928 in credit lowered it by $928 and put the
+  Accounts total $1,857 away from the header. Every file now signs a balance from the owner's
+  side — owed is negative, credit positive — the import turns a statement's figure once, and the
+  build reads it as written; a card in credit counts as spendable cash. `tools/migrate_9to10.py`
+  turns the `debts` in an existing `banks.json`.
 
 - **Home loses its to-do list; Records stays open** (2026-10-28). The owner's call, with Rules:
   "What needs you today" is gone from Home; what waits is on To do, and the sidebar dots still
