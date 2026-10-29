@@ -57,9 +57,13 @@ rows. **Read the summary, not the statements.** What it hands back is the whole 
   row by hand the same way — D24 refuses one that gives back nothing.
 - **What it asked** (`?` lines): a merchant seen for the first time, filed as Other meanwhile —
   or, for a common chain, as the starter map suggests (`setup/data/starter_merchants.json`; the
-  workspace's own `merchants.json` always wins over it); an e-Transfer with no name on the other side. Each is already a row in `decisions.json`. Put them
-  to the owner; when they answer, write `answer` and `resolved` on the row and apply it where it
-  belongs (`merchants.json`, the ledger's `type` column).
+  workspace's own `merchants.json` always wins over it); an e-Transfer with no name on the other side. Each is already a row in `decisions.json`.
+  **Put them to the owner as one table, not one question each:**
+  `python3 .claude/skills/update-dashboard/scripts/confirm.py .` prints them numbered, with what
+  each was filed as. The owner answers in one breath — "all fine", or "3 is Shopping, the rest
+  are fine" — and `confirm.py . --write --ok --set 3=Shopping` applies it: `merchants.json`, every
+  `spending.csv` row of that merchant, the item closed in `decisions.json`, the page rebuilt. A
+  transfer is confirmed there only as it was assumed; changing one is the ledger's `type` column.
 - **The record.** It has appended one to `imports.json` — `files`, `changed`, `noticed`,
   `judged`, `asked` — and the report to the owner is that record read out. Add to it what you
   decided by hand; never write the report in the chat first.
@@ -184,9 +188,10 @@ The owner's own banks, and what each one does, are in `OWNER.md`.
 
 1. **Look up `merchants.json` first.** A hit is reused, not re-judged.
 2. A miss is a **new merchant** — it must appear in the report for the owner to confirm.
-3. **Subscription means the charge repeats.** A brand seen once is not a subscription, whatever
-   the name suggests and whatever it cost. Note that a large recurring charge is still not a
-   "big buy": subscriptions are excluded from the big-buy threshold by design.
+3. **Subscription is not a category** (2026-10-29). File a merchant by what it sells; whether
+   its charge repeats is measured by the build (FINANCE.md §3a), and a subscription is never a
+   big buy. A chequing row that is spending (rent, a bill, a payment, cash, a fee) is written to
+   spending.csv by the import itself.
 4. Merchant strings are truncated and abbreviated. They are not sentences and cannot be read as
    ones.
 
@@ -233,7 +238,7 @@ DESIGN.md §4 forbids. That invariant is asserted inside the script.
 
 | file | what the import writes |
 |---|---|
-| each ledger's `type` / `label` columns | the classification of every row (Payroll / Transfer / Repayment / Fee …) and a readable label when the bank's description is not one |
+| each ledger's `type` / `label` columns | the classification of every row (Payroll / Transfer / Repayment / Bill / Government / Cash / Fee …) and a readable label when the bank's description is not one |
 | `filings.json` | the month each archived document covers, keyed by `documents[].key` — written in Step 6, checked against `archive/` by lint **T2** |
 | `networth_history.json` | one point when the holdings export reaches a new month |
 | `investment_history.json` | one snapshot per import |

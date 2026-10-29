@@ -1,374 +1,558 @@
 {
- "note": "A starter map of common Canadian chains, shipped with the tool and owned by nobody. The import reads it only for a merchant the workspace's own merchants.json does not know: its category is the default applied, and the merchant still goes to decisions.json for the owner to confirm. A pattern matches whole words of the merchant once punctuation is dropped ('MCDONALD'S #40 OTTAWA' is MCDONALDS); the longest match wins, so UBER EATS beats UBER TRIP.",
- "rules": [
-  "Public chain names only — never a merchant from anyone's statements.",
-  "No pattern suggests Subscription: Subscription means the charge repeats, and a first sighting has not repeated. A streaming service is Entertainment until the owner says otherwise.",
-  "A chain that sells everything (a pharmacy, a department store) is filed by what it mostly sells, and the owner confirms it."
- ],
- "patterns": [
-  {
-   "match": "LOBLAWS",
-   "category": "Grocery"
-  },
-  {
-   "match": "NO FRILLS",
-   "category": "Grocery"
-  },
-  {
-   "match": "REAL CANADIAN SUPERSTORE",
-   "category": "Grocery"
-  },
-  {
-   "match": "SUPERSTORE",
-   "category": "Grocery"
-  },
-  {
-   "match": "ZEHRS",
-   "category": "Grocery"
-  },
-  {
-   "match": "PROVIGO",
-   "category": "Grocery"
-  },
-  {
-   "match": "MAXI",
-   "category": "Grocery"
-  },
-  {
-   "match": "INDEPENDENT GROCER",
-   "category": "Grocery"
-  },
-  {
-   "match": "YOUR INDEPENDENT GROCER",
-   "category": "Grocery"
-  },
-  {
-   "match": "VALU MART",
-   "category": "Grocery"
-  },
-  {
-   "match": "METRO",
-   "category": "Grocery"
-  },
-  {
-   "match": "FOOD BASICS",
-   "category": "Grocery"
-  },
-  {
-   "match": "SUPER C",
-   "category": "Grocery"
-  },
-  {
-   "match": "SOBEYS",
-   "category": "Grocery"
-  },
-  {
-   "match": "SAFEWAY",
-   "category": "Grocery"
-  },
-  {
-   "match": "IGA",
-   "category": "Grocery"
-  },
-  {
-   "match": "FRESHCO",
-   "category": "Grocery"
-  },
-  {
-   "match": "FOODLAND",
-   "category": "Grocery"
-  },
-  {
-   "match": "SAVE ON FOODS",
-   "category": "Grocery"
-  },
-  {
-   "match": "FARM BOY",
-   "category": "Grocery"
-  },
-  {
-   "match": "LONGOS",
-   "category": "Grocery"
-  },
-  {
-   "match": "WHOLE FOODS",
-   "category": "Grocery"
-  },
-  {
-   "match": "T&T SUPERMARKET",
-   "category": "Grocery"
-  },
-  {
-   "match": "WALMART SUPERCENTER",
-   "category": "Grocery"
-  },
-  {
-   "match": "COSTCO WHOLESALE",
-   "category": "Grocery"
-  },
-  {
-   "match": "COSTCO",
-   "category": "Grocery"
-  },
-  {
-   "match": "TIM HORTONS",
-   "category": "Dining"
-  },
-  {
-   "match": "STARBUCKS",
-   "category": "Dining"
-  },
-  {
-   "match": "MCDONALDS",
-   "category": "Dining"
-  },
-  {
-   "match": "A&W",
-   "category": "Dining"
-  },
-  {
-   "match": "WENDYS",
-   "category": "Dining"
-  },
-  {
-   "match": "BURGER KING",
-   "category": "Dining"
-  },
-  {
-   "match": "HARVEYS",
-   "category": "Dining"
-  },
-  {
-   "match": "SUBWAY",
-   "category": "Dining"
-  },
-  {
-   "match": "KFC",
-   "category": "Dining"
-  },
-  {
-   "match": "POPEYES",
-   "category": "Dining"
-  },
-  {
-   "match": "MARY BROWNS",
-   "category": "Dining"
-  },
-  {
-   "match": "PIZZA PIZZA",
-   "category": "Dining"
-  },
-  {
-   "match": "DOMINOS",
-   "category": "Dining"
-  },
-  {
-   "match": "PIZZA HUT",
-   "category": "Dining"
-  },
-  {
-   "match": "LITTLE CAESARS",
-   "category": "Dining"
-  },
-  {
-   "match": "CHIPOTLE",
-   "category": "Dining"
-  },
-  {
-   "match": "TACO BELL",
-   "category": "Dining"
-  },
-  {
-   "match": "DAIRY QUEEN",
-   "category": "Dining"
-  },
-  {
-   "match": "SECOND CUP",
-   "category": "Dining"
-  },
-  {
-   "match": "BOOSTER JUICE",
-   "category": "Dining"
-  },
-  {
-   "match": "FRESHII",
-   "category": "Dining"
-  },
-  {
-   "match": "OSMOWS",
-   "category": "Dining"
-  },
-  {
-   "match": "MR SUB",
-   "category": "Dining"
-  },
-  {
-   "match": "QUESADA",
-   "category": "Dining"
-  },
-  {
-   "match": "UBER EATS",
-   "category": "Dining"
-  },
-  {
-   "match": "UBEREATS",
-   "category": "Dining"
-  },
-  {
-   "match": "DOORDASH",
-   "category": "Dining"
-  },
-  {
-   "match": "SKIP THE DISHES",
-   "category": "Dining"
-  },
-  {
-   "match": "SKIPTHEDISHES",
-   "category": "Dining"
-  },
-  {
-   "match": "COSTCO GAS",
-   "category": "Transport"
-  },
-  {
-   "match": "PETRO CANADA",
-   "category": "Transport"
-  },
-  {
-   "match": "ESSO",
-   "category": "Transport"
-  },
-  {
-   "match": "SHELL",
-   "category": "Transport"
-  },
-  {
-   "match": "PIONEER",
-   "category": "Transport"
-  },
-  {
-   "match": "ULTRAMAR",
-   "category": "Transport"
-  },
-  {
-   "match": "HUSKY",
-   "category": "Transport"
-  },
-  {
-   "match": "MOBIL",
-   "category": "Transport"
-  },
-  {
-   "match": "CHEVRON",
-   "category": "Transport"
-  },
-  {
-   "match": "PRESTO",
-   "category": "Transport"
-  },
-  {
-   "match": "OC TRANSPO",
-   "category": "Transport"
-  },
-  {
-   "match": "TTC",
-   "category": "Transport"
-  },
-  {
-   "match": "GO TRANSIT",
-   "category": "Transport"
-  },
-  {
-   "match": "STM",
-   "category": "Transport"
-  },
-  {
-   "match": "TRANSLINK",
-   "category": "Transport"
-  },
-  {
-   "match": "VIA RAIL",
-   "category": "Transport"
-  },
-  {
-   "match": "UBER TRIP",
-   "category": "Transport"
-  },
-  {
-   "match": "UBER CANADA",
-   "category": "Transport"
-  },
-  {
-   "match": "LYFT",
-   "category": "Transport"
-  },
-  {
-   "match": "SHOPPERS DRUG MART",
-   "category": "Shopping"
-  },
-  {
-   "match": "SHOPPERS DRUG",
-   "category": "Shopping"
-  },
-  {
-   "match": "PHARMAPRIX",
-   "category": "Shopping"
-  },
-  {
-   "match": "REXALL",
-   "category": "Shopping"
-  },
-  {
-   "match": "LONDON DRUGS",
-   "category": "Shopping"
-  },
-  {
-   "match": "JEAN COUTU",
-   "category": "Shopping"
-  },
-  {
-   "match": "GUARDIAN PHARMACY",
-   "category": "Shopping"
-  },
-  {
-   "match": "WALMART",
-   "category": "Shopping"
-  },
-  {
-   "match": "NETFLIX",
-   "category": "Entertainment"
-  },
-  {
-   "match": "SPOTIFY",
-   "category": "Entertainment"
-  },
-  {
-   "match": "DISNEY PLUS",
-   "category": "Entertainment"
-  },
-  {
-   "match": "DISNEYPLUS",
-   "category": "Entertainment"
-  },
-  {
-   "match": "PRIME VIDEO",
-   "category": "Entertainment"
-  },
-  {
-   "match": "YOUTUBE PREMIUM",
-   "category": "Entertainment"
-  },
-  {
-   "match": "APPLE TV",
-   "category": "Entertainment"
-  },
-  {
-   "match": "PARAMOUNT PLUS",
-   "category": "Entertainment"
-  },
-  {
-   "match": "CINEPLEX",
-   "category": "Entertainment"
-  }
- ]
+  "note": "A starter map of common Canadian chains, shipped with the tool and owned by nobody. The import reads it only for a merchant the workspace's own merchants.json does not know: its category is the default applied, and the merchant still goes to decisions.json for the owner to confirm. A pattern matches whole words of the merchant once punctuation is dropped ('MCDONALD'S #40 OTTAWA' is MCDONALDS); the longest match wins, so UBER EATS beats UBER TRIP.",
+  "rules": [
+    "Public chain names only — never a merchant from anyone's statements.",
+    "Subscription is not a category: a charge that repeats is measured from the rows, whatever it bought. A streaming service is Entertainment, a phone plan is Bills.",
+    "A chain that sells everything (a pharmacy, a department store) is filed by what it mostly sells, and the owner confirms it."
+  ],
+  "patterns": [
+    {
+      "match": "LOBLAWS",
+      "category": "Grocery"
+    },
+    {
+      "match": "NO FRILLS",
+      "category": "Grocery"
+    },
+    {
+      "match": "REAL CANADIAN SUPERSTORE",
+      "category": "Grocery"
+    },
+    {
+      "match": "SUPERSTORE",
+      "category": "Grocery"
+    },
+    {
+      "match": "ZEHRS",
+      "category": "Grocery"
+    },
+    {
+      "match": "PROVIGO",
+      "category": "Grocery"
+    },
+    {
+      "match": "MAXI",
+      "category": "Grocery"
+    },
+    {
+      "match": "INDEPENDENT GROCER",
+      "category": "Grocery"
+    },
+    {
+      "match": "YOUR INDEPENDENT GROCER",
+      "category": "Grocery"
+    },
+    {
+      "match": "VALU MART",
+      "category": "Grocery"
+    },
+    {
+      "match": "METRO",
+      "category": "Grocery"
+    },
+    {
+      "match": "FOOD BASICS",
+      "category": "Grocery"
+    },
+    {
+      "match": "SUPER C",
+      "category": "Grocery"
+    },
+    {
+      "match": "SOBEYS",
+      "category": "Grocery"
+    },
+    {
+      "match": "SAFEWAY",
+      "category": "Grocery"
+    },
+    {
+      "match": "IGA",
+      "category": "Grocery"
+    },
+    {
+      "match": "FRESHCO",
+      "category": "Grocery"
+    },
+    {
+      "match": "FOODLAND",
+      "category": "Grocery"
+    },
+    {
+      "match": "SAVE ON FOODS",
+      "category": "Grocery"
+    },
+    {
+      "match": "FARM BOY",
+      "category": "Grocery"
+    },
+    {
+      "match": "LONGOS",
+      "category": "Grocery"
+    },
+    {
+      "match": "WHOLE FOODS",
+      "category": "Grocery"
+    },
+    {
+      "match": "T&T SUPERMARKET",
+      "category": "Grocery"
+    },
+    {
+      "match": "WALMART SUPERCENTER",
+      "category": "Grocery"
+    },
+    {
+      "match": "COSTCO WHOLESALE",
+      "category": "Grocery"
+    },
+    {
+      "match": "COSTCO",
+      "category": "Grocery"
+    },
+    {
+      "match": "TIM HORTONS",
+      "category": "Dining"
+    },
+    {
+      "match": "STARBUCKS",
+      "category": "Dining"
+    },
+    {
+      "match": "MCDONALDS",
+      "category": "Dining"
+    },
+    {
+      "match": "A&W",
+      "category": "Dining"
+    },
+    {
+      "match": "WENDYS",
+      "category": "Dining"
+    },
+    {
+      "match": "BURGER KING",
+      "category": "Dining"
+    },
+    {
+      "match": "HARVEYS",
+      "category": "Dining"
+    },
+    {
+      "match": "SUBWAY",
+      "category": "Dining"
+    },
+    {
+      "match": "KFC",
+      "category": "Dining"
+    },
+    {
+      "match": "POPEYES",
+      "category": "Dining"
+    },
+    {
+      "match": "MARY BROWNS",
+      "category": "Dining"
+    },
+    {
+      "match": "PIZZA PIZZA",
+      "category": "Dining"
+    },
+    {
+      "match": "DOMINOS",
+      "category": "Dining"
+    },
+    {
+      "match": "PIZZA HUT",
+      "category": "Dining"
+    },
+    {
+      "match": "LITTLE CAESARS",
+      "category": "Dining"
+    },
+    {
+      "match": "CHIPOTLE",
+      "category": "Dining"
+    },
+    {
+      "match": "TACO BELL",
+      "category": "Dining"
+    },
+    {
+      "match": "DAIRY QUEEN",
+      "category": "Dining"
+    },
+    {
+      "match": "SECOND CUP",
+      "category": "Dining"
+    },
+    {
+      "match": "BOOSTER JUICE",
+      "category": "Dining"
+    },
+    {
+      "match": "FRESHII",
+      "category": "Dining"
+    },
+    {
+      "match": "OSMOWS",
+      "category": "Dining"
+    },
+    {
+      "match": "MR SUB",
+      "category": "Dining"
+    },
+    {
+      "match": "QUESADA",
+      "category": "Dining"
+    },
+    {
+      "match": "UBER EATS",
+      "category": "Dining"
+    },
+    {
+      "match": "UBEREATS",
+      "category": "Dining"
+    },
+    {
+      "match": "DOORDASH",
+      "category": "Dining"
+    },
+    {
+      "match": "SKIP THE DISHES",
+      "category": "Dining"
+    },
+    {
+      "match": "SKIPTHEDISHES",
+      "category": "Dining"
+    },
+    {
+      "match": "COSTCO GAS",
+      "category": "Transport"
+    },
+    {
+      "match": "PETRO CANADA",
+      "category": "Transport"
+    },
+    {
+      "match": "ESSO",
+      "category": "Transport"
+    },
+    {
+      "match": "SHELL",
+      "category": "Transport"
+    },
+    {
+      "match": "PIONEER",
+      "category": "Transport"
+    },
+    {
+      "match": "ULTRAMAR",
+      "category": "Transport"
+    },
+    {
+      "match": "HUSKY",
+      "category": "Transport"
+    },
+    {
+      "match": "MOBIL",
+      "category": "Transport"
+    },
+    {
+      "match": "CHEVRON",
+      "category": "Transport"
+    },
+    {
+      "match": "PRESTO",
+      "category": "Transport"
+    },
+    {
+      "match": "OC TRANSPO",
+      "category": "Transport"
+    },
+    {
+      "match": "TTC",
+      "category": "Transport"
+    },
+    {
+      "match": "GO TRANSIT",
+      "category": "Transport"
+    },
+    {
+      "match": "STM",
+      "category": "Transport"
+    },
+    {
+      "match": "TRANSLINK",
+      "category": "Transport"
+    },
+    {
+      "match": "VIA RAIL",
+      "category": "Transport"
+    },
+    {
+      "match": "UBER TRIP",
+      "category": "Transport"
+    },
+    {
+      "match": "UBER CANADA",
+      "category": "Transport"
+    },
+    {
+      "match": "LYFT",
+      "category": "Transport"
+    },
+    {
+      "match": "SHOPPERS DRUG MART",
+      "category": "Shopping"
+    },
+    {
+      "match": "SHOPPERS DRUG",
+      "category": "Shopping"
+    },
+    {
+      "match": "PHARMAPRIX",
+      "category": "Shopping"
+    },
+    {
+      "match": "REXALL",
+      "category": "Shopping"
+    },
+    {
+      "match": "LONDON DRUGS",
+      "category": "Shopping"
+    },
+    {
+      "match": "JEAN COUTU",
+      "category": "Shopping"
+    },
+    {
+      "match": "GUARDIAN PHARMACY",
+      "category": "Shopping"
+    },
+    {
+      "match": "WALMART",
+      "category": "Shopping"
+    },
+    {
+      "match": "NETFLIX",
+      "category": "Entertainment"
+    },
+    {
+      "match": "SPOTIFY",
+      "category": "Entertainment"
+    },
+    {
+      "match": "DISNEY PLUS",
+      "category": "Entertainment"
+    },
+    {
+      "match": "DISNEYPLUS",
+      "category": "Entertainment"
+    },
+    {
+      "match": "PRIME VIDEO",
+      "category": "Entertainment"
+    },
+    {
+      "match": "YOUTUBE PREMIUM",
+      "category": "Entertainment"
+    },
+    {
+      "match": "APPLE TV",
+      "category": "Entertainment"
+    },
+    {
+      "match": "PARAMOUNT PLUS",
+      "category": "Entertainment"
+    },
+    {
+      "match": "CINEPLEX",
+      "category": "Entertainment"
+    },
+    {
+      "match": "BELL CANADA",
+      "category": "Bills"
+    },
+    {
+      "match": "BELL MOBILITY",
+      "category": "Bills"
+    },
+    {
+      "match": "ROGERS",
+      "category": "Bills"
+    },
+    {
+      "match": "TELUS",
+      "category": "Bills"
+    },
+    {
+      "match": "KOODO",
+      "category": "Bills"
+    },
+    {
+      "match": "VIRGIN PLUS",
+      "category": "Bills"
+    },
+    {
+      "match": "FREEDOM MOBILE",
+      "category": "Bills"
+    },
+    {
+      "match": "CHATR",
+      "category": "Bills"
+    },
+    {
+      "match": "PUBLIC MOBILE",
+      "category": "Bills"
+    },
+    {
+      "match": "SHAW",
+      "category": "Bills"
+    },
+    {
+      "match": "VIDEOTRON",
+      "category": "Bills"
+    },
+    {
+      "match": "TECKSAVVY",
+      "category": "Bills"
+    },
+    {
+      "match": "HYDRO ONE",
+      "category": "Bills"
+    },
+    {
+      "match": "HYDRO OTTAWA",
+      "category": "Bills"
+    },
+    {
+      "match": "TORONTO HYDRO",
+      "category": "Bills"
+    },
+    {
+      "match": "BC HYDRO",
+      "category": "Bills"
+    },
+    {
+      "match": "HYDRO QUEBEC",
+      "category": "Bills"
+    },
+    {
+      "match": "ENBRIDGE",
+      "category": "Bills"
+    },
+    {
+      "match": "FORTISBC",
+      "category": "Bills"
+    },
+    {
+      "match": "PROPERTY TAX",
+      "category": "Housing"
+    },
+    {
+      "match": "AIR CANADA",
+      "category": "Travel"
+    },
+    {
+      "match": "WESTJET",
+      "category": "Travel"
+    },
+    {
+      "match": "PORTER AIRLINES",
+      "category": "Travel"
+    },
+    {
+      "match": "FLAIR AIRLINES",
+      "category": "Travel"
+    },
+    {
+      "match": "AIRBNB",
+      "category": "Travel"
+    },
+    {
+      "match": "EXPEDIA",
+      "category": "Travel"
+    },
+    {
+      "match": "BOOKING COM",
+      "category": "Travel"
+    },
+    {
+      "match": "HOTELS COM",
+      "category": "Travel"
+    },
+    {
+      "match": "TRIP COM",
+      "category": "Travel"
+    },
+    {
+      "match": "FLYWIRE",
+      "category": "Education"
+    },
+    {
+      "match": "PAYMYTUITION",
+      "category": "Education"
+    },
+    {
+      "match": "IELTS",
+      "category": "Education"
+    },
+    {
+      "match": "WORLD EDUCATION SERVICES",
+      "category": "Education"
+    },
+    {
+      "match": "IRCC",
+      "category": "Other"
+    },
+    {
+      "match": "CLAUDE AI",
+      "category": "Software"
+    },
+    {
+      "match": "CHATGPT",
+      "category": "Software"
+    },
+    {
+      "match": "GITHUB",
+      "category": "Software"
+    },
+    {
+      "match": "NOTION",
+      "category": "Software"
+    },
+    {
+      "match": "ADOBE",
+      "category": "Software"
+    },
+    {
+      "match": "DROPBOX",
+      "category": "Software"
+    },
+    {
+      "match": "GOOGLE ONE",
+      "category": "Software"
+    },
+    {
+      "match": "CANVA",
+      "category": "Software"
+    },
+    {
+      "match": "GRAMMARLY",
+      "category": "Software"
+    },
+    {
+      "match": "MIDJOURNEY",
+      "category": "Software"
+    },
+    {
+      "match": "ZOOM US",
+      "category": "Software"
+    },
+    {
+      "match": "1PASSWORD",
+      "category": "Software"
+    }
+  ]
 }

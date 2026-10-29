@@ -163,6 +163,16 @@ Every one of these has already been broken once; each line in the three rule fil
 9. **Private by construction.** Statements stay in the owner's folder and the import is local.
    The tool's repository holds no one's data; an owner's decisions live only in their own
    `OWNER.md` and `findata/`.
+10. **Designed for the target user, not for the first owner** (2026-10-29). Until v1.1 the
+    tool was built around one person, user 001, so their habits became its defaults. From now on a
+    default, a category, a word on the page or a step in setup is chosen for the person in §2,
+    and the evidence is what friends' setups show (`feedback/`), not what one owner prefers.
+    User 001 is one user among the others: a preference of theirs that differs stays theirs, a
+    setting in their register, never the tool's default.
+11. **Features live in the programs and the page, not in Claude** (2026-10-29). Claude reads
+    what no parser can and carries a question to the owner and the answer back; the question,
+    its choices and what the answer writes are a script's. Anything a program can compute or
+    decide, a program does, so the product works the same every month and costs no judgement.
 
 ## 7. The model behind the page
 

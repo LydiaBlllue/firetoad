@@ -12,9 +12,11 @@
   into the markup. In the sidebar it is the product name, **Jade Toad**, with the owner's name in
   small type beneath it.
 - Interface language: **English throughout** — labels, buttons, hints, empty states, every page.
-- Seven fixed spending categories, in English: Grocery / Subscription / Dining / Shopping /
-  Transport / Entertainment / Other. The category name *is* the definition; never mix languages
-  in it.
+- Fifteen fixed spending categories in three groups, in English (FINANCE.md §3a,
+  `categories.py`): Housing, Bills · Groceries, Dining, Transport, Shopping, Software & tools, Entertainment,
+  Health, Travel, Family & gifts, Cash, Fees & interest, Other · Education. The category name
+  *is* the definition; never mix languages in it. Subscription is a mark on a repeating charge,
+  not a category.
 - **Every word that reaches the page is English.** A field in `findata/` that gets rendered is
   written in English; reasoning in another language goes in a `zh_`-prefixed field the page never
   reads.
@@ -33,10 +35,16 @@
 
 ## 3. Colour
 
-- The category palette is a dataviz-validated 7-slot set, colour-blind safe in light mode:
-  Grocery `#2a78d6` blue / Dining `#eb6834` orange / Subscription `#1baf7a` teal /
-  Shopping `#eda100` yellow / Transport `#e87ba4` pink / Entertainment `#008300` green /
-  Other `#4a3aa7` purple.
+- **Every category has its own colour; Other is grey** (2026-10-29, user 001's choice). In stack
+  order, bottom up: Groceries `#2a78d6` blue / Dining `#eb6834` orange / Housing `#1baf7a` aqua /
+  Shopping `#eda100` yellow / Transport `#e87ba4` magenta / Software & tools `#008300` green /
+  Bills `#6250d6` violet / Travel `#e34948` red — the eight dataviz-validated slots in their
+  validated order, so no two that touch are hard to tell apart — then Entertainment `#8a5a2b`
+  brown / Health `#5bc4d6` cyan / Family & gifts `#c2185b` rose / Cash `#7a8b2e` olive /
+  Fees & interest `#1f3f74` navy / Education `#b07ad6` lilac / Other `#a8a69e` grey. Past eight no
+  palette keeps every pair apart for a colour-blind reader, so a category's name is always beside
+  its colour: in the list, the legend and the tooltip. A legend lists only the categories its
+  period has.
 - **Colour follows the category, permanently. It is never reassigned by rank or by size.**
 - **Income is one blue family** (Payroll `#1c5cab` / Rent `#5598e7` / Gift `#9ec5f4`), so income
   and spending read as two domains.
@@ -60,7 +68,11 @@
   constant. Home sits above the sections under no heading.
   - **A new page is one entry in `NAV` plus one `<section data-pg="key" hidden>`**, nothing
     else; `setPage()` is driven entirely by `NAV`.
-  - **Every group is open.** No section folds away; Records is listed like the others.
+  - **Every group is open.** No section folds away; Records is listed like the others. The one
+    fold is **Waiting for data**, above the Glossary: a page whose data has not arrived yet
+    (`WAITS` — Income without a chequing ledger, Investing and FIRE with nothing invested) is
+    listed there with what it waits for, closed by default, and returns to its section by itself
+    the day the data arrives. A workspace with only a credit card is then a complete product.
   - **The Glossary is on its own at the foot**, below Records and above the version, under no
     heading: it is a reference for reading the page, not a record.
   - **Dots**: `pageFlags()` hangs a 6px dot on a sidebar entry when its page has something on

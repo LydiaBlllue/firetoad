@@ -16,6 +16,34 @@ a correct state, and every page is built to say so rather than to look broken.
 
 ---
 
+## Five steps, said up front
+
+Before the first question, tell the owner how long this takes and what the steps are, and then
+start every message of the setup with where it is — *Step 2 of 5 · a draft from your files* (in
+their language). The first person to set this up could not tell how far along it was and thought
+it had stalled (2026-10-28, first user).
+
+| step | what happens | the owner does |
+|---|---|---|
+| 1 · the tools | `ready.py` checks Python and the PDF reader | installs what it names, if anything |
+| 2 · a draft from your files | `propose.py` reads `inbox/` | looks at the tables |
+| 3 · the questions | `_open`, a few at a time | answers, or skips |
+| 4 · your workspace and the first import | scaffold, rebuild, `update.py` | confirms new merchants |
+| 5 · the checks, and your page | the four checkers | opens the page |
+
+About twenty minutes with last month's files at hand.
+
+## Step 1 · The tools
+
+```bash
+python3 .claude/skills/setup/scripts/ready.py .
+```
+
+It says what is installed and the one command for anything missing, and what is in `inbox/`. A
+✗ stops setup until it is fixed: without the PDF reader no statement can be read. If `python3`
+itself is not found, say so plainly — on a Mac, `xcode-select --install` installs it; elsewhere,
+python.org — and wait. Installing is the owner's to approve.
+
 ## The order: files first, then the questions
 
 **Ask for last month's files before asking anything else.** The statements, the broker's holdings
@@ -27,7 +55,7 @@ account at the broker. The same files are then the first import, so nothing is d
 Someone who has no files at hand can still be set up: skip to **The interview** and ask
 everything, the way it was done before 2026-09-12.
 
-## Step 1 · Draft from the files
+## Step 2 · Draft from the files
 
 ```bash
 python3 .claude/skills/setup/scripts/propose.py .            # show the draft
@@ -67,18 +95,35 @@ python3 .claude/skills/setup/scripts/scaffold.py . --answers /dev/null 2>&1 | he
 
 The scaffold refuses to run when any ledger already has rows in it. **If it refuses, stop and
 ask.** Someone who says "set this up" while holding six months of imported statements means
-something else — probably one account added, which is an edit to `findata/register/accounts.json`, not
-this.
+something else — probably one account added. That is something they say, not a file they edit:
+with the new account's statements in `inbox/`,
+
+```bash
+python3 .claude/skills/setup/scripts/add_account.py .            # the drafted row
+python3 .claude/skills/setup/scripts/add_account.py . --write    # into the register
+python3 .claude/skills/update-dashboard/scripts/update.py . --write
+```
+
+The row is drafted by the same code the scaffold uses; show it, fix a name, a kind or what it
+feeds with `--name`, `--kind`, `--feeds`, then write it. The import after it is the account's
+first, and creates its balance, so net worth moves with it.
 
 ---
 
-## The interview
+## Step 3 · The interview
 
-**With a draft from Step 1, this section is the reference for answering `_open`, not a second
+**With a draft from Step 2, this section is the reference for answering `_open`, not a second
 round of questions.** Without files, ask in the order below, **a few questions at a time, not all
 at once**. Repeat back what you
 heard before writing anything. Everything here ends up in `setup-answers.json`; nothing is typed
 into HTML.
+
+**A question they skip stays unanswered.** Leave the key out of `setup-answers.json` — never
+fill in $0, a typical figure or a birth year to get past it. The scaffold writes it as `null`
+and the page says *Not set* wherever it would be shown, so the owner sees what is missing
+instead of a number that looks like theirs. A value the files suggest (the allowance from what
+the cards spend) is a draft to confirm, and stays only if they confirm it or say go ahead with
+the drafts. When you hand over, name what is still Not set and that saying the number sets it.
 
 ### 1 · Who this belongs to
 
@@ -188,7 +233,7 @@ away. If they do: the currency, its symbol, the display name they want, and toda
 
 ---
 
-## Writing it
+## Step 4 · Writing it, and the first import
 
 Put the answers in `findata/register/setup-answers.json` (the shape is at the bottom of this file; Step 1 writes it for you), show
 them the summary, and only then:
@@ -211,7 +256,17 @@ puts `scripts/guard.py` in the clone's pre-commit hook, which refuses a commit t
 them (or `OWNER.md`, `inbox/`, `archive/`) while the repository has a remote. Say so in one line.
 The demo's own data, with `demo: true`, still commits.
 
-## Proving it
+Then, if the draft was made from files, run the first import straight away — the register now
+names every file in `inbox/`, so nothing is dropped twice:
+
+```bash
+python3 .claude/skills/update-dashboard/scripts/update.py . --write
+```
+
+Settle what it hands back the way the `update-dashboard` skill says: the merchants seen for the
+first time first (the starter map has a suggestion for the common ones), then anything else.
+
+## Step 5 · Proving it
 
 **This is not optional, and a ✗ here is a bug in the setup, not in the checkers:**
 
@@ -230,10 +285,9 @@ little to show yet. Anything else, fix before handing it over.
 
 Three things, in this order:
 
-1. **Say "update dashboards".** The files the draft was made from are still in `inbox/`, and
-   the register now names every one of them, so they are the first import — nothing is dropped
-   twice. That import is what fills the pages. (Set up without files? Then drop last month's
-   statements into `inbox/` with the bank's own filenames first.)
+1. **Next month, say "update dashboards".** The first import is done. (Set up without files?
+   Then drop last month's statements into `inbox/` with the bank's own filenames and say it
+   now.) Name anything still *Not set*, and that saying the number sets it.
 2. **Open the dashboard.** `dashboards/finance_dashboard.html`, in a browser, at least 1120px
    wide.
 3. **Fill in `OWNER.md`.** The scaffold left an empty one. The three governing documents are the tool's and say nothing about

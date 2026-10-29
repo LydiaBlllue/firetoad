@@ -47,6 +47,9 @@
 - **Not income**: transfers between your own accounts; a counterparty paying you back (their
   ledger is the register document that carries `counterparty`, and D10 checks that every
   matching e-Transfer is typed Repayment); dividends and interest that stay with the broker.
+- **Government** money (a tax refund, the GST/HST credit, a benefit) is counted with Other
+  income, and so is money from family (a parent paying toward tuition). Rent, a bill, cash taken
+  out and a bank's fee are money out, never income: they are spending (§3a).
 - Investment income (dividends, interest, stock lending, withholding tax) is shown on its own on
   the Income → Investment income page and is not part of the income figure.
 
@@ -57,14 +60,45 @@
 - Whether the rule held is judged on the EFTs reaching the broker's chequing account in the
   activities export (`WSDEP`), because they run ahead of the bank statement.
 
+## 3a. What spending is
+
+**Spending is money that leaves and buys nothing you still own — whatever paid it** (2026-10-29,
+for the target user, PRODUCT.md §2). A card purchase, a debit purchase, and from chequing: rent,
+a bill, a payment to anyone outside the register, cash taken out, a bank's fee or interest
+charged, money sent to family. Each is a row in `spending.csv`; a chequing one keeps its ledger
+row too (so the chain closes) and is tagged with that account's spending tag. **Not spending**:
+money between your own accounts (one abroad included), investing, a card payment, lending, being
+repaid, a loan's principal.
+
+- **Fifteen categories in three groups** (`categories.py`, the one definition):
+
+  | group | categories | counts for |
+  |---|---|---|
+  | fixed | Housing, Bills | the spending FIRE is planned on; never the allowance |
+  | everyday | Groceries, Dining, Transport, Shopping, Software & tools, Entertainment, Health, Travel, Family & gifts, Cash, Fees & interest, Other | the allowance, and the spending FIRE is planned on |
+  | for a time | Education — tuition, books, exams, credential assessments | the year's total only: it ends, so never the FIRE target |
+
+  The owner may move a category to another group (`plan.json` `categoryGroups`).
+- **A chequing row is filed by its type**: a till purchase and a payment by its payee, looked up
+  like any merchant; a bill by its payee too, or Bills (a tax: Housing); rent Housing, cash Cash,
+  a fee or charged interest Fees, a fee given back a negative Fees row.
+- **A subscription is a mark, not a category.** A charge that repeats — one price to the cent
+  in most of the months a merchant is paid, or an amount that holds month to month seven times
+  in ten — is marked at build time (`categories.recurring`), whatever it bought; the
+  Subscriptions page lists the marked charges. A brand seen once can never be one. A
+  subscription is never a big buy. Rent, cash and fees are never marked.
+- **Money sent to someone nobody named** is a transfer until the owner says otherwise, because a
+  program cannot tell a parent from the owner's own account abroad; answered with a category
+  (`confirm.py --set N=Family`) it becomes spending.
+
 ## 3b. Guilt-free spending
 
 The monthly waterfall, from `funds.json`:
 
 1. Invest — the `saving` flow to the broker
 2. Everyday allowance — the `allowance` flow; below that line there are no categories and no caps
-3. A single transaction at or above `plan.bigThreshold` is a big buy: outside the allowance, paid
-   from the fund with `role: "big"`
+3. A single everyday transaction at or above `plan.bigThreshold` is a big buy: outside the
+   allowance, paid from the fund with `role: "big"`
 4. Whatever allowance is left goes to the fund with `role: "topup"`, overflowing into the big-buys
    fund once it is full
 
@@ -115,8 +149,7 @@ folder.
 ## 6. Naming
 
 The interface and the documents do not call the dashboard a "barbell" (the strategy itself may
-still be called that). Seven fixed English categories: Grocery / Subscription / Dining /
-Shopping / Transport / Entertainment / Other.
+still be called that). The categories are fixed and English, fifteen of them (§3a).
 
 ## 7. Earmarked accounts
 
@@ -182,20 +215,25 @@ order.
 | axis | values | what reads it |
 |---|---|---|
 | `kind` | income · committed · saving · allowance | the waterfall, top down; §3's pay-yourself-first is `saving` placed before `allowance` |
-| `amount` | per month | the waterfall |
+| `amount` | per month, or `null` when never given | the waterfall; `null` counts as nothing and reads *Not set* |
 | `starts` | absent, or `fire` | a flow that begins only after FIRE — rent an owner will pay but does not yet — is out of this month's split and inside the planning figure |
 | `until` | a date, or open | the FIRE projection drops a flow after its end — a loan paid off |
 | `afterFire` | keep · drop | rent keeps, a mortgage payment drops, property tax keeps |
 | `pays` | the liability it repays | the principal part is saving, not spending |
 | `to` | `broker` (the default) or a fund's key | pay-yourself-first counts only the broker; a fund's standing contribution is the saving flow that names it, and nothing on the fund repeats the number |
 
+- **A number never given is `null`, not 0** — take-home, the investing transfer, the allowance,
+  `plan.json` `planBase` and `profile.json` `born`. The page says *Not set* where it would show
+  one, the figures table below says the same, and what is a share of a missing number (the
+  target, progress, the drawdown) is not drawn. A $0 that looks like a fact is the failure this
+  rule exists for.
 - **Unallocated** is income less every other kind. It is a hard constraint: below zero the plan
   does not hold and the page says so in red. It is never "money that flows to the funds".
 - **Planning spend** is still set by hand and §1's target is still planning spend × 12 × 25.
-  The calibration beside it is the measured everyday median plus every committed flow marked
-  `keep`, paid today or starting at FIRE — the fixed costs the cards never show. What used to be
+  The calibration beside it is the measured median of fixed and everyday spending (§3a) plus
+  every committed flow marked `keep` that spending does not already show: one that starts at
+  FIRE, and a repayment (`pays`). Rent or a tax paid today is in spending, so it is not added. What used to be
   `plan.json` `imputedRent` is an ordinary committed flow with `starts: "fire"`.
-- **Savings rate** is saving plus the principal in `pays`, over income.
 - **A committed flow is declared, not observed.** D21 matches each one paid today against the
   ledgers the way the investing transfers are matched against the broker's activities — a
   payment of that size in the two whole months before the newest ledger date — and reports an
@@ -204,7 +242,7 @@ order.
 ### 8c. What is deliberately simplified
 
 - **Principal and interest.** Without the loan's own ledger the split is unknown, so a payment
-  with `pays` is counted whole as committed and the savings rate says principal is not counted.
+  with `pays` is counted whole as committed.
   Estimating an amortization table would be guessing; bringing the loan statement in as a ledger
   is the honest fix, and it belongs with the parsers.
 - **A `stated` value has no evidence behind it.** It is the only number in the workspace nothing

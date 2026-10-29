@@ -1,5 +1,89 @@
 # Changelog
 
+## 1.2 — 2026-10-29
+
+- **Spending is what it is, not how it was paid** (2026-10-29, designed for the target user;
+  findata schema 11, `tools/migrate_10to11.py`). Rent, a bill, a payment to a payee, cash taken
+  out and a bank's fee leave chequing and are spending: the import writes each to spending.csv
+  beside its ledger row, as it did a debit purchase, and a fee given back is a refund of it. The
+  seven categories are fifteen in three groups, defined once in `categories.py` and baked into
+  the page as `CATS` (48 constants): *fixed* (Housing, Bills) is never measured against the
+  allowance, *for a time* (Education) is never in the FIRE target, *everyday* is both. The owner
+  can move a category (`plan.json` `categoryGroups`). Subscription is no longer a category: a
+  charge that repeats — one price to the cent most months, or an amount that holds month to
+  month — is marked at build time, whatever it bought, and the Subscriptions page and "never a
+  big buy" read the mark (D5 retired). The calibration no longer adds rent paid today on top of
+  spending that already holds it. A transfer to someone nobody named can be answered as
+  spending (`confirm.py --set N=Family`), and rent sent by e-Transfer is typed Rent. A bill is
+  named by its payee, never by "pre-authorized". The starter map knows telecoms, utilities,
+  airlines, tuition payment services and software tools (Software & tools, in green). Every category has its own colour, Other grey: the eight validated slots in their order first, six further hues after them. Seven colours stay; the other categories share a grey
+  rest band. The migration moves each Subscription merchant to the starter map's category or
+  Other, and asks. The selftest checks the repeats, the calibration and the groups.
+
+- **No false alarms on a first import** (2026-10-29, first user). Three rules ended a clean
+  first import with exit 2. D4 called two identical charges on one statement a duplicate; a
+  statement is imported whole, so they are two purchases and now a note — what D4 still fails is
+  one purchase under two statements of an account, which is how a real double import looks. D15
+  read the figures table without its sign, so a card-only owner's negative net worth disagreed
+  with the page. S4 called README's and the import skill's pointers to the holdings export broken
+  in a workspace with no broker; a data file a script of the tool reads by that name is in the
+  right place whether or not this owner has one. The selftest plants the cross-statement
+  duplicate and runs a quiet first import (58 faults).
+- **Start here, in words** (2026-10-29). README's first screen links the live demo and the way
+  in: the Claude desktop app's Code tab (not Chat), this folder, *set this up*. The start section
+  is five steps with no git and no terminal — download the ZIP, choose the folder, drop the
+  files, say it — in English and Chinese. The screenshots a step are still to come.
+- **Every suggestion confirmed in one table** (2026-10-29, first user: one question a merchant
+  was 104 questions). `update-dashboard/scripts/confirm.py` lists every open item numbered, with
+  what it was filed as; `--write --ok --set 3=Shopping` answers them all at once — merchants.json,
+  every spending row of that merchant and decisions.json follow, and the page is rebuilt. A
+  merchant seen once is refused as a Subscription. New merchant questions now carry the merchant
+  as `match`.
+- **A second account after the first** (2026-10-29, first user). `setup/scripts/add_account.py`
+  drafts the register row and the monthly document of every account in `inbox/` the register
+  does not have, with the scaffold's own code; the import after it is the account's first, and
+  now creates its line in banks.json (it used to skip an account banks.json did not list, so net
+  worth stayed put). Found on the way: setup wrote a new ledger's header without `type` and
+  `label`, so every row the first import typed in it was unreadable. The columns are said once
+  (`layout.LEDGER_COLS`), an import repairs a short header it finds, and D22 fails one (59 faults).
+- **Spending only, if that is all you bring** (2026-10-29, first user). A page whose data has
+  not arrived — Income with no chequing statement, Investment income with no broker activity,
+  the Investing pages, FIRE and Drawdown with nothing invested — moves into one folded
+  *Waiting for data* group at the foot of the sidebar, saying what it waits for, and comes back
+  by itself when the data does. Found on a card-only setup run end to end: the Portfolio page
+  printed "1 on undefined NaN" with no exchange rate (fixed); the scaffold left the demo's
+  fx.json behind, which warned on the first import (it now clears the demo's snapshots too);
+  five selftest cases planted nothing in such a workspace and reported their rule as broken
+  (a mutation that changes nothing is now *not exercised*); and the round trip of an owner's
+  card disagreed with the register by a credit the books never filed (the synthetic statement
+  now carries it).
+- **Every chequing row gets a type** (2026-10-29, first user: 64 rows were left blank). The
+  import now recognises a **Bill** (property tax, insurance, a phone or internet plan, utilities,
+  a pre-authorised payment), **Government** money (a tax refund, the GST/HST credit, a benefit —
+  counted with Other income), **Cash** taken out at a machine, and a transfer to or from an
+  account the register does not have, which is typed Transfer and asked. FINANCE.md §2 says
+  where each one counts.
+- **Ready before it starts** (2026-10-29, first user). Setup's first step is now
+  `setup/scripts/ready.py`: Python, the PDF reader and what is in `inbox/`, with the one command
+  for anything missing, before a single question. The skill says up front that setup is five
+  steps and about twenty minutes, starts each message with where it is, and runs the first
+  import as step 4 instead of leaving it for later.
+- **A number you never gave is not shown as one** (2026-10-29, first user). A question skipped
+  at setup used to land as $0 take-home, $0 investing and a 1990 birth year, and the page showed
+  them as facts. Setup now writes `null`; Home, Budget and FIRE say *Not set* with the way to set
+  it, the target and the drawdown are not drawn without their inputs, and the figures table in
+  FINANCE.md says Not set too. D13 accepts a null amount in an income, saving or allowance flow
+  and stops comparing the split with an income nobody gave; D15 expects Not set exactly where a
+  number is missing. check_render no longer measures a chart the page has hidden. The selftest
+  builds a copy with all five unanswered.
+- **The selftest gives an answer on an owner's own data** (2026-10-29, first user). A fault
+  with nothing to plant it in — a fund to overclaim, in a workspace with no fund — crashed the
+  whole run with an IndexError and no verdict. It is now listed as not exercised, and the rest
+  runs. In the demo, which carries one of everything, the same case is still a failure.
+- **The live demo on a phone** (2026-10-29). The demo's front door shows a phone the screenshots,
+  in Chinese or English by the phone's language, with a button that sends the link to a
+  computer; a wide screen goes straight to the page.
+
 ## 1.1 — unreleased
 
 - **Setup leaves nothing of the demo owner behind** (2026-10-28). On a fresh clone it cleared the

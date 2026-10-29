@@ -35,9 +35,12 @@ def totals(plan):
     return {
         "income": s("income"),
         "committed": s("committed"),
-        # What is still paid after FIRE, whether or not it is paid today: the fixed part of the
-        # planning figure, added to the measured everyday median for the calibration.
-        "committedKeep": s("committed", flows, lambda f: f.get("afterFire", "keep") == "keep"),
+        # What is still paid after FIRE and is not in the measured spending: rent that starts at
+        # FIRE, and a repayment (`pays`), which is not spending because its principal is saving.
+        # Rent, a bill or a tax paid today is in spending.csv already (FINANCE.md §3a), so adding
+        # it here would count it twice. Added to the measured median for the calibration.
+        "committedKeep": s("committed", flows, lambda f: f.get("afterFire", "keep") == "keep"
+                           and (not active(f) or f.get("pays"))),
         "saving": s("saving"),
         # Pay-yourself-first is judged on what reaches the broker; a saving flow with another
         # destination (a fund, a child's plan) is saving but not that rule.
@@ -46,3 +49,16 @@ def totals(plan):
         "committedNow": [f for f in now if f.get("kind") == "committed"],
         "incomeNote": next((f.get("note") or "" for f in flows if f.get("kind") == "income"), ""),
     }
+
+
+def unset(plan):
+    """The plan's numbers the owner never gave: a flow whose amount is null, not 0 (2026-10-28,
+    first user -- a skipped question used to land as $0 and read as a fact). The sums above count
+    it as nothing; the page and the figures table say Not set."""
+    flows = plan.get("flows") or []
+    miss = lambda pred: any(f.get("amount") is None for f in flows if pred(f))
+    return {k for k, pred in (
+        ("takeHome", lambda f: f.get("kind") == "income" and active(f)),
+        ("invest", lambda f: f.get("kind") == "saving" and (f.get("to") or "broker") == "broker"),
+        ("everyday", lambda f: f.get("kind") == "allowance"),
+    ) if miss(pred)}

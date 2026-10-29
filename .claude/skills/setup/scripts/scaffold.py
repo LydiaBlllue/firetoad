@@ -28,12 +28,12 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
                                 "update-dashboard", "scripts"))
 import layout  # noqa: E402  where each findata file lives (schema 6)
 
-LEDGER_COLS = ["date", "description", "amount", "balance", "statement"]
+LEDGER_COLS = layout.LEDGER_COLS
 SPENDING_COLS = ["date", "amount", "currency", "category", "note"]
 
-# DESIGN.md §1 and CLAUDE.md: the categories are fixed and English. A new one needs a decision,
-# not a typo, so the starter file names them and merchants.json is what maps into them.
-CATEGORIES = ["Grocery", "Subscription", "Dining", "Shopping", "Transport", "Entertainment", "Other"]
+# The categories are fixed and English, defined once in categories.py. A new one needs a
+# decision, not a typo, so merchants.json is what maps into them.
+from categories import CATEGORIES  # noqa: E402
 
 HOLDINGS_COLS = [
     "Account Name", "Account Type", "Account Classification", "Account Number", "Symbol",
@@ -194,9 +194,11 @@ def build(a, today):
     out[layout.rel("profile.json")] = json.dumps({
         "note": "Who this workspace belongs to. The FIRST thing to change when you make it yours: "
                 "the name appears in the browser tab and under the Jade Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. Jade Toad itself is the product, not a setting.",
-        "schema": 10,
+        "schema": 11,
         "owner": a["owner"],
-        "born": a.get("born", 1990),
+        # A question skipped is null, never a default that reads as a fact (2026-10-28, first
+        # user: 1990 and $0 went onto the page). The page says Not set where one is needed.
+        "born": a.get("born"),
         "importDay": int(a.get("importDay", 26)),
     }, ensure_ascii=False, indent=2) + "\n"
 
@@ -340,7 +342,7 @@ def build(a, today):
             # month's split, inside the planning figure.
             "flows": [
                 {"key": "pay", "kind": "income", "name": "Take-home pay",
-                 "amount": plan.get("takeHome", 0),
+                 "amount": plan.get("takeHome"),
                  "note": plan.get("takeHomeNote", "What actually lands in your account each month.")},
             ] + [
                 {"key": c.get("key") or re.sub(r"[^a-z0-9]+", "-", c["name"].lower()).strip("-"),
@@ -355,10 +357,10 @@ def build(a, today):
                  "amount": int(plan.get("imputedRent", 0)), "starts": "fire", "afterFire": "keep",
                  "note": "Not paid today. Part of the planning figure from the day FIRE begins."}
             ] if int(plan.get("imputedRent", 0) or 0) else []) + [
-                {"key": "invest", "kind": "saving", "name": "Invest", "amount": plan.get("invest", 0),
+                {"key": "invest", "kind": "saving", "name": "Invest", "amount": plan.get("invest"),
                  "to": "broker", "note": "Off the top, before anything else — pay-yourself-first."},
                 {"key": "everyday", "kind": "allowance", "name": "Everyday allowance",
-                 "amount": plan.get("everyday", 0),
+                 "amount": plan.get("everyday"),
                  "note": "The guilt-free line. No categories and no caps below it."},
             ] + [
                 # Schema 8: a fund's standing contribution is a saving flow that names the fund.
@@ -399,8 +401,8 @@ def build(a, today):
         "why": "A merchant string is an abbreviation and a truncation. It cannot be read for "
                "meaning: LIGHTHOUSE PUBLICATION sells notebooks.",
         "rules": [
-            "Subscription means the charge repeats. A merchant seen once is never a "
-            "Subscription — file it as Shopping or Other and flag it for confirmation.",
+            "Subscription is not a category: a charge that repeats is marked by the page, "
+            "whatever it bought. File a merchant by what it sells.",
             "The categories are fixed: " + " / ".join(CATEGORIES) + ". A new one needs a decision.",
         ],
         # A list, the shape rebuild.py and D6 read: {match, category, seen, first, last} per merchant.
@@ -432,7 +434,7 @@ def build(a, today):
                 "`skipMonths` are months excluded from every comparison, each with the reason the "
                 "page shows. `retirement` holds the projection scenarios and the late-life care "
                 "model; `descriptions` are your own one-liners under the net-worth parts.",
-        "planBase": int(plan.get("planBase") or plan.get("everyday") or 0),
+        "planBase": int(plan.get("planBase") or plan.get("everyday")) if (plan.get("planBase") or plan.get("everyday")) else None,
         "skipMonths": {},
         "retirement": a.get("retirement") or RETIREMENT_DEFAULTS,
     }, ensure_ascii=False, indent=2) + "\n"
@@ -569,7 +571,11 @@ def main(argv):
     # the workspace exactly as it found it (it did not, 2026-09-12).
     if is_demo(root):
         led = os.path.join(root, "findata", "ledgers")
-        stale = sorted(f for f in (os.listdir(led) if os.path.isdir(led) else []) if f.endswith(".csv"))
+        # The demo's snapshots go too, not only its ledgers: an fx.json the new register never
+        # writes (no investment account) stayed behind dated to the demo and warned on the first
+        # import (2026-10-29). prices.json and returns.json are fetched, nobody's, and stay.
+        stale = sorted(f for f in (os.listdir(led) if os.path.isdir(led) else [])
+                       if f.endswith(".csv") or (f.endswith(".json") and f not in ("prices.json", "returns.json")))
         for f in stale:
             os.remove(os.path.join(led, f))
         if stale:

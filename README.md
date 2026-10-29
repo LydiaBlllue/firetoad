@@ -10,6 +10,8 @@
 
 **[Open the live demo →](https://lydiablllue.github.io/jade-toad/)** a made-up owner's page, the
 same file a fresh clone opens to, with nothing to download.
+**[Make it yours →](#start-here-make-it-yours-in-twenty-minutes)** in the Claude desktop app's
+**Code** tab, not Chat: choose this folder and say *set this up*.
 
 Once a month you drop your bank statements and broker exports into a folder and say
 *"update dashboards"*. Claude Code reads them, checks that every statement adds up, files every
@@ -82,36 +84,46 @@ one shows the sum behind it. Every page works this way.
 
 ## Try it in one minute
 
-Nothing to install. Clone the repository and open `dashboards/finance_dashboard.html` in a
-browser (desktop, at least 1120px wide).
+Nothing to install: **[open the live demo](https://lydiablllue.github.io/jade-toad/)**, on a
+computer (the page is built for a window at least 1120px wide; on a phone it shows the
+screenshots). The same page is `dashboards/finance_dashboard.html` in any download of this
+repository.
 
 What you are looking at is a year in the life of **Emma Roy**, 31, a project coordinator in
 Ottawa who does not exist. Every number is synthetic, and every balance chain still closes,
 because the checkers would not have let the page build otherwise.
 
-## Make it yours in twenty minutes
+## Start here: make it yours in twenty minutes
 
-You need a Claude plan that includes [Claude Code](https://claude.com/claude-code), used from the
-Claude desktop app's **Code** tab (Chat cannot open a folder), Python 3.9 or newer, a folder that syncs
-between your devices (iCloud Drive, OneDrive, Dropbox — so a statement photographed on your phone
-is on your laptop), and last month's statements. That is all: no bank connection, and no subscription but
-Claude's.
+You need a Claude plan that includes [Claude Code](https://claude.com/claude-code), a folder that
+syncs between your devices (iCloud Drive, OneDrive, Dropbox — so a statement photographed on your
+phone is on your laptop), and last month's statements. No git, no terminal, no bank connection,
+and no subscription but Claude's.
 
-1. **Drop last month's files into `inbox/`**, filenames untouched: every bank statement, your
-   broker's holdings and activities exports, a screenshot of anything held abroad.
-2. **Say "set this up"** in Claude Code, inside your copy. It reads those files and drafts your
-   accounts, the files you get each month and your monthly plan, and shows them to you as
-   tables. You correct what's wrong and answer what the files can't say — your name, what an
-   account is for, how you invest — about a dozen questions. Nothing is written until every one
-   is answered.
-3. **Say "update dashboards".** The same files become your first import, and the page fills in.
-4. **Read what it asks you.** A merchant it has not seen, a transfer it could not name: each one
-   waits on Records → Updates with the default it applied meanwhile. Say the word and it is filed.
+1. **Install the Claude desktop app** and sign in.
+2. **Download this folder**: on GitHub, *Code → Download ZIP*. Unzip it into the folder that
+   syncs.
+3. **Open the Claude app's Code tab — not Chat** — and choose that folder. Chat cannot open a
+   folder; if you are talking to Claude and it cannot see your files, this is why.
+4. **Drop last month's files into `inbox/`**, filenames untouched: every bank statement, your
+   broker's holdings and activities exports, a screenshot of anything held abroad. Only a credit
+   card is fine too: the spending pages are complete with one, and the rest wait for their data.
+5. **Say "set this up".** It tells you up front: five steps, about twenty minutes, and each
+   message says which step it is on. First it checks that Python and the PDF reader are there and
+   says exactly what to install if not. Then it reads your files and drafts your accounts, the
+   files you get each month and your plan as tables; you correct what is wrong and answer what
+   the files cannot say. Skip a question and it stays *Not set* on the page — never a made-up
+   number. Your first import runs as part of it, and its merchants come back as one table to
+   confirm in one answer.
+
+Next month, say **"update dashboards"**. An account you open later is one sentence too: drop its
+statements in `inbox/` and say so.
 
 Two things worth knowing before you start:
 
-- `pip3 install --user pypdf` lets the statement parsers read your PDFs. Without it, Claude
-  reads each statement by hand — slower, but it works.
+- The PDF reader (`pypdf`) lets the statement parsers read your PDFs; setup's first step
+  checks for it and gives you the one command. Without it, Claude reads each statement by hand
+  — slower, and it means Claude sees them.
 - Your real data stays out of git. When setup writes it, it adds `findata/`, `dashboards/` and the
   decisions folder to `.gitignore` and installs a pre-commit guard that refuses any commit carrying
   them while the repository has a remote. The demo's files are still tracked, so to drop them
@@ -155,8 +167,8 @@ line, and a fifth checks the checkers:
   against sections, this README against the real pages.
 - **Does it actually draw** — a headless browser opens every page at three widths and looks for
   anything that failed to render.
-<!-- LINT:FAULTS n=57 -->
-- **Are the checkers still checking** — a selftest plants 57 specific faults in a copy of the
+<!-- LINT:FAULTS n=59 -->
+- **Are the checkers still checking** — a selftest plants 59 specific faults in a copy of the
   workspace and asserts each one is caught. It exists because a checker once linted an empty
   folder and reported success.
 

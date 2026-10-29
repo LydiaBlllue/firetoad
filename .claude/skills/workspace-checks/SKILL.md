@@ -53,8 +53,8 @@ before calling a dashboard change done.
 python3 .claude/skills/workspace-checks/scripts/selftest.py .
 ```
 
-<!-- LINT:FAULTS n=57 -->
-Plants 57 specific faults in a **copy** of the workspace and asserts that a named rule fires
+<!-- LINT:FAULTS n=59 -->
+Plants 59 specific faults in a **copy** of the workspace and asserts that a named rule fires
 for each. Run it after changing a linter, and after moving anything the linters read.
 
 It exists because on 2026-09-08 two linter bugs shipped in one afternoon and both were silent: S4
@@ -136,7 +136,7 @@ which matters more — a merchant filed wrong moved the FIRE target by $33,000.
 | D2 | each spending row carries a `[SOURCE/YYYYMMDD]` tag from a known source |
 | D3 | categories stay inside the fixed seven |
 | D4 | no duplicate date+amount+merchant rows survived the merge |
-| D5 | nothing is filed as Subscription unless that brand appears more than once |
+| D5 | retired 2026-10-29: Subscription is no longer a category; a charge that repeats is measured (`categories.py` `recurring`), so a brand seen once can never be one |
 | D6 | one merchant, one category; and repeat merchants are in merchants.json |
 | D7 | banks.json agrees with the ledger's closing balance |
 | D8 | foreign.json total is the sum of its accounts, and each has an institution |

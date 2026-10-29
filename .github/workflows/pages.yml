@@ -1,11 +1,12 @@
-# The live demo: the demo owner's page, published as it is committed.
+# The live demo: the demo owner's page, published as it is committed, behind a front door
+# (docs/site/index.html) that sends a wide screen straight to it and shows a phone the screenshots.
 # dashboards/ is what the template and findata/ build (T1), so nothing is rebuilt here.
 name: Live demo
 
 on:
   push:
     branches: [main]
-    paths: [dashboards/finance_dashboard.html]
+    paths: [dashboards/finance_dashboard.html, docs/site/**, docs/screens/**, docs/logo.svg, .github/workflows/pages.yml]
   workflow_dispatch:
 
 permissions:
@@ -25,7 +26,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - run: mkdir _site && cp dashboards/finance_dashboard.html _site/index.html
+      - run: |
+          mkdir -p _site/screens
+          cp docs/site/index.html docs/logo.svg _site/
+          cp dashboards/finance_dashboard.html _site/dashboard.html
+          cp docs/screens/*.png _site/screens/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

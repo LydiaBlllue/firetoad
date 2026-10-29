@@ -28,6 +28,9 @@ REGISTER = ("accounts.json", "profile.json", "funds.json", "plan.json", "rules.j
 HISTORY = ("imports.json", "decisions.json", "filings.json", "investment_history.json",
            "networth_history.json")
 FOLDERS = ("register", "ledgers", "history")
+# A ledger's columns, said once: setup wrote its own shorter list, without `type` and `label`, so
+# every row the first import typed in a new chequing ledger was unreadable (2026-10-29).
+LEDGER_COLS = ["date", "description", "amount", "balance", "statement", "type", "label"]
 
 
 def layer(name):

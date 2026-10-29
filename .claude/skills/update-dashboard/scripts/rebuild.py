@@ -21,8 +21,11 @@ import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from flows import totals as flow_totals   # the plan's sums, read from its flows -- one place
+from flows import unset as flow_unset    # the numbers the owner never gave
+NOT_SET = "Not set"                       # what the figures table says for one of them
 import layout                              # where each findata file lives (schema 6)
 import loans                               # what a borrower still owes, read from the ledgers -- one place
+import categories                          # the spending categories and their groups -- one place
 
 MAIN_NAMES = ("ly_finance_dashboard.html", "finance_dashboard.html")   # an owner's copy, or the template's
 INV_NAME = "investment_dashboard.html"
@@ -77,8 +80,10 @@ REACH_ROWS = (("today", "Spendable today", "#1baf7a"), ("costs", "Taxed to take 
 # reach / value / against, and feeds keeps only the flow words (2026-09-10, FINANCE.md §8a);
 # 5 = the monthly plan is flows (income / committed / saving / allowance) and plan.json's
 # imputedRent is a committed flow that starts after FIRE (2026-09-10, FINANCE.md §8b); 6 =
-# findata/ is three folders, register / ledgers / history, one per layer (2026-09-10, layout.py).
-SCHEMA = 10
+# findata/ is three folders, register / ledgers / history, one per layer (2026-09-10, layout.py);
+# 11 = spending is what it is, not how it was paid: fifteen categories in three groups, no
+# Subscription category, and chequing rent, bills, cash and fees in spending.csv (2026-10-29).
+SCHEMA = 11
 
 
 def same(a, b):
@@ -172,7 +177,7 @@ def cashflow_rows(d, accs, rate, half, wsinc):
             if t == "Payroll" and amt > 0: m["payroll"] += amt
             elif t == "Rent" and amt > 0: m["rent"] += amt
             elif t == "Gift" and amt > 0: m["gift"] += amt
-            elif t == "Other" and amt > 0: m["other"] += amt
+            elif t in ("Other", "Government") and amt > 0: m["other"] += amt   # a refund or benefit is shown with Other
             elif t == "Repayment" and amt > 0: m["repaid"] += amt
             elif t == "Transfer" and broker and broker in lab:
                 if amt < 0:
@@ -326,6 +331,7 @@ def derive(d):
                       "currency": r["currency"], "category": r["category"],
                       "note": r["note"][:m.start()].strip() if m else r["note"].strip(),
                       "acct": ACCT_OF.get(m.group(1)) if m else None})
+    spend_unsorted = list(spend)                 # row for row with d["spending"], for the marks below
     spend.sort(key=lambda e: e["date"])          # stable: same-day rows keep ledger order
     out["SPENDING"] = spend
 
@@ -344,20 +350,25 @@ def derive(d):
     chq.sort(key=lambda r: r["date"])
     out["CHEQUING"] = chq
 
-    # --- SUB_KEYS: the subscription brands, from merchants.json.
-    def brand_token(match):
-        t = re.sub(r'^(SP|SQ|WL|TST|LS)[\s*\-]+', '', match.strip(), flags=re.I)
-        return re.split(r'[^A-Za-z0-9]+', t)[0].lower()
-    subs = collections.OrderedDict()
-    for m in d["merchants"]["merchants"]:
-        if m.get("category") != "Subscription":
-            continue
-        key = brand_token(m["match"])
-        name = m.get("brand") or key.title()
-        e = subs.setdefault(name, {"k": [], "name": name})
-        if key not in e["k"]:
-            e["k"].append(key)
-    out["SUB_KEYS"] = list(subs.values())
+    # --- CATS: the categories, their group (the owner's moves applied) and colour, from
+    # categories.py -- the page used to carry its own list of seven.
+    out["CATS"] = categories.page_table(plan)
+
+    # --- SUB_KEYS: the charges that repeat, measured from the rows (categories.recurring) --
+    # until 2026-10-29 a list of brands filed as Subscription in merchants.json. Each spending row
+    # of one is marked `sub` with its name, which is what the subscriptions list and "a
+    # subscription is never a big buy" read.
+    # several spellings of one service, named once by the owner (merchants.json `brand`)
+    brands = {categories.brand_of(m["match"]): m["brand"] for m in d["merchants"]["merchants"] if m.get("brand")}
+    rec = categories.recurring(d["spending"], brands)
+    names = {}
+    for r, e in zip(d["spending"], spend_unsorted):
+        b = categories.brand_of(r["note"])
+        b = brands.get(b, b)
+        if b in rec and r.get("category") not in categories.NEVER_RECURRING:
+            e["sub"] = names.setdefault(b, b if b in brands.values() else b.title())
+    out["SUB_KEYS"] = [{"name": names[b], "amount": v["amount"], "months": v["months"]}
+                       for b, v in sorted(rec.items()) if b in names]
 
     today = datetime.date.today().isoformat()
     out["TODAY"] = today
@@ -856,12 +867,23 @@ def sync_figures(root, out):
     fj, plan = out["FOREIGN"], out["FUNDS"]["plan"]
     nw = inv["netWorth"] + round(fj["total"] * fj["cadPerUnit"])
     port = inv["portfolio"]
-    tgt = pb * 300
+    tgt = (pb or 0) * 300
+    miss = flow_unset(plan)
     val = {"plan_base": f"${pb:,} /mo", "fire_target": f"${tgt:,}", "net_worth": f"${nw:,}",
            "portfolio": f"${port:,}",
            "progress": f"{round(port / tgt * 100, 1) if tgt else 0}%", "gap": f"${tgt - port:,}",
            "invest_monthly": f"${flow_totals(plan)['invest']:,}", "everyday": f"${flow_totals(plan)['allowance']:,}",
-           "big_threshold": f"${plan['bigThreshold']:,}", "dry_powder": f"{inv['dryPct']}%"}
+           "big_threshold": f"${plan['bigThreshold']:,}", "dry_powder": f"{inv['dryPct']}%"} if pb is not None else None
+    if val is None:
+        # No planning figure: nothing that is a share of the target is a number yet.
+        val = {"plan_base": NOT_SET, "fire_target": NOT_SET, "progress": NOT_SET, "gap": NOT_SET,
+               "net_worth": f"${nw:,}", "portfolio": f"${port:,}",
+               "invest_monthly": f"${flow_totals(plan)['invest']:,}", "everyday": f"${flow_totals(plan)['allowance']:,}",
+               "big_threshold": f"${plan['bigThreshold']:,}", "dry_powder": f"{inv['dryPct']}%"}
+    if "invest" in miss:
+        val["invest_monthly"] = NOT_SET
+    if "everyday" in miss:
+        val["everyday"] = NOT_SET
     topup = next((f for f in out["FUNDS"]["funds"] if f.get("role") == "topup"), None)
     if topup and topup.get("goal"):
         val["travel_goal"] = f"${topup['goal']:,}"

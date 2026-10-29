@@ -26,6 +26,72 @@
       "status": "confirmed",
       "answer": "Entertainment",
       "resolved": "2026-08-12"
+    },
+    {
+      "added": "2026-10-29",
+      "kind": "merchant",
+      "match": "AMAZON PRIME MEMBER AMAZON.CA",
+      "what": "AMAZON PRIME MEMBER AMAZON.CA was filed as Subscription, which is no longer a category: a charge that repeats is marked as one whatever it bought. It is filed as Other meanwhile.",
+      "default": "Other",
+      "source": "the move to fourteen categories",
+      "status": "confirmed",
+      "answer": "Shopping",
+      "resolved": "2026-10-29"
+    },
+    {
+      "added": "2026-10-29",
+      "kind": "merchant",
+      "match": "APPLE.COM/BILL TORONTO",
+      "what": "APPLE.COM/BILL TORONTO was filed as Subscription, which is no longer a category: a charge that repeats is marked as one whatever it bought. It is filed as Other meanwhile.",
+      "default": "Other",
+      "source": "the move to fourteen categories",
+      "status": "confirmed",
+      "answer": "Entertainment",
+      "resolved": "2026-10-29"
+    },
+    {
+      "added": "2026-10-29",
+      "kind": "merchant",
+      "match": "GOODLIFE FITNESS TORONTO",
+      "what": "GOODLIFE FITNESS TORONTO was filed as Subscription, which is no longer a category: a charge that repeats is marked as one whatever it bought. It is filed as Other meanwhile.",
+      "default": "Other",
+      "source": "the move to fourteen categories",
+      "status": "confirmed",
+      "answer": "Health",
+      "resolved": "2026-10-29"
+    },
+    {
+      "added": "2026-10-29",
+      "kind": "merchant",
+      "match": "KOODO MOBILE",
+      "what": "KOODO MOBILE was filed as Subscription, which is no longer a category: a charge that repeats is marked as one whatever it bought. It is filed as Bills meanwhile.",
+      "default": "Bills",
+      "source": "the move to fourteen categories",
+      "status": "confirmed",
+      "answer": "Bills",
+      "resolved": "2026-10-29"
+    },
+    {
+      "added": "2026-10-29",
+      "kind": "merchant",
+      "match": "NETFLIX.COM NETFLIX.COM",
+      "what": "NETFLIX.COM NETFLIX.COM was filed as Subscription, which is no longer a category: a charge that repeats is marked as one whatever it bought. It is filed as Entertainment meanwhile.",
+      "default": "Entertainment",
+      "source": "the move to fourteen categories",
+      "status": "confirmed",
+      "answer": "Entertainment",
+      "resolved": "2026-10-29"
+    },
+    {
+      "added": "2026-10-29",
+      "kind": "merchant",
+      "match": "SPOTIFY SPOTIFY.COM",
+      "what": "SPOTIFY SPOTIFY.COM was filed as Subscription, which is no longer a category: a charge that repeats is marked as one whatever it bought. It is filed as Entertainment meanwhile.",
+      "default": "Entertainment",
+      "source": "the move to fourteen categories",
+      "status": "confirmed",
+      "answer": "Entertainment",
+      "resolved": "2026-10-29"
     }
   ]
 }

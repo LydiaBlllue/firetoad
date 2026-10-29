@@ -1,0 +1,108 @@
+<!doctype html>
+<!-- The live demo's front door. A screen wide enough for the dashboard (DESIGN.md: 1120px and up)
+     goes straight to it; a phone sees the README's screenshots and a way to open it on a computer.
+     The workflow (.github/workflows/pages.yml) publishes this as index.html beside dashboard.html. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jade Toad · demo</title>
+<script>
+  if (matchMedia('(min-width: 1120px)').matches) location.replace('dashboard.html' + location.hash);
+</script>
+<style>
+  :root {
+    --page:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink-2:#52514e; --muted:#75736d;
+    --border:rgba(11,11,11,.10); --pill:#efeeea; --accent:#2a78d6;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--page); color:var(--ink);
+         font:16px/1.55 system-ui,-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif; }
+  main { max-width:560px; margin:0 auto; padding:28px 16px 48px; }
+  header { display:flex; align-items:center; gap:12px; }
+  header img { width:40px; height:40px; }
+  h1 { font-size:22px; margin:0; letter-spacing:-.01em; }
+  .tag { color:var(--ink-2); margin:14px 0 22px; font-size:17px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; }
+  .card p { margin:0 0 14px; }
+  .actions { display:flex; flex-wrap:wrap; gap:10px; }
+  .btn { appearance:none; border:0; border-radius:8px; padding:10px 14px; font:inherit; font-size:15px;
+         font-weight:600; cursor:pointer; text-decoration:none; }
+  .primary { background:var(--ink); color:#fff; }
+  .secondary { background:var(--pill); color:var(--ink); }
+  .done { color:var(--muted); font-size:14px; margin-top:10px; min-height:1.4em; }
+  figure { margin:28px 0 0; }
+  figure img { width:100%; height:auto; display:block; border-radius:10px; border:1px solid var(--border); }
+  figcaption { margin-top:10px; color:var(--ink-2); font-size:15px; }
+  figcaption b { color:var(--ink); }
+  footer { margin-top:36px; color:var(--muted); font-size:14px; }
+  footer a { color:var(--ink-2); }
+</style>
+</head>
+<body>
+<main>
+  <header><img src="logo.svg" alt=""><h1>Jade Toad <span id="cn"></span></h1></header>
+  <p class="tag" id="tag"></p>
+
+  <div class="card">
+    <p id="notice"></p>
+    <div class="actions">
+      <button class="btn primary" id="send"></button>
+      <a class="btn secondary" id="open" href="dashboard.html"></a>
+    </div>
+    <div class="done" id="done" aria-live="polite"></div>
+  </div>
+
+  <div id="shots"></div>
+
+  <footer><a id="repo"></a></footer>
+</main>
+<script>
+  const zh = /^zh/i.test(navigator.language || '');
+  const T = zh ? {
+    lang: 'zh-CN', cn: '· 玉蟾',
+    tag: '你的钱，一页看完，一组检查器保证数字是真的。',
+    notice: '这是一位虚构用户的完整页面。它为电脑屏幕设计，在手机上先看下面的截图；完整的 demo 请在电脑上打开。',
+    send: '发到电脑上打开', copied: '链接已复制，在电脑浏览器里粘贴打开。', open: '仍然在手机上打开',
+    repo: 'GitHub 上的 Jade Toad →',
+    shots: [
+      ['home', 'Home', '净值放在一张卡里，每一行是这部分钱的用途，色条按多容易拿到上色。'],
+      ['spending', 'Spending', '这个月按分类拆开；一年按月看；订阅，以及接下来 30 天要扣的。'],
+      ['plan', 'Plan', '离 FIRE 目标还有多远、哪年到；开始取钱以后钱够不够用，用 1928 年以来的真实年份重放。'],
+      ['portfolio', 'Investing', '持有什么、按币种和资产类别怎么分布；和「当初买一只基金」相比表现如何。'],
+      ['sources', 'Records', '每次更新改了什么；每个账户；哪份对账单哪个月到了。'],
+    ],
+  } : {
+    lang: 'en', cn: '',
+    tag: 'Your money, on one page, kept honest by a set of checkers.',
+    notice: "This is a made-up owner's full page. It is built for a computer screen, so on a phone here are the screenshots; open the demo on a computer to click through it.",
+    send: 'Send to a computer', copied: 'Link copied — paste it into a browser on your computer.', open: 'Open it here anyway',
+    repo: 'Jade Toad on GitHub →',
+    shots: [
+      ['home', 'Home', 'Net worth in one card: a row for what each part is for, its bar coloured by how easily you could reach it.'],
+      ['spending', 'Spending', 'This month by category; the year month by month; subscriptions, with what is due in the next 30 days.'],
+      ['plan', 'Plan', 'How far the portfolio is from the FIRE target and when it gets there; whether the money lasts, replayed through real years since 1928.'],
+      ['portfolio', 'Investing', 'What you hold, by currency and kind of asset; how it did against one fund you could have bought instead.'],
+      ['sources', 'Records', 'What each update changed; every account; which statement arrived which month.'],
+    ],
+  };
+  document.documentElement.lang = T.lang;
+  // <owner>.github.io/<repo>/ is github.com/<owner>/<repo>
+  document.getElementById('repo').href =
+    `https://github.com/${location.hostname.split('.')[0]}/${location.pathname.split('/')[1] || ''}`;
+  for (const id of ['cn', 'tag', 'notice', 'send', 'open', 'repo']) document.getElementById(id).textContent = T[id];
+  document.getElementById('shots').innerHTML = T.shots.map(([f, name, text]) =>
+    `<figure><a href="screens/${f}.png"><img src="screens/${f}.png" alt="${name}" loading="lazy" width="2880" height="1800"></a>` +
+    `<figcaption><b>${name}.</b> ${text}</figcaption></figure>`).join('');
+
+  const url = location.href.split('#')[0].replace(/index\.html$/, '');
+  document.getElementById('send').addEventListener('click', async () => {
+    try {
+      if (navigator.share) { await navigator.share({ title: 'Jade Toad', url }); return; }
+      await navigator.clipboard.writeText(url);
+      document.getElementById('done').textContent = T.copied;
+    } catch (e) { /* the share sheet was closed */ }
+  });
+</script>
+</body>
+</html>

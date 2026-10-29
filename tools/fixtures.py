@@ -190,6 +190,7 @@ def build(ws, outdir):
     fd = lambda n: layout.path(ws, n)
     reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
     owner = json.load(open(fd("profile.json"), encoding="utf-8")).get("owner", "Owner")
+    banks = json.load(open(fd("banks.json"), encoding="utf-8")) if os.path.exists(fd("banks.json")) else {}
     by_key = {a["key"]: a for a in reg["accounts"]}
     os.makedirs(outdir, exist_ok=True)
     manifest = []
@@ -238,6 +239,15 @@ def build(ws, outdir):
                 start = prev_end + datetime.timedelta(days=1) if prev_end else end - datetime.timedelta(days=30)
                 srows = [{"date": r["date"], "description": tag_re.sub("", r["note"]).strip(),
                           "amount": float(r["amount"])} for r in sel]
+                # A real statement can carry a credit the books never filed (a fee rebate), so
+                # its printed balance is less than its purchases. Where banks.json says what this
+                # statement closed at, the credit is put back, or the round trip of an owner's
+                # own card disagrees with their register by exactly that credit (2026-10-29).
+                owed = next((-float(b["balance"]) for b in banks.get("debts", []) + banks.get("assets", [])
+                             if b.get("account") == acc["name"] and b.get("asof") == end.isoformat()), None)
+                gap = round(owed - sum(r["amount"] for r in srows), 2) if owed is not None else 0
+                if gap < 0:
+                    srows.append({"date": end.isoformat(), "description": "CREDIT NOT IN THE BOOKS", "amount": gap})
                 if parser == "rbc_visa":
                     pages = rbc_visa(digits[-4:], start, end, previous, srows, owner)
                 elif parser == "bmo_mastercard":

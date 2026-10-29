@@ -57,7 +57,9 @@ async () => {
       // inside it is scaled to the height and centred -- so a bounding rect shows no problem
       // and the chart is capped anyway. getScreenCTM().a is the viewBox-unit -> CSS-pixel
       // scale actually in force, so viewBox width x that is what the reader sees.
-      charts: [...s.querySelectorAll('svg, canvas')].map(c => {
+      // A chart the page has put away (a card hidden until its numbers exist) is not drawn:
+      // getScreenCTM still answers for it, with the unscaled viewBox width (2026-10-29).
+      charts: [...s.querySelectorAll('svg, canvas')].filter(c => c.getClientRects().length).map(c => {
         if (c.tagName.toLowerCase() === 'svg' && c.viewBox && c.viewBox.baseVal &&
             c.viewBox.baseVal.width && c.getScreenCTM()) {
           return Math.round(c.viewBox.baseVal.width * c.getScreenCTM().a);

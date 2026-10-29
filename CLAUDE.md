@@ -186,9 +186,9 @@ report template are all in that file. **Do not work from memory.**
 
 ## Nothing in a dashboard is typed by hand
 
-<!-- LINT:CONSTS n=47 -->
+<!-- LINT:CONSTS n=48 -->
 `rebuild.py` builds the dashboard from `templates/dashboards/` and `findata/`, deriving
-**47 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DECISIONS, DOC_LATEST, FGN, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
+**48 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CATS, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DECISIONS, DOC_LATEST, FGN, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
 applies, and it is idempotent. `--template DIR` writes the page with every constant emptied,
 which is what the template *is*: page code and nobody's numbers.
 
@@ -232,7 +232,7 @@ python3 .claude/skills/workspace-checks/scripts/selftest.py .
 
 - `check_data.py` — whether the numbers are real. Its output is grouped by what actually failed:
   `reconcile` (balance chains, cross-file totals), `rules` (a repayment is never income, a
-  subscription is a repeat charge, a fund claim never exceeds its account), `build` (is the page
+  category is one of the fifteen, a fund claim never exceeds its account), `build` (is the page
   current with the data, and is it what the template builds), `hygiene` (missing tags, duplicate
   rows, a stale rate, filings without a file). **The category is attached to each finding, not to
   the rule** — "the register contradicts itself" and "the page is stale" are not the same
@@ -256,9 +256,9 @@ HTML files there (mock-ups, decision records) that were never meant to follow th
 Subscription because of the word "PUBLICATION" in it. It was a shop, and the charge was a
 notebook. Merchant strings are abbreviated and truncated; they cannot be read for meaning. So:
 look the merchant up in `merchants.json` first and reuse a hit — only a miss is a judgement, and
-every miss goes in the report for the owner to confirm. And **Subscription means the charge
-repeats**: a brand seen once is never a subscription, whatever the name suggests and whatever it
-cost.
+every miss goes in the report for the owner to confirm. And **a subscription is a charge that
+repeats**: since 2026-10-29 it is measured from the rows, not filed as a category, so a brand
+seen once can never be one, whatever the name suggests and whatever it cost.
 
 **A checker that has stopped checking is worse than no checker.** One of these linters once
 located the workspace by counting `..` from its own path. When the scripts moved one level

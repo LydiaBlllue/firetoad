@@ -72,9 +72,9 @@ from check_data import merchant_key, refund_pool  # noqa: E402  the one definiti
 MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 LONG = ("January", "February", "March", "April", "May", "June", "July", "August", "September",
         "October", "November", "December")
-LEDGER_COLS = ["date", "description", "amount", "balance", "statement", "type", "label"]
+LEDGER_COLS = layout.LEDGER_COLS
 SPEND_COLS = ["date", "amount", "currency", "category", "note"]
-NEW_MERCHANT_CATEGORY = "Other"      # merchants.json's rule: a first sighting is never a Subscription
+NEW_MERCHANT_CATEGORY = "Other"      # a merchant nobody has decided, until the owner does
 # Common Canadian chains, shipped with the setup and owned by nobody: a first sighting the starter
 # map knows is filed under its category instead of Other, and is still asked (a first user's
 # first import put every purchase in Other, 2026-10).
@@ -208,6 +208,42 @@ def merchant_of_debit(desc):
     return (m.group(1) if m else desc).strip(" ,-")
 
 
+def payee_of(desc):
+    """'Pre-AuthorizedPayment,HYDRO OTTAWA' -> 'HYDRO OTTAWA': who a chequing payment went to, the
+    bank's own words for how it was paid taken off."""
+    s = re.sub(r"^\s*(?:pre-?authori[sz]ed\s*(?:payment|debit)?|bill\s*p(?:ay)?m(?:en)?t|misc\.?\s*payment|"
+               r"\bpap\b)[\s,\-:]*", "", desc, flags=re.I)
+    return s.strip(" ,-") or desc.strip()
+
+
+FEES = re.compile(r"\bINTEREST\b|\bFEES?\b|\bOVERDRAFT\b|\bNSF\b")
+
+# The chequing rows that are spending as well (FINANCE.md §3a): written to spending.csv too, so the
+# chain still closes in the ledger and the money is counted once, where purchases are. A purchase
+# at a till is categorised by its merchant; the rest by type, the payee first where there is one.
+SPENT = {"Debit purchase": None, "Bill": "Bills", "Payment": "Other", "Rent": "Housing",
+         "Cash": "Cash", "Fee": "Fees", "Interest": "Fees"}
+
+
+# What a chequing statement says about a row a program can type without asking (2026-10-28,
+# first user: 64 rows were left untyped -- property tax, insurance, a phone plan, a government
+# refund, a cash withdrawal, a transfer to a bank the register does not know). Recognition, not
+# judgement: a row none of these matches is still left for the model, and a transfer to an
+# account nobody registered is typed and asked.
+# A bill is named by who is paid, never by how: a pre-authorized debit can as well be a gym.
+BILL = re.compile(r"PROPERTY\s*TAX|\bTAXES\b|INSURANCE|ASSURANCE|\bINS\b|\bBELL\b|ROGERS|TELUS|"
+                  r"KOODO|VIRGIN\s*PLUS|FREEDOM\s*MOBILE|\bSHAW\b|VIDEOTRON|HYDRO|ENBRIDGE|"
+                  r"UTILIT|\bWATER\b")
+# How a payment to someone outside the register leaves chequing. It is spending (FINANCE.md §3a);
+# what it bought is the payee's, looked up like any merchant.
+PAYMENT = re.compile(r"BILL\s*P(?:AY)?M(?:EN)?T|\bPAP\b|PRE-?AUTHORI[SZ]ED|MISC\.?\s*PAYMENT")
+GOVERNMENT = re.compile(r"\bGST\b|\bHST\b|CANADA\s*(?:FED|PRO|CHILD|CARBON)|\bCRA\b|\bCCB\b|"
+                        r"CLIMATE\s*ACTION|\bCAIP\b|TAX\s*REFUND|\bEI\b|EMPLOYMENT\s*INS|\bCPP\b|"
+                        r"\bOAS\b|GOVERNMENT|\bGOVT?\b|PROV(?:INCE)?\s*OF|TRILLIUM")
+CASH = re.compile(r"\bATM\b|\bABM\b|CASH\s*WITHDRAWAL|\bW/D\b")
+OTHER_ACCOUNT = re.compile(r"TRANSFER|\bTFR\b|\bWIRE\b|\bDRAFT\b")
+
+
 def type_row(ws, acc, desc, amt, when, holder=None):
     """(type, label, ask) for one ledger row. `ask` is a decisions.json item when the row was
     typed by default rather than by evidence; None otherwise. Blank type means: a program cannot
@@ -245,6 +281,8 @@ def type_row(ws, acc, desc, amt, when, holder=None):
         if cp_first and cp_first in dn:
             return ("Repayment", f"e-Transfer from {ws.cp} (repayment)", None) if received \
                 else ("Lent", f"e-Transfer to {ws.cp} (loan)", None)
+        if not received and any(abs(-amt - r) < 0.01 for r in ws.rent):
+            return "Rent", "Rent (e-Transfer)", None
         if received:
             return "Other", "e-Transfer received", {
                 "kind": "transfer", "what": f"A {money(amt)} e-Transfer received on {short(iso_to_date(when))} carries no sender you have named.",
@@ -269,6 +307,23 @@ def type_row(ws, acc, desc, amt, when, holder=None):
                 return "Transfer", f"Transfer {'to' if amt < 0 else 'from'} {other['name'].lower()}", None
     if amt < 0 and ("RENT" in dn or any(abs(-amt - r) < 0.01 for r in ws.rent)):
         return "Rent", "Rent", None
+    if amt > 0 and GOVERNMENT.search(d):
+        return "Government", "From the government", None
+    if amt < 0 and CASH.search(d):
+        return "Cash", "Cash withdrawal", None
+    if amt < 0 and BILL.search(d):
+        return "Bill", "Bill — " + payee_of(desc).title(), None
+    if OTHER_ACCOUNT.search(d) and not (("INTEREST" in dn or "FEE" in dn)):
+        # Money to or from an account the register does not have: the owner's own elsewhere,
+        # most likely, but only they can say -- a large one could as well be pay or a gift.
+        way = "to" if amt < 0 else "from"
+        return "Transfer", f"Transfer {way} an account not in the register", {
+            "kind": "transfer",
+            "what": f"A {money(abs(amt))} transfer {way} an account the register does not have, on "
+                    f"{short(iso_to_date(when))} ({desc.strip()[:60]}).",
+            "default": "Transfer"}
+    if amt < 0 and PAYMENT.search(d):
+        return "Payment", "Payment — " + payee_of(desc).title(), None
     if "FEE" in dn:
         return "Fee", "", None
     if "INTEREST" in dn:
@@ -294,6 +349,8 @@ def categorise(ws, merchant, table):
     cat = starter_category(key)
     if cat:
         return cat, "starter", key
+    if FEES.search(key):
+        return "Fees", "rules", key      # a bank's own charge says what it is
     return NEW_MERCHANT_CATEGORY, "new", key
 
 
@@ -539,18 +596,45 @@ def plan_ledger(ws, plan, acc, doc, part, end):
         t, label, ask = type_row(ws, acc, r["description"], amt, r["date"], part.get("holder"))
         if ask:
             ask.update(source=f"{src}, {short(iso_to_date(r['date']))}")
+            if ask.get("kind") == "transfer" and amt < 0 and acc.get("spendTag"):
+                # where the answer lands if the owner says it was spent (money to family, say)
+                ask["row"] = {"date": r["date"], "amount": -amt, "cur": acc.get("cur", "CAD"),
+                              "note": f"{r['description'].strip()} (chequing) [{acc['spendTag']}/{stamp(end)}]",
+                              "ledger": ledger, "statement": tag}
             plan.decisions.append(ask)
         if not t:
             plan.untyped.append((ledger, r["date"], r["description"], amt))
         plan.ledger[ledger].append([r["date"], r["description"], f"{amt:.2f}", f"{bal:.2f}", tag, t, label])
-        if t == "Debit purchase" and acc.get("spendTag"):
-            merchant = merchant_of_debit(r["description"])
-            cat, how, key = categorise(ws, merchant, table)
-            note_merchant(plan, key, cat, how, r["date"], src)
+        # a fee given back is a refund of the fee: a negative Fees row (FINANCE.md §3c)
+        if t in SPENT and (amt < 0 or t == "Fee") and acc.get("spendTag"):
+            merchant, cat = spent_of(ws, plan, table, t, r["description"], r["date"], src)
             plan.spend.append([r["date"], f"{-amt:.2f}", acc.get("cur", "CAD"), cat,
-                               f"{merchant} (debit) [{acc['spendTag']}/{stamp(end)}]"])
+                               f"{merchant} ({'debit' if t == 'Debit purchase' else 'chequing'}) "
+                               f"[{acc['spendTag']}/{stamp(end)}]"])
     plan.counts["ledger rows"] += len(rows)
     return len(rows)
+
+
+def spent_of(ws, plan, table, t, desc, when, src):
+    """(merchant, category) of a chequing row that is spending. A till purchase and a payment to
+    a payee are merchants like any card's; rent, cash and a bank's own charge are what they are."""
+    if t == "Debit purchase":
+        merchant = merchant_of_debit(desc)
+    elif t in ("Bill", "Payment"):
+        merchant = payee_of(desc)
+    else:
+        # decided by its type, and kept in merchants.json like any merchant, so D6 finds it
+        merchant = payee_of(desc)
+        key = merchant_key(merchant)
+        cat = table[key]["category"] if key in table else SPENT[t]
+        note_merchant(plan, key, cat, "type", when, src)
+        return merchant, cat
+    cat, how, key = categorise(ws, merchant, table)
+    if how == "new" and t == "Bill":
+        # the payee says what it is: a tax is the home's, the rest is a bill. Still asked.
+        cat = "Housing" if re.search(r"TAX", merchant, re.I) else SPENT[t]
+    note_merchant(plan, key, cat, how, when, src)
+    return merchant, cat
 
 
 def plan_card(ws, plan, acc, doc, part, end):
@@ -607,7 +691,7 @@ def note_merchant(plan, key, cat, how, when, src):
     if how in ("new", "starter") and key not in plan.new_merchants:
         plan.new_merchants[key] = (cat, src)
         why = " The starter map of common chains suggests " + cat + "." if how == "starter" else ""
-        plan.decisions.append({"kind": "merchant", "what": f"{key}, seen for the first time.{why}",
+        plan.decisions.append({"kind": "merchant", "match": key, "what": f"{key}, seen for the first time.{why}",
                                "default": cat, "source": f"{src}, {short(iso_to_date(when))}"})
     elif how == "brand" and key not in plan.new_merchants:
         plan.new_merchants[key] = (cat, src)
@@ -670,6 +754,15 @@ def write_plan(ws, plan):
     for ledger, rows in plan.ledger.items():
         p = fd(ledger)
         new = not os.path.exists(p) or os.path.getsize(p) == 0
+        if not new:
+            # A ledger setup wrote before 2026-10-29 has a header without `type` and `label`
+            # (layout.LEDGER_COLS): the rows below it carry them, so only the header is short.
+            with open(p, encoding="utf-8-sig", newline="") as fh:
+                body = list(csv.reader(fh))
+            if body and body[0] != LEDGER_COLS and LEDGER_COLS[:len(body[0])] == body[0]:
+                with open(p, "w", encoding="utf-8", newline="") as fh:
+                    csv.writer(fh).writerows([LEDGER_COLS] + body[1:])
+                plan.judged.append(f"{ledger}: its header now names the type and label columns its rows already carry.")
         with open(p, "a", encoding="utf-8", newline="") as fh:
             w = csv.writer(fh)
             if new:
@@ -703,6 +796,14 @@ def write_plan(ws, plan):
     # owner's side (owed is negative, a card in credit positive), so it is turned once, here.
     for name, (bal, asof, is_debt) in plan.bank.items():
         signed = -bal if is_debt else bal
+        # An account added after setup has no line in banks.json yet: its first statement makes
+        # one. It used to be skipped, so net worth never moved and D14 reported a register row
+        # nothing matched (2026-10-28, first user).
+        if not any(x.get("account") == name for side in ("assets", "debts") for x in ws.banks.get(side, [])):
+            acc = next((a for a in ws.accounts if a.get("src") == "banks.json" and a.get("name") == name), {})
+            ws.banks.setdefault("debts" if is_debt else "assets", []).append(
+                {"inst": acc.get("inst", ""), "account": name, "balance": signed,
+                 "currency": acc.get("cur", "CAD"), "asof": asof, **({"limit": None} if is_debt else {})})
         for side in ("assets", "debts"):
             for x in ws.banks.get(side, []):
                 if x.get("account") == name and (not x.get("asof") or x["asof"] <= asof):
@@ -730,8 +831,8 @@ def write_plan(ws, plan):
     if plan.decisions:
         for d in plan.decisions:
             ws.decisions.setdefault("decisions", []).append(
-                {"added": ws.today.isoformat(), "kind": d["kind"], "what": d["what"], "default": d["default"],
-                 "source": d.get("source", ""), "status": "open"})
+                {"added": ws.today.isoformat(), "kind": d["kind"], **({"match": d["match"]} if d.get("match") else {}),
+                 "what": d["what"], "default": d["default"], "source": d.get("source", ""), "status": "open"})
         jsave(fd("decisions.json"), ws.decisions)
     os.makedirs(os.path.join(ws.root, "archive"), exist_ok=True)
     for src, dst in plan.archive:

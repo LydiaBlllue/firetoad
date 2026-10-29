@@ -45,6 +45,16 @@ Merged into `main`; what it carries is in CHANGELOG, 1.1.
 
 ## v1.2 — 2026-11-24 — a first setup that works for someone else
 
+**Released 2026-10-29** — what each item became is in CHANGELOG, 1.2. Still open, and carried
+into v1.3: the screenshots a step in *Start here* (the words are done), and asking at the import
+about an account abroad whose balance fell. Setup was run end to end for a card-only owner, and
+the selftest now does that every time; the migration was run on a copy of user 001's workspace.
+
+- **The demo on a phone.** A link shared on social media is opened on a phone, and the page is
+  built for 1120px and wider. First step: the live demo's front door shows a phone the
+  screenshots, in Chinese or English by the phone's language, with a button to send the link to
+  a computer; a wide screen goes straight to the page. Next: a simplified view of Home that
+  reads at phone width.
 - **Every suggestion confirmed in one table.** *(first user)* The starter map now files a common
   chain under its category on the first import (1.1); what is left is asking all of them at
   once, in one table on the panel, instead of one question each.
@@ -69,7 +79,33 @@ Merged into `main`; what it carries is in CHANGELOG, 1.1.
   first import creates its balance, so net worth moves with it.
 - **Every chequing row gets a type.** *(first user)* Bills — property tax, insurance, a phone
   plan — a government refund, a cash withdrawal and a transfer between banks are recognised, and
-  Bill is a type of its own.
+  Bill is a type of its own. *(Built; replaced by the next item, which makes a bill spending.)*
+- **Spending is what it is, not how it was paid** (decided 2026-10-29, for the target user;
+  replaces the seven categories). *Built on `v1.2` (CHANGELOG); still open: an account abroad
+  that moved, asked at the import.* Spending is money that leaves and buys nothing you still own:
+  card and debit purchases, and from chequing rent, bills, cash taken out, fees and interest,
+  and money sent to family. Not spending: moving money between your own accounts (abroad
+  included), investing, a card payment, lending, being repaid, loan principal.
+  - **Three groups, fifteen categories.** *Fixed* — Housing, Bills. *Everyday* — Groceries,
+    Dining, Transport, Shopping, Software & tools, Entertainment, Health, Travel, Family & gifts, Cash, Fees,
+    Other. *For a time* (it ends) — Education: tuition, books, exams and credential
+    assessments. Each category has a default group the owner can change.
+  - **What each group counts for.** Only Everyday is measured against the guilt-free
+    allowance. Fixed and Everyday make the measured spending the FIRE target is calibrated on;
+    For a time is in the year's total and never in the target. A bill paid once a year is
+    spread over twelve months when months are compared.
+  - **A subscription is a mark, not a category.** A charge that repeats — one merchant, a
+    similar amount, month after month — is detected and marked, and the subscriptions list is
+    every marked charge; each keeps the category of what it bought.
+  - **Family money.** Money sent to family is Family & gifts, asked once, since a program
+    cannot tell a parent from the owner's own account abroad. Money from family (a parent
+    paying toward tuition) is other income.
+  - **An account abroad that moved.** Its balance comes from a screenshot with no
+    transactions; a fall past a threshold that no known transfer explains is asked at the
+    import (tuition, my own account, family, other), and the answer is recorded as the row the
+    statement could not give.
+  - Rent and a mortgage stay declared flows as well, matched against the ledger (D21), so a
+    payment is counted once. The owner's workspace maps its seven categories across.
 - **The selftest never crashes on an owner's own data.** *(first user)* A workspace with no
   fund, or anything else the demo has and an owner may not, gets an answer, not an error.
 - **Setup, tested end to end.** A fresh workspace set up the way a new owner would, then
@@ -109,7 +145,10 @@ Merged into `main`; what it carries is in CHANGELOG, 1.1.
 - **Without the desktop app.** *(first user)* Today setup and the import need Claude Code on a
   computer. A path for someone on the web or a phone only — statements uploaded, the page built
   in the cloud — has to keep the promise that a statement a parser reads never leaves the
-  owner's hands, so it waits until that can be kept.
+  owner's hands, so it waits until that can be kept. A smaller step toward it: a local app
+  opened with a double-click, the page with buttons that answer the import's questions and
+  write them back, so answering needs no Claude (PRODUCT.md §6.11). It ends the page being one
+  file that opens anywhere, so it waits for friends to show that Claude is where they stop.
 - **Updates between imports, from a connection the owner authorises** (to try). Two free
   personal-use routes, each owner bringing their own key: Plaid's Trial plan for banks (real
   data, US and Canada, ten connections; whether a given Canadian bank is on it is unconfirmed)

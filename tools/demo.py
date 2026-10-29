@@ -27,6 +27,9 @@ from check_data import merchant_key  # one normalisation, owned by the checker
 _sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                                  ".claude", "skills", "setup", "scripts"))
 from scaffold import default_axes, flow_feeds  # the five axes, owned by setup
+_sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                 ".claude", "skills", "update-dashboard", "scripts"))
+from update import SPENT, payee_of  # which chequing rows are spending, and who was paid: the import's
 import layout  # where each findata file lives (schema 6)
 
 TODAY = "2026-09-08"
@@ -61,12 +64,12 @@ def r2(x): return float(f"{x:.2f}")
 
 # ------------------------------------------------------------------ spending
 SUBS_FIXED = [   # merchant, amount, day, category — the charges that come back every month
- ("SPOTIFY SPOTIFY.COM", 11.29, 4, "Subscription"),
- ("NETFLIX.COM NETFLIX.COM", 18.99, 12, "Subscription"),
- ("APPLE.COM/BILL TORONTO ON", 3.99, 16, "Subscription"),
- ("KOODO MOBILE", 45.20, 10, "Subscription"),
- ("GOODLIFE FITNESS TORONTO ON", 32.99, 1, "Subscription"),
- ("AMAZON PRIME MEMBER AMAZON.CA", 10.99, 22, "Subscription"),
+ ("SPOTIFY SPOTIFY.COM", 11.29, 4, "Entertainment"),
+ ("NETFLIX.COM NETFLIX.COM", 18.99, 12, "Entertainment"),
+ ("APPLE.COM/BILL TORONTO ON", 3.99, 16, "Entertainment"),
+ ("KOODO MOBILE", 45.20, 10, "Bills"),
+ ("GOODLIFE FITNESS TORONTO ON", 32.99, 1, "Health"),
+ ("AMAZON PRIME MEMBER AMAZON.CA", 10.99, 22, "Shopping"),
  ("OC TRANSPO MONTHLY PASS OTTAWA ON", 135.00, 26, "Transport"),
 ]
 VAR = [          # merchant, category, times a month, low, high, may go on the MasterCard
@@ -211,7 +214,16 @@ def gen_ledgers(rng, spend):
         bal = r2(bal + amt)
         sav.append(dict(date=d, description=desc, amount=r2(amt), balance=bal,
                         statement=f"BMOSAV{ID['bmo_sav']}/{tag(d, BMO_DAY)}", tdesc=tdesc, type=typ))
-    return bmo, rbc, sav, debit_bmo + debit_rbc, visa_tot, mc_tot
+    # A chequing row that is spending (rent, a bill, cash, a bank's fee) is written to spending.csv
+    # too, by the same rule the import uses, so the round trip finds the demo's own rows.
+    paid = []
+    for rows, acct in ((bmo, f"BMO{ID['bmo_chq']}"), (rbc, f"RBC{ID['rbc_chq']}")):
+        for r in rows:
+            if r["type"] in SPENT and r["type"] != "Debit purchase" and r["amount"] < 0:
+                paid.append(dict(date=r["date"], amount=-r["amount"], category=SPENT[r["type"]],
+                                 merchant=payee_of(r["description"]), acct=acct,
+                                 stmt=r["statement"].split("/")[1], via="chequing"))
+    return bmo, rbc, sav, debit_bmo + debit_rbc + paid, visa_tot, mc_tot
 
 # ------------------------------------------------------------------ holdings
 PRICE = {"VEQT": 46.10, "VSC": 24.05, "SGOV": 100.42, "XAW": 44.80, "VCN": 52.30,
@@ -336,7 +348,8 @@ def build(out):
     with W("spending.csv") as f:
         w = csv.writer(f); w.writerow(["date", "amount", "currency", "category", "note"])
         for r in allspend:
-            note = f"{r['merchant']}{' (debit)' if r.get('debit') else ''} [{r['acct']}/{r['stmt']}]"
+            via = "debit" if r.get("debit") else r.get("via")
+            note = f"{r['merchant']}{f' ({via})' if via else ''} [{r['acct']}/{r['stmt']}]"
             w.writerow([iso(r["date"]), f"{r['amount']:.2f}", "CAD", r["category"], note])
     # Keyed the way check_data's D6 looks a merchant up (order ids and city dropped), so the
     # demo passes the same lookup a real import does. Until 2026-09-10 the raw string was
@@ -349,7 +362,7 @@ def build(out):
     J("merchants.json", OrderedDict([
         ("note", "Merchant -> spending category, the only place a category is decided. Look a new statement's merchants up here first; reuse a hit, judge only a miss, and append the miss."),
         ("why", "A merchant string is an abbreviation, not a sentence: a shop with PUBLICATION in its name sold a notebook, not a subscription."),
-        ("rules", ["Subscription means the charge repeats. A brand seen once is never a Subscription; file it as Shopping or Other and mark it to confirm.",
+        ("rules", ["Subscription is not a category: a charge that repeats is marked by the page, whatever it bought. File a merchant by what it sells.",
                    "An entry with confirmed_by is not re-judged; changing it needs the owner and a new confirmed_on.",
                    "Every merchant seen for the first time goes on the report for the owner to confirm."]),
         ("merchants", sorted(seen.values(), key=lambda x: x["match"]))]))
@@ -518,7 +531,7 @@ def build(out):
                             note=f"${P['take_home']:,} after rent, less ${P['invest']:,} to the broker and ${P['everyday']:,} of allowance. This is everything the paycheque actually has left."),
             ],
             bigThreshold=P["big"], leftoverGoesTo="travel",
-            bigThresholdNote="A single transaction at or over this is a big buy: kept out of the allowance and paid from the Big buys fund. Subscriptions are excluded whatever they cost.",
+            bigThresholdNote="A single transaction at or over this is a big buy: kept out of the allowance and paid from the Big buys fund. Only everyday spending can be one, and a subscription never is.",
             leftoverNote="Each closed month adds (allowance - everyday spending) to the funds, and that figure is signed: an over month takes from Big buys first, then Travel.")),
         ("funds", [
             OrderedDict(key="travel", role="topup", name="Travel", color="#4a3aa7", goal=3000, by="2027-03", why="A week away in March 2027",
@@ -538,7 +551,7 @@ def build(out):
     J("profile.json", OrderedDict([
         ("note", "Who this workspace belongs to. The FIRST thing to change when you make it yours: "
                  "the name appears in the browser tab and under the Jade Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. Jade Toad itself is the product, not a setting."),
-        ("schema", 10), ("demo", True), ("owner", P["name"]), ("born", 1995), ("importDay", 26)]))
+        ("schema", 11), ("demo", True), ("owner", P["name"]), ("born", 1995), ("importDay", 26)]))
     J("plan.json", OrderedDict([
         ("note", "Your planning assumptions. `planBase` is the monthly planning spend the FIRE target is built on (× 12 × 25); `skipMonths` are months excluded from every comparison, each with the reason the page shows. `retirement` holds the projection scenarios and the late-life care model; `descriptions` are your own one-liners under the net-worth parts (leave them out and the page describes each part from the register)."),
         ("planBase", int(P["rent"] + P["everyday"])),
@@ -671,7 +684,7 @@ RETIREMENT_DEFAULTS = OrderedDict([
 # README shows these. They are of the demo owner, so they are generated here; S4 checks every
 # image README shows resolves, so a missing shot fails the checks rather than leaving a broken image.
 SHOTS = [("home.png", "main", "home"), ("spending.png", "main", "trends"), ("plan.png", "main", "budget"),
-         ("sources.png", "main", "src"), ("rules.png", "main", "rules")]
+         ("sources.png", "main", "src"), ("portfolio.png", "main", "port")]
 
 
 def screenshots(out):

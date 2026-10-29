@@ -11,11 +11,12 @@ Exit:   0 clean or notes only, 1 if any ERROR
 import csv, json, os, re, sys, collections, datetime
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "update-dashboard", "scripts"))
-from flows import totals as flow_totals, KINDS as FLOW_KINDS   # the plan's sums, read once, there
+from flows import totals as flow_totals, KINDS as FLOW_KINDS, unset as flow_unset   # the plan's sums, read once, there
 import layout                                                   # where each findata file lives
 import loans                                                    # what a borrower still owes, read once, there
 
-CATEGORIES = {"Grocery","Subscription","Dining","Shopping","Transport","Entertainment","Other"}
+from categories import CATEGORIES as _CATS                       # the categories, defined once
+CATEGORIES = set(_CATS)
 # SOURCES and LEDGERS are read from findata/accounts.json, not written out here. A table
 # copied into a script drifts exactly like one copied into a document: accounts.json
 # gained spendTag / stmtTag / ledger on 2026-09-08 so there is one place to change.
@@ -146,7 +147,7 @@ def check(root):
     # than one kind of finding. D14 is the clearest case: "this document covers an account that
     # does not exist" is a rules problem, "ACCT no longer matches accounts.json" is a build one.
     HOME = {"D1":"reconcile", "D7":"reconcile", "D8":"reconcile",
-            "D3":"rules", "D5":"rules", "D6":"rules", "D10":"rules", "D13":"rules", "D14":"rules",
+            "D3":"rules", "D6":"rules", "D10":"rules", "D13":"rules", "D14":"rules",
             "D11":"build", "D12":"build", "D17":"build", "T1":"build", "T2":"hygiene", "D15":"build", "D16":"conform",
             "D2":"hygiene", "D4":"hygiene", "D9":"hygiene", "D18":"hygiene",
             "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D25":"hygiene", "D26":"rules", "D27":"hygiene", "D28":"hygiene"}
@@ -186,7 +187,6 @@ def check(root):
     sp = list(csv.DictReader(open(p, encoding="utf-8-sig"))) if p else []
     if sp:
         seen = collections.Counter()
-        by_brand = collections.defaultdict(list)
         for r in sp:
             # D2 the statement tag is what the dashboard parses the account column from
             m = re.search(r'\[([A-Z0-9]+)/(\d{8})\]\s*$', r["note"])
@@ -194,21 +194,28 @@ def check(root):
                 err("D2", f"spending.csv {r['date']} {r['note'][:40]}: no [SOURCE/YYYYMMDD] tag")
             elif m.group(1) not in SOURCES:
                 err("D2", f"spending.csv {r['date']}: unknown source tag {m.group(1)}")
-            # D3 the seven categories are the shared vocabulary; a new one needs the owner
+            # D3 the categories are the shared vocabulary (categories.py); a new one needs a decision
             if r["category"] not in CATEGORIES:
-                err("D3", f"spending.csv {r['date']}: category '{r['category']}' is not one of the seven")
+                err("D3", f"spending.csv {r['date']}: category '{r['category']}' is not one of the categories")
             seen[(r["date"], r["amount"], r["note"])] += 1
-            by_brand[brand(r["note"])].append(r)
-        # D4 the merge is meant to dedupe on date+amount+merchant
+        # D4 a purchase is written once. Rows identical down to the statement tag come from one
+        # statement, and a statement is imported whole or not at all, so they are that many
+        # purchases: two coffees on one card on one day (2026-10-28, first user: an error that
+        # ended a clean first import with exit 2). What cannot happen honestly is the same
+        # purchase under two statements of one account -- statements of an account do not overlap.
         for k, n in seen.items():
             if n > 1:
-                err("D4", f"spending.csv has {n} identical rows: {k[0]} {k[1]} {k[2][:40]}")
-        # D5 a subscription is a charge that repeats
-        for b, rs in sorted(by_brand.items()):
-            if len(rs) == 1 and rs[0]["category"] == "Subscription":
-                warn("D5", f"{b} is filed as Subscription but appears once ({rs[0]['date']}, "
-                           f"${rs[0]['amount']}). A subscription repeats — confirm before it "
-                           "hardens into the FIRE baseline.")
+                note("D4", f"spending.csv has {n} identical purchases on one statement: "
+                           f"{k[0]} {k[1]} {k[2][:40]} — the statement shows each")
+        by_purchase = collections.defaultdict(set)
+        for (d, a, nt) in seen:
+            m = re.search(r'\[([A-Z0-9]+)/(\d{8})\]\s*$', nt)
+            if m:
+                by_purchase[(d, a, nt[:m.start()].rstrip(), m.group(1))].add(m.group(2))
+        for (d, a, what, src), ends in by_purchase.items():
+            if len(ends) > 1:
+                err("D4", f"spending.csv has {d} {a} {what[:40]} under {len(ends)} statements of "
+                          f"{src} ({', '.join(sorted(ends))}) — one purchase written twice")
         # D24 a refund gives back a purchase: same card, same merchant (or a bank charge for a
         # fee or interest credit), on or before its date, in that purchase's category — and never
         # more than was spent there. One that points at nothing is income or a mistake, and it
@@ -561,6 +568,10 @@ def check(root):
             if f_.get("kind") not in FLOW_KINDS:
                 err("D13", f"funds.json flow {f_.get('name') or f_.get('key')!r}: kind must be one of "
                            f"{', '.join(FLOW_KINDS)}, not {f_.get('kind')!r}")
+            # null is a number the owner has not given yet (flows.unset) -- the page says Not set.
+            # Anything else that is not a number, or a negative one, is a broken row.
+            if f_.get("amount") is None and f_.get("kind") in ("income", "saving", "allowance"):
+                continue
             if not isinstance(f_.get("amount"), (int, float)) or f_["amount"] < 0:
                 err("D13", f"funds.json flow {f_.get('name') or f_.get('key')!r} has no amount")
         # Schema 8: a fund's standing contribution is a saving flow that names the fund. A `monthly`
@@ -577,7 +588,7 @@ def check(root):
                            "the broker nor a fund in this file")
         ft = flow_totals(plan)
         split = ft["committed"] + ft["saving"] + ft["allowance"]
-        if split > ft["income"]:
+        if split > ft["income"] and "takeHome" not in flow_unset(plan):
             err("D13", f"the monthly split asks for ${split:,} against income of ${ft['income']:,}")
         # 2026-09-07: the funds moved off bank cash onto a named Wealthsimple account, so the claim
         # has to be checked against THAT account. A stale backing.balance is the failure that
@@ -924,14 +935,18 @@ def check(root):
                 c = [x.strip() for x in line.strip("|").split("|")]
                 if len(c) >= 3 and re.fullmatch(r"[a-z][a-z0-9_]*", c[0]):
                     rows[c[0]] = (c[1], c[2])          # key -> (label shown, value)
-            n = lambda t: float(re.sub(r"[^\d.]", "", t) or 0)
+            # The sign is kept: a card-only owner's net worth is what the card owes, and the
+            # table writes it "$-170" (or "−$170") -- read as 170 it disagreed with the page
+            # (2026-10-28, first user).
+            n = lambda t: (-1 if re.search(r"[-−]", t) else 1) * float(re.sub(r"[^\d.]", "", t) or 0)
 
             inv = json.loads(re.search(r'^const INVEST = (\{.*?\});$', src, re.M | re.S).group(1))
             cm_t = const_field(src, "FOREIGN", "total")
             cm_r = const_field(src, "FOREIGN", "cadPerUnit")
             nw = inv["netWorth"] + (round(float(cm_t) * float(cm_r)) if cm_t and cm_r else 0)
-            pb = int(re.search(r'const PLAN_BASE_DEFAULT = (\d+)', src).group(1))
-            tgt = pb * 300
+            pbm = re.search(r'const PLAN_BASE_DEFAULT = (\d+|null)', src).group(1)
+            pb = None if pbm == "null" else int(pbm)
+            tgt = (pb or 0) * 300
             fj2 = json.load(open(load(root, "funds.json"), encoding="utf-8"))
             # The fund is found by the role it plays, not by a name: this looked for the literal
             # key "travel", so a workspace whose funds are called anything else crashed the
@@ -946,6 +961,14 @@ def check(root):
                     "dry_powder": inv["dryPct"]}
             if trav:
                 want["travel_goal"] = trav["goal"]
+            # A number never given is Not set in the table, and only then (flows.unset).
+            miss = flow_unset(fj2["plan"])
+            gone = ({"plan_base", "fire_target", "progress", "gap"} if pb is None else set()) \
+                | ({"invest_monthly"} if "invest" in miss else set()) | ({"everyday"} if "everyday" in miss else set())
+            for k in gone:
+                if k in rows and rows[k][1].strip().lower() != "not set":
+                    err("D15", f"FINANCE.md says {rows[k][0]} ({k}) is {rows[k][1]}, but it was never given")
+                want.pop(k, None)
             for k, v in want.items():
                 if k not in rows:
                     err("D15", f"FINANCE.md figures table is missing the row '{k}'")
@@ -959,8 +982,8 @@ def check(root):
             # or the regex just backtracks ("$399k" fails on 399, then happily matches 39).
             sec1 = tail.split("\n## ", 1)[0]
             for k, v in (("net_worth", nw), ("fire_target", tgt), ("gap", tgt - nw),
-                         ("progress", round(port / tgt * 100, 1))):
-                if k not in rows:
+                         ("progress", round(port / tgt * 100, 1) if tgt else 0)):
+                if k not in rows or k in gone:
                     continue
                 label, shown = rows[k]
                 pat = (re.escape(label) + r"\s*\*{0,2}([\d.]+)%") if "%" in shown \
@@ -983,7 +1006,13 @@ def check(root):
         if not lp22:
             continue
         with open(lp22, encoding="utf-8-sig") as fh:
-            blank = [r for r in csv.DictReader(fh) if r.get("date") and not (r.get("type") or "").strip()]
+            rd22 = csv.DictReader(fh)
+            if "type" not in (rd22.fieldnames or []):
+                # The rows may well be typed: a header that does not name the column hides it.
+                err("D22", f"{a['ledger']}: the header has no type column, so no row's type can be read "
+                           "(the next import repairs it)", "hygiene")
+                continue
+            blank = [r for r in rd22 if r.get("date") and not (r.get("type") or "").strip()]
         if blank:
             warn("D22", f"{a['ledger']}: {len(blank)} row(s) with no type ({blank[0]['date']} "
                         f"{blank[0]['description'][:30]!r} …) -- untyped, they are in the balance chain but "

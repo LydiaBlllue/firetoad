@@ -10,6 +10,9 @@ Exit:   0 clean or notes only, 1 if any ERROR
 """
 import re, sys, os, json
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "update-dashboard", "scripts"))
+import layout                                                   # where each findata file lives
+
 # ---------------------------------------------------------------- helpers
 def luminance(hex_):
     c = [int(hex_[i:i+2], 16) / 255 for i in (1, 3, 5)]
@@ -40,6 +43,23 @@ def js_strings(src):
     return out
 
 # ---------------------------------------------------------------- rules
+def _data_file(root, tok):
+    """A findata file this owner may simply not have -- a workspace with no broker has no
+    holdings export, and S4 called the pointers to it broken on a first import (2026-10-28,
+    first user). It counts when it is named where layout puts it (or bare) and a script of the
+    tool reads it by that name, so a typo or a path into the wrong folder still fails."""
+    name = os.path.basename(tok)
+    if "/" in tok and tok != layout.rel(name):
+        return False
+    if not re.search(r'\.(csv|json)$', name):
+        return False
+    for d, _, files in os.walk(os.path.join(root, ".claude", "skills")):
+        for f in files:
+            if f.endswith(".py") and f'"{name}"' in open(os.path.join(d, f), encoding="utf-8").read():
+                return True
+    return False
+
+
 def _exists_somewhere(root, filename):
     """Is this bare filename anywhere in the workspace? Prose mentions it without a path."""
     for d, dirs, files in os.walk(root):
@@ -345,6 +365,8 @@ def check(path):
                 # guards against stale paths broke on a stale path of its own. Walk the tree.
                 if "/" not in tok and _exists_somewhere(root, tok):
                     continue
+                if _data_file(root, tok):
+                    continue
                 err("S4", f"{rname} points at `{tok}`, which does not exist")
 
             # Images too: the hero and the pipeline diagram are handed to the reader by an <img>
@@ -400,7 +422,7 @@ def check(path):
                 if cand.startswith("dashboards/") else ""
             if (os.path.exists(os.path.join(root, cand)) or os.path.exists(os.path.join(skills, sk, cand))
                     or (alias and os.path.exists(alias))
-                    or _exists_somewhere(root, os.path.basename(cand))):
+                    or _exists_somewhere(root, os.path.basename(cand)) or _data_file(root, cand)):
                 continue
             err("S4", f"{doc} points at `{tok}`, which does not exist")
         if real is not None:

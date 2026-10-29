@@ -11,8 +11,12 @@
   --page:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink-2:#52514e; --muted:#75736d;
   --grid:#e1e0d9; --border:rgba(11,11,11,.10); --pill:#efeeea;
   /* --muted must stay >=4.5:1 on --surface; it is used at 10.5-11.5px */
-  --c-grocery:#2a78d6; --c-dining:#eb6834; --c-subscription:#1baf7a; --c-shopping:#eda100;
-  --c-transport:#e87ba4; --c-entertainment:#008300; --c-other:#4a3aa7;
+  /* the categories, in their stack order (categories.py): the eight validated slots, six more, grey */
+  --c-grocery:#2a78d6; --c-dining:#eb6834; --c-housing:#1baf7a; --c-shopping:#eda100;
+  --c-transport:#e87ba4; --c-software:#008300; --c-bills:#6250d6; --c-travel:#e34948;
+  --c-entertainment:#8a5a2b; --c-health:#5bc4d6; --c-family:#c2185b; --c-cash:#7a8b2e;
+  --c-fees:#1f3f74; --c-education:#b07ad6; --c-rest:#a8a69e;
+  --c-other:#4a3aa7;   /* the plan's own parts (DESIGN.md §3), not a category */
   --bar:#2a78d6; --bar-dim:#9ec5f4;
   --headh:92px;   /* sidebar wordmark and page header share this so their rules line up */
 }
@@ -36,6 +40,13 @@ body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system
   color:var(--ink-2);padding:7px 10px;border-radius:8px;cursor:pointer;text-align:left}
 .side button:hover{background:var(--pill)}
 .side button.sel{background:var(--ink);color:#fff;font-weight:600}
+.side details.wait summary{cursor:pointer;list-style:none}
+.side details.wait summary::-webkit-details-marker{display:none}
+.side details.wait summary::after{content:" +";letter-spacing:0}
+.side details.wait[open] summary::after{content:" \2212"}
+.side details.wait button{color:var(--muted)}
+.side details.wait button span{display:flex;flex-direction:column}
+.side details.wait small{font-size:11px;color:var(--muted)}
 .side button .dot-n{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-left:auto}
 .main{flex:1;min-width:0}
 .pghead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;height:var(--headh);
@@ -270,6 +281,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 #acctTable tr.tot td{padding-top:12px;border-top:2px solid var(--border);font-weight:700}
 #acctTable tr.tot td.sub{font-weight:400;color:var(--muted);font-size:12px}
 .alert-row .tag{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--pill);border-radius:4px;padding:1px 5px;vertical-align:1px;margin-right:2px}
+.unset{color:var(--muted);font-weight:500}
 </style>
 </head>
 <body>
@@ -608,17 +620,16 @@ const STMT_END = {};
 const LEDGER_THRU = {};
 const DOC_LATEST = {};
 
-// Fixed category → color-slot mapping (validated palette order; never reassigned by rank)
-const CATS = [
-  {k:"Grocery", c:"var(--c-grocery)"},
-  {k:"Dining", c:"var(--c-dining)"},
-  {k:"Subscription", c:"var(--c-subscription)"},
-  {k:"Shopping", c:"var(--c-shopping)"},
-  {k:"Transport", c:"var(--c-transport)"},
-  {k:"Entertainment", c:"var(--c-entertainment)"},
-  {k:"Other", c:"var(--c-other)"}
-];
+// The categories (categories.py): key, name, group and colour. A colour follows the category and
+// is never reassigned by rank; the categories past the seven validated slots share the rest band.
+// The group decides what a row counts for (FINANCE.md §3a): only `everyday` is measured against
+// the allowance, and `time` (tuition: it ends) is never in the spending FIRE is planned on.
+const CATS = [];
 const CCOL = Object.fromEntries(CATS.map(c=>[c.k,c.c]));
+const CGRP = Object.fromEntries(CATS.map(c=>[c.k,c.g]));
+const catName = k => (CATS.find(c => c.k === k) || {n:k}).n;
+const inAllowance = e => (CGRP[e.category] || "everyday") === "everyday";
+const inTarget    = e => CGRP[e.category] !== "time";
 const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const SUB_KEYS = [];
 
@@ -652,6 +663,8 @@ const fmt = n => { const r = Math.round(n) + 0; return (r < 0 ? "\u2212" : "") +
 const fmt2 = n => (n <= -0.005 ? "\u2212" : "") + "$" + Math.abs(n).toLocaleString("en-CA",{minimumFractionDigits:2,maximumFractionDigits:2});
 const monthOf = ym => SPENDING.filter(e => e.date.startsWith(ym) && e.currency === "CAD");
 const monthTotal = ym => monthOf(ym).reduce((s,e) => s + e.amount, 0);
+// What FIRE is planned on: every month's spending but what ends (tuition), FINANCE.md §3a.
+const monthTarget = ym => monthOf(ym).filter(inTarget).reduce((s,e) => s + e.amount, 0);
 function ymShift(ym,d){let[y,m]=ym.split("-").map(Number);m+=d;if(m<1){m=12;y--}if(m>12){m=1;y++}return y+"-"+String(m).padStart(2,"0");}
 // Months from today as a label ("Aug 2039").
 const dTxt = m => { if(m === null) return "beyond 25y"; const [Y,M] = TODAY.slice(0,7).split("-").map(Number); const t = M-1+m, yy = Y + Math.floor(t/12); return MN[t%12]+" "+yy; };
@@ -748,22 +761,46 @@ function pageFlags(){
   // The plan page: red when the split asks for more than the paycheque, amber when a fund is
   // short of what it has promised. Both are things you decide, not things the data decides.
   const fr = fundRun();
-  if(COMMITTED_NOW + INVM + ALW + BIGM + TMON > PLAN.takeHome
+  if((COMMITTED_NOW + INVM + ALW + BIGM + TMON > PLAN.takeHome && !unset("takeHome"))
      || backingGroups([fr.t, fr.b]).some(g => g.claim > g.b.balance)) f.budget = "#d03b3b";
   else if(fr.b < 0 || fr.t < TFUND.goal) f.budget = "#c98500";
   return f;
 }
+// What a page needs before it has anything to show. A workspace with only a credit card is a
+// complete product: the spending pages in full, and a page still waiting for its data folded
+// into one group at the foot of the sidebar, saying what it waits for (2026-10-28, first user:
+// Income, Investing and the FIRE pages were empty frames). The page comes back by itself the day
+// its data arrives; there is no setting.
+const INVESTED = () => PORTFOLIO > 0 || !!INVEST.investable;
+const WAITS = {
+  income: () => (INVEST.cashflow || []).length ? "" : "a chequing statement",
+  wsinc:  () => (WSINC || []).length ? "" : "a broker's activity",
+  port:   () => INVESTED() ? "" : "a broker's holdings",
+  perf:   () => INVESTED() ? "" : "a broker's holdings",
+  hold:   () => INVESTED() ? "" : "a broker's holdings",
+  fire:   () => INVESTED() ? "" : "something invested",
+  coast:  () => INVESTED() ? "" : "something invested",
+};
+const waitsFor = k => WAITS[k] ? WAITS[k]() : "";
+let waitOpen = false;
 function drawNav(){
   const f = pageFlags();
+  const btn = i => '<button data-k="'+i.k+'" class="'+(i.k===curPage?"sel":"")+'"><span>'+i.n+'</span>'
+    + (f[i.k] ? '<span class="dot-n" style="background:'+f[i.k]+'"></span>' : '') + '</button>';
+  const waiting = PAGES.filter(i => waitsFor(i.k));
+  if(waiting.some(i => i.k === curPage)) waitOpen = true;
+  const fold = !waiting.length ? "" : '<details class="wait"'+(waitOpen ? " open" : "")+'><summary class="sec">Waiting for data</summary>'
+    + '<div class="grp">' + waiting.map(i => '<button data-k="'+i.k+'" class="'+(i.k===curPage?"sel":"")+'"><span>'+i.n
+      + '<small>with '+waitsFor(i.k)+'</small></span></button>').join("") + '</div></details>';
   $("sideNav").innerHTML = NAV.map((g, gi) => {
-    if(!g.sec && gi > 0) return '<div class="grp foot">' + g.items.map(i =>
-      '<button data-k="'+i.k+'" class="'+(i.k===curPage?"sel":"")+'"><span>'+i.n+'</span></button>').join("") + '</div>';
+    if(!g.sec && gi > 0) return fold + '<div class="grp foot">' + g.items.map(btn).join("") + '</div>';
+    const items = g.items.filter(i => !waitsFor(i.k));
+    if(!items.length) return "";
     const head = !g.sec ? '' : '<div class="sec">'+g.sec+'</div>';
-    return head + '<div class="grp">' + g.items.map(i => {
-      return '<button data-k="'+i.k+'" class="'+(i.k===curPage?"sel":"")+'"><span>'+i.n+'</span>'
-        + (f[i.k] ? '<span class="dot-n" style="background:'+f[i.k]+'"></span>' : '') + '</button>';
-    }).join("") + '</div>';
+    return head + '<div class="grp">' + items.map(btn).join("") + '</div>';
   }).join("");
+  const det = $("sideNav").querySelector("details.wait");
+  if(det) det.ontoggle = () => { waitOpen = det.open; };
   $("sideNav").querySelectorAll("button").forEach(b => b.onclick = () => setPage(b.dataset.k));
 }
 // A page merged into another or taken off: an old link or saved state still lands.
@@ -802,7 +839,7 @@ const GLOSSARY = {
   equity:         {w:"equity", pos:"noun", def:"The part of something you own outright once what is borrowed against it is taken off.", eg:"A $500k home with a $300k mortgage is $200k of equity.", also:["in_property"]},
   pay_yourself_first: {w:"pay yourself first", pos:"phrase", def:"Moving your saving out on payday, before any spending, so saving does not depend on what is left over."},
   sinking_fund:   {w:"sinking fund", pos:"noun", def:"Money put aside a little at a time for a known future cost, such as a trip or a new laptop.", also:["big_buy"]},
-  subscription:   {w:"subscription", pos:"noun", def:"A charge that repeats on a schedule. A purchase seen once is not a subscription, whatever the merchant is called."},
+  subscription:   {w:"subscription", pos:"noun", def:"A charge that comes back at the same price month after month, whatever it buys: a phone plan as well as a streaming service. A purchase seen once is never one."},
   median:         {w:"median", pos:"noun", def:"The middle value once a list is sorted. Unlike the average, one unusual month barely moves it.", eg:"The median of 1, 2 and 30 is 2."},
   inflation:      {w:"inflation", pos:"noun", def:"The rise in prices over time, so the same money buys less each year.", also:["real_return"]},
   tfsa:           {w:"TFSA", pos:"noun", def:"Tax-Free Savings Account. Investments grow tax-free and nothing is taxed when you take money out. How much you can put in is capped by your contribution room.", also:["contribution_room","rrsp"]},
@@ -841,7 +878,6 @@ const GLOSSARY = {
   sequence_risk:  {w:"sequence-of-returns risk", pos:"noun", def:"Bad years soon after you start taking money out do far more damage than the same bad years later on.", also:["drawdown","backtest"]},
   backtest:       {w:"backtest", pos:"noun", def:"Running a plan through real past years to see how it would have done.", also:["sequence_risk"]},
   investment_income: {w:"investment income", pos:"noun", def:"What your investments pay you while you still hold them: dividends, interest and securities lending, after any tax withheld.", eg:"A fund paying $40 of dividends, less $6 withheld, is $34 of investment income.", not:"A gain from selling, which is not paid until you sell.", also:["dividend","securities_lending","withholding_tax"]},
-  savings_rate:   {w:"savings rate", pos:"noun", def:"The share of what comes in that you keep instead of spending.", f:"savings rate = (income \u2212 spending) \u00f7 income", eg:"$4,000 in and $3,000 spent is a 25% savings rate.", also:["pay_yourself_first"]},
   unrealized_gain:{w:"unrealized gain", pos:"noun", def:"How much more an investment is worth today than you paid for it, while you still hold it. It is not money until you sell.", f:"unrealized gain = market value \u2212 book value", eg:"Bought for $1,000, worth $1,200 today: a $200 unrealized gain.", also:["book_value","market_value"]},
   long_term_care: {w:"long-term care", pos:"noun", def:"Help with daily living in later life, at home or in a facility, usually paid for privately."},
   // Words this page coined
@@ -858,8 +894,8 @@ const GLOSSARY = {
   in_property:    {own:1, w:"In property", pos:"on this page", def:"What a property is worth minus what is still owed on it. You reach it only by selling or borrowing against it.", also:["equity"]},
   held_abroad:    {own:1, w:"Held abroad", pos:"on this page", def:"Money in another country. Bringing it home takes conversion, transfer limits and time.", also:["exchange_rate","liquidity"]},
   planning_figure:{own:1, w:"planning figure", pos:"on this page", def:"The monthly spending your FIRE target is built on. You set it by hand; what you actually spend only calibrates it.", also:["fire_target","median"]},
-  big_buy:        {own:1, w:"big buy", pos:"on this page", def:"A single purchase at or above your threshold, paid from the Big buys fund. A subscription never counts as one.", also:["sinking_fund","subscription"]},
-  kept:           {own:1, w:"Kept", pos:"on this page", def:"Income minus spending over the same months. Money moved to savings or investments counts as kept.", also:["savings_rate"]},
+  big_buy:        {own:1, w:"big buy", pos:"on this page", def:"A single everyday purchase at or above your threshold, paid from the Big buys fund. Rent, a bill, tuition and a subscription never count as one.", also:["sinking_fund","subscription"]},
+  kept:           {own:1, w:"Kept", pos:"on this page", def:"Income minus spending over the same months. Money moved to savings or investments counts as kept.", also:["pay_yourself_first"]},
   repayment:      {own:1, w:"Paid back", pos:"on this page", def:"Money someone returns on a loan you made. It lowers what they owe you, and it is never income.", also:["owed_to_you","lent_out"]},
   bucket:         {own:1, w:"bucket", pos:"on this page", def:"A group of holdings your investing rules are written about, such as dry powder. What no bucket claims falls into the last one.", also:["dry_powder","target_band"]},
   everyday:       {own:1, w:"Everyday", pos:"on this page", def:"The monthly allowance for everything under the big-buy threshold. Inside it, no purchase needs a reason.", also:["big_buy","pay_yourself_first"]},
@@ -1099,14 +1135,17 @@ function renderHome(){
       numx(fmt(PORTFOLIO), split(grow.by), "Every account you hold to grow. Set-aside accounts and bank cash are not in it.", true),
       !INVEST.investable ? "Nothing invested yet" : term("dry_powder", "Dry powder")+" "+INVEST.dryPct+"%") +
     card(term("fire", "FIRE")+" progress",
-      numx(pctP+"%", [["Portfolio", fmt(PORTFOLIO)], ["Target", fmt(target)]], "The target is your planning figure × 12 × 25."),
-      crossP ? "On track for "+dTxt(crossP) : "") +
+      unset("planBase") ? notSet("planBase")
+        : numx(pctP+"%", [["Portfolio", fmt(PORTFOLIO)], ["Target", fmt(target)]], "The target is your planning figure × 12 × 25."),
+      !unset("planBase") && crossP ? "On track for "+dTxt(crossP) : "") +
     card(dep ? "Invested in "+ymLabel(dep.ym) : "Invested this month",
-      dep ? numx(fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>', [["Planned", fmt(FUNDS.plan.invest)], ["Arrived", fmt(dep.amt)]], "Two transfers of "+fmt(half)+", counted the day "+BROKER+" receives them.") : "\u2014",
-      dep ? (dep.nRule >= 2 ? "Both transfers arrived \u2713" : dep.nRule === 1 ? "One of two transfers arrived" : "No transfer arrived yet") : "") +
+      unset("invest") ? (dep ? numx(fmt(dep.amt), [], "Counted the day "+BROKER+" receives it. The plan has no investing amount yet.") : notSet("invest"))
+        : dep ? numx(fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>', [["Planned", fmt(FUNDS.plan.invest)], ["Arrived", fmt(dep.amt)]], "Two transfers of "+fmt(half)+", counted the day "+BROKER+" receives them.") : "\u2014",
+      dep && !unset("invest") ? (dep.nRule >= 2 ? "Both transfers arrived \u2713" : dep.nRule === 1 ? "One of two transfers arrived" : "No transfer arrived yet") : "") +
     card("Free to spend",
-      numx(fmt(freeNow)+' <span class="cap-v">of '+fmt(ALW)+'</span>', [["Allowance", fmt(ALW)], ["Spent in "+ymLabel(curYM), "\u2212"+fmt(spentNow)]], "Everyday spending only. Big buys come from their own fund.", true),
-      fmt(perDay)+" a day for "+left+" day"+(left > 1 ? "s" : ""));
+      unset("everyday") && ALW === PLAN.everyday ? notSet("everyday")
+        : numx(fmt(freeNow)+' <span class="cap-v">of '+fmt(ALW)+'</span>', [["Allowance", fmt(ALW)], ["Spent in "+ymLabel(curYM), "\u2212"+fmt(spentNow)]], "Everyday spending only. Big buys come from their own fund.", true),
+      unset("everyday") && ALW === PLAN.everyday ? "" : fmt(perDay)+" a day for "+left+" day"+(left > 1 ? "s" : ""));
 
   // Net worth, both cuts in one card: a row per purpose, its bar as long as its share and
   // coloured by reach; the row's number opens the accounts in it. Then total assets and what is
@@ -1156,6 +1195,20 @@ const fundMonthly = key => key ? flowSum("saving", f => f.to === key) : 0;
 const fundMonthlyNote = key => (FLOWS.find(f => f.kind === "saving" && f.to === key) || {}).note
                              || "No standing contribution. Leftover allowance is what tops it up.";
 PLAN.takeHomeNote = (FLOWS.find(f => f.kind === "income") || {}).note || "";
+// A number the owner never gave is null in the plan, not 0: the first setup that skipped its
+// questions showed take-home pay of $0 and a birth year of 1990 as if they were facts (2026-10-28,
+// first user). Wherever one of these would be shown, the page says Not set and how to set it.
+// Read at render time: PLAN_BASE_DEFAULT and BORN are declared further down.
+const UNSET_HOW = {takeHome:"your take-home pay", invest:"what goes to investing each month",
+  everyday:"your everyday allowance", planBase:"the monthly spending to plan FIRE on",
+  born:"the year you were born"};
+const unset = k =>
+    k === "takeHome" ? FLOWS.some(f => f.kind === "income" && flowNow(f) && f.amount == null)
+  : k === "invest"   ? FLOWS.some(f => f.kind === "saving" && (f.to || "broker") === "broker" && f.amount == null)
+  : k === "everyday" ? FLOWS.some(f => f.kind === "allowance" && f.amount == null)
+  : k === "planBase" ? PLAN_BASE_DEFAULT === null && !(PLAN_BASE > 0)
+  : k === "born"     ? BORN === null : false;
+const notSet = k => numx('<span class="unset">Not set</span>', [], "Never given. Say "+UNSET_HOW[k]+" to set it.");
 const COMMITTED     = FLOWS.filter(f => f.kind === "committed" && flowNow(f));
 const COMMITTED_NOW = COMMITTED.reduce((s, f) => s + f.amount, 0);
 // Funds are found by the ROLE they play in the waterfall, not by name: `topup` catches whatever
@@ -1184,8 +1237,8 @@ let BIGM = stNum0("bigm", BMON);
 const refundOf   = e  => SPENDING.filter(p => p.amount > 0 && p.acct === e.acct && p.date <= e.date
                                        && merchantOf(p.note) === merchantOf(e.note)).pop();
 const isBig      = e  => e.amount < 0 ? !!refundOf(e) && isBig(refundOf(e))
-                                      : e.amount >= PLAN.bigThreshold && e.category !== "Subscription";
-const everydayOf = ym => monthOf(ym).filter(e => !isBig(e)).reduce((s,e) => s + e.amount, 0);
+                                      : e.amount >= PLAN.bigThreshold && inAllowance(e) && !e.sub;
+const everydayOf = ym => monthOf(ym).filter(e => inAllowance(e) && !isBig(e)).reduce((s,e) => s + e.amount, 0);
 const bigOf      = ym => monthOf(ym).filter(isBig);
 const monthsBetween = (a,b) => { const [y1,m1] = a.split("-").map(Number), [y2,m2] = b.split("-").map(Number); return (y2-y1)*12 + (m2-m1); };
 const merchantOf = note => note.replace(/\s*\[[^\]]*\]\s*$/, "").replace(/\s+/g, " ").trim();
@@ -1254,7 +1307,8 @@ function renderFree(F){
   const open = viewYM >= TODAY.slice(0,7);
   const frac = de/dim;
   $("freeLab").textContent = "Free to spend";
-  $("freeBig").innerHTML = numx('<span style="color:' + (left < 0 ? "#d03b3b" : "var(--ink)") + '">'
+  if(unset("everyday") && ALW === PLAN.everyday){ $("freeBig").innerHTML = notSet("everyday"); $("freeFill").style.width = "0%"; }
+  else $("freeBig").innerHTML = numx('<span style="color:' + (left < 0 ? "#d03b3b" : "var(--ink)") + '">'
     + (left < 0 ? "\u2212" + fmt(-left) : fmt(left)) + '</span>'
     + ' <span style="font-size:13px;font-weight:400;color:var(--muted)">of ' + fmt(ALW) + '</span>',
     [["Allowance", fmt(ALW)], ["Everyday spending", "\u2212" + fmt2(ed)]],
@@ -1313,14 +1367,14 @@ function renderSplit(F){
   });
   const rows = alloc.concat(rest > 0 ? [UNALLOC(rest)] : []);
   $("splitRows").innerHTML = metaList(
-    [["Take-home pay", numx(fmt(PLAN.takeHome), [], PLAN.takeHomeNote)]].concat(
+    [["Take-home pay", unset("takeHome") ? notSet("takeHome") : numx(fmt(PLAN.takeHome), [], PLAN.takeHomeNote)]].concat(
     rows.map(a => ['<span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'
         + a.c + ';margin-right:7px;vertical-align:middle"></span>' + (a.tm ? term(a.tm, a.k) : a.k),
-      a.pk ? '<span class="bud-edit num" data-pk="' + a.pk + '">' + fmt(a.v) + '</span>' : numx(fmt(a.v), [], a.d)]))
+      a.pk ? '<span class="bud-edit num" data-pk="' + a.pk + '">' + (a.v === 0 && unset(a.pk === "alw" ? "everyday" : a.pk === "invm" ? "invest" : "") ? '<span class="unset">Not set</span>' : fmt(a.v)) + '</span>' : numx(fmt(a.v), [], a.d)]))
   );
   const edited = [ALW !== PLAN.everyday, INVM !== PLAN.invest, BIGM !== BMON].filter(Boolean).length;
   $("splitNote").innerHTML =
-    (used > PLAN.takeHome
+    (used > PLAN.takeHome && !unset("takeHome")
       ? noteBox("This split asks for <b>" + fmt(used) + "</b> a month against take-home pay of <b>"
           + fmt(PLAN.takeHome) + "</b>. Lower the allowance or the investing transfer.")
       : "")
@@ -1342,8 +1396,8 @@ function drawFlow(){
   $("flowLab").textContent = ym ? "Where the paycheque went" : "Where the paycheque goes";
   const alloc = planAlloc(), used = alloc.reduce((s,a) => s + a.v, 0), rest = PLAN.takeHome - used;
   const segs = alloc.filter(a => a.v > 0).concat(rest > 0 ? [UNALLOC(rest)] : []);
-  const ev = ym ? monthOf(ym).filter(e => !isBig(e)) : [];
-  const net = CATS.map(c => ({k:c.k, c:c.c, v:ev.filter(e => e.category === c.k).reduce((s,e) => s + e.amount, 0)}));
+  const ev = ym ? monthOf(ym).filter(e => inAllowance(e) && !isBig(e)) : [];
+  const net = CATS.map(c => ({k:c.k, n:c.n, c:c.c, v:ev.filter(e => e.category === c.k).reduce((s,e) => s + e.amount, 0)}));
   const byCat = net.filter(c => c.v > 0.5);
   const back = -net.filter(c => c.v < 0).reduce((s,c) => s + c.v, 0);
   const gross = byCat.reduce((s,c) => s + c.v, 0), spent = gross - back;
@@ -1387,7 +1441,7 @@ function drawFlow(){
   if(right.length){
     let o = 0;
     right.forEach(n => { g += band(X[1] + NW, a.y + o, X[2], n.y, n.h, n.c,
-      n.k + "<br>" + fmt(n.v) + " in " + ymFull(ym) + (n.rest ? "" : "<br>Click to see each purchase"),
+      (n.n || n.k) + "<br>" + fmt(n.v) + " in " + ymFull(ym) + (n.rest ? "" : "<br>Click to see each purchase"),
       n.rest ? "" : "hit" + (n.k === catSel ? " on" : "")); o += n.h; });
   }
   const node = (n, x, lab) => '<rect x="'+x+'" y="'+n.y+'" width="'+NW+'" height="'+n.h+'" rx="2" fill="'+n.c+'"/>' + lab;
@@ -1396,7 +1450,7 @@ function drawFlow(){
   left.forEach(n => g += node(n, X[0], lbl(X[0] - 8, n.y + n.h/2, "end", n.k, fmt(n.v))));
   mid.forEach(n => g += node(n, X[1], lbl(X[1] + NW + 8, n.y + n.h/2, "start", n.k,
     n === a && ym ? fmt(ALW) + " planned · " + fmt(spent) + " spent" : fmt(n.v))));
-  right.forEach(n => g += node(n, X[2], lbl(X[2] + NW + 8, n.y + n.h/2, "start", n.k, fmt(n.v), n.rest ? null : n.k)));
+  right.forEach(n => g += node(n, X[2], lbl(X[2] + NW + 8, n.y + n.h/2, "start", n.n || n.k, fmt(n.v), n.rest ? null : n.k)));
   svg.setAttribute("viewBox", "0 0 " + W + " " + H);
   svg.innerHTML = g;
   svg.querySelectorAll("path[data-tip]").forEach(p => hoverable(p, p.dataset.tip));
@@ -1558,14 +1612,14 @@ function renderYear(){
   svg.querySelectorAll("rect[data-s]").forEach(rc => {
     const s = segMeta[Number(rc.dataset.s)];
     hoverable(rc, s.back
-      ? ymFull(s.m)+"<br>"+s.back.map(b => b.k+" refunds \u2212"+fmt2(b.v)).join("<br>")+"<br>Net "+fmt2(s.net)+" after them"
-      : ymFull(s.m)+"<br>"+s.cat+" "+fmt2(s.v)+"<br>"+Math.round(pc(s.v, s.tot))+"% of that month");
+      ? ymFull(s.m)+"<br>"+s.back.map(b => catName(b.k)+" refunds \u2212"+fmt2(b.v)).join("<br>")+"<br>Net "+fmt2(s.net)+" after them"
+      : ymFull(s.m)+"<br>"+catName(s.cat)+" "+fmt2(s.v)+"<br>"+Math.round(pc(s.v, s.tot))+"% of that month");
   });
   $("yearLegend").innerHTML =
     '<div class="leg-row all'+(yearCat?"":" on")+'" data-cat=""><span class="nm">All</span></div>'
-    + CATS.map(c =>
+    + CATS.filter(c => byMonthCat.some(a => a[c.k])).map(c =>
     '<div class="leg-row'+(yearCat===c.k?" on":(yearCat?" dim":""))+'" data-cat="'+c.k+'">'
-    +'<span class="dot" style="background:'+c.c+'"></span><span class="nm">'+c.k+'</span></div>').join("");
+    +'<span class="dot" style="background:'+c.c+'"></span><span class="nm">'+c.n+'</span></div>').join("");
   $("yearLegend").querySelectorAll(".leg-row[data-cat]").forEach(el =>
     el.onclick = () => { const k = el.dataset.cat; yearCat = (!k || yearCat === k) ? null : k; renderYear(); });
 }
@@ -1729,12 +1783,12 @@ function renderCatPage(){
   const nWin = catWindow(viewYM).length;
   $("catStats").innerHTML =
     card("Spent in "+ymLabel(viewYM), numx(fmt(total), [], es.length+" purchase"+(es.length === 1 ? "" : "s")+" in "+rows.length+" categor"+(rows.length === 1 ? "y" : "ies")+"."), "")
-    + (rows.length ? card("Biggest category", rows[0].k, fmt(rows[0].v)+", "+pct(rows[0].v)+"% of the month") : "")
+    + (rows.length ? card("Biggest category", catName(rows[0].k), fmt(rows[0].v)+", "+pct(rows[0].v)+"% of the month") : "")
     + card("Against a usual month",
         diff === null ? "\u2014" : numx((diff >= 0 ? "+" : "\u2212") + fmt(Math.abs(diff)),
           [["This month", fmt(total)], ["A usual month", "\u2212"+fmt(usual)]],
           "A usual month is the median of the last "+nWin+" full months. Months you set aside as unusual are left out.", true),
-        diff === null ? "Needs three full months" : diff > 0 && drivers.length ? "Mostly " + drivers.slice(0,2).map(r => r.k).join(" and ") : "",
+        diff === null ? "Needs three full months" : diff > 0 && drivers.length ? "Mostly " + drivers.slice(0,2).map(r => catName(r.k)).join(" and ") : "",
         diff !== null && diff > 0 ? "hi" : "");
 
   const mx = Math.max(...rows.map(r => Math.abs(r.v)), 1);
@@ -1743,7 +1797,7 @@ function renderCatPage(){
   $("catRows").innerHTML = rows.length ? rows.map(r =>
       '<button class="cat-row" data-k="'+r.k+'" aria-selected="'+(catSel === r.k ? "true" : "false")+'">'
       + '<span style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+r.col+'"></span>'
-      + '<span class="nm">'+r.k+'</span>'
+      + '<span class="nm">'+catName(r.k)+'</span>'
       + '<span class="bar-wrap"><span class="bar" style="width:'+(Math.max(r.v,0)/mx*100)+'%;background:'+r.col+'"></span></span>'
       + '<span class="v num'+(isHigh(r) ? " hi" : "")+'">'+fmt2(r.v)+'</span>'
       + '</button>').join("")
@@ -1756,7 +1810,7 @@ function renderCatPage(){
 
   const sel = rows.find(r => r.k === catSel);
   const win = catWindow(viewYM);
-  $("catDetLab").textContent = sel ? sel.k : "Detail";
+  $("catDetLab").textContent = sel ? catName(sel.k) : "Detail";
   $("catDetail").innerHTML = !sel
     ? '<div class="empty">Nothing to show for '+ymLabel(viewYM)+' '+viewYM.slice(0,4)+'.</div>'
     : '<div class="big num" style="margin-bottom:8px">'+fmt2(sel.v)+'</div>'
@@ -1794,7 +1848,7 @@ function renderYr(){
   const rows = CATS.map(c => ({k:c.k, col:c.c, v:byCat[c.k]||0})).filter(r => r.v > 0).sort((a,b) => b.v - a.v);
   const mx = Math.max(...rows.map(r => r.v), 1);
   $("yrSpendCats").innerHTML = rows.length ? rows.map(r =>
-    '<div class="inc-row"><span class="dot" style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+r.col+'"></span><span class="nm" style="width:96px">'+r.k+'</span><div class="bar-wrap"><div class="bar" style="width:'+(pc(r.v, mx))+'%;background:'+r.col+'"></div></div><span class="v num">'+fmt2(r.v)+'</span></div>').join("")
+    '<div class="inc-row"><span class="dot" style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+r.col+'"></span><span class="nm" style="width:110px">'+catName(r.k)+'</span><div class="bar-wrap"><div class="bar" style="width:'+(pc(r.v, mx))+'%;background:'+r.col+'"></div></div><span class="v num">'+fmt2(r.v)+'</span></div>').join("")
     : '<div class="empty">No records in '+viewYear+'</div>';
 
   const inc = ICATS.map(c => [c.k, cfy.reduce((s,m)=>s+(m[c.f]||0),0), c.c]).filter(x => x[1] > 0);
@@ -1885,7 +1939,7 @@ function renderBaseline(){
   const vals = []; const firstClosed = ymShift(TODAY.slice(0,7),-1);
   let cm = firstClosed < covEnd ? firstClosed : covEnd;      // never look at a month a card has not reported
   for(let i=0;i<24 && vals.length<3;i++){
-    const v = monthTotal(cm);
+    const v = monthTarget(cm);
     if(v > 0 && !skipped(cm)) vals.unshift({m:cm, v});
     cm = ymShift(cm,-1);
   }
@@ -1906,12 +1960,9 @@ const TREND_INC = "#2a78d6", TREND_SP = "#eb6834";
 
 function renderSubs(){
   const map = {};
-  SPENDING.forEach(e => {
-    const hay = ((e.note||"")+" "+e.category).toLowerCase();
-    let hit = SUB_KEYS.find(s => s.k.some(k => hay.includes(k)));
-    if(!hit && e.category === "Subscription") hit = {name:(e.note||"Other subscription")};
-    if(hit) (map[hit.name] = map[hit.name]||[]).push(e);
-  });
+  // A subscription is a charge that repeats, measured at build time (SUB_KEYS, and `sub` on each
+  // of its rows) -- whatever it bought, so a phone plan is here as well as a streaming service.
+  SPENDING.forEach(e => { if(e.sub) (map[e.sub] = map[e.sub]||[]).push(e); });
   // Active = net paid > 0 (not fully refunded), last event not a refund, last charge within 45 days of latest data
   const dataEnd = SPENDING.map(e => e.date).sort().pop();
   const rows = Object.entries(map).map(([name, items]) => {
@@ -2014,7 +2065,7 @@ const PLAN_BASE_DEFAULT = 0;
 const DRIFT_FLAG = 0.10;                  // measured vs planned gap that is worth flagging
 let PLAN_BASE = stNum("base", (function(){
   try{ const v = Number(localStorage.getItem("plan_base")); if(v > 0) return v; }catch(e){}
-  return PLAN_BASE_DEFAULT;
+  return PLAN_BASE_DEFAULT || 0;
 })());
 function savePlanBase(){
   try{ localStorage.setItem("plan_base", String(PLAN_BASE)); }catch(e){}
@@ -2022,14 +2073,21 @@ function savePlanBase(){
 }
 // What the statements say the same figure would be, for comparison only.
 const measuredBase = () => baselineMed ? baselineMed + COMMITTED_KEEP : null;
-const baseDrift = () => { const m = measuredBase(); return m === null ? null : (m - PLAN_BASE) / PLAN_BASE; };
+const baseDrift = () => { const m = measuredBase(); return m === null || !(PLAN_BASE > 0) ? null : (m - PLAN_BASE) / PLAN_BASE; };
 function renderFire(){
+  if(unset("planBase")){
+    // No planning figure, no target: every number on these pages is a share of it.
+    $("fireStats").innerHTML = '<div class="card"><div class="lab">'+term("fire_target", "Target")+'</div><div class="big num">'+notSet("planBase")+'</div></div>';
+    $("fireProgLab").textContent = "Progress"; $("fireHero").innerHTML = notSet("planBase");
+    $("fireFill").style.width = "0%"; $("fireCap").textContent = "";
+  }
   const I = INVEST;
   const adjBase = PLAN_BASE;
   const target = adjBase * 12 * 25;   // 4% rule: annual spend × 25
   const pct = Math.round(PORTFOLIO / target * 1000) / 10;
   const gap = Math.round(target - PORTFOLIO);
   const fcard = (lab, val) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div></div>';
+  if(!unset("planBase")){
   $("fireStats").innerHTML =
       fcard(term("fire", "FIRE")+" progress", numx(pct+"%", [["Portfolio", fmt(PORTFOLIO)], ["Target", fmt(target)]], "The portfolio as a share of the target."))
     + fcard("Still to go", numx(fmt(gap), [["Target", fmt(target)], ["Portfolio", "\u2212"+fmt(PORTFOLIO)]], "", true))
@@ -2038,20 +2096,22 @@ function renderFire(){
   $("fireHero").textContent = fmt(PORTFOLIO) + " / " + fmt(target);
   $("fireFill").style.width = Math.min(pct, 100) + "%";
   $("fireCap").textContent = "";
-  $("baseHero").innerHTML = '<span class="plan-edit num" id="planEdit" title="Click to change">'+fmt(PLAN_BASE)+'</span> / mo';
+  }
+  $("baseHero").innerHTML = '<span class="plan-edit num" id="planEdit" title="Click to change">'
+    + (unset("planBase") ? '<span class="unset">Not set</span>' : fmt(PLAN_BASE)) + '</span> / mo';
   // An edited figure lives in the browser, not in this file. Rebuilding the dashboard would
   // silently drop back to the built-in default, and the numbers would move with no explanation.
   // So say it out loud whenever the two differ.
   $("baseLab").innerHTML = term("planning_figure", "Planning figure");
-  $("baseDrift").innerHTML = PLAN_BASE === PLAN_BASE_DEFAULT ? "" : noteBox(
-    "Changed here to <b>"+fmt(PLAN_BASE)+"</b>; the plan still says "+fmt(PLAN_BASE_DEFAULT)
+  $("baseDrift").innerHTML = PLAN_BASE === (PLAN_BASE_DEFAULT || 0) ? "" : noteBox(
+    "Changed here to <b>"+fmt(PLAN_BASE)+"</b>; the plan still says "+(PLAN_BASE_DEFAULT === null ? "nothing" : fmt(PLAN_BASE_DEFAULT))
     + ". It resets at the next update. Say the new number to keep it.");
   const drift = baseDrift();
   const usedM = [...$("baseMonths").querySelectorAll(".bm-row span:first-child")].map(x => x.textContent.trim());
   const skipM = Object.keys(MONTH_SKIP).filter(m => MONTHS.includes(m));
   $("baseCap").innerHTML = metaList([
-    ["Cards and debit, a usual month", baselineMed ? numx(fmt(baselineMed), [], term("median", "Median")+" of the three most recent usable months.") : "Not enough months yet"],
-    ["Fixed costs the cards never show", numx("+ "+fmt(COMMITTED_KEEP), [], "Rent, a mortgage or a loan paid from chequing, and rent that starts at FIRE: the ones that continue after FIRE.")],
+    ["Spending, a usual month", baselineMed ? numx(fmt(baselineMed), [], term("median", "Median")+" of the three most recent usable months.") : "Not enough months yet"],
+    ["Fixed costs not in spending", numx("+ "+fmt(COMMITTED_KEEP), [], "Rent that starts at FIRE, and a mortgage or loan payment: the ones that continue after FIRE. Rent and bills paid today are in spending already; tuition is not counted, it ends.")],
     ["A comparable month", measuredBase() ? numx(fmt(measuredBase()), baselineMed ? [["A usual month", fmt(baselineMed)], ["Fixed costs", fmt(COMMITTED_KEEP)]] : [], "", true) : "\u2014"],
     drift === null ? null
       : ["Against the planning figure",
@@ -2081,7 +2141,25 @@ function renderFire(){
     inp.onkeydown = e => { if(e.key === "Enter") commit(); if(e.key === "Escape"){ done = true; renderFire(); } };
   };
   renderBaseChart();
+  // The drawdown needs both a target and an age; without one of them its controls and charts
+  // have nothing to draw, so only the sentence that says what is missing stays.
+  const drawCard = $("coastChart").closest(".card");
+  const drawOff = on => {
+    drawCard.querySelectorAll(":scope > :not(#drawSay)").forEach(e => e.hidden = on);
+    $("btChart").closest(".card").hidden = on;
+    $("coastSay").closest(".card").hidden = on;
+    $("fireTraj").closest(".card").hidden = unset("planBase");
+  };
+  drawOff(unset("planBase") || unset("born"));
+  if(unset("planBase")){
+    $("drawSay").innerHTML = "Whether the money lasts is measured against a "+term("planning_figure", "planning figure")+": "+notSet("planBase");
+    return;
+  }
   renderTrajectory(target);
+  if(unset("born")){
+    $("drawSay").innerHTML = "The drawdown runs by age: "+notSet("born");
+    return;
+  }
   renderCoast(target, adjBase*12);
 }
 
@@ -2597,7 +2675,7 @@ function renderBaseChart(){
   const counted = [...$("baseMonths").querySelectorAll(".bm-row span:first-child")].map(x => x.textContent.trim());
   const isCounted = m => counted.includes(ymFull(m));
   const W=940, H=250, padL=54, padR=10, padT=22, padB=28;
-  const vals = months.map(monthTotal), mx = Math.max(...vals, baselineMed)*1.12;
+  const vals = months.map(monthTarget), mx = Math.max(...vals, baselineMed)*1.12;
   const step = (W-padL-padR)/months.length, bw = Math.min(56, step*0.58);
   const y = v => H-padB - v/mx*(H-padT-padB);
   let out = "";
@@ -2615,7 +2693,7 @@ function renderBaseChart(){
   out += '<line x1="'+padL+'" y1="'+y(baselineMed)+'" x2="'+(W-padR)+'" y2="'+y(baselineMed)+'" stroke="#d03b3b" stroke-width="2" stroke-dasharray="6 4"/>'
       +  '<text x="'+(W-padR)+'" y="'+(y(baselineMed)-7)+'" text-anchor="end" font-size="12" class="num" fill="#d03b3b" font-weight="700">median '+fmt(baselineMed)+'</text>';
   const svg = $("baseChart"); svg.innerHTML = out;
-  svg.querySelectorAll("rect[data-m]").forEach(r => hoverable(r, ymFull(r.dataset.m)+"<br>"+fmt2(monthTotal(r.dataset.m))
+  svg.querySelectorAll("rect[data-m]").forEach(r => hoverable(r, ymFull(r.dataset.m)+"<br>"+fmt2(monthTarget(r.dataset.m))
     + (isCounted(r.dataset.m) ? "<br>counted in the median" : "")
     + (skipped(r.dataset.m) ? "<br>left out — "+MONTH_SKIP[r.dataset.m] : "")));
   $("baseChartCap").innerHTML = '<div class="cap">'+ymFull(months[vals.indexOf(Math.max(...vals))])+' was the highest month, at '+fmt(Math.max(...vals))+'; one month does not move a median.</div>';
@@ -2625,13 +2703,12 @@ function renderBaseChart(){
 // Subscriptions: a list of charges does not say what they cost you over a year.
 function renderSubStats(){
   const yr = TODAY.slice(0,4);
-  const subs = SPENDING.filter(e => e.date.startsWith(yr) && e.category === "Subscription");
+  const subs = SPENDING.filter(e => e.date.startsWith(yr) && e.sub);
   const ytd = subs.reduce((a,e) => a + e.amount, 0);
   const closed = MONTHS.filter(m => m <= covEnd).length || 1;
   const perMo = ytd/closed;
-  // The biggest single subscription, by the brands SUB_KEYS knows. This card used to name one
-  // owner's vendors ("AI tools").
-  const byBrand = SUB_KEYS.map(b => ({name:b.name, v: subs.filter(e => b.k.some(k => (e.note||"").toLowerCase().includes(k))).reduce((a,e)=>a+e.amount,0)}))
+  // The biggest single subscription. This card used to name one owner's vendors ("AI tools").
+  const byBrand = SUB_KEYS.map(b => ({name:b.name, v: subs.filter(e => e.sub === b.name).reduce((a,e)=>a+e.amount,0)}))
                           .sort((a,b)=>b.v-a.v)[0];
   const base = PLAN_BASE;
   const card = (lab, val, status) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status ? '<div class="cap">'+status+'</div>' : "")+'</div>';
@@ -2996,14 +3073,11 @@ function renderYearInsights(){
   const byCat = {};
   yes.forEach(e => byCat[e.category] = (byCat[e.category]||0) + e.amount);
   const top = Object.entries(byCat).sort((a,b) => b[1]-a[1])[0];
-  if(top) ins.push({s:"n", t:"<b>"+top[0]+"</b> is the biggest category: "+fmt(top[1])+", "+Math.round(pc(top[1], ytd))+"% of the year."});
-  const subYtd = byCat["Subscription"]||0;
-  // The biggest subscription brand, read off SUB_KEYS (derived from merchants.json) rather
-  // than a vendor list written into the page.
+  if(top) ins.push({s:"n", t:"<b>"+catName(top[0])+"</b> is the biggest category: "+fmt(top[1])+", "+Math.round(pc(top[1], ytd))+"% of the year."});
+  // The charges that repeat (`sub`, measured at build time), and the biggest of them.
   const byBrand = {};
-  yes.filter(e => e.category === "Subscription").forEach(e => {
-    const hay = (e.note||"").toLowerCase(), hit = SUB_KEYS.find(s => s.k.some(k => hay.includes(k)));
-    const nm = hit ? hit.name : "Other"; byBrand[nm] = (byBrand[nm]||0) + e.amount; });
+  yes.filter(e => e.sub).forEach(e => { byBrand[e.sub] = (byBrand[e.sub]||0) + e.amount; });
+  const subYtd = Object.values(byBrand).reduce((s,v) => s + v, 0);
   const topBrand = Object.entries(byBrand).sort((a,b) => b[1]-a[1])[0];
   if(subYtd > 0) ins.push({s:"w", t:"<b>"+term("subscription", "Subscriptions")+"</b> cost "+fmt(subYtd)+", "+Math.round(pc(subYtd, ytd))+"% of spending."
     + (topBrand && topBrand[0] !== "Other" ? " The biggest is "+topBrand[0]+", at "+fmt(topBrand[1])+"." : "")});
@@ -3108,6 +3182,9 @@ const IV = (function(){
            numx(String(nTick), [["At "+DATA.broker, String(freeSyms.size)], ...(FGN.rows.length ? [["Funds abroad", String(FGN.rows.length)]] : [])], "Cash is not counted.", true));
   }
   function renderMeta(){
+    // No exchange rate is the supported way to say nothing is held in another currency (a
+    // workspace with no broker has none): there is no rate line to show (2026-10-29).
+    if(!FX.asof){ $("invMeta").innerHTML = ""; return; }
     $("invMeta").innerHTML = metaList([
       [term("exchange_rate", "Rate"), FX.rate + " on " + dLong(FX.asof) + (fxAge > 30 ? ", older than a month" : ""), fxAge > 30 ? "hi" : ""],
       ["Held in US dollars", numx(fmt(usdExp), [], pctS(pc(usdExp, cadInv)) + " of what is held at " + DATA.broker + ".")],
