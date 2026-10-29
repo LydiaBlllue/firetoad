@@ -225,6 +225,11 @@
 
 - At the foot of the sidebar, in no group: every finance term and every coined word (§5b′),
   finance terms first, grouped by letter.
+- A concept entry may carry a second layer, **Why it works**: folded under the entry on this
+  page only, never in the hover. A few short paragraphs on the reason behind the concept, then
+  *What people get wrong*. Like the entry it is the same for anyone — no owner's numbers, no
+  advice ("you should"), and no figure that changes by year (a yearly contribution limit), since
+  the page would carry it stale. Entries that share one reason share one text.
 
 ## 5. Interaction
 

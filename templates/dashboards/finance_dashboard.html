@@ -170,6 +170,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .gl-letter{font-size:12px;font-weight:700;color:var(--muted);margin:16px 0 4px;letter-spacing:.06em}.gl-letter:first-child{margin-top:0}
 .gl-entry{padding:10px 0;border-bottom:1px solid var(--grid);font-size:13px;line-height:1.55;max-width:680px;transition:background .3s}.gl-entry:last-child{border-bottom:none}
 .gl-entry p{margin:0}.gl-entry p+p{margin-top:4px}.gl-entry .t-h{display:flex;align-items:baseline;gap:7px}.gl-entry .t-h b{font-size:14px;color:var(--ink)}.gl-entry .t-h i{font-size:11.5px;color:var(--muted)}.gl-entry .f{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--grid);border-radius:6px;padding:2px 8px}.gl-entry .k{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:8px}.gl-entry .eg,.gl-entry .also{color:var(--ink-2)}.gl-entry .here{border:0;padding:0;margin-top:4px}.gl-entry.hit{background:var(--grid)}
+.gl-entry .why{margin:6px 0 4px}.gl-entry .why summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--ink-2)}.gl-entry .why[open] summary{margin-bottom:6px}.gl-entry .why p+p{margin-top:6px}.gl-entry .why .k{display:block;margin-top:10px}.gl-entry .why ul{margin:2px 0 0;padding-left:18px;color:var(--ink-2)}.gl-entry .why li+li{margin-top:3px}
 .both-sum{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:12px;font-size:13px}.both-sum span.it{display:flex;align-items:center;gap:7px}.both-sum i{width:9px;height:9px;border-radius:3px}.both-sum .num{font-weight:600}
 .ph-r .s .gap{display:inline-block;width:14px}
 .empty{color:var(--muted);font-size:13px;padding:14px 0}
@@ -842,9 +843,9 @@ const GLOSSARY = {
   subscription:   {w:"subscription", pos:"noun", def:"A charge that comes back at the same price month after month, whatever it buys: a phone plan as well as a streaming service. A purchase seen once is never one."},
   median:         {w:"median", pos:"noun", def:"The middle value once a list is sorted. Unlike the average, one unusual month barely moves it.", eg:"The median of 1, 2 and 30 is 2."},
   inflation:      {w:"inflation", pos:"noun", def:"The rise in prices over time, so the same money buys less each year.", also:["real_return"]},
-  tfsa:           {w:"TFSA", pos:"noun", def:"Tax-Free Savings Account. Investments grow tax-free and nothing is taxed when you take money out. How much you can put in is capped by your contribution room.", also:["contribution_room","rrsp"]},
-  rrsp:           {w:"RRSP", pos:"noun", def:"Registered Retirement Savings Plan. What you put in lowers your taxable income now; what you take out is taxed as income that year.", also:["tfsa","taxed_to_take_out"]},
-  fhsa:           {w:"FHSA", pos:"noun", def:"First Home Savings Account. What you put in is deductible like an RRSP; money taken out for a first home is tax-free like a TFSA. It stays open fifteen years at most.", also:["tfsa","rrsp"]},
+  tfsa:           {w:"TFSA", pos:"noun", def:"Tax-Free Savings Account. Investments grow tax-free and nothing is taxed when you take money out. How much you can put in is capped by your contribution room.", why:"registered", also:["contribution_room","rrsp"]},
+  rrsp:           {w:"RRSP", pos:"noun", def:"Registered Retirement Savings Plan. What you put in lowers your taxable income now; what you take out is taxed as income that year.", why:"registered", also:["tfsa","taxed_to_take_out"]},
+  fhsa:           {w:"FHSA", pos:"noun", def:"First Home Savings Account. What you put in is deductible like an RRSP; money taken out for a first home is tax-free like a TFSA. It stays open fifteen years at most.", why:"registered", also:["tfsa","rrsp"]},
   non_registered: {w:"non-registered account", pos:"noun", def:"An ordinary investment account with no tax shelter. Dividends, interest and gains are taxed each year."},
   contribution_room: {w:"contribution room", pos:"noun", def:"How much a registered account still lets you put in. Room you do not use carries forward."},
   portfolio:      {w:"portfolio", pos:"noun", def:"All the investments a person holds, taken together.", here:"The accounts you hold to grow. Money set aside for a goal is not in it.", also:["for_fire","asset_class"]},
@@ -869,9 +870,9 @@ const GLOSSARY = {
   exchange_rate:  {w:"exchange rate", pos:"noun", def:"How much of one currency buys one unit of another.", eg:"1.39 Canadian dollars to one US dollar."},
   fire:           {w:"FIRE", pos:"noun", def:"Financial Independence, Retire Early: saving and investing until the returns can pay your living costs, so work becomes optional.", also:["fire_target","four_pct"]},
   fire_target:    {w:"FIRE target", pos:"noun", def:"The portfolio that can pay your yearly spending indefinitely, by the 4% rule.", f:"yearly spending × 25", eg:"$40k a year needs $1M.", also:["four_pct","planning_figure"]},
-  four_pct:       {w:"4% rule", pos:"noun", def:"A finding from US market history: taking 4% of the portfolio in the first year, then the same amount raised with inflation, lasted at least 30 years in almost every past period.", also:["fire_target","withdrawal_rate"]},
+  four_pct:       {w:"4% rule", pos:"noun", def:"A finding from US market history: taking 4% of the portfolio in the first year, then the same amount raised with inflation, lasted at least 30 years in almost every past period.", why:"withdrawal", also:["fire_target","withdrawal_rate"]},
   real_return:    {w:"real return", pos:"noun", def:"A return after inflation.", f:"≈ return − inflation", eg:"7% with 2% inflation is about 5% real.", also:["inflation","compound_growth"]},
-  compound_growth:{w:"compound growth", pos:"noun", def:"Growth earned on earlier growth, so money grows faster the longer it is left alone.", also:["real_return"]},
+  compound_growth:{w:"compound growth", pos:"noun", def:"Growth earned on earlier growth, so money grows faster the longer it is left alone.", why:"compound", also:["real_return"]},
   coast_fire:     {w:"coast FIRE", pos:"noun", def:"Having enough invested that, with nothing more added, growth alone reaches your target by the age you want to stop.", also:["fire_target"]},
   drawdown:       {w:"drawdown", pos:"noun", def:"The years when you live off your investments by taking money out.", not:"a market drawdown, a fall from a peak", also:["withdrawal_rate","sequence_risk"]},
   withdrawal_rate:{w:"withdrawal rate", pos:"noun", def:"How much you take out in a year, as a share of the portfolio.", f:"yearly withdrawal ÷ portfolio", also:["four_pct","drawdown"]},
@@ -906,6 +907,42 @@ const GLOSSARY = {
 // The register's axes in the page's own words (Home's net-worth card, the Accounts table).
 const ROLE_TERM = {grow:"for_fire", "set-aside":"set_aside", buffer:"cash", owed:"owed_to_you", none:"other_assets"};
 const REACH_TERM = {today:"spendable_today", costs:"taxed_to_take_out", spoken:"promised_to_a_goal", lent:"lent_out", locked:"in_property", abroad:"held_abroad"};
+// The second layer of a concept entry: why it works and what people get wrong. Shown only on the
+// Glossary page, folded; the hover keeps the one-sentence entry. Several entries may share one.
+const WHY = {
+  registered: {p:[
+    "All three answer one question: when is the tax paid?",
+    "<b>TFSA: on the way in.</b> You put in money that has already been taxed. Growth and withdrawals are never taxed.",
+    "<b>RRSP: on the way out.</b> What you put in comes off this year’s taxable income. Everything you take out later is taxed as income in the year you take it.",
+    "<b>FHSA: never, if the money buys a first home.</b> It is deductible going in, like an RRSP, and tax-free coming out, like a TFSA. It is the only account with both, which is why it is limited to a first home, $8,000 a year and $40,000 in all.",
+    "<b>If the tax rate is the same at both ends, the TFSA and the RRSP come out identical.</b> Say you earn $1,000 and the tax rate is 30%. In a TFSA, $700 goes in, doubles to $1,400, and you take out $1,400. In an RRSP, $1,000 goes in, doubles to $2,000, and 30% is taxed on the way out: $1,400 again. The RRSP comes out ahead only when your rate on the way out is lower than your rate on the way in, and the TFSA comes out ahead when it is higher. (This assumes the RRSP’s tax refund is invested too.)"],
+   wrong:[
+    "A TFSA is not only a savings account. It can hold stocks and funds.",
+    "Money taken out of a TFSA gives its room back, but not until 1 January. Putting it back in the same year can be an over-contribution, taxed at 1% a month.",
+    "Money taken out of an RRSP loses that room for good, and tax is withheld at the time.",
+    "FHSA room starts in the year you open the account. Earlier years do not count. FHSA money you do not use for a home can move to an RRSP without using RRSP room.",
+    "An RRSP has to become a RRIF or an annuity by the end of the year you turn 71."]},
+  withdrawal: {p:[
+    "Why not just withdraw the average return? Because the average is not what a retiree lives through. Money taken out during a crash means selling low, and those shares are gone before the recovery comes. So the safe rate is set by the <b>worst years in history to start</b>, not by the average year. In US history, the worst were retirements that began in the late 1960s, just before a decade of high inflation.",
+    "<b>The rule is about the first year.</b> You take 4% of the starting portfolio. After that you take the same dollar amount, raised with inflation, whatever markets do. It is not 4% of each year’s balance.",
+    "<b>Its limits.</b> It was tested on 30-year retirements, on a mix of US stocks and bonds, with no fees, using the history of one of the best-performing markets of the century. A longer retirement needs a lower rate: studies of 40- to 60-year retirements often land around 3–3.5%. ×25 is the same as 4%; ×30 is about 3.3%."],
+   wrong:[
+    "“4% lasts forever.” It was tested on 30 years.",
+    "“The rule says the money runs out at 30 years.” In many past periods there was more left after 30 years than at the start. 4% is the rate that survived the worst periods."]},
+  compound: {p:[
+    "Each year’s growth is earned on the whole balance, including the growth from earlier years. So the curve bends upward, and the late years add far more than the early ones.",
+    "<b>Example:</b> $10,000 growing 5% a year after inflation becomes $16,289 after 10 years, $26,533 after 20 and $43,219 after 30. <b>The last ten years add $16,686, more than the first twenty combined.</b> That is why time matters more than amount: a dollar invested ten years earlier gets an extra decade at the steep end of the curve.",
+    "<b>Rule of 72:</b> the years it takes to double ≈ 72 ÷ the yearly rate. At 5% that is about 14 years; at 8%, about 9.",
+    "<b>It works against you too.</b> A 1% yearly fee takes about a quarter of what you would have had after 30 years. Credit card interest compounds. So does inflation: at 2% a year, money loses half its buying power in about 36 years."],
+   wrong:[
+    "Expecting a straight line. Compound growth describes the long-run average. Real markets get there through good years and bad ones."]},
+};
+function whyHtml(key){
+  const y = WHY[key]; if(!y) return "";
+  return '<details class="why"><summary>Why it works</summary>' + y.p.map(x => '<p>'+x+'</p>').join("")
+    + (y.wrong ? '<p class="k">What people get wrong</p><ul>' + y.wrong.map(x => '<li>'+x+'</li>').join("") + '</ul>' : "")
+    + '</details>';
+}
 // A term on the page: dotted underline, hover for the entry, click for the Glossary page.
 function term(key, text){
   const g = GLOSSARY[key];
@@ -946,7 +983,7 @@ function renderGlossary(){
     let letter = "";
     return list.sort((a,b) => GLOSSARY[a].w.toLowerCase().localeCompare(GLOSSARY[b].w.toLowerCase())).map(k => {
       const g = GLOSSARY[k], L = g.w[0].toUpperCase(), head = L !== letter ? (letter = L, '<div class="gl-letter">'+L+'</div>') : "";
-      return head + '<div class="gl-entry" id="g-'+k+'">'+entryHtml(k)
+      return head + '<div class="gl-entry" id="g-'+k+'">'+entryHtml(k) + (g.why ? whyHtml(g.why) : "")
         + (g.also ? '<p class="also">See also '+g.also.map(a => term(a)).join(", ")+'</p>' : "") + '</div>';
     }).join("");
   };
