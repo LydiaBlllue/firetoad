@@ -17,12 +17,23 @@ anywhere and no app: a folder of plain CSV and JSON, and one self-contained HTML
 
 ## 2. Who it is for
 
+**The positioning** (decided 2026-10-29): *for Chinese newcomers working in Canada who want to
+retire early — their money spread across a few banks, a broker and accounts back in China —
+Jade Toad reads their own statements once a month and makes one page that says whether the plan
+still holds. Every number reconciles; no bank connection, nothing typed by hand.* This is where
+it starts, not where it stops: the first users come from the owner's friends and from Chinese-
+language social media, and the money abroad in one figure is what no nearby tool does
+([`docs/competitors.md`](docs/competitors.md)). The wider audience below is the long run.
+
 **The target user** (decided 2026-10-28): someone in Canada working toward financial
 independence (FIRE — enough invested to live off it), with a paycheque, accounts at a bank the
 parsers read, and a broker, who wants to know each month whether the plan still holds. Not
 someone who only wants to see where their spending went; tools with a lower entry cost already
 do that well, and this one's reason to exist is the plan, the portfolio and numbers that
 reconcile.
+
+Open: the page is in English (DESIGN.md); whether this audience needs it in Chinese is not
+decided.
 
 - **One owner, one workspace.** Not a household ledger and not a service: a workspace is one
   person's folder, and the tool is the repository that folder is an instance of.
@@ -188,8 +199,11 @@ The full rules are DESIGN.md §5b and §5b′.
 
 - **Not financial advice.** It shows the owner's own rules checked against their own data; it
   recommends nothing.
-- **Not connected to any bank.** No credentials are stored or typed by the tool; the owner signs
-  in themselves, and statements are files.
+- **Not connected to any bank — yet.** No credentials are stored or typed by the tool; the owner
+  signs in themselves, and statements are files. This is where things stand, not a principle
+  (decided 2026-10-29): statements are the way in because no free, safe connection to Canadian
+  banks was available when the tool was built. A connection the owner authorises themselves is
+  welcome once one exists.
 - **Not real-time.** It is monthly by design. A number is as of a stated day.
 - **Not a budget with category caps.** One allowance, and everything under it is guilt-free.
 - **Not mobile, not dark.** Desktop at 1120px and wider, light theme only.
@@ -197,6 +211,9 @@ The full rules are DESIGN.md §5b and §5b′.
   their rate.
 - **Not multi-user.** One owner per workspace; money in the owner's login that is not theirs is
   kept out of every figure.
+
+How this sits beside the open-source tools nearby (Actual, Firefly III, Beancount and others) is
+[`docs/competitors.md`](docs/competitors.md), a dated survey.
 
 ## 10. Known gaps between this file and the pages
 

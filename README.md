@@ -8,6 +8,9 @@
 
 **Your money, on one page, kept honest by a set of checkers.**
 
+**[Open the live demo →](https://lydiablllue.github.io/jade-toad/)** a made-up owner's page, the
+same file a fresh clone opens to, with nothing to download.
+
 Once a month you drop your bank statements and broker exports into a folder and say
 *"update dashboards"*. Claude Code reads them, checks that every statement adds up, files every
 purchase, rebuilds the dashboard and tells you what changed. No server, no bank login, no app:

@@ -10,9 +10,38 @@ fault caught, then one squashed commit on `main`.
 Items marked *(first user)* came from the first person other than the owner to set the tool up
 from scratch: one credit card, nine statements, a cloud session.
 
+## The first release — by 2026-11-29
+
+v1.1 and v1.2 are the first release: the version a friend can set up alone and the one that is
+announced. Four weeks, one outcome each (positioning: PRODUCT.md §2).
+
+| week | what | done when |
+|---|---|---|
+| 1 · 10-29 → 11-04 | v1.1 shipped · the live demo · the positioning in PRODUCT.md | one link opens the full demo |
+| 2 · 11-05 → 11-11 | the core of v1.2 · three to five friends found, **and their banks asked first** | a list of friends and their banks |
+| 3 · 11-12 → 11-18 | v1.2 finished · a fresh setup run end to end · the first two friends set up, each report in `feedback/` | two friends see their own page within 20 minutes |
+| 4 · 11-19 → 11-29 | the friends' P0s fixed · v1.2 released · the first post: the demo link and a one-minute recording | announced |
+
+- **The basics come first** (2026-10-29). Limited features, not rough ones: a friend sets up
+  alone, the first import reconciles with no false alarm, every purchase gets a category to
+  confirm, and net worth, spending and the FIRE target are right on their own data with every
+  checker clean. A release that misses one of these is not announced.
+- **The risk is the banks.** The parsers read RBC and BMO; a friend at another bank is read by
+  hand, slower and less trusted. If most of the friends bank elsewhere, week 3 writes that
+  bank's parser instead.
+- **Not in this month**: v1.3 and later, a bank or broker connection, the browser-only
+  experiment, the monthly import panel's public release.
+- **The test** is the second month: whether the friends come back for the import around the
+  next import day (PRODUCT.md §2, *What success looks like*).
+
 ## v1.1 — shipped 2026-10-29
 
 Merged into `main`; what it carries is in CHANGELOG, 1.1.
+
+## Between v1.1 and v1.2
+
+- **A live demo, one click away.** The demo owner's page is published on GitHub Pages from
+  `main`, and the README's first screen links to it, so seeing the product needs no download.
 
 ## v1.2 — 2026-11-24 — a first setup that works for someone else
 
@@ -81,3 +110,10 @@ Merged into `main`; what it carries is in CHANGELOG, 1.1.
   computer. A path for someone on the web or a phone only — statements uploaded, the page built
   in the cloud — has to keep the promise that a statement a parser reads never leaves the
   owner's hands, so it waits until that can be kept.
+- **Updates between imports, from a connection the owner authorises** (to try). Two free
+  personal-use routes, each owner bringing their own key: Plaid's Trial plan for banks (real
+  data, US and Canada, ten connections; whether a given Canadian bank is on it is unconfirmed)
+  and SnapTrade Personal for brokers (Wealthsimple listed). First step: confirm the owner's banks
+  are on the Trial list, then a local experiment. The key stays out of `findata/` and out of the
+  repository, and statements stay the way in for anyone who does not connect. See
+  [`docs/competitors.md`](docs/competitors.md) and PRODUCT.md §9.
