@@ -44,7 +44,8 @@ def stage(root, dst):
     # OWNER.md is optional (a workspace may not have written one yet); README names it.
     # .gitignore too: S4 exempts the files an owner writes and the tool deliberately does not ship
     # (setup-answers.json), and it learns which those are from there (2026-09-13).
-    for f in ("CLAUDE.md", "DESIGN.md", "FINANCE.md", "README.md", "OWNER.md", ".gitignore"):
+    # CHANGELOG.md, ROADMAP.md and PRODUCT.md: README links to them, and S4 resolves every link.
+    for f in ("CLAUDE.md", "DESIGN.md", "FINANCE.md", "README.md", "OWNER.md", ".gitignore", "CHANGELOG.md", "ROADMAP.md", "PRODUCT.md"):
         if os.path.exists(os.path.join(root, f)):
             shutil.copy2(os.path.join(root, f), dst)
     # README names these folders in prose and S4 checks that every path it hands the reader
@@ -237,6 +238,37 @@ def m_committed_missing(r):
         d["plan"]["flows"].append({"key": "car", "kind": "committed", "name": "Car loan",
                                    "amount": 410, "until": "2029-06", "afterFire": "drop"})
     edit_json(r, layout.rel("funds.json"), f)
+def m_fx_stale(r):
+    # A rate months older than the statements around it. The demo is judged against its own
+    # newest data rather than the calendar (so a clone checks clean), and that clock must still
+    # see a rate that rotted inside it.
+    edit_json(r, layout.rel("fx.json"), lambda d: d.__setitem__("asof", "2026-06-01"))
+# The setup's data guard (setup/scripts/guard.py). Runner kind "guard": the mutation makes the
+# staged copy a git checkout with a remote, the way a clone of the public repository is, lets the
+# setup's own step write .gitignore and the hook, and then tries to commit. The demo's profile has
+# to go through (a guard that refuses everything would also "fire"); the owner's has to be refused.
+def m_guard_data(r):
+    g = lambda *a: subprocess.run(["git", "-C", r, "-c", "user.name=Emma Roy", "-c", "user.email=emma@example.com", *a],
+                                  capture_output=True, text=True)
+    g("init", "-q"); g("remote", "add", "origin", "https://github.com/example/jade-toad.git")
+    sys.path.insert(0, os.path.join(r, ".claude", "skills", "setup", "scripts"))
+    import importlib
+    import scaffold
+    importlib.reload(scaffold)
+    import contextlib, io
+    with contextlib.redirect_stdout(io.StringIO()):
+        scaffold.keep_private(r, "2026-11-01")
+    if "findata/" not in open(os.path.join(r, ".gitignore"), encoding="utf-8").read().splitlines():
+        return "setup did not add findata/ to .gitignore"
+    prof = layout.rel("profile.json")
+    g("add", "-f", prof)
+    c = g("commit", "-q", "-m", "demo")
+    if c.returncode != 0:
+        return "the demo's own profile was refused too:\n" + c.stdout + c.stderr
+    edit_json(r, prof, lambda d: d.pop("demo"))
+    g("add", "-f", prof)
+    c = g("commit", "-q", "-m", "mine")
+    return c.stdout + c.stderr + ("" if c.returncode else "\n(committed — nothing refused it)")
 # The parsers (update-dashboard/parsers). A fixture is one of the demo owner's own statements
 # rendered back into the text shape the real one has (tools/fixtures.py); the fault is a
 # statement whose printed total disagrees with its rows — the parser has to say so, not
@@ -250,9 +282,6 @@ def m_class_missing(r):
 def m_class_unknown(r):
     # A kind of asset the page has no slice for.
     edit_json(r, layout.rel("rules.json"), lambda d: d["assetClass"].__setitem__(next(iter(d["assetClass"])), "property"))
-def m_principle_unknown(r):
-    # A rule naming a check nobody wrote: it would silently drop off the Investing overview.
-    edit_json(r, layout.rel("rules.json"), lambda d: d.__setitem__("principles", [{"check": "neverWritten", "name": "A rule nobody checks"}]))
 def m_bench_other(r):
     # The owner names another fund and the prices on file are still the old one's: the
     # Performance page would compare against a fund nobody chose any more.
@@ -264,8 +293,8 @@ def m_returns_gap(r):
     # A year lost from the middle of the history: the backtest would run 1973 straight into 1975.
     edit_json(r, layout.rel("returns.json"), lambda d: d["years"].pop(len(d["years"]) // 2))
 def m_rules_drift(r):
-    # rules.json is the strategy; the page copies it. The copy going stale means the Rules page
-    # is checking the portfolio against a band nobody chose any more.
+    # rules.json is the strategy; the page copies it. The copy going stale means the page groups
+    # the portfolio by rules nobody chose any more.
     edit_json(r, layout.rel("rules.json"), lambda d: d.__setitem__("maxHoldings", 99))
 
 
@@ -410,7 +439,6 @@ CASES = [
     ("D23", "a borrower paid back more than was owed",      m_loan_overpaid,   "find"),
     ("D25", "an ETF held with no kind of asset",            m_class_missing,   "find"),
     ("D25", "an asset class the page has no slice for",     m_class_unknown,   "find"),
-    ("D26", "a principle naming a check the page lacks",   m_principle_unknown, "find"),
     ("D27", "the benchmark changed, the prices did not",    m_bench_other,     "find"),
     ("D27", "the benchmark's prices stop before the newest snapshot", m_prices_stale, "find"),
     ("D28", "a year is missing from the history of returns", m_returns_gap,  "find"),
@@ -419,6 +447,8 @@ CASES = [
     ("D24", "a refund larger than was ever spent there",    m_refund_too_much,   "find"),
     ("D24", "a refund filed in another category than its purchase", m_refund_wrong_category, "find"),
     ("P1",  "a statement whose rows do not add up to its total", m_parse_tampered, "parse"),
+    ("G1",  "real data staged for a repository with a remote", m_guard_data,     "guard"),
+    ("D9",  "an exchange rate months older than the data around it", m_fx_stale, "find"),
     ("D14", "a document covers an account that is gone",    m_bad_cover,       "find"),
     ("D14", "SUBMITTED key with no matching document",      m_submitted_orphan,"find"),
     ("D14", "SOURCES written out instead of derived",       m_sources_literal, "find"),
@@ -529,8 +559,140 @@ def credit_balance_check(ws):
                                       "Emma Roy", overpay=100.0))
     ok, n, detail = parse_one(ws, path, "rbc_visa")
     if ok and n == 3 and "new balance -100.00" in detail:
-        return ["  ✓ parsers: a Visa statement in credit (CREDIT BALANCE, no NEW BALANCE) read and reconciled"]
-    return [f"  ✗ parsers: a Visa statement in credit: {detail} — expected 3 rows closing at -100.00"]
+        out = ["  ✓ parsers: a Visa statement in credit (CREDIT BALANCE, no NEW BALANCE) read and reconciled"]
+    else:
+        out = [f"  ✗ parsers: a Visa statement in credit: {detail} — expected 3 rows closing at -100.00"]
+    # A Mastercard prints the same thing as "Total balance $100.00 CR" (a first user's card,
+    # 2026-10), and the statement after it opens in credit: "Previous total balance … CR".
+    got = []
+    for name, start, end, prev, rows, over, want_n, want in (
+            ("mc_credit.pdf", datetime.date(2026, 9, 21), datetime.date(2026, 10, 20), 50.0,
+             [{"date": "2026-10-04", "description": "COFFEE SHOP", "amount": 12.34}], 100.0, 3, "-100.00"),
+            ("mc_from_credit.pdf", datetime.date(2026, 10, 21), datetime.date(2026, 11, 20), -100.0,
+             [{"date": "2026-11-02", "description": "BOOK STORE", "amount": 30.0}], 0.0, 1, "-70.00")):
+        p = os.path.join(ws, "_fixtures", name)
+        write_pdf(p, fixtures.bmo_mastercard("5518", start, end, prev, rows, "Emma Roy", overpay=over))
+        ok, n, detail = parse_one(ws, p, "bmo_mastercard")
+        got.append(ok and n == want_n and f"total balance {want}" in detail)
+        if not got[-1]:
+            out.append(f"  ✗ parsers: a Mastercard statement in credit ({name}): {detail} — expected {want_n} rows closing at {want}")
+    if all(got):
+        out.append("  ✓ parsers: a Mastercard closing in credit, and the next one opening in credit (balances ending in CR), read and reconciled")
+    return out
+
+
+def wrap_check(ws):
+    """A first user's chequing statements were all refused (2026-10): a long description wrapped
+    so its amounts landed on the second or third line, and pypdf read '1 ,215.05' and
+    '3, 000.00'. Render a BMO and an RBC statement with both, and expect every row back, signed
+    and reconciled, with the whole description."""
+    if not os.path.exists(os.path.join(ws, "tools", "fixtures.py")):
+        return []
+    sys.path.insert(0, os.path.join(ws, "tools"))
+    import fixtures
+    from pdfgen import write_pdf
+    rows = [{"date": "2026-10-03", "description": "PAYROLL DEPOSIT EXAMPLE CO", "amount": 3000.0, "split": ", "},
+            {"date": "2026-10-09", "description": "INTERAC e-Transfer Sent SOMEONE WITH A LONG NAME CA2Kx7Q",
+             "amount": -1215.05, "wrap": 2, "split": " ,"},
+            {"date": "2026-10-14", "description": "Bill payment CITY OF EXAMPLE PROPERTY TAX", "amount": -82.10, "wrap": 1}]
+    bal = 1000.0
+    for r in rows:
+        bal = round(bal + r["amount"], 2); r["balance"] = bal
+    start, end = datetime.date(2026, 10, 1), datetime.date(2026, 10, 31)
+    out, good = [], 0
+    for parser, pages in (("bmo_banking", fixtures.bmo_banking("Primary Chequing", "4471", start, end, 1000.0, rows, "Emma Roy")),
+                          ("rbc_banking", fixtures.rbc_banking("1234", start, end, 1000.0, rows, "Emma Roy"))):
+        p = os.path.join(ws, "_fixtures", f"wrapped_{parser}.pdf")
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        write_pdf(p, pages)
+        r = subprocess.run([sys.executable, os.path.normpath(PARSE), p, "--parser", parser, "--json"],
+                           capture_output=True, text=True, cwd=ws)
+        try:
+            res = json.loads(r.stdout)
+        except ValueError:
+            out.append(f"  ✗ parsers: a wrapped {parser} statement: {(r.stdout or r.stderr).strip().splitlines()[-1:]}")
+            continue
+        got = [(x["amount"], x["description"]) for x in res["rows"]]
+        want = [(x["amount"], x["description"]) for x in rows]
+        if res["reconcile"]["ok"] and got == want:
+            good += 1
+        else:
+            out.append(f"  ✗ parsers: a wrapped {parser} statement: {res['reconcile']['detail']}; rows {got}")
+    if good == 2:
+        out.append("  ✓ parsers: chequing rows whose description wraps onto a second and third line, and numbers read as '1 ,215.05' and '3, 000.00' (BMO, RBC), read and reconciled")
+    return out
+
+
+def starter_check(root, base):
+    """A first import put every purchase in Other (a first user, 2026-10). The starter map of
+    common chains (setup/data/starter_merchants.json) suggests a category for a merchant the
+    workspace does not know yet: the suggestion is filed and the question is still asked; the
+    workspace's own merchants.json wins over it; a merchant it does not know stays Other; and no
+    pattern may suggest Subscription, which a first sighting can never be."""
+    import types
+    sys.path.insert(0, os.path.join(root, ".claude", "skills", "update-dashboard", "scripts"))
+    import update
+    from check_data import CATEGORIES
+    pats = json.load(open(update.STARTER, encoding="utf-8"))["patterns"]
+    bad = [p["match"] for p in pats if p["category"] not in CATEGORIES or p["category"] == "Subscription"]
+    ws, plan = types.SimpleNamespace(row_cats={}), update.Plan()
+    got = []
+    for merchant, table in (("TIM HORTONS #1234 OTTAWA ON", {}), ("UBER* EATS", {}), ("LIGHTHOUSE PUBLICATION", {}),
+                            ("TIM HORTONS #1234 OTTAWA ON", {"TIM HORTONS OTTAWA": {"category": "Grocery"}})):
+        cat, how, key = update.categorise(ws, merchant, table)
+        update.note_merchant(plan, key, cat, how, "2026-10-03", "Card 5518 statement")
+        got.append((cat, how))
+    asked = {d["what"].split(",")[0]: d["default"] for d in plan.decisions}
+    want = [("Dining", "starter"), ("Dining", "starter"), ("Other", "new"), ("Grocery", "hit")]
+    if got == want and asked == {"TIM HORTONS OTTAWA": "Dining", "UBER* EATS": "Dining", "LIGHTHOUSE PUBLICATION": "Other"} and not bad:
+        return [f"  ✓ starter map: {len(pats)} chains, none suggesting Subscription; a known chain filed as suggested and still asked, the workspace's own entry first, a stranger Other"]
+    return [f"  ✗ starter map: got {got}, asked {asked}" + (f"; patterns outside the seven categories or Subscription: {bad}" if bad else "")]
+
+
+def demo_clear_check(root, base):
+    """Setup on a fresh clone leaves nothing of the demo owner behind (2026-10: their statements
+    stayed in archive/ and their OWNER.md stayed loaded). Run the scaffold on a demo copy, with a
+    file of the new owner's already in archive/ and one with no tag at all: every file carrying a
+    demo tag goes, those two stay, and OWNER.md is the empty stub. A setup refused for bad answers
+    first has to leave archive/ exactly as it was."""
+    sc = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "setup", "scripts", "scaffold.py"))
+    stub = os.path.join(os.path.dirname(os.path.dirname(sc)), "data", "owner_stub.md")
+    if not (os.path.exists(sc) and os.path.exists(stub)):
+        return []
+    ws = os.path.join(base, "democlear"); os.makedirs(ws); stage(root, ws)
+    edit_json(ws, layout.rel("profile.json"), lambda d: d.__setitem__("demo", True))
+    arc = os.path.join(ws, "archive")
+    keep = ["20261026_TD_CHQ4021_Chequing Statement-4021 2026-10-26.pdf", "README.txt"]
+    for f in keep:
+        open(os.path.join(arc, f), "w").close()
+    tags = {t for d in json.load(open(layout.path(ws, "accounts.json"), encoding="utf-8"))["documents"]
+            for t in d.get("tags", [])}
+    demo = lambda: [f for f in os.listdir(arc) if re.match(r"\d{8}_", f) and any(f[9:].startswith(t + "_") for t in tags)]
+    before = len(demo())
+    ans = os.path.join(base, "democlear-answers.json")
+    answers = {"owner": "Alex Chen", "born": 1993, "currency": "CAD", "importDay": 26, "accounts": []}
+    json.dump(answers, open(ans, "w", encoding="utf-8"))
+    refused = subprocess.run([sys.executable, sc, ws, "--answers", ans, "--write"], capture_output=True, text=True)
+    after_refusal = len(demo())
+    answers.update({
+        "accounts": [{"inst": "TD", "name": "Everyday Chequing", "kind": "Chequing", "id": "…4021",
+                      "balance": 4210.55, "asof": "2026-08-31", "ledger": "chequing.csv",
+                      "feeds": "Income, Cash flow, Bank cash",
+                      "doc": {"file": "Chequing Statement-4021 <date>.pdf", "closes": 31}}],
+        "plan": {"takeHome": 4200, "invest": 900, "everyday": 1800, "bigThreshold": 300},
+        "funds": [], "rules": {"buckets": [{"key": "rest", "name": "Holdings", "catchAll": True}], "maxHoldings": 8},
+        "foreign": None})
+    json.dump(answers, open(ans, "w", encoding="utf-8"))
+    r = subprocess.run([sys.executable, sc, ws, "--answers", ans, "--write"], capture_output=True, text=True)
+    left, kept = demo(), [f for f in keep if os.path.exists(os.path.join(arc, f))]
+    op = os.path.join(ws, "OWNER.md")
+    is_stub = os.path.exists(op) and open(op, encoding="utf-8").read() == open(stub, encoding="utf-8").read()
+    if before and refused.returncode != 0 and after_refusal == before and r.returncode == 0 and not left and kept == keep and is_stub:
+        return [f"  ✓ setup on the demo: {before} demo statement(s) cleared from archive/, the owner's own and an untagged file kept, OWNER.md the empty stub; a refused setup cleared nothing"]
+    tail = (r.stdout + r.stderr).strip().splitlines()[-1:]
+    return [f"  ✗ setup on the demo: {before} demo file(s), {after_refusal} after a refused run (exit {refused.returncode}), "
+            f"{len(left)} left after setup (exit {r.returncode}{': ' + tail[0] if r.returncode and tail else ''}), "
+            f"kept {kept}, OWNER.md {'the stub' if is_stub else 'not the stub'}"]
 
 
 def propose_check(ws, man):
@@ -602,6 +764,7 @@ def parser_checks(root, base):
                 lines.append(f"  ✗ fixture {os.path.basename(m['file'])} ({m['parser']}): {detail} — expected {m['rows']} rows")
         lines.append(f"\n  {'✓' if good == len(man) else '✗'} parsers: {good} of {len(man)} synthetic statements read and reconciled")
         lines += credit_balance_check(ws)
+        lines += wrap_check(ws)
         lines += propose_check(ws, man)
     arc = os.path.join(root, "archive")
     reg = layout.path(root, "accounts.json")
@@ -1187,6 +1350,8 @@ def main(argv):
                 if out is None:
                     print(f"  · [{rule}] {what} — no tools/fixtures.py here, not exercised")
                     continue
+            elif which == "guard":
+                out = mut(d)
             else:
                 mut(d)
                 script = {"dash": "check_design.py", "find": "check_data.py",
@@ -1201,7 +1366,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = (parser_checks(root, base) + update_check(root, base) + update_batch_check(root, base)
                 + undo_check(root, base) + drift_check(root, base) + own_name_check(root, base)
-                + loan_import_check(root, base))
+                + loan_import_check(root, base) + starter_check(root, base) + demo_clear_check(root, base))
         for line in runs:
             print(line)
             if line.lstrip().startswith("✗"):

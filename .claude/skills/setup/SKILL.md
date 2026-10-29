@@ -199,9 +199,17 @@ python3 .claude/skills/update-dashboard/scripts/rebuild.py . --write
 ```
 
 Two steps: the scaffold writes `findata/`, the rebuild builds the dashboard from
-`templates/dashboards/` and that data — and keeps FINANCE.md's figures table in step. There is no
-previous owner to clear out: the template holds nobody's numbers (lint T1 says so), so the new
+`templates/dashboards/` and that data — and keeps FINANCE.md's figures table in step. On a fresh
+clone the scaffold also clears out the demo owner: their ledgers, the statements in `archive/` that
+carry one of the demo register's tags (anything else there stays), and their `OWNER.md`, which
+becomes an empty one to fill. The template holds nobody's numbers (lint T1 says so), so the new
 owner's first view is their own empty workspace.
+
+From this write on the data is theirs, so the scaffold also keeps it off the internet when the
+workspace is a git clone: it adds `findata/`, `dashboards/` and `decisions/` to `.gitignore`, and
+puts `scripts/guard.py` in the clone's pre-commit hook, which refuses a commit that carries any of
+them (or `OWNER.md`, `inbox/`, `archive/`) while the repository has a remote. Say so in one line.
+The demo's own data, with `demo: true`, still commits.
 
 ## Proving it
 
@@ -228,7 +236,7 @@ Three things, in this order:
    statements into `inbox/` with the bank's own filenames first.)
 2. **Open the dashboard.** `dashboards/finance_dashboard.html`, in a browser, at least 1120px
    wide.
-3. **Start `OWNER.md`.** The three governing documents are the tool's and say nothing about
+3. **Fill in `OWNER.md`.** The scaffold left an empty one. The three governing documents are the tool's and say nothing about
    anyone; everything that is theirs — which bank does what, the traps their statements have,
    the decisions they make out loud — goes in `OWNER.md`, which `CLAUDE.md` loads (and, once a
    decision is replaced, its dated record goes in `decisions/`). Write the

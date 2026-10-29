@@ -20,6 +20,11 @@ What the text looks like once pypdf has read it:
 A purchase is written NEGATIVE the ledger's way; a payment or a credit (CR) is positive.
 Reconciled against the summary: purchases + interest + fees on one side, payments and credits
 on the other.
+
+A card paid past zero prints its balances with CR too — "Total balance $100.00 CR", and the
+next statement's "Previous total balance, Oct. 20, 2026 $100.00 CR" — and the closing balance
+comes back negative, the way rbc_visa's CREDIT BALANCE does: the import turns a card's figure
+once (owed is negative on file, credit positive; FINANCE.md §8a).
 """
 import re
 
@@ -42,7 +47,7 @@ def parse(path):
     account = card.group(1) if card else None
 
     def grab(label):
-        mm = re.search(r"^" + label + r"\s*([+-]?\$?[\d,]+\.\d{2})\s*$", text, re.M)
+        mm = re.search(r"^" + label + r"\s*([+-]?\$?[\d,]+\.\d{2}(?: CR)?)\s*$", text, re.M)
         return money(mm.group(1).replace("+", "")) if mm else None
     totals = {"purchases": grab(r"Purchases and other charges"), "credits": grab(r"Payments and credits"),
               "interest": grab(r"Total interest charges"), "fees": grab(r"Fees"),

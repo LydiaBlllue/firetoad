@@ -93,7 +93,9 @@ therefore after refunds without any of them knowing refunds exist.
   for the owner. Counting it would lower the spending baseline with money that was never spent.
 - **A refund lands in the month it posted**, not the month of the purchase, so a category can be
   negative in a month with a large refund and nothing else. The month's total is still exact; a
-  chart that stacks categories draws a negative category as nothing.
+  chart that stacks categories cannot stack a negative one, so it takes it off the top of the
+  month's bar as a hatched band and labels the month with its net — the bars add up to the
+  year's total.
 - **A refund of a big buy goes back to the Big buys fund**, not onto the month's allowance:
   it is big exactly when the purchase it gives back was (§3b).
 - A card payment (`PAYMENT`, `THANK YOU`, a transfer in) is neither spending nor a refund.
@@ -144,6 +146,11 @@ and needs no special case.
 | `value` | export · statement · stated | how the balance is known: `export` from a file the broker produced, `statement` from any evidence the owner dropped in — a bank statement, a screenshot of an app, a balance read off it and typed into `banks.json` or `foreign.json` — and `stated` typed by hand with an `asof`, the one value nothing can re-derive |
 | `against` | the asset a liability sits on | the reach table shows equity: a home less its mortgage, on the `locked` row |
 
+- **Every balance is signed from the owner's side**, in every file: what she has is positive,
+  what she owes is negative. A credit card owing $500 is −500; one paid $90 past zero is +90,
+  and counts as spendable cash, because the bank owes her the difference. A statement prints a
+  card's balance as the amount owed; the import turns it once, when it writes the file, and
+  nothing downstream turns it again.
 - A home is `asset · none · locked · stated`. It counts in net worth, not in Portfolio and not in
   dry powder. On the reach cut it is "In property", net of what is secured against it;
   on the by-purpose card it is "Other assets".

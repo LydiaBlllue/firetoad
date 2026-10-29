@@ -119,6 +119,28 @@ def load(root, name):
     p = layout.path(root, name)
     return p if os.path.exists(p) else None
 
+def clock(root):
+    """The date the staleness rules (D9, D20) measure age from. A workspace's is today. The demo
+    is a snapshot nobody imports into, so its rate and its stated values age with the calendar
+    while nothing else in it moves: a clone a few weeks old greeted its first run with a stale
+    rate (2026-10). The demo is measured against its own newest fact instead — the latest bank
+    as-of date or ledger row — so it checks clean on any day and still ages within itself."""
+    today = datetime.date.today()
+    pp = load(root, "profile.json")
+    if not pp or not json.load(open(pp, encoding="utf-8")).get("demo"):
+        return today, None
+    dates = []
+    bp = load(root, "banks.json")
+    if bp:
+        bj = json.load(open(bp, encoding="utf-8"))
+        dates += [x["asof"] for side in ("assets", "debts") for x in bj.get(side, []) if x.get("asof")]
+    led = os.path.dirname(layout.path(root, "spending.csv"))
+    for f in sorted(os.listdir(led)) if os.path.isdir(led) else []:
+        if f.endswith(".csv"):
+            dates += [r["date"] for r in csv.DictReader(open(os.path.join(led, f), encoding="utf-8")) if r.get("date")]
+    dates = [d for d in dates if re.fullmatch(r"\d{4}-\d{2}-\d{2}", d)]
+    return (datetime.date.fromisoformat(max(dates)), "the demo's newest data") if dates else (today, None)
+
 def check(root):
     # Each rule has a home category; a call may override it, because several rules produce more
     # than one kind of finding. D14 is the clearest case: "this document covers an account that
@@ -133,6 +155,7 @@ def check(root):
     def warn(r, m, cat=None): F.append(("WARN",  r, m, cat or HOME.get(r, "rules")))
     def note(r, m, cat=None): F.append(("NOTE",  r, m, cat or HOME.get(r, "rules")))
     today = datetime.date.today()
+    now, now_is = clock(root)            # what D9 and D20 count age from
     SOURCES, LEDGERS = _registry(root)
 
     # -- D1 every ledger's balance column must actually chain -----------------
@@ -266,7 +289,7 @@ def check(root):
     fp = load(root, "fx.json")
     if fp:
         fj = json.load(open(fp, encoding="utf-8"))
-        age = (today - datetime.date(*map(int, fj["asof"].split("-")))).days
+        age = (now - datetime.date(*map(int, fj["asof"].split("-")))).days
         # A rate carried forward for a day or two is not stale; it is simply the newest one
         # anybody has. The complaint is that it has been carried for a WHILE (rule 9's
         # 30 days), which is also why a workspace set up today should not be scolded.
@@ -276,7 +299,8 @@ def check(root):
         elif age > 45:
             warn("D9", f"fx.json is {age} days old ({fj['asof']}, {fj.get('quality')})")
         else:
-            note("D9", f"fx.json {fj['usd_cad']} @ {fj['asof']} ({fj.get('quality')}), {age}d old")
+            note("D9", f"fx.json {fj['usd_cad']} @ {fj['asof']} ({fj.get('quality')}), {age}d old"
+                       + (f" against {now_is} ({now})" if now_is else ""))
 
     # -- D10 money back from a counterparty is a repayment, never income ---------
     # The register's document that carries `counterparty` names the person and, through `into`,
@@ -637,7 +661,7 @@ def check(root):
                 if x.get("balance") is not None:
                     bank_bal[x["account"]] = x["balance"]
             for x in bj2["debts"]:
-                bank_bal[x["account"]] = -x["balance"]
+                bank_bal[x["account"]] = x["balance"]
         hp3 = load(root, "holdings_latest.csv")
         if hp3:
             fxp2 = load(root, "fx.json")
@@ -823,7 +847,7 @@ def check(root):
     # A home's value is the one number in the workspace nothing can re-derive (§8c). It gets a
     # date instead of a source, and a date that is a year old is a number that is a year old.
     if ap:
-        today_ = datetime.date.today()
+        today_ = now
         for a in aj["accounts"]:
             if a.get("value") != "stated" or a.get("balance") is None:
                 continue
@@ -1027,7 +1051,11 @@ def check(root):
         rj26 = json.load(open(rp26, encoding="utf-8"))
         src26 = open(tpl26, encoding="utf-8").read()
         m26 = re.search(r"const CHECKS = \{(.*?)\n  \};", src26, re.S)
-        have = set(re.findall(r"^    (\w+): ", m26.group(1), re.M)) if m26 else set()
+        # No page runs the principles while Rules is off the page (2026-10-28): they are kept in
+        # rules.json and nothing names a check, so there is nothing to hold them to.
+        have = set(re.findall(r"^    (\w+): ", m26.group(1), re.M)) if m26 else None
+        if have is None:
+            rj26 = dict(rj26, principles=[], notes=[])
         kinds = {a.get("kind") for a in aj["accounts"]}
         bkeys = {b.get("key") for b in rj26.get("buckets", [])}
         for pr in rj26.get("principles", []):

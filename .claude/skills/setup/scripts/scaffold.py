@@ -21,6 +21,7 @@ import datetime
 import json
 import os
 import re
+import shutil
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
@@ -193,7 +194,7 @@ def build(a, today):
     out[layout.rel("profile.json")] = json.dumps({
         "note": "Who this workspace belongs to. The FIRST thing to change when you make it yours: "
                 "the name appears in the browser tab and under the Jade Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. Jade Toad itself is the product, not a setting.",
-        "schema": 9,
+        "schema": 10,
         "owner": a["owner"],
         "born": a.get("born", 1990),
         "importDay": int(a.get("importDay", 26)),
@@ -317,7 +318,7 @@ def build(a, today):
     assets = [{"inst": x["inst"], "account": x["name"], "balance": x["balance"] or 0,
                "currency": x["cur"], "asof": x["asof"]}
               for x in accounts if x["kind"] in CASH_KINDS and x["src"] == "banks.json"]
-    debts = [{"inst": x["inst"], "account": x["name"], "balance": abs(x["balance"] or 0),
+    debts = [{"inst": x["inst"], "account": x["name"], "balance": x["balance"] or 0,
               "currency": x["cur"], "asof": x["asof"], "limit": x.get("limit")}
              for x in accounts if x["kind"] in DEBT_KINDS and x["src"] == "banks.json"]
     out[layout.rel("banks.json")] = json.dumps({
@@ -479,6 +480,58 @@ def build(a, today):
     return out
 
 
+# What setup writes is the owner's own money from here on. A clone of the public repository
+# tracks findata/ (the demo's), so a `git commit -a` and a push would publish it (a first user
+# came within a click of that, 2026-10). Two layers: .gitignore keeps new data files out of
+# `git add`, and guard.py — in the clone's pre-commit hook — refuses data that is already tracked.
+PRIVATE = ("findata/", "dashboards/", "decisions/")
+
+
+OWNER_STUB = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "owner_stub.md")
+
+
+def clear_demo(root):
+    """The rest of the demo owner: the originals in archive/ and their OWNER.md. Left behind, the
+    statements of a person who does not exist sat beside the new owner's own, and CLAUDE.md went on
+    loading their notes (2026-10). Only files carrying one of the demo register's archive tags go —
+    read before the new register replaces it — so anything else in archive/ stays."""
+    tags = set()
+    try:
+        reg = json.load(open(layout.path(root, "accounts.json"), encoding="utf-8"))
+        tags = {t for d in reg.get("documents", []) for t in d.get("tags", [])}
+    except (OSError, ValueError):
+        pass
+    arc = os.path.join(root, "archive")
+    gone = []
+    for f in sorted(os.listdir(arc) if os.path.isdir(arc) else []):
+        m = re.match(r"\d{8}_(.+)$", f)
+        if m and any(m.group(1).startswith(t + "_") for t in tags):
+            os.remove(os.path.join(arc, f))
+            gone.append(f)
+    if gone:
+        print(f"  − demo statements cleared from archive/: {len(gone)} file(s)")
+    shutil.copyfile(OWNER_STUB, os.path.join(root, "OWNER.md"))
+    print("  → OWNER.md: an empty one, yours to fill (the demo owner's notes are gone)")
+
+
+def keep_private(root, today):
+    gi = os.path.join(root, ".gitignore")
+    lines = open(gi, encoding="utf-8").read().splitlines() if os.path.exists(gi) else []
+    have = {l.strip() for l in lines if not l.startswith("#")}
+    add = [p for p in PRIVATE if p not in have]
+    if add:
+        # The shipped file suggests the line commented out; the suggestion goes once it is taken.
+        lines = [l for l in lines if l.strip() not in ("# " + p for p in add)]
+        lines += ["", f"# Your own data from here on (setup, {today}): never in a remote."] + add
+        open(gi, "w", encoding="utf-8").write("\n".join(lines).lstrip("\n") + "\n")
+        print("  → .gitignore: " + ", ".join(add))
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import guard
+    hook = guard.install(root)
+    if hook:
+        print(f"  → pre-commit data guard: {hook} (a commit carrying findata/ into a repository with a remote is refused)")
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("root", nargs="?", default=".")
@@ -521,11 +574,13 @@ def main(argv):
             os.remove(os.path.join(led, f))
         if stale:
             print("  − demo ledgers cleared: " + ", ".join(stale))
+        clear_demo(root)
     for path, text in files.items():
         full = os.path.join(root, path)
         os.makedirs(os.path.dirname(full), exist_ok=True)
         with open(full, "w", encoding="utf-8") as fh:
             fh.write(text)
+    keep_private(root, today)
     print("\n  written. Now run rebuild.py --write, then the four checkers — they are the "
           "acceptance test for this scaffold.")
     return 0

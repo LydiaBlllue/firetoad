@@ -43,6 +43,9 @@ SYNCED = [
     "CLAUDE.md",
     "FINANCE.md",
     "DESIGN.md",
+    "PRODUCT.md",         # the product and its features, readable in the workspace
+    "ROADMAP.md",
+    "CHANGELOG.md",       # PRODUCT.md links both
     "docs/pipeline.py",
     "docs/pipeline.svg",
     "docs/pipeline.drawio",
@@ -52,25 +55,16 @@ SYNCED = [
     ".gitignore",         # not for git: check_design's S4 reads it to skip files an owner writes
                           # (setup-answers.json), and without it a workspace failed on them
 ]
-NEVER = ("findata", "inbox", "archive", "dashboards", "OWNER.md", "decisions", ".private")
+NEVER = ("findata", "inbox", "archive", "dashboards", "OWNER.md", "decisions", ".private", "feedback")
 
-OWNER_STUB = """# OWNER.md — this workspace's notes
-
-> **This file is one person's** — yours. `CLAUDE.md` loads it with `@OWNER.md`. Everything that is
-> about you rather than about the tool goes here: which bank does what, the traps your statements
-> have, the decisions you make out loud and the mistakes that taught them. The tool's own
-> instructions are in `CLAUDE.md`, `FINANCE.md` and `DESIGN.md`; nothing in those three is about
-> anyone in particular. Keep it to what is true today; when a decision is replaced, move the old
-> one, dated, into `decisions/` and leave a one-line pointer here.
-
-- Reply in: English
-- Banks:
-- Broker:
-"""
+# The empty OWNER.md a new owner starts from; setup writes the same file over the demo's.
+OWNER_STUB = os.path.join(TOOL, ".claude", "skills", "setup", "data", "owner_stub.md")
 
 GUARD = """#!/bin/sh
 # Installed by tools/sync.py --install-guard. Refuses a commit whose staged files contain any
 # identifier from the owner's private deny list, which lives OUTSIDE this repository.
+# It also runs the setup's data guard: real findata/ is refused when this checkout has a remote.
+python3 "$(git rev-parse --show-toplevel)/.claude/skills/setup/scripts/guard.py" || exit 1
 DENY="__DENY__"
 [ -f "$DENY" ] || { echo "pre-commit guard: $DENY is missing — refusing to commit blind"; exit 1; }
 python3 - "$DENY" <<'PY'
@@ -181,7 +175,7 @@ def main(argv):
 
     owner = os.path.join(ws, "OWNER.md")
     if not os.path.exists(owner) and not check:
-        open(owner, "w", encoding="utf-8").write(OWNER_STUB)
+        shutil.copyfile(OWNER_STUB, owner)
         print("  → OWNER.md (empty stub — it is yours to fill)")
     for d in ("inbox", "archive"):
         if not check:

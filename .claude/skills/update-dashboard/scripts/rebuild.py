@@ -78,7 +78,7 @@ REACH_ROWS = (("today", "Spendable today", "#1baf7a"), ("costs", "Taxed to take 
 # 5 = the monthly plan is flows (income / committed / saving / allowance) and plan.json's
 # imputedRent is a committed flow that starts after FIRE (2026-09-10, FINANCE.md §8b); 6 =
 # findata/ is three folders, register / ledgers / history, one per layer (2026-09-10, layout.py).
-SCHEMA = 9
+SCHEMA = 10
 
 
 def same(a, b):
@@ -403,16 +403,21 @@ def derive(d):
     out["SUBMITTED"] = d["filings"]["filed"]
 
     # --- WSINC: dividends, interest, stock lending and withholding tax, USD converted
+    # `by` splits the month's dividends by fund, so the page can say which holdings pay and how often.
     inc = collections.defaultdict(lambda: collections.defaultdict(float))
+    by = collections.defaultdict(lambda: collections.defaultdict(float))
     for r in d["acts"]:
         ym = r["effective_date"][:7]
         a = float(r["net_cash_amount"] or 0) * (rate if r["currency"] == "USD" else 1)
         t, desc = r["activity_type"], r["description"].lower()
-        if t == "Dividend": inc[ym]["div"] += a
+        if t == "Dividend":
+            inc[ym]["div"] += a
+            by[ym][r.get("symbol") or "Other"] += a
         elif t == "Interest": inc[ym]["lend" if "lending" in desc else "int"] += a
         elif t == "Tax": inc[ym]["tax"] += a
     out["WSINC"] = [{"ym": k, "div": round(v["div"], 2), "int": round(v["int"], 2),
-                     "lend": round(v["lend"], 2), "tax": round(v["tax"], 2)}
+                     "lend": round(v["lend"], 2), "tax": round(v["tax"], 2),
+                     "by": {s: round(x, 2) for s, x in sorted(by[k].items())}}
                     for k, v in sorted(inc.items())]
 
     # --- WSDEP: only EFT landing in the broker's chequing doorway account. Money paid straight
@@ -485,8 +490,9 @@ def derive(d):
     fgn_cad = round(fj["total"] * rate_f)
     fgn_fund_rows = [a for a in fj["accounts"] if a["type"] in FUND_TYPES]
     fgn_funds = round(sum(a["value"] for a in fgn_fund_rows) * rate_f)
-    bank_bal = {x["account"]: x["balance"] for x in bank["assets"] if x.get("balance") is not None}
-    bank_bal.update({x["account"]: -x["balance"] for x in bank["debts"]})
+    # Every balance is signed from the owner's side: what she has is positive, what she owes is
+    # negative, a card paid past zero is positive (schema 10). Nothing is flipped on the way in.
+    bank_bal = {x["account"]: x["balance"] for x in bank["assets"] + bank["debts"] if x.get("balance") is not None}
     fgn_inst = collections.defaultdict(float)
     for x in fj["accounts"]:
         fgn_inst[x["inst"]] += x["value"]
@@ -505,12 +511,19 @@ def derive(d):
         else: v, cur = (a.get("balance") or 0.0), a.get("cur", "CAD")
         if cur == "USD": v *= rate
         elif cur and cur != "CAD" and cur == fgn_cur: v *= rate_f
-        # An asset keeps its sign (an overdrawn chequing account is a negative asset, and it
-        # was one before the axes); a liability is the amount owed, whichever way the file wrote it.
-        return abs(v) if a.get("side") == "liability" else v
+        # Signed from the owner's side everywhere, so a liability's amount owed is -v.
+        return -v if a.get("side") == "liability" else v
 
-    items = [(a, cad_of(a)) for a in accs
-             if not (a.get("src") in (None, "none") and a.get("balance") is None)]
+    # A card paid past zero owes nothing: the bank owes the owner the difference, so it is counted
+    # as spendable cash rather than as a debt below zero.
+    def credit_as_cash(a):
+        return dict(a, side="asset", role="buffer", reach="today", against=None)
+    items = []
+    for a in accs:
+        if a.get("src") in (None, "none") and a.get("balance") is None:
+            continue
+        v = cad_of(a)
+        items.append((credit_as_cash(a), -v) if a.get("side") == "liability" and v < 0 else (a, v))
     assets = [(a, v) for a, v in items if a.get("side") != "liability"]
     liabs = [(a, v) for a, v in items if a.get("side") == "liability"]
     by_key = {a["key"]: a for a in accs}

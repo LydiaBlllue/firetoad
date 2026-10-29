@@ -1,8 +1,153 @@
 # Changelog
 
+## 1.1 — unreleased
+
+- **Setup leaves nothing of the demo owner behind** (2026-10-28). On a fresh clone it cleared the
+  demo's ledgers and rewrote the register, but the demo's statements stayed in `archive/` beside
+  the new owner's and `CLAUDE.md` went on loading the demo's `OWNER.md`. The scaffold now removes
+  every `archive/` file carrying one of the demo register's tags (anything else there stays) and
+  writes an empty `OWNER.md` from `setup/data/owner_stub.md` — the same stub `tools/sync.py`
+  gives a workspace that has none, now kept in one place. Only after the answers have built
+  without error, so a refused setup changes nothing; the selftest runs it on a demo copy both ways.
+
+- **Investment income fills its page** (2026-10-28). The page was under a screen (R4), and its
+  months swing — January, April and July twice the others — with nothing to say why. A **By
+  holding** card answers it: each fund that paid dividends, how often it pays (every month, every
+  quarter), what it paid and its share. `WSINC` rows carry `by`, the month's dividends by fund.
+
+- **The year's stacked bar counts refunds** (2026-10-28). A refund lands in the month it posted,
+  so a category can be below zero in a month; the Year page's "Each month, by category" chart
+  drew that category as nothing, and its labels added up to more than "Spent" above them. A
+  month's refunds are now a hatched band taken off the top of its bar, the month is labelled
+  with its net, and hovering the band names what came back. FINANCE.md §3c says so.
+
+- **A fresh clone checks clean** (2026-10-28). The demo is a snapshot nobody imports into, so
+  its exchange rate aged with the calendar while nothing else in it moved, and a clone a few
+  weeks old greeted its first run with a stale-rate warning (D9). For a workspace with
+  `demo: true`, D9 and D20 now count age from the demo's own newest data — the latest bank as-of
+  date or ledger row — instead of today; the data is not touched, so the build stays
+  idempotent. An owner's workspace is measured against today as before. A new fault (D9) plants a
+  rate months older than the demo's data and expects the warning: 57 faults.
+
+- **A first import is already mostly sorted** (2026-10-28, from a first user, whose first import
+  put every purchase in Other). `setup/data/starter_merchants.json` maps about ninety common
+  Canadian chains — grocery chains and Costco, gas stations, fast food and delivery, pharmacies,
+  transit, streaming — to a category. For a merchant the workspace's own `merchants.json` does
+  not know, the import files it as the starter map suggests and still asks it in
+  `decisions.json`, the suggestion as the default; a merchant neither knows stays Other. No
+  pattern suggests Subscription (a first sighting never repeats yet), so a streaming service
+  starts as Entertainment. Public chain names only.
+
+- **A chequing statement with long descriptions is read** (2026-10-28, from a first user, whose
+  nine BMO chequing statements were all refused). A description that wraps so its amounts land
+  on the second or third line is joined back into one row (`bmo_banking`; `rbc_banking` already
+  did this), and a number pypdf reads with a space beside its comma — `1 ,215.05`, `3, 000.00` —
+  closes up for every parser before it is matched. `tools/fixtures.py` rows can ask for both
+  (`wrap`, `split`); the selftest renders a BMO and an RBC statement with them and expects every
+  row back whole.
+
+- **A Mastercard in credit is read** (2026-10-28, from a first user). A BMO Mastercard paid past
+  zero prints its balances with `CR` — "Total balance $100.00 CR", and on the next statement
+  "Previous total balance … CR" — and the parser could not find its summary, so the statement
+  went to be read by eye. It now reads them as a closing balance below zero, the way the Visa's
+  CREDIT BALANCE is read, and the import stores it as credit (schema 10). `tools/fixtures.py`
+  can render a Mastercard that closes in credit (`overpay`) or opens in it; the selftest reads
+  one of each.
+
+- **Your data stays out of a public clone** (2026-10-28, from a first user). Setup, when it
+  writes a real workspace, adds `findata/`, `dashboards/` and `decisions/` to `.gitignore` and
+  installs `setup/scripts/guard.py` in the clone's pre-commit hook: a commit carrying the owner's
+  data while the repository has any remote is refused (G1). `.gitignore` alone could not do it —
+  the demo's `findata/` is tracked, and a tracked file stays tracked. The demo's data, with
+  `demo: true`, commits as before; `sync.py --install-guard` chains the same check in front of
+  the deny list. Selftest makes a clone with a remote and expects the demo through and the owner
+  refused.
+
 ## 1.0 — unreleased
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
+
+- **To do comes off the page** (2026-10-28). The owner's call. The page, its sidebar dot and the
+  "Worth a second look" check are gone; an old link opens Updates. The import still writes its
+  questions to `decisions.json` and asks them in the conversation. 17 pages.
+
+- **The dry-powder band is not judged any more** (2026-10-28, with Rules). Home's Portfolio card
+  and Portfolio's Dry powder card show the share as a number; the ✓/⚠, the "short of the floor"
+  line, the holdings-limit mark and the Portfolio dot in the sidebar are gone. `rules.json` keeps
+  the band.
+
+- **One sign for every balance** (2026-10-28, findata schema 10). The register wrote what the
+  owner owes as negative; `banks.json` wrote a card's balance as the amount owed, and the build
+  turned it back with an absolute value that assumed a card can only be owed. A card paid past
+  zero was therefore subtracted from net worth: one $928 in credit lowered it by $928 and put the
+  Accounts total $1,857 away from the header. Every file now signs a balance from the owner's
+  side — owed is negative, credit positive — the import turns a statement's figure once, and the
+  build reads it as written; a card in credit counts as spendable cash. `tools/migrate_9to10.py`
+  turns the `debts` in an existing `banks.json`.
+
+- **Home loses its to-do list; Records stays open** (2026-10-28). The owner's call, with Rules:
+  "What needs you today" is gone from Home; what waits is on To do, and the sidebar dots still
+  mark a page that needs a look. Records no longer folds away at the foot of the sidebar.
+
+- **Records, written to the card rules, and the last `?` goes** (2026-10-28). To do's cards open
+  their counts, and a task says when it is due rather than when it was added. Updates puts the
+  file count with the files. Accounts names each account's role and reach in the page's own
+  words instead of the register's (`grow · today` became *For FIRE*, *Spendable today*), dates
+  read `Oct 25`, and the total in dollars opens its conversion; the lines about where balances
+  come from and how currencies are kept are gone, as are the yes/no rows under money held abroad
+  and under money lent. Statements keeps the import day and how many sources are older than a
+  month. With every group moved over, the `?` mark and its code are gone from the page.
+
+- **Rules comes off the page, for now** (2026-10-28). The owner's call: rules done well are hard,
+  and the basics come first. The page, its sidebar dot and the rule lines on Home are gone; the
+  dry-powder band is still judged on Portfolio and, when it is broken, on Home. `rules.json` keeps
+  everything it held, and D26 stands down while no page runs a principle (its planted fault
+  goes with it: 55). 18 pages.
+
+- **Plan, written to the card rules** (2026-10-28). Budget's rows lost their `?` marks: Invest,
+  Everyday, Big buys, the travel fund, committed payments and Unallocated are terms, and each
+  fixed amount opens what it is for. The funds' descriptions moved behind their balances. FIRE's
+  three cards open their sums (portfolio over target, target less portfolio, the planning figure
+  times 12 times 25). The returns on the trajectory are read from the scenarios rather than
+  written out. Drawdown & care and the replay keep their numbers and lose their paragraphs: one
+  grey line says every figure is in today's money, one says the history is American and the
+  stretches overlap, and a warning box is left only where the plan needs action. Spending
+  baseline gets a label, and its comparison rows open their working.
+
+- **The Glossary leaves Records** (2026-10-28). It is a reference for reading the page, not a
+  record, so it sits on its own at the foot of the sidebar, below Records and above the version.
+  Still 19 pages in 5 groups; S4 now reads every heading-less group in the order a reader sees it.
+
+- **A coined word does not look like a dictionary entry** (2026-10-28). *Bucket*, *Set aside*,
+  *Kept* and the rest are this page's own words, not finance terms; their entry drops the part
+  of speech and carries a gold rule and the heading *A word on this page*, in the explanation
+  and on the Glossary page alike.
+
+- **Investing, written to the card rules** (2026-10-28). Portfolio's four cards lost their `?`
+  marks and captions: Portfolio, Set aside, Dry powder and Holdings are terms, and each number
+  opens its sum (the accounts, the symbols against the denominator, the band). The US-dollar card
+  is three plain rows. Performance's cards say *Growth accounts*, *Same money in* the benchmark
+  and *Difference*; the price sources are gone from the page, and the note that a short
+  comparison says little is one grey line instead of a warning. What you put in and what the
+  market added are terms (*book value*, *unrealized gain*), and the paragraph under them is gone.
+  Holdings calls the funds abroad *Held abroad* and a set-aside account *Set aside*; the P&L
+  footnote is gone. On Rules, each rule's detail is one sentence, its composition behind the
+  number.
+
+- **Income, written to the card rules** (2026-10-28). Income, Spent and Kept each open their
+  sum; *Kept* and *Paid back* are terms, and Investment is the Glossary's *investment income*
+  rather than a `?`. The coverage line under the chart (ledger date ranges strung on `·`) is
+  now only "Oct 2026 is still open" when it is. Investment income's four cards lost their
+  explanations to their sums and to *tax withheld*; the months read `Jan`, not `2026-01`; tax
+  withheld is no longer green, the colour of money coming back; the source and rate list under
+  the table is gone.
+
+- **DESIGN.md holds rules only** (2026-10-28). It states what is true today; how each rule came
+  about — the dates, the measurements, what was there before — moved to *How the design rules
+  came about* at the end of this file. Rules that described pages long gone (Overview's donuts,
+  Month by Month, the Cash flow page, the Insights and Tasks tabs) were dropped, and the ones that
+  had drifted from the page were corrected: the sidebar is 210px in five sections, no page has a
+  description line, Home is in no pill list.
 
 - **Spending, written to the card rules** (2026-10-28). This month, Year and Subscriptions keep
   a label, a number and at most one fact per card; the long captions (coverage lines, "click a
@@ -303,3 +448,77 @@ The tool is the repository; every workspace, the author's included, is an instan
   "Everything due has arrived" apart from the two open items, which stay: they are the queue
   the page is for. The unnamed $200 e-Transfer the demo asks about is now a real row in the
   ledger, typed Other income meanwhile, as the record says.
+
+## How the design rules came about
+
+Moved out of DESIGN.md on 2026-10-28, so the rules there can stay short. Newest last.
+
+- **2026-08-11** — The Spending dashboard redesign: DESIGN.md is written from everything the
+  owner said that day. White cards on a pale ground, small grey uppercase labels, big numbers,
+  the seven English categories and their colours, settled against a published dashboard style
+  the owner liked.
+- **2026-08-13** — The dashboard shows data from the start of the owner's first full year. FIRE
+  gets its own page; the trajectory chart's x-axis is anchored at that year so it does not drift
+  across a new year. Income joins the monthly and yearly views in its own blue family. The
+  Overview's charts are made symmetrical: income donut left, spending donut right. (Overview was
+  later split up; see 2026-09-06.)
+- **2026-08-14** — Overview loses its five stat cards. Page subtitles are deleted. "At a
+  glance", one status row per tab, goes on Home. A compact layout: tighter padding, gaps and
+  rows.
+- **2026-08-20** — The investment pages are English too; the one language exception is gone.
+  Definitions go in a `?`, one or two sentences — the first version was too long. The headline
+  number of the investing pages is Portfolio, money actually invested.
+- **2026-09-06** — The big UI review, measured page by page on the owner's 32-inch screen:
+  - Desktop only. The page widened from 1280 to 1760px and the narrow-screen block went; what
+    widens is the charts and tables, not the cards.
+  - Charts lost their fixed heights: a fixed height with a `viewBox` had kept the trend chart at
+    940×190 inside a 1434px box. Removing it took the drawing to 1434×290.
+  - `--muted` went from `#898781` (3.50:1, below AA) to `#75736d` (4.62:1). A rule status line
+    had run 242 characters across 1252px, so long text got caps. A 1306px card wrapped around
+    720px of content looked unfinished, so `.tight`. Four stat cards in grid `auto-fit` fitted
+    three, so flex.
+  - Six pages held under 520px; the direction was to add content that answers the page's own
+    question, not to merge pages.
+  - Navigation moved from six top tabs, which had wrapped onto two lines, to a left sidebar,
+    picked from two mock-ups. Every page got a `.pghead`, 38px of top margin ("the whole thing
+    sits too high up"), and a shared `--headh` so the two dividing lines align.
+  - The sidebar's `data through` line was deleted: it took the newest date of every source while
+    three were past 30 days, reporting the best case as the general one.
+  - Copy: no facts strung on `·` ("splitting sentences with dots… is exhausting to read"); one
+    fact per line; sentences as sentences; warnings in a box. Eight tooltips were split onto
+    lines.
+  - The filing grid, in a paper-planner look: dot, ring, grey dot, judged by each statement's
+    own closing day.
+  - Motion, two things only: a 120ms page fade, and reduced motion honoured. Measured: page
+    change fires it once, a month switch or a slider drag never.
+  - The Transactions page was deleted: by category covers it. Chequing line by line, search by
+    merchant and filter by account went with it, and are on the roadmap.
+- **2026-09-07** — The budget is rebuilt as guilt-free spending: the old category caps had
+  contradicted the money rules all along. The first version rendered a Chinese sentence from the
+  data onto a card, hence `zh_` fields the page never reads. Home drops everything by month. The
+  Accounts page is added, because the account list had to be assembled by hand from four files.
+  Net worth by purpose and by reach on Home, after the idea of reporting the rings inside one
+  net worth from Irene Zhu's 10-Year Wealth Dashboard — layered here by the cost of taking money
+  out, since a Canadian RRSP is taxed rather than locked. Accumulating years: the year selector
+  had never been read by the Year chart, and three years of test data showed 24 month pills on
+  two rows and eighteen labels reading `Aug ’24 2024`; hence year as container, month as cursor,
+  and every rolling statistic stating its window.
+- **2026-09-08** — The Accounts table gets a total in the home currency, the second of the two
+  places currencies are added. The import day moves to the 26th.
+- **2026-09-10** — One dashboard: the investment dashboard, a second file with its own sidebar,
+  becomes the Investing group. Records becomes a secondary group; Data sources is renamed
+  Statements. The Updates page replaces a Rule status list that had shown one import's sentences
+  as the state of things for months. Insights is absorbed. The page stops talking about itself
+  ("the UI language has too much AI in it"): no first person, no provenance, no rule numbers.
+  The header's pipeline strip ("Built · 3 checks ✓ · 10/12 sources fresh") becomes one sentence
+  about the numbers.
+- **2026-10-26** — Money in another currency stops being a page: its accounts move to Accounts,
+  its funds to Holdings.
+- **2026-10-27** — The whole-dashboard map: one page, one question, one kind of time. Spending
+  becomes This month then Year; Investing gains Performance; Plan becomes FIRE, Drawdown & care
+  and Spending baseline; Income follows the year only; every investing rule moves onto Rules.
+  To do takes the waiting cards from Updates and the whole Tasks page. Home's two net-worth
+  cards become one. The header's sentence becomes two dates ("no filler").
+- **2026-10-28** — Words on a card: a label, one number, at most one fact; terms with a dotted
+  underline and a Glossary, numbers that open their sum; no subtitles ("every word is designed").
+

@@ -48,6 +48,21 @@ def long_date(dt):
     return f"{LONG[dt.month - 1]} {dt.day}, {dt.year}"
 
 
+def wrapped(desc, amounts, row):
+    """A row may ask to look the way a long one does on a real statement (2026-10): `wrap` = n
+    puts the last n words of the description on lines of their own, the amounts after the last;
+    `split` puts the space pypdf sometimes reads into a number on one side of its comma
+    (" ," → "1 ,215.05", ", " → "3, 000.00"). Returns the description's first line and the
+    lines that follow it."""
+    if row.get("split"):
+        amounts = re.sub(r"(\d),(\d{3}\.\d{2})", lambda m: m.group(1) + row["split"] + m.group(2), amounts, count=1)
+    words, n = desc.split(), int(row.get("wrap") or 0)
+    if not n or len(words) <= n:
+        return f"{desc} {amounts}", []
+    more = words[-n:]
+    return " ".join(words[:-n]), more[:-1] + [f"{more[-1]} {amounts}"]
+
+
 # ---------------------------------------------------------------- the four layouts
 def rbc_banking(acct_digits, start, end, opening, rows, owner):
     dep = sum(r["amount"] for r in rows if r["amount"] > 0)
@@ -71,10 +86,9 @@ def rbc_banking(acct_digits, start, end, opening, rows, owner):
         last_day = day
         # The real statement prints a balance on the last row of each day only.
         last_of_day = i + 1 == len(rows) or rows[i + 1]["date"] != day
-        line = f"{prefix}{r['description']} {money(abs(r['amount']))}"
-        if last_of_day:
-            line += f" {money(r['balance'])}"
-        body.append(line)
+        amounts = money(abs(r["amount"])) + (f" {money(r['balance'])}" if last_of_day else "")
+        first, more = wrapped(r["description"], amounts, r)
+        body += [f"{prefix}{first}"] + more
     tail = [f"Closing Balance {money(closing, True)}",
             "Please check this Account Statement without delay and advise us of any error or omission within 45 days."]
     return [head + body + tail]
@@ -94,8 +108,10 @@ def bmo_banking(name, acct_digits, start, end, opening, rows, owner):
             "Date Description from your account ($) to your account ($) Balance ($)",
             f"{name} Account # {number}", "Owner:", owner.upper(),
             f"{MON[start.month - 1]} {start.day:02d} Opening balance {money(opening)}"]
-    body = [f"{MON[d(r['date']).month - 1]} {d(r['date']).day:02d} {r['description']} "
-            f"{money(abs(r['amount']))} {money(r['balance'])}" for r in rows]
+    body = []
+    for r in rows:
+        first, more = wrapped(r["description"], f"{money(abs(r['amount']))} {money(r['balance'])}", r)
+        body += [f"{MON[d(r['date']).month - 1]} {d(r['date']).day:02d} {first}"] + more
     tail = [f"{MON[end.month - 1]} {end.day:02d} Closing totals {money(out)} {money(inn)}",
             "Please report any errors, omissions or irregularities in writing within 30 days of the statement date."]
     return [head + body + tail]
@@ -135,29 +151,37 @@ def rbc_visa(last4, start, end, previous, rows, owner, overpay=0.0):
     return [head + body + tail]
 
 
-def bmo_mastercard(last4, start, end, previous, rows, owner):
+def bmo_mastercard(last4, start, end, previous, rows, owner, overpay=0.0):
+    """`overpay` pays that much past the whole balance, so the card closes in credit and every
+    balance the statement prints about it ends in CR — "Total balance $100.00 CR" — the way a
+    real one did (2026-10). A `previous` below zero is a card that opened in credit."""
     purchases = round(sum(r["amount"] for r in rows if r["amount"] > 0), 2)
-    credits = round(previous - sum(r["amount"] for r in rows if r["amount"] < 0), 2)   # payment + refunds
+    refunds = round(-sum(r["amount"] for r in rows if r["amount"] < 0), 2)
+    paid = max(previous, 0.0) + (round(purchases + overpay, 2) if overpay else 0.0)
+    credits = round(paid + refunds, 2)                                                 # payments + refunds
     new = round(previous + purchases - credits, 2)
     ds = lambda dt: f"{MON[dt.month - 1]}. {dt.day}"
+    bal = lambda v: f"{money(-v, True)} CR" if v < 0 else money(v, True)
     head = ["BMO CashBack Mastercard", "Summary of your account",
-            f"Previous total balance, {ds(start - datetime.timedelta(days=1))}, {start.year} {money(previous, True)}",
+            f"Previous total balance, {ds(start - datetime.timedelta(days=1))}, {start.year} {bal(previous)}",
             f"Payments and credits -{money(credits)}", f"Purchases and other charges +{money(purchases)}",
             "New installments 0.00", "Cash advances1 0.00", "Total interest charges 0.00", "Fees 0.00",
-            f"Total balance {money(new, True)}", owner, f"Card number XXXX XXXX XXXX {last4}",
+            f"Total balance {bal(new)}", owner, f"Card number XXXX XXXX XXXX {last4}",
             f"Statement date {ds(end)}, {end.year}", f"Statement period {ds(start)}, {start.year} - {ds(end)}, {end.year}",
             "Transactions since your last statement", "TRANS", "DATE", "POSTING", "DATE DESCRIPTION AMOUNT ($)",
             f"Card number: XXXX XXXX XXXX {last4}    {owner.upper()}"]
     body = []
-    if previous:
+    if previous > 0:
         pay = start + datetime.timedelta(days=6)
         body.append(f"{ds(pay)} {ds(pay)} TRSF FROM/DE ACCT/CPT    0006-XXXX-471 {money(previous)} CR")
     for r in rows:
         dt = d(r["date"]); post = dt + datetime.timedelta(days=1)
         amount = f"{money(-r['amount'])} CR" if r["amount"] < 0 else money(r["amount"])
         body.append(f"{ds(dt)} {ds(post)} {r['description']:<25} OTTAWA       ON {amount}")
+    if overpay:
+        body.append(f"{ds(end)} {ds(end)} TRSF FROM/DE ACCT/CPT    0006-XXXX-471 {money(paid - max(previous, 0.0))} CR")
     tail = [f"Subtotal for {owner.upper()} {money(purchases)}",
-            f"Total for card number XXXX XXXX XXXX {last4} {money(new, True)}"]
+            f"Total for card number XXXX XXXX XXXX {last4} {bal(new)}"]
     return [head + body + tail]
 
 

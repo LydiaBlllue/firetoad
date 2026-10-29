@@ -19,11 +19,45 @@ Anthropic；解析器读成功的对账单，它从不看。
 
 | | |
 |---|---|
-| ![净值，两种拆法](docs/screens/home.png) | **Home。** 净值按「每一部分是干什么的」和「多容易拿到」各切一次。下面一句话告诉你数字截至哪天、还缺什么。 |
-| ![一年的支出](docs/screens/spending.png) | **Spending。** 先看这个月按分类拆开，再看一年按月。没有分类上限 —— 只有一条日常额度，线以下都是 guilt-free。 |
-| ![预算](docs/screens/plan.png) | **Budget。** 每份工资做什么用：先付固定支出，先投资，剩下多少自由花，两个基金里有多少。 |
-| ![你的投资规则](docs/screens/rules.png) | **Investing。** 你自己定的规则 —— 现金区间、持仓上限、写下的论点 —— 逐条对照实际持仓核对。 |
-| ![哪个月交了哪份文件](docs/screens/sources.png) | **Records。** 哪份对账单哪个月到了、每个账户还缺什么、每次更新改了什么、有什么等你确认。 |
+| ![Home](docs/screens/home.png) | **Home。** 四张卡，每组一张。净值放在一张卡里：每一行是这部分钱的用途，色条按多容易拿到上色。净值下面两个日期：所有账户数据截至哪天，最近一次更新是哪天。 |
+| ![一年的支出](docs/screens/spending.png) | **Spending。** 这个月按分类拆开；一年按月看、和日常额度比；订阅，以及接下来 30 天要扣的。没有分类上限 —— 只有一条日常额度，线以下都是 guilt-free。 |
+| ![预算](docs/screens/plan.png) | **Plan。** 每份工资做什么用；投资组合离 FIRE 目标还有多远、哪年到；开始取钱以后钱够不够用 —— 用 1928 年以来每一段真实年份重放一遍。 |
+| ![你的投资组合](docs/screens/portfolio.png) | **Investing。** 持有什么、按币种、资产类别和分组怎么分布；备用现金占多少；和「当初买一只基金」相比表现如何。 |
+| ![哪个月交了哪份文件](docs/screens/sources.png) | **Records。** 每次更新改了什么；每个账户；哪份对账单哪个月到了。页面上每个术语的词典单独放在侧栏最底部。 |
+
+**卡片上的每个字都是挑过的。** 一张卡只有一个标题、一个数字、最多一句话。带虚线下划线的
+术语会显示词典释义、点开进 Glossary；带虚线的数字会显示它是怎么算出来的。每一页都是这样。
+
+### 每一页
+
+| 分组 | 页面 | 回答什么 |
+|---|---|---|
+| — | Home | 你现在在哪儿，值多少 |
+| Spending | This month | 这个月还能花多少，钱花到哪了 |
+| | Year | 这一年按分类、按月怎么样 |
+| | Subscriptions | 哪些在重复扣钱、一年多少、下一笔什么时候 |
+| Income | Income | 收入从哪来，留下了多少 |
+| | Investment income | 不卖任何东西，投资组合付给你多少 |
+| Investing | Portfolio | 投了多少，按币种、资产类别、分组怎么分布 |
+| | Performance | 和同一天买入一只基准基金相比表现如何 |
+| | Holdings | 每个持仓，按角色或按账户 |
+| Plan | Budget | 每份工资做什么用，基金里有多少 |
+| | FIRE | 离目标还有多远，哪年到 |
+| | Drawdown & care | 钱够不够用（含养老护理），历史上多少段真实年份里撑得住 |
+| | Spending baseline | 目标所依据的月支出，和实际花了多少 |
+| Records | Updates | 每次更新改了什么 |
+| | Accounts | 钱放在哪些地方 |
+| | Statements | 哪份对账单哪个月到了，还缺什么 |
+| — | Glossary | 每个金融术语，以及页面自己起的每个词 |
+
+### 第一次发布以后新增的
+
+- **Performance**：同样的钱在同一天买入你指定的一只基金，现在值多少。
+- **历史上撑得住吗？** 用 1928 年以来每一段真实年份重放取钱计划，按你现在的投资组合配比。
+- **Coast to FIRE**：今天的钱什么都不再加，几岁能到目标。
+- **Glossary**、虚线下划线的术语、能点开看算式的数字。
+- **下载对账单**：你自己登录银行以后，Claude 算出缺哪几份、问你一次、下载并放进 `inbox/`。
+- 净值合成一张卡；负数写作 −$61；页眉只说两个日期。
 
 ## 一分钟试一下
 
@@ -35,9 +69,10 @@ Anthropic；解析器读成功的对账单，它从不看。
 
 ## 二十分钟做成你自己的
 
-你需要 [Claude Code](https://claude.com/claude-code)、Python 3.9 或更新、一个在你设备之间同步的
+你需要一个包含 [Claude Code](https://claude.com/claude-code) 的 Claude 套餐，在 Claude desktop app 的
+**Code** 标签里用（Chat 打不开文件夹）；还要 Python 3.9 或更新、一个在你设备之间同步的
 文件夹（iCloud Drive、OneDrive、Dropbox —— 手机拍的对账单，电脑上就能处理），以及上个月的对账单。
-就这些；不连银行，不订阅任何服务。
+就这些：不连银行，除了 Claude 不订阅别的服务。
 
 1. **把上个月的文件丢进 `inbox/`**，文件名保持银行默认的样子：每份银行对账单、券商的持仓和活动导出、
    海外资产的截图。
@@ -55,7 +90,7 @@ Anthropic；解析器读成功的对账单，它从不看。
   `findata/` 是被 git 跟踪的；你的一旦是真的，先跑 `git rm -r --cached findata`，再把
   `.gitignore` 里 `findata/` 那一行取消注释。
 
-> **给谁用。** 在加拿大领工资、在五大行之一或之二有几个账户、有一个券商账户、想让自己的计划被盯住的人。
+> **给谁用。** 在加拿大朝财务自由努力、领工资、在五大行之一或之二有几个账户、有一个券商账户、想让自己的计划被盯住的人。
 > 它认识的免税账户是 TFSA、RRSP 和 FHSA，金额是加元，退休那部分的算法假设了 CPP 和 OAS。对账单由解析器
 > 读，每家银行每种对账单一个：现在有 RBC 和 BMO，加 Wealthsimple 的导出；接下来按顺序是 TD、Scotiabank、
 > CIBC，然后 Questrade 和 Interactive Brokers。你的银行还没有解析器之前，那些对账单由 Claude 手读 ——
@@ -82,8 +117,8 @@ Emma 每月要丢八份文件：RBC 三份 PDF、BMO 三份 PDF、Wealthsimple �
   注册表和它的来源一致。
 - **页面是否守着设计规则** —— 图表高度、行宽、对比度、导航和页面对应、这份 README 和真实页面对应。
 - **真的画得出来** —— 无头浏览器在三种宽度打开每一页，找没渲染出来的东西。
-<!-- LINT:FAULTS n=56 -->
-- **检查器自己还在不在工作** —— selftest 在工作区副本上种下 56 个故障，逐个断言会被抓住。
+<!-- LINT:FAULTS n=57 -->
+- **检查器自己还在不在工作** —— selftest 在工作区副本上种下 57 个故障，逐个断言会被抓住。
   它存在是因为有一次检查器 lint 了一个空目录还报了通过。
 
 干净时一声不吭。出了问题就是一条带编号的发现，按出错的种类分组。
@@ -138,6 +173,7 @@ tools/        demo 数据、迁移脚本、同步进工作区
 
 | 文件 | 管什么 |
 |---|---|
+| [`PRODUCT.md`](PRODUCT.md) | 产品为谁、回答什么问题、原则，以及刻意不做什么 |
 | `CLAUDE.md` | Claude 在这里怎么工作：信息模型、导入、检查器 |
 | `FINANCE.md` | 钱的逻辑：FIRE 目标、pay-yourself-first、什么算收入 |
 | `DESIGN.md` | 页面长什么样、怎么说话：配色、导航、文案 |
@@ -156,11 +192,16 @@ tools/        demo 数据、迁移脚本、同步进工作区
 —— 是它的一个实例。`tools/sync.py <workspace>` 把技能、模板和纲领文件复制进去，不碰任何属于你
 的东西；工具的数据形状比你的文件夹新时，`tools/migrate.py <workspace>` 会一步一步把文件夹迁上来。
 
-<!-- LINT:NAV main=19/5 minwidth=1120 -->
-页面共 19 页、5 个侧栏分组 ——
-Home · Spending · Income · Investing · Plan · Records
+<!-- LINT:NAV main=17/5 minwidth=1120 -->
+页面共 17 页、5 个侧栏分组 ——
+Home · Spending · Income · Investing · Plan · Records · Glossary
 —— 仅桌面，窗口至少 1120px 宽。
 </details>
+
+## 接下来
+
+接下来几次发布的内容和目标日期见 [`ROADMAP.md`](ROADMAP.md)；已经发布的见
+[`CHANGELOG.md`](CHANGELOG.md)。
 
 ## 许可
 

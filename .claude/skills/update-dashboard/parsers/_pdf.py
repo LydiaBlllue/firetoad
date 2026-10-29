@@ -28,8 +28,20 @@ def text_lines(path):
     out = []
     for p in r.pages:
         # A non-breaking space (0xa0) between an amount and "CR" is a space to everything below.
-        out += [l.replace("\xa0", " ").strip() for l in (p.extract_text() or "").splitlines() if l.strip()]
+        out += [join_split(l.replace("\xa0", " ").strip()) for l in (p.extract_text() or "").splitlines() if l.strip()]
     return out
+
+
+SPLIT = (re.compile(r"(\d) ,(?=\d{3}(?:,\d{3})*\.\d{2}\b)"), re.compile(r"(\d), (?=\d{3}(?:,\d{3})*\.\d{2}\b)"))
+
+
+def join_split(line):
+    """pypdf sometimes puts a space on one side of a thousands comma — '1 ,215.05', '3, 000.00'
+    (a first user's chequing statements, 2026-10). Only a comma followed by three digits and the
+    cents closes up, so 'May 05, 2026' and '3, 4 and 5' are left alone."""
+    for rx in SPLIT:
+        line = rx.sub(r"\1,", line)
+    return line
 
 
 def money(s):

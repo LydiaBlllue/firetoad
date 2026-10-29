@@ -21,11 +21,48 @@ does.
 
 | | |
 |---|---|
-| ![Net worth, cut two ways](docs/screens/home.png) | **Home.** Your net worth, cut by what each part is for and by how easily you could reach it. A sentence under it says how far the numbers go and what is still missing. |
-| ![A year of spending](docs/screens/spending.png) | **Spending.** This month opened up by category, then the year by month. No category caps — one allowance, and everything under it is guilt-free. |
-| ![The budget](docs/screens/plan.png) | **Budget.** What each paycheque is for: what is committed, what is invested first, what is free, what the two funds hold. |
-| ![Your investment rules](docs/screens/rules.png) | **Investing.** Your own rules — a cash band, a cap on holdings, the theses you wrote down — checked one by one against what you actually hold. |
-| ![Which file was filed](docs/screens/sources.png) | **Records.** Which statement arrived which month, every account and what it is still missing, and what each update changed or left waiting for you. |
+| ![Home](docs/screens/home.png) | **Home.** Four cards, one per section. Net worth in one card: a row for what each part is for, its bar coloured by how easily you could reach it. Two dates under the net worth: the day every account is complete to, and the last update. |
+| ![A year of spending](docs/screens/spending.png) | **Spending.** This month, opened up by category; the year, month by month and against the allowance; subscriptions, with what is due in the next 30 days. No category caps — one allowance, and everything under it is guilt-free. |
+| ![The budget](docs/screens/plan.png) | **Plan.** What each paycheque is for; how far the portfolio is from the FIRE target and when it gets there; whether the money lasts once you start taking it out, replayed through every stretch of real years since 1928. |
+| ![Your portfolio](docs/screens/portfolio.png) | **Investing.** What you hold and how it splits, by currency, by kind of asset and by bucket; how much is kept ready as dry powder; how it did against one fund you could have bought instead. |
+| ![Which file was filed](docs/screens/sources.png) | **Records.** What each update changed; every account; which statement arrived which month. A glossary of every term sits on its own at the foot of the sidebar. |
+
+**Every word on a card is chosen.** A card has a label, one number and at most one fact. A
+term with a dotted underline shows its dictionary entry and opens the Glossary; a number with
+one shows the sum behind it. Every page works this way.
+
+### Every page
+
+| Section | Page | What it answers |
+|---|---|---|
+| — | Home | Where you stand, and what you are worth |
+| Spending | This month | How much is still free to spend, and where the money went |
+| | Year | How the year went, by category and month by month |
+| | Subscriptions | What repeats, what it costs a year, what is due next |
+| Income | Income | What came in, by source, and how much of it you kept |
+| | Investment income | What the portfolio paid you before you sold anything |
+| Investing | Portfolio | What is invested, by currency, by kind of asset and by bucket |
+| | Performance | How it did against one benchmark fund bought on the same days |
+| | Holdings | Every position, by role or by account |
+| Plan | Budget | What each paycheque is for, and what the funds hold |
+| | FIRE | How far the portfolio is from the target, and when it gets there |
+| | Drawdown & care | Whether the money lasts, care included, and in how many real stretches of history it would have |
+| | Spending baseline | The monthly figure the target is built on, against what you really spend |
+| Records | Updates | What each update changed |
+| | Accounts | Every place the money sits |
+| | Statements | Which statement arrived which month, and what is missing |
+| — | Glossary | Every finance term, and every word the page coined |
+
+### New since the first release
+
+- **Performance**: the same money put into one fund you name, on the days it actually went in.
+- **Would it have lasted?** The drawdown replayed through every stretch of real years since
+  1928, mixed the way your portfolio is today.
+- **Coast to FIRE**: the age today's money reaches the target with nothing more added.
+- **Glossary**, dotted-underline terms and numbers that open their sum.
+- **Fetching statements**: once you have signed in to your bank yourself, Claude works out
+  which statements are missing, asks once, downloads them and files them into `inbox/`.
+- Net worth in one card instead of two; negative money reads −$61; the header says two dates.
 
 ## Try it in one minute
 
@@ -38,10 +75,11 @@ because the checkers would not have let the page build otherwise.
 
 ## Make it yours in twenty minutes
 
-You need [Claude Code](https://claude.com/claude-code), Python 3.9 or newer, a folder that syncs
+You need a Claude plan that includes [Claude Code](https://claude.com/claude-code), used from the
+Claude desktop app's **Code** tab (Chat cannot open a folder), Python 3.9 or newer, a folder that syncs
 between your devices (iCloud Drive, OneDrive, Dropbox — so a statement photographed on your phone
-is on your laptop), and last month's statements. That is all; no bank connection and no
-subscription.
+is on your laptop), and last month's statements. That is all: no bank connection, and no subscription but
+Claude's.
 
 1. **Drop last month's files into `inbox/`**, filenames untouched: every bank statement, your
    broker's holdings and activities exports, a screenshot of anything held abroad.
@@ -62,7 +100,7 @@ Two things worth knowing before you start:
   and `archive/`, but the demo's `findata/` is tracked; the moment yours is real, run
   `git rm -r --cached findata` and uncomment the `findata/` line in `.gitignore`.
 
-> **Who it is for.** Someone in Canada with a paycheque, a few accounts at one or two of the big
+> **Who it is for.** Someone in Canada working toward financial independence, with a paycheque, a few accounts at one or two of the big
 > five banks, a broker, and a plan they want held to. The tax-sheltered accounts it knows are the
 > TFSA, RRSP and FHSA, the money is Canadian dollars, and the retirement arithmetic assumes CPP
 > and OAS. Statements are read by parsers, one per bank and kind of statement: today RBC and BMO,
@@ -100,8 +138,8 @@ line, and a fifth checks the checkers:
   against sections, this README against the real pages.
 - **Does it actually draw** — a headless browser opens every page at three widths and looks for
   anything that failed to render.
-<!-- LINT:FAULTS n=56 -->
-- **Are the checkers still checking** — a selftest plants 56 specific faults in a copy of the
+<!-- LINT:FAULTS n=57 -->
+- **Are the checkers still checking** — a selftest plants 57 specific faults in a copy of the
   workspace and asserts each one is caught. It exists because a checker once linted an empty
   folder and reported success.
 
@@ -157,6 +195,7 @@ The folder is called `findata/` because iCloud for Windows refuses to sync any f
 
 | File | Owns |
 |---|---|
+| [`PRODUCT.md`](PRODUCT.md) | what the product is for, its principles, and what it deliberately is not |
 | `CLAUDE.md` | how Claude works here: the information model, the import, the checkers |
 | `FINANCE.md` | the money logic: the FIRE target, pay-yourself-first, what counts as income |
 | `DESIGN.md` | how the page looks and talks: palette, navigation, copy |
@@ -176,11 +215,16 @@ the templates and the governing documents into it and touches nothing that is yo
 tool's data shape moves ahead of your folder, `tools/migrate.py <workspace>` brings the folder
 up one step at a time.
 
-<!-- LINT:NAV main=19/5 minwidth=1120 -->
-The page is 19 pages in 5 sidebar groups —
-Home · Spending · Income · Investing · Plan · Records
+<!-- LINT:NAV main=17/5 minwidth=1120 -->
+The page is 17 pages in 5 sidebar groups —
+Home · Spending · Income · Investing · Plan · Records · Glossary
 — desktop only, at least 1120px wide.
 </details>
+
+## What's next
+
+The next releases and their target dates are in [`ROADMAP.md`](ROADMAP.md); what already
+shipped is in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Licence
 

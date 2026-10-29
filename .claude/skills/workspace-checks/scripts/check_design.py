@@ -190,12 +190,14 @@ def check(path):
     b_min = re.search(r'min-width:\s*(\d+)px', bodycss)
     nav = re.search(r'const NAV = \[(.*?)\n\];', src, re.S)
     if nav:
-        real = {}
+        real, top = {}, []
         for sec, items in re.findall(r'\{sec:"([^"]*)",\s*items:\[(.*?)\]\}', nav.group(1), re.S):
-            real[sec or "—"] = re.findall(r'n:"([^"]+)"', items)
+            names = re.findall(r'n:"([^"]+)"', items)
+            # A group with no heading (Home at the top, the Glossary at the foot) is its pages.
+            real[sec or "—"] = real.get(sec or "—", []) + names
+            top += names if not sec else [sec]
         n_pages = len(re.findall(r'\{k:"', nav.group(1)))
         n_secs = len([k for k in real if k != "—"])   # Home sits above the section list
-        top = real.get("—", []) + [k for k in real if k != "—"]   # sidebar as a reader sees it
 
         design = os.path.join(root, "DESIGN.md")
         if os.path.exists(design):

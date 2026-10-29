@@ -53,8 +53,8 @@ before calling a dashboard change done.
 python3 .claude/skills/workspace-checks/scripts/selftest.py .
 ```
 
-<!-- LINT:FAULTS n=56 -->
-Plants 56 specific faults in a **copy** of the workspace and asserts that a named rule fires
+<!-- LINT:FAULTS n=57 -->
+Plants 57 specific faults in a **copy** of the workspace and asserts that a named rule fires
 for each. Run it after changing a linter, and after moving anything the linters read.
 
 It exists because on 2026-09-08 two linter bugs shipped in one afternoon and both were silent: S4
@@ -140,7 +140,7 @@ which matters more — a merchant filed wrong moved the FIRE target by $33,000.
 | D6 | one merchant, one category; and repeat merchants are in merchants.json |
 | D7 | banks.json agrees with the ledger's closing balance |
 | D8 | foreign.json total is the sum of its accounts, and each has an institution |
-| D9 | fx.json is not carried-forward — the activities export carries the broker's rate |
+| D9 | fx.json is not carried-forward — the activities export carries the broker's rate; the demo's age is counted from its own newest data, not today |
 | D10 | an e-Transfer matching the counterparty ledger named in cashflow.json is typed Repayment, never income |
 | D11 | the dashboard's baked-in INVEST / NW_HISTORY match findata |
 
