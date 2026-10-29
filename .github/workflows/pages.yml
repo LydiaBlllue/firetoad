@@ -3,10 +3,11 @@
 # dashboards/ is what the template and findata/ build (T1), so nothing is rebuilt here.
 name: Live demo
 
+# Every push to main redeploys, whatever it changed (2026-10-29, user 001): a release is a
+# release, and the demo is never left on an older build than the repository says it is.
 on:
   push:
     branches: [main]
-    paths: [dashboards/finance_dashboard.html, docs/site/**, docs/screens/**, docs/logo.svg, .github/workflows/pages.yml]
   workflow_dispatch:
 
 permissions:

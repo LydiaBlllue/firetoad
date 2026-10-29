@@ -5,7 +5,7 @@ shipped is in [`CHANGELOG.md`](CHANGELOG.md).
 
 Every release goes out the same way: a privacy scan of every changed file and commit message, a
 fresh clone that must rebuild to the committed page with every checker clean and every planted
-fault caught, then one squashed commit on `main`.
+fault caught, then one squashed commit on `main`, and the live demo redeploys with it.
 
 Items marked *(first user)* came from the first person other than the owner to set the tool up
 from scratch: one credit card, nine statements, a cloud session.
