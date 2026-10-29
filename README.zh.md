@@ -37,7 +37,7 @@ Anthropic；解析器读成功的对账单，它从不看。
 | | Year | 这一年按分类、按月怎么样 |
 | | Subscriptions | 哪些在重复扣钱、一年多少、下一笔什么时候 |
 | Income | Income | 收入从哪来，留下了多少 |
-| | Investment income | 不卖任何东西，投资组合付给你多少 |
+| | Investment income | 不卖任何东西，投资组合付给你多少，哪只持仓什么时候付 |
 | Investing | Portfolio | 投了多少，按币种、资产类别、分组怎么分布 |
 | | Performance | 和同一天买入一只基准基金相比表现如何 |
 | | Holdings | 每个持仓，按角色或按账户 |
@@ -49,6 +49,14 @@ Anthropic；解析器读成功的对账单，它从不看。
 | | Accounts | 钱放在哪些地方 |
 | | Statements | 哪份对账单哪个月到了，还缺什么 |
 | — | Glossary | 每个金融术语，以及页面自己起的每个词 |
+
+### 1.1 新增
+
+- **你的数据只在你这里**：setup 让 `findata/` 不进 git，pre-commit 守卫会拒绝任何要把它带到远端的提交。
+- **第一次导入大多已经分好类**：大约九十个加拿大常见连锁自带建议类别，仍会问你一次确认。
+- **能读更多对账单**：余额在贷方的 BMO Mastercard，以及描述换行、数字被拆开（`1 ,215.05`）的支票账单。
+- **setup 从干净开始**：demo 的对账单和笔记会被清掉，`OWNER.md` 换成一份空的等你填。
+- **Year** 算上退款，每月加起来等于实际花的；**Investment income** 显示哪只持仓付息、多久一次、付了多少。
 
 ### 第一次发布以后新增的
 
@@ -86,9 +94,9 @@ Anthropic；解析器读成功的对账单，它从不看。
 开始之前两件事值得知道：
 
 - `pip3 install --user pypdf` 让解析器直接读你的 PDF。不装的话，Claude 会逐份手读 —— 慢一点，但能用。
-- 真实数据不要进任何公开仓库。自带的 `.gitignore` 保护了 `inbox/` 和 `archive/`，但 demo 的
-  `findata/` 是被 git 跟踪的；你的一旦是真的，先跑 `git rm -r --cached findata`，再把
-  `.gitignore` 里 `findata/` 那一行取消注释。
+- 真实数据不会进 git。setup 写入你的数据时，会把 `findata/`、`dashboards/` 和 decisions 文件夹加进
+  `.gitignore`，并装上 pre-commit 守卫：仓库有远端时，带这些文件的提交一律拒绝。demo 的文件仍被
+  跟踪，想把它们也从索引里去掉，跑一次 `git rm -r --cached findata dashboards`。
 
 > **给谁用。** 在加拿大朝财务自由努力、领工资、在五大行之一或之二有几个账户、有一个券商账户、想让自己的计划被盯住的人。
 > 它认识的免税账户是 TFSA、RRSP 和 FHSA，金额是加元，退休那部分的算法假设了 CPP 和 OAS。对账单由解析器

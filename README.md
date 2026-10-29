@@ -40,7 +40,7 @@ one shows the sum behind it. Every page works this way.
 | | Year | How the year went, by category and month by month |
 | | Subscriptions | What repeats, what it costs a year, what is due next |
 | Income | Income | What came in, by source, and how much of it you kept |
-| | Investment income | What the portfolio paid you before you sold anything |
+| | Investment income | What the portfolio paid you before you sold anything, and which holding pays when |
 | Investing | Portfolio | What is invested, by currency, by kind of asset and by bucket |
 | | Performance | How it did against one benchmark fund bought on the same days |
 | | Holdings | Every position, by role or by account |
@@ -53,7 +53,20 @@ one shows the sum behind it. Every page works this way.
 | | Statements | Which statement arrived which month, and what is missing |
 | — | Glossary | Every finance term, and every word the page coined |
 
-### New since the first release
+### New in 1.1
+
+- **Your data stays yours**: setup keeps your `findata/` out of git, and a pre-commit guard
+  refuses a commit that would carry it to a remote.
+- **A first import is mostly sorted already**: about ninety common Canadian chains come with a
+  suggested category, still put to you once to confirm.
+- **More statements read**: a BMO Mastercard in credit, and chequing statements whose
+  descriptions wrap or whose numbers come out split (`1 ,215.05`).
+- **Setup starts you clean**: the demo's statements and notes go, and `OWNER.md` is an empty
+  one to fill.
+- **Year** counts refunds, so the months add up to what was spent; **Investment income** shows
+  which holding pays, how often and how much.
+
+### Since the first release
 
 - **Performance**: the same money put into one fund you name, on the days it actually went in.
 - **Would it have lasted?** The drawdown replayed through every stretch of real years since
@@ -96,9 +109,10 @@ Two things worth knowing before you start:
 
 - `pip3 install --user pypdf` lets the statement parsers read your PDFs. Without it, Claude
   reads each statement by hand — slower, but it works.
-- Keep your real data out of any public repository. The shipped `.gitignore` protects `inbox/`
-  and `archive/`, but the demo's `findata/` is tracked; the moment yours is real, run
-  `git rm -r --cached findata` and uncomment the `findata/` line in `.gitignore`.
+- Your real data stays out of git. When setup writes it, it adds `findata/`, `dashboards/` and the
+  decisions folder to `.gitignore` and installs a pre-commit guard that refuses any commit carrying
+  them while the repository has a remote. The demo's files are still tracked, so to drop them
+  from the index as well, run `git rm -r --cached findata dashboards` once.
 
 > **Who it is for.** Someone in Canada working toward financial independence, with a paycheque, a few accounts at one or two of the big
 > five banks, a broker, and a plan they want held to. The tax-sheltered accounts it knows are the
