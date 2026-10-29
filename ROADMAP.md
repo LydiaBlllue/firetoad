@@ -10,9 +10,9 @@ fault caught, then one squashed commit on `main`.
 Items marked *(first user)* came from the first person other than the owner to set the tool up
 from scratch: one credit card, nine statements, a cloud session.
 
-## v1.1 — 2026-11-04
+## v1.1 — shipped 2026-10-29
 
-Everything planned here is built, on the `v1.1` branch (CHANGELOG, 1.1).
+Merged into `main`; what it carries is in CHANGELOG, 1.1.
 
 ## v1.2 — 2026-11-24 — a first setup that works for someone else
 
