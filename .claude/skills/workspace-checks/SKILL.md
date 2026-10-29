@@ -92,9 +92,6 @@ once the page renders. After a structural change, check these yourself:
 3. **Charts actually got wider, not just their container.** Measure the rendered `<svg>` box.
    Measuring the element and declaring victory is exactly how the fixed-height bug survived a
    round of "verification" — the element was 1434px while the drawing inside stayed 940px.
-4. **Pages fill roughly a screen.** DESIGN.md §5d puts the floor near 520px. When a page falls
-   short the agreed fix is to add a card that answers a question the page already raised — not to
-   merge pages, and not to pad.
 
 ## Reporting
 

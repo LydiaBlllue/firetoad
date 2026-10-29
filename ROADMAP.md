@@ -46,8 +46,8 @@ Merged into `main`; what it carries is in CHANGELOG, 1.1.
 ## v1.2 — 2026-11-24 — a first setup that works for someone else
 
 **Released 2026-10-29** — what each item became is in CHANGELOG, 1.2. Still open, and carried
-into v1.3: the screenshots a step in *Start here* (the words are done), and asking at the import
-about an account abroad whose balance fell. Setup was run end to end for a card-only owner, and
+into v1.3: the screenshots a step in *Start here* (the words are done), and spreading a bill paid
+once a year over twelve months when months are compared. Setup was run end to end for a card-only owner, and
 the selftest now does that every time; the migration was run on a copy of user 001's workspace.
 
 - **The demo on a phone.** A link shared on social media is opened on a phone, and the page is
@@ -81,8 +81,8 @@ the selftest now does that every time; the migration was run on a copy of user 0
   plan — a government refund, a cash withdrawal and a transfer between banks are recognised, and
   Bill is a type of its own. *(Built; replaced by the next item, which makes a bill spending.)*
 - **Spending is what it is, not how it was paid** (decided 2026-10-29, for the target user;
-  replaces the seven categories). *Built on `v1.2` (CHANGELOG); still open: an account abroad
-  that moved, asked at the import.* Spending is money that leaves and buys nothing you still own:
+  replaces the seven categories). *Built on `v1.2` (CHANGELOG); still open: a bill paid once a
+  year spread over twelve months.* Spending is money that leaves and buys nothing you still own:
   card and debit purchases, and from chequing rent, bills, cash taken out, fees and interest,
   and money sent to family. Not spending: moving money between your own accounts (abroad
   included), investing, a card payment, lending, being repaid, loan principal.
@@ -94,16 +94,12 @@ the selftest now does that every time; the migration was run on a copy of user 0
     allowance. Fixed and Everyday make the measured spending the FIRE target is calibrated on;
     For a time is in the year's total and never in the target. A bill paid once a year is
     spread over twelve months when months are compared.
-  - **A subscription is a mark, not a category.** A charge that repeats — one merchant, a
-    similar amount, month after month — is detected and marked, and the subscriptions list is
+  - **A subscription is a mark, not a category.** A charge that repeats — one merchant, one
+    price month after month — is detected and marked, and the subscriptions list is
     every marked charge; each keeps the category of what it bought.
   - **Family money.** Money sent to family is Family & gifts, asked once, since a program
     cannot tell a parent from the owner's own account abroad. Money from family (a parent
     paying toward tuition) is other income.
-  - **An account abroad that moved.** Its balance comes from a screenshot with no
-    transactions; a fall past a threshold that no known transfer explains is asked at the
-    import (tuition, my own account, family, other), and the answer is recorded as the row the
-    statement could not give.
   - Rent and a mortgage stay declared flows as well, matched against the ledger (D21), so a
     payment is counted once. The owner's workspace maps its seven categories across.
 - **The selftest never crashes on an owner's own data.** *(first user)* A workspace with no

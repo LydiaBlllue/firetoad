@@ -16,8 +16,7 @@ Needs Playwright + Chromium (installed 2026-09-08):
 import os, sys
 
 WIDTHS = [1120, 1440, 1760]   # DESIGN.md §4: min-width 1120, max-width 1760
-TALL   = 900                  # viewport height used for the "does a page fill a screen" check
-FILLS  = 600                  # a page shorter than this at 900px tall leaves the screen empty
+TALL   = 900                  # viewport height
 
 CATS = [("build",   "is the artefact current with findata/"),
         ("conform", "does it still follow DESIGN.md")]
@@ -164,13 +163,8 @@ def check(path):
         note("R3", f"{grew} charts grow with the window "
                    f"({WIDTHS[0]} → {WIDTHS[-1]}px)")
 
-    # -- R4 a page should fill the screen it opens on ---------------------------
-    thin = sorted((p["h"], p["k"]) for p in res[1440]["pages"] if p["h"] < FILLS)
-    for h, k in thin:
-        warn("R4", f"page '{k}' is only {h}px tall at 1440×{TALL} — it does not fill a screen",
-             "conform")
-    if not thin:
-        note("R4", f"every page fills a {TALL}px screen")
+    # R4 (a page should fill a screen) was retired 2026-10-29: Home is short on purpose, so the
+    # rule warned on every run, and a warning nobody acts on teaches everyone to skip the output.
     return F
 
 

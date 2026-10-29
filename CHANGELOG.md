@@ -2,6 +2,9 @@
 
 ## 1.2 — 2026-10-29
 
+- **R4 retired** (2026-10-29). "A page should fill a screen" warned on Home on every run, and
+  Home is short on purpose; a warning nobody acts on only teaches everyone to skip the output.
+  DESIGN.md §5d now says a page is as long as what it has to say.
 - **Spending is what it is, not how it was paid** (2026-10-29, designed for the target user;
   findata schema 11, `tools/migrate_10to11.py`). Rent, a bill, a payment to a payee, cash taken
   out and a bank's fee leave chequing and are spending: the import writes each to spending.csv

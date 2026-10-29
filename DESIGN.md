@@ -353,9 +353,9 @@ Each of these is checked by `check_design.py`.
   `.tight` (780px).
 - **Stat cards are flex**, `flex:1 1 190px; max-width:340px`, never grid `auto-fit` with a
   fixed maximum, which lays its tracks at the maximum and wraps a fourth card.
-- **Every page fills roughly a screen** (about 520px of content or more). A page that falls
-  short gets content that answers a question it already raises — never padding, and never a
-  merge with another page.
+- **A page is as long as what it has to say.** A short page is not padded and not merged into
+  another (2026-10-29: the rule that every page fill a screen was retired; Home is short on
+  purpose).
 
 ## 5e. Motion — two things only
 
