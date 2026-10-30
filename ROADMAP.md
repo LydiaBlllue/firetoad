@@ -138,7 +138,7 @@ the selftest now does that every time; the migration was run on a copy of user 0
 - **A checker for charts drawn by month**: the months must have an end (DESIGN.md §5f).
 - **Charts draw in** the first time they appear (optional).
 
-## v2.0 — after v1.4 — the page on a framework
+## v2.0 — after v1.4 — the page on a framework, the data in a database
 
 Decided 2026-10-30 (user 001). This month was built twice in React to compare, on the
 `proto-react-month` branch (`prototypes/`): with Tremor, and with shadcn/ui. The shadcn/ui build
@@ -159,6 +159,30 @@ The move is planned here so it does not land in the middle of the first release.
 - **The checkers follow.** `check_design` and `check_render` read the built page, and the
   selftest plants its faults in the component sources.
 - **One page at a time**, This month first, each released only when the checkers pass on it.
+
+**The data moves into a database** (decided 2026-10-30, user 001), in the same release, so the
+data layer is rewritten once with the page rather than twice:
+
+- **SQLite, through Python's own `sqlite3`**: nothing new to install. What it buys: an import
+  is one transaction, written whole or not at all; two writers (an import and a save from the
+  page) queue instead of overwriting each other; the simple rules (a category is one of the
+  fifteen, a key is unique) are constraints a bad row cannot pass; any question about the data
+  is one query, which a search or filter on the page can ask without Claude; and a later sync
+  across devices has a known shape (Actual Budget's CRDT log).
+- **Edited on the page and saved**, through a small local server started with a double-click,
+  later wrapped as a desktop app (Tauri). Every write goes through one module that checks it,
+  dates it with its reason and rebuilds; the page, `confirm.py` and any later bank connection
+  all use it.
+- **What stays files**: `inbox/` and `archive/` (the original statements), and the demo and
+  fixtures in the repository, kept as text and loaded into a database when built, so a pull
+  request still shows what changed and the privacy guard still reads every line.
+- **The checkers follow.** check_data keeps the rules that span tables (a balance chain closes,
+  a fund never claims more than its account) and reads them from the database; the selftest
+  plants its faults there. A migration moves an existing workspace's `findata/` in, user 001's
+  included, and proves the figures are unchanged.
+- **Decided first**: where the workspace lives. A database inside iCloud Drive can be corrupted
+  by a sync in the middle of a write, so the workspace leaves iCloud and gets a backup of its
+  own; which, and how it reaches a second computer, is settled before any code.
 
 ## Later
 
