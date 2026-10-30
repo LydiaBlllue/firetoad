@@ -203,6 +203,8 @@ def check(root):
             if (g.get("date"), f"{float(g.get('amount') or 0):.2f}", g.get("currency", "CAD")) not in deposits:
                 err("D29", f"plan.json brokerGifts {g.get('date')} {g.get('amount')} {g.get('currency', 'CAD')}: "
                            f"no deposit like it in ws_activities.csv")
+            if not 0 < float(g.get("counted", g.get("amount") or 0)) <= float(g.get("amount") or 0):
+                err("D29", f"plan.json brokerGifts {g.get('date')}: counted {g.get('counted')} is not part of the deposit")
             if not g.get("why"):
                 err("D29", f"plan.json brokerGifts {g.get('date')}: no reason beside the value")
 

@@ -191,7 +191,7 @@ def cashflow_rows(d, accs, rate, half, wsinc):
     # a deposit straight into the broker that the owner says was a gift (plan.json `brokerGifts`):
     # no ledger ever shows it, and the export cannot say where it came from. D29 holds each to it.
     for g in (d.get("plan") or {}).get("brokerGifts", []):
-        rows[g["date"][:7]]["gift"] += float(g["amount"]) * (rate if g.get("currency") == "USD" else 1)
+        rows[g["date"][:7]]["gift"] += float(g.get("counted", g["amount"])) * (rate if g.get("currency") == "USD" else 1)
     # a card's cash back (rewards.csv): income, on its own line, never pay -- like the broker's
     # income, it never reaches chequing
     for r in d.get("rewards", []):

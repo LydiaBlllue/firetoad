@@ -50,8 +50,9 @@
 - **Money from family** (a parent paying toward tuition, support sent from abroad) and other
   gifts are income, on the **Gift** line and never pay. Money that went straight into the broker
   shows in no ledger, and the export cannot say whose it was: the owner declares it in `plan.json`
-  `brokerGifts` (date, amount, currency, why), D29 holds each to a deposit in the export, and a
-  US-dollar one counts at today's rate. **Government** money (a tax refund, the
+  `brokerGifts` (date, amount, currency, why, and `counted` when only part of the deposit was
+  for the owner), D29 holds each to a deposit in the export, and a US-dollar one counts at today's
+  rate. **Government** money (a tax refund, the
   GST/HST credit, a benefit) is counted with Other income. Rent, a bill, cash taken
   out and a bank's fee are money out, never income: they are spending (§3a).
 - Investment income (dividends, interest, stock lending, withholding tax) is shown on its own on
