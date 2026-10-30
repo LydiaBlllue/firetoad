@@ -2,6 +2,7 @@
 
 ## 1.3 — unreleased
 
+- **The page says its version again**: the sidebar had read v1.0 through 1.1 and 1.2.
 - **Home's net-worth rows open to their accounts** (2026-10-30, user 001). "How much cash, and
   where" had only a total on Home and a table sorted by bank on Accounts. Click Cash, or any row,
   and it lists the accounts behind it in place; the amounts sum to the row.
