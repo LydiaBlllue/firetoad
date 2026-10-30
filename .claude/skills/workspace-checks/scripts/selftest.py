@@ -1145,6 +1145,15 @@ def update_check(root, base):
         name = doc["file"].replace("<Month D, YYYY>", f"{LONG[end.month - 1]} {end.day}, {end.year}").replace("<date>", end.isoformat())
         if m["parser"] == "rbc_visa":
             name = f"{tag}.pdf"      # the way an RBC download really arrives: the statement has to name itself
+        # Two documents under one filename pattern (2026-10-28): the first arrives the way an
+        # upload renames it, underscores for spaces and commas; the second under the OTHER one's
+        # close day, so only the account it prints can say which it is.
+        twins = sorted(k for k, d in docs.items() if d.get("parser") and d.get("file") == doc.get("file"))
+        if len(twins) > 1 and key == twins[0]:
+            name = name.replace(", ", " ").replace(" ", "_")
+        elif len(twins) > 1 and key == twins[1]:
+            other = int(re.search(r"\d+", docs[twins[0]].get("closes", "")).group(0))
+            name = f"{LONG[end.month - 1]} {other}, {end.year}.pdf"
         shutil.copy(m["file"], os.path.join(ws, "inbox", name))
         dropped[key] = (name, f"{tag}_{doc['tags'][0]}_{name}")
     json.dump(banks, open(fd("banks.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
@@ -1159,6 +1168,9 @@ def update_check(root, base):
     bad = []
     if rc != 0:
         bad.append(f"update.py exited {rc}: " + " | ".join(out.strip().splitlines()[-3:]))
+    if any(len([k for k, d in docs.items() if d.get("parser") and d.get("file") == x.get("file")]) > 1 for x in docs.values()) \
+            and "prints the" not in out:
+        bad.append("a statement under the other account's close day was not named by the account it prints")
     for ledger, rows in want["ledger"].items():
         now = list(csv.DictReader(open(fd(ledger), encoding="utf-8")))
         if len(now) != len(rows):
@@ -1245,7 +1257,7 @@ def update_check(root, base):
     if bad:
         return ["  ✗ update.py: " + b for b in bad[:8]]
     return [f"  ✓ update.py: {len(newest)} statements round-tripped — {n_led} ledger rows and every purchase back where the "
-            f"demo had them, banks and filings as they were, a date-only PDF named by its contents, checkers clean, rebuild idempotent, a second drop wrote nothing, a transcribed statement filed and a wrong one refused"]
+            f"demo had them, banks and filings as they were, a date-only PDF named by its contents, a renamed one recognised and a card under the chequing's date named by the account it prints, checkers clean, rebuild idempotent, a second drop wrote nothing, a transcribed statement filed and a wrong one refused"]
 
 
 def strip_statement(ws, m):

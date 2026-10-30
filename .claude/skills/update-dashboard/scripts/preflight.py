@@ -81,8 +81,14 @@ def load_docs(root):
                         acct=by_key.get((d.get("covers") or [None])[0]) or {}))
     return out
 
+def canonical(name):
+    """The name a bank gave the file, back from what an upload made of it: spaces and commas
+    turned into underscores (`April_16_2026.pdf` for `April 16, 2026.pdf`, 2026-10-28)."""
+    n = re.sub(r"_+", " ", name.strip())
+    return re.sub(r"^([A-Z][a-z]+) (\d{1,2}) (\d{4})", r"\1 \2, \3", n)
+
 def classify(name):
-    n = name.strip()
+    n = canonical(name)
     low = n.lower()
     def hit(x, extra=""):
         d, a = x["doc"], x["acct"]

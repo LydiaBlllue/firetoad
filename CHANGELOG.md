@@ -2,6 +2,13 @@
 
 ## 1.3 — unreleased
 
+- **A renamed statement is still recognised, and a shared filename is told apart by the
+  account it prints** (2026-10-30, user 002). An upload that turns spaces and commas into
+  underscores (`April_16_2026.pdf`) is read as the bank's own name. Two documents under one
+  pattern — a card and a chequing account, both `<Month D, YYYY>.pdf` — were told apart by the
+  close day the name carries; the statement's printed account now decides, and the close day is
+  only the fallback. The archived name carries the account's tag either way. The selftest drops
+  one statement renamed and the card under the chequing's date, and expects both filed right.
 - **Big buys sit beside Free to spend** (2026-10-30, user 001). The card was the last on This
   month, under the chosen category's purchases, so a long list pushed it off the screen. It is
   the other half of the month — every purchase at or over the threshold — so it now shares the

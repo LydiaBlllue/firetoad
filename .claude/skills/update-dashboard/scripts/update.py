@@ -417,11 +417,21 @@ def classify_inbox(ws, plan):
         if label.startswith("Screenshot:"):
             plan.by_hand.append((os.path.basename(f["name"]), "a screenshot of an account held abroad: read the balances off the image into foreign.json"))
             continue
-        named.append((f["path"], label_to_doc[label]))
+        doc = label_to_doc[label]
+        # Two documents arriving under one filename pattern (a card and a chequing account, both
+        # `<Month D, YYYY>.pdf`) are told apart by the account the statement prints; the close
+        # day the name carries is only the fallback (2026-10-28).
+        if sum(1 for d in ws.docs if d.get("file") == doc.get("file")) > 1:
+            printed = name_by_contents(ws, plan, f["path"], quiet=True)
+            if printed is not None and printed is not doc:
+                plan.judged.append(f"{os.path.basename(f['name'])} has the name of the {ws.doc_name(doc)} statement, but it "
+                                   f"prints the {ws.doc_name(printed)} account; filed as that.")
+                doc = printed
+        named.append((f["path"], doc))
     return named
 
 
-def name_by_contents(ws, plan, path):
+def name_by_contents(ws, plan, path, quiet=False):
     """A PDF whose name says nothing — an RBC download arrives as `20260819.pdf` — is named by
     the statement itself: every parser is offered the file (the way setup drafts the register),
     and the one that reads it and reconciles says which account. Still never the filename."""
@@ -445,8 +455,9 @@ def name_by_contents(ws, plan, path):
                 hits.append(doc)
     if len(hits) != 1:
         return None
-    plan.judged.append(f"{os.path.basename(path)} carried no account in its name; the statement itself says it is "
-                       f"the {ws.doc_name(hits[0])} statement.")
+    if not quiet:
+        plan.judged.append(f"{os.path.basename(path)} carried no account in its name; the statement itself says it is "
+                           f"the {ws.doc_name(hits[0])} statement.")
     return hits[0]
 
 

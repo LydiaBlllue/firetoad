@@ -127,16 +127,11 @@ the selftest now does that every time; the migration was run on a copy of user 0
   exports, phone screenshots, balances no file carries, open questions), each with the one
   button that moves it forward. In the tool since 2026-10-30, so a sync no longer removes it;
   still to run through one real import before it is announced.
-- **A renamed file is still recognised.** *(first user)* A statement whose spaces and commas
-  were turned into underscores on the way in is named the same as the original.
 - **An account seen only in payments is offered.** *(first user)* When the statements show money
   moving to or from an account nobody registered, setup asks whether to add it, so a card-only
   owner's net worth is not just the card's debt.
 - **A regular e-Transfer may be pay.** *(first user)* When the same amount arrives every month
   from no named sender, the question offers it as income first.
-- **Which file is which.** *(first user)* Two statements that share a filename pattern, a card
-  and a chequing account, are named for the account the statement prints, so the owner can tell
-  them apart in `inbox/` and `archive/`.
 - **Cashback has a home.** *(first user)* A redemption is filed as a reward, not left as a credit
   nobody claimed.
 - **The selftest passes on a fresh machine.** *(first user)* One case failed in a cloud session
