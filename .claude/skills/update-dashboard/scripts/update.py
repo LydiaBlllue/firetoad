@@ -64,6 +64,7 @@ from parsers import parse as parse_file, ParserUnavailable, ParseError, NAMES as
 sys.path.insert(0, HERE)
 import layout  # noqa: E402
 import preflight  # noqa: E402
+import seen_accounts  # noqa: E402
 import rebuild  # noqa: E402
 import loans  # noqa: E402  what a borrower still owes (loans.py)
 sys.path.insert(0, CHECKS)
@@ -362,6 +363,7 @@ class Plan:
         self.bank = {}                                  # register name -> (balance, asof, is_debt)
         self.filed = collections.defaultdict(set)       # doc key -> months
         self.archive = []                               # (src, dst)
+        self.moves = []                                 # rows moving money between accounts, for seen_accounts
         self.delete = []                                # true duplicates
         self.merchant_seen = collections.Counter()      # key -> count
         self.merchant_dates = {}                        # key -> (first, last)
@@ -629,6 +631,7 @@ def plan_ledger(ws, plan, acc, doc, part, end):
         if not t:
             plan.untyped.append((ledger, r["date"], r["description"], amt))
         plan.ledger[ledger].append([r["date"], r["description"], f"{amt:.2f}", f"{bal:.2f}", tag, t, label])
+        plan.moves.append({"description": r["description"], "amount": amt})
         # a fee given back is a refund of the fee: a negative Fees row (FINANCE.md §3c)
         if t in SPENT and (amt < 0 or t == "Fee") and acc.get("spendTag"):
             merchant, cat = spent_of(ws, plan, table, t, r["description"], r["date"], src)
@@ -675,6 +678,7 @@ def plan_card(ws, plan, acc, doc, part, end):
         desc = r["description"].strip()
         if amt >= 0:
             if re.search(r"PAYMENT|THANK YOU|AUTOPAY|TRSF FROM|TRANSFER FROM", desc, re.I):   # a card payment, not a refund
+                plan.moves.append({"description": desc, "amount": amt})
                 continue
             if not plan_refund(plan, existing, acc, desc, amt, r["date"], src, tagend):
                 plan.credits.append((src, r["date"], desc, amt))
@@ -1058,6 +1062,12 @@ def noticed_lines(ws, out, plan):
         lines.append({"sev": "warn" if over else "ok",
                       "text": f"Purchases in {mon} come to {money(sp[m])} against the {money(allowance)} allowance."
                               + (" Some of it may be a big buy; say so and it moves." if over else "")})
+    # an account these statements move money to or from, that the register does not have
+    mine = [digits(a.get("id")) for a in ws.accounts] + [digits(x.get("id") or x.get("account")) for x in ws.reg.get("notOwned", [])]
+    for n, (c, i, o) in sorted(seen_accounts.unregistered(plan.moves, mine).items()):
+        flow = " and ".join(x for x in (f"{money(i)} in" if i else "", f"{money(o)} out" if o else "") if x)
+        lines.append({"sev": "warn", "text": f"Money moved to or from account …{n} ({c} time{'s' if c > 1 else ''}, {flow}), which is "
+                                             f"not one of your accounts. If it is yours, add it, so net worth counts it."})
     for g in ws.reg.get("gaps", []):
         if g.get("sev") in ("warn", "bad"):
             lines.append({"sev": g["sev"], "text": f"{g.get('what', '')}. {g.get('fix', '')}".strip()})

@@ -2,6 +2,14 @@
 
 ## 1.3 — unreleased
 
+- **An account seen only in payments is asked about by its number** (2026-10-30, user 002).
+  A card-only owner's statements show every payment coming from a chequing account that was
+  never registered, so net worth was the card's debt; a chequing ledger showed three other
+  account numbers. `seen_accounts.py` reads an account number where it is shaped like one —
+  masked, two groups joined, or ten digits and more — in a row that moves money between
+  accounts. Setup's question about missing accounts now lists each one, with how often and how
+  much moved; the import says when a new one appears. The selftest points one transfer at an
+  unregistered account and expects it named, and the demo's own transfers to name none.
 - **Pay that arrives by e-Transfer is offered as pay** (2026-10-30, user 002). Money in from no
   named sender waited as Other income however regular it was. When the same amount came in at
   least two earlier months, the question now suggests Pay, and answering it retypes the ledger

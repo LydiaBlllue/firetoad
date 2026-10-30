@@ -164,6 +164,10 @@ whose charges go to spending.csv), `Cash flow`, `Repayments` (a counterparty's l
 
 Ask for **every** account, including the ones they think are boring. "Where is the money" is one
 of the two questions this tool exists to answer, and an account nobody listed is invisible.
+When the statements move money to or from an account none of them is for, the `missing`
+question names it by number (`seen` lists them): a card-only owner's chequing account, a USD
+account a transfer went to. Each one they say is theirs is an account row like any other, with
+the balance they read off the app as its stated balance; one that is not theirs is left out.
 
 ### 3 · What arrives each month
 

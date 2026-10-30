@@ -1030,6 +1030,10 @@ def propose_check(ws, man):
     got_h = sum(1 for a in draft["accounts"] if a["id"] and not a["id"].startswith("…") and a.get("balance") is not None
                 and a["kind"] in ("TFSA", "RRSP", "FHSA", "Non-registered", "Crypto", "Investment"))
     ids = {q["id"] for q in draft.get("_open", [])}
+    # every account the demo moves money between has a statement here, so none is asked by number
+    seen = next((q.get("seen") for q in draft.get("_open", []) if q["id"] == "missing"), None)
+    if seen:
+        miss.append(f"asked about account(s) {', '.join(seen)} that every statement already covers")
     out = []
     ok = not miss and got_h == want_h and {"owner", "born"} <= ids
     detail = (f"{len(got)} statement account(s), {got_h} of {want_h} broker account(s), {len(ids)} question(s) left open"
@@ -1589,6 +1593,43 @@ def pay_etransfer_check(root, base):
             f"confirm exit {c.returncode}, ledger types {typed}"]
 
 
+def seen_account_check(root, base):
+    """An account the statements move money to or from, that nobody registered (2026-10-28, user
+    002: a card-only owner's chequing account, three other numbers in a chequing ledger). Point one
+    transfer in the newest chequing statement at an account the register does not have, import it,
+    and expect the update to name that account; the demo's own transfers, all between registered
+    accounts, must name none."""
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    ws = os.path.join(base, "seenacct"); os.makedirs(ws); stage(root, ws)
+    if not (os.path.exists(os.path.join(ws, "tools", "fixtures.py")) and os.path.exists(upd)):
+        return []
+    fd = lambda n: layout.path(ws, n)
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    acc = next((a for a in reg["accounts"] if a.get("ledger") and "Income" in (a.get("feeds") or "")), None)
+    if acc is None:
+        return []
+    rows = csv_rows_of(fd(acc["ledger"]))
+    newest = max(r["statement"] for r in rows)
+    i = next((j for j, r in enumerate(rows) if r["statement"] == newest and r["type"] == "Transfer"
+              and re.search(r"#\d{3,5}-\d{3,5}", r["description"])), None)
+    if i is None:
+        return []
+    rows[i]["description"] = re.sub(r"#(\d{3,5})-\d{3,5}", r"#\1-7788", rows[i]["description"])
+    with open(fd(acc["ledger"]), "w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
+    man = fixtures_for(ws) or []
+    mine = [m for m in man if next((d for d in reg["documents"] if d["key"] == m["doc"]), {}).get("covers", [None])[0] == acc["key"]]
+    if not mine:
+        return []
+    strip_statement(ws, max(mine, key=lambda m: os.path.basename(m["file"])))
+    subprocess.run([sys.executable, os.path.join(os.path.dirname(upd), "rebuild.py"), ".", "--write"], cwd=ws, capture_output=True)
+    r = subprocess.run([sys.executable, upd, ".", "--write"], cwd=ws, capture_output=True, text=True, timeout=300)
+    named = re.findall(r"account …(\d+)", r.stdout)
+    if r.returncode in (0, 2) and named == ["7788"]:
+        return ["  ✓ update.py: a transfer to an account nobody registered named it (…7788); the registered ones named nothing"]
+    return [f"  ✗ unregistered account: update exit {r.returncode}, named {named or 'nothing'}"]
+
+
 def loan_import_check(root, base):
     """A repayment from a borrower, under the name the bank prints, is money back — typed
     Repayment, attributed to that borrower's loan, and the loan's balance in the register moves
@@ -1733,7 +1774,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
-                    own_name_check, loan_import_check, pay_etransfer_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, starter_check,
+                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, starter_check,
                     demo_clear_check):
             try:
                 runs += chk(root, base)

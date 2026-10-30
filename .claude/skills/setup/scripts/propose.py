@@ -39,6 +39,7 @@ sys.path.insert(0, os.path.join(SKILLS, "update-dashboard"))
 sys.path.insert(0, os.path.join(SKILLS, "update-dashboard", "scripts"))
 import layout  # noqa: E402
 import scaffold  # noqa: E402  default_axes and the kinds the tool understands
+import seen_accounts  # noqa: E402
 from parsers import NAMES, ParseError, ParserUnavailable, parse  # noqa: E402
 
 IGNORE = {"README.txt", ".gitkeep", ".DS_Store"}
@@ -115,6 +116,7 @@ def propose(root, inbox):
     first = {}                      # (inst, digits) -> the earliest month seen
     holdings = activities = None
     images, unknown, by_hand = [], [], []
+    moves = []                      # every row, for the accounts they name (seen_accounts)
     for f in files:
         p = os.path.join(inbox, f)
         low = f.lower()
@@ -133,6 +135,7 @@ def propose(root, inbox):
                 inst = INST_OF_PARSER.get(part["parser"].split("_")[0], part["parser"])
                 k = (inst, part["account"])
                 part = dict(part, _file=f, _inst=inst)
+                moves += part["rows"]
                 if k not in stmts or part["period"]["to"] > stmts[k]["period"]["to"]:
                     stmts[k] = part
                 first[k] = min(first.get(k, part["period"]["to"][:7]), part["period"]["to"][:7])
@@ -341,8 +344,20 @@ def propose(root, inbox):
     questions.insert(1, {"id": "born", "q": "Roughly what year were you born? (Only the retirement-age arithmetic uses it.)"})
     questions.insert(2, {"id": "accounts", "q": f"Is the accounts table right? Change a name, a kind, what an account is for, "
                                                 f"or which ones keep a line-by-line ledger."})
-    questions.insert(3, {"id": "missing", "q": "Any account these files do not show — savings with no statement this month, "
-                                               "a loan, a home, an account abroad?"})
+    # Accounts the statements show money moving to or from, with no statement of their own: a
+    # card-only owner's chequing account is one (2026-10-28, user 002). Asked by number.
+    named = seen_accounts.unregistered(moves, [d for (_i, d) in stmts])
+    if named:
+        seen_q = "; ".join(f"…{n} ({c} time{'s' if c > 1 else ''}"
+                           + "".join(f", {money(v)} {w}" for v, w in ((i, "in"), (o, "out")) if v) + ")"
+                           for n, (c, i, o) in sorted(named.items(), key=lambda kv: -(kv[1][1] + kv[1][2])))
+        questions.insert(3, {"id": "missing", "q": f"Money moved to or from accounts these files have no statement for: {seen_q}. "
+                                                   f"Which are yours — the bank, the kind, the currency, today's balance? "
+                                                   f"And any other account these files do not show — a loan, a home, an account abroad?",
+                             "seen": sorted(named)})
+    else:
+        questions.insert(3, {"id": "missing", "q": "Any account these files do not show — savings with no statement this month, "
+                                                   "a loan, a home, an account abroad?"})
     if cash_asked:
         questions.insert(4, {"id": "cash", "q": f"What balance does the app show for {', '.join(cash_asked)}? The exports name "
                                                 f"{'them' if len(cash_asked) > 1 else 'it'} but carry no balance."})
