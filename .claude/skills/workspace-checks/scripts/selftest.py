@@ -820,6 +820,10 @@ def refile_check(root, base):
     to take the suggestion into merchants.json and every spending row."""
     ws = os.path.join(base, "refile")
     os.makedirs(ws); stage(root, ws)
+    # The migrations live in the repository's tools/, which a sync never copies into a
+    # workspace: there this case cannot run, as the fixture cases cannot.
+    if not os.path.exists(os.path.join(ws, "tools", "migrate_11to12.py")):
+        return []
     sys.path.insert(0, os.path.join(ws, ".claude", "skills", "update-dashboard", "scripts"))
     sys.path.insert(0, HERE)
     from check_data import merchant_key
