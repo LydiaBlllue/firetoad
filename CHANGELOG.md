@@ -2,6 +2,14 @@
 
 ## 1.3 — unreleased
 
+- **Pay that arrives by e-Transfer is offered as pay** (2026-10-30, user 002). Money in from no
+  named sender waited as Other income however regular it was. When the same amount came in at
+  least two earlier months, the question now suggests Pay, and answering it retypes the ledger
+  row; money in is answered with what it was — Pay, Other income, Own money, Paid back — on the
+  panel and in `confirm.py`. A question saved to `decisions.json` now keeps its suggestion and
+  the row it lands on, which it had been dropping: a transfer answered as spending (1.2) never
+  reached `spending.csv` in a real import. The selftest puts the same e-Transfer in three
+  statements and expects Pay suggested and the row retyped once confirmed.
 - **A renamed statement is still recognised, and a shared filename is told apart by the
   account it prints** (2026-10-30, user 002). An upload that turns spaces and commas into
   underscores (`April_16_2026.pdf`) is read as the bank's own name. Two documents under one

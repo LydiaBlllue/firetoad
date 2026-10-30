@@ -68,8 +68,9 @@ line at the bottom ("BMO, RBC, Wealthsimple up to date") so the card shows only 
   happens, ask once what page they use and write it to the register as `capture` with today's
   date, so next month's panel says it.
 - **Questions card**: one row per open question — the question, its `suggest` (or, with none,
-  its current default) as the selected pill, and the `choices` as pills to tap (merchants: the categories; e-Transfers: the
-  ledger types, most used first — show the first five and a *More* pill). Tapping only selects,
+  its current default) as the selected pill, and the `choices` as pills to tap (merchants: the categories; money in from no named
+  sender: Pay, Other income, Own money, Paid back; other e-Transfers: the ledger types, most used
+  first — show the first five and a *More* pill). Answers are saved with `confirm.py --set`. Tapping only selects,
   in the widget's own state. One button at the bottom, *Save answers*, sends every selection in
   one prompt, numbered by the question's `index`. An unanswered row keeps its default.
 - **Result card**: net worth before and after, the other `changed` lines, then `noticed` with

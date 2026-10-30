@@ -18,7 +18,9 @@ less well), as suggested. A merchant's answer lands in
 merchants.json and in every spending.csv row of that merchant, and the item is closed in
 decisions.json (`answer`, `resolved`). A transfer sent to someone nobody named can be answered
 with a category too -- money to family, rent -- and is then written to spending.csv as well
-(FINANCE.md §3a). A file is confirmed only as it was assumed. Then the page is rebuilt.
+(FINANCE.md §3a). Money that came in from no named sender is answered with what it was (Pay, Other income, Own
+money, Paid back) and its ledger row is retyped; a same-size e-Transfer that came in month after
+month is suggested as Pay. A file is confirmed only as it was assumed. Then the page is rebuilt.
 """
 import argparse, csv, datetime, os, re, subprocess, sys
 
@@ -31,6 +33,8 @@ import categories  # noqa: E402
 from update import jload, jsave, csv_rows  # noqa: E402
 
 SEEN = re.compile(r"^(.*?), seen for the first time\.")
+# what money coming in from no named sender can be: the ledger type, and how it is said
+INCOMING = {"Payroll": "Pay", "Other": "Other income", "Transfer": "Own money", "Repayment": "Paid back"}
 
 
 def merchant_of(item):
@@ -71,6 +75,7 @@ def main(argv):
         what = k or d.get("what", "")
         w = d.get("what") or ""
         why = "starter map" if "starter map" in w else "was Subscription" if "no longer a category" in w \
+            else "same amount each month" if d.get("credit") and d.get("suggest") \
             else "fits better" if d.get("suggest") else ("first time" if k else d.get("kind", ""))
         print(f"  {i:>3}  {what[:38]:<38} {str(d.get('default'))[:14]:<14} {str(d.get('suggest') or '')[:14]:<14} "
               f"{count.get(k, '') if k else '':>4}  {why}")
@@ -80,9 +85,17 @@ def main(argv):
     for s in a.set:
         if "=" not in s:
             bad.append(f"--set {s!r}: write it as N=Category or MERCHANT=Category"); continue
-        who, cat = (x.strip() for x in s.rsplit("=", 1))
-        cat = next((k for k, n, *_ in categories.TABLE if cat.lower() in (k.lower(), n.lower())), None)
+        who, said = (x.strip() for x in s.rsplit("=", 1))
+        cat = next((k for k, n, *_ in categories.TABLE if said.lower() in (k.lower(), n.lower())), None)
         idx = int(who) - 1 if who.isdigit() else next((i for i, d in enumerate(items) if merchant_of(d) == who.upper()), None)
+        if idx is not None and 0 <= idx < len(items) and items[idx].get("credit"):
+            # money coming in is answered with what it was, not a category
+            t = next((x for x in INCOMING if said.lower() in (x.lower(), INCOMING[x].lower())), None)
+            if t is None:
+                bad.append(f"--set {s!r}: #{idx + 1} is money coming in; say one of {', '.join(INCOMING)}")
+            else:
+                want[idx] = t
+            continue
         if cat is None:
             bad.append(f"--set {s!r}: the category has to be one of {', '.join(categories.CATEGORIES)}")
         elif idx is None or not (0 <= idx < len(items)):
@@ -126,6 +139,23 @@ def main(argv):
                 mine = rk == k or (k and float(r["amount"]) < 0 and rk.startswith(k + " "))
                 if mine and r["category"] != ans:
                     r["category"] = ans; changed += 1
+        if d.get("credit"):
+            t = "Other" if ans == "Other income" else ans
+            if t in INCOMING:
+                c = d["credit"]
+                lp = fd(c["ledger"])
+                rows = csv_rows(lp)
+                for r in rows:
+                    if r.get("statement") == c["statement"] and r.get("date") == c["date"] \
+                            and abs(float(r["amount"]) - c["amount"]) < 0.005 and r.get("type") != t:
+                        r["type"] = t
+                        r["label"] = {"Payroll": "Pay (e-Transfer)", "Other": "e-Transfer received",
+                                      "Transfer": "e-Transfer between your own accounts",
+                                      "Repayment": "Paid back (e-Transfer)"}[t]
+                        changed += 1
+                        break
+                with open(lp, "w", encoding="utf-8", newline="") as fh:
+                    w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
         d["answer"], d["resolved"], d["status"] = ans, today, "confirmed"
         closed += 1
     jsave(fd("merchants.json"), merchants)

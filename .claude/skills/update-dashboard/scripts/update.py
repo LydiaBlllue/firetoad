@@ -612,6 +612,19 @@ def plan_ledger(ws, plan, acc, doc, part, end):
                 ask["row"] = {"date": r["date"], "amount": -amt, "cur": acc.get("cur", "CAD"),
                               "note": f"{r['description'].strip()} (chequing) [{acc['spendTag']}/{stamp(end)}]",
                               "ledger": ledger, "statement": tag}
+            if ask.get("kind") == "transfer" and amt > 0:
+                # where the answer lands: the ledger row's type (pay, other income, a transfer)
+                ask["credit"] = {"ledger": ledger, "statement": tag, "date": r["date"],
+                                 "amount": amt, "description": r["description"].strip()}
+                # The same amount from no named sender in earlier months is most likely pay: an
+                # employer paying by e-Transfer (2026-10-28, user 002 — pay stopped in May, and
+                # every month since a same-size e-Transfer waited as Other income).
+                months = {x["date"][:7] for x in existing if x.get("type") in ("Other", "Payroll")
+                          and re.search(r"INTERAC|E-TRANSFER", (x.get("description") or "").upper())
+                          and abs(float(x["amount"]) - amt) < 0.01} - {r["date"][:7]}
+                if len(months) >= 2:
+                    ask["suggest"] = "Payroll"
+                    ask["what"] += f" The same amount came in {len(months)} earlier months, so it may be pay."
             plan.decisions.append(ask)
         if not t:
             plan.untyped.append((ledger, r["date"], r["description"], amt))
@@ -843,7 +856,9 @@ def write_plan(ws, plan):
         for d in plan.decisions:
             ws.decisions.setdefault("decisions", []).append(
                 {"added": ws.today.isoformat(), "kind": d["kind"], **({"match": d["match"]} if d.get("match") else {}),
-                 "what": d["what"], "default": d["default"], "source": d.get("source", ""), "status": "open"})
+                 "what": d["what"], "default": d["default"], "source": d.get("source", ""), "status": "open",
+                 # what confirm.py needs to act on the answer: a suggestion, and the row it lands on
+                 **{k: d[k] for k in ("suggest", "row", "credit") if d.get(k)}})
         jsave(fd("decisions.json"), ws.decisions)
     os.makedirs(os.path.join(ws.root, "archive"), exist_ok=True)
     for src, dst in plan.archive:

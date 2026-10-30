@@ -144,7 +144,10 @@ def status(root, today):
         if q.get("status") != "open":
             continue
         kind = q.get("kind")
-        if kind == "transfer":
+        if kind == "transfer" and q.get("credit"):
+            # money in from no named sender: what it was, in confirm.py's words
+            choices = ["Pay", "Other income", "Own money", "Paid back"]
+        elif kind == "transfer":
             types = types if types is not None else ledger_types(root, reg)
             choices = types
         elif kind in ("merchant", "category"):
@@ -152,8 +155,9 @@ def status(root, today):
             choices = cats
         else:
             choices = []
+        sug = {"Payroll": "Pay"}.get(q.get("suggest"), q.get("suggest"))
         out["questions"].append({"index": i, "kind": kind, "what": q.get("what"),
-                                 "default": q.get("default"), "suggest": q.get("suggest"),
+                                 "default": q.get("default"), "suggest": sug,
                                  "source": q.get("source"),
                                  "choices": [c for c in choices if c != q.get("default")]})
     return out

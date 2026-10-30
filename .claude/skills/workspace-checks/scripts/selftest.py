@@ -1548,6 +1548,47 @@ def own_name_check(root, base):
     return [f"  ✗ update.py: own-name e-Transfer under a different profile name: exit {r.returncode}, typed {wrong}, asked {asked[:2]}"]
 
 
+def pay_etransfer_check(root, base):
+    """Pay that arrives by e-Transfer from no named sender (2026-10-28, user 002: pay stopped in
+    May, and a same-size e-Transfer every month since waited as Other income). Put one into each
+    of the last three statements of a chequing ledger, import the newest, and expect the question
+    to suggest Pay; confirm it as suggested and expect the ledger row retyped Payroll."""
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    cf = os.path.join(os.path.dirname(upd), "confirm.py")
+    ws = os.path.join(base, "payet"); os.makedirs(ws); stage(root, ws)
+    if not (os.path.exists(os.path.join(ws, "tools", "fixtures.py")) and os.path.exists(upd)):
+        return []
+    fd = lambda n: layout.path(ws, n)
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    acc = next((a for a in reg["accounts"] if a.get("ledger") and "Income" in (a.get("feeds") or "")), None)
+    if acc is None:
+        return []
+    AMT, DESC = 1234.56, "Interac e-Transfer Received"
+    rows = csv_rows_of(fd(acc["ledger"]))
+    for st in sorted({r["statement"] for r in rows})[-3:]:
+        i = max(j for j, r in enumerate(rows) if r["statement"] == st)
+        rows.insert(i, dict(rows[i], description=DESC, amount=f"{AMT:.2f}", type="Other", label="e-Transfer received"))
+    for j in range(1, len(rows)):
+        rows[j]["balance"] = f"{float(rows[j - 1]['balance']) + float(rows[j]['amount']):.2f}"
+    with open(fd(acc["ledger"]), "w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
+    man = fixtures_for(ws) or []
+    mine = [m for m in man if next((d for d in reg["documents"] if d["key"] == m["doc"]), {}).get("covers", [None])[0] == acc["key"]]
+    if not mine:
+        return []
+    strip_statement(ws, max(mine, key=lambda m: os.path.basename(m["file"])))
+    subprocess.run([sys.executable, os.path.join(os.path.dirname(upd), "rebuild.py"), ".", "--write"], cwd=ws, capture_output=True)
+    r = subprocess.run([sys.executable, upd, ".", "--write"], cwd=ws, capture_output=True, text=True, timeout=300)
+    asked = [x for x in json.load(open(fd("decisions.json"), encoding="utf-8"))["decisions"]
+             if x.get("status") == "open" and (x.get("credit") or {}).get("amount") == AMT]
+    c = subprocess.run([sys.executable, cf, ".", "--write", "--ok"], cwd=ws, capture_output=True, text=True, timeout=300)
+    typed = [x["type"] for x in csv_rows_of(fd(acc["ledger"])) if x["description"] == DESC]
+    if r.returncode in (0, 2) and asked and asked[0].get("suggest") == "Payroll" and c.returncode == 0 and typed and typed[-1] == "Payroll":
+        return ["  ✓ update.py: a same-size e-Transfer from no named sender, three months running, suggested as Pay and retyped once confirmed"]
+    return [f"  ✗ pay by e-Transfer: update exit {r.returncode}, asked {[(x.get('default'), x.get('suggest')) for x in asked]}, "
+            f"confirm exit {c.returncode}, ledger types {typed}"]
+
+
 def loan_import_check(root, base):
     """A repayment from a borrower, under the name the bank prints, is money back — typed
     Repayment, attributed to that borrower's loan, and the loan's balance in the register moves
@@ -1692,7 +1733,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
-                    own_name_check, loan_import_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, starter_check,
+                    own_name_check, loan_import_check, pay_etransfer_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, starter_check,
                     demo_clear_check):
             try:
                 runs += chk(root, base)
