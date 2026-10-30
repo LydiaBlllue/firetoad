@@ -379,6 +379,13 @@ def check(path):
                 if not os.path.exists(os.path.join(root, img.split("#")[0])):
                     err("S4", f"{rname} shows the image `{img}`, which does not exist")
 
+            # And its links: the short README hands the reader on by [text](path) (2026-10-30).
+            for link in set(re.findall(r'(?<!!)\[[^\]]*\]\(([^)\s]+)\)', rd)):
+                if link.startswith(("http://", "https://", "mailto:", "#")):
+                    continue
+                if not os.path.exists(os.path.join(root, link.split("#")[0])):
+                    err("S4", f"{rname} links to `{link}`, which does not exist")
+
     # -- S4 / S6 for the documents the model reads --------------------------------------
     # The three SKILL.md files are the instructions Claude follows on every import and setup, and
     # nothing checked them: on 2026-09-13 the import skill still told the run to check

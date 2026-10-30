@@ -44,8 +44,8 @@ def stage(root, dst):
     # OWNER.md is optional (a workspace may not have written one yet); README names it.
     # .gitignore too: S4 exempts the files an owner writes and the tool deliberately does not ship
     # (setup-answers.json), and it learns which those are from there (2026-09-13).
-    # CHANGELOG.md, ROADMAP.md and PRODUCT.md: README links to them, and S4 resolves every link.
-    for f in ("CLAUDE.md", "DESIGN.md", "FINANCE.md", "README.md", "OWNER.md", ".gitignore", "CHANGELOG.md", "ROADMAP.md", "PRODUCT.md"):
+    # LICENSE, CHANGELOG.md, ROADMAP.md and PRODUCT.md: README links to them, and S4 resolves every link.
+    for f in ("CLAUDE.md", "DESIGN.md", "FINANCE.md", "README.md", "OWNER.md", ".gitignore", "LICENSE", "CHANGELOG.md", "ROADMAP.md", "PRODUCT.md"):
         if os.path.exists(os.path.join(root, f)):
             shutil.copy2(os.path.join(root, f), dst)
     # README names these folders in prose and S4 checks that every path it hands the reader
@@ -72,7 +72,7 @@ def rules_seen(out):
 
 # --- the faults, each one a mistake that has really happened or really could -------------
 def m_readme_path(r):
-    edit(r, "README.md", lambda s: s.replace("check_data.py", "check_data_MOVED.py"))
+    edit(r, "README.md", lambda s: s.replace("(docs/how-it-works.md)", "(docs/how-it-works_MOVED.md)"))
 def m_design_pages(r):
     # The Records row's first page swapped for one that does not exist, whatever the row lists.
     edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Records \| )[^·|]+·", r"\1Insights ·", s, count=1))
