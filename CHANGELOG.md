@@ -2,6 +2,11 @@
 
 ## 1.3 — unreleased
 
+- **The README is short, and says what you need** (2026-10-30). Both languages: what it is, a table
+  of what it takes (a paid Claude plan, the desktop app on Mac or Windows, Python, a statement), how
+  to start, each month, your data. The pages, the monthly run, the checkers and the folder moved to
+  `docs/how-it-works.md`; what was new in each release is here. It no longer suggests a folder that
+  syncs between devices.
 - **Net worth over time, on Home** (2026-10-30). Every import has kept a point a month and nothing
   drew them. One line, what really was, nothing projected.
 - **The FIRE chart has a span: 1 year, 5 years, 10 years, To FIRE** (2026-10-30). It was always

@@ -1,247 +1,73 @@
 <p align="right"><b>English</b> · <a href="README.zh.md">中文</a></p>
 
 <p align="center">
-  <img src="docs/hero.png" alt="" width="220">
+  <img src="docs/hero.png" alt="" width="180">
 </p>
 
 # Jade Toad
 
-**Your money, on one page, kept honest by a set of checkers.**
+**Your money on one page, for working toward financial independence in Canada.**
 
-**[Open the live demo →](https://lydiablllue.github.io/jade-toad/)** a made-up owner's page, the
-same file a fresh clone opens to, with nothing to download.
-**[Make it yours →](#start-here-make-it-yours-in-twenty-minutes)** in the Claude desktop app's
-**Code** tab, not Chat: choose this folder and say *set this up*.
+**[Open the live demo →](https://lydiablllue.github.io/jade-toad/)** a made-up owner's page,
+nothing to install.
 
-Once a month you drop your bank statements and broker exports into a folder and say
-*"update dashboards"*. Claude Code reads them, checks that every statement adds up, files every
-purchase, rebuilds the dashboard and tells you what changed. No server, no bank login, no app:
-one folder of plain CSV and JSON, and one HTML page you open in a browser. Your statements and
-your data stay in that folder, and the import is a local script. What Claude reads is its
-summary — a merchant it has not seen, a statement no parser could read, your answers — and that
-goes to Anthropic the way anything you say in Claude Code does. A statement a parser read never
-does.
+Once a month you drop your bank statements into a folder and say *"update dashboards"*. Claude
+Code reads them, checks that every statement adds up, files every purchase and rebuilds one HTML
+page: what you spent, what you own, how far you are from FIRE. No bank login, no server.
 
+![The Home page](docs/screens/home.png)
 
-### Every page
+## What you need
 
-| Section | Page | What it answers |
-|---|---|---|
-| — | Home | Where you stand, and what you are worth |
-| Spending | This month | How much is still free to spend, and where the money went |
-| | Year | How the year went, by category and month by month |
-| | Subscriptions | What repeats, what it costs a year, what is due next |
-| Income | Income | What came in, by source, and how much of it you kept |
-| | Investment income | What the portfolio paid you before you sold anything, and which holding pays when |
-| Investing | Portfolio | What is invested, by currency, by kind of asset and by bucket |
-| | Performance | How it did against one benchmark fund bought on the same days |
-| | Holdings | Every position, by role or by account |
-| Plan | Budget | What each paycheque is for, and what the funds hold |
-| | FIRE | How far the portfolio is from the target, and when it gets there |
-| | Drawdown & care | Whether the money lasts, care included, and in how many real stretches of history it would have |
-| | Spending baseline | The monthly figure the target is built on, against what you really spend |
-| Records | Updates | What each update changed |
-| | Accounts | Every place the money sits |
-| | Statements | Which statement arrived which month, and what is missing |
-| — | Glossary | Every finance term, and every word the page coined |
-
-### New in 1.1
-
-- **Your data stays yours**: setup keeps your `findata/` out of git, and a pre-commit guard
-  refuses a commit that would carry it to a remote.
-- **A first import is mostly sorted already**: about ninety common Canadian chains come with a
-  suggested category, still put to you once to confirm.
-- **More statements read**: a BMO Mastercard in credit, and chequing statements whose
-  descriptions wrap or whose numbers come out split (`1 ,215.05`).
-- **Setup starts you clean**: the demo's statements and notes go, and `OWNER.md` is an empty
-  one to fill.
-- **Year** counts refunds, so the months add up to what was spent; **Investment income** shows
-  which holding pays, how often and how much.
-
-### Since the first release
-
-- **Performance**: the same money put into one fund you name, on the days it actually went in.
-- **Would it have lasted?** The drawdown replayed through every stretch of real years since
-  1928, mixed the way your portfolio is today.
-- **Coast to FIRE**: the age today's money reaches the target with nothing more added.
-- **Glossary**, dotted-underline terms and numbers that open their sum.
-- **Fetching statements**: once you have signed in to your bank yourself, Claude works out
-  which statements are missing, asks once, downloads them and files them into `inbox/`.
-- Net worth in one card instead of two; negative money reads −$61; the header says two dates.
-
-## Try it in one minute
-
-Nothing to install: **[open the live demo](https://lydiablllue.github.io/jade-toad/)**, on a
-computer (the page is built for a window at least 1120px wide; on a phone it shows the
-screenshots). The same page is `dashboards/finance_dashboard.html` in any download of this
-repository.
-
-What you are looking at is a year in the life of **Emma Roy**, 31, a project coordinator in
-Ottawa who does not exist. Every number is synthetic, and every balance chain still closes,
-because the checkers would not have let the page build otherwise.
-
-## Start here: make it yours in twenty minutes
-
-You need a Claude plan that includes [Claude Code](https://claude.com/claude-code), a folder that
-syncs between your devices (iCloud Drive, OneDrive, Dropbox — so a statement photographed on your
-phone is on your laptop), and last month's statements. No git, no terminal, no bank connection,
-and no subscription but Claude's.
-
-1. **Install the Claude desktop app** and sign in.
-2. **Download this folder**: on GitHub, *Code → Download ZIP*. Unzip it into the folder that
-   syncs.
-3. **Open the Claude app's Code tab — not Chat** — and choose that folder. Chat cannot open a
-   folder; if you are talking to Claude and it cannot see your files, this is why.
-4. **Drop last month's files into `inbox/`**, filenames untouched: every bank statement, your
-   broker's holdings and activities exports, a screenshot of anything held abroad. Only a credit
-   card is fine too: the spending pages are complete with one, and the rest wait for their data.
-5. **Say "set this up".** It tells you up front: five steps, about twenty minutes, and each
-   message says which step it is on. First it checks that Python and the PDF reader are there and
-   says exactly what to install if not. Then it reads your files and drafts your accounts, the
-   files you get each month and your plan as tables; you correct what is wrong and answer what
-   the files cannot say. Skip a question and it stays *Not set* on the page — never a made-up
-   number. Your first import runs as part of it, and its merchants come back as one table to
-   confirm in one answer.
-
-Next month, say **"update dashboards"**. An account you open later is one sentence too: drop its
-statements in `inbox/` and say so.
-
-Two things worth knowing before you start:
-
-- The PDF reader (`pypdf`) lets the statement parsers read your PDFs; setup's first step
-  checks for it and gives you the one command. Without it, Claude reads each statement by hand
-  — slower, and it means Claude sees them.
-- Your real data stays out of git. When setup writes it, it adds `findata/`, `dashboards/` and the
-  decisions folder to `.gitignore` and installs a pre-commit guard that refuses any commit carrying
-  them while the repository has a remote. The demo's files are still tracked, so to drop them
-  from the index as well, run `git rm -r --cached findata dashboards` once.
-
-> **Who it is for.** Someone in Canada working toward financial independence, with a paycheque, a few accounts at one or two of the big
-> five banks, a broker, and a plan they want held to. The tax-sheltered accounts it knows are the
-> TFSA, RRSP and FHSA, the money is Canadian dollars, and the retirement arithmetic assumes CPP
-> and OAS. Statements are read by parsers, one per bank and kind of statement: today RBC and BMO,
-> and Wealthsimple's exports. TD, Scotiabank and CIBC come next, then Questrade and Interactive
-> Brokers, in that order. Until a parser exists for your bank, Claude reads those statements by
-> hand — slower, and it means it sees them. Everything else — the accounts, the categories, the
-> investing rules — is data you set in the interview, so nothing stops you elsewhere.
-
-## What a month looks like
-
-1. **Import day** (the 26th by default; a reminder lists what has arrived and what is missing).
-   Download the month's statements into `inbox/`. Leave the bank's filenames alone — that is how
-   each file is recognised.
-2. **Say "update dashboards".** One local script does the month: every file is named and checked
-   for duplicates before anything is touched; each statement is read by its parser and has to
-   reconcile to its own totals before a row is written; purchases are filed by merchant; the page
-   is rebuilt; the originals move to `archive/`. Claude reads only the script's summary and puts
-   to you what a program cannot decide — a merchant it has not seen, a statement no parser could
-   read — and you get a short report: what changed, what was noticed, what was decided without
-   asking, what needs your word.
-3. **Open the page.** Records → Statements shows which month got which file, so a gap is
-   visible at a glance.
-
-For Emma the monthly drop is eight files: three RBC PDFs, three BMO PDFs and two Wealthsimple
-exports. Yours is whatever your register says.
-
-## Why the numbers can be trusted
-
-Every figure on the page is built from the data folder, never typed. Four checkers hold that
-line, and a fifth checks the checkers:
-
-- **Does the money add up** — every ledger's balance chain closes, every statement reconciles to
-  its own totals, a repayment is never counted as income, the register agrees with its sources.
-- **Does the page follow its design rules** — chart heights, line widths, contrast, navigation
-  against sections, this README against the real pages.
-- **Does it actually draw** — a headless browser opens every page at three widths and looks for
-  anything that failed to render.
-<!-- LINT:FAULTS n=59 -->
-- **Are the checkers still checking** — a selftest plants 59 specific faults in a copy of the
-  workspace and asserts each one is caught. It exists because a checker once linted an empty
-  folder and reported success.
-
-A clean run is silent. Anything else is a numbered finding, grouped by what went wrong.
-
-<details>
-<summary>Run them yourself</summary>
-
-```bash
-python3 .claude/skills/workspace-checks/scripts/check_data.py .
-python3 .claude/skills/workspace-checks/scripts/check_design.py dashboards/finance_dashboard.html
-python3 .claude/skills/workspace-checks/scripts/check_render.py dashboards/finance_dashboard.html
-python3 .claude/skills/workspace-checks/scripts/selftest.py .
-```
-
-`check_data.py` is the one to start with; `-v` lists what passed. `check_render.py` needs Playwright
-(`pip3 install --user playwright && python3 -m playwright install chromium`).
-</details>
-
-## Under the hood
-
-<details>
-<summary>The folder</summary>
-
-```
-inbox/        drop new files here; they move to archive/ once processed
-findata/      the only source of truth, three folders by who writes them:
-  register/     what you declare — accounts, plan, rules, merchants
-  ledgers/      what the import writes — every ledger, purchases, the broker's exports
-  history/      what each update leaves behind — updates, decisions, filings, snapshots
-dashboards/   the built page (one self-contained HTML file)
-templates/    the page code with every number empty; dashboards/ is built from it
-archive/      processed originals, named <date>_<source>_<original name>
-docs/         the pipeline diagram and the Chinese guide
-.claude/      the three skills: setup, update-dashboard, workspace-checks
-tools/        demo data, migrations, sync into a workspace
-```
-
-The folder is called `findata/` because iCloud for Windows refuses to sync any folder named
-`data`. That one cost a day.
-</details>
-
-<details>
-<summary>The pipeline</summary>
-
-![Pipeline](docs/pipeline.svg)
-
-*Editable source: [`docs/pipeline.drawio`](docs/pipeline.drawio), generated by `docs/pipeline.py`.*
-</details>
-
-<details>
-<summary>The documents that govern it</summary>
-
-| File | Owns |
+| | |
 |---|---|
-| [`PRODUCT.md`](PRODUCT.md) | what the product is for, its principles, and what it deliberately is not |
-| `CLAUDE.md` | how Claude works here: the information model, the import, the checkers |
-| `FINANCE.md` | the money logic: the FIRE target, pay-yourself-first, what counts as income |
-| `DESIGN.md` | how the page looks and talks: palette, navigation, copy |
-| `OWNER.md` | **yours** — your banks, your traps, your decisions; the other three name nobody |
+| **Claude plan** | Pro, Max, Team or Enterprise. The free plan does not include Claude Code. Nothing else to pay for |
+| **Claude desktop app** | On a **Mac or Windows** computer, using its **Code** tab, not Chat. Claude Code comes with it |
+| **Python 3 and pypdf** | Setup checks for them and gives you the one command if one is missing |
+| **Your statements** | Last month's PDFs. A single credit card is enough to start |
+| **A screen** | The page needs a window at least 1120px wide; a phone shows screenshots only |
 
-They are rules, not notes: each line was written after something went wrong, and they are read
-before every change. Anything agreed out loud has to land in one of them or it does not survive
-the next session.
-</details>
+**Banks.** RBC and BMO statements and Wealthsimple exports are read by a local parser. Any other
+bank works too, but Claude reads those statements by hand: slower, and it means Claude sees them.
 
-<details>
-<summary>The tool and your workspace</summary>
+**Built for Canada.** Canadian dollars, TFSA / RRSP / FHSA, CPP and OAS. Accounts abroad count in
+net worth.
 
-This repository is the tool. Your workspace — the synced folder with your `findata/`, your
-`inbox/`, your `OWNER.md` — is an instance of it. `tools/sync.py <workspace>` copies the skills,
-the templates and the governing documents into it and touches nothing that is yours; when the
-tool's data shape moves ahead of your folder, `tools/migrate.py <workspace>` brings the folder
-up one step at a time.
+## Get started
+
+About twenty minutes.
+
+1. **Install the [Claude desktop app](https://claude.com/download)** and sign in.
+2. **Download this folder** (*Code → Download ZIP*) and unzip it anywhere on your computer.
+3. **Open the app's Code tab and choose that folder.**
+4. **Drop last month's files into `inbox/`**, filenames untouched.
+5. **Say "set this up".** It reads your files, drafts your accounts and plan, and asks only what
+   the files cannot say. Skip a question and it shows *Not set*, never a made-up number.
+
+## Each month
+
+Download the month's statements into `inbox/` and say **"update dashboards"**. You get a short
+report and any questions a program cannot answer, like a merchant it has not seen.
+
+## Your data
+
+- **It stays in the folder on your computer**: plain CSV and JSON, and one HTML page. Back the folder up; there is no other copy.
+- **A statement a parser reads never goes to Anthropic.** What Claude does read is the import's
+  summary, a merchant it has not seen, and your answers, the way anything you say in Claude Code does.
+- **It stays out of git**: setup keeps your data out of commits, and a guard refuses one that would carry it.
+
+## More
+
+- **[How it works](docs/how-it-works.md)**: every page, the monthly run, the folder, and the
+  checkers that keep the numbers honest.
+<!-- LINT:FAULTS n=59 -->
+  Four checkers hold every figure to its source; a selftest plants 59 faults to prove they still catch them.
+- **[Roadmap](ROADMAP.md)** and **[Changelog](CHANGELOG.md)**.
+- **[What the product is for](PRODUCT.md)**.
 
 <!-- LINT:NAV main=17/5 minwidth=1120 -->
 The page is 17 pages in 5 sidebar groups —
 Home · Spending · Income · Investing · Plan · Records · Glossary
 — desktop only, at least 1120px wide.
-</details>
 
-## What's next
-
-The next releases and their target dates are in [`ROADMAP.md`](ROADMAP.md); what already
-shipped is in [`CHANGELOG.md`](CHANGELOG.md).
-
-## Licence
-
-MIT — see [`LICENSE`](LICENSE).
+MIT licence: see [`LICENSE`](LICENSE).
