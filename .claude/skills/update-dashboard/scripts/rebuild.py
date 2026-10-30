@@ -123,7 +123,7 @@ def load(root):
             raise SystemExit(f"{layout.rel(n)} is missing — the setup skill writes it")
         return default
     accounts = jd("accounts.json")
-    d = {"spending": rd("spending.csv"), "acts": rd("ws_activities.csv"),
+    d = {"spending": rd("spending.csv"), "rewards": rd("rewards.csv"), "acts": rd("ws_activities.csv"),
          "hold": rd("holdings_latest.csv"),
          "banks": jd("banks.json"), "foreign": jd("foreign.json"), "profile": jd("profile.json"),
          "rules": jd("rules.json"), "accounts": accounts, "funds": jd("funds.json"),
@@ -163,12 +163,12 @@ def cashflow_rows(d, accs, rate, half, wsinc):
     """The monthly cash-flow rows, from the typed ledgers (schema 9; they used to be copied into
     cashflow.json by the import, and nothing checked the copy). One row per month from the first
     ledger row to the newest: what payroll delivered, what came in typed Rent / Gift / Other /
-    Repayment, what moved to the broker and back (a Transfer whose label names the broker), how
+    Repayment, the cash back a card paid (rewards.csv), what moved to the broker and back (a Transfer whose label names the broker), how
     many of the outgoing ones were exactly half the monthly investing amount, and the broker's
     own income for the month. Only ledgers whose `feeds` include "Cash flow" count."""
     broker = (next((a["inst"] for a in accs if a.get("role") == "grow" and a.get("value") == "export"), "") or "").lower()
     rows = collections.defaultdict(lambda: {"payroll": 0.0, "wsOut": 0.0, "wsIn": 0.0, "rent": 0.0, "gift": 0.0,
-                                            "other": 0.0, "repaid": 0.0, "inv": 0.0, "nRule": 0})
+                                            "other": 0.0, "repaid": 0.0, "inv": 0.0, "rewards": 0.0, "nRule": 0})
     for a in accs:
         if not a.get("ledger") or "Cash flow" not in (a.get("feeds") or ""):
             continue
@@ -188,6 +188,10 @@ def cashflow_rows(d, accs, rate, half, wsinc):
                     m["wsIn"] += amt
     for w in wsinc:
         rows[w["ym"]]["inv"] += w["div"] + w["int"] + w["lend"] + w["tax"]
+    # a card's cash back (rewards.csv): income, on its own line, never pay -- like the broker's
+    # income, it never reaches chequing
+    for r in d.get("rewards", []):
+        rows[r["date"][:7]]["rewards"] += float(r["amount"]) * (rate if r.get("currency") == "USD" else 1)
     return [dict(ym=ym, **{k: (round(v, 2) if isinstance(v, float) else v) for k, v in m.items()})
             for ym, m in sorted(rows.items())]
 

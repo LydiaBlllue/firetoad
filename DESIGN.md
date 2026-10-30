@@ -46,7 +46,8 @@
   its colour: in the list, the legend and the tooltip. A legend lists only the categories its
   period has.
 - **Colour follows the category, permanently. It is never reassigned by rank or by size.**
-- **Income is one blue family** (Payroll `#1c5cab` / Rent `#5598e7` / Gift `#9ec5f4`), so income
+- **Income is one blue family** (Payroll `#1c5cab` / Rent `#5598e7` / Gift `#9ec5f4` / Rewards
+  `#4a6fa5`), so income
   and spending read as two domains.
 - **The plan's parts do not use the category palette**: Invest blue `#2a78d6` / Everyday orange
   `--c-dining` / Big buys yellow `--c-shopping` / Travel purple `--c-other` / Unallocated
@@ -145,9 +146,9 @@
 
 ### Income
 
-- **Follows the year only**: Income / Spent / Kept, the year by source — Investment carries its
-  explanation, since it never reaches chequing — a line for what a borrower paid back, which is
-  never income, and the months by source.
+- **Follows the year only**: Income / Spent / Kept, the year by source — Investment and Rewards
+  (a card's cash back) carry their explanation, since neither reaches chequing — a line for what
+  a borrower paid back, which is never income, and the months by source.
 - **Investment income**: what was paid, a month on average, its share of spending, the tax
   withheld; the months, each split into dividends, interest, lending and tax; and **By holding**
   — which funds paid the dividends, how often each pays (every month, every quarter), and its

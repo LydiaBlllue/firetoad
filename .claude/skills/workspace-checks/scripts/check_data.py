@@ -182,6 +182,15 @@ def check(root):
         elif not breaks:
             note("D1", f"{fn}: {len(rows)} rows, balance chain closes at {prev:,.2f}")
 
+    # -- rewards.csv: a card's cash back, income (FINANCE.md §2) -----------------
+    p = load(root, "rewards.csv")
+    for r in (list(csv.DictReader(open(p, encoding="utf-8-sig"))) if p else []):
+        m = re.search(r'\[([A-Z0-9]+)/(\d{8})\]\s*$', r.get("note") or "")
+        if not m or m.group(1) not in SOURCES:
+            err("D2", f"rewards.csv {r.get('date')} {(r.get('note') or '')[:40]}: no known [SOURCE/YYYYMMDD] tag")
+        elif float(r.get("amount") or 0) <= 0:
+            err("D2", f"rewards.csv {r.get('date')}: a reward is money in, but this one is {r.get('amount')}")
+
     # -- spending.csv ---------------------------------------------------------
     p = load(root, "spending.csv")
     sp = list(csv.DictReader(open(p, encoding="utf-8-sig"))) if p else []

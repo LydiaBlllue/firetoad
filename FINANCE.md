@@ -52,6 +52,10 @@
   out and a bank's fee are money out, never income: they are spending (§3a).
 - Investment income (dividends, interest, stock lending, withholding tax) is shown on its own on
   the Income → Investment income page and is not part of the income figure.
+- **Rewards** — a card's cash back, points turned into money — are income, on a line of their
+  own in the year by source and never pay. The import files a card credit that names cash back
+  or a redemption into `rewards.csv` (a fact, tagged with its statement like every row); like
+  investment income, it never reaches chequing: it stays on the card.
 
 ## 3. The budget method: pay-yourself-first
 
@@ -136,9 +140,10 @@ therefore after refunds without any of them knowing refunds exist.
   at least that much not yet refunded. A fee or interest credit (an annual-fee rebate) has no
   merchant; it gives back a charge the card made, so it points at an earlier fee or interest row
   on that card and takes its category. D24 holds every negative row to this.
-- **What points at nothing is not a refund.** Cash back, a reward, a credit for a purchase made
-  before the books begin: the import leaves it out of spending and lists it (`credit not filed`)
-  for the owner. Counting it would lower the spending baseline with money that was never spent.
+- **What points at nothing is not a refund.** Cash back is a reward, income (§2). A credit for
+  a purchase made before the books begin, or one that points at nothing on the card, the import
+  leaves out of spending and lists (`credit not filed`) for the owner. Counting it would lower
+  the spending baseline with money that was never spent.
 - **A refund lands in the month it posted**, not the month of the purchase, so a category can be
   negative in a month with a large refund and nothing else. The month's total is still exact; a
   chart that stacks categories cannot stack a negative one, so it takes it off the top of the

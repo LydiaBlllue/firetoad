@@ -75,6 +75,10 @@ LONG = ("January", "February", "March", "April", "May", "June", "July", "August"
         "October", "November", "December")
 LEDGER_COLS = layout.LEDGER_COLS
 SPEND_COLS = ["date", "amount", "currency", "category", "note"]
+REWARD_COLS = ["date", "amount", "currency", "note"]
+# A card's cash back or points turned into money (2026-10-28, user 002: a redemption sat as a
+# credit nobody claimed). Income, shown on its own line, never pay (FINANCE.md §2).
+REWARD = re.compile(r"CASH\s*BACK|REWARDS?\b|REDEMPTION|REDEEM|POINTS\s+(?:CREDIT|CONVERSION)", re.I)
 NEW_MERCHANT_CATEGORY = "Other"      # a merchant nobody has decided, until the owner does
 # Common Canadian chains, shipped with the setup and owned by nobody: a first sighting the starter
 # map knows is filed under its category instead of Other, and is still asked (a first user's
@@ -376,6 +380,7 @@ class Plan:
         self.unknown = []
         self.untyped = []
         self.credits = []
+        self.rewards = []                               # rewards.csv rows: cash back a card paid
         self.files = []                                 # sentences, the way the owner knows them
         self.holdings = None                            # (src path, asof)
         self.activities = None
@@ -667,7 +672,7 @@ def spent_of(ws, plan, table, t, desc, when, src):
 def plan_card(ws, plan, acc, doc, part, end):
     existing = csv_rows(ws.fd("spending.csv"))
     tagend = f"[{acc['spendTag']}/{stamp(end)}]"
-    if any(r["note"].rstrip().endswith(tagend) for r in existing):
+    if any(r["note"].rstrip().endswith(tagend) for r in existing + csv_rows(ws.fd("rewards.csv"))):
         plan.judged.append(f"The {ws.doc_name(doc)} statement to {short(end)} was already in the books; nothing was written twice.")
         return 0
     table = {e["match"]: e for e in ws.merchants.get("merchants", [])}
@@ -677,6 +682,11 @@ def plan_card(ws, plan, acc, doc, part, end):
         amt = round(float(r["amount"]), 2)
         desc = r["description"].strip()
         if amt >= 0:
+            if REWARD.search(desc):
+                # cash back is income the card paid, not a refund and not a stranger's credit
+                plan.rewards.append([r["date"], f"{amt:.2f}", acc.get("cur", "CAD"), f"{desc} {tagend}"])
+                plan.judged.append(f"Filed the {money(amt)} {desc[:40]!r} ({src}, {short(iso_to_date(r['date']))}) as a reward: income, not pay.")
+                continue
             if re.search(r"PAYMENT|THANK YOU|AUTOPAY|TRSF FROM|TRANSFER FROM", desc, re.I):   # a card payment, not a refund
                 plan.moves.append({"description": desc, "amount": amt})
                 continue
@@ -804,6 +814,14 @@ def write_plan(ws, plan):
             if new:
                 w.writerow(SPEND_COLS)
             w.writerows(sorted(plan.spend, key=lambda r: (r[0], r[4])))
+    if plan.rewards:
+        p = fd("rewards.csv")
+        new = not os.path.exists(p) or os.path.getsize(p) == 0
+        with open(p, "a", encoding="utf-8", newline="") as fh:
+            w = csv.writer(fh)
+            if new:
+                w.writerow(REWARD_COLS)
+            w.writerows(sorted(plan.rewards))
     # merchants.json: hits are counted, misses appended — the one place a category is decided.
     if plan.merchant_seen:
         table = {e["match"]: e for e in ws.merchants.setdefault("merchants", [])}
@@ -1211,6 +1229,8 @@ def main(argv):
         say(f"  {v} {k}")
     if plan.spend:
         say(f"  {len(plan.spend)} rows → spending.csv (refunds negative); {len(plan.new_merchants)} merchant(s) not seen before")
+    if plan.rewards:
+        say(f"  {len(plan.rewards)} reward(s) → rewards.csv")
     for name, why in plan.by_hand:
         say(f"  · by hand: {name} — {why}")
     for ledger, d, desc, amt in plan.untyped:

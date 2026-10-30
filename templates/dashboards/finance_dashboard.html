@@ -903,6 +903,7 @@ const GLOSSARY = {
   withdrawal_rate:{w:"withdrawal rate", pos:"noun", def:"How much you take out in a year, as a share of the portfolio.", f:"yearly withdrawal ÷ portfolio", also:["four_pct","drawdown"]},
   sequence_risk:  {w:"sequence-of-returns risk", pos:"noun", def:"Bad years soon after you start taking money out do far more damage than the same bad years later on.", also:["drawdown","backtest"]},
   backtest:       {w:"backtest", pos:"noun", def:"Running a plan through real past years to see how it would have done.", also:["sequence_risk"]},
+  rewards:        {w:"rewards", pos:"noun", def:"Money a card pays back for spending on it: cash back, or points turned into money. It counts as income but never as pay, and it stays on the card.", eg:"1% cash back on $2,000 of purchases is $20 of rewards.", not:"A refund, which gives back a purchase and comes off spending.", also:["investment_income"]},
   investment_income: {w:"investment income", pos:"noun", def:"What your investments pay you while you still hold them: dividends, interest and securities lending, after any tax withheld.", eg:"A fund paying $40 of dividends, less $6 withheld, is $34 of investment income.", not:"A gain from selling, which is not paid until you sell.", also:["dividend","securities_lending","withholding_tax"]},
   unrealized_gain:{w:"unrealized gain", pos:"noun", def:"How much more an investment is worth today than you paid for it, while you still hold it. It is not money until you sell.", f:"unrealized gain = market value \u2212 book value", eg:"Bought for $1,000, worth $1,200 today: a $200 unrealized gain.", also:["book_value","market_value"]},
   long_term_care: {w:"long-term care", pos:"noun", def:"Help with daily living in later life, at home or in a facility, usually paid for privately."},
@@ -1734,6 +1735,7 @@ function renderAlwYear(){
 const ICATS = [
   {k:"Payroll", c:"#104281", f:"payroll"},
   {k:"Investment", c:"#1baf7a", f:"inv"},   // dividends, interest, lending — stays inside the broker
+  {k:"Rewards", c:"#4a6fa5", f:"rewards"},  // a card's cash back — stays on the card, never pay
   {k:"Rent", c:"#2a78d6", f:"rent"},
   {k:"Gift", c:"#6da7ec", f:"gift"},
   {k:"Other", c:"#b7d3f6", f:"other"}
@@ -1935,7 +1937,7 @@ function renderYr(){
   const repaid = cfy.reduce((s,m) => s + (m.repaid||0), 0);
   $("yrIncLab").textContent = "By source";
   $("yrIncCats").innerHTML = (inc.length ? inc.map(x =>
-    '<div class="inc-row"><span class="dot" style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+x[2]+'"></span><span class="nm" style="width:105px">'+(x[0] === "Investment" ? term("investment_income", x[0]) : x[0])+'</span><div class="bar-wrap"><div class="bar" style="width:'+(pc(x[1], imx))+'%;background:'+x[2]+'"></div></div><span class="v num">'+fmt2(x[1])+'</span></div>').join("")
+    '<div class="inc-row"><span class="dot" style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+x[2]+'"></span><span class="nm" style="width:105px">'+(x[0] === "Investment" ? term("investment_income", x[0]) : x[0] === "Rewards" ? term("rewards", x[0]) : x[0])+'</span><div class="bar-wrap"><div class="bar" style="width:'+(pc(x[1], imx))+'%;background:'+x[2]+'"></div></div><span class="v num">'+fmt2(x[1])+'</span></div>').join("")
     : '<div class="empty">No income data for '+viewYear+'</div>')
     + (CP && repaid > 0 ? '<div style="margin-top:8px">'+metaList([[term("repayment", "Paid back")+" by "+CP.name, numx(fmt(repaid), [], CP.tip || "")]])+'</div>' : "");
 

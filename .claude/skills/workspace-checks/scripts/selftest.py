@@ -1265,8 +1265,9 @@ def update_check(root, base):
 
 
 def strip_statement(ws, m):
-    """Take one statement's rows out of its ledger (and the copies of its balance), drop the
-    PDF into inbox/ under the bank's own filename, the way update_check does."""
+    """Take one statement's rows out of its ledger — or, for a card, out of spending.csv — and
+    the copies of its balance, drop the PDF into inbox/ under the bank's own filename, the way
+    update_check does."""
     fd = lambda n: layout.path(ws, n)
     reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
     docs = {d["key"]: d for d in reg["documents"]}; by_key = {a["key"]: a for a in reg["accounts"]}
@@ -1275,11 +1276,25 @@ def strip_statement(ws, m):
     doc = docs[m["doc"]]; acc = by_key[doc["covers"][0]]
     tag = re.search(r"(\d{8})\.pdf$", m["file"]).group(1)
     end = datetime.date(int(tag[:4]), int(tag[4:6]), int(tag[6:]))
-    rows = list(csv.DictReader(open(fd(acc["ledger"]), encoding="utf-8")))
-    keep = [r for r in rows if r["statement"] != f"{acc['stmtTag']}/{tag}"]
-    with open(fd(acc["ledger"]), "w", encoding="utf-8", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(keep)
-    for p, side in (("banks.json", "assets"), ("accounts.json", "accounts")):
+    if not acc.get("ledger"):
+        # a card: its rows are spending.csv's, and its balance is a debt known again on import
+        sp = [r for r in csv.DictReader(open(fd("spending.csv"), encoding="utf-8"))
+              if not r["note"].endswith(f"[{acc['spendTag']}/{tag}]")]
+        with open(fd("spending.csv"), "w", encoding="utf-8", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=["date", "amount", "currency", "category", "note"]); w.writeheader(); w.writerows(sp)
+        for p, side in (("banks.json", "debts"), ("accounts.json", "accounts")):
+            j = json.load(open(fd(p), encoding="utf-8"))
+            for x in j[side]:
+                if x.get("account", x.get("name")) == acc["name"] and (side == "debts" or x["key"] == acc["key"]):
+                    x["balance"], x["asof"] = 0.0, "2000-01-01"
+            json.dump(j, open(fd(p), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+        keep = None
+    else:
+        rows = list(csv.DictReader(open(fd(acc["ledger"]), encoding="utf-8")))
+        keep = [r for r in rows if r["statement"] != f"{acc['stmtTag']}/{tag}"]
+        with open(fd(acc["ledger"]), "w", encoding="utf-8", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(keep)
+    for p, side in (() if keep is None else (("banks.json", "assets"), ("accounts.json", "accounts"))):
         j = json.load(open(fd(p), encoding="utf-8"))
         for x in j[side]:
             if x.get("account", x.get("name")) == acc["name"] and (side == "assets" or x["key"] == acc["key"]):
@@ -1668,6 +1683,48 @@ def yearly_check(root, base):
     return [f"  ✗ once a year: marked {len(marked)} of {len(mine)}, found {sorted(found)}" + ("; the checkers then failed" if "✗" in out else "")]
 
 
+def reward_check(root, base):
+    """A card's cash back is income, on its own line, never pay (2026-10-30, user 002: a
+    redemption sat as a credit nobody claimed). Put a cash-back credit on the newest statement of
+    a card, import it, and expect it in rewards.csv, not in spending.csv, and on the page as the
+    month's Rewards."""
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    ws = os.path.join(base, "reward"); os.makedirs(ws); stage(root, ws)
+    if not (os.path.exists(os.path.join(ws, "tools", "fixtures.py")) and os.path.exists(upd)):
+        return []
+    fd = lambda n: layout.path(ws, n)
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    sp = csv_rows_of(fd("spending.csv"))
+    card = next((a for a in reg["accounts"] if a.get("spendTag") and not a.get("ledger")
+                 and any(r["note"].endswith("]") and f"[{a['spendTag']}/" in r["note"] for r in sp)), None)
+    if card is None:
+        return []
+    tag = max(r["note"].rsplit("/", 1)[1].rstrip("]") for r in sp if f"[{card['spendTag']}/" in r["note"])
+    last = max((r for r in sp if r["note"].endswith(f"[{card['spendTag']}/{tag}]")), key=lambda r: r["date"])
+    AMT = 25.00
+    sp.append({"date": last["date"], "amount": f"{-AMT:.2f}", "currency": "CAD", "category": "Other",
+               "note": f"CASH BACK REDEMPTION [{card['spendTag']}/{tag}]"})
+    with open(fd("spending.csv"), "w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=["date", "amount", "currency", "category", "note"]); w.writeheader(); w.writerows(sp)
+    man = fixtures_for(ws) or []
+    mine = [m for m in man if next((d for d in reg["documents"] if d["key"] == m["doc"]), {}).get("covers", [None])[0] == card["key"]
+            and m["file"].endswith(f"{tag}.pdf")]
+    if not mine:
+        return []
+    strip_statement(ws, mine[0])
+    subprocess.run([sys.executable, os.path.join(os.path.dirname(upd), "rebuild.py"), ".", "--write"], cwd=ws, capture_output=True)
+    r = subprocess.run([sys.executable, upd, ".", "--write"], cwd=ws, capture_output=True, text=True, timeout=300)
+    rw = [x for x in csv_rows_of(fd("rewards.csv")) if "CASH BACK" in x["note"].upper()]
+    spent = [x for x in csv_rows_of(fd("spending.csv")) if "CASH BACK" in x["note"].upper()]
+    page = open(os.path.join(ws, main_dash(ws)), encoding="utf-8").read()
+    inv = json.loads(re.search(r"^const INVEST = (\{.*\});", page, re.M).group(1))
+    shown = sum(m.get("rewards", 0) for m in inv.get("cashflow", []))
+    if r.returncode in (0, 2) and len(rw) == 1 and float(rw[0]["amount"]) == AMT and not spent and abs(shown - AMT) < 0.01:
+        return [f"  ✓ update.py: a card's cash back filed as a reward ({AMT:.2f} in rewards.csv, none in spending, the month's Rewards on the page)"]
+    return [f"  ✗ cash back: update exit {r.returncode}, rewards.csv {[(x['date'], x['amount']) for x in rw]}, "
+            f"spending {len(spent)} row(s), page Rewards {shown}"]
+
+
 def loan_import_check(root, base):
     """A repayment from a borrower, under the name the bank prints, is money back — typed
     Repayment, attributed to that borrower's loan, and the loan's balance in the register moves
@@ -1812,7 +1869,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
-                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, starter_check,
+                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, starter_check,
                     demo_clear_check):
             try:
                 runs += chk(root, base)

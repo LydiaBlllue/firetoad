@@ -57,6 +57,7 @@ The rest of `findata/`, and what each carries:
 | file | what it is |
 |---|---|
 | `spending.csv` | every purchase, tagged with the statement it came from |
+| `rewards.csv` | a card's cash back, tagged the same way — income, never pay, never spending |
 | each account's ledger CSV | date, description, amount, balance, statement, **`type`**, `label` — the balance chain must close (D1), and `type` is the classification the page shows |
 | `holdings_latest.csv`, `ws_activities.csv` | the broker's exports |
 | `banks.json` | one balance and one as-of date per bank account |
@@ -84,7 +85,7 @@ checker guards it, and whether the page may read it:
 | layer | answers | only writer | how it changes |
 |---|---|---|---|
 | **evidence** — `inbox/` → `archive/` | where is the original | the import (rename and move) | append only |
-| **facts** — `findata/ledgers/`: the ledgers, `spending.csv`, the broker exports, `banks.json`, `fx.json`, `foreign.json` | what actually happened to the money | the import's parse step | a ledger is append only and every row carries its statement tag; a snapshot (`holdings_latest.csv`, `banks.json`, `fx.json`, `foreign.json`) is replaced whole and dated by `asof`, its previous state living in `archive/` and in `history/` |
+| **facts** — `findata/ledgers/`: the ledgers, `spending.csv`, `rewards.csv`, the broker exports, `banks.json`, `fx.json`, `foreign.json` | what actually happened to the money | the import's parse step | a ledger is append only and every row carries its statement tag; a snapshot (`holdings_latest.csv`, `banks.json`, `fx.json`, `foreign.json`) is replaced whole and dated by `asof`, its previous state living in `archive/` and in `history/` |
 | **history** — `findata/history/`: `imports.json`, `decisions.json`, `filings.json`, the two `*_history.json` | what the world looked like at each update | the import's last step | one record per update, never rewritten — except a `decisions.json` item, which is closed in place (`answer`, `resolved`) when the owner answers |
 | **declarations** — `findata/register/`: `accounts.json`, `funds.json`, `plan.json`, `rules.json`, `merchants.json`, `profile.json`, `tasks.json` | how the owner chooses to see the money | the owner, through `setup` or out loud | edited, with a dated reason beside the value |
 | **derived** — `dashboards/`, the figures table in `FINANCE.md` | what the page shows | `rebuild.py` | overwritten whole, idempotent |

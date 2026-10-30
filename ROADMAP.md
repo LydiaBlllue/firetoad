@@ -127,8 +127,6 @@ the selftest now does that every time; the migration was run on a copy of user 0
   exports, phone screenshots, balances no file carries, open questions), each with the one
   button that moves it forward. In the tool since 2026-10-30, so a sync no longer removes it;
   still to run through one real import before it is announced.
-- **Cashback has a home.** *(first user)* A redemption is filed as a reward, not left as a credit
-  nobody claimed.
 
 ## v1.4 — January 2027
 

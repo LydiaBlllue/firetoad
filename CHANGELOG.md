@@ -2,6 +2,13 @@
 
 ## 1.3 — unreleased
 
+- **Cash back is income, on a line of its own** (2026-10-30, user 001's call on user 002's
+  report). A card's cash-back redemption sat as a credit nobody claimed. The import now files a
+  card credit that names cash back or a redemption into `rewards.csv` — a fact, tagged with its
+  statement — and the Income page shows it as **Rewards** in the year by source, with a Glossary
+  entry: income, never pay, and like investment income it never reaches chequing. D2 holds
+  every reward row to a known statement tag. The selftest puts a cash-back credit on a card
+  statement and expects it in rewards.csv, out of spending, and on the page.
 - **The selftest passes when run as root** (2026-10-30, user 002). The all-or-nothing case
   made the import's last step fail by turning `archive/` read-only, which root writes through:
   in a cloud session the run succeeded and the case reported a failure. It now puts a file
