@@ -22,19 +22,6 @@ summary — a merchant it has not seen, a statement no parser could read, your a
 goes to Anthropic the way anything you say in Claude Code does. A statement a parser read never
 does.
 
-## What you see
-
-| | |
-|---|---|
-| ![Home](docs/screens/home.png) | **Home.** Four cards, one per section. Net worth in one card: a row for what each part is for, its bar coloured by how easily you could reach it. Two dates under the net worth: the day every account is complete to, and the last update. |
-| ![A year of spending](docs/screens/spending.png) | **Spending.** This month, opened up by category; the year, month by month and against the allowance; subscriptions, with what is due in the next 30 days. No category caps — one allowance, and everything under it is guilt-free. |
-| ![The budget](docs/screens/plan.png) | **Plan.** What each paycheque is for; how far the portfolio is from the FIRE target and when it gets there; whether the money lasts once you start taking it out, replayed through every stretch of real years since 1928. |
-| ![Your portfolio](docs/screens/portfolio.png) | **Investing.** What you hold and how it splits, by currency, by kind of asset and by bucket; how much is kept ready as dry powder; how it did against one fund you could have bought instead. |
-| ![Which file was filed](docs/screens/sources.png) | **Records.** What each update changed; every account; which statement arrived which month. A glossary of every term sits on its own at the foot of the sidebar. |
-
-**Every word on a card is chosen.** A card has a label, one number and at most one fact. A
-term with a dotted underline shows its dictionary entry and opens the Glossary; a number with
-one shows the sum behind it. Every page works this way.
 
 ### Every page
 
