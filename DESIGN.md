@@ -113,6 +113,9 @@
 - **No list of things to do on Home** (taken off 2026-10-28 with Rules): what waits for the owner
   is asked in the conversation with Claude at each import, and a page that needs attention
   carries its dot in the sidebar.
+- **Each net-worth row opens in place** to the accounts behind it, largest first, each with its
+  institution, amount, share of the row, the date of its balance and any currency not the
+  home one; the amounts sum to the row. So does *Less what you owe*.
 - **Net worth over time** under the net-worth card: one point per month, what really was, nothing
   projected, from two months on. It is not the FIRE chart, which follows the portfolio to a target.
 - **Four stat cards**, one per section: **Portfolio** (with its dry-powder share), **FIRE progress**

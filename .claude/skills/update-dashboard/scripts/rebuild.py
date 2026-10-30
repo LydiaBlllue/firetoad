@@ -676,6 +676,22 @@ def derive(d):
             big = max(t, key=lambda r: t[r])
             t[big] += total - sum(t.values())
         return [[reach_lab[r][0], v, reach_lab[r][1], r] for r, v in t.items() if v]
+    def one_account(a, v):
+        cur = a.get("cur", "CAD")
+        return {"n": a.get("label") or a["name"], "i": "" if a.get("role") == "owed" else a.get("inst", ""),
+                "v": round(v), "asof": a.get("asof") or "", "cur": cur if cur != "CAD" else ""}
+    def part_accounts(role, where, total):
+        """The accounts behind a row, largest first. Rounded per account, the dollar that can
+        drift settled on the largest, so the list sums to the row it opens under."""
+        rows = [one_account(a, v) for a, v in assets if a.get("role") == role and round(v)
+                and (where == "all" or (a.get("reach") == "abroad") == (where == "abroad"))]
+        rows.sort(key=lambda x: -x["v"])
+        if rows:
+            rows[0]["v"] += total - sum(x["v"] for x in rows)
+        return rows
+    out["DEBT_ACCTS"] = sorted((one_account(a, v) for a, v in liabs if round(v)), key=lambda x: -x["v"])
+    if out["DEBT_ACCTS"]:
+        out["DEBT_ACCTS"][0]["v"] += R_debt - sum(x["v"] for x in out["DEBT_ACCTS"])
     out["NWPARTS"] = []
     for role, where, lab, c, q in PART_ROWS:
         names = accounts_in(role, where)
@@ -684,7 +700,8 @@ def derive(d):
         lab = lab.replace("{abroad}", fgn_label)
         out["NWPARTS"].append({"k": lab, "role": role, "v": part_value(role, where), "c": c, "q": q,
                                "d": desc.get("nwparts", {}).get(lab, names),
-                               "by": part_by_reach(role, where, part_value(role, where))})
+                               "by": part_by_reach(role, where, part_value(role, where)),
+                               "accts": part_accounts(role, where, part_value(role, where))})
     out["REACH"] = [{"k": lab, "r": r, "v": by_reach[r], "c": c, "d": desc.get("reach", {}).get(lab, generic_reach[lab])}
                     for r, lab, c in REACH_ROWS if r in reach_present]
     got_parts = sum(r["v"] for r in out["NWPARTS"]) - R_debt

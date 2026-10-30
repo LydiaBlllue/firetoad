@@ -140,6 +140,11 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .nw-row:last-child{border-bottom:none}
 .both-row{display:grid;grid-template-columns:158px minmax(0,1fr) 110px 44px;column-gap:12px;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid var(--grid)}
 .both-row:last-child{border-bottom:none}
+.both-row[role=button]{cursor:pointer}.both-row[role=button]:hover{background:var(--pill)}
+.both-row .caret{display:inline-block;width:9px;color:var(--muted);font-size:10px;font-weight:400;transition:transform .12s}.both-row[aria-expanded=true] .caret{transform:rotate(90deg)}
+.both-accts{border-bottom:1px solid var(--grid);padding:2px 0 8px}
+.both-acct{display:grid;grid-template-columns:minmax(0,1fr) 110px 44px;column-gap:12px;align-items:baseline;padding:4px 0 4px 17px;font-size:12.5px;color:var(--ink-2)}
+.both-acct .i{color:var(--muted);margin-right:6px}.both-acct .a{color:var(--muted);font-size:11.5px;margin-left:8px}.both-acct .v{text-align:right;font-weight:600}.both-acct .p{text-align:right;color:var(--muted)}
 .both-row .nm{color:var(--ink-2);display:flex;align-items:center;gap:8px;font-weight:600}
 .both-row .v{text-align:right;font-weight:600}.both-row .p{text-align:right;color:var(--muted)}
 .both-bar{display:flex;height:12px;border-radius:3px;overflow:hidden;min-width:2px}
@@ -1261,15 +1266,29 @@ function renderHome(){
   const widest = Math.max(1, ...NWPARTS.map(r => r.v));
   $("bothLab").innerHTML = term("net_worth", "Net worth");
   $("bothBig").innerHTML = numx(fmt(NW_GLOBAL), [["You own", fmt(gross)], ["You owe", "\u2212"+fmt(NW_DEBT)]], "", true);
+  // A row opens in place to the accounts behind it; "where is my cash" should not need another page.
+  const acctList = (rows, total) => '<div class="both-accts" hidden>' + rows.map(a =>
+      '<div class="both-acct"><span>'+(a.i ? '<span class="i">'+a.i+'</span>' : "")+a.n
+      + (a.cur ? '<span class="a">'+a.cur+'</span>' : "") + (a.asof ? '<span class="a">'+MN[Number(a.asof.slice(5,7))-1]+' '+Number(a.asof.slice(8,10))+'</span>' : "")+'</span>'
+      + '<span class="v num">'+fmt(a.v)+'</span><span class="p num">'+Math.round(pc(a.v, total))+'%</span></div>').join("") + '</div>';
+  const opens = n => n ? ' role="button" tabindex="0" aria-expanded="false"' : "";
+  const caret = n => n ? '<span class="caret">\u25B8</span>' : "";
   $("bothRows").innerHTML = NWPARTS.map(r => {
-    const by = r.by || [];
-    return '<div class="both-row"><span class="nm">'+partTerm(r)+'</span>'
+    const by = r.by || [], ac = r.accts || [];
+    return '<div class="both-row"'+opens(ac.length)+'><span class="nm">'+caret(ac.length)+partTerm(r)+'</span>'
       + '<span class="both-bar" style="width:'+pc(r.v, widest)+'%">'
       + by.map(b => '<span style="width:'+pc(b[1], r.v)+'%;background:'+b[2]+'"></span>').join("")
-      + '</span><span class="v num">'+numx(fmt(r.v), by.length > 1 ? split(by) : [], r.d, true)+'</span><span class="p num">'+Math.round(pc(r.v, gross))+'%</span></div>';
+      + '</span><span class="v num">'+numx(fmt(r.v), by.length > 1 ? split(by) : [], r.d, true)+'</span><span class="p num">'+Math.round(pc(r.v, gross))+'%</span></div>' + (ac.length ? acctList(ac, r.v) : "");
   }).join("")
     + '<div class="both-row sum"><span class="nm">'+term("assets", "Total assets")+'</span><span></span><span class="v num">'+fmt(gross)+'</span><span class="p"></span></div>'
-    + '<div class="both-row"><span class="nm">Less what you owe</span><span></span><span class="v num">'+numx("\u2212"+fmt(NW_DEBT), [], DEBT_NOTE)+'</span><span class="p"></span></div>';
+    + '<div class="both-row"'+opens(DEBT_ACCTS.length)+'><span class="nm">'+caret(DEBT_ACCTS.length)+'Less what you owe</span><span></span><span class="v num">'+numx("\u2212"+fmt(NW_DEBT), [], DEBT_NOTE)+'</span><span class="p"></span></div>'
+    + (DEBT_ACCTS.length ? acctList(DEBT_ACCTS, NW_DEBT) : "");
+  $("bothRows").querySelectorAll('.both-row[role=button]').forEach(row => {
+    const flip = () => { const open = row.getAttribute("aria-expanded") !== "true";
+      row.setAttribute("aria-expanded", open); row.nextElementSibling.hidden = !open; };
+    row.onclick = flip;
+    row.onkeydown = e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); flip(); } };
+  });
   $("bothKey").innerHTML = '<div class="both-sum">' + REACH.map(r =>
     '<span class="it"><i style="background:'+r.c+'"></i>'+term(REACH_TERM[r.r], r.k)+' '+numx(fmt(r.v), [], r.d)+'</span>').join("") + '</div>';
 }
@@ -2465,6 +2484,7 @@ const CARE_ESC = HOME_CARE.esc;
 // access. Both lists are derived at rebuild time from the holdings export, banks.json and
 // foreign.json, and both sum to PORTFOLIO.
 const NWPARTS = [];
+const DEBT_ACCTS = [];
 const NW_DEBT = 0;
 const DEBT_NOTE = "";   // the line under "Less what you owe": the owner's words, or the debts by name
 

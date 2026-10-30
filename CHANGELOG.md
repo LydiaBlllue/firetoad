@@ -2,6 +2,9 @@
 
 ## 1.3 — unreleased
 
+- **Home's net-worth rows open to their accounts** (2026-10-30, user 001). "How much cash, and
+  where" had only a total on Home and a table sorted by bank on Accounts. Click Cash, or any row,
+  and it lists the accounts behind it in place; the amounts sum to the row.
 - **A gift that went straight into the broker counts** (2026-10-30, user 001). Family support
   wired to a brokerage account reached no bank ledger, so the income page never saw it. `plan.json`
   `brokerGifts` declares such a deposit; it lands on the month's Gift line, and D29 fails one the
