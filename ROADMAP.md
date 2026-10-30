@@ -60,8 +60,9 @@ Merged into `main`; what it carries is in CHANGELOG, 1.1.
 ## v1.2 — 2026-11-24 — a first setup that works for someone else
 
 **Released 2026-10-29** — what each item became is in CHANGELOG, 1.2. Still open, and carried
-into v1.3: the screenshots a step in *Start here* (the words are done), and spreading a bill paid
-once a year over twelve months when months are compared. Setup was run end to end for a card-only owner, and
+into v1.3: spreading a bill paid once a year over twelve months when months are compared. The
+screenshots a step in *Start here* were dropped on 2026-10-30: the words say it, and the app's
+screens change. Setup was run end to end for a card-only owner, and
 the selftest now does that every time; the migration was run on a copy of user 001's workspace.
 
 - **The demo on a phone.** A link shared on social media is opened on a phone, and the page is
