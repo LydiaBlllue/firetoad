@@ -323,6 +323,11 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   <div id="bothRows"></div>
   <div id="bothKey"></div>
 </div>
+<div class="card" style="margin-bottom:10px" id="nwCard">
+  <div class="lab">Net worth over time</div>
+  <svg class="year-svg" id="nwChart" viewBox="0 0 940 200" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Net worth at each update"></svg>
+  <div class="cap num" id="nwCap"></div>
+</div>
 </section>
 
 <section data-pg="trends" hidden>
@@ -482,6 +487,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   </div>
   <div class="card" style="margin-bottom:10px">
     <div class="lab">Trajectory to FIRE</div>
+    <div class="pills" id="trajPills" style="margin:6px 0 8px"></div>
     <svg class="year-svg" id="fireTraj" viewBox="0 0 940 300" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="year-legend" id="trajLegend"></div>
     <div class="cap" id="trajCap"></div>
@@ -659,8 +665,9 @@ const ST = (() => {
   return st;
 })();
 const stNum = (k, dflt) => { const v = Number(ST[k]); return isFinite(v) && v > 0 ? v : dflt; };
+let trajView = ST.traj && ST.traj !== "fire" ? Number(ST.traj) || "fire" : "fire";   // the FIRE chart's span: years ahead, or to the target
 function saveState(){
-  const st = {p:curPage, ym:viewYM, base:PLAN_BASE, stop:stopAge, draw:drawAge,
+  const st = {traj:trajView, p:curPage, ym:viewYM, base:PLAN_BASE, stop:stopAge, draw:drawAge,
               care:careAge, ltc:ltcAge, home:ltcTier, alw:ALW, invm:INVM, bigm:BIGM};
   try{ localStorage.setItem("ly_state", JSON.stringify(st)); }catch(e){}
   try{ history.replaceState(null, "", "#" + Object.entries(st)
@@ -1174,7 +1181,45 @@ function renderPerf(){
     ? '<div class="cap">' + cap1(span) + " is too short to judge one fund against a portfolio.</div>"
     : "";
 }
+// What the owner is worth over time: one point per month, what really was, nothing projected.
+// Not the FIRE chart: that follows the portfolio towards a target; this counts everything owned
+// less everything owed. It needs two months to be a line.
+function renderNwChart(){
+  const pts = NW_HISTORY, card = $("nwCard");
+  card.hidden = pts.length < 2;
+  if(card.hidden) return;
+  const [W, H] = fit("nwChart", 200), padL=58, padR=14, padT=14, padB=26;
+  const vals = pts.map(p => p.v), lo = Math.min(...vals), hi = Math.max(...vals), room = Math.max((hi - lo) * 0.15, Math.abs(hi) * 0.02, 1);
+  const minV = lo >= 0 ? Math.max(0, lo - room) : lo - room, maxV = hi + room;
+  const m0 = mIdx(pts[0].ym), m1 = mIdx(pts[pts.length-1].ym);
+  const x = i => padL + (i - m0) / Math.max(1, m1 - m0) * (W-padL-padR);
+  const y = v => H-padB - (v - minV) / (maxV - minV) * (H-padT-padB);
+  const yLab = v => (v < 0 ? "\u2212" : "") + "$" + (Math.abs(v) >= 1e6 ? (Math.abs(v)/1e6).toFixed(1)+"M" : Math.round(Math.abs(v)/1e3)+"k");
+  const raw = (maxV - minV)/4, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1,2,2.5,5,10].map(m => m*mag).find(s => s >= raw);
+  let out = "";
+  for(let v=Math.ceil(minV/step)*step; v<=maxV; v+=step){
+    out += '<line x1="'+padL+'" y1="'+y(v)+'" x2="'+(W-padR)+'" y2="'+y(v)+'" stroke="var(--grid)" stroke-width="1"/>'
+      + '<text x="'+(padL-8)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="12" class="num" fill="var(--muted)">'+yLab(v)+'</text>';
+  }
+  const every = Math.max(1, Math.ceil((m1 - m0) / 8));
+  for(let i=m0; i<=m1; i+=every){
+    const yy = ANCHOR_Y + Math.floor(i/12);
+    out += '<text x="'+x(i)+'" y="'+(H-8)+'" text-anchor="'+(i === m0 ? "start" : x(i) > W - padR - 24 ? "end" : "middle")+'" font-size="12" class="num" fill="var(--muted)">'+MN[((i%12)+12)%12]+" "+String(yy).slice(2)+'</text>';
+  }
+  out += '<path d="'+pts.map((p,i) => (i ? "L " : "M ")+x(mIdx(p.ym))+" "+y(p.v)).join(" ")+'" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+  pts.forEach((p,i) => out += '<circle cx="'+x(mIdx(p.ym))+'" cy="'+y(p.v)+'" r="4" fill="'+(p.cadOnly ? "var(--surface)" : "var(--ink)")+'" stroke="'+(p.cadOnly ? "var(--ink)" : "var(--surface)")+'" stroke-width="2" data-i="'+i+'"/>'
+    + '<circle cx="'+x(mIdx(p.ym))+'" cy="'+y(p.v)+'" r="12" fill="rgba(0,0,0,0)" data-i="'+i+'"/>');
+  const svg = $("nwChart");
+  svg.innerHTML = out;
+  svg.querySelectorAll("circle[data-i]").forEach(c => { const p = pts[Number(c.dataset.i)];
+    hoverable(c, ymFull(p.ym)+"<br>net worth "+fmt(p.v)+(p.cadOnly ? "<br>Canadian side only" : "")); });
+  const d = vals[vals.length-1] - vals[0];
+  $("nwCap").textContent = (d >= 0 ? "Up " : "Down ") + fmt(Math.abs(d)) + " since " + ymFull(pts[0].ym) + "."
+    + (pts.some(p => p.cadOnly) ? " The hollow point counts the Canadian side only." : "");
+}
 function renderHome(){
+  renderNwChart();
   const yr = TODAY.slice(0,4);
   const target = PLAN_BASE * 300;
   const invested = INVEST.portfolio;   // every account held to grow, the foreign funds included; 0 until the first holdings export
@@ -2261,29 +2306,45 @@ function renderTrajectory(target){
   const paths = SCENARIOS.map(s => ({...s, series: project(p0, s.r, projMonths)}));
   paths.forEach(p => p.cross = crossMonth(p.series, target));
   const [W, H] = fit("fireTraj", 300), padL=58, padR=8, padT=18, padB=28;
-  const maxV = Math.max(target*1.12, ...PORT_HISTORY.map(h => h.v), ...paths.map(p => p.series[Math.min(projMonths, (p.cross??projMonths))]));
-  const x = i => padL + i/months * (W-padL-padR);
-  const y = v => H-padB - v/maxV * (H-padT-padB);
+  // The span shown: from the first real point to some years ahead, or to just past the month the
+  // middle return reaches the target. Twenty-five years squeezed the real months into a corner.
+  const midCross = (paths[1] || paths[0] || {}).cross;
+  const from = PORT_HISTORY.length ? Math.min(mIdx(PORT_HISTORY[0].ym), offM) : offM;
+  const to = trajView === "fire" ? Math.min(months, offM + (midCross === null || midCross === undefined ? projMonths : midCross + 6))
+                                 : Math.min(months, offM + trajView * 12);
+  const shownEnd = p => Math.min(p.cross ?? projMonths, to - offM);
+  const reached = paths.some(p => p.cross !== null && offM + p.cross <= to);
+  const seen = PORT_HISTORY.map(h => h.v).concat(...paths.map(p => [p.series[0], p.series[shownEnd(p)]]));
+  const maxV = Math.max(reached ? target * 1.12 : 0, ...seen) * (reached ? 1 : 1.05);
+  const minV = reached ? 0 : Math.max(0, Math.min(...seen) * 0.9);     // a line need not start at zero
+  const x = i => padL + (i - from) / Math.max(1, to - from) * (W-padL-padR);
+  const y = v => H-padB - (v - minV) / Math.max(1, maxV - minV) * (H-padT-padB);
   let out = "";
   // y-axis: horizontal gridlines at a nice dollar step (~5 ticks)
-  const rawStep = maxV/5, mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const rawStep = (maxV - minV)/5, mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
   const yStep = [1,2,2.5,5,10].map(m => m*mag).find(s => s >= rawStep);
   const yLab = v => "$" + (v >= 1e6 ? (v/1e6).toFixed(v%1e6?1:0)+"M" : Math.round(v/1e3)+"k");
-  for(let v=yStep; v<=maxV; v+=yStep){
+  for(let v=Math.ceil((minV + 1)/yStep)*yStep; v<=maxV; v+=yStep){
     out += '<line x1="'+padL+'" y1="'+y(v)+'" x2="'+(W-padR)+'" y2="'+y(v)+'" stroke="var(--grid)" stroke-width="1"/>';
     out += '<text x="'+(padL-8)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="12" class="num" fill="var(--muted)">'+yLab(v)+'</text>';
   }
-  // horizon gridlines every 5 years, labelled with calendar years from the fixed 2026 anchor
-  for(let yr=5; yr<=HORIZON; yr+=5){
-    out += '<line x1="'+x(yr*12)+'" y1="'+padT+'" x2="'+x(yr*12)+'" y2="'+(H-padB)+'" stroke="var(--grid)" stroke-width="1"/>';
-    out += '<text x="'+x(yr*12)+'" y="'+(H-9)+'" text-anchor="middle" font-size="12" class="num" fill="var(--muted)">'+(ANCHOR_Y+yr)+'</text>';
+  // time: quarters on a short span, then years, then every five
+  const span = to - from, stepM = span <= 30 ? 3 : span <= 96 ? 12 : 60;
+  for(let i=Math.ceil(from/stepM)*stepM; i<=to; i+=stepM){
+    const yy = ANCHOR_Y + Math.floor(i/12);
+    out += '<line x1="'+x(i)+'" y1="'+padT+'" x2="'+x(i)+'" y2="'+(H-padB)+'" stroke="var(--grid)" stroke-width="1"/>';
+    out += '<text x="'+x(i)+'" y="'+(H-9)+'" text-anchor="'+(x(i) < padL + 20 ? "start" : x(i) > W - padR - 24 ? "end" : "middle")+'" font-size="12" class="num" fill="var(--muted)">'
+      + (stepM < 12 ? MN[i%12]+" "+yy : yy)+'</text>';
   }
   out += '<line x1="'+padL+'" y1="'+(H-padB)+'" x2="'+(W-padR)+'" y2="'+(H-padB)+'" stroke="var(--grid)" stroke-width="1"/>';
-  out += '<text x="'+x(0)+'" y="'+(H-9)+'" text-anchor="start" font-size="12" class="num" fill="var(--muted)">'+ANCHOR_Y+'</text>';
-  // target line
-  out += '<line x1="'+padL+'" y1="'+y(target)+'" x2="'+(W-padR)+'" y2="'+y(target)+'" stroke="#d03b3b" stroke-width="2" stroke-dasharray="6 4"/>';
-  out += '<text x="'+(W-padR)+'" y="'+(y(target)-7)+'" text-anchor="end" font-size="12" class="num" fill="#d03b3b" font-weight="700">FIRE '+fmt(target)+'</text>';
-  // actual net-worth history: solid ink line with dots
+  // target line, when the span reaches it; otherwise say where it is
+  if(reached){
+    out += '<line x1="'+padL+'" y1="'+y(target)+'" x2="'+(W-padR)+'" y2="'+y(target)+'" stroke="#d03b3b" stroke-width="2" stroke-dasharray="6 4"/>';
+    out += '<text x="'+(W-padR)+'" y="'+(y(target)-7)+'" text-anchor="end" font-size="12" class="num" fill="#d03b3b" font-weight="700">FIRE '+fmt(target)+'</text>';
+  } else {
+    out += '<text x="'+(W-padR)+'" y="'+(padT+2)+'" text-anchor="end" font-size="12" class="num" fill="#d03b3b" font-weight="700">FIRE '+fmt(target)+' is above this range</text>';
+  }
+  // the portfolio so far: solid ink line with dots
   if(PORT_HISTORY.length){
     let hd = "";
     PORT_HISTORY.forEach(h => { hd += (hd?" L ":"M ")+x(mIdx(h.ym))+" "+y(h.v); });
@@ -2292,14 +2353,19 @@ function renderTrajectory(target){
       out += '<circle cx="'+x(mIdx(h.ym))+'" cy="'+y(h.v)+'" r="4" fill="var(--ink)" stroke="var(--surface)" stroke-width="2" data-h="'+h.ym+'"/>';
     });
   }
+  // the months between the last snapshot and today, which no snapshot has seen yet
+  const lastH = PORT_HISTORY[PORT_HISTORY.length-1];
+  if(lastH && mIdx(lastH.ym) < offM)
+    out += '<line x1="'+x(mIdx(lastH.ym))+'" y1="'+y(lastH.v)+'" x2="'+x(offM)+'" y2="'+y(p0)+'" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="3 4"/>';
   // scenario lines from the current month, drawn only up to the crossing point
   paths.forEach((p, pi) => {
-    const end = p.cross ?? projMonths;
+    const end = shownEnd(p), st = span <= 60 ? 1 : 3;
     let d = "";
-    for(let i=0;i<=end;i+=3) d += (d?" L ":"M ")+x(offM+i)+" "+y(p.series[i]);
+    for(let i=0;i<=end;i+=st) d += (d?" L ":"M ")+x(offM+i)+" "+y(p.series[i]);
+    if(end % st) d += " L "+x(offM+end)+" "+y(p.series[end]);
     out += '<path d="'+d+'" fill="none" stroke="'+p.c+'" stroke-width="2" stroke-linecap="round"/>';
     out += '<path d="'+d+'" fill="none" stroke="rgba(0,0,0,0)" stroke-width="16" data-hov="'+pi+'"/>';
-    if(p.cross !== null){
+    if(p.cross !== null && offM + p.cross <= to){
       out += '<circle cx="'+x(offM+p.cross)+'" cy="'+y(target)+'" r="4.5" fill="'+p.c+'" stroke="var(--surface)" stroke-width="2" data-c="'+pi+'"/>';
     }
   });
@@ -2307,7 +2373,7 @@ function renderTrajectory(target){
   svg.innerHTML = out;
   svg.querySelectorAll("circle[data-h]").forEach(c => {
     const h = PORT_HISTORY.find(q => q.ym === c.dataset.h);
-    hoverable(c, ymFull(h.ym)+"<br>net worth "+fmt(h.v)+(h.cadOnly?"<br>Canadian side only":""));
+    hoverable(c, ymFull(h.ym)+"<br>portfolio "+fmt(h.v)+(h.cadOnly?"<br>Canadian side only":""));
   });
   const yrTxt = m => m === null ? "beyond "+HORIZON+"y" : (m/12).toFixed(1)+" yr";
   const dateTxt = m => {
@@ -2319,11 +2385,11 @@ function renderTrajectory(target){
   // hover anywhere on a scenario line → month + projected value; crossing dots → arrival info
   svg.querySelectorAll("path[data-hov]").forEach(ph => {
     const p = paths[Number(ph.dataset.hov)];
-    const end = p.cross ?? projMonths;
+    const end = shownEnd(p);
     ph.addEventListener("mousemove", ev => {
       const r = svg.getBoundingClientRect();
       const mx = (ev.clientX - r.left) / r.width * W;
-      let i = Math.round((mx - padL)/(W-padL-padR)*months) - offM;
+      let i = Math.round(from + (mx - padL)/(W-padL-padR)*(to - from)) - offM;
       i = Math.max(0, Math.min(end, i));
       showTip(ev, p.n+"<br>"+dateTxt(i)+"<br>"+fmt(p.series[i]));
     });
@@ -2333,6 +2399,12 @@ function renderTrajectory(target){
     const p = paths[Number(c.dataset.c)];
     hoverable(c, p.n+"<br>reaches "+fmt(target)+"<br>"+dateTxt(p.cross));
   });
+  $("trajPills").innerHTML = [[1,"1 year"],[5,"5 years"],[10,"10 years"],["fire","To FIRE"]].map(([v,t]) =>
+    '<button class="pill'+(trajView === v ? " sel" : "")+'" data-v="'+v+'">'+t+'</button>').join("");
+  $("trajPills").querySelectorAll(".pill").forEach(b => b.onclick = () => {
+    trajView = b.dataset.v === "fire" ? "fire" : Number(b.dataset.v);
+    saveState(); renderTrajectory(target);
+  });
   $("trajLegend").innerHTML =
     '<div class="leg-row" style="pointer-events:none"><span class="dot" style="background:var(--ink)"></span>'
     +'<span class="nm">Actual</span><span class="v num" style="width:auto;padding-left:6px">'+fmt((PORT_HISTORY[PORT_HISTORY.length-1]||{v:0}).v)+'</span></div>'
@@ -2341,7 +2413,9 @@ function renderTrajectory(target){
     +'<span class="nm">'+p.n+'</span><span class="v num" style="width:auto;padding-left:6px">'+yrTxt(p.cross)+' · '+dateTxt(p.cross)+'</span></div>').join("");
   const base = paths[1];
   const rs = SCENARIOS.map(sc => Math.round(sc.r*100)+"%");
-  $("trajCap").innerHTML = '<div class="say">On the middle return you reach the target around <b>' + dateTxt(base.cross) + '</b>.</div>'
+  $("trajCap").innerHTML = '<div class="say">' + (base.cross === null
+      ? "On the middle return the target is more than " + HORIZON + " years away."
+      : 'On the middle return you reach the target around <b>' + dateTxt(base.cross) + '</b>.') + '</div>'
     + metaList([
       ["Added each month", fmt(MONTHLY_CONTRIB)],
       [term("real_return", "Returns"), (rs.length > 1 ? rs.slice(0,-1).join(", ")+" and "+rs[rs.length-1] : rs.join("")) + " a year"]

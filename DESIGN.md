@@ -98,7 +98,7 @@
   reader:
   | Section | Pages |
   |---|---|
-  | — | Home (four cards, net worth in one card) |
+  | — | Home (four cards, net worth in one card, net worth over time) |
   | Spending | This month · Year · Subscriptions |
   | Income | Income · Investment income |
   | Investing | Portfolio · Performance · Holdings |
@@ -113,6 +113,8 @@
 - **No list of things to do on Home** (taken off 2026-10-28 with Rules): what waits for the owner
   is asked in the conversation with Claude at each import, and a page that needs attention
   carries its dot in the sidebar.
+- **Net worth over time** under the net-worth card: one point per month, what really was, nothing
+  projected, from two months on. It is not the FIRE chart, which follows the portfolio to a target.
 - **Four stat cards**, one per section: **Portfolio** (with its dry-powder share), **FIRE progress**
   (with the on-track year), **Invested in \<month\>** (pay-yourself-first, from the broker's
   record), **Free to spend** (the allowance today).
@@ -193,8 +195,10 @@
   assumed.
   - **The trajectory**: the portfolio under today's contribution at three real returns, drawn to
     the target's dashed line, each curve stopping where it arrives, the legend giving
-    "X.X years · month year". A money y-axis on nice steps; **the x-axis is calendar years
-    anchored at `plan.json` `retirement.anchorYear`**, so it does not drift across a new year.
+    "X.X years · month year". A money y-axis on nice steps; **the x-axis is calendar time**
+    (quarters, years or every five years, by span). **Four spans**: 1 year, 5 years, 10 years, and
+    To FIRE, the default, which stops just past the month the middle return arrives; the choice is
+    kept. A span that does not reach the target says so, and its y-axis fits what it shows.
     The real snapshots are a black line with dots, first in the legend as Actual; the projections
     continue from the current month.
 - **Drawdown & care** answers *does it last*: a headline sentence; two sliders (the age you stop

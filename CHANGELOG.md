@@ -2,6 +2,13 @@
 
 ## 1.3 — unreleased
 
+- **Net worth over time, on Home** (2026-10-30). Every import has kept a point a month and nothing
+  drew them. One line, what really was, nothing projected.
+- **The FIRE chart has a span: 1 year, 5 years, 10 years, To FIRE** (2026-10-30). It was always
+  twenty-five years, with the real months squeezed into its left edge. To FIRE, the default, stops
+  just past the month the middle return arrives; a span short of the target says so, and its axis
+  fits what it shows, so the one-year view shows whether the portfolio is keeping to the plan. The
+  Actual line's tooltip said net worth; it is the portfolio.
 - **Cash back imported before 1.3 is found again** (findata schema 13, `tools/migrate_12to13.py`).
   Every card statement in `archive/` is read again by its parser, and a cash-back or redemption
   credit not yet in `rewards.csv` is written there with its statement's tag.
