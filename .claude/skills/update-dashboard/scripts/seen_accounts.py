@@ -2,8 +2,8 @@
 
 A card-only owner's statements show every payment coming from a chequing account the tool has
 never heard of, and their net worth was the card's debt and nothing else; a chequing ledger
-showed three other account numbers, one in US dollars, and a $98,000 transfer could only be
-guessed as the owner's own (2026-10-28, user 002). Setup asks about each one by its number, and
+showed other account numbers, and a large transfer could only be guessed as the owner's own
+(2026-10-28, user 002). Setup asks about each one by its number, and
 the import says when a new one appears.
 
 An account number is read only where it is shaped like one — masked (`XXXX-432`, `****1234`),
@@ -22,13 +22,16 @@ SHAPES = (
 
 
 def numbers_in(desc):
-    """The account numbers a row's description carries, as their trailing digits."""
+    """The accounts a row's description names, each as the digit groups that name it. Two groups
+    joined are ONE reference: at one bank both ends of a transfer, at another a branch and an
+    account (`#1234-567`: account …567 at branch 1234) — so a reference is the owner's when any
+    of its groups is (2026-10-30)."""
     if not MOVES.search(desc or ""):
         return []
     out = []
     for i, rx in enumerate(SHAPES):
         for m in rx.finditer(desc.upper()):
-            out += [m.group(0)[-4:]] if i == 2 else [g for g in m.groups() if g]
+            out.append((m.group(0)[-4:],) if i == 2 else tuple(g for g in m.groups() if g))
     return list(dict.fromkeys(out))
 
 
@@ -43,9 +46,10 @@ def unregistered(rows, registered):
     seen = {}
     for r in rows:
         amt = float(r["amount"])
-        for n in numbers_in(r.get("description", "")):
-            if known(n, registered):
+        for ref in numbers_in(r.get("description", "")):
+            if any(known(g, registered) for g in ref):
                 continue
+            n = ref[-1]
             c, i, o = seen.get(n, (0, 0.0, 0.0))
             seen[n] = (c + 1, i + max(amt, 0), o + max(-amt, 0))
     return seen

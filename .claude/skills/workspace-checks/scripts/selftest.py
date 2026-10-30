@@ -1619,7 +1619,7 @@ def seen_account_check(root, base):
               and re.search(r"#\d{3,5}-\d{3,5}", r["description"])), None)
     if i is None:
         return []
-    rows[i]["description"] = re.sub(r"#(\d{3,5})-\d{3,5}", r"#\1-7788", rows[i]["description"])
+    rows[i]["description"] = re.sub(r"#\d{3,5}-\d{3,5}", "#3321-7788", rows[i]["description"])
     with open(fd(acc["ledger"]), "w", encoding="utf-8", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
     man = fixtures_for(ws) or []
