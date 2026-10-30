@@ -163,12 +163,12 @@ def load(root):
 def cashflow_rows(d, accs, rate, half, wsinc):
     """The monthly cash-flow rows, from the typed ledgers (schema 9; they used to be copied into
     cashflow.json by the import, and nothing checked the copy). One row per month from the first
-    ledger row to the newest: what payroll delivered, what came in typed Rent / Gift / Other /
+    ledger row to the newest: what payroll delivered, what came in typed Gift / Other /
     Repayment, the cash back a card paid (rewards.csv), what moved to the broker and back (a Transfer whose label names the broker), how
     many of the outgoing ones were exactly half the monthly investing amount, and the broker's
     own income for the month. Only ledgers whose `feeds` include "Cash flow" count."""
     broker = (next((a["inst"] for a in accs if a.get("role") == "grow" and a.get("value") == "export"), "") or "").lower()
-    rows = collections.defaultdict(lambda: {"payroll": 0.0, "wsOut": 0.0, "wsIn": 0.0, "rent": 0.0, "gift": 0.0,
+    rows = collections.defaultdict(lambda: {"payroll": 0.0, "wsOut": 0.0, "wsIn": 0.0, "gift": 0.0,
                                             "other": 0.0, "repaid": 0.0, "inv": 0.0, "rewards": 0.0, "nRule": 0})
     for a in accs:
         if not a.get("ledger") or "Cash flow" not in (a.get("feeds") or ""):
@@ -177,9 +177,8 @@ def cashflow_rows(d, accs, rate, half, wsinc):
             t, amt, lab = r.get("type") or "", float(r["amount"] or 0), (r.get("label") or "").lower()
             m = rows[r["date"][:7]]
             if t == "Payroll" and amt > 0: m["payroll"] += amt
-            elif t == "Rent" and amt > 0: m["rent"] += amt
             elif t == "Gift" and amt > 0: m["gift"] += amt
-            elif t in ("Other", "Government") and amt > 0: m["other"] += amt   # a refund or benefit is shown with Other
+            elif t in ("Other", "Government", "Rent") and amt > 0: m["other"] += amt   # a refund, a benefit, or rent received, shown with Other
             elif t == "Repayment" and amt > 0: m["repaid"] += amt
             elif t == "Transfer" and broker and broker in lab:
                 if amt < 0:

@@ -18,8 +18,8 @@ less well), as suggested. A merchant's answer lands in
 merchants.json and in every spending.csv row of that merchant, and the item is closed in
 decisions.json (`answer`, `resolved`). A transfer sent to someone nobody named can be answered
 with a category too -- money to family, rent -- and is then written to spending.csv as well
-(FINANCE.md §3a). Money that came in from no named sender is answered with what it was (Pay, Other income, Own
-money, Paid back) and its ledger row is retyped; a same-size e-Transfer that came in month after
+(FINANCE.md §3a). Money that came in from no named sender is answered with what it was (Pay, Family or gift, Other
+income, Own money, Paid back) and its ledger row is retyped; a same-size e-Transfer that came in month after
 month is suggested as Pay. A file is confirmed only as it was assumed. Then the page is rebuilt.
 """
 import argparse, csv, datetime, os, re, subprocess, sys
@@ -34,7 +34,7 @@ from update import jload, jsave, csv_rows  # noqa: E402
 
 SEEN = re.compile(r"^(.*?), seen for the first time\.")
 # what money coming in from no named sender can be: the ledger type, and how it is said
-INCOMING = {"Payroll": "Pay", "Other": "Other income", "Transfer": "Own money", "Repayment": "Paid back"}
+INCOMING = {"Payroll": "Pay", "Gift": "Family or gift", "Other": "Other income", "Transfer": "Own money", "Repayment": "Paid back"}
 
 
 def merchant_of(item):
@@ -149,7 +149,7 @@ def main(argv):
                     if r.get("statement") == c["statement"] and r.get("date") == c["date"] \
                             and abs(float(r["amount"]) - c["amount"]) < 0.005 and r.get("type") != t:
                         r["type"] = t
-                        r["label"] = {"Payroll": "Pay (e-Transfer)", "Other": "e-Transfer received",
+                        r["label"] = {"Payroll": "Pay (e-Transfer)", "Gift": "e-Transfer received (family or gift)", "Other": "e-Transfer received",
                                       "Transfer": "e-Transfer between your own accounts",
                                       "Repayment": "Paid back (e-Transfer)"}[t]
                         changed += 1

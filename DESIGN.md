@@ -46,7 +46,7 @@
   its colour: in the list, the legend and the tooltip. A legend lists only the categories its
   period has.
 - **Colour follows the category, permanently. It is never reassigned by rank or by size.**
-- **Income is one blue family** (Payroll `#1c5cab` / Rent `#5598e7` / Gift `#9ec5f4` / Rewards
+- **Income is one blue family** (Payroll `#1c5cab` / Gift `#9ec5f4` / Rewards
   `#4a6fa5`), so income
   and spending read as two domains.
 - **The plan's parts do not use the category palette**: Invest blue `#2a78d6` / Everyday orange

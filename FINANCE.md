@@ -47,8 +47,9 @@
 - **Not income**: transfers between your own accounts; a counterparty paying you back (their
   ledger is the register document that carries `counterparty`, and D10 checks that every
   matching e-Transfer is typed Repayment); dividends and interest that stay with the broker.
-- **Government** money (a tax refund, the GST/HST credit, a benefit) is counted with Other
-  income, and so is money from family (a parent paying toward tuition). Rent, a bill, cash taken
+- **Money from family** (a parent paying toward tuition, support sent from abroad) and other
+  gifts are income, on the **Gift** line and never pay. **Government** money (a tax refund, the
+  GST/HST credit, a benefit) is counted with Other income. Rent, a bill, cash taken
   out and a bank's fee are money out, never income: they are spending (§3a).
 - Investment income (dividends, interest, stock lending, withholding tax) is shown on its own on
   the Income → Investment income page and is not part of the income figure.

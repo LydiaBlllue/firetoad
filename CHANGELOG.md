@@ -2,6 +2,10 @@
 
 ## 1.3 — unreleased
 
+- **Money from family is Gift; Rent is no longer an income source** (2026-10-30, user 001). Family
+  support was counted with Other income, hiding how much of the income it was. It has the Gift
+  line now, and a question about money from no named sender offers it. A received row typed Rent
+  counts with Other.
 - **The README is short, and says what you need** (2026-10-30). Both languages: what it is, a table
   of what it takes (a paid Claude plan, the desktop app on Mac or Windows, Python, a statement), how
   to start, each month, your data. The pages, the monthly run, the checkers and the folder moved to

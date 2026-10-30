@@ -146,7 +146,7 @@ def status(root, today):
         kind = q.get("kind")
         if kind == "transfer" and q.get("credit"):
             # money in from no named sender: what it was, in confirm.py's words
-            choices = ["Pay", "Other income", "Own money", "Paid back"]
+            choices = ["Pay", "Family or gift", "Other income", "Own money", "Paid back"]
         elif kind == "transfer":
             types = types if types is not None else ledger_types(root, reg)
             choices = types
