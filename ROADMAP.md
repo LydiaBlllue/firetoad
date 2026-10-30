@@ -129,8 +129,6 @@ the selftest now does that every time; the migration was run on a copy of user 0
   still to run through one real import before it is announced.
 - **Cashback has a home.** *(first user)* A redemption is filed as a reward, not left as a credit
   nobody claimed.
-- **The selftest passes on a fresh machine.** *(first user)* One case failed in a cloud session
-  and passes locally; reproduce it there and fix it.
 
 ## v1.4 — January 2027
 

@@ -1445,13 +1445,18 @@ def undo_check(root, base):
         w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), quoting=csv.QUOTE_ALL); w.writeheader(); w.writerows(rows)
     before = hashes()
     bad = []
+    # The last step is moving the statements into archive/; a FILE where the folder should be
+    # makes it fail. A read-only folder did too, except for root, which writes anyway: in a cloud
+    # session the run went through and this case failed (2026-10-28, user 002).
     arc = os.path.join(ws, "archive")
     os.makedirs(arc, exist_ok=True)
-    os.chmod(arc, 0o555)
+    os.rename(arc, arc + ".aside")
+    open(arc, "w").close()
     try:
         rc, out = go("--write")
     finally:
-        os.chmod(arc, 0o755)
+        os.remove(arc)
+        os.rename(arc + ".aside", arc)
     torn = sorted(k for k in set(before) | set(hashes()) if before.get(k) != hashes().get(k))
     if rc != 1 or "nothing was written" not in out or torn or not os.path.exists(os.path.join(ws, "inbox", name)):
         bad.append(f"a run that failed at its last step: exit {rc}, findata/ changed in {torn[:3]}, "

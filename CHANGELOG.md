@@ -2,6 +2,10 @@
 
 ## 1.3 — unreleased
 
+- **The selftest passes when run as root** (2026-10-30, user 002). The all-or-nothing case
+  made the import's last step fail by turning `archive/` read-only, which root writes through:
+  in a cloud session the run succeeded and the case reported a failure. It now puts a file
+  where the folder should be, which stops anyone.
 - **A bill paid once a year is spread when months are compared** (2026-10-30, designed in 1.2).
   A merchant the owner says is yearly (`merchants.json` `every: "year"`), or whose charges come
   back a year apart within a tenth of the amount, is marked at build time
