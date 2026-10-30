@@ -2,6 +2,9 @@
 
 ## 1.3 — unreleased
 
+- **A new plan figure reaches the page** (2026-10-30, user 001). Every page turn saved the planning figure,
+  the allowance and the other plan numbers in the browser, so an open or reopened page kept the old
+  ones after a rebuild, and the target did not move. An edit now holds only until the built value changes.
 - **FINANCE.md names the research behind the × 25** (2026-10-30, user 001), what it does not cover, and
   which spending figures are the tool's own.
 - **The Spending baseline is an average now, not a median** (2026-10-30, user 001). Three months' median

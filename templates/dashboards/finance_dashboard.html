@@ -669,11 +669,19 @@ const ST = (() => {
     });
   return st;
 })();
-const stNum = (k, dflt) => { const v = Number(ST[k]); return isFinite(v) && v > 0 ? v : dflt; };
+// An edit holds only against the built value it was made over. Otherwise every page turn would
+// save the built value too, and the next rebuild's number would never reach the page.
+const stBuilt = {};
+const stNum = (k, dflt) => {
+  stBuilt[k] = dflt;
+  const v = Number(ST[k]);
+  return isFinite(v) && v > 0 && Number(ST["of_"+k]) === dflt ? v : dflt;
+};
 let trajView = ST.traj && ST.traj !== "fire" ? Number(ST.traj) || "fire" : "fire";   // the FIRE chart's span: years ahead, or to the target
 function saveState(){
   const st = {traj:trajView, p:curPage, ym:viewYM, base:PLAN_BASE, stop:stopAge, draw:drawAge,
               care:careAge, ltc:ltcAge, home:ltcTier, alw:ALW, invm:INVM, bigm:BIGM};
+  Object.entries(stBuilt).forEach(([k,v]) => { st["of_"+k] = v; });
   try{ localStorage.setItem("ly_state", JSON.stringify(st)); }catch(e){}
   try{ history.replaceState(null, "", "#" + Object.entries(st)
         .map(([k,v]) => k+"="+encodeURIComponent(v)).join("&")); }catch(e){}
@@ -2193,14 +2201,8 @@ const RULES = {};
 
 const PLAN_BASE_DEFAULT = 0;
 const DRIFT_FLAG = 0.10;                  // measured vs planned gap that is worth flagging
-let PLAN_BASE = stNum("base", (function(){
-  try{ const v = Number(localStorage.getItem("plan_base")); if(v > 0) return v; }catch(e){}
-  return PLAN_BASE_DEFAULT || 0;
-})());
-function savePlanBase(){
-  try{ localStorage.setItem("plan_base", String(PLAN_BASE)); }catch(e){}
-  saveState();
-}
+let PLAN_BASE = stNum("base", PLAN_BASE_DEFAULT || 0);
+const savePlanBase = saveState;
 // What the statements say the same figure would be, for comparison only.
 const measuredBase = () => baselineAvg ? baselineAvg + COMMITTED_KEEP : null;
 const baseDrift = () => { const m = measuredBase(); return m === null || !(PLAN_BASE > 0) ? null : (m - PLAN_BASE) / PLAN_BASE; };
