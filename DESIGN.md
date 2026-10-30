@@ -214,8 +214,8 @@
   early it ran out), and a note that this is American history and the stretches overlap. Only
   the years of taking money out are replayed; the first day's pot is the steady path's.
 - **Spending baseline**: the planning figure against what is really spent, with a 12-month bar
-  chart, the months in the median highlighted, the median a red dashed line; beside the usual month, the
-  average of up to twelve usable months.
+  chart, the months in the average highlighted, the average of up to twelve usable months a red
+  dashed line.
 
 ### Records
 

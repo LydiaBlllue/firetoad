@@ -4,8 +4,9 @@
 
 - **FINANCE.md names the research behind the × 25** (2026-10-30, user 001), what it does not cover, and
   which spending figures are the tool's own.
-- **The Spending baseline shows the average beside the median** (2026-10-30, user 001). The median of
-  three months leaves out the big months, and early retirement pays for those too. It sets nothing.
+- **The Spending baseline is an average now, not a median** (2026-10-30, user 001). Three months' median
+  swung with whichever months were latest, and left the big months out. It covers up to twelve usable
+  months, and the drift warning reads it. It sets nothing.
 - **The page says its version again**: the sidebar had read v1.0 through 1.1 and 1.2.
 - **Home's net-worth rows open to their accounts** (2026-10-30, user 001). "How much cash, and
   where" had only a total on Home and a table sorted by bank on Accounts. Click Cash, or any row,

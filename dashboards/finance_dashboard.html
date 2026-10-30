@@ -532,7 +532,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 
 <section data-pg="base" hidden>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab">Every month, and which three the median came from</div>
+    <div class="lab">Every month, and which ones the average came from</div>
     <svg class="year-svg" id="baseChart" viewBox="0 0 940 250" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="cap" id="baseChartCap"></div>
   </div>
@@ -932,7 +932,7 @@ const GLOSSARY = {
   lent_out:       {own:1, w:"Lent out", pos:"on this page", def:"Money someone owes you. It comes back on their schedule, not yours.", also:["owed_to_you"]},
   in_property:    {own:1, w:"In property", pos:"on this page", def:"What a property is worth minus what is still owed on it. You reach it only by selling or borrowing against it.", also:["equity"]},
   held_abroad:    {own:1, w:"Held abroad", pos:"on this page", def:"Money in another country. Bringing it home takes conversion, transfer limits and time.", also:["exchange_rate","liquidity"]},
-  planning_figure:{own:1, w:"planning figure", pos:"on this page", def:"The monthly spending your FIRE target is built on. You set it by hand; what you actually spend only calibrates it.", also:["fire_target","median"]},
+  planning_figure:{own:1, w:"planning figure", pos:"on this page", def:"The monthly spending your FIRE target is built on. You set it by hand; what you actually spend only calibrates it.", also:["fire_target"]},
   big_buy:        {own:1, w:"big buy", pos:"on this page", def:"A single everyday purchase at or above your threshold, paid from the Big buys fund. Rent, a bill, tuition and a subscription never count as one.", also:["sinking_fund","subscription"]},
   kept:           {own:1, w:"Kept", pos:"on this page", def:"Income minus spending over the same months. Money moved to savings or investments counts as kept.", also:["pay_yourself_first"]},
   repayment:      {own:1, w:"Paid back", pos:"on this page", def:"Money someone returns on a loan you made. It lowers what they owe you, and it is never income.", also:["owed_to_you","lent_out"]},
@@ -2045,14 +2045,14 @@ function drawDonut(svgId, centerId, legendId, rows, totalVal, emptyMsg, withPct,
 // could not express that, so the exclusions are a named list with reasons, and the reasons are
 // shown on the page rather than buried here.
 // These months still count in totals -- they happened. They are left out of COMPARISONS only:
-// the baseline median, "typical month", and the vs-typical figures on Spending by category.
+// the baseline average, "typical month", and the vs-typical figures on Spending by category.
 const MONTH_SKIP = {"2025-12": "Only the tail of the first Visa statement — 11 days, not a month"};
 const skipped = m => !!MONTH_SKIP[m];
 // Closed, and worth comparing against.
 const usableMonths = () => MONTHS.filter(m => m <= covEnd && !skipped(m));
-let baselineMed = null, baselineLag = 0;
+let baselineAvg = null;
 // A month only counts once EVERY card has reported it. Cards are on different statement cycles, so
-// Aug 2026 has MasterCard records but no Visa ones — folding that half-month into the median would
+// Aug 2026 has MasterCard records but no Visa ones — folding that half-month into the average would
 // understate the baseline and quietly shrink the FIRE target. covEnd = the newest month every card reaches.
 const covEnd = (() => {
   // A card covers month M only when its newest statement closes on or after M's last day.
@@ -2072,18 +2072,12 @@ const covEnd = (() => {
 })();
 function renderBaseline(){
   if(!MONTHS.length) $("baseChart").innerHTML = '<text x="470" y="130" text-anchor="middle" font-size="13" fill="var(--muted)">No closed months with records yet.</text>';
-  const vals = []; const firstClosed = ymShift(TODAY.slice(0,7),-1);
-  let cm = firstClosed < covEnd ? firstClosed : covEnd;      // never look at a month a card has not reported
-  for(let i=0;i<24 && vals.length<3;i++){
-    const v = monthTarget(cm);
-    if(v > 0 && !skipped(cm)) vals.unshift({m:cm, v});
-    cm = ymShift(cm,-1);
-  }
-  baselineLag = vals.length ? Math.round((new Date(firstClosed+"-01") - new Date(vals[vals.length-1].m+"-01"))/2.63e9) : 0;
+  // The average of up to twelve closed months: big months are in it, and early retirement pays
+  // for those too. usableMonths never reaches a month a card has not reported.
+  const closed = TODAY.slice(0,7);
+  const vals = usableMonths().filter(m => m < closed).map(m => ({m, v:monthTarget(m)})).filter(x => x.v > 0).slice(-12);
   if(vals.length >= 3){
-    const s = vals.map(x=>x.v).sort((a,b)=>a-b);
-    const med = s.length%2 ? s[(s.length-1)/2] : (s[s.length/2-1]+s[s.length/2])/2;
-    baselineMed = med;
+    baselineAvg = vals.reduce((s,x) => s + x.v, 0) / vals.length;
     $("baseMonths").innerHTML = vals.map(x =>
       '<div class="bm-row"><span>'+ymLabel(x.m)+' '+x.m.slice(0,4)+'</span><span class="num">'+fmt(x.v)+'</span></div>').join("");
   }else{
@@ -2208,7 +2202,7 @@ function savePlanBase(){
   saveState();
 }
 // What the statements say the same figure would be, for comparison only.
-const measuredBase = () => baselineMed ? baselineMed + COMMITTED_KEEP : null;
+const measuredBase = () => baselineAvg ? baselineAvg + COMMITTED_KEEP : null;
 const baseDrift = () => { const m = measuredBase(); return m === null || !(PLAN_BASE > 0) ? null : (m - PLAN_BASE) / PLAN_BASE; };
 function renderFire(){
   if(unset("planBase")){
@@ -2245,16 +2239,10 @@ function renderFire(){
   const drift = baseDrift();
   const usedM = [...$("baseMonths").querySelectorAll(".bm-row span:first-child")].map(x => x.textContent.trim());
   const skipM = Object.keys(MONTH_SKIP).filter(m => MONTHS.includes(m));
-  // The median says what a usual month is; the average carries the big months a lifetime of
-  // spending also has to pay for, so it is the one to hold the planning figure against.
-  const closed = TODAY.slice(0,7), avgM = usableMonths().filter(m => m < closed && monthTarget(m) > 0).slice(-12);
-  const avg = avgM.length >= 3 ? avgM.reduce((s,m) => s + monthTarget(m), 0) / avgM.length : null;
   $("baseCap").innerHTML = metaList([
-    ["Spending, a usual month", baselineMed ? numx(fmt(baselineMed), [], term("median", "Median")+" of the three most recent usable months.") : "Not enough months yet"],
+    ["Spending, on average", baselineAvg ? numx(fmt(baselineAvg), [], "Average of the last "+usedM.length+" usable months"+(usedM.length < 12 ? ", until there are twelve" : "")+", big months included. Early retirement pays for those too.") : "Not enough months yet"],
     ["Fixed costs not in spending", numx("+ "+fmt(COMMITTED_KEEP), [], "Rent that starts at FIRE, and a mortgage or loan payment: the ones that continue after FIRE. Rent and bills paid today are in spending already; tuition is not counted, it ends.")],
-    ["A comparable month", measuredBase() ? numx(fmt(measuredBase()), baselineMed ? [["A usual month", fmt(baselineMed)], ["Fixed costs", fmt(COMMITTED_KEEP)]] : [], "", true) : "\u2014"],
-    ["Spending, on average", avg === null ? "Not enough months yet" : numx(fmt(avg), [], "Average of the last "+avgM.length+" usable months"+(avgM.length < 12 ? ", until there are twelve" : "")+", big months included. Early retirement pays for those too.")],
-    ["A comparable month, on average", avg === null ? "\u2014" : numx(fmt(avg + COMMITTED_KEEP), [["On average", fmt(avg)], ["Fixed costs", fmt(COMMITTED_KEEP)]], "", true)],
+    ["A comparable month", measuredBase() ? numx(fmt(measuredBase()), baselineAvg ? [["On average", fmt(baselineAvg)], ["Fixed costs", fmt(COMMITTED_KEEP)]] : [], "", true) : "\u2014"],
     drift === null ? null
       : ["Against the planning figure",
          Math.abs(measuredBase() - PLAN_BASE) < 1 ? "The same"
@@ -2837,17 +2825,17 @@ function renderTasks(){
 // ===== Extra cards for the pages that were a single card floating in an empty screen =====
 // Each one answers a question the page raised but did not answer.
 
-// Baseline: "why is the number $1,290 when June was $2,534?" — show every month and mark the three counted.
+// Baseline: "why is the number $1,290 when June was $2,534?" — show every month and mark the ones counted.
 function renderBaseChart(){
   // The last 12 closed months, not every month on file. The chart exists to answer "why is the
   // baseline $1,290 when June was $2,534" -- a year of context answers that; sixty bars 7px wide
   // do not.
   const months = MONTHS.filter(m => m <= covEnd).slice(-12);
-  if(!months.length || !baselineMed) return;
+  if(!months.length || !baselineAvg) return;
   const counted = [...$("baseMonths").querySelectorAll(".bm-row span:first-child")].map(x => x.textContent.trim());
   const isCounted = m => counted.includes(ymFull(m));
   const [W, H] = fit("baseChart", 250), padL=54, padR=10, padT=22, padB=28;
-  const vals = months.map(monthTarget), mx = Math.max(...vals, baselineMed)*1.12;
+  const vals = months.map(monthTarget), mx = Math.max(...vals, baselineAvg)*1.12;
   const step = (W-padL-padR)/months.length, bw = Math.min(56, step*0.58);
   const y = v => H-padB - v/mx*(H-padT-padB);
   let out = "";
@@ -2862,13 +2850,13 @@ function renderBaseChart(){
         +  (out_?' stroke="#dcdad3" stroke-dasharray="3 2"':'')+' data-m="'+m+'"/>'
         +  '<text x="'+(x+bw/2)+'" y="'+(H-9)+'" text-anchor="middle" font-size="12" fill="'+(on?"var(--ink)":"var(--muted)")+'" font-weight="'+(on?600:400)+'">'+ymLabel(m)+(out_?" ×":"")+'</text>';
   });
-  out += '<line x1="'+padL+'" y1="'+y(baselineMed)+'" x2="'+(W-padR)+'" y2="'+y(baselineMed)+'" stroke="#d03b3b" stroke-width="2" stroke-dasharray="6 4"/>'
-      +  '<text x="'+(W-padR)+'" y="'+(y(baselineMed)-7)+'" text-anchor="end" font-size="12" class="num" fill="#d03b3b" font-weight="700">median '+fmt(baselineMed)+'</text>';
+  out += '<line x1="'+padL+'" y1="'+y(baselineAvg)+'" x2="'+(W-padR)+'" y2="'+y(baselineAvg)+'" stroke="#d03b3b" stroke-width="2" stroke-dasharray="6 4"/>'
+      +  '<text x="'+(W-padR)+'" y="'+(y(baselineAvg)-7)+'" text-anchor="end" font-size="12" class="num" fill="#d03b3b" font-weight="700">average '+fmt(baselineAvg)+'</text>';
   const svg = $("baseChart"); svg.innerHTML = out;
   svg.querySelectorAll("rect[data-m]").forEach(r => hoverable(r, ymFull(r.dataset.m)+"<br>"+fmt2(monthTarget(r.dataset.m))
-    + (isCounted(r.dataset.m) ? "<br>counted in the median" : "")
+    + (isCounted(r.dataset.m) ? "<br>counted in the average" : "")
     + (skipped(r.dataset.m) ? "<br>left out — "+MONTH_SKIP[r.dataset.m] : "")));
-  $("baseChartCap").innerHTML = '<div class="cap">'+ymFull(months[vals.indexOf(Math.max(...vals))])+' was the highest month, at '+fmt(Math.max(...vals))+'; one month does not move a median.</div>';
+  $("baseChartCap").innerHTML = '<div class="cap">'+ymFull(months[vals.indexOf(Math.max(...vals))])+' was the highest month, at '+fmt(Math.max(...vals))+'.</div>';
 }
 
 

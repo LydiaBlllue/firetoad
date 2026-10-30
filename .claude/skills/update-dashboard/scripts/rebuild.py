@@ -406,7 +406,7 @@ def derive(d):
     out["PLAN_BASE_DEFAULT"] = plan["planBase"]
     # The fixed part of the planning figure: every committed flow still paid after FIRE, paid
     # today or not (an owner who does not pay rent yet has one that starts at FIRE). Added to the
-    # measured everyday median on the Baseline page so the two can be compared.
+    # measured everyday average on the Baseline page so the two can be compared.
     out["COMMITTED_KEEP"] = flow_totals(d["funds"]["plan"])["committedKeep"]
     out["MONTH_SKIP"] = plan.get("skipMonths", {})
     ret = plan.get("retirement", {})

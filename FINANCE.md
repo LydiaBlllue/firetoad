@@ -33,7 +33,7 @@
 - The target is **planning spend × 12 × 25** (the 4% rule), and progress is measured on the
   **portfolio** — the money that will be drawn down — not on net worth, which also holds
   earmarked accounts, bank cash and money abroad. Planning spend (`plan.json`
-  `planBase`) is set by hand; the Baseline page shows the measured median beside it and warns past
+  `planBase`) is set by hand; the Baseline page shows the measured average beside it and warns past
   10% of drift, but **never changes the target by itself**.
 - **Where these come from.** The 25 is research; the spending figures are this tool's own.
   - Bengen, "Determining Withdrawal Rates Using Historical Data", *Journal of Financial Planning*,
@@ -50,8 +50,8 @@
     65% over 60.
   - So 25 fits a retirement of about 30 years and has no margin for a much longer one. The target
     stays × 25 until the owner chooses otherwise.
-  - The median of three months, the average of up to twelve, and adding fixed costs to either have
-    no outside source: they are this tool's calibration of the planning figure.
+  - The average of up to twelve months, and adding fixed costs to it, have no outside source:
+    they are this tool's calibration of the planning figure.
 - Net worth covers every account in every currency: the Canadian side plus foreign-currency
   accounts at the reference rate in `foreign.json`.
 - The trajectory chart anchors at `plan.json` `retirement.anchorYear` and projects the three
@@ -155,7 +155,7 @@ A fund is a **label on an account you already have**, not an account of its own;
 Spending is counted **net of refunds**. A refund is a fact on a card statement, so it is a row in
 `spending.csv` like the purchase it gives back: dated the day it posted, in the statement it came
 from, with a **negative** amount and **the purchase's category**. Every total that adds spending
-rows up — the month, a category, the year, the medians the planning figure is calibrated on — is
+rows up — the month, a category, the year, the average the planning figure is calibrated on — is
 therefore after refunds without any of them knowing refunds exist.
 
 - **A refund points at a purchase**: an earlier row on the same card at the same merchant, with
@@ -271,14 +271,13 @@ order.
 - **Unallocated** is income less every other kind. It is a hard constraint: below zero the plan
   does not hold and the page says so in red. It is never "money that flows to the funds".
 - **Planning spend** is still set by hand and §1's target is still planning spend × 12 × 25.
-  The calibration beside it is the measured median of fixed and everyday spending (§3a) plus
+  The calibration beside it is the measured average of fixed and everyday spending (§3a) plus
   every committed flow marked `keep` that spending does not already show: one that starts at
   FIRE, and a repayment (`pays`). Rent or a tax paid today is in spending, so it is not added. What used to be
   `plan.json` `imputedRent` is an ordinary committed flow with `starts: "fire"`.
-- **A usual month and an average month are both shown.** The median of the last three usable
-  months says what a usual month is, and the drift warning reads it. The average of up to the last
-  twelve usable months carries the big months too, which a lifetime of spending also has to pay
-  for; it is shown beside the planning figure and sets nothing.
+- **The calibration is an average, not a median.** It covers up to the last twelve usable months, so
+  the big months count, which a lifetime of spending also has to pay for. It needs three months,
+  and the drift warning reads it. It sets nothing.
 - **A committed flow is declared, not observed.** D21 matches each one paid today against the
   ledgers the way the investing transfers are matched against the broker's activities — a
   payment of that size in the two whole months before the newest ledger date — and reports an
