@@ -60,8 +60,8 @@ report and any questions a program cannot answer, like a merchant it has not see
 
 - **[How it works](docs/how-it-works.md)**: every page, the monthly run, the folder, and the
   checkers that keep the numbers honest.
-<!-- LINT:FAULTS n=59 -->
-  Four checkers hold every figure to its source; a selftest plants 59 faults to prove they still catch them.
+<!-- LINT:FAULTS n=60 -->
+  Four checkers hold every figure to its source; a selftest plants 60 faults to prove they still catch them.
 - **[Roadmap](ROADMAP.md)** and **[Changelog](CHANGELOG.md)**.
 - **[What the product is for](PRODUCT.md)**.
 

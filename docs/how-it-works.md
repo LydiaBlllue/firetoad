@@ -64,7 +64,7 @@ line, and a fifth checks the checkers:
   against sections, this README against the real pages.
 - **Does it actually draw** — a headless browser opens every page at three widths and looks for
   anything that failed to render.
-- **Are the checkers still checking** — a selftest plants 59 specific faults in a copy of the
+- **Are the checkers still checking** — a selftest plants 60 specific faults in a copy of the
   workspace and asserts each one is caught. It exists because a checker once linted an empty
   folder and reported success.
 

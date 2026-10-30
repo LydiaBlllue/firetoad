@@ -63,7 +63,7 @@ The rest of `findata/`, and what each carries:
 | `banks.json` | one balance and one as-of date per bank account |
 | `profile.json` | the owner (shown under the Jade Toad wordmark and in the tab), the year of birth, the import day |
 | `funds.json` | the monthly plan as **flows** — `income`, `committed` (rent, a mortgage, a loan), `saving` (to the broker, or to a fund by `to`), `allowance`, each with an amount and, where it applies, `until`, `afterFire`, `pays`, `starts` — and the named funds (`role: topup` / `big`), which carry no number of their own |
-| `plan.json` | planning spend, months excluded from comparisons, the retirement assumptions, the owner's one-line descriptions of the net-worth parts |
+| `plan.json` | planning spend, months excluded from comparisons, deposits into the broker that were gifts (`brokerGifts`), the retirement assumptions, the owner's one-line descriptions of the net-worth parts |
 | `rules.json` | the investing buckets and their target bands, the owner's theses (`notes`) and `checkpoints`, `assetClass` — what each ETF holds (stocks / bonds / cash / gold / crypto), the one thing the broker's export cannot say — and `principles`, the owner's high-level rules, each naming a check the Investing overview runs today (with `placement`, which account each holding belongs in) |
 | `merchants.json` | merchant → category |
 | `fx.json` | a dated exchange rate — absent means "no foreign-currency holdings" |

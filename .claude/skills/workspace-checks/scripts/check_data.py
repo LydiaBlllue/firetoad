@@ -150,7 +150,7 @@ def check(root):
             "D3":"rules", "D6":"rules", "D10":"rules", "D13":"rules", "D14":"rules",
             "D11":"build", "D12":"build", "D17":"build", "T1":"build", "T2":"hygiene", "D15":"build", "D16":"conform",
             "D2":"hygiene", "D4":"hygiene", "D9":"hygiene", "D18":"hygiene",
-            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D25":"hygiene", "D26":"rules", "D27":"hygiene", "D28":"hygiene"}
+            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D29":"rules", "D25":"hygiene", "D26":"rules", "D27":"hygiene", "D28":"hygiene"}
     F = []          # (severity, rule, message, category)
     def err(r, m, cat=None):  F.append(("ERROR", r, m, cat or HOME.get(r, "rules")))
     def warn(r, m, cat=None): F.append(("WARN",  r, m, cat or HOME.get(r, "rules")))
@@ -190,6 +190,21 @@ def check(root):
             err("D2", f"rewards.csv {r.get('date')} {(r.get('note') or '')[:40]}: no known [SOURCE/YYYYMMDD] tag")
         elif float(r.get("amount") or 0) <= 0:
             err("D2", f"rewards.csv {r.get('date')}: a reward is money in, but this one is {r.get('amount')}")
+
+    # -- D29 a gift declared in the broker: the deposit has to be in the export ----
+    p = load(root, "plan.json")
+    gifts = (json.load(open(p, encoding="utf-8")).get("brokerGifts") or []) if p else []
+    if gifts:
+        p = load(root, "ws_activities.csv")
+        deposits = {(r["effective_date"], f"{float(r['net_cash_amount'] or 0):.2f}", r["currency"])
+                    for r in (csv.DictReader(open(p, encoding="utf-8-sig")) if p else [])
+                    if r.get("activity_type") == "MoneyMovement" and float(r.get("net_cash_amount") or 0) > 0}
+        for g in gifts:
+            if (g.get("date"), f"{float(g.get('amount') or 0):.2f}", g.get("currency", "CAD")) not in deposits:
+                err("D29", f"plan.json brokerGifts {g.get('date')} {g.get('amount')} {g.get('currency', 'CAD')}: "
+                           f"no deposit like it in ws_activities.csv")
+            if not g.get("why"):
+                err("D29", f"plan.json brokerGifts {g.get('date')}: no reason beside the value")
 
     # -- spending.csv ---------------------------------------------------------
     p = load(root, "spending.csv")

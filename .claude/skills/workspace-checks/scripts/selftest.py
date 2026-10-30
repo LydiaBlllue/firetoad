@@ -407,6 +407,9 @@ def m_exclude_left_behind(r):
 def m_alerts_left_behind(r):
     open(layout.path(r, "alerts.json"), "w", encoding="utf-8").write('{"alerts": []}\n')
 
+def m_broker_gift_no_deposit(r):
+    edit_json(r, layout.rel("plan.json"), lambda d: d.update(brokerGifts=[
+        {"date": "2026-02-03", "amount": 12345.67, "currency": "CAD", "why": "planted"}]))
 def m_decision_no_default(r):
     # An empty queue (an owner with nothing waiting) gets one item planted without its default;
     # this used to index [0] and crash the whole selftest in such a workspace (2026-09-10).
@@ -515,6 +518,7 @@ CASES = [
     ("D18", "an item to confirm with nothing assumed meanwhile", m_decision_no_default, "find"),
     ("S8",  "the page speaks in the first person",          m_first_person,       "dash"),
     ("R5", "a broken field leaves NaN on the page",         m_render_nan,         "render"),
+    ("D29", "a gift declared in the broker with no such deposit", m_broker_gift_no_deposit, "find"),
     ("R3", "a chart pinned to a fixed height",              m_render_chart_capped,"render"),
 ]
 
@@ -1725,6 +1729,32 @@ def reward_check(root, base):
             f"spending {len(spent)} row(s), page Rewards {shown}"]
 
 
+def broker_gift_check(root, base):
+    """A deposit straight into the broker that the owner says was family money (2026-10-30). Declare
+    one of the demo's real deposits and expect it on the month's Gift line, with the checkers clean."""
+    rb = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "rebuild.py"))
+    ws = os.path.join(base, "brokergift"); os.makedirs(ws); stage(root, ws)
+    fd = lambda n: layout.path(ws, n)
+    dep = next((r for r in csv_rows_of(fd("ws_activities.csv")) if r["activity_type"] == "MoneyMovement"
+                and r["currency"] == "CAD" and float(r["net_cash_amount"] or 0) > 0), None)
+    if dep is None:
+        return []
+    def gift():
+        subprocess.run([sys.executable, rb, ".", "--write"], cwd=ws, capture_output=True)
+        page = open(os.path.join(ws, main_dash(ws)), encoding="utf-8").read()
+        inv = json.loads(re.search(r"^const INVEST = (\{.*\});", page, re.M).group(1))
+        return sum(m["gift"] for m in inv["cashflow"] if m["ym"] == dep["effective_date"][:7])
+    before = gift()
+    amt = float(dep["net_cash_amount"])
+    edit_json(ws, layout.rel("plan.json"), lambda d: d.update(brokerGifts=[
+        {"date": dep["effective_date"], "amount": amt, "currency": "CAD", "why": "family support"}]))
+    after = gift()
+    out = run("check_data.py", ["."], ws)
+    if abs(after - before - amt) < 0.01 and "✗" not in out:
+        return [f"  ✓ a broker deposit declared as a gift: {amt:,.2f} on the month's Gift line, checkers clean"]
+    return [f"  ✗ broker gift: Gift went {before} → {after} for {amt}" + ("; the checkers failed" if "✗" in out else "")]
+
+
 def loan_import_check(root, base):
     """A repayment from a borrower, under the name the bank prints, is money back — typed
     Repayment, attributed to that borrower's loan, and the loan's balance in the register moves
@@ -1869,7 +1899,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
-                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, starter_check,
+                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, starter_check,
                     demo_clear_check):
             try:
                 runs += chk(root, base)
