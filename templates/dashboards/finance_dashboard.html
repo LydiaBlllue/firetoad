@@ -1359,7 +1359,11 @@ const HAS_FUNDS = FUNDS.funds.length > 0;
 const TMON = fundMonthly(TFUND.key), BMON = fundMonthly(BFUND.key);
 // Editable in the page, same caveat as PLAN_BASE: an edit rides in the hash and this browser,
 // not in the file. Tell Claude the number and it goes into funds.json, where a rebuild keeps it.
-const stNum0 = (k, dflt) => { const v = Number(ST[k]); return isFinite(v) && v >= 0 ? v : dflt; };
+const stNum0 = (k, dflt) => {
+  stBuilt[k] = dflt;
+  const v = Number(ST[k]);
+  return ST[k] !== undefined && ST[k] !== "" && isFinite(v) && v >= 0 && Number(ST["of_"+k]) === dflt ? v : dflt;
+};
 let ALW  = stNum("alw",  PLAN.everyday);
 let INVM = stNum("invm", PLAN.invest);
 let BIGM = stNum0("bigm", BMON);
