@@ -52,6 +52,15 @@ def age(asof, today):
         return None
 
 
+def newest_row(root, name):
+    """The newest date in a ledger: a counterparty's is not in the filing grid, so that says nothing."""
+    try:
+        rows = list(csv.DictReader(open(layout.path(root, name), encoding="utf-8-sig")))
+    except (OSError, TypeError):
+        return None
+    return max((r.get("date") or "" for r in rows), default=None) or None
+
+
 def ledger_types(root, reg):
     """Every `type` the ledgers already use: the choices for a transfer the import could not type."""
     seen = collections.Counter()
@@ -100,24 +109,30 @@ def status(root, today):
         out["statements"].append({"bank": ep, "docs": rows,
                                   "state": "todo" if todo else ("inbox" if any(r["inbox"] for r in rows) else "ok")})
 
+    inbox_dir = os.path.join(root, "inbox")
+    shots = [n for n in (os.listdir(inbox_dir) if os.path.isdir(inbox_dir) else [])
+             if n.lower().endswith((".png", ".jpg", ".jpeg", ".heic", ".webp"))]
     covered = set()
     for d in docs:
         covered |= set(d.get("covers") or [])
         when = (d.get("closes") or "").lower()
         if d.get("counterparty"):
             out["people"].append({"key": d["key"], "who": d["counterparty"], "from": d.get("ep"),
-                                  "last": (sorted(filed.get(d["key"], [])) or [None])[-1],
+                                  "last": newest_row(root, d.get("into")),
                                   "state": "optional"})
             continue
         if d.get("into") == "foreign.json":
             for k in d.get("covers") or []:
                 a = accts.get(k, {})
                 ag = age(a.get("asof"), today)
+                # already dropped: a screenshot carries the bank's or the app's name, or nothing
+                # the panel can read, and then it is one of the "unnamed" files
+                have = [n for n in shots if a.get("inst") and a["inst"] in n]
                 out["screenshots"].append({
                     "account": k, "inst": a.get("inst"), "name": a.get("name"),
                     "capture": a.get("capture") or f"{a.get('inst')} app, the page with the balance",
-                    "asof": a.get("asof"), "age": ag,
-                    "state": "todo" if ag is None or ag >= CYCLE_DAYS else "ok"})
+                    "asof": a.get("asof"), "age": ag, "inbox": have,
+                    "state": "inbox" if have else ("todo" if ag is None or ag >= CYCLE_DAYS else "ok")})
             continue
         if when in ("any time", "when it changes") or not d.get("file", "").lower().endswith(".pdf"):
             asofs = [accts[k].get("asof") for k in d.get("covers") or [] if accts.get(k, {}).get("asof")]
