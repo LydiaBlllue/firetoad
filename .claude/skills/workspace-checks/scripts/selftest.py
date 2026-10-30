@@ -840,7 +840,7 @@ def refile_check(root, base):
         w = csv.DictWriter(fh, fieldnames=["date", "amount", "currency", "category", "note"]); w.writeheader()
         w.writerows(dict(r, category=wrong) if merchant_key(r["note"]) == pick["match"] else r for r in sp)
     edit_json(ws, layout.rel("profile.json"), lambda d: d.update(schema=11))
-    mig = subprocess.run([sys.executable, os.path.join(ws, "tools", "migrate_11to12.py"), ws],
+    mig = subprocess.run([sys.executable, os.path.join(ws, "tools", "migrate.py"), ws],
                          capture_output=True, text=True, timeout=120)
     dec = json.load(open(layout.path(ws, "decisions.json"), encoding="utf-8"))["decisions"]
     asked = [d for d in dec if d.get("status") == "open" and d.get("match") == pick["match"]]

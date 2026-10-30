@@ -83,8 +83,9 @@ REACH_ROWS = (("today", "Spendable today", "#1baf7a"), ("costs", "Taxed to take 
 # findata/ is three folders, register / ledgers / history, one per layer (2026-09-10, layout.py);
 # 11 = spending is what it is, not how it was paid: fifteen categories in three groups, no
 # Subscription category, and chequing rent, bills, cash and fees in spending.csv (2026-10-29);
-# 12 = every merchant held against the fifteen categories, a better fit asked (2026-10-30).
-SCHEMA = 12
+# 12 = every merchant held against the fifteen categories, a better fit asked (2026-10-30);
+# 13 = a card's cash back is income in rewards.csv, filed again from the archive (2026-10-30).
+SCHEMA = 13
 
 
 def same(a, b):

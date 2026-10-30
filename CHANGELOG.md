@@ -2,6 +2,9 @@
 
 ## 1.3 — unreleased
 
+- **Cash back imported before 1.3 is found again** (findata schema 13, `tools/migrate_12to13.py`).
+  Every card statement in `archive/` is read again by its parser, and a cash-back or redemption
+  credit not yet in `rewards.csv` is written there with its statement's tag.
 - **Cash back is income, on a line of its own** (2026-10-30, user 001's call on user 002's
   report). A card's cash-back redemption sat as a credit nobody claimed. The import now files a
   card credit that names cash back or a redemption into `rewards.csv` — a fact, tagged with its
