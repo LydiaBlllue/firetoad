@@ -6,7 +6,20 @@ shipped is in [`CHANGELOG.md`](CHANGELOG.md).
 Every release goes out the same way: a privacy scan of every changed file and commit message, a
 fresh clone that must rebuild to the committed page with every checker clean and every planted
 fault caught, then a pull request from the release branch, merged as one squashed commit on
-`main` (since 2026-10-29), and the live demo redeploys with it.
+`main` (since 2026-10-29), tagged with its version, and the live demo redeploys with it.
+
+How work reaches a release (since 2026-10-30):
+
+- **`main` is the released tool**, and only a release or a hotfix changes it, so what users get
+  and what the demo shows are always a finished version.
+- **One branch per coming version**, named for it (`v1.3`). Everything for that version is
+  committed there, without a pull request; work done side by side starts a short branch from it
+  and is merged back locally.
+- **A hotfix** — a bug in the released tool that users would hit — is a small pull request
+  straight to `main`, which is then merged back into the version branch.
+- **After a release**, the next version's branch starts from the new `main`.
+- The first owner's workspace is synced from the version branch, so a change runs on real data
+  for a month before anyone else gets it.
 
 Items marked *(first user)* came from the first person other than the owner to set the tool up
 from scratch: one credit card, nine statements, a cloud session.
