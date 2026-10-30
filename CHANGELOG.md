@@ -2,6 +2,8 @@
 
 ## 1.3 — unreleased
 
+- **The Spending baseline shows the average beside the median** (2026-10-30, user 001). The median of
+  three months leaves out the big months, and early retirement pays for those too. It sets nothing.
 - **The page says its version again**: the sidebar had read v1.0 through 1.1 and 1.2.
 - **Home's net-worth rows open to their accounts** (2026-10-30, user 001). "How much cash, and
   where" had only a total on Home and a table sorted by bank on Accounts. Click Cash, or any row,

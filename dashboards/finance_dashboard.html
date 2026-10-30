@@ -2245,10 +2245,16 @@ function renderFire(){
   const drift = baseDrift();
   const usedM = [...$("baseMonths").querySelectorAll(".bm-row span:first-child")].map(x => x.textContent.trim());
   const skipM = Object.keys(MONTH_SKIP).filter(m => MONTHS.includes(m));
+  // The median says what a usual month is; the average carries the big months a lifetime of
+  // spending also has to pay for, so it is the one to hold the planning figure against.
+  const closed = TODAY.slice(0,7), avgM = usableMonths().filter(m => m < closed && monthTarget(m) > 0).slice(-12);
+  const avg = avgM.length >= 3 ? avgM.reduce((s,m) => s + monthTarget(m), 0) / avgM.length : null;
   $("baseCap").innerHTML = metaList([
     ["Spending, a usual month", baselineMed ? numx(fmt(baselineMed), [], term("median", "Median")+" of the three most recent usable months.") : "Not enough months yet"],
     ["Fixed costs not in spending", numx("+ "+fmt(COMMITTED_KEEP), [], "Rent that starts at FIRE, and a mortgage or loan payment: the ones that continue after FIRE. Rent and bills paid today are in spending already; tuition is not counted, it ends.")],
     ["A comparable month", measuredBase() ? numx(fmt(measuredBase()), baselineMed ? [["A usual month", fmt(baselineMed)], ["Fixed costs", fmt(COMMITTED_KEEP)]] : [], "", true) : "\u2014"],
+    ["Spending, on average", avg === null ? "Not enough months yet" : numx(fmt(avg), [], "Average of the last "+avgM.length+" usable months"+(avgM.length < 12 ? ", until there are twelve" : "")+", big months included. Early retirement pays for those too.")],
+    ["A comparable month, on average", avg === null ? "\u2014" : numx(fmt(avg + COMMITTED_KEEP), [["On average", fmt(avg)], ["Fixed costs", fmt(COMMITTED_KEEP)]], "", true)],
     drift === null ? null
       : ["Against the planning figure",
          Math.abs(measuredBase() - PLAN_BASE) < 1 ? "The same"

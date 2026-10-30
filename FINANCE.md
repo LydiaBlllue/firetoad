@@ -258,6 +258,10 @@ order.
   every committed flow marked `keep` that spending does not already show: one that starts at
   FIRE, and a repayment (`pays`). Rent or a tax paid today is in spending, so it is not added. What used to be
   `plan.json` `imputedRent` is an ordinary committed flow with `starts: "fire"`.
+- **A usual month and an average month are both shown.** The median of the last three usable
+  months says what a usual month is, and the drift warning reads it. The average of up to the last
+  twelve usable months carries the big months too, which a lifetime of spending also has to pay
+  for; it is shown beside the planning figure and sets nothing.
 - **A committed flow is declared, not observed.** D21 matches each one paid today against the
   ledgers the way the investing transfers are matched against the broker's activities — a
   payment of that size in the two whole months before the newest ledger date — and reports an
