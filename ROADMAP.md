@@ -138,6 +138,28 @@ the selftest now does that every time; the migration was run on a copy of user 0
 - **A checker for charts drawn by month**: the months must have an end (DESIGN.md §5f).
 - **Charts draw in** the first time they appear (optional).
 
+## v2.0 — after v1.4 — the page on a framework
+
+Decided 2026-10-30 (user 001). This month was built twice in React to compare, on the
+`proto-react-month` branch (`prototypes/`): with Tremor, and with shadcn/ui. The shadcn/ui build
+keeps the page's look, reads as four shared blocks (a labelled card, a stat, a label-and-value
+list, a ranked bar row) plus the flow chart, and is 216 KB as one file. It is the starting point.
+The move is planned here so it does not land in the middle of the first release.
+
+- **The page is built from components, not from strings.** React with shadcn/ui, whose
+  components are copied into the repository as source; Svelte 5 is the second choice. Tremor is
+  not used: it has no flow chart, and its colours need a safelist to take the fifteen
+  categories. The charts stay hand-drawn SVG, one component each, as the prototype's
+  `FlowChart` already is.
+- **Users install nothing new.** Node is needed only to develop the page. Vite builds it into
+  one self-contained HTML template that is committed; `rebuild.py` fills in the data as today,
+  so a user still needs only Python, and the page still opens from disk with nothing fetched.
+- **The data goes in as one JSON block**, not 48 constants, and T1 checks that the template's
+  block is empty.
+- **The checkers follow.** `check_design` and `check_render` read the built page, and the
+  selftest plants its faults in the component sources.
+- **One page at a time**, This month first, each released only when the checkers pass on it.
+
 ## Later
 
 - **Without the desktop app.** *(first user)* Today setup and the import need Claude Code on a
