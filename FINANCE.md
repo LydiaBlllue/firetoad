@@ -35,6 +35,23 @@
   earmarked accounts, bank cash and money abroad. Planning spend (`plan.json`
   `planBase`) is set by hand; the Baseline page shows the measured median beside it and warns past
   10% of drift, but **never changes the target by itself**.
+- **Where these come from.** The 25 is research; the spending figures are this tool's own.
+  - Bengen, "Determining Withdrawal Rates Using Historical Data", *Journal of Financial Planning*,
+    October 1994: US data from 1926, 50% stocks and 50% intermediate Treasuries, inflation-adjusted
+    withdrawals, tax-deferred accounts. 4% never ran out before 33 years; 3 to 3.5% lasted 50.
+  - Cooley, Hubbard and Walz (the Trinity study), *AAII Journal*, February 1998: US data, 1926–1995.
+  - Pfau, "An International Perspective on Safe Withdrawal Rates", *Journal of Financial Planning*,
+    December 2010: 17 countries, 30 years. 4% held in only four of them; Canada was the highest, 4.42%.
+  - Anarkulova, Cederburg, O'Doherty and Sias, *Journal of Pension Economics and Finance* 24(3), 2025,
+    doi:10.1017/S1474747225000010: 38 developed countries; 2.31% for a couple aged 65 accepting a 5%
+    chance of running out.
+  - Early Retirement Now, "The Ultimate Guide to Safe Withdrawal Rates", part 1 (2016; a blog, not a
+    journal; US data from 1871): a 50/50 portfolio at 4% succeeds 95% of the time over 30 years and
+    65% over 60.
+  - So 25 fits a retirement of about 30 years and has no margin for a much longer one. The target
+    stays × 25 until the owner chooses otherwise.
+  - The median of three months, the average of up to twelve, and adding fixed costs to either have
+    no outside source: they are this tool's calibration of the planning figure.
 - Net worth covers every account in every currency: the Canadian side plus foreign-currency
   accounts at the reference rate in `foreign.json`.
 - The trajectory chart anchors at `plan.json` `retirement.anchorYear` and projects the three

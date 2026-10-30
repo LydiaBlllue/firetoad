@@ -2,6 +2,8 @@
 
 ## 1.3 — unreleased
 
+- **FINANCE.md names the research behind the × 25** (2026-10-30, user 001), what it does not cover, and
+  which spending figures are the tool's own.
 - **The Spending baseline shows the average beside the median** (2026-10-30, user 001). The median of
   three months leaves out the big months, and early retirement pays for those too. It sets nothing.
 - **The page says its version again**: the sidebar had read v1.0 through 1.1 and 1.2.
