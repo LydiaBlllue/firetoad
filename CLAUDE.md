@@ -39,7 +39,8 @@ Every place money sits and every file that arrives is registered in
   exactly one of them (below, and FINANCE.md §8a). `feeds` says only what a ledger is used for
   on the page ("Income" for the ledger payroll lands in, "Spending", "Cash flow", "Repayments"
   for a counterparty's ledger); `ledger` names its CSV; `label` is what the Investing pages call
-  it.
+  it; `capture`, on an account read off a phone screenshot, says which app and page carries its
+  balance — the monthly import panel shows that line, so the owner can take it without asking.
 - `documents[]` — one row per file dropped each month, with the filename pattern, the closing
   day, `into` (which findata file it lands in), `reconcile` (what has to balance before it is
   allowed in), `covers` (which accounts) and `tags` (how it is named in `archive/`). A

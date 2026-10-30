@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.3 — unreleased
+
+- **Every merchant gets the fifteen categories, not only the old subscriptions** (2026-10-30,
+  user 001; findata schema 12, `tools/migrate_11to12.py`). The move to fifteen categories re-filed
+  only what had been Subscription, so an owner's other merchants stayed in the seven old ones: a
+  pharmacy in Shopping, a dentist and a phone plan in Other, and Health, Bills and Education
+  stayed empty. The migration holds every merchant against the starter map and asks each better
+  fit as a suggestion, moving nothing; `confirm.py` shows *filed as* beside *suggested*, and
+  `--ok` takes the suggestion. A refund follows the merchant it refunds. The starter map grows
+  from 137 patterns to 173: pharmacies are Health, with the words that name a kind of care
+  (DENTAL, PHYSIO, MASSAGE, OPTOMETRY), phone and internet providers it lacked, common software
+  tools, language and course providers, and a card's annual fee and interest as Fees. The
+  selftest puts a copy back at schema 11 with a merchant in the wrong category and expects it
+  asked, untouched, then moved once confirmed.
+- **The monthly import as taps ships with the tool** (2026-10-30). The `monthly-import` skill
+  draws a panel of everything to bring this month — statements, exports, screenshots, balances
+  no file carries, open questions — each with the one button that moves it forward, from
+  `monthly-import/scripts/status.py`, which reads the register and never writes. It had lived in
+  one workspace only, and `tools/sync.py`, which replaces `.claude/skills` whole, removed it on
+  every sync. Question choices are the fifteen categories, and a suggestion is the pill
+  selected. An account read off a phone screenshot can say where with `capture` (CLAUDE.md).
+
 ## 1.2 — 2026-10-29
 
 - **R4 retired** (2026-10-29). "A page should fill a screen" warned on Home on every run, and

@@ -1,7 +1,7 @@
 {
   "note": "A starter map of common Canadian chains, shipped with the tool and owned by nobody. The import reads it only for a merchant the workspace's own merchants.json does not know: its category is the default applied, and the merchant still goes to decisions.json for the owner to confirm. A pattern matches whole words of the merchant once punctuation is dropped ('MCDONALD'S #40 OTTAWA' is MCDONALDS); the longest match wins, so UBER EATS beats UBER TRIP.",
   "rules": [
-    "Public chain names only — never a merchant from anyone's statements.",
+    "Public chain names, and words that name a kind of business (DENTAL, MASSAGE, PHARMACY) — never a merchant from anyone’s statements.",
     "Subscription is not a category: a charge that repeats is measured from the rows, whatever it bought. A streaming service is Entertainment, a phone plan is Bills.",
     "A chain that sells everything (a pharmacy, a department store) is filed by what it mostly sells, and the owner confirms it."
   ],
@@ -304,31 +304,31 @@
     },
     {
       "match": "SHOPPERS DRUG MART",
-      "category": "Shopping"
+      "category": "Health"
     },
     {
       "match": "SHOPPERS DRUG",
-      "category": "Shopping"
+      "category": "Health"
     },
     {
       "match": "PHARMAPRIX",
-      "category": "Shopping"
+      "category": "Health"
     },
     {
       "match": "REXALL",
-      "category": "Shopping"
+      "category": "Health"
     },
     {
       "match": "LONDON DRUGS",
-      "category": "Shopping"
+      "category": "Health"
     },
     {
       "match": "JEAN COUTU",
-      "category": "Shopping"
+      "category": "Health"
     },
     {
       "match": "GUARDIAN PHARMACY",
-      "category": "Shopping"
+      "category": "Health"
     },
     {
       "match": "WALMART",
@@ -553,6 +553,150 @@
     {
       "match": "1PASSWORD",
       "category": "Software"
+    },
+    {
+      "match": "PHARMASAVE",
+      "category": "Health"
+    },
+    {
+      "match": "SHOPPERSDRUGMART",
+      "category": "Health"
+    },
+    {
+      "match": "LIFELABS",
+      "category": "Health"
+    },
+    {
+      "match": "DYNACARE",
+      "category": "Health"
+    },
+    {
+      "match": "PHARMACY",
+      "category": "Health"
+    },
+    {
+      "match": "DENTAL",
+      "category": "Health"
+    },
+    {
+      "match": "DENTISTRY",
+      "category": "Health"
+    },
+    {
+      "match": "PHYSIOTHERAPY",
+      "category": "Health"
+    },
+    {
+      "match": "PHYSIO",
+      "category": "Health"
+    },
+    {
+      "match": "MASSAGE",
+      "category": "Health"
+    },
+    {
+      "match": "CHIROPRACTIC",
+      "category": "Health"
+    },
+    {
+      "match": "OPTOMETRY",
+      "category": "Health"
+    },
+    {
+      "match": "OPTOMETRIST",
+      "category": "Health"
+    },
+    {
+      "match": "FIDO MOBILE",
+      "category": "Bills"
+    },
+    {
+      "match": "COGECO",
+      "category": "Bills"
+    },
+    {
+      "match": "EASTLINK",
+      "category": "Bills"
+    },
+    {
+      "match": "SASKTEL",
+      "category": "Bills"
+    },
+    {
+      "match": "LUCKY MOBILE",
+      "category": "Bills"
+    },
+    {
+      "match": "ALECTRA",
+      "category": "Bills"
+    },
+    {
+      "match": "EPCOR",
+      "category": "Bills"
+    },
+    {
+      "match": "FIGMA",
+      "category": "Software"
+    },
+    {
+      "match": "OPENAI",
+      "category": "Software"
+    },
+    {
+      "match": "ANTHROPIC",
+      "category": "Software"
+    },
+    {
+      "match": "MICROSOFT 365",
+      "category": "Software"
+    },
+    {
+      "match": "JETBRAINS",
+      "category": "Software"
+    },
+    {
+      "match": "ALLIANCE FRANCAISE",
+      "category": "Education"
+    },
+    {
+      "match": "COURSERA",
+      "category": "Education"
+    },
+    {
+      "match": "UDEMY",
+      "category": "Education"
+    },
+    {
+      "match": "DUOLINGO",
+      "category": "Education"
+    },
+    {
+      "match": "ANNUAL FEE",
+      "category": "Fees"
+    },
+    {
+      "match": "INTEREST PURCHASES",
+      "category": "Fees"
+    },
+    {
+      "match": "PURCHASE INTEREST",
+      "category": "Fees"
+    },
+    {
+      "match": "CASH ADVANCE INTEREST",
+      "category": "Fees"
+    },
+    {
+      "match": "CURSOR COM",
+      "category": "Software"
+    },
+    {
+      "match": "CURSOR AI",
+      "category": "Software"
+    },
+    {
+      "match": "UBER CANADA UBEREATS",
+      "category": "Dining"
     }
   ]
 }

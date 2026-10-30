@@ -84,7 +84,7 @@ VAR = [          # merchant, category, times a month, low, high, may go on the M
  ("STARBUCKS 1100 OTTAWA ON", "Dining", 1, 5, 8, False),
  ("AMAZON.CA AMAZON.CA", "Shopping", 1, 15, 80, False),
  ("AMZN MKTP CA", "Shopping", 1, 12, 60, True),
- ("SHOPPERS DRUG MART 0781 OTTAWA ON", "Shopping", 2, 8, 45, True),
+ ("SHOPPERS DRUG MART 0781 OTTAWA ON", "Health", 2, 8, 45, True),
  ("DOLLARAMA #1052 OTTAWA ON", "Shopping", 1, 4, 18, False),
  ("WINNERS 3215 OTTAWA ON", "Shopping", 0.5, 25, 90, True),
  ("CANADIAN TIRE #030 OTTAWA ON", "Shopping", 0.4, 15, 80, True),
@@ -551,7 +551,7 @@ def build(out):
     J("profile.json", OrderedDict([
         ("note", "Who this workspace belongs to. The FIRST thing to change when you make it yours: "
                  "the name appears in the browser tab and under the Jade Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. Jade Toad itself is the product, not a setting."),
-        ("schema", 11), ("demo", True), ("owner", P["name"]), ("born", 1995), ("importDay", 26)]))
+        ("schema", 12), ("demo", True), ("owner", P["name"]), ("born", 1995), ("importDay", 26)]))
     J("plan.json", OrderedDict([
         ("note", "Your planning assumptions. `planBase` is the monthly planning spend the FIRE target is built on (× 12 × 25); `skipMonths` are months excluded from every comparison, each with the reason the page shows. `retirement` holds the projection scenarios and the late-life care model; `descriptions` are your own one-liners under the net-worth parts (leave them out and the page describes each part from the register)."),
         ("planBase", int(P["rent"] + P["everyday"])),

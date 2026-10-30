@@ -237,5 +237,5 @@ What the principles ask and the page does not do yet. Each is on the roadmap.
   asks for a question. v1.2.
 - A fresh clone of the demo warns about a stale exchange rate on its first run, which principle
   1 says it should not. v1.1.
-- The monthly import panel exists in the owner's workspace only; it ships after one real
-  import. v1.3.
+- The monthly import panel ships with the tool but has not yet run through a real import, so it
+  is not announced. v1.3.

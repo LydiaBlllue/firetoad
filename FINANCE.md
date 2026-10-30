@@ -79,6 +79,12 @@ repaid, a loan's principal.
   | for a time | Education — tuition, books, exams, credential assessments | the year's total only: it ends, so never the FIRE target |
 
   The owner may move a category to another group (`plan.json` `categoryGroups`).
+- **A merchant is filed once and asked once.** `merchants.json` wins; a merchant it does not know
+  takes the starter map's category (`setup/data/starter_merchants.json`: public chains, and words
+  that name a kind of business — DENTAL, MASSAGE, PHARMACY) or Other, and is asked. A pharmacy is
+  Health, a phone or internet plan Bills. A workspace filed before the fifteen categories has
+  every merchant held against the map once (schema 12): a better fit is asked as a suggestion and
+  nothing moves until the owner confirms it.
 - **A chequing row is filed by its type**: a till purchase and a payment by its payee, looked up
   like any merchant; a bill by its payee too, or Bills (a tax: Housing); rent Housing, cash Cash,
   a fee or charged interest Fees, a fee given back a negative Fees row.

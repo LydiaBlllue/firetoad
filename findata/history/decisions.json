@@ -92,6 +92,30 @@
       "status": "confirmed",
       "answer": "Entertainment",
       "resolved": "2026-10-29"
+    },
+    {
+      "added": "2026-10-29",
+      "kind": "merchant",
+      "match": "ANNUAL FEE",
+      "what": "ANNUAL FEE is filed as Other. With fifteen categories it fits Fees better; it stays Other until confirmed.",
+      "default": "Other",
+      "suggest": "Fees",
+      "source": "the move to fifteen categories",
+      "status": "confirmed",
+      "answer": "Fees",
+      "resolved": "2026-10-29"
+    },
+    {
+      "added": "2026-10-29",
+      "kind": "merchant",
+      "match": "SHOPPERS DRUG MART 0781 OTTAWA",
+      "what": "SHOPPERS DRUG MART 0781 OTTAWA is filed as Shopping. With fifteen categories it fits Health better; it stays Shopping until confirmed.",
+      "default": "Shopping",
+      "suggest": "Health",
+      "source": "the move to fifteen categories",
+      "status": "confirmed",
+      "answer": "Health",
+      "resolved": "2026-10-29"
     }
   ]
 }

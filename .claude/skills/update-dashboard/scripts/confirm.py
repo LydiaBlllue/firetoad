@@ -12,7 +12,9 @@ the rest are fine" in one breath.
         --set "AMZN MKTP=Shopping"                                                 # some changed
 
 `--set` takes a row number or a merchant and a category (its key or its name: Family or "Family &
-gifts"); `--ok` confirms every other open item as it was filed. A merchant's answer lands in
+gifts"); `--ok` confirms every other open item as it was filed, or, where the item carries a
+suggestion (the move to fifteen categories left some merchants in a category that fits them
+less well), as suggested. A merchant's answer lands in
 merchants.json and in every spending.csv row of that merchant, and the item is closed in
 decisions.json (`answer`, `resolved`). A transfer sent to someone nobody named can be answered
 with a category too -- money to family, rent -- and is then written to spending.csv as well
@@ -42,7 +44,7 @@ def main(argv):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("root", nargs="?", default=".")
     ap.add_argument("--write", action="store_true")
-    ap.add_argument("--ok", action="store_true", help="confirm every item not --set as it was filed")
+    ap.add_argument("--ok", action="store_true", help="confirm every item not --set as suggested, or as it was filed")
     ap.add_argument("--set", action="append", default=[], metavar="N=CATEGORY")
     a = ap.parse_args(argv)
     root = os.path.abspath(a.root)
@@ -63,14 +65,15 @@ def main(argv):
             count[k] = count.get(k, 0) + 1
 
     print(f"=== to confirm — {len(items)} item(s) ===")
-    print(f"  {'#':>3}  {'what':<38} {'filed as':<14} {'seen':>4}  why")
+    print(f"  {'#':>3}  {'what':<38} {'filed as':<14} {'suggested':<14} {'seen':>4}  why")
     for i, d in enumerate(items, 1):
         k = merchant_of(d) if d.get("kind") == "merchant" else None
         what = k or d.get("what", "")
         w = d.get("what") or ""
         why = "starter map" if "starter map" in w else "was Subscription" if "no longer a category" in w \
-            else ("first time" if k else d.get("kind", ""))
-        print(f"  {i:>3}  {what[:38]:<38} {str(d.get('default'))[:14]:<14} {count.get(k, '') if k else '':>4}  {why}")
+            else "fits better" if d.get("suggest") else ("first time" if k else d.get("kind", ""))
+        print(f"  {i:>3}  {what[:38]:<38} {str(d.get('default'))[:14]:<14} {str(d.get('suggest') or '')[:14]:<14} "
+              f"{count.get(k, '') if k else '':>4}  {why}")
 
     # what the owner said
     want, bad = {}, []
@@ -104,7 +107,7 @@ def main(argv):
     for i, d in enumerate(items):
         if i not in want and not a.ok:
             continue
-        ans = want.get(i, d.get("default"))
+        ans = want.get(i, d.get("suggest") or d.get("default"))
         if d.get("kind") == "transfer" and i in want and d.get("row"):
             # spent after all: the ledger row stays a transfer out, and the money is spending
             r = d["row"]
@@ -118,7 +121,10 @@ def main(argv):
             else:
                 merchants.setdefault("merchants", []).append({"match": k, "category": ans})
             for r in spend:
-                if merchant_key(r["note"]) == k and r["category"] != ans:
+                rk = merchant_key(r["note"])
+                # a refund follows what it refunds ("ANNUAL FEE REBATE" is the annual fee's)
+                mine = rk == k or (k and float(r["amount"]) < 0 and rk.startswith(k + " "))
+                if mine and r["category"] != ans:
                     r["category"] = ans; changed += 1
         d["answer"], d["resolved"], d["status"] = ans, today, "confirmed"
         closed += 1

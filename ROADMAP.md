@@ -31,7 +31,7 @@ announced. Four weeks, one outcome each (positioning: PRODUCT.md §2).
   hand, slower and less trusted. If most of the friends bank elsewhere, week 3 writes that
   bank's parser instead.
 - **Not in this month**: v1.3 and later, a bank or broker connection, the browser-only
-  experiment, the monthly import panel's public release.
+  experiment, announcing the monthly import panel (it ships in the tool, unannounced).
 - **The test** is the second month: whether the friends come back for the import around the
   next import day (PRODUCT.md §2, *What success looks like*).
 
@@ -112,7 +112,8 @@ the selftest now does that every time; the migration was run on a copy of user 0
 
 - **The monthly import as a panel.** Everything to bring this month (statements, broker
   exports, phone screenshots, balances no file carries, open questions), each with the one
-  button that moves it forward. Released after it has run through one real import.
+  button that moves it forward. In the tool since 2026-10-30, so a sync no longer removes it;
+  still to run through one real import before it is announced.
 - **A renamed file is still recognised.** *(first user)* A statement whose spaces and commas
   were turned into underscores on the way in is named the same as the original.
 - **An account seen only in payments is offered.** *(first user)* When the statements show money

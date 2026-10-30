@@ -812,6 +812,49 @@ def confirm_check(root, base):
     return ["  ✓ confirm.py: one table, one answer by name and the rest as filed — merchants.json, spending.csv and decisions.json follow, checks clean"]
 
 
+def refile_check(root, base):
+    """The move to fifteen categories re-filed only what had been Subscription, so a pharmacy
+    stayed in Shopping and a dentist in Other (2026-10-30, the first owner's workspace). Put a
+    copy back at schema 11 with a merchant the starter map files elsewhere: migrate_11to12 has to
+    ask it with the better category as the suggestion and move nothing, and confirm.py --ok has
+    to take the suggestion into merchants.json and every spending row."""
+    ws = os.path.join(base, "refile")
+    os.makedirs(ws); stage(root, ws)
+    sys.path.insert(0, os.path.join(ws, ".claude", "skills", "update-dashboard", "scripts"))
+    sys.path.insert(0, HERE)
+    from check_data import merchant_key
+    import update
+    sp = list(csv.DictReader(open(layout.path(ws, "spending.csv"), encoding="utf-8")))
+    mj = json.load(open(layout.path(ws, "merchants.json"), encoding="utf-8"))
+    pick = next((e for e in mj["merchants"] if update.starter_category(e["match"]) not in (None, "Other")), None)
+    if pick is None:
+        return []
+    right = update.starter_category(pick["match"])
+    wrong = "Other" if right != "Other" else "Shopping"
+    edit_json(ws, layout.rel("merchants.json"), lambda d: [e.update(category=wrong) for e in d["merchants"] if e["match"] == pick["match"]])
+    with open(layout.path(ws, "spending.csv"), "w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=["date", "amount", "currency", "category", "note"]); w.writeheader()
+        w.writerows(dict(r, category=wrong) if merchant_key(r["note"]) == pick["match"] else r for r in sp)
+    edit_json(ws, layout.rel("profile.json"), lambda d: d.update(schema=11))
+    mig = subprocess.run([sys.executable, os.path.join(ws, "tools", "migrate_11to12.py"), ws],
+                         capture_output=True, text=True, timeout=120)
+    dec = json.load(open(layout.path(ws, "decisions.json"), encoding="utf-8"))["decisions"]
+    asked = [d for d in dec if d.get("status") == "open" and d.get("match") == pick["match"]]
+    still = all(r["category"] == wrong for r in csv.DictReader(open(layout.path(ws, "spending.csv"), encoding="utf-8"))
+                if merchant_key(r["note"]) == pick["match"])
+    cf = os.path.join(ws, ".claude", "skills", "update-dashboard", "scripts", "confirm.py")
+    r = subprocess.run([sys.executable, cf, ".", "--write", "--ok"], cwd=ws, capture_output=True, text=True, timeout=300)
+    after = {x["category"] for x in csv.DictReader(open(layout.path(ws, "spending.csv"), encoding="utf-8"))
+             if merchant_key(x["note"]) == pick["match"]}
+    filed = {e["match"]: e["category"] for e in json.load(open(layout.path(ws, "merchants.json"), encoding="utf-8"))["merchants"]}
+    out = run("check_data.py", ["."], ws)
+    if mig.returncode or not asked or asked[0].get("suggest") != right or not still or r.returncode \
+            or after != {right} or filed.get(pick["match"]) != right or "✗" in out:
+        return [f"  ✗ re-filing: migrate exit {mig.returncode}, asked {[d.get('suggest') for d in asked]}, untouched before confirming "
+                f"{still}, after confirming {sorted(after)} / {filed.get(pick['match'])}" + ("; the checkers then failed" if "✗" in out else "")]
+    return [f"  ✓ re-filing: a merchant left in {wrong} is asked as {right} and moved only once confirmed — merchants.json and spending.csv follow"]
+
+
 def card_only_setup_check(root, base):
     """Setup end to end for the smallest owner there is: one credit card, two statements, every
     question the files cannot answer skipped (2026-10-28, the first person to set this up had
@@ -1633,7 +1676,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
-                    own_name_check, loan_import_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, card_only_setup_check, starter_check,
+                    own_name_check, loan_import_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, starter_check,
                     demo_clear_check):
             try:
                 runs += chk(root, base)

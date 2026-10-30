@@ -30,7 +30,7 @@
     },
     {
       "match": "ANNUAL FEE",
-      "category": "Other",
+      "category": "Fees",
       "seen": 1,
       "first": "2026-02-01",
       "last": "2026-02-01"
@@ -163,7 +163,7 @@
     },
     {
       "match": "SHOPPERS DRUG MART 0781 OTTAWA",
-      "category": "Shopping",
+      "category": "Health",
       "seen": 16,
       "first": "2025-12-28",
       "last": "2026-07-22"
