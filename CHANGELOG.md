@@ -2,6 +2,19 @@
 
 ## 1.3 — unreleased
 
+- **Big buys sit beside Free to spend** (2026-10-30, user 001). The card was the last on This
+  month, under the chosen category's purchases, so a long list pushed it off the screen. It is
+  the other half of the month — every purchase at or over the threshold — so it now shares the
+  top row: the total, how many and which fund paid, the four largest, and when there are none,
+  what would land there.
+- **The page fits the screen it is on** (2026-10-30, user 001). A chart's drawing was a fixed
+  940-wide `viewBox` scaled to the card, so its height and its text grew with the window's
+  width: on a 32-inch screen it fitted, on a laptop the monthly chart sat below the fold and a
+  card was seen by halves. Every chart is now drawn at the card's real width, with a height
+  that follows the window's height, and redrawn when the window changes. On Year, "What stands
+  out" and the year by category sit side by side, the category rows are tighter, and the year
+  pills have room under them. R3 also fails a chart drawn narrower than its own box, which is
+  what a pinned height does now that the drawing is not stretched.
 - **Every merchant gets the fifteen categories, not only the old subscriptions** (2026-10-30,
   user 001; findata schema 12, `tools/migrate_11to12.py`). The move to fifteen categories re-filed
   only what had been Subscription, so an owner's other merchants stayed in the seven old ones: a

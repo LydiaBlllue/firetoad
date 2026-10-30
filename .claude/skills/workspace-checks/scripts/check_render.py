@@ -65,6 +65,12 @@ async () => {
         }
         return Math.round(c.getBoundingClientRect().width);
       }).filter(w => w > 200),
+      // A chart drawn narrower than its own box: a height pinned below the viewBox's scales the
+      // drawing down and leaves white space beside it (2026-10-30, charts drawn at their size).
+      unfilled: [...s.querySelectorAll('svg')].filter(c => c.getClientRects().length && c.viewBox &&
+        c.viewBox.baseVal && c.viewBox.baseVal.width && c.getScreenCTM() &&
+        c.getBoundingClientRect().width > 200).filter(c =>
+        c.viewBox.baseVal.width * c.getScreenCTM().a < c.getBoundingClientRect().width - 2).length,
       hscroll: document.documentElement.scrollWidth - document.documentElement.clientWidth
     });
   }
@@ -159,6 +165,12 @@ def check(path):
                     "conform")
             else:
                 grew += 1
+    for w, r in res.items():
+        for p in r["pages"]:
+            if p.get("unfilled"):
+                capped += 1
+                err("R3", f"{w}px: page '{p['k']}' draws {p['unfilled']} chart(s) narrower than "
+                          f"their box — a pinned height shrinks the drawing", "conform")
     if grew and not capped:
         note("R3", f"{grew} charts grow with the window "
                    f"({WIDTHS[0]} → {WIDTHS[-1]}px)")

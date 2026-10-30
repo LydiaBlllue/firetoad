@@ -64,6 +64,11 @@
     `preserveAspectRatio="xMidYMid meet"` and a fixed height, the drawing scales to its height
     and a wider window only adds white space beside it. `check_render.py` measures the painted
     width, not the box.
+  - **A chart is drawn at the size it is shown** (`fit(id, h)`): the `viewBox` is the card's
+    real width and a height that follows the window's (`h` × window height ÷ 1000, between
+    0.72 and 1.1), redrawn when the window changes. A `viewBox` of fixed width scaled up with
+    the window — a wide screen got a tall chart and text larger than the page's, and a laptop
+    screen got the chart below the fold.
 - **One left sidebar** (`aside.side`, 210px, sticky) beside `main.main`, rendered from the `NAV`
   constant. Home sits above the sections under no heading.
   - **A new page is one entry in `NAV` plus one `<section data-pg="key" hidden>`**, nothing
@@ -125,14 +130,15 @@
 
 - **This month** — the month on the cursor, all of it: **Free to spend** (the headline: the
   allowance less this month's everyday spending, no categories, a track bar with an even-pace
-  marker for the current month only); three stat cards (spent, biggest category, against a usual
+  marker for the current month only) with **Big buys** beside it, a third of the row — the other
+  half of the month, every purchase at or over the threshold: the total, how many and which fund
+  paid, the four largest, and when there are none, what would land there; three stat cards (spent, biggest category, against a usual
   month); **Where the paycheque went** (the plan as flows, the allowance fanning out into that
   month's categories — refunds a source coming in, an overspend a second source from the fund
   that covers it, so every band is its real size and the total is Free to spend's); the category
-  list and the line-by-line of the chosen category; **Big buys in \<month\>** on a card of its
-  own.
-- **Year** — the year pills, the yearly stat cards, "What stands out", the year by category, the
-  monthly stacked chart, and **Inside the allowance, month by month** (everyday spending against
+  list and the line-by-line of the chosen category.
+- **Year** — the year pills, the yearly stat cards, "What stands out" and the year by category
+  side by side, the monthly stacked chart, and **Inside the allowance, month by month** (everyday spending against
   today's allowance, the overspend in red, the open month faded).
 - **Subscriptions** follows no time.
 - No transactions page: a month's purchases are reached through a category on This month.

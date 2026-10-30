@@ -65,7 +65,7 @@ h1{font-size:21px;font-weight:700;letter-spacing:-.2px}
 .pills{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 0}
 .pill{border:1px solid var(--border);background:var(--pill);color:var(--ink-2);border-radius:999px;padding:4px 13px;font-size:12.5px;cursor:pointer;font-family:inherit}
 .pill[disabled]{opacity:.34;cursor:default}
-#yearPills{margin:14px 0 0}
+#yearPills,#pills{margin:0 0 14px}
 #yearPills .pill{font-weight:600}
 .pill.part{border-style:dashed;color:var(--muted)}
 .pill.sel{background:var(--ink);color:var(--page);border-color:var(--ink);font-weight:600}
@@ -187,7 +187,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .year-legend .leg-row.all{border-color:var(--border)}
 .year-legend .leg-row.all.on{border-color:var(--ink)}
 .tx-neg{color:#006300}
-.inc-row{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px}
+.inc-row{display:flex;align-items:center;gap:10px;padding:3px 0;font-size:13px}
 .inc-row .nm{width:58px;color:var(--ink-2);flex-shrink:0}
 .inc-row .bar-wrap{flex:1;background:var(--pill);border-radius:4px;height:12px;overflow:hidden}
 .inc-row .bar{height:100%;background:var(--bar);border-radius:4px}
@@ -204,6 +204,9 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .cat-row .v.hi{color:#c98500}
 /* List on the left, the selected category on the right. An accordion pushed everything below it
    down on every click; with two panes the left column never moves. */
+.free-split{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:10px;margin-bottom:10px}
+.free-split .meta .k{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.yr-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:10px}
 .cat-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;margin-bottom:10px}
 .meta .v.hi{color:#c98500}
 .fire-track{background:var(--pill);border-radius:999px;height:14px;overflow:hidden;margin:10px 0 8px}
@@ -324,8 +327,10 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 
 <section data-pg="trends" hidden>
   <div class="grid-stats" id="yrStats"></div>
-  <div class="card" style="margin-bottom:10px"><div class="lab">What stands out</div><div id="yrInsights"></div></div>
-  <div class="card" style="margin-bottom:10px"><div class="lab">Spending by category</div><div id="yrSpendCats"></div></div>
+  <div class="yr-split">
+    <div class="card"><div class="lab">What stands out</div><div id="yrInsights"></div></div>
+    <div class="card"><div class="lab">Spending by category</div><div id="yrSpendCats"></div></div>
+  </div>
   <div class="cap num" id="yrCap" style="margin-bottom:10px"></div>
   <div class="card" style="margin-bottom:10px">
     <div class="lab">Each month, by category</div>
@@ -340,11 +345,17 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 </section>
 
 <section data-pg="cat" hidden>
-  <div class="card" style="margin-bottom:10px">
+  <div class="free-split">
+  <div class="card">
     <div class="lab" id="freeLab">Free to spend</div>
     <div class="big num" id="freeBig"></div>
     <div class="bud-track" style="margin-top:10px;max-width:720px"><div class="bud-fill" id="freeFill"></div><div class="bud-tick" id="freeTick"></div></div>
     <div id="freeMeta"></div>
+  </div>
+  <div class="card">
+    <div class="lab" id="bigLab">Big buys this month</div>
+    <div id="freeBigBuys"></div>
+  </div>
   </div>
   <div class="grid-stats" id="catStats"></div>
   <div class="card" style="margin-bottom:10px">
@@ -362,10 +373,6 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
       <div class="lab" id="catDetLab">Detail</div>
       <div id="catDetail"></div>
     </div>
-  </div>
-  <div class="card" style="margin-top:10px">
-    <div class="lab" id="bigLab">Big buys this month</div>
-    <div id="freeBigBuys"></div>
   </div>
 </section>
 
@@ -695,6 +702,17 @@ let viewYM = (ST.ym && MONTHS.includes(ST.ym)) ? ST.ym : (MONTHS[MONTHS.length-1
 // it the month row grows one pill per month forever: 24 months already wraps to two rows, ten
 // years would be ten rows of pills above every page.
 let viewYear = viewYM.slice(0,4);
+// A chart is drawn at the size it is shown: its width is the card's, its height follows the
+// window's, so text inside stays the page's size and a short screen gets a shorter chart.
+function fit(id, h){
+  const svg = $(id), w = Math.round(svg.getBoundingClientRect().width) || document.querySelector(".main").clientWidth - 32;
+  const H = Math.round(h * Math.min(1.1, Math.max(0.72, innerHeight / 1000)));
+  svg.setAttribute("viewBox", "0 0 " + w + " " + H);
+  return [w, H];
+}
+let fitKey = innerWidth + "x" + innerHeight, fitT;
+addEventListener("resize", () => { clearTimeout(fitT); fitT = setTimeout(() => {
+  const k = innerWidth + "x" + innerHeight; if(k !== fitKey){ fitKey = k; render(); } }, 150); });
 function setYear(y){
   viewYear = y;
   if(!viewYM.startsWith(y)){
@@ -1108,7 +1126,7 @@ function renderPerf(){
     + stat("Difference", numx((diff >= 0 ? "+" : "\u2212") + fmt(Math.abs(diff)), [["Growth accounts", fmt(P.end)], ["Same money in " + P.symbol, "\u2212" + fmt(P.shadow)]], "", true),
            (diff >= 0 ? "Ahead by " : "Behind by ") + pct1(Math.abs(pc(diff, P.shadow))) + " over " + span, diff < 0 ? "#d03b3b" : "");
   // the chart: the benchmark's daily line, the snapshots as dots on an ink line
-  const W=940, H=260, padL=64, padR=16, padT=16, padB=28;
+  const [W, H] = fit("perfChart", 260), padL=64, padR=16, padT=16, padB=28;
   const t = d => new Date(d).getTime(), t0 = t(P.from), t1 = t(P.to);
   const vals = P.path.map(p => p[1]).concat(P.actual.map(a => a[1]));
   const lo = Math.min(...vals), hi = Math.max(...vals), pad = (hi - lo) * 0.12 || hi * 0.05;
@@ -1362,10 +1380,19 @@ function renderFree(F){
       : (left >= 0 ? fmt(left) + " left unspent" : "Over by " + fmt(-left))) + '</div>';
   const bsum = big.reduce((a,e) => a + e.amount, 0);
   $("bigLab").innerHTML = term("big_buy", "Big buys");
+  // Beside Free to spend, because it is the other half of the month: every purchase at or over
+  // the threshold lands here instead of there.
+  const fund = (BFUND.key ? BFUND.name : "Big buys") + " fund";
   $("freeBigBuys").innerHTML = big.length
-    ? metaList(big.map(e => [merchantOf(e.note).slice(0,58), fmt2(e.amount)]).concat([
-          [(bsum < 0 ? "Given back to the " : "Paid from the ") + (BFUND.key ? BFUND.name : "Big buys") + " fund", fmt(Math.abs(bsum)), "mut"]]))
-    : '<div class="empty">None this month.</div>';
+    ? '<div class="big num">' + fmt(bsum) + '</div>'
+      + '<div class="cap" style="margin-top:2px">' + big.length + (big.length === 1 ? " purchase, " : " purchases, ")
+      + (bsum < 0 ? "given back to the " : "paid from the ") + fund + '</div>'
+      // the four largest, so a month of many big buys does not make this card the long one again
+      + metaList([...big].sort((a,b) => b.amount - a.amount).slice(0,4)
+          .map(e => ['<span title="' + merchantOf(e.note) + '">' + merchantOf(e.note) + '</span>', fmt2(e.amount)])
+          .concat(big.length > 4 ? [["and " + (big.length - 4) + " more", fmt2(big.slice().sort((a,b) => b.amount - a.amount).slice(4).reduce((t,e) => t + e.amount, 0)), "mut"]] : []))
+    : '<div class="empty" style="padding:4px 0 0">None this month.</div>'
+      + '<div class="cap" style="margin-top:6px">A purchase of ' + fmt(PLAN.bigThreshold) + ' or more lands here, paid from the ' + fund + '.</div>';
 }
 
 // --- where the paycheque goes ----------------------------------------------
@@ -1599,7 +1626,7 @@ function renderYear(){
   // Twelve columns, always the selected year. This used to walk MONTHS, which ignored the year
   // pills entirely -- with three years loaded, picking 2026 still drew all 36 months.
   const YM12 = MONTHS_IN(viewYear);
-  const W=940, H=280, padB=26, padT=30, gap=2;
+  const [W, H] = fit("yearChart", 280), padB=26, padT=30, gap=2;
   const n = YM12.length;
   const step = W/n, bw = Math.min(64, step*0.55);
   const totals = YM12.map(monthTotal);
@@ -1668,7 +1695,7 @@ function renderAlwYear(){
   const YM12 = MONTHS_IN(viewYear), svg = $("alwYrChart");
   const has = YM12.filter(m => MONTHS.includes(m));
   if(!has.length){ svg.innerHTML = '<text x="470" y="110" text-anchor="middle" font-size="13" fill="var(--muted)">No spending recorded in '+viewYear+' yet.</text>'; $("alwYrCap").textContent = ""; return; }
-  const W=940, H=220, padB=26, padT=26, step=W/12, bw=Math.min(52, step*0.5);
+  const [W, H] = fit("alwYrChart", 220), padB=26, padT=26, step=W/12, bw=Math.min(52, step*0.5);
   const ev = YM12.map(m => MONTHS.includes(m) ? everydayOf(m) : null);
   const mx = Math.max(ALW * 1.15, ...ev.filter(v => v !== null));
   const y = v => H - padB - v/mx*(H-padB-padT);
@@ -1712,7 +1739,7 @@ function renderIncChart(){
   if(!cfAll.length){ $("incChart").innerHTML=""; $("incLegend").innerHTML='<div class="empty">No chequing data yet.</div>'; return; }
   const byYm = Object.fromEntries(cfAll.map(m => [m.ym, m]));
   const months = MONTHS_IN(viewYear);      // twelve columns for the selected year
-  const W=940, H=280, padB=26, padT=30, gap=2;
+  const [W, H] = fit("incChart", 280), padB=26, padT=30, gap=2;
   const step = W/months.length, bw = Math.min(64, step*0.55);
   const cats = incSel ? ICATS.filter(c => c.k === incSel) : ICATS;
   const shown = months.map(ym => cats.reduce((s,c) => s + Math.max(byYm[ym]?.[c.f]||0, 0), 0));
@@ -2224,7 +2251,7 @@ function renderTrajectory(target){
   const projMonths = months - offM;
   const paths = SCENARIOS.map(s => ({...s, series: project(p0, s.r, projMonths)}));
   paths.forEach(p => p.cross = crossMonth(p.series, target));
-  const W=940, H=300, padL=58, padR=8, padT=18, padB=28;
+  const [W, H] = fit("fireTraj", 300), padL=58, padR=8, padT=18, padB=28;
   const maxV = Math.max(target*1.12, ...PORT_HISTORY.map(h => h.v), ...paths.map(p => p.series[Math.min(projMonths, (p.cross??projMonths))]));
   const x = i => padL + i/months * (W-padL-padR);
   const y = v => H-padB - v/maxV * (H-padT-padB);
@@ -2587,7 +2614,7 @@ function renderBacktest(bt, pot0){
     '<div class="card"><div class="lab">Left at '+LIFE_TO+', middle case</div><div class="big num">'+fmt(med)+'</div></div>';
   // One bar per start year: green above the line is what is left at the end, red below is how
   // many years short the money fell.
-  const W=940, H=220, padL=58, padR=8, padT=12, padB=28, mid = padT + (H-padT-padB)*0.7;
+  const [W, H] = fit("btChart", 220), padL=58, padR=8, padT=12, padB=28, mid = padT + (H-padT-padB)*0.7;
   const maxE = Math.max(pot0, ...bt.runs.map(r => r.end));
   const maxShort = Math.max(1, ...fails.map(r => LIFE_TO - r.dead));
   const bw = (W-padL-padR)/bt.n;
@@ -2625,7 +2652,7 @@ function renderBacktest(bt, pot0){
     + (rate < 90 ? noteBox("<b>Under 90% leans on luck.</b> Starting later, spending less or holding more at the start all raise it.") : "");
 }
 function drawCoast(run, target, atDraw, careA, ltcA){
-  const W=940, H=300, padL=58, padR=10, padT=18, padB=30;
+  const [W, H] = fit("coastChart", 300), padL=58, padR=10, padT=18, padB=30;
   const n = run.series.length-1;
   const maxV = Math.max(target*1.1, ...run.series);
   const x = i => padL + i/n*(W-padL-padR);
@@ -2711,7 +2738,7 @@ function renderBaseChart(){
   if(!months.length || !baselineMed) return;
   const counted = [...$("baseMonths").querySelectorAll(".bm-row span:first-child")].map(x => x.textContent.trim());
   const isCounted = m => counted.includes(ymFull(m));
-  const W=940, H=250, padL=54, padR=10, padT=22, padB=28;
+  const [W, H] = fit("baseChart", 250), padL=54, padR=10, padT=22, padB=28;
   const vals = months.map(monthTarget), mx = Math.max(...vals, baselineMed)*1.12;
   const step = (W-padL-padR)/months.length, bw = Math.min(56, step*0.58);
   const y = v => H-padB - v/mx*(H-padT-padB);
