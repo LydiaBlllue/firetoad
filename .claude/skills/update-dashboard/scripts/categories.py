@@ -15,7 +15,8 @@ a charge that repeats is marked as such, whatever it bought (`recurring` below).
 
 Every category has its own colour (DESIGN.md §3); Other is grey.
 """
-import collections, re
+import collections
+import datetime, re
 
 GROUPS = ("fixed", "everyday", "time")
 
@@ -92,6 +93,29 @@ def _monthly(ms, months):
     y0, m0 = map(int, ms[0].split("-")); y1, m1 = map(int, ms[-1].split("-"))
     span = (y1 - y0) * 12 + (m1 - m0) + 1
     return span - len(ms) <= max(1, span // 6)
+
+
+def yearly(rows, brands=None, declared=()):
+    """The merchants paid once a year: the ones the owner said so of (merchants.json
+    `every: "year"`, as `declared` brand names), and the ones whose charges come back eleven to
+    thirteen months apart within a tenth of the amount, with nothing in between. A year's
+    insurance or a card's annual fee is one large row in one month, which makes that month look
+    unusual and the others cheap; months are compared with it spread over twelve (FINANCE.md §3a).
+    Housing and cash are never one."""
+    brands = brands or {}
+    by = collections.defaultdict(list)
+    for r in rows:
+        a = float(r["amount"])
+        if a > 0 and r.get("category") not in ("Housing", "Cash"):
+            b = _brand(r["note"])
+            by[brands.get(b, b)].append((datetime.date.fromisoformat(r["date"]), a))
+    out = {b for b in declared if b in by}
+    for b, xs in by.items():
+        xs.sort()
+        if len(xs) >= 2 and all(330 <= (q[0] - p[0]).days <= 400 and abs(q[1] - p[1]) <= 0.1 * p[1]
+                                for p, q in zip(xs, xs[1:])):
+            out.add(b)
+    return out
 
 
 def recurring(rows, brands=None, tolerance=0.03, months=3):

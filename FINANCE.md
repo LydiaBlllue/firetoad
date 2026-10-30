@@ -93,6 +93,14 @@ repaid, a loan's principal.
   in ten — is marked at build time (`categories.recurring`), whatever it bought; the
   Subscriptions page lists the marked charges. A brand seen once can never be one. A
   subscription is never a big buy. Rent, cash and fees are never marked.
+- **A bill paid once a year is spread when months are compared.** Insurance for the year, a
+  card's annual fee: one large row in one month makes that month look unusual and the others
+  cheap. A merchant the owner says is paid once a year (`merchants.json` `every: "year"`), or
+  whose charges come back eleven to thirteen months apart within a tenth of the amount, has its
+  rows marked at build time (`categories.yearly`), and every comparison between months — a
+  usual month, a category's usual, the planning baseline — counts a twelfth of each in the twelve
+  months from the one it was paid in. A month's own total and the year's keep it whole. Rent and
+  cash are never spread.
 - **Money sent to someone nobody named** is a transfer until the owner says otherwise, because a
   program cannot tell a parent from the owner's own account abroad; answered with a category
   (`confirm.py --set N=Family`) it becomes spending.

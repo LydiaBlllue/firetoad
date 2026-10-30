@@ -370,6 +370,15 @@ def derive(d):
             e["sub"] = names.setdefault(b, b if b in brands.values() else b.title())
     out["SUB_KEYS"] = [{"name": names[b], "amount": v["amount"], "months": v["months"]}
                        for b, v in sorted(rec.items()) if b in names]
+    # a charge paid once a year (said so in merchants.json, or seen a year apart) is marked `yr`:
+    # months are compared with it spread over the twelve it pays for (FINANCE.md §3a)
+    said = {brands.get(categories.brand_of(m["match"]), categories.brand_of(m["match"]))
+            for m in d["merchants"]["merchants"] if m.get("every") == "year"}
+    yr = categories.yearly(d["spending"], brands, said)
+    for r, e in zip(d["spending"], spend_unsorted):
+        b = categories.brand_of(r["note"])
+        if brands.get(b, b) in yr and float(r["amount"]) > 0:
+            e["yr"] = 1
 
     today = datetime.date.today().isoformat()
     out["TODAY"] = today

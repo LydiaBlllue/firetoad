@@ -2,6 +2,13 @@
 
 ## 1.3 — unreleased
 
+- **A bill paid once a year is spread when months are compared** (2026-10-30, designed in 1.2).
+  A merchant the owner says is yearly (`merchants.json` `every: "year"`), or whose charges come
+  back a year apart within a tenth of the amount, is marked at build time
+  (`categories.yearly`); a usual month, a category's usual and the planning baseline count a
+  twelfth of it in each of the twelve months from the one it was paid in, while the month's and
+  the year's totals keep it whole. Found by itself only once there is a year of rows; until
+  then, said. The selftest marks one merchant yearly and expects its rows marked and no other.
 - **An account seen only in payments is asked about by its number** (2026-10-30, user 002).
   A card-only owner's statements show every payment coming from a chequing account that was
   never registered, so net worth was the card's debt; a chequing ledger showed three other

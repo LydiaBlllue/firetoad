@@ -1630,6 +1630,39 @@ def seen_account_check(root, base):
     return [f"  ✗ unregistered account: update exit {r.returncode}, named {named or 'nothing'}"]
 
 
+def yearly_check(root, base):
+    """A bill paid once a year is spread over twelve months when months are compared (2026-10-29,
+    FINANCE.md §3a). Say of one merchant that it is paid once a year, rebuild, and expect each of
+    its rows marked `yr` on the page and no other row; then expect the same of a merchant whose
+    two charges are a year apart, said of by nobody."""
+    rb = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "rebuild.py"))
+    sys.path.insert(0, os.path.dirname(rb))
+    import categories
+    ws = os.path.join(base, "yearly"); os.makedirs(ws); stage(root, ws)
+    fd = lambda n: layout.path(ws, n)
+    sp = csv_rows_of(fd("spending.csv"))
+    mj = json.load(open(fd("merchants.json"), encoding="utf-8"))
+    pick = next((e for e in mj["merchants"] if e.get("category") not in ("Housing", "Cash")
+                 and any(categories.brand_of(r["note"]) == categories.brand_of(e["match"]) for r in sp)), None)
+    if pick is None:
+        return []
+    pick["every"] = "year"
+    json.dump(mj, open(fd("merchants.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    subprocess.run([sys.executable, rb, ".", "--write"], cwd=ws, capture_output=True)
+    page = open(main_dash(ws) and os.path.join(ws, main_dash(ws)), encoding="utf-8").read()
+    rows = json.loads(re.search(r"^const SPENDING = (\[.*\]);", page, re.M).group(1))
+    mine = [e for e in rows if categories.brand_of(e["note"]) == categories.brand_of(pick["match"]) and e["amount"] > 0]
+    marked = [e for e in rows if e.get("yr")]
+    found = categories.yearly([{"date": "2025-03-14", "amount": "480.00", "note": "ACME INSURANCE [X/1]", "category": "Bills"},
+                               {"date": "2026-03-12", "amount": "492.00", "note": "ACME INSURANCE [X/2]", "category": "Bills"},
+                               {"date": "2026-03-12", "amount": "4.50", "note": "CAFE [X/2]", "category": "Dining"},
+                               {"date": "2026-04-12", "amount": "4.50", "note": "CAFE [X/3]", "category": "Dining"}])
+    out = run("check_data.py", ["."], ws)
+    if mine and len(marked) == len(mine) and found == {categories.brand_of("ACME INSURANCE")} and "✗" not in out:
+        return [f"  ✓ once a year: a merchant said to be yearly has its {len(mine)} row(s) marked for spreading, and two charges a year apart are found by themselves"]
+    return [f"  ✗ once a year: marked {len(marked)} of {len(mine)}, found {sorted(found)}" + ("; the checkers then failed" if "✗" in out else "")]
+
+
 def loan_import_check(root, base):
     """A repayment from a borrower, under the name the bank prints, is money back — typed
     Repayment, attributed to that borrower's loan, and the loan's balance in the register moves
@@ -1774,7 +1807,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
-                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, starter_check,
+                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, starter_check,
                     demo_clear_check):
             try:
                 runs += chk(root, base)

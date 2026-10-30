@@ -672,7 +672,14 @@ const fmt2 = n => (n <= -0.005 ? "\u2212" : "") + "$" + Math.abs(n).toLocaleStri
 const monthOf = ym => SPENDING.filter(e => e.date.startsWith(ym) && e.currency === "CAD");
 const monthTotal = ym => monthOf(ym).reduce((s,e) => s + e.amount, 0);
 // What FIRE is planned on: every month's spending but what ends (tuition), FINANCE.md §3a.
-const monthTarget = ym => monthOf(ym).filter(inTarget).reduce((s,e) => s + e.amount, 0);
+// Months compared: a charge paid once a year (`yr`) counts a twelfth in each of the twelve months
+// from the one it was paid in, so its month does not look unusual and the others cheap. A month's
+// own total keeps it whole (FINANCE.md §3a).
+const ymNum = ym => Number(ym.slice(0,4)) * 12 + Number(ym.slice(5,7));
+const cmpOf = ym => monthOf(ym).filter(e => !e.yr).concat(
+  SPENDING.filter(e => e.yr && e.currency === "CAD" && ymNum(ym) - ymNum(e.date) >= 0 && ymNum(ym) - ymNum(e.date) < 12)
+          .map(e => Object.assign({}, e, {amount: e.amount / 12})));
+const monthTarget = ym => cmpOf(ym).filter(inTarget).reduce((s,e) => s + e.amount, 0);
 function ymShift(ym,d){let[y,m]=ym.split("-").map(Number);m+=d;if(m<1){m=12;y--}if(m>12){m=1;y++}return y+"-"+String(m).padStart(2,"0");}
 // Months from today as a label ("Aug 2039").
 const dTxt = m => { if(m === null) return "beyond 25y"; const [Y,M] = TODAY.slice(0,7).split("-").map(Number); const t = M-1+m, yy = Y + Math.floor(t/12); return MN[t%12]+" "+yy; };
@@ -1798,7 +1805,7 @@ const catWindow = ym => usableMonths().filter(m => m < ym).slice(-CAT_WINDOW);
 function catMedian(cat, ym){
   const win = catWindow(ym);
   if(win.length < 3) return null;
-  const vs = win.map(m => monthOf(m).filter(e => e.category === cat).reduce((s,e) => s + e.amount, 0));
+  const vs = win.map(m => cmpOf(m).filter(e => e.category === cat).reduce((s,e) => s + e.amount, 0));
   vs.sort((a,b) => a - b);
   const h = vs.length >> 1;
   return vs.length % 2 ? vs[h] : (vs[h-1] + vs[h]) / 2;
@@ -1809,7 +1816,7 @@ function catMedian(cat, ym){
 function monthMedian(ym){
   const win = catWindow(ym);
   if(win.length < 3) return null;
-  const vs = win.map(m => monthOf(m).reduce((s,e) => s + e.amount, 0)).sort((a,b) => a - b);
+  const vs = win.map(m => cmpOf(m).reduce((s,e) => s + e.amount, 0)).sort((a,b) => a - b);
   const h = vs.length >> 1;
   return vs.length % 2 ? vs[h] : (vs[h-1] + vs[h]) / 2;
 }
