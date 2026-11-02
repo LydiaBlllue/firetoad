@@ -194,11 +194,9 @@ the page shows is a sum of them.
   payment in the ledgers afterwards, so a number nobody actually pays is caught.
 - How much they invest per month — the transfer to the broker.
 - Their everyday amount — the guilt-free line. **No category caps**; that is the point of it.
-- What counts as a big buy (the default is a single purchase of $300 or more).
 - Any funds they are saving into: a name, a goal, a date. A fund is a **label on an account they
   already have** — nothing is transferred and no new account is opened. At most one fund can be
-  `role: "topup"` (everyday money left over flows into it) and one `role: "big"` (big buys come out of
-  it). Having neither is fine. **A standing contribution to a fund is a `saving` flow with
+  `role: "topup"` (everyday money left over flows into it). Having none is fine. **A standing contribution to a fund is a `saving` flow with
   `to: <fund key>`** — a row of the plan, not a number on the fund.
 
 ### 5 · The one investing question
@@ -324,7 +322,7 @@ Three things, in this order:
      "balance":38400,"asof":"2026-09-06","feeds":"Portfolio",
      "doc":{"file":"holdings-<date>.csv"}}
   ],
-  "plan": {"takeHome":4200,"invest":900,"everyday":1800,"bigThreshold":300},
+  "plan": {"takeHome":4200,"invest":900,"everyday":1800},
   "funds": [],
   "rules": {
     "buckets": [{"key":"rest","name":"Holdings","catchAll":true}],

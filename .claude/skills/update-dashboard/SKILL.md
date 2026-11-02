@@ -189,8 +189,7 @@ The owner's own banks, and what each one does, are in `OWNER.md`.
 1. **Look up `merchants.json` first.** A hit is reused, not re-judged.
 2. A miss is a **new merchant** — it must appear in the report for the owner to confirm.
 3. **Subscription is not a category** (2026-10-29). File a merchant by what it sells; whether
-   its charge repeats is measured by the build (FINANCE.md §3a), and a subscription is never a
-   big buy. A chequing row that is spending (rent, a bill, a payment, cash, a fee) is written to
+   its charge repeats is measured by the build (FINANCE.md §3a). A chequing row that is spending (rent, a bill, a payment, cash, a fee) is written to
    spending.csv by the import itself.
 4. Merchant strings are truncated and abbreviated. They are not sentences and cannot be read as
    ones.

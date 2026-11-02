@@ -85,7 +85,7 @@ REACH_ROWS = (("today", "Spendable today", "#1baf7a"), ("costs", "Taxed to take 
 # Subscription category, and chequing rent, bills, cash and fees in spending.csv (2026-10-29);
 # 12 = every merchant held against the fifteen categories, a better fit asked (2026-10-30);
 # 13 = a card's cash back is income in rewards.csv, filed again from the archive (2026-10-30).
-SCHEMA = 16
+SCHEMA = 17
 
 
 def same(a, b):
@@ -366,7 +366,7 @@ def derive(d):
     # --- SUB_KEYS: the charges that repeat, measured from the rows (categories.recurring) --
     # until 2026-10-29 a list of brands filed as Subscription in merchants.json. Each spending row
     # of one is marked `sub` with its name, which is what the subscriptions list and "a
-    # subscription is never a big buy" read.
+    # subscription" page reads.
     # several spellings of one service, named once by the owner (merchants.json `brand`)
     brands = {categories.brand_of(m["match"]): m["brand"] for m in d["merchants"]["merchants"] if m.get("brand")}
     rec = categories.recurring(d["spending"], brands)
@@ -908,13 +908,13 @@ def sync_figures(root, out):
            "portfolio": f"${port:,}",
            "progress": f"{round(port / tgt * 100, 1) if tgt else 0}%", "gap": f"${tgt - port:,}",
            "invest_monthly": f"${flow_totals(plan)['invest']:,}", "everyday": f"${flow_totals(plan)['everyday']:,}",
-           "big_threshold": f"${plan['bigThreshold']:,}", "dry_powder": f"{inv['dryPct']}%"} if pb is not None else None
+           "dry_powder": f"{inv['dryPct']}%"} if pb is not None else None
     if val is None:
         # No planning figure: nothing that is a share of the target is a number yet.
         val = {"plan_base": NOT_SET, "fire_target": NOT_SET, "progress": NOT_SET, "gap": NOT_SET,
                "net_worth": f"${nw:,}", "portfolio": f"${port:,}",
                "invest_monthly": f"${flow_totals(plan)['invest']:,}", "everyday": f"${flow_totals(plan)['everyday']:,}",
-               "big_threshold": f"${plan['bigThreshold']:,}", "dry_powder": f"{inv['dryPct']}%"}
+               "dry_powder": f"{inv['dryPct']}%"}
     if "invest" in miss:
         val["invest_monthly"] = NOT_SET
     if "everyday" in miss:

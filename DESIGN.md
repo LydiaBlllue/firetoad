@@ -50,7 +50,7 @@
   `#4a6fa5`), so income
   and spending read as two domains.
 - **The plan's parts do not use the category palette**: Invest blue `#2a78d6` / Everyday orange
-  `--c-dining` / Big buys yellow `--c-shopping` / Travel purple `--c-other` / Unallocated
+  `--c-dining` / Travel purple `--c-other` / Unallocated
   `--pill`; committed payments in `--muted`. Home's net-worth rows use the same semantic set.
 - Anything semantic — up or down, good or bad — carries **colour *and* a symbol or arrow**.
   Colour alone is never the signal.
@@ -86,7 +86,8 @@
     A new rule is wired into it.
   - The month pills appear only on `PILL_PAGES`, the year pills only on `YEAR_PAGES`.
   - The foot of the sidebar carries the tool version (`VERSION`) in muted 10.5px. MAJOR.MINOR:
-    polish moves the minor, a change of shape moves the major.
+    the major moves only with a change of technology (v2.0: the page's framework, the data's
+    store); everything else, a new product structure included, moves the minor.
 - **One page, one question, one kind of time**: a page follows the month cursor, the year cursor
   or no time at all, never half of each; a thing is judged in one place, and Home only
   summarises.
@@ -136,9 +137,7 @@
 
 - **This month** — the month on the cursor, all of it: **Everyday** (the headline: the
   everyday less this month's everyday spending, no categories, a track bar with an even-pace
-  marker for the current month only) with **Big buys** beside it, a third of the row — the other
-  half of the month, every purchase at or over the threshold: the total, how many and which fund
-  paid, the four largest, and when there are none, what would land there; three stat cards (spent, split into the parts that month has, biggest category, against a usual
+  marker for the current month only); three stat cards (spent, split into the parts that month has, biggest category, against a usual
   month); **Where the paycheque went** (the plan as flows, each marked planned, and titled for the plan rather than the paycheque when it asks for more than take-home; the everyday amount fanning out into that
   month's categories — refunds a source coming in, an overspend a second source from the fund
   that covers it, so every band is its real size and the total is Everyday's); the category
@@ -184,11 +183,11 @@
 
 - **Budget** follows no time: the plan and the funds, no category caps.
   - **How each paycheque is split**: one stacked bar cutting take-home into the committed
-    payments (one segment each) / Invest / Everyday / Big buys / Travel / Unallocated, with one
+    payments (one segment each) / Invest / Everyday / Travel / Unallocated, with one
     line per part beneath it. Take-home, Invest and Everyday are sums of `funds.json`
     `plan.flows`, derived at load; Unallocated is what nothing names and stays where the
     paycheque landed.
-  - Invest, Everyday and Big buys can be edited on the page (`.bud-edit[data-pk]`, kept in the
+  - Invest and Everyday can be edited on the page (`.bud-edit[data-pk]`, kept in the
     URL hash and localStorage, never written back). Parts that add to more than take-home get a
     `noteBox`.
   - **The funds**: a goal fund with its bar and deadline; a fund with no goal with its opening

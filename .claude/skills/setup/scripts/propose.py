@@ -61,7 +61,6 @@ EXPORTS = {
 PAY = re.compile(r"\b(PAY|PAYROLL|PYRL|SALARY|WAGES)\b")
 DEBIT_PURCHASE = re.compile(r"INTERAC PURCHASE|CONTACTLESS INTERAC|POINT OF SALE|DEBIT PURCHASE|POS PURCHASE", re.I)
 CARD_CREDIT = re.compile(r"PAYMENT|TRSF FROM|CASHBACK|REMISES", re.I)
-BIG = 300
 
 
 def pattern_of(name):
@@ -277,8 +276,7 @@ def propose(root, inbox):
                            "alsoCovers": others}
 
     # --- the plan
-    plan = {"bigThreshold": BIG}
-    src("plan.bigThreshold", "default: a single purchase of $300 or more is a big buy")
+    plan = {}
     if pay_amounts:
         per = collections.Counter(round(x, 2) for x in pay_amounts).most_common(1)[0][0]
         plan["takeHome"] = round(per * 2)
@@ -309,11 +307,11 @@ def propose(root, inbox):
     spend = 0.0
     for (inst, digits), s in stmts.items():
         if (s.get("kind") or "") in scaffold.DEBT_KINDS:
-            spend += sum(-r["amount"] for r in s["rows"] if r["amount"] < 0 and -r["amount"] < BIG
+            spend += sum(-r["amount"] for r in s["rows"] if r["amount"] < 0
                          and not CARD_CREDIT.search(r["description"]))
     if spend:
         plan["everyday"] = int(round(spend / 50.0) * 50)
-        src("plan.everyday", f"{money(spend)} of card purchases under {money(BIG)} on the newest statements, rounded")
+        src("plan.everyday", f"{money(spend)} of card purchases on the newest statements, rounded")
         questions.append({"id": "everyday", "q": f"Your cards show {money(spend)} of everyday spending this month. "
                                                  f"Set the guilt-free everyday amount at {money(plan['everyday'])}?",
                           "suggest": plan["everyday"]})
@@ -401,7 +399,7 @@ def report(a):
         out.append(f"  {d.get('file', '')[:44]:44}  closes {str(d.get('closes') or d.get('closes_label')):9} "
                    f"{d.get('parser') or '—':15} → {d['into']}")
     out += ["", "PLAN"]
-    for k in ("takeHome", "invest", "everyday", "bigThreshold"):
+    for k in ("takeHome", "invest", "everyday"):
         if k in a["plan"]:
             out.append(f"  {k:13} {money(a['plan'][k]):>11}   {a['_proposed'].get('plan.' + k, '')}")
     out += ["", f"QUESTIONS ({len(a['_open'])}) — the scaffold will not run until every one is answered"]

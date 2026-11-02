@@ -194,7 +194,7 @@ def build(a, today):
     out[layout.rel("profile.json")] = json.dumps({
         "note": "Who this workspace belongs to. The FIRST thing to change when you make it yours: "
                 "the name appears in the browser tab and under the Jade Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. Jade Toad itself is the product, not a setting.",
-        "schema": 16,
+        "schema": 17,
         "owner": a["owner"],
         # A question skipped is null, never a default that reads as a fact (2026-10-28, first
         # user: 1990 and $0 went onto the page). The page says Not set where one is needed.
@@ -371,7 +371,6 @@ def build(a, today):
                  **({"note": f["monthlyNote"]} if f.get("monthlyNote") else {})}
                 for f in (a.get("funds") or []) if f.get("monthly")
             ],
-            "bigThreshold": plan.get("bigThreshold", 300),
             "leftover": plan.get("leftover", "Whatever the everyday amount does not use tops up the funds below."),
         },
         "funds": [{k: v for k, v in f.items() if k not in ("monthly", "monthlyNote")} for f in (a.get("funds") or [])],
