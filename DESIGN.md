@@ -120,7 +120,7 @@
   projected, from two months on. It is not the FIRE chart, which follows the portfolio to a target.
 - **Four stat cards**, one per section: **Portfolio** (with its dry-powder share), **FIRE progress**
   (with the on-track year), **Invested in \<month\>** (pay-yourself-first, from the broker's
-  record), **Free to spend** (the allowance today).
+  record), **Everyday** (what is left of the month's amount).
 - **Net worth in one card, cut both ways at once**: one row per `role`, cash split by where it
   is — For FIRE / Set aside / Cash / Cash in \<abroad\> / Owed to you / Other assets (only for
   things that are not money). Each row's bar is as long as its share and coloured by `reach`
@@ -134,17 +134,17 @@
 
 ### Spending
 
-- **This month** — the month on the cursor, all of it: **Free to spend** (the headline: the
+- **This month** — the month on the cursor, all of it: **Everyday** (the headline: the
   allowance less this month's everyday spending, no categories, a track bar with an even-pace
   marker for the current month only) with **Big buys** beside it, a third of the row — the other
   half of the month, every purchase at or over the threshold: the total, how many and which fund
-  paid, the four largest, and when there are none, what would land there; three stat cards (spent, biggest category, against a usual
+  paid, the four largest, and when there are none, what would land there; three stat cards (spent, split into the parts that month has, biggest category, against a usual
   month); **Where the paycheque went** (the plan as flows, each marked planned, and titled for the plan rather than the paycheque when it asks for more than take-home; the allowance fanning out into that
   month's categories — refunds a source coming in, an overspend a second source from the fund
-  that covers it, so every band is its real size and the total is Free to spend's); the category
+  that covers it, so every band is its real size and the total is Everyday's); the category
   list and the line-by-line of the chosen category.
 - **Year** — the year pills, the yearly stat cards, "What stands out" and the year by category
-  side by side, the monthly stacked chart, and **Inside the allowance, month by month** (everyday spending against
+  side by side, the monthly stacked chart, and **Everyday, month by month** (everyday spending against
   today's allowance, the overspend in red, the open month faded).
 - **Subscriptions** follows no time.
 - No transactions page: a month's purchases are reached through a category on This month.
@@ -320,7 +320,7 @@ these jobs is deleted, not shortened.
 
 | line | job | rule |
 |---|---|---|
-| **label** | names the thing | a noun phrase of at most four words: `Net worth`, `Free to spend`. No verb, no sentence, no colon, no "your". |
+| **label** | names the thing | a noun phrase of at most four words: `Net worth`, `Spent in Oct`. No verb, no sentence, no colon, no "your". |
 | **value** | answers it | one number with its unit; `$838 of $1,300` is still one number. |
 | **status** | the one fact the value cannot show | optional; at most seven words, one fact, no `·`, never a restatement of the label, never where a number came from. `On track for May 2039`, `Both transfers landed`. |
 

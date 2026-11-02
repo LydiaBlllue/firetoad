@@ -132,6 +132,26 @@ repaid, a loan's principal.
   program cannot tell a parent from the owner's own account abroad; answered with a category
   (`confirm.py --set N=Family`) it becomes spending.
 
+### A month adds up
+
+Every row of spending is in exactly one part, so the parts always sum to the month's total:
+
+> **spent = bills & housing + everyday + big buys + education**
+
+| part | what is in it | measured against |
+|---|---|---|
+| bills & housing | the `fixed` group | nothing yet |
+| everyday | the `everyday` group, under the big-buy threshold | the `allowance` flow |
+| big buys | the `everyday` group, one purchase at or over the threshold, never a subscription | the big-buys fund |
+| education | the `time` group | nothing: the year's total only |
+
+Money that leaves and nobody has named is a transfer, outside the sum, until the owner answers.
+
+**On the page there is one word for each part**, and a part the month does not have is not shown.
+The `allowance` flow is called **Everyday** everywhere the owner reads; "allowance" is this file's
+word and the code's. A reader is never asked to learn these rules first: the page shows their own
+month split, and the definitions wait behind the question mark.
+
 ## 3b. Guilt-free spending
 
 The monthly waterfall, from `funds.json`:

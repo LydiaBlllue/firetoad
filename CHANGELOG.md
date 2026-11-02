@@ -2,6 +2,12 @@
 
 ## 1.3 — unreleased
 
+- **One name, and a month that adds up** (2026-11-02, user 002 and user 001: neither could say what
+  the allowance was). Free to spend, Everyday and allowance were one thing under three names; the
+  page says Everyday. Spent in a month is shown split into bills & housing, everyday, and big buys
+  or education when the month has them, and the Big buys card appears only when there is one. Setup
+  ends with the owner's last full month in one sentence.
+
 - **A chequing account's bills and cash count as spending after setup** (2026-11-02, user 002;
   findata schema 14, `tools/migrate_13to14.py`). Setup gave a chequing account a spending tag only
   if its first statements showed a debit purchase, and the import quietly skipped the rest, so bills
