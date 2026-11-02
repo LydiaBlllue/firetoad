@@ -63,6 +63,13 @@ def main(argv):
                          "workspace had, kept so it can come back.", "plan": notes, "flows": flows, "funds": big})
         dump(fp, fj)
         print(f"→ funds.json: removed {len(big)} fund(s), {len(flows)} flow(s); kept in decisions/")
+    # The figures table is the workspace's own and a sync keeps it, so its old rows are cleared here.
+    tp = os.path.join(ws, "FINANCE.md")
+    if os.path.exists(tp):
+        t = open(tp, encoding="utf-8").read()
+        t = re.sub(r"\| big_threshold \|.*\n", "", t)
+        t = t.replace("| everyday | Everyday allowance |", "| everyday | Everyday |").replace("flows: `allowance` |", "flows: `everyday` |")
+        open(tp, "w", encoding="utf-8").write(t)
     prof["schema"] = 17
     dump(pp, prof)
     print("→ profile.json: schema 17")
