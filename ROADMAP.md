@@ -106,7 +106,7 @@ the selftest now does that every time; the migration was run on a copy of user 0
     Other. *For a time* (it ends) — Education: tuition, books, exams and credential
     assessments. Each category has a default group the owner can change.
   - **What each group counts for.** Only Everyday is measured against the guilt-free
-    allowance. Fixed and Everyday make the measured spending the FIRE target is calibrated on;
+    everyday. Fixed and Everyday make the measured spending the FIRE target is calibrated on;
     For a time is in the year's total and never in the target. A bill paid once a year is
     spread over twelve months when months are compared.
   - **A subscription is a mark, not a category.** A charge that repeats — one merchant, one

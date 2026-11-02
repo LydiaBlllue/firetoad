@@ -78,14 +78,14 @@ REACH_ROWS = (("today", "Spendable today", "#1baf7a"), ("costs", "Taxed to take 
 # 2 = page constants moved into findata (2026-09-09); 3 = alerts.json replaced by imports.json
 # and decisions.json (2026-09-10); 4 = every account row carries the five axes side / role /
 # reach / value / against, and feeds keeps only the flow words (2026-09-10, FINANCE.md §8a);
-# 5 = the monthly plan is flows (income / committed / saving / allowance) and plan.json's
+# 5 = the monthly plan is flows (income / committed / saving / everyday) and plan.json's
 # imputedRent is a committed flow that starts after FIRE (2026-09-10, FINANCE.md §8b); 6 =
 # findata/ is three folders, register / ledgers / history, one per layer (2026-09-10, layout.py);
 # 11 = spending is what it is, not how it was paid: fifteen categories in three groups, no
 # Subscription category, and chequing rent, bills, cash and fees in spending.csv (2026-10-29);
 # 12 = every merchant held against the fifteen categories, a better fit asked (2026-10-30);
 # 13 = a card's cash back is income in rewards.csv, filed again from the archive (2026-10-30).
-SCHEMA = 14
+SCHEMA = 15
 
 
 def same(a, b):
@@ -907,13 +907,13 @@ def sync_figures(root, out):
     val = {"plan_base": f"${pb:,} /mo", "fire_target": f"${tgt:,}", "net_worth": f"${nw:,}",
            "portfolio": f"${port:,}",
            "progress": f"{round(port / tgt * 100, 1) if tgt else 0}%", "gap": f"${tgt - port:,}",
-           "invest_monthly": f"${flow_totals(plan)['invest']:,}", "everyday": f"${flow_totals(plan)['allowance']:,}",
+           "invest_monthly": f"${flow_totals(plan)['invest']:,}", "everyday": f"${flow_totals(plan)['everyday']:,}",
            "big_threshold": f"${plan['bigThreshold']:,}", "dry_powder": f"{inv['dryPct']}%"} if pb is not None else None
     if val is None:
         # No planning figure: nothing that is a share of the target is a number yet.
         val = {"plan_base": NOT_SET, "fire_target": NOT_SET, "progress": NOT_SET, "gap": NOT_SET,
                "net_worth": f"${nw:,}", "portfolio": f"${port:,}",
-               "invest_monthly": f"${flow_totals(plan)['invest']:,}", "everyday": f"${flow_totals(plan)['allowance']:,}",
+               "invest_monthly": f"${flow_totals(plan)['invest']:,}", "everyday": f"${flow_totals(plan)['everyday']:,}",
                "big_threshold": f"${plan['bigThreshold']:,}", "dry_powder": f"{inv['dryPct']}%"}
     if "invest" in miss:
         val["invest_monthly"] = NOT_SET

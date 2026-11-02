@@ -93,7 +93,7 @@ What ships today. What is planned is in [`ROADMAP.md`](ROADMAP.md); when each ar
 |---|---|
 | Header | Net worth across every currency, visible from any page; under it two dates — the day every account is complete to, and the last update |
 | Home | Net worth in one card, a row per purpose, each bar coloured by how easily the money can be reached · four cards: Portfolio, FIRE progress, this month's investing transfer, Everyday |
-| Spending | What is left of Everyday today, and for how many days · this month by category, each opening its purchases · big buys apart from everyday spending · the year month by month, by category and against the allowance · subscriptions: what repeats, a year's cost, what is due in the next 30 days |
+| Spending | What is left of Everyday today, and for how many days · this month by category, each opening its purchases · big buys apart from everyday spending · the year month by month, by category and against the everyday amount · subscriptions: what repeats, a year's cost, what is due in the next 30 days |
 | Income | Income by source and how much of it was kept · investment income — dividends, interest, lending, withholding tax — on its own page |
 | Investing | The portfolio by currency, kind of asset and bucket · performance against one benchmark fund bought on the same days · every holding, by role or by account |
 | Plan | What each paycheque is for, and what each fund holds · the FIRE target, progress, the year it is reached and coast to FIRE · whether the money lasts, late-life care included, replayed through every stretch of real years since 1928 · the planning figure against what is really spent |
@@ -183,7 +183,7 @@ Two ideas carry everything, so a new kind of thing needs a row, not new code.
   known, and what a debt is secured against. Each total on the page reads exactly one axis, so
   the two views of net worth — by purpose and by reach — agree by construction. A home, a
   mortgage or money lent to a friend is an ordinary row. (FINANCE.md §8a.)
-- **A flow** is every monthly line of the plan: income, committed costs, saving, the allowance,
+- **A flow** is every monthly line of the plan: income, committed costs, saving, the everyday amount,
   each with an amount and, where it applies, an end date and what happens to it after FIRE.
   (FINANCE.md §8b.)
 
@@ -215,7 +215,7 @@ The full rules are DESIGN.md §5b and §5b′.
   banks was available when the tool was built. A connection the owner authorises themselves is
   welcome once one exists.
 - **Not real-time.** It is monthly by design. A number is as of a stated day.
-- **Not a budget with category caps.** One allowance, and everything under it is guilt-free.
+- **Not a budget with category caps.** One everyday amount, and everything under it is guilt-free.
 - **Not mobile, not dark.** Desktop at 1120px and wider, light theme only.
 - **Not a mixer of currencies.** Amounts stay per currency; the two converted totals carry
   their rate.

@@ -24,7 +24,7 @@
 | progress | Progress | 8.8% | portfolio ÷ target |
 | gap | Gap | $697,865 | target − portfolio |
 | invest_monthly | Monthly contribution | $800 | `funds.json` flows: `saving` to the broker |
-| everyday | Everyday allowance | $1,300 | `funds.json` flows: `allowance` |
+| everyday | Everyday | $1,300 | `funds.json` flows: `everyday` |
 | big_threshold | Big-buy threshold | $300 | `funds.json` plan.bigThreshold |
 | travel_goal | Travel goal | $3,000 | `funds.json`, due 2027-02 |
 | dry_powder | Dry powder | 43.1% | `INVEST.dryPct`, band 40–45% |
@@ -101,9 +101,9 @@ repaid, a loan's principal.
 
   | group | categories | counts for |
   |---|---|---|
-  | fixed | Housing, Bills | the spending FIRE is planned on; never the allowance |
-  | everyday | Groceries, Dining, Transport, Shopping, Software & tools, Entertainment, Health, Travel, Family & gifts, Cash, Fees & interest, Other | the allowance, and the spending FIRE is planned on |
-  | for a time | Education — tuition, books, exams, credential assessments | the year's total only: it ends, so never the FIRE target |
+  | bills | Housing, Bills | the spending FIRE is planned on; never the everyday amount |
+  | everyday | Groceries, Dining, Transport, Shopping, Software & tools, Entertainment, Health, Travel, Family & gifts, Cash, Fees & interest, Other | the everyday amount, and the spending FIRE is planned on |
+  | education | Education — tuition, books, exams, credential assessments | the year's total only: it ends, so never the FIRE target |
 
   The owner may move a category to another group (`plan.json` `categoryGroups`).
 - **A merchant is filed once and asked once.** `merchants.json` wins; a merchant it does not know
@@ -140,16 +140,15 @@ Every row of spending is in exactly one part, so the parts always sum to the mon
 
 | part | what is in it | measured against |
 |---|---|---|
-| bills & housing | the `fixed` group | nothing yet |
-| everyday | the `everyday` group, under the big-buy threshold | the `allowance` flow |
+| bills & housing | the `bills` group | nothing yet |
+| everyday | the `everyday` group, under the big-buy threshold | the `everyday` flow |
 | big buys | the `everyday` group, one purchase at or over the threshold, never a subscription | the big-buys fund |
-| education | the `time` group | nothing: the year's total only |
+| education | the `education` group | nothing: the year's total only |
 
 Money that leaves and nobody has named is a transfer, outside the sum, until the owner answers.
 
-**On the page there is one word for each part**, and a part the month does not have is not shown.
-The `allowance` flow is called **Everyday** everywhere the owner reads; "allowance" is this file's
-word and the code's. A reader is never asked to learn these rules first: the page shows their own
+**There is one word for each part**, and a part the month does not have is not shown.
+The same words are used in the page, this file, the code and the register. A reader is never asked to learn these rules first: the page shows their own
 month split, and the definitions wait behind the question mark.
 
 ## 3b. Guilt-free spending
@@ -157,14 +156,14 @@ month split, and the definitions wait behind the question mark.
 The monthly waterfall, from `funds.json`:
 
 1. Invest — the `saving` flow to the broker
-2. Everyday allowance — the `allowance` flow; below that line there are no categories and no caps
+2. Everyday — the `everyday` flow; below that line there are no categories and no caps
 3. A single everyday transaction at or above `plan.bigThreshold` is a big buy: outside the
-   allowance, paid from the fund with `role: "big"`
-4. Whatever allowance is left goes to the fund with `role: "topup"`, overflowing into the big-buys
+   everyday, paid from the fund with `role: "big"`
+4. Whatever everyday is left goes to the fund with `role: "topup"`, overflowing into the big-buys
    fund once it is full
 
 These four steps are the flows of §8b: `saving` (to the broker, or to a fund it names with
-`to`), `allowance`, and the leftover routed by `leftoverGoesTo`. A `committed` flow — rent, a mortgage, a loan — sits above them and is paid before
+`to`), `everyday`, and the leftover routed by `leftoverGoesTo`. A `committed` flow — rent, a mortgage, a loan — sits above them and is paid before
 anything is chosen; `income` is the whole paycheque, before it.
 
 A fund is a **label on an account you already have**, not an account of its own; each names its
@@ -192,7 +191,7 @@ therefore after refunds without any of them knowing refunds exist.
   chart that stacks categories cannot stack a negative one, so it takes it off the top of the
   month's bar as a hatched band and labels the month with its net — the bars add up to the
   year's total.
-- **A refund of a big buy goes back to the Big buys fund**, not onto the month's allowance:
+- **A refund of a big buy goes back to the Big buys fund**, not onto the month's everyday amount:
   it is big exactly when the purchase it gives back was (§3b).
 - A card payment (`PAYMENT`, `THANK YOU`, a transfer in) is neither spending nor a refund.
 
@@ -276,7 +275,7 @@ order.
 
 | axis | values | what reads it |
 |---|---|---|
-| `kind` | income · committed · saving · allowance | the waterfall, top down; §3's pay-yourself-first is `saving` placed before `allowance` |
+| `kind` | income · committed · saving · everyday | the waterfall, top down; §3's pay-yourself-first is `saving` placed before `everyday` |
 | `amount` | per month, or `null` when never given | the waterfall; `null` counts as nothing and reads *Not set* |
 | `starts` | absent, or `fire` | a flow that begins only after FIRE — rent an owner will pay but does not yet — is out of this month's split and inside the planning figure |
 | `until` | a date, or open | the FIRE projection drops a flow after its end — a loan paid off |
@@ -284,7 +283,7 @@ order.
 | `pays` | the liability it repays | the principal part is saving, not spending |
 | `to` | `broker` (the default) or a fund's key | pay-yourself-first counts only the broker; a fund's standing contribution is the saving flow that names it, and nothing on the fund repeats the number |
 
-- **A number never given is `null`, not 0** — take-home, the investing transfer, the allowance,
+- **A number never given is `null`, not 0** — take-home, the investing transfer, the everyday amount,
   `plan.json` `planBase` and `profile.json` `born`. The page says *Not set* where it would show
   one, the figures table below says the same, and what is a share of a missing number (the
   target, progress, the drawdown) is not drawn. A $0 that looks like a fact is the failure this
@@ -292,7 +291,7 @@ order.
 - **Unallocated** is income less every other kind. It is a hard constraint: below zero the plan
   does not hold and the page says so in red. It is never "money that flows to the funds".
 - **Planning spend** is still set by hand and §1's target is still planning spend × 12 × 25.
-  The calibration beside it is the measured average of fixed and everyday spending (§3a) plus
+  The calibration beside it is the measured average of bills, housing and everyday spending (§3a) plus
   every committed flow marked `keep` that spending does not already show: one that starts at
   FIRE, and a repayment (`pays`). Rent or a tax paid today is in spending, so it is not added. What used to be
   `plan.json` `imputedRent` is an ordinary committed flow with `starts: "fire"`.

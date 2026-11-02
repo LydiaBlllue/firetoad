@@ -691,13 +691,13 @@ def first_import_quiet_check(root, base):
 def unset_check(root, base):
     """A question skipped at setup is null and reads Not set (2026-10-28, first user: take-home
     pay of $0 and a 1990 birth year went onto the page as facts). Null out take-home, the
-    investing transfer, the allowance, the planning figure and the birth year in a copy: it has
+    investing transfer, the everyday amount, the planning figure and the birth year in a copy: it has
     to build, check clean, and say Not set in the figures table."""
     ws = os.path.join(base, "unset")
     os.makedirs(ws); stage(root, ws)
     def flows(d):
         for f in d["plan"]["flows"]:
-            if f["kind"] in ("income", "allowance") or (f["kind"] == "saving" and (f.get("to") or "broker") == "broker"):
+            if f["kind"] in ("income", "everyday") or (f["kind"] == "saving" and (f.get("to") or "broker") == "broker"):
                 f["amount"] = None
     edit_json(ws, layout.rel("funds.json"), flows)
     edit_json(ws, layout.rel("plan.json"), lambda d: d.__setitem__("planBase", None))
@@ -711,7 +711,7 @@ def unset_check(root, base):
     if b.returncode or bad or (fin and fin.count("Not set") < 6) or "const BORN = null" not in page:
         return [f"  ✗ answers never given: rebuild exit {b.returncode}; " + ("; ".join(bad[:3]) or
                 f"{fin.count('Not set')} Not set in FINANCE.md, BORN {'null' if 'const BORN = null' in page else 'not null'}")]
-    return ["  ✓ answers never given: take-home, investing, allowance, planning figure and birth year null, built and checked clean, Not set in the figures table"]
+    return ["  ✓ answers never given: take-home, investing, everyday, planning figure and birth year null, built and checked clean, Not set in the figures table"]
 
 
 def ready_check(root, base):
@@ -775,13 +775,13 @@ def spending_check(root, base):
     plan = {"flows": [{"kind": "committed", "amount": 1500}, {"kind": "committed", "amount": 1200, "starts": "fire"},
                       {"kind": "committed", "amount": 900, "pays": "mortgage"}]}
     keep = fl.totals(plan)["committedKeep"]
-    g = cats.groups({"categoryGroups": {"Transport": "fixed", "Dining": "nonsense"}})
+    g = cats.groups({"categoryGroups": {"Transport": "bills", "Dining": "nonsense"}})
     bad = []
     if rec != {"SPOTIFY", "KOODO MOBILE"}:
         bad.append(f"repeats found {sorted(rec)}")
     if keep != 2100:
         bad.append(f"calibration adds {keep}, not 2100")
-    if (g["Transport"], g["Dining"], g["Education"]) != ("fixed", "everyday", "time"):
+    if (g["Transport"], g["Dining"], g["Education"]) != ("bills", "everyday", "education"):
         bad.append(f"groups {g['Transport']}/{g['Dining']}/{g['Education']}")
     if bad:
         return ["  ✗ spending: " + "; ".join(bad)]

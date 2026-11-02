@@ -315,10 +315,10 @@ def propose(root, inbox):
         plan["everyday"] = int(round(spend / 50.0) * 50)
         src("plan.everyday", f"{money(spend)} of card purchases under {money(BIG)} on the newest statements, rounded")
         questions.append({"id": "everyday", "q": f"Your cards show {money(spend)} of everyday spending this month. "
-                                                 f"Set the guilt-free allowance at {money(plan['everyday'])}?",
+                                                 f"Set the guilt-free everyday amount at {money(plan['everyday'])}?",
                           "suggest": plan["everyday"]})
     else:
-        questions.append({"id": "everyday", "q": "What everyday allowance a month — the guilt-free line, no categories under it?"})
+        questions.append({"id": "everyday", "q": "What everyday amount a month — the guilt-free line, no categories under it?"})
     questions.append({"id": "committed", "q": "Anything paid every month before you choose anything — rent, a mortgage, a loan? "
                                               "And rent you do not pay now but will after FIRE?"})
     questions.append({"id": "planBase", "q": "Your planning spend for the FIRE target, a month, rent after FIRE included?",

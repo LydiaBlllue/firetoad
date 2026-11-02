@@ -194,7 +194,7 @@ def build(a, today):
     out[layout.rel("profile.json")] = json.dumps({
         "note": "Who this workspace belongs to. The FIRST thing to change when you make it yours: "
                 "the name appears in the browser tab and under the Jade Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. Jade Toad itself is the product, not a setting.",
-        "schema": 14,
+        "schema": 15,
         "owner": a["owner"],
         # A question skipped is null, never a default that reads as a fact (2026-10-28, first
         # user: 1990 and $0 went onto the page). The page says Not set where one is needed.
@@ -335,7 +335,7 @@ def build(a, today):
     # --- the monthly plan ----------------------------------------------------------------
     plan = a.get("plan") or {}
     out[layout.rel("funds.json")] = json.dumps({
-        "asof_note": "The guilt-free budget: one allowance, no category caps.",
+        "asof_note": "The guilt-free budget: one everyday amount, no category caps.",
         "plan": {
             "start": today[:7],
             # Schema 5: the plan is flows (FINANCE.md §8b). Take-home, the fixed payments made
@@ -361,7 +361,7 @@ def build(a, today):
             ] if int(plan.get("imputedRent", 0) or 0) else []) + [
                 {"key": "invest", "kind": "saving", "name": "Invest", "amount": plan.get("invest"),
                  "to": "broker", "note": "Off the top, before anything else — pay-yourself-first."},
-                {"key": "everyday", "kind": "allowance", "name": "Everyday allowance",
+                {"key": "everyday", "kind": "everyday", "name": "Everyday",
                  "amount": plan.get("everyday"),
                  "note": "The guilt-free line. No categories and no caps below it."},
             ] + [
@@ -372,7 +372,7 @@ def build(a, today):
                 for f in (a.get("funds") or []) if f.get("monthly")
             ],
             "bigThreshold": plan.get("bigThreshold", 300),
-            "leftover": plan.get("leftover", "Whatever the allowance does not use tops up the funds below."),
+            "leftover": plan.get("leftover", "Whatever the everyday amount does not use tops up the funds below."),
         },
         "funds": [{k: v for k, v in f.items() if k not in ("monthly", "monthlyNote")} for f in (a.get("funds") or [])],
         "claimsAgainst": {

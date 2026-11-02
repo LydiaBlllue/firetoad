@@ -1,5 +1,5 @@
 {
-  "asof_note": "The guilt-free plan: pay-yourself-first, one everyday allowance, two named funds. The dashboard's FUNDS constant is a copy of this file (check_data D13). Fields that render on the page are English.",
+  "asof_note": "The guilt-free plan: pay-yourself-first, one everyday amount, two named funds. The dashboard's FUNDS constant is a copy of this file (check_data D13). Fields that render on the page are English.",
   "plan": {
     "start": "2026-08",
     "flows": [
@@ -28,8 +28,8 @@
       },
       {
         "key": "everyday",
-        "kind": "allowance",
-        "name": "Everyday allowance",
+        "kind": "everyday",
+        "name": "Everyday",
         "amount": 1300,
         "note": "The guilt-free line. No categories and no caps below it."
       },
@@ -39,13 +39,13 @@
         "name": "Big buys",
         "amount": 250,
         "to": "bigbuy",
-        "note": "$2,350 after rent, less $800 to the broker and $1,300 of allowance. This is everything the paycheque actually has left."
+        "note": "$2,350 after rent, less $800 to the broker and $1,300 of everyday. This is everything the paycheque actually has left."
       }
     ],
     "bigThreshold": 300,
     "leftoverGoesTo": "travel",
-    "bigThresholdNote": "A single transaction at or over this is a big buy: kept out of the allowance and paid from the Big buys fund. Subscriptions are excluded whatever they cost.",
-    "leftoverNote": "Each closed month adds (allowance - everyday spending) to the funds, and that figure is signed: an over month takes from Big buys first, then Travel."
+    "bigThresholdNote": "A single transaction at or over this is a big buy: kept out of the everyday amount and paid from the Big buys fund. Subscriptions are excluded whatever they cost.",
+    "leftoverNote": "Each closed month adds (everyday - everyday spending) to the funds, and that figure is signed: an over month takes from Big buys first, then Travel."
   },
   "funds": [
     {
@@ -77,7 +77,7 @@
       "name": "Big buys",
       "color": "#eda100",
       "goal": null,
-      "why": "One-off purchases like a monitor. If the fund covers it, buy it — it never touches the month's allowance",
+      "why": "One-off purchases like a monitor. If the fund covers it, buy it — it never touches the month's everyday",
       "opening": {
         "date": "2026-08-01",
         "amount": 1000,

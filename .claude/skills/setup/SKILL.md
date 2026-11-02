@@ -70,7 +70,7 @@ recognises the broker exports by their columns, and drafts the answers file with
 - **the monthly files** — the filename pattern (the dropped name with its date taken out), the
   closing day, the parser, where it lands;
 - **the plan** — take-home from the payroll deposits, the investing amount from what reached the
-  broker last month, an allowance from one month of card spending;
+  broker last month, an everyday amount from one month of card spending;
 - **`_proposed`** — where every drafted value came from;
 - **`_open`** — the questions the files cannot answer.
 
@@ -81,7 +81,7 @@ refuses to run while `_open` has anything in it** — a draft is not an answer.
 What the files typically cannot say, and so `_open` asks: the name to show (the statements carry
 the legal name, which may not be the one the owner uses), the birth year, whether the table is
 right, accounts that sent no file this month, balances the broker's exports do not carry, how
-often pay arrives, whether last month's transfers are the standing rule, the allowance, fixed
+often pay arrives, whether last month's transfers are the standing rule, the everyday amount, fixed
 payments and rent after FIRE, the planning spend, funds, the investing buckets, a counterparty
 who repays a loan, and anything held abroad.
 
@@ -121,7 +121,7 @@ into HTML.
 **A question they skip stays unanswered.** Leave the key out of `setup-answers.json` — never
 fill in $0, a typical figure or a birth year to get past it. The scaffold writes it as `null`
 and the page says *Not set* wherever it would be shown, so the owner sees what is missing
-instead of a number that looks like theirs. A value the files suggest (the allowance from what
+instead of a number that looks like theirs. A value the files suggest (the everyday amount from what
 the cards spend) is a draft to confirm, and stays only if they confirm it or say go ahead with
 the drafts. When you hand over, name what is still Not set and that saying the number sets it.
 
@@ -193,11 +193,11 @@ the page shows is a sum of them.
   figure as `imputedRent`; it becomes a flow that starts at FIRE. D21 looks for each committed
   payment in the ledgers afterwards, so a number nobody actually pays is caught.
 - How much they invest per month — the transfer to the broker.
-- Their everyday allowance — the guilt-free line. **No category caps**; that is the point of it.
+- Their everyday amount — the guilt-free line. **No category caps**; that is the point of it.
 - What counts as a big buy (the default is a single purchase of $300 or more).
 - Any funds they are saving into: a name, a goal, a date. A fund is a **label on an account they
   already have** — nothing is transferred and no new account is opened. At most one fund can be
-  `role: "topup"` (leftover allowance flows into it) and one `role: "big"` (big buys come out of
+  `role: "topup"` (everyday money left over flows into it) and one `role: "big"` (big buys come out of
   it). Having neither is fine. **A standing contribution to a fund is a `saving` flow with
   `to: <fund key>`** — a row of the plan, not a number on the fund.
 

@@ -2,6 +2,10 @@
 
 ## 1.3 — unreleased
 
+- **The tool uses the page's words** (2026-11-02, user 001; findata schema 15,
+  `tools/migrate_14to15.py`). The `allowance` flow is `everyday`, and the category groups are
+  `bills`, `everyday` and `education`, in the register, the code and the documents.
+
 - **One name, and a month that adds up** (2026-11-02, user 002 and user 001: neither could say what
   the allowance was). Free to spend, Everyday and allowance were one thing under three names; the
   page says Everyday. Spent in a month is shown split into bills & housing, everyday, and big buys
