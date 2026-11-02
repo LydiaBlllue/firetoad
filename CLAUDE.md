@@ -62,7 +62,7 @@ The rest of `findata/`, and what each carries:
 | `holdings_latest.csv`, `ws_activities.csv` | the broker's exports |
 | `banks.json` | one balance and one as-of date per bank account |
 | `profile.json` | the owner (shown under the Jade Toad wordmark and in the tab), the year of birth, the import day |
-| `funds.json` | the monthly plan as **flows** — `income`, `committed` (rent, a mortgage, a loan), `saving` (to the broker, or to a fund by `to`), `everyday`, each with an amount and, where it applies, `until`, `afterFire`, `pays`, `starts` — and the named funds (`role: topup` / `big`), which carry no number of their own |
+| `funds.json` | the monthly plan as **flows** — `income`, `committed` (rent, a mortgage, a loan), `saving` (to the broker), `everyday`, each with an amount and, where it applies, `until`, `afterFire`, `pays`, `starts` |
 | `plan.json` | planning spend, months excluded from comparisons, deposits into the broker that were gifts (`brokerGifts`), the retirement assumptions, the owner's one-line descriptions of the net-worth parts |
 | `rules.json` | the investing buckets and their target bands, the owner's theses (`notes`) and `checkpoints`, `assetClass` — what each ETF holds (stocks / bonds / cash / gold / crypto), the one thing the broker's export cannot say — and `principles`, the owner's high-level rules, each naming a check the Investing overview runs today (with `placement`, which account each holding belongs in) |
 | `merchants.json` | merchant → category |
@@ -93,7 +93,7 @@ checker guards it, and whether the page may read it:
 The rules that follow, each with the checker that holds it:
 
 - **One fact lives in one layer.** A copy is allowed only if a checker re-derives it from its
-  source every time: the balances in `accounts.json` (D14), a fund's `backing` (D13), the
+  source every time: the balances in `accounts.json` (D14), the
   figures table (D15), the built page (T1).
 - **No back-edges.** Derived output is never an input. What the page lets you change — planning
   spend, the toggles — lives in the browser's localStorage and never flows back into `findata/`.
@@ -108,7 +108,7 @@ The rules that follow, each with the checker that holds it:
 When something new has to be stored, first ask which layer it belongs to. The answer settles who
 writes it, which check guards it and whether the page may read it. Something that fits no single
 layer is usually two things stuck together — `feeds` was: a net-worth part, a location, a
-strategy word and a fund label in one tag.
+strategy word and a label in one tag.
 
 ### The register's axes
 
@@ -234,7 +234,7 @@ python3 .claude/skills/workspace-checks/scripts/selftest.py .
 
 - `check_data.py` — whether the numbers are real. Its output is grouped by what actually failed:
   `reconcile` (balance chains, cross-file totals), `rules` (a repayment is never income, a
-  category is one of the fifteen, a fund claim never exceeds its account), `build` (is the page
+  category is one of the fifteen), `build` (is the page
   current with the data, and is it what the template builds), `hygiene` (missing tags, duplicate
   rows, a stale rate, filings without a file). **The category is attached to each finding, not to
   the rule** — "the register contradicts itself" and "the page is stale" are not the same

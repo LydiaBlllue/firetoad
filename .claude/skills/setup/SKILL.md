@@ -82,7 +82,7 @@ What the files typically cannot say, and so `_open` asks: the name to show (the 
 the legal name, which may not be the one the owner uses), the birth year, whether the table is
 right, accounts that sent no file this month, balances the broker's exports do not carry, how
 often pay arrives, whether last month's transfers are the standing rule, the everyday amount, fixed
-payments and rent after FIRE, the planning spend, funds, the investing buckets, a counterparty
+payments and rent after FIRE, the planning spend, the investing buckets, a counterparty
 who repays a loan, and anything held abroad.
 
 ## Before you write anything
@@ -194,10 +194,6 @@ the page shows is a sum of them.
   payment in the ledgers afterwards, so a number nobody actually pays is caught.
 - How much they invest per month — the transfer to the broker.
 - Their everyday amount — the guilt-free line. **No category caps**; that is the point of it.
-- Any funds they are saving into: a name, a goal, a date. A fund is a **label on an account they
-  already have** — nothing is transferred and no new account is opened. At most one fund can be
-  `role: "topup"` (everyday money left over flows into it). Having none is fine. **A standing contribution to a fund is a `saving` flow with
-  `to: <fund key>`** — a row of the plan, not a number on the fund.
 
 ### 5 · The one investing question
 
@@ -323,7 +319,6 @@ Three things, in this order:
      "doc":{"file":"holdings-<date>.csv"}}
   ],
   "plan": {"takeHome":4200,"invest":900,"everyday":1800},
-  "funds": [],
   "rules": {
     "buckets": [{"key":"rest","name":"Holdings","catchAll":true}],
     "maxHoldings": 8

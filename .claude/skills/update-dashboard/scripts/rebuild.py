@@ -85,7 +85,7 @@ REACH_ROWS = (("today", "Spendable today", "#1baf7a"), ("costs", "Taxed to take 
 # Subscription category, and chequing rent, bills, cash and fees in spending.csv (2026-10-29);
 # 12 = every merchant held against the fifteen categories, a better fit asked (2026-10-30);
 # 13 = a card's cash back is income in rewards.csv, filed again from the archive (2026-10-30).
-SCHEMA = 17
+SCHEMA = 18
 
 
 def same(a, b):
@@ -919,9 +919,6 @@ def sync_figures(root, out):
         val["invest_monthly"] = NOT_SET
     if "everyday" in miss:
         val["everyday"] = NOT_SET
-    topup = next((f for f in out["FUNDS"]["funds"] if f.get("role") == "topup"), None)
-    if topup and topup.get("goal"):
-        val["travel_goal"] = f"${topup['goal']:,}"
     text, hits = open(fin, encoding="utf-8").read(), []
     for key, v in val.items():
         pat = re.compile(r'^(\| *' + key + r' *\|[^|]*\| *)([^|]*?)( *\|)', re.M)
@@ -929,8 +926,6 @@ def sync_figures(root, out):
             new_text = pat.sub(lambda m: m.group(1) + v + m.group(3), text, count=1)
             if new_text != text:
                 hits.append(key); text = new_text
-    if not topup:
-        text = re.sub(r'^\| *travel_goal *\|.*\n', "", text, flags=re.M)
     open(fin, "w", encoding="utf-8").write(text)
     return hits
 

@@ -25,7 +25,6 @@
 | gap | Gap | $697,865 | target − portfolio |
 | invest_monthly | Monthly contribution | $800 | `funds.json` flows: `saving` to the broker |
 | everyday | Everyday | $1,300 | `funds.json` flows: `everyday` |
-| travel_goal | Travel goal | $3,000 | `funds.json`, due 2027-02 |
 | dry_powder | Dry powder | 43.1% | `INVEST.dryPct`, band 40–45% |
 <!-- LINT:FIGURES:END -->
 
@@ -156,16 +155,11 @@ The monthly waterfall, from `funds.json`:
 
 1. Invest — the `saving` flow to the broker
 2. Everyday — the `everyday` flow; below that line there are no categories and no caps
-3. Whatever everyday is left goes to the fund with `role: "topup"` until it is full, and an
-   overspent month comes off that fund; past that it simply stays where it is
+3. Whatever everyday is left stays where it is
 
-These three steps are the flows of §8b: `saving` (to the broker, or to a fund it names with
-`to`), `everyday`, and the leftover routed by `leftoverGoesTo`. A `committed` flow — rent, a mortgage, a loan — sits above them and is paid before
+These are the flows of §8b: `saving` and `everyday`. A `committed` flow — rent, a mortgage, a loan — sits above them and is paid before
 anything is chosen; `income` is the whole paycheque, before it.
 
-A fund is a **label on an account you already have**, not an account of its own; each names its
-`backing`. The hard constraint is that the claims against an account never exceed its balance
-(D13), and a fund can be renamed, re-backed or removed as data.
 
 ## 3c. Refunds
 
@@ -258,7 +252,6 @@ and needs no special case.
   income figure. An export carrying an account in neither list stops the import until the owner
   says which it is.
 - Dry powder is not an axis: `rules.json` names the symbols, counted inside `grow`.
-- A fund (§3b) is not an axis either: a label claimed against one `set-aside` item.
 - The two cuts of net worth — by purpose, by reach — read the same rows and agree by
   construction. The assert stays, because `against` netting is new and negative equity is a real
   case.
@@ -276,7 +269,7 @@ order.
 | `until` | a date, or open | the FIRE projection drops a flow after its end — a loan paid off |
 | `afterFire` | keep · drop | rent keeps, a mortgage payment drops, property tax keeps |
 | `pays` | the liability it repays | the principal part is saving, not spending |
-| `to` | `broker` (the default) or a fund's key | pay-yourself-first counts only the broker; a fund's standing contribution is the saving flow that names it, and nothing on the fund repeats the number |
+| `to` | `broker` (the default) or another destination | pay-yourself-first counts only the broker |
 
 - **A number never given is `null`, not 0** — take-home, the investing transfer, the everyday amount,
   `plan.json` `planBase` and `profile.json` `born`. The page says *Not set* where it would show
@@ -284,7 +277,7 @@ order.
   target, progress, the drawdown) is not drawn. A $0 that looks like a fact is the failure this
   rule exists for.
 - **Unallocated** is income less every other kind. It is a hard constraint: below zero the plan
-  does not hold and the page says so in red. It is never "money that flows to the funds".
+  does not hold and the page says so in red.
 - **Planning spend** is still set by hand and §1's target is still planning spend × 12 × 25.
   The calibration beside it is the measured average of bills, housing and everyday spending (§3a) plus
   every committed flow marked `keep` that spending does not already show: one that starts at

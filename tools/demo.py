@@ -484,10 +484,6 @@ def build(out):
     ]))
 
     # funds.json
-    hys_label = "Wealthsimple High yield savings (Non-registered)"
-    backing = dict(account=ID["hys"], label=hys_label, balance=hys_bal, asof="2026-09-06",
-                   holds="SGOV and VSC, not cash — spending it means selling first",
-                   note="Rule 2 already treats this account as earmarked, so naming part of it Travel changes no other number on the dashboard.")
     J("rules.json", OrderedDict([
         ("note", "Your investing rules, as data. ONE thing is computed: every bucket that carries a `target` is checked against that range, and the Rules page reports the drift. Buckets are matched in order and the one marked catchAll takes whatever is left. `notes` are your own theses, shown with the status you gave them and judged by you; `{mv:SYM}`, `{n:SYM}` and `{split:SYM}` in the text are filled from the holdings. `checkpoints` are dates you promised to look at something again."),
         ("buckets", [
@@ -513,7 +509,7 @@ def build(out):
         ]),
     ]))
     J("funds.json", OrderedDict([
-        ("asof_note", "The guilt-free plan: pay-yourself-first, one everyday amount, two named funds. The dashboard's FUNDS constant is a copy of this file (check_data D13). Fields that render on the page are English."),
+        ("asof_note", "The guilt-free plan: pay-yourself-first, one everyday amount. The dashboard's FUNDS constant is a copy of this file (check_data D13). Fields that render on the page are English."),
         ("plan", OrderedDict(start="2026-08",
             # Schema 5: flows. Take-home is the whole paycheque; rent is a committed flow the
             # ledger shows on the 1st (D21 looks for it), and it stays after FIRE.
@@ -527,18 +523,8 @@ def build(out):
                 OrderedDict(key="everyday", kind="everyday", name="Everyday", amount=P["everyday"],
                             note="The guilt-free line. No categories and no caps below it."),
             ],
-            leftoverGoesTo="travel",
-            leftoverNote="Each closed month adds (everyday - everyday spending) to the fund, and that figure is signed: an over month takes from Big buys first, then Travel.")),
-        ("funds", [
-            OrderedDict(key="travel", role="topup", name="Travel", color="#4a3aa7", goal=3000, by="2027-03", why="A week away in March 2027",
-                        opening=dict(date="2026-08-01", amount=3000, **{"from": hys_label + " " + ID["hys"]},
-                                     note="Not a transfer — a label on money already in that account, so the goal is met on day one and the discipline is leaving it alone."),
-                        backing=backing),
-        ]),
-        ("claimsAgainst", dict(source="Each fund names the account it is claimed against, and the claims have to fit inside that account",
-                               note="Neither fund is an account of its own. Both are labels on one savings account.")),
+        )),
     ]))
-    assert 3000 + 1000 <= hys_bal
 
     J("profile.json", OrderedDict([
         ("note", "Who this workspace belongs to. The FIRST thing to change when you make it yours: "

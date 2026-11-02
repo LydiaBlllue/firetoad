@@ -50,7 +50,7 @@
   `#4a6fa5`), so income
   and spending read as two domains.
 - **The plan's parts do not use the category palette**: Invest blue `#2a78d6` / Everyday orange
-  `--c-dining` / Travel purple `--c-other` / Unallocated
+  `--c-dining` / Unallocated
   `--pill`; committed payments in `--muted`. Home's net-worth rows use the same semantic set.
 - Anything semantic — up or down, good or bad — carries **colour *and* a symbol or arrow**.
   Colour alone is never the signal.
@@ -139,8 +139,7 @@
   everyday less this month's everyday spending, no categories, a track bar with an even-pace
   marker for the current month only); three stat cards (spent, split into the parts that month has, biggest category, against a usual
   month); **Where the paycheque went** (the plan as flows, each marked planned, and titled for the plan rather than the paycheque when it asks for more than take-home; the everyday amount fanning out into that
-  month's categories — refunds a source coming in, an overspend a second source from the fund
-  that covers it, so every band is its real size and the total is Everyday's); the category
+  month's categories — refunds a source coming in, an overspend a second source from savings, so every band is its real size and the total is Everyday's); the category
   list and the line-by-line of the chosen category.
 - **Year** — the year pills, the yearly stat cards, "What stands out" and the year by category
   side by side, the monthly stacked chart, and **Everyday, month by month** (everyday spending against
@@ -181,17 +180,15 @@
 
 ### Plan
 
-- **Budget** follows no time: the plan and the funds, no category caps.
+- **Budget** follows no time: the plan, no category caps.
   - **How each paycheque is split**: one stacked bar cutting take-home into the committed
-    payments (one segment each) / Invest / Everyday / Travel / Unallocated, with one
+    payments (one segment each) / Invest / Everyday / Unallocated, with one
     line per part beneath it. Take-home, Invest and Everyday are sums of `funds.json`
     `plan.flows`, derived at load; Unallocated is what nothing names and stays where the
     paycheque landed.
   - Invest and Everyday can be edited on the page (`.bud-edit[data-pk]`, kept in the
     URL hash and localStorage, never written back). Parts that add to more than take-home get a
     `noteBox`.
-  - **The funds**: a goal fund with its bar and deadline; a fund with no goal with its opening
-    amount, contributions, draw-downs and the largest purchase it covers today.
 - **FIRE** answers *when*: the stat cards, the progress bar, the trajectory, and *If you stopped
   adding today* — the age today's money reaches the target alone, with the year and the return
   assumed.

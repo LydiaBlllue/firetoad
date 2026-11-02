@@ -279,9 +279,6 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .flow path:hover{opacity:.62}
 .flow path.on{opacity:.75}
 .flow .hit{cursor:pointer}
-.fund-row{padding:11px 0;border-bottom:1px solid var(--grid)}
-.fund-row:last-child{border-bottom:none}
-.fund-why{font-size:11.5px;color:var(--muted);margin:3px 0 7px;max-width:720px}
 .dt tr.grp td{padding-top:14px;font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--grid)}
 .dt tr.grp.first td{padding-top:2px}
 .dt td.note-c{font-size:11.5px;color:var(--muted);text-align:left;max-width:420px}
@@ -411,12 +408,6 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div class="split" id="splitBar"></div>
     <div id="splitRows"></div>
     <div id="splitNote"></div>
-  </div>
-  <div class="card" style="margin-bottom:10px">
-    <div class="lab">Funds</div>
-    <div id="fundRows"></div>
-    <div id="fundMeta"></div>
-    <div id="fundNote"></div>
   </div>
 </section>
 
@@ -800,12 +791,8 @@ function pageFlags(){
   const bd = baseDrift();
   if(bd !== null && Math.abs(bd) > DRIFT_FLAG) f.base = "#c98500";
   // The investing pages: the band and the cap from rules.json, never a literal 40/45/10.
-  // The plan page: red when the split asks for more than the paycheque, amber when a fund is
-  // short of what it has promised. Both are things you decide, not things the data decides.
-  const fr = fundRun();
-  if((COMMITTED_NOW + INVM + EVERYDAY + TMON > PLAN.takeHome && !unset("takeHome"))
-     || backingGroups([fr.t]).some(g => g.claim > g.b.balance)) f.budget = "#d03b3b";
-  else if(fr.t < TFUND.goal) f.budget = "#c98500";
+  // The plan page: red when the split asks for more than the paycheque.
+  if(COMMITTED_NOW + INVM + EVERYDAY > PLAN.takeHome && !unset("takeHome")) f.budget = "#d03b3b";
   return f;
 }
 // What a page needs before it has anything to show. A workspace with only a credit card is a
@@ -880,7 +867,6 @@ const GLOSSARY = {
   grace_period:   {w:"grace period", pos:"noun", def:"On a credit card, the days between the statement and the due date. Pay the whole balance in that window and no interest is charged."},
   equity:         {w:"equity", pos:"noun", def:"The part of something you own outright once what is borrowed against it is taken off.", eg:"A $500k home with a $300k mortgage is $200k of equity.", also:["in_property"]},
   pay_yourself_first: {w:"pay yourself first", pos:"phrase", def:"Moving your saving out on payday, before any spending, so saving does not depend on what is left over."},
-  sinking_fund:   {w:"sinking fund", pos:"noun", def:"Money put aside a little at a time for a known future cost, such as a trip or a new laptop.", also:[]},
   subscription:   {w:"subscription", pos:"noun", def:"A charge that comes back at the same price month after month, whatever it buys: a phone plan as well as a streaming service. A purchase seen once is never one."},
   median:         {w:"median", pos:"noun", def:"The middle value once a list is sorted. Unlike the average, one unusual month barely moves it.", eg:"The median of 1, 2 and 30 is 2."},
   inflation:      {w:"inflation", pos:"noun", def:"The rise in prices over time, so the same money buys less each year.", also:["real_return"]},
@@ -1317,9 +1303,6 @@ PLAN.invest       = flowSum("saving", f => (f.to || "broker") === "broker");
 PLAN.everyday     = flowSum("everyday");
 // A fund's standing contribution is a saving flow that names the fund (`to`), one row of the
 // plan like every other -- not a number kept on the fund. (findata schema 8, 2026-09-10)
-const fundMonthly = key => key ? flowSum("saving", f => f.to === key) : 0;
-const fundMonthlyNote = key => (FLOWS.find(f => f.kind === "saving" && f.to === key) || {}).note
-                             || "No standing contribution. Everyday money left over is what tops it up.";
 PLAN.takeHomeNote = (FLOWS.find(f => f.kind === "income") || {}).note || "";
 // A number the owner never gave is null in the plan, not 0: the first setup that skipped its
 // questions showed take-home pay of $0 and a birth year of 1990 as if they were facts (2026-10-28,
@@ -1337,15 +1320,6 @@ const unset = k =>
 const notSet = k => numx('<span class="unset">Not set</span>', [], "Never given. Say "+UNSET_HOW[k]+" to set it.");
 const COMMITTED     = FLOWS.filter(f => f.kind === "committed" && flowNow(f));
 const COMMITTED_NOW = COMMITTED.reduce((s, f) => s + f.amount, 0);
-// Funds are found by the ROLE they play in the waterfall, not by name: `topup` catches whatever
-// the everyday amount did not spend. A workspace may have none — this page used to look for a literal
-// key, so a new owner had to name their fund after someone else's holiday.
-const NOFUND = {key:null, name:"—", color:"var(--muted)", goal:0, by:null, why:"",
-                opening:{amount:0}};
-const byRole = r => FUNDS.funds.find(f => f.role === r) || null;
-const TFUND = byRole("topup") || NOFUND;
-const HAS_FUNDS = FUNDS.funds.length > 0;
-const TMON = fundMonthly(TFUND.key);
 // Editable in the page, same caveat as PLAN_BASE: an edit rides in the hash and this browser,
 // not in the file. Tell Claude the number and it goes into funds.json, where a rebuild keeps it.
 let EVERYDAY  = stNum("everyday", PLAN.everyday);
@@ -1355,55 +1329,15 @@ const everydayOf = ym => monthOf(ym).filter(inEveryday).reduce((s,e) => s + e.am
 const monthsBetween = (a,b) => { const [y1,m1] = a.split("-").map(Number), [y2,m2] = b.split("-").map(Number); return (y2-y1)*12 + (m2-m1); };
 const merchantOf = note => note.replace(/\s*\[[^\]]*\]\s*$/, "").replace(/\s+/g, " ").trim();
 
-// Both funds are claims on the same pile of bank cash, not accounts of their own. Nothing has to
-// move for them to be real, and the only hard constraint is that the claims fit inside the pile.
-// Balance = opening claim + the monthly split + routed leftovers - what has been drawn out.
-function fundRun(){
-  const cur = TODAY.slice(0,7);
-  let t = TFUND.opening.amount, tIn = 0, months = 0;
-  for(let m = PLAN.start; m <= cur; m = ymShift(m,1)){
-    months++;
-    t += TMON; tIn += TMON;
-    // Leftovers only from months every card has reported. A part-month always looks underspent,
-    // and crediting it would quietly inflate both funds -- the same trap covEnd guards elsewhere.
-    if(m <= covEnd){
-      const net = EVERYDAY - everydayOf(m);
-      if(net >= 0){
-        const toT = TFUND.goal ? Math.min(net, Math.max(0, TFUND.goal - t)) : 0;
-        t += toT; tIn += toT;
-      }else{
-        // Overspending is allowed -- that is the point -- but it is not free. It slows the fund
-        // down instead of turning a bar red.
-        t += net; tIn += net;
-      }
-    }
-  }
-  return {t, tIn, months};
-}
-// Group the funds by the account backing them, so the constraint is checked where it actually
-// applies. Both currently sit on one high-yield savings account, which rule 2 already
-// treats as earmarked -- so labelling part of it changes no other figure on the dashboard.
-function backingGroups(bal){
-  const g = new Map();
-  FUNDS.funds.forEach((f,i) => {
-    const b = f.backing, cur = g.get(b.account) || {b, claim:0, names:[]};
-    cur.claim += bal[i]; cur.names.push(f.name);
-    g.set(b.account, cur);
-  });
-  return [...g.values()];
-}
-
 function renderPlan(){
-  const F = fundRun();
-  renderFree(F);
+  renderFree();
   drawFlow();
-  renderSplit(F);
-  renderFunds(F);
+  renderSplit();
   wirePlanEdits();
 }
 
 // --- the one number ---------------------------------------------------------
-function renderFree(F){
+function renderFree(){
   const ed = everydayOf(viewYM);
   const left = EVERYDAY - ed;
   const de = daysElapsed(viewYM);
@@ -1443,14 +1377,12 @@ function planAlloc(){
      d:"Two transfers of "+fmt(FUNDS.plan.invest/2)+" to "+BROKER+". It comes off the top before anything else, which is the whole point of pay-yourself-first."},
     {k:"Everyday", v:EVERYDAY,           c:"var(--c-dining)", pk:"everyday", tm:"everyday",
      d:"Groceries, dining, transport, subscriptions, shopping \u2014 everything but bills and housing."},
-    {k:TFUND.name, v:TMON,          c:"var(--c-other)", pk:null, tm:"sinking_fund",
-     d:fundMonthlyNote(TFUND.key)}
   ]);
 }
 const UNALLOC = v => ({k:"Unallocated", v, c:"var(--pill)", pk:null, tm:"unallocated",
     d:"Nothing in the plan names this. It stays where the paycheque landed."});
 
-function renderSplit(F){
+function renderSplit(){
   const alloc = planAlloc();
   const used = alloc.reduce((s,a) => s + a.v, 0);
   const rest = PLAN.takeHome - used;
@@ -1563,54 +1495,6 @@ function drawFlow(){
 function pickCat(k){
   catSel = k; renderCatPage(); drawFlow();
   $("catSplit").scrollIntoView({behavior:"smooth", block:"nearest"});
-}
-
-// --- the two funds ----------------------------------------------------------
-function renderFunds(F){
-  // A workspace can have no funds at all — a fund is a label on an account you already have, and
-  // deciding you want one is a decision, not a default. Say so instead of drawing two empty bars.
-  if(!HAS_FUNDS){
-    $("fundRows").innerHTML = '<div class="fund-row"><div class="fund-why">No funds yet. Say what you are saving for to start one.</div></div>';
-    return;
-  }
-  const left = TFUND.by ? monthsBetween(TODAY.slice(0,7), TFUND.by) : null;
-  const shortBy = Math.max(0, TFUND.goal - F.t);
-  const tOK = F.t >= TFUND.goal;
-  const sym = ok => ok ? '<span class="sym ok">\u2713</span>' : '<span class="sym bad">\u2717</span>';
-  const head = (s, name, right) => '<div class="bud-head">' + s + '<span class="nm">' + name + '</span><span class="v num">' + right + '</span></div>';
-  $("fundRows").innerHTML = (!TFUND.key ? "" :
-    '<div class="fund-row">'
-      + head(sym(tOK), term("sinking_fund", TFUND.name), numx(fmt(F.t), [], TFUND.why) + ' <span class="cap-v">/ ' + fmt(TFUND.goal) + '</span>')
-      + '<div class="bud-track" style="max-width:720px"><div class="bud-fill" style="width:'
-        + Math.min(pc(F.t, TFUND.goal), 100) + '%;background:' + TFUND.color + '"></div></div>'
-      + metaList([
-          ["Opened with", numx(fmt(TFUND.opening.amount), [], "From " + TFUND.opening.from + ". " + (TFUND.opening.note || ""))],
-          ["Added each month", numx(TMON > 0 ? fmt(TMON) : "None", [], fundMonthlyNote(TFUND.key))],
-          ["Everyday left over since " + ymFull(PLAN.start), fmt(F.tIn)],
-          tOK ? null : ["Short by", fmt(shortBy), "hi"],
-          tOK ? null : ["Needed a month from here", fmt(shortBy/Math.max(left,1)), "hi"]
-        ])
-    + '</div>');
-  const groups = backingGroups([F.t]);
-  $("fundMeta").innerHTML = metaList([].concat(
-    ...groups.map(g => [
-      ["Held in", g.b.note ? numx(g.b.label, [], g.b.note) : g.b.label],
-      ["Account balance", numx(fmt(g.b.balance), [], "On " + dLong(g.b.asof) + ".")],
-      ["Claimed by " + g.names.join(" and "), fmt(g.claim)],
-      ["Unclaimed", fmt(g.b.balance - g.claim), g.b.balance - g.claim < 0 ? "hi" : ""]
-    ]),
-    TFUND.by ? [[TFUND.name + " due", ymFull(TFUND.by) + (left > 0 ? ", in " + left + " months" : ", this month")]] : []
-  ));
-  const perMonth = PLAN.takeHome - COMMITTED_NOW - INVM - EVERYDAY;
-  const over = groups.filter(g => g.claim > g.b.balance);
-  $("fundNote").innerHTML = over.map(g =>
-      noteBox(g.names.join(" and ") + " claim <b>" + fmt(g.claim) + "</b> against <b>" + g.b.label
-        + "</b>, which holds <b>" + fmt(g.b.balance) + "</b>. Claim less, or move money in.")).join("")
-    + (!tOK && shortBy > 0
-      ? noteBox(TFUND.name + " is <b>" + fmt(shortBy) + "</b> short with " + left + " months to go: <b>"
-          + fmt(shortBy/Math.max(left,1)) + "</b> a month, against " + fmt(perMonth)
-          + " the split frees. Move money in from savings, or move the date.")
-      : "");
 }
 
 // One editor for the plan numbers. Same behaviour as the old cap editor: click, type,
@@ -2023,7 +1907,7 @@ const covEnd = (() => {
   // for it until then. A source that has reported nothing constrains nothing.
   const ends = Object.values(STMT_END).filter(Boolean).map(full);
   // Nothing reported yet means no month is covered -- not "this month is complete". The first
-  // fresh workspace credited its whole September everyday to the travel fund on day 10.
+  // fresh workspace counted its whole September as finished on day 10.
   return ends.length ? ends.sort()[0] : "";
 })();
 function renderBaseline(){
