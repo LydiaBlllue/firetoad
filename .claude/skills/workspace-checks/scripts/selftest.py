@@ -621,8 +621,8 @@ def credit_balance_check(ws):
 
 def wrap_check(ws):
     """A first user's chequing statements were all refused (2026-10): a long description wrapped
-    so its amounts landed on the second or third line, and pypdf read '1 ,215.05' and
-    '3, 000.00'. Render a BMO and an RBC statement with both, and expect every row back, signed
+    so its amounts landed on the second or third line, or on a line of their own (2026-11), and
+    pypdf read '1 ,215.05' and '3, 000.00'. Render a BMO and an RBC statement with both, and expect every row back, signed
     and reconciled, with the whole description."""
     if not os.path.exists(os.path.join(ws, "tools", "fixtures.py")):
         return []
@@ -632,7 +632,9 @@ def wrap_check(ws):
     rows = [{"date": "2026-10-03", "description": "PAYROLL DEPOSIT EXAMPLE CO", "amount": 3000.0, "split": ", "},
             {"date": "2026-10-09", "description": "INTERAC e-Transfer Sent SOMEONE WITH A LONG NAME CA2Kx7Q",
              "amount": -1215.05, "wrap": 2, "split": " ,"},
-            {"date": "2026-10-14", "description": "Bill payment CITY OF EXAMPLE PROPERTY TAX", "amount": -82.10, "wrap": 1}]
+            {"date": "2026-10-14", "description": "Bill payment CITY OF EXAMPLE PROPERTY TAX", "amount": -82.10, "wrap": 1},
+            {"date": "2026-10-20", "description": "Pre-Authorized Payment, EXAMPLE HOME SERVICES PLAN",
+             "amount": -48.20, "wrap": 2, "alone": True}]
     bal = 1000.0
     for r in rows:
         bal = round(bal + r["amount"], 2); r["balance"] = bal
@@ -657,7 +659,7 @@ def wrap_check(ws):
         else:
             out.append(f"  ✗ parsers: a wrapped {parser} statement: {res['reconcile']['detail']}; rows {got}")
     if good == 2:
-        out.append("  ✓ parsers: chequing rows whose description wraps onto a second and third line, and numbers read as '1 ,215.05' and '3, 000.00' (BMO, RBC), read and reconciled")
+        out.append("  ✓ parsers: chequing rows whose description wraps onto a second and third line, amounts on a line of their own, and numbers read as '1 ,215.05' and '3, 000.00' (BMO, RBC), read and reconciled")
     return out
 
 
