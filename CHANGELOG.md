@@ -2,6 +2,11 @@
 
 ## 1.3 — unreleased
 
+- **A chequing account's bills and cash count as spending after setup** (2026-11-02, user 002;
+  findata schema 14, `tools/migrate_13to14.py`). Setup gave a chequing account a spending tag only
+  if its first statements showed a debit purchase, and the import quietly skipped the rest, so bills
+  and cash were in no figure. Every chequing account now has the tag, D30 fails a row typed as
+  spending that is not in `spending.csv` (61 faults), and the migration files what was missed.
 - **Ready means ready** (2026-11-02, user 002). `ready.py` passed, then an encrypted statement
   stopped the draft with a traceback, because pypdf needs `cryptography` for it. `ready.py` now
   checks both, and a missing one is said in a sentence.
