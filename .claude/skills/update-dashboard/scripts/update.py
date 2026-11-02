@@ -1218,7 +1218,7 @@ def main(argv):
             else:
                 plan_export(ws, plan, path, doc)
     except ParserUnavailable as e:
-        print(f"  ✗ {e}. Nothing can be parsed: pip3 install --user pypdf, then run again.")
+        print(f"  ✗ {e}. Nothing can be parsed until it is installed; then run again.")
         return 3
 
     say = print if not a.json else (lambda *x, **k: None)

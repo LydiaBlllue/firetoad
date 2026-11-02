@@ -282,6 +282,10 @@ python3 .claude/skills/workspace-checks/scripts/check_render.py \
   dashboards/finance_dashboard.html
 ```
 
+`check_render.py` needs playwright and a browser, a large download nothing else uses. Without
+them it says so: tell the owner that one check was not run, and do not offer the download unless
+they ask. Setup is not incomplete for it.
+
 `⚠ page does not fill a screen` is expected while the workspace is empty — there genuinely is
 little to show yet. Anything else, fix before handing it over.
 

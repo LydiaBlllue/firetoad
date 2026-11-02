@@ -68,6 +68,9 @@ def main(argv):
             k = merchant_key(r["note"])
             count[k] = count.get(k, 0) + 1
 
+    # Questions about money first, then merchants by how often they appear: the first rows settle the most.
+    items.sort(key=lambda d: count.get(merchant_of(d), 0) * -1 if d.get("kind") == "merchant" else -10 ** 6)
+
     print(f"=== to confirm — {len(items)} item(s) ===")
     print(f"  {'#':>3}  {'what':<38} {'filed as':<14} {'suggested':<14} {'seen':>4}  why")
     for i, d in enumerate(items, 1):

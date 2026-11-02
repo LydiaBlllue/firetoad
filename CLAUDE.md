@@ -175,7 +175,7 @@ report template are all in that file. **Do not work from memory.**
   `.claude/skills/update-dashboard/parsers/`, and `scripts/parse.py <file> --doc <key>` runs it:
   rows signed the ledger's way, dated with the right year, with a running balance, reconciled
   the way the document's `reconcile` says. The parser takes the account from the statement's
-  own text, never from the filename. They need `pypdf` (`pip3 install --user pypdf`); without it
+  own text, never from the filename. They need `pypdf` (`pip3 install --user pypdf cryptography`); without it
   the import reads by hand, as it always could. A parser that reconciles is trusted over a
   reading by eye. The proof: `tools/fixtures.py` renders the demo owner's ledgers back into
   statements in the exact text shape the real ones have, and the selftest holds every parser to

@@ -123,9 +123,9 @@ def propose(root, inbox):
         if low.endswith(".pdf"):
             try:
                 res, why = read_statement(p)
-            except ParserUnavailable:
+            except ParserUnavailable as e:
                 by_hand.append(f)
-                seen.append((f, "a PDF", "pypdf is not installed — it will be read by hand"))
+                seen.append((f, "a PDF", f"{e}"))
                 continue
             if not res:
                 unknown.append(f)

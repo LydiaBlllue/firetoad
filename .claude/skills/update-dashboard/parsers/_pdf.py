@@ -24,11 +24,15 @@ def text_lines(path):
         from pypdf import PdfReader
     except ImportError:
         raise ParserUnavailable("pypdf is not installed (pip3 install --user pypdf); read the statement by hand")
-    r = PdfReader(path)
+    from pypdf.errors import DependencyError
     out = []
-    for p in r.pages:
-        # A non-breaking space (0xa0) between an amount and "CR" is a space to everything below.
-        out += [join_split(l.replace("\xa0", " ").strip()) for l in (p.extract_text() or "").splitlines() if l.strip()]
+    try:
+        for p in PdfReader(path).pages:
+            # A non-breaking space (0xa0) between an amount and "CR" is a space to everything below.
+            out += [join_split(l.replace("\xa0", " ").strip()) for l in (p.extract_text() or "").splitlines() if l.strip()]
+    except DependencyError:
+        # Some banks encrypt their PDFs with no password, and pypdf needs this to open them.
+        raise ParserUnavailable("cryptography is not installed (pip3 install --user cryptography); read the statement by hand")
     return out
 
 

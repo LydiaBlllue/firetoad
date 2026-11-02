@@ -25,19 +25,24 @@ def main(argv):
     else:
         ok.append(f"Python {v.major}.{v.minor}")
 
-    try:
-        import pypdf                                    # noqa: F401 -- the parsers read PDFs with it
-        ok.append("the PDF reader (pypdf)")
-    except ImportError:
-        need.append("The PDF reader is missing, so no statement can be read. Install it with:\n"
-                    f"      {os.path.basename(sys.executable)} -m pip install --user pypdf")
+    missing = []
+    for mod in ("pypdf", "cryptography"):               # some banks encrypt their PDFs, with no password
+        try:
+            __import__(mod)
+        except ImportError:
+            missing.append(mod)
+    if missing:
+        need.append("The PDF reader is not complete, so statements cannot all be read. Install it with:\n"
+                    f"      {os.path.basename(sys.executable)} -m pip install --user {' '.join(missing)}")
+    else:
+        ok.append("the PDF reader (pypdf, cryptography)")
 
     try:
         import playwright                               # noqa: F401 -- only check_render uses it
         ok.append("the page checker's browser (playwright)")
     except ImportError:
-        nice.append("Optional: the check that the page draws at every window size needs playwright. "
-                    "Setup works without it.")
+        nice.append("Optional: the check that the page draws at every window size needs playwright and a "
+                    "browser, a large download. Setup and every number work without it.")
 
     inbox = os.path.join(root, "inbox")
     files = sorted(f for f in os.listdir(inbox) if not f.startswith(".")) if os.path.isdir(inbox) else []
