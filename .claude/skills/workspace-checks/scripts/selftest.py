@@ -781,7 +781,7 @@ def spending_check(root, base):
         bad.append(f"repeats found {sorted(rec)}")
     if keep != 2100:
         bad.append(f"calibration adds {keep}, not 2100")
-    if (g["Transport"], g["Dining"], g["Education"]) != ("bills", "everyday", "education"):
+    if (g["Transport"], g["Dining"], g["Education"]) != ("bills", "everyday", "everyday") or cats.not_in_fire({}) != ["Education"] or cats.not_in_fire({"notInFire": []}) != []:
         bad.append(f"groups {g['Transport']}/{g['Dining']}/{g['Education']}")
     if bad:
         return ["  ✗ spending: " + "; ".join(bad)]
