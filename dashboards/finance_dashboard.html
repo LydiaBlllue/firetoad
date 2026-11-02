@@ -642,13 +642,13 @@ const DOC_LATEST = {"Chequing 4471": "2026-09-05", "Savings 9032": "2026-09-05",
 // The categories (categories.py): key, name, group and colour. A colour follows the category and
 // is never reassigned by rank; the categories past the seven validated slots share the rest band.
 // The group decides what a row counts for (FINANCE.md §3a): only `everyday` is measured against
-// the everyday amount, and `education` (tuition: it ends) is never in the spending FIRE is planned on.
-const CATS = [{"k": "Grocery", "n": "Groceries", "g": "everyday", "c": "var(--c-grocery)"}, {"k": "Dining", "n": "Dining", "g": "everyday", "c": "var(--c-dining)"}, {"k": "Housing", "n": "Housing", "g": "bills", "c": "var(--c-housing)"}, {"k": "Shopping", "n": "Shopping", "g": "everyday", "c": "var(--c-shopping)"}, {"k": "Transport", "n": "Transport", "g": "everyday", "c": "var(--c-transport)"}, {"k": "Software", "n": "Software & tools", "g": "everyday", "c": "var(--c-software)"}, {"k": "Bills", "n": "Bills", "g": "bills", "c": "var(--c-bills)"}, {"k": "Travel", "n": "Travel", "g": "everyday", "c": "var(--c-travel)"}, {"k": "Entertainment", "n": "Entertainment", "g": "everyday", "c": "var(--c-entertainment)"}, {"k": "Health", "n": "Health", "g": "everyday", "c": "var(--c-health)"}, {"k": "Family", "n": "Family & gifts", "g": "everyday", "c": "var(--c-family)"}, {"k": "Cash", "n": "Cash", "g": "everyday", "c": "var(--c-cash)"}, {"k": "Fees", "n": "Fees & interest", "g": "everyday", "c": "var(--c-fees)"}, {"k": "Education", "n": "Education", "g": "education", "c": "var(--c-education)"}, {"k": "Other", "n": "Other", "g": "everyday", "c": "var(--c-rest)"}];
+// the everyday amount, and a category marked as ending before FIRE (tuition) is never in the spending FIRE is planned on.
+const CATS = [{"k": "Grocery", "n": "Groceries", "g": "everyday", "c": "var(--c-grocery)"}, {"k": "Dining", "n": "Dining", "g": "everyday", "c": "var(--c-dining)"}, {"k": "Housing", "n": "Housing", "g": "bills", "c": "var(--c-housing)"}, {"k": "Shopping", "n": "Shopping", "g": "everyday", "c": "var(--c-shopping)"}, {"k": "Transport", "n": "Transport", "g": "everyday", "c": "var(--c-transport)"}, {"k": "Software", "n": "Software & tools", "g": "everyday", "c": "var(--c-software)"}, {"k": "Bills", "n": "Bills", "g": "bills", "c": "var(--c-bills)"}, {"k": "Travel", "n": "Travel", "g": "everyday", "c": "var(--c-travel)"}, {"k": "Entertainment", "n": "Entertainment", "g": "everyday", "c": "var(--c-entertainment)"}, {"k": "Health", "n": "Health", "g": "everyday", "c": "var(--c-health)"}, {"k": "Family", "n": "Family & gifts", "g": "everyday", "c": "var(--c-family)"}, {"k": "Cash", "n": "Cash", "g": "everyday", "c": "var(--c-cash)"}, {"k": "Fees", "n": "Fees & interest", "g": "everyday", "c": "var(--c-fees)"}, {"k": "Education", "n": "Education", "g": "everyday", "c": "var(--c-education)", "noFire": true}, {"k": "Other", "n": "Other", "g": "everyday", "c": "var(--c-rest)"}];
 const CCOL = Object.fromEntries(CATS.map(c=>[c.k,c.c]));
 const CGRP = Object.fromEntries(CATS.map(c=>[c.k,c.g]));
 const catName = k => (CATS.find(c => c.k === k) || {n:k}).n;
 const inEveryday = e => (CGRP[e.category] || "everyday") === "everyday";
-const inTarget    = e => CGRP[e.category] !== "education";
+const inTarget    = e => !(CATS.find(c => c.k === e.category) || {}).noFire;
 const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const SUB_KEYS = [{"name": "Amazon Prime", "amount": 10.99, "months": 8}, {"name": "Apple", "amount": 3.99, "months": 8}, {"name": "Goodlife Fitness", "amount": 32.99, "months": 8}, {"name": "Koodo Mobile", "amount": 45.2, "months": 8}, {"name": "Netflix", "amount": 18.99, "months": 8}, {"name": "Oc Transpo", "amount": 135.0, "months": 8}, {"name": "Spotify", "amount": 11.29, "months": 8}];
 
@@ -749,7 +749,7 @@ function setYear(y){
   render();
 }
 // page tabs — pills apply to Overview & Transactions; year view & investments are month-independent
-const PROFILE = {"schema": 15, "demo": true, "owner": "Emma Roy", "born": 1995, "importDay": 26};
+const PROFILE = {"schema": 16, "demo": true, "owner": "Emma Roy", "born": 1995, "importDay": 26};
 const BROKER = "Wealthsimple";          // the institution that holds the portfolio, from accounts.json
 const CP = INVEST.counterparty || null;   // who pays money back, from cashflow.json
 const VERSION = "1.3";   // MAJOR.MINOR — a polish moves the minor, a change of shape moves the major
@@ -1918,13 +1918,13 @@ const TX_HEAD = '<tr><th>Date</th><th style="text-align:left">Description</th><t
 function monthParts(ym){
   const sum = f => monthOf(ym).filter(f).reduce((s,e) => s + e.amount, 0);
   return {bills:sum(e => CGRP[e.category] === "bills"), everyday:everydayOf(ym),
-          big:sum(e => inEveryday(e) && isBig(e)), education:sum(e => CGRP[e.category] === "education")};
+          big:sum(e => inEveryday(e) && isBig(e))};
 }
 function renderCatPage(){
   const es = monthOf(viewYM);
   const total = es.reduce((s,e) => s + e.amount, 0);
   const parts = monthParts(viewYM);
-  const partRows = [["Bills & housing", parts.bills], ["Everyday", parts.everyday], ["Big buys", parts.big], ["Education", parts.education]]
+  const partRows = [["Bills & housing", parts.bills], ["Everyday", parts.everyday], ["Big buys", parts.big]]
     .filter(p => Math.abs(p[1]) > 0.005);
   const rows = CATS.map(c => {
     const items = es.filter(e => e.category === c.k).sort((a,b) => b.amount - a.amount);

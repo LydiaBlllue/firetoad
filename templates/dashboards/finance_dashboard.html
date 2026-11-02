@@ -642,13 +642,13 @@ const DOC_LATEST = {};
 // The categories (categories.py): key, name, group and colour. A colour follows the category and
 // is never reassigned by rank; the categories past the seven validated slots share the rest band.
 // The group decides what a row counts for (FINANCE.md §3a): only `everyday` is measured against
-// the everyday amount, and `education` (tuition: it ends) is never in the spending FIRE is planned on.
+// the everyday amount, and a category marked as ending before FIRE (tuition) is never in the spending FIRE is planned on.
 const CATS = [];
 const CCOL = Object.fromEntries(CATS.map(c=>[c.k,c.c]));
 const CGRP = Object.fromEntries(CATS.map(c=>[c.k,c.g]));
 const catName = k => (CATS.find(c => c.k === k) || {n:k}).n;
 const inEveryday = e => (CGRP[e.category] || "everyday") === "everyday";
-const inTarget    = e => CGRP[e.category] !== "education";
+const inTarget    = e => !(CATS.find(c => c.k === e.category) || {}).noFire;
 const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const SUB_KEYS = [];
 
@@ -1918,13 +1918,13 @@ const TX_HEAD = '<tr><th>Date</th><th style="text-align:left">Description</th><t
 function monthParts(ym){
   const sum = f => monthOf(ym).filter(f).reduce((s,e) => s + e.amount, 0);
   return {bills:sum(e => CGRP[e.category] === "bills"), everyday:everydayOf(ym),
-          big:sum(e => inEveryday(e) && isBig(e)), education:sum(e => CGRP[e.category] === "education")};
+          big:sum(e => inEveryday(e) && isBig(e))};
 }
 function renderCatPage(){
   const es = monthOf(viewYM);
   const total = es.reduce((s,e) => s + e.amount, 0);
   const parts = monthParts(viewYM);
-  const partRows = [["Bills & housing", parts.bills], ["Everyday", parts.everyday], ["Big buys", parts.big], ["Education", parts.education]]
+  const partRows = [["Bills & housing", parts.bills], ["Everyday", parts.everyday], ["Big buys", parts.big]]
     .filter(p => Math.abs(p[1]) > 0.005);
   const rows = CATS.map(c => {
     const items = es.filter(e => e.category === c.k).sort((a,b) => b.amount - a.amount);

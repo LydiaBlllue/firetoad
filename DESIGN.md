@@ -12,7 +12,7 @@
   into the markup. In the sidebar it is the product name, **Jade Toad**, with the owner's name in
   small type beneath it.
 - Interface language: **English throughout** — labels, buttons, hints, empty states, every page.
-- Fifteen fixed spending categories in three groups, in English (FINANCE.md §3a,
+- Fifteen fixed spending categories in two groups, in English (FINANCE.md §3a,
   `categories.py`): Housing, Bills · Groceries, Dining, Transport, Shopping, Software & tools, Entertainment,
   Health, Travel, Family & gifts, Cash, Fees & interest, Other · Education. The category name
   *is* the definition; never mix languages in it. Subscription is a mark on a repeating charge,

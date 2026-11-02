@@ -2,6 +2,11 @@
 
 ## 1.3 — unreleased
 
+- **Education is an ordinary category** (2026-11-02, user 001; findata schema 16,
+  `tools/migrate_15to16.py`). It was a group of its own because tuition ends, which mixed what money
+  bought with whether it continues after FIRE. A month now has three parts, and `plan.json`
+  `notInFire` marks what stays out of the FIRE target, Education by default. The target does not change.
+
 - **The tool uses the page's words** (2026-11-02, user 001; findata schema 15,
   `tools/migrate_14to15.py`). The `allowance` flow is `everyday`, and the category groups are
   `bills`, `everyday` and `education`, in the register, the code and the documents.

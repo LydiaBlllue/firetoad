@@ -97,15 +97,17 @@ account has; D30 fails a row typed as spending that is not in `spending.csv`. **
 money between your own accounts (one abroad included), investing, a card payment, lending, being
 repaid, a loan's principal.
 
-- **Fifteen categories in three groups** (`categories.py`, the one definition):
+- **Fifteen categories in two groups** (`categories.py`, the one definition):
 
   | group | categories | counts for |
   |---|---|---|
   | bills | Housing, Bills | the spending FIRE is planned on; never the everyday amount |
   | everyday | Groceries, Dining, Transport, Shopping, Software & tools, Entertainment, Health, Travel, Family & gifts, Cash, Fees & interest, Other | the everyday amount, and the spending FIRE is planned on |
-  | education | Education — tuition, books, exams, credential assessments | the year's total only: it ends, so never the FIRE target |
-
+  
   The owner may move a category to another group (`plan.json` `categoryGroups`).
+- **Spending that ends before FIRE** is a mark on a category, not a kind of spending: `plan.json`
+  `notInFire`, Education (tuition, books, exams, credential assessments) by default. It counts like
+  any other category today, and is left out of the FIRE target.
 - **A merchant is filed once and asked once.** `merchants.json` wins; a merchant it does not know
   takes the starter map's category (`setup/data/starter_merchants.json`: public chains, and words
   that name a kind of business — DENTAL, MASSAGE, PHARMACY) or Other, and is asked. A pharmacy is
@@ -136,14 +138,13 @@ repaid, a loan's principal.
 
 Every row of spending is in exactly one part, so the parts always sum to the month's total:
 
-> **spent = bills & housing + everyday + big buys + education**
+> **spent = bills & housing + everyday + big buys**
 
 | part | what is in it | measured against |
 |---|---|---|
 | bills & housing | the `bills` group | nothing yet |
 | everyday | the `everyday` group, under the big-buy threshold | the `everyday` flow |
 | big buys | the `everyday` group, one purchase at or over the threshold, never a subscription | the big-buys fund |
-| education | the `education` group | nothing: the year's total only |
 
 Money that leaves and nobody has named is a transfer, outside the sum, until the owner answers.
 
