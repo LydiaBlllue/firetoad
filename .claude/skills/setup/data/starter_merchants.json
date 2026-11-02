@@ -699,6 +699,10 @@
       "category": "Dining"
     },
     {
+      "match": "FORTINOS",
+      "category": "Grocery"
+    },
+    {
       "match": "LOBLAW",
       "category": "Grocery"
     },
