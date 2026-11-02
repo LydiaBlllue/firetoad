@@ -131,6 +131,95 @@ the selftest now does that every time; the migration was run on a copy of user 0
 
 ## v1.4 — January 2027
 
+**One page for both kinds of user** comes first (decided 2026-11-02, user 001; PRODUCT.md §2).
+It is built after v1.3 ships, on the v1.4 branch. DESIGN.md §4 stays the page's rule until then:
+S4 checks that table against `NAV`, so the table changes in the same commit as the navigation.
+This is the product's structure, so it is a minor version; v2.0 is the change of technology.
+Before any of it, the first page has to be
+believable: a chequing statement must not be refused, and most purchases must arrive with a
+category.
+
+- **The navigation**, 18 pages in 4 sections, ordered the way someone starting out needs them.
+  Page keys do not change, so old links and saved state still land:
+
+  | Section | Pages |
+  |---|---|
+  | — | Home |
+  | Money in & out | This month · Year · Income · Subscriptions · Spending baseline |
+  | Plan | Budget · Safety net · FIRE · Drawdown & care |
+  | Investing | Portfolio · Performance · Holdings · Investment income |
+  | Records | Accounts · Updates · Statements |
+  | — | Waiting for data (the fold) · Glossary |
+
+- **What each page waits for** (`WAITS`), the two signals in PRODUCT.md §2:
+
+  | page | waits for |
+  |---|---|
+  | Income, Safety net | a chequing statement |
+  | Portfolio, Performance, Holdings | a broker's holdings |
+  | Investment income | a broker's activity |
+  | FIRE | a FIRE goal |
+  | Drawdown & care | a FIRE goal and something invested, so nobody with nothing invested reads that the money runs out |
+
+- **The FIRE goal is a declaration**: `plan.json` `fire` `{goal, asked}`, baked in as a new
+  constant. Setup asks once, in plain words, whether they have thought about retiring early;
+  skipped leaves it out, and the page reads that as no. It changes by saying so to Claude. The
+  migration keeps what a workspace has: money invested means goal yes, so no page disappears;
+  otherwise it stays unanswered and the next import asks once.
+- **Safety net**, a new page answering how long the money would last without a paycheque:
+
+  > **months covered = (Spendable today − unsecured debt) ÷ what a month costs**
+
+  - The top is the figures Home already shows: the `today` reach row, less what is owed that sits
+    on no asset. So the two pages cannot disagree.
+  - **What a month costs** = the spending baseline's average + repayments paid today (active
+    committed flows with `pays`). Rent and bills paid today are in `spending.csv` already, so
+    they are not added; `COMMITTED_KEEP` is not used, because it holds rent that starts only at
+    FIRE. `flows.py` gives the sum.
+  - Three stat cards (months covered, the money, what a month costs), each opening its sum, then
+    the accounts behind the money. Money abroad is one line of its own, "with money abroad, N
+    months", never mixed into the headline. Investments are left out.
+  - With no usable whole month, the page says it needs one rather than showing a figure.
+    Below zero it shows 0.
+  - It judges nothing: no band, colour, dot or target. The usual three to six months is a
+    Glossary entry, and "Safety net" and "Months covered" are coined words with entries of their
+    own.
+- **Home's four cards**: the signals choose the first ones, and the rest fill from one list, in
+  order, taking only a card that has a number. So a card-only owner and an owner with no plan
+  never see an empty card:
+
+  | | first cards |
+  |---|---|
+  | nothing invested, no goal | — |
+  | nothing invested, goal | FIRE progress |
+  | invested, no goal | Portfolio · Invested |
+  | invested, goal | Portfolio · FIRE progress · Invested · Everyday, exactly today's four |
+
+  The list: Card interest (only when there is some) · Spent a month · Months covered · Kept this year · Everyday · A year of subscriptions ·
+  Biggest category.
+- **Proof.** `check_render` draws all four states and a card-only owner: every page draws, four
+  cards with a number, no `undefined`. The selftest plants rent added twice to what a month
+  costs, money abroad in the headline, and a page shown against its signals. The written rule goes
+  into FINANCE.md and DESIGN.md §4 with the code, along with README's page lists and the constant
+  count.
+- **Card interest**, what the owner's cards have charged them, as a fact and never a verdict:
+  - **Where it comes from**: the Interest total each card statement prints, which the parsers
+    already read to reconcile and then drop. It becomes a fact the import keeps, one row per
+    statement: card, statement tag, interest. Never from a merchant name. The migration fills
+    the past by running the parsers over `archive/`. The interest's own row in `spending.csv` is
+    filed under Fees & interest (to confirm while building), and stays spending, counted once.
+  - **Shown only when there is some.** A card paid in full each month never mentions it.
+  - **Home**: a card, "Card interest", the total of the last 12 months, its one fact the amount on
+    the newest statement, its number opening the split by card. It leads the fill list, so an owner
+    with money invested and a FIRE goal keeps today's four cards and sees the next two instead.
+  - **Year**: one line in What stands out, and an amber dot in the sidebar while the newest
+    statement of any card charged interest. Paying it off clears the dot by itself.
+  - **Glossary**: what card interest is and how it starts, in the same words for anyone: paying
+    the whole statement balance by the due date means no interest on purchases. No "you should",
+    and no rate, since rates change. The rate is not read from statements in this release.
+
+The rest of this release:
+
 - **Government pensions in the drawdown.** CPP and OAS, from the owner's own statement, so the
   plan stops overstating what has to be saved.
 - **Chequing, transaction by transaction.** Transfers, fees and e-Transfers one row each, with
@@ -185,6 +274,9 @@ data layer is rewritten once with the page rather than twice:
   own; which, and how it reaches a second computer, is settled before any code.
 
 ## Later
+
+- **Big buys, back.** A large one-off purchase kept apart from Everyday, for an owner who keeps a fund
+  for it. Taken out on 2026-11-02 until the basics are done; a workspace keeps its old fund in `decisions/`.
 
 - **Without the desktop app.** *(first user)* Today setup and the import need Claude Code on a
   computer. A path for someone on the web or a phone only — statements uploaded, the page built

@@ -30,17 +30,13 @@ def main(argv):
     y, m = int(newest[:4]), int(newest[5:7])
     ym = newest[:7] if int(newest[8:]) == calendar.monthrange(y, m)[1] else max((r["date"][:7] for r in rows if r["date"][:7] < newest[:7]), default=newest[:7])
     group = categories.groups(load(root, "plan.json", {}))
-    limit = float((load(root, "funds.json", {}).get("plan") or {}).get("bigThreshold") or float("inf"))
-    repeats = categories.recurring(rows)
-    parts = {"bills and housing": 0.0, "everyday": 0.0, "big buys": 0.0}
+    parts = {"bills and housing": 0.0, "everyday": 0.0}
     for r in rows:
         if not r["date"].startswith(ym):
             continue
         a, g = float(r["amount"]), group.get(r["category"], "everyday")
         if g == "bills":
             parts["bills and housing"] += a
-        elif a >= limit and categories.brand_of(r["note"]) not in repeats:
-            parts["big buys"] += a
         else:
             parts["everyday"] += a
     said = ", ".join(f"{k} ${v:,.0f}" for k, v in parts.items() if abs(v) >= 0.5)

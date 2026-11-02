@@ -32,20 +32,10 @@
         "name": "Everyday",
         "amount": 1300,
         "note": "The guilt-free line. No categories and no caps below it."
-      },
-      {
-        "key": "bigbuy-in",
-        "kind": "saving",
-        "name": "Big buys",
-        "amount": 250,
-        "to": "bigbuy",
-        "note": "$2,350 after rent, less $800 to the broker and $1,300 of everyday. This is everything the paycheque actually has left."
       }
     ],
-    "bigThreshold": 300,
     "leftoverGoesTo": "travel",
-    "bigThresholdNote": "A single transaction at or over this is a big buy: kept out of the everyday amount and paid from the Big buys fund. Subscriptions are excluded whatever they cost.",
-    "leftoverNote": "Each closed month adds (everyday - everyday spending) to the funds, and that figure is signed: an over month takes from Big buys first, then Travel."
+    "leftoverNote": "Each closed month adds (everyday - everyday spending) to the fund, and that figure is signed: an over month takes from Big buys first, then Travel."
   },
   "funds": [
     {
@@ -68,29 +58,7 @@
         "balance": 9500,
         "asof": "2026-09-06",
         "holds": "SGOV and VSC, not cash — spending it means selling first",
-        "note": "Rule 2 already treats this account as earmarked, so naming part of it Travel and part of it Big buys changes no other number on the dashboard."
-      }
-    },
-    {
-      "key": "bigbuy",
-      "role": "big",
-      "name": "Big buys",
-      "color": "#eda100",
-      "goal": null,
-      "why": "One-off purchases like a monitor. If the fund covers it, buy it — it never touches the month's everyday",
-      "opening": {
-        "date": "2026-08-01",
-        "amount": 1000,
-        "from": "Wealthsimple High yield savings (Non-registered) HQ7HY3E05CAD",
-        "note": "Same account, second label. No new account was opened: a chequing account pays nothing, costs a monthly fee, and would add another statement to import every month."
-      },
-      "backing": {
-        "account": "HQ7HY3E05CAD",
-        "label": "Wealthsimple High yield savings (Non-registered)",
-        "balance": 9500,
-        "asof": "2026-09-06",
-        "holds": "SGOV and VSC, not cash — spending it means selling first",
-        "note": "Rule 2 already treats this account as earmarked, so naming part of it Travel and part of it Big buys changes no other number on the dashboard."
+        "note": "Rule 2 already treats this account as earmarked, so naming part of it Travel changes no other number on the dashboard."
       }
     }
   ],

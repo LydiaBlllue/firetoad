@@ -2,6 +2,12 @@
 
 ## 1.3 — unreleased
 
+- **Big buys are gone for now** (2026-11-02, user 001; findata schema 17, `tools/migrate_16to17.py`).
+  The threshold, the card, the fund role and the word asked a first-time reader to learn something
+  before the basics were solid, and misread a cash withdrawal or a large grocery trip. Everything
+  everyday counts against Everyday. The migration keeps what it removes in `decisions/`, so it can
+  come back. On the roadmap once the basics are done.
+
 - **Education is an ordinary category** (2026-11-02, user 001; findata schema 16,
   `tools/migrate_15to16.py`). It was a group of its own because tuition ends, which mixed what money
   bought with whether it continues after FIRE. A month now has three parts, and `plan.json`

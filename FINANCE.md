@@ -25,7 +25,6 @@
 | gap | Gap | $697,865 | target − portfolio |
 | invest_monthly | Monthly contribution | $800 | `funds.json` flows: `saving` to the broker |
 | everyday | Everyday | $1,300 | `funds.json` flows: `everyday` |
-| big_threshold | Big-buy threshold | $300 | `funds.json` plan.bigThreshold |
 | travel_goal | Travel goal | $3,000 | `funds.json`, due 2027-02 |
 | dry_powder | Dry powder | 43.1% | `INVEST.dryPct`, band 40–45% |
 <!-- LINT:FIGURES:END -->
@@ -121,7 +120,7 @@ repaid, a loan's principal.
   in most of the months a merchant is paid, or an amount that holds month to month seven times
   in ten — is marked at build time (`categories.recurring`), whatever it bought; the
   Subscriptions page lists the marked charges. A brand seen once can never be one. A
-  subscription is never a big buy. Rent, cash and fees are never marked.
+  Rent, cash and fees are never marked.
 - **A bill paid once a year is spread when months are compared.** Insurance for the year, a
   card's annual fee: one large row in one month makes that month look unusual and the others
   cheap. A merchant the owner says is paid once a year (`merchants.json` `every: "year"`), or
@@ -138,13 +137,12 @@ repaid, a loan's principal.
 
 Every row of spending is in exactly one part, so the parts always sum to the month's total:
 
-> **spent = bills & housing + everyday + big buys**
+> **spent = bills & housing + everyday**
 
 | part | what is in it | measured against |
 |---|---|---|
 | bills & housing | the `bills` group | nothing yet |
-| everyday | the `everyday` group, under the big-buy threshold | the `everyday` flow |
-| big buys | the `everyday` group, one purchase at or over the threshold, never a subscription | the big-buys fund |
+| everyday | the `everyday` group | the `everyday` flow |
 
 Money that leaves and nobody has named is a transfer, outside the sum, until the owner answers.
 
@@ -158,12 +156,10 @@ The monthly waterfall, from `funds.json`:
 
 1. Invest — the `saving` flow to the broker
 2. Everyday — the `everyday` flow; below that line there are no categories and no caps
-3. A single everyday transaction at or above `plan.bigThreshold` is a big buy: outside the
-   everyday, paid from the fund with `role: "big"`
-4. Whatever everyday is left goes to the fund with `role: "topup"`, overflowing into the big-buys
-   fund once it is full
+3. Whatever everyday is left goes to the fund with `role: "topup"` until it is full, and an
+   overspent month comes off that fund; past that it simply stays where it is
 
-These four steps are the flows of §8b: `saving` (to the broker, or to a fund it names with
+These three steps are the flows of §8b: `saving` (to the broker, or to a fund it names with
 `to`), `everyday`, and the leftover routed by `leftoverGoesTo`. A `committed` flow — rent, a mortgage, a loan — sits above them and is paid before
 anything is chosen; `income` is the whole paycheque, before it.
 
@@ -192,8 +188,6 @@ therefore after refunds without any of them knowing refunds exist.
   chart that stacks categories cannot stack a negative one, so it takes it off the top of the
   month's bar as a hatched band and labels the month with its net — the bars add up to the
   year's total.
-- **A refund of a big buy goes back to the Big buys fund**, not onto the month's everyday amount:
-  it is big exactly when the purchase it gives back was (§3b).
 - A card payment (`PAYMENT`, `THANK YOU`, a transfer in) is neither spending nor a refund.
 
 ## 4. The rhythm

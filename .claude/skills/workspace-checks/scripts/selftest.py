@@ -1037,7 +1037,7 @@ def demo_clear_check(root, base):
                       "balance": 4210.55, "asof": "2026-08-31", "ledger": "chequing.csv",
                       "feeds": "Income, Cash flow, Bank cash",
                       "doc": {"file": "Chequing Statement-4021 <date>.pdf", "closes": 31}}],
-        "plan": {"takeHome": 4200, "invest": 900, "everyday": 1800, "bigThreshold": 300},
+        "plan": {"takeHome": 4200, "invest": 900, "everyday": 1800},
         "funds": [], "rules": {"buckets": [{"key": "rest", "name": "Holdings", "catchAll": True}], "maxHoldings": 8},
         "foreign": None})
     json.dump(answers, open(ans, "w", encoding="utf-8"))

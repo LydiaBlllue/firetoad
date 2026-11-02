@@ -1078,8 +1078,7 @@ def noticed_lines(ws, out, plan):
         mon = LONG[int(m[5:]) - 1]
         over = sp[m] > everyday
         lines.append({"sev": "warn" if over else "ok",
-                      "text": f"Purchases in {mon} come to {money(sp[m])} against the {money(everyday)} everyday."
-                              + (" Some of it may be a big buy; say so and it moves." if over else "")})
+                      "text": f"Purchases in {mon} come to {money(sp[m])} against the {money(everyday)} everyday."})
     # an account these statements move money to or from, that the register does not have
     mine = [digits(a.get("id")) for a in ws.accounts] + [digits(x.get("id") or x.get("account")) for x in ws.reg.get("notOwned", [])]
     for n, (c, i, o) in sorted(seen_accounts.unregistered(plan.moves, mine).items()):

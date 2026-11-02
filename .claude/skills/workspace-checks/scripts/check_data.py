@@ -1013,7 +1013,6 @@ def check(root):
                     "progress": round(port / tgt * 100, 1) if tgt else 0, "gap": tgt - port,
                     "invest_monthly": flow_totals(fj2["plan"])["invest"],
                     "everyday": flow_totals(fj2["plan"])["everyday"],
-                    "big_threshold": fj2["plan"]["bigThreshold"],
                     "dry_powder": inv["dryPct"]}
             if trav:
                 want["travel_goal"] = trav["goal"]
