@@ -10,7 +10,7 @@
   the copy's inbox is now empty. Without playwright, the two render faults say "not run" instead
   of failing, and setup's last step no longer offers the download.
 - **More of a first import is sorted, and the frequent ones come first** (2026-11-02, user 002).
-  The starter map gains 63 public chains and kinds of business, and the one table to confirm is
+  The starter map gains 64 public chains and kinds of business, and the one table to confirm is
   ordered by how often a merchant appears, after any question about money.
 - **A plan above take-home is not called a paycheque** (2026-11-02, user 002). With take-home of
   $0 the flow chart said Take-home $3,150. It now says Planned, is titled for the plan, says the
