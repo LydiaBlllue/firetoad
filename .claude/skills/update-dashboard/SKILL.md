@@ -308,7 +308,7 @@ out. Five parts, in this order — the same five keys of the record:
    row in `findata/history/decisions.json` (`status: open`, the `default` applied meanwhile, the `source`
    statement and line it came from); the page header counts them until the owner answers.
 3. **`noticed`** — rules kept or broken (pay-yourself-first, the band, the holding count, the
-   allowance, fund claims) and what is still missing (from `GAPS` and the tracker grid), each
+   everyday, fund claims) and what is still missing (from `GAPS` and the tracker grid), each
    with `sev` ok / warn / bad. This is the story of the update; the Investing page computes
    today's status itself and never shows these sentences.
 4. **`judged`** — every default applied and every ambiguity resolved without asking.

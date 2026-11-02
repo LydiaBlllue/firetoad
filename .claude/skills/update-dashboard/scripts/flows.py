@@ -2,7 +2,7 @@
 
 `funds.json` `plan.flows` is a list of rows, each one thing that happens to the paycheque every
 month: what comes in (`income`), what is paid before anything is chosen (`committed` — rent, a
-mortgage, a loan), what is moved out to be saved (`saving`), and what is free (`allowance`).
+mortgage, a loan), what is moved out to be saved (`saving`), and what is free (`everyday`).
 The page, rebuild.py and check_data.py all read the same sums from here, so a flow added to the
 file changes every one of them and none of them carries a hand-copied number.
 
@@ -12,7 +12,7 @@ committed flow may carry `until` (the month a loan ends), `afterFire` (`keep`, t
 `drop`: a mortgage payment stops, property tax does not) and `pays` (the liability it repays).
 """
 
-KINDS = ("income", "committed", "saving", "allowance")
+KINDS = ("income", "committed", "saving", "everyday")
 
 
 def active(f):
@@ -45,7 +45,7 @@ def totals(plan):
         # Pay-yourself-first is judged on what reaches the broker; a saving flow with another
         # destination (a fund, a child's plan) is saving but not that rule.
         "invest": s("saving", now, lambda f: (f.get("to") or "broker") == "broker"),
-        "allowance": s("allowance"),
+        "everyday": s("everyday"),
         "committedNow": [f for f in now if f.get("kind") == "committed"],
         "incomeNote": next((f.get("note") or "" for f in flows if f.get("kind") == "income"), ""),
     }
@@ -60,5 +60,5 @@ def unset(plan):
     return {k for k, pred in (
         ("takeHome", lambda f: f.get("kind") == "income" and active(f)),
         ("invest", lambda f: f.get("kind") == "saving" and (f.get("to") or "broker") == "broker"),
-        ("everyday", lambda f: f.get("kind") == "allowance"),
+        ("everyday", lambda f: f.get("kind") == "everyday"),
     ) if miss(pred)}

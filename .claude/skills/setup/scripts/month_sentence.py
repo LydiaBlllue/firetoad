@@ -37,9 +37,9 @@ def main(argv):
         if not r["date"].startswith(ym):
             continue
         a, g = float(r["amount"]), group.get(r["category"], "everyday")
-        if g == "fixed":
+        if g == "bills":
             parts["bills and housing"] += a
-        elif g == "time":
+        elif g == "education":
             parts["education"] += a
         elif a >= limit and categories.brand_of(r["note"]) not in repeats:
             parts["big buys"] += a

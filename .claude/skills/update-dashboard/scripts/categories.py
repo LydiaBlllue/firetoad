@@ -4,10 +4,10 @@ Spending is money that leaves and buys nothing you still own, whatever paid it: 
 purchase, or chequing (rent, a bill, cash taken out, a bank fee, money sent to family). Every
 category sits in one of three groups, and the group is what decides what it counts for:
 
-- `fixed`    — paid before anything is chosen. Not measured against the allowance; in the
+- `bills`    — paid before anything is chosen. Not measured against the everyday amount; in the
                spending the FIRE target is calibrated on.
-- `everyday` — what the allowance is for, and in the calibration.
-- `time`     — spending with an end (tuition). In the year's total, never in the FIRE target.
+- `everyday` — what the everyday amount is for, and in the calibration.
+- `education` — spending with an end (tuition). In the year's total, never in the FIRE target.
 
 The owner may move a category to another group in `plan.json` `categoryGroups`; the page, the
 import, the checkers and the setup all read the list from here. A subscription is not a category:
@@ -18,7 +18,7 @@ Every category has its own colour (DESIGN.md §3); Other is grey.
 import collections
 import datetime, re
 
-GROUPS = ("fixed", "everyday", "time")
+GROUPS = ("bills", "everyday", "education")
 
 # key, label shown on the page, default group, colour token. The order is the stack's, bottom up,
 # and it is the colour order: the first eight are the validated slots in their validated order
@@ -28,18 +28,18 @@ GROUPS = ("fixed", "everyday", "time")
 TABLE = [
     ("Grocery",       "Groceries",        "everyday", "--c-grocery"),
     ("Dining",        "Dining",           "everyday", "--c-dining"),
-    ("Housing",       "Housing",          "fixed",    "--c-housing"),
+    ("Housing",       "Housing",          "bills",    "--c-housing"),
     ("Shopping",      "Shopping",         "everyday", "--c-shopping"),
     ("Transport",     "Transport",        "everyday", "--c-transport"),
     ("Software",      "Software & tools", "everyday", "--c-software"),
-    ("Bills",         "Bills",            "fixed",    "--c-bills"),
+    ("Bills",         "Bills",            "bills",    "--c-bills"),
     ("Travel",        "Travel",           "everyday", "--c-travel"),
     ("Entertainment", "Entertainment",    "everyday", "--c-entertainment"),
     ("Health",        "Health",           "everyday", "--c-health"),
     ("Family",        "Family & gifts",   "everyday", "--c-family"),
     ("Cash",          "Cash",             "everyday", "--c-cash"),
     ("Fees",          "Fees & interest",  "everyday", "--c-fees"),
-    ("Education",     "Education",        "time",     "--c-education"),
+    ("Education",     "Education",        "education", "--c-education"),
     ("Other",         "Other",            "everyday", "--c-rest"),
 ]
 CATEGORIES = [k for k, *_ in TABLE]

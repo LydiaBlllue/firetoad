@@ -348,9 +348,9 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div class="year-legend" id="yearLegend"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab" id="alwYrLab">Everyday, month by month</div>
-    <svg class="year-svg" id="alwYrChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
-    <div class="cap" id="alwYrCap"></div>
+    <div class="lab" id="everydayYrLab">Everyday, month by month</div>
+    <svg class="year-svg" id="everydayYrChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="cap" id="everydayYrCap"></div>
   </div>
 </section>
 
@@ -642,13 +642,13 @@ const DOC_LATEST = {"Chequing 4471": "2026-09-05", "Savings 9032": "2026-09-05",
 // The categories (categories.py): key, name, group and colour. A colour follows the category and
 // is never reassigned by rank; the categories past the seven validated slots share the rest band.
 // The group decides what a row counts for (FINANCE.md §3a): only `everyday` is measured against
-// the allowance, and `time` (tuition: it ends) is never in the spending FIRE is planned on.
-const CATS = [{"k": "Grocery", "n": "Groceries", "g": "everyday", "c": "var(--c-grocery)"}, {"k": "Dining", "n": "Dining", "g": "everyday", "c": "var(--c-dining)"}, {"k": "Housing", "n": "Housing", "g": "fixed", "c": "var(--c-housing)"}, {"k": "Shopping", "n": "Shopping", "g": "everyday", "c": "var(--c-shopping)"}, {"k": "Transport", "n": "Transport", "g": "everyday", "c": "var(--c-transport)"}, {"k": "Software", "n": "Software & tools", "g": "everyday", "c": "var(--c-software)"}, {"k": "Bills", "n": "Bills", "g": "fixed", "c": "var(--c-bills)"}, {"k": "Travel", "n": "Travel", "g": "everyday", "c": "var(--c-travel)"}, {"k": "Entertainment", "n": "Entertainment", "g": "everyday", "c": "var(--c-entertainment)"}, {"k": "Health", "n": "Health", "g": "everyday", "c": "var(--c-health)"}, {"k": "Family", "n": "Family & gifts", "g": "everyday", "c": "var(--c-family)"}, {"k": "Cash", "n": "Cash", "g": "everyday", "c": "var(--c-cash)"}, {"k": "Fees", "n": "Fees & interest", "g": "everyday", "c": "var(--c-fees)"}, {"k": "Education", "n": "Education", "g": "time", "c": "var(--c-education)"}, {"k": "Other", "n": "Other", "g": "everyday", "c": "var(--c-rest)"}];
+// the everyday amount, and `education` (tuition: it ends) is never in the spending FIRE is planned on.
+const CATS = [{"k": "Grocery", "n": "Groceries", "g": "everyday", "c": "var(--c-grocery)"}, {"k": "Dining", "n": "Dining", "g": "everyday", "c": "var(--c-dining)"}, {"k": "Housing", "n": "Housing", "g": "bills", "c": "var(--c-housing)"}, {"k": "Shopping", "n": "Shopping", "g": "everyday", "c": "var(--c-shopping)"}, {"k": "Transport", "n": "Transport", "g": "everyday", "c": "var(--c-transport)"}, {"k": "Software", "n": "Software & tools", "g": "everyday", "c": "var(--c-software)"}, {"k": "Bills", "n": "Bills", "g": "bills", "c": "var(--c-bills)"}, {"k": "Travel", "n": "Travel", "g": "everyday", "c": "var(--c-travel)"}, {"k": "Entertainment", "n": "Entertainment", "g": "everyday", "c": "var(--c-entertainment)"}, {"k": "Health", "n": "Health", "g": "everyday", "c": "var(--c-health)"}, {"k": "Family", "n": "Family & gifts", "g": "everyday", "c": "var(--c-family)"}, {"k": "Cash", "n": "Cash", "g": "everyday", "c": "var(--c-cash)"}, {"k": "Fees", "n": "Fees & interest", "g": "everyday", "c": "var(--c-fees)"}, {"k": "Education", "n": "Education", "g": "education", "c": "var(--c-education)"}, {"k": "Other", "n": "Other", "g": "everyday", "c": "var(--c-rest)"}];
 const CCOL = Object.fromEntries(CATS.map(c=>[c.k,c.c]));
 const CGRP = Object.fromEntries(CATS.map(c=>[c.k,c.g]));
 const catName = k => (CATS.find(c => c.k === k) || {n:k}).n;
-const inAllowance = e => (CGRP[e.category] || "everyday") === "everyday";
-const inTarget    = e => CGRP[e.category] !== "time";
+const inEveryday = e => (CGRP[e.category] || "everyday") === "everyday";
+const inTarget    = e => CGRP[e.category] !== "education";
 const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const SUB_KEYS = [{"name": "Amazon Prime", "amount": 10.99, "months": 8}, {"name": "Apple", "amount": 3.99, "months": 8}, {"name": "Goodlife Fitness", "amount": 32.99, "months": 8}, {"name": "Koodo Mobile", "amount": 45.2, "months": 8}, {"name": "Netflix", "amount": 18.99, "months": 8}, {"name": "Oc Transpo", "amount": 135.0, "months": 8}, {"name": "Spotify", "amount": 11.29, "months": 8}];
 
@@ -680,7 +680,7 @@ const stNum = (k, dflt) => {
 let trajView = ST.traj && ST.traj !== "fire" ? Number(ST.traj) || "fire" : "fire";   // the FIRE chart's span: years ahead, or to the target
 function saveState(){
   const st = {traj:trajView, p:curPage, ym:viewYM, base:PLAN_BASE, stop:stopAge, draw:drawAge,
-              care:careAge, ltc:ltcAge, home:ltcTier, alw:ALW, invm:INVM, bigm:BIGM};
+              care:careAge, ltc:ltcAge, home:ltcTier, everyday:EVERYDAY, invm:INVM, bigm:BIGM};
   Object.entries(stBuilt).forEach(([k,v]) => { st["of_"+k] = v; });
   try{ localStorage.setItem("ly_state", JSON.stringify(st)); }catch(e){}
   try{ history.replaceState(null, "", "#" + Object.entries(st)
@@ -749,7 +749,7 @@ function setYear(y){
   render();
 }
 // page tabs — pills apply to Overview & Transactions; year view & investments are month-independent
-const PROFILE = {"schema": 14, "demo": true, "owner": "Emma Roy", "born": 1995, "importDay": 26};
+const PROFILE = {"schema": 15, "demo": true, "owner": "Emma Roy", "born": 1995, "importDay": 26};
 const BROKER = "Wealthsimple";          // the institution that holds the portfolio, from accounts.json
 const CP = INVEST.counterparty || null;   // who pays money back, from cashflow.json
 const VERSION = "1.3";   // MAJOR.MINOR — a polish moves the minor, a change of shape moves the major
@@ -807,7 +807,7 @@ function pageFlags(){
   // The plan page: red when the split asks for more than the paycheque, amber when a fund is
   // short of what it has promised. Both are things you decide, not things the data decides.
   const fr = fundRun();
-  if((COMMITTED_NOW + INVM + ALW + BIGM + TMON > PLAN.takeHome && !unset("takeHome"))
+  if((COMMITTED_NOW + INVM + EVERYDAY + BIGM + TMON > PLAN.takeHome && !unset("takeHome"))
      || backingGroups([fr.t, fr.b]).some(g => g.claim > g.b.balance)) f.budget = "#d03b3b";
   else if(fr.b < 0 || fr.t < TFUND.goal) f.budget = "#c98500";
   return f;
@@ -1242,7 +1242,7 @@ function renderHome(){
   const crossP = crossMonth(project(PORTFOLIO, 0.05, 300), target);
   const dep = (WSDEP||[]).slice(-1)[0] || null, half = FUNDS.plan.invest/2;
   const curYM = TODAY.slice(0,7), dayNow = Number(TODAY.slice(8)), dim = new Date(Number(curYM.slice(0,4)), Number(curYM.slice(5)), 0).getDate();
-  const spentNow = everydayOf(curYM), freeNow = ALW - spentNow;
+  const spentNow = everydayOf(curYM), freeNow = EVERYDAY - spentNow;
   const gross = NWPARTS.reduce((a,r) => a + r.v, 0);
   const grow = NWPARTS.find(r => r.role === "grow") || {by: []};
   const left = Math.max(1, dim - dayNow + 1), perDay = Math.max(0, freeNow) / left;
@@ -1264,9 +1264,9 @@ function renderHome(){
         : dep ? numx(fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>', [["Planned", fmt(FUNDS.plan.invest)], ["Arrived", fmt(dep.amt)]], "Two transfers of "+fmt(half)+", counted the day "+BROKER+" receives them.") : "\u2014",
       dep && !unset("invest") ? (dep.nRule >= 2 ? "Both transfers arrived \u2713" : dep.nRule === 1 ? "One of two transfers arrived" : "No transfer arrived yet") : "") +
     card(term("everyday", "Everyday"),
-      unset("everyday") && ALW === PLAN.everyday ? notSet("everyday")
-        : numx(fmt(Math.abs(freeNow))+' <span class="cap-v">'+(freeNow < 0 ? "over " : "left of ")+fmt(ALW)+'</span>', [["Set for the month", fmt(ALW)], ["Spent in "+ymLabel(curYM), "\u2212"+fmt(spentNow)]], "Bills, housing and big buys are not in it.", true),
-      unset("everyday") && ALW === PLAN.everyday ? "" : fmt(perDay)+" a day for "+left+" day"+(left > 1 ? "s" : ""));
+      unset("everyday") && EVERYDAY === PLAN.everyday ? notSet("everyday")
+        : numx(fmt(Math.abs(freeNow))+' <span class="cap-v">'+(freeNow < 0 ? "over " : "left of ")+fmt(EVERYDAY)+'</span>', [["Set for the month", fmt(EVERYDAY)], ["Spent in "+ymLabel(curYM), "\u2212"+fmt(spentNow)]], "Bills, housing and big buys are not in it.", true),
+      unset("everyday") && EVERYDAY === PLAN.everyday ? "" : fmt(perDay)+" a day for "+left+" day"+(left > 1 ? "s" : ""));
 
   // Net worth, both cuts in one card: a row per purpose, its bar as long as its share and
   // coloured by reach; the row's number opens the accounts in it. Then total assets and what is
@@ -1313,7 +1313,7 @@ function renderHome(){
 //   2. Anything at or over the big-buy threshold is not part of the month at all. A $1,200
 //      monitor is a funding question you answer once, not a red bar you look at for four weeks.
 // findata/funds.json is the source of truth for every number below; check_data D12 checks it.
-const FUNDS = {"asof_note": "The guilt-free plan: pay-yourself-first, one everyday allowance, two named funds. The dashboard's FUNDS constant is a copy of this file (check_data D13). Fields that render on the page are English.", "plan": {"start": "2026-08", "flows": [{"key": "pay", "kind": "income", "name": "Take-home pay", "amount": 3600, "note": "Payroll of $1,800 twice a month. Investment income stays with the broker and is not counted."}, {"key": "rent", "kind": "committed", "name": "Rent", "amount": 1250, "afterFire": "keep", "note": "Pre-authorized on the 1st, from chequing. Still there after FIRE."}, {"key": "invest", "kind": "saving", "name": "Invest", "amount": 800, "to": "broker", "note": "Off the top, before anything else — pay-yourself-first."}, {"key": "everyday", "kind": "allowance", "name": "Everyday allowance", "amount": 1300, "note": "The guilt-free line. No categories and no caps below it."}, {"key": "bigbuy-in", "kind": "saving", "name": "Big buys", "amount": 250, "to": "bigbuy", "note": "$2,350 after rent, less $800 to the broker and $1,300 of allowance. This is everything the paycheque actually has left."}], "bigThreshold": 300, "leftoverGoesTo": "travel", "bigThresholdNote": "A single transaction at or over this is a big buy: kept out of the allowance and paid from the Big buys fund. Subscriptions are excluded whatever they cost.", "leftoverNote": "Each closed month adds (allowance - everyday spending) to the funds, and that figure is signed: an over month takes from Big buys first, then Travel."}, "funds": [{"key": "travel", "role": "topup", "name": "Travel", "color": "#4a3aa7", "goal": 3000, "by": "2027-03", "why": "A week away in March 2027", "opening": {"date": "2026-08-01", "amount": 3000, "from": "Wealthsimple High yield savings (Non-registered) HQ7HY3E05CAD", "note": "Not a transfer — a label on money already in that account, so the goal is met on day one and the discipline is leaving it alone."}, "backing": {"account": "HQ7HY3E05CAD", "label": "Wealthsimple High yield savings (Non-registered)", "balance": 9500, "asof": "2026-09-06", "holds": "SGOV and VSC, not cash — spending it means selling first", "note": "Rule 2 already treats this account as earmarked, so naming part of it Travel and part of it Big buys changes no other number on the dashboard."}}, {"key": "bigbuy", "role": "big", "name": "Big buys", "color": "#eda100", "goal": null, "why": "One-off purchases like a monitor. If the fund covers it, buy it — it never touches the month's allowance", "opening": {"date": "2026-08-01", "amount": 1000, "from": "Wealthsimple High yield savings (Non-registered) HQ7HY3E05CAD", "note": "Same account, second label. No new account was opened: a chequing account pays nothing, costs a monthly fee, and would add another statement to import every month."}, "backing": {"account": "HQ7HY3E05CAD", "label": "Wealthsimple High yield savings (Non-registered)", "balance": 9500, "asof": "2026-09-06", "holds": "SGOV and VSC, not cash — spending it means selling first", "note": "Rule 2 already treats this account as earmarked, so naming part of it Travel and part of it Big buys changes no other number on the dashboard."}}], "claimsAgainst": {"source": "Each fund names the account it is claimed against, and the claims have to fit inside that account", "note": "Neither fund is an account of its own. Both are labels on one savings account."}};
+const FUNDS = {"asof_note": "The guilt-free plan: pay-yourself-first, one everyday amount, two named funds. The dashboard's FUNDS constant is a copy of this file (check_data D13). Fields that render on the page are English.", "plan": {"start": "2026-08", "flows": [{"key": "pay", "kind": "income", "name": "Take-home pay", "amount": 3600, "note": "Payroll of $1,800 twice a month. Investment income stays with the broker and is not counted."}, {"key": "rent", "kind": "committed", "name": "Rent", "amount": 1250, "afterFire": "keep", "note": "Pre-authorized on the 1st, from chequing. Still there after FIRE."}, {"key": "invest", "kind": "saving", "name": "Invest", "amount": 800, "to": "broker", "note": "Off the top, before anything else — pay-yourself-first."}, {"key": "everyday", "kind": "everyday", "name": "Everyday", "amount": 1300, "note": "The guilt-free line. No categories and no caps below it."}, {"key": "bigbuy-in", "kind": "saving", "name": "Big buys", "amount": 250, "to": "bigbuy", "note": "$2,350 after rent, less $800 to the broker and $1,300 of everyday. This is everything the paycheque actually has left."}], "bigThreshold": 300, "leftoverGoesTo": "travel", "bigThresholdNote": "A single transaction at or over this is a big buy: kept out of the everyday amount and paid from the Big buys fund. Subscriptions are excluded whatever they cost.", "leftoverNote": "Each closed month adds (everyday - everyday spending) to the funds, and that figure is signed: an over month takes from Big buys first, then Travel."}, "funds": [{"key": "travel", "role": "topup", "name": "Travel", "color": "#4a3aa7", "goal": 3000, "by": "2027-03", "why": "A week away in March 2027", "opening": {"date": "2026-08-01", "amount": 3000, "from": "Wealthsimple High yield savings (Non-registered) HQ7HY3E05CAD", "note": "Not a transfer — a label on money already in that account, so the goal is met on day one and the discipline is leaving it alone."}, "backing": {"account": "HQ7HY3E05CAD", "label": "Wealthsimple High yield savings (Non-registered)", "balance": 9500, "asof": "2026-09-06", "holds": "SGOV and VSC, not cash — spending it means selling first", "note": "Rule 2 already treats this account as earmarked, so naming part of it Travel and part of it Big buys changes no other number on the dashboard."}}, {"key": "bigbuy", "role": "big", "name": "Big buys", "color": "#eda100", "goal": null, "why": "One-off purchases like a monitor. If the fund covers it, buy it — it never touches the month's everyday", "opening": {"date": "2026-08-01", "amount": 1000, "from": "Wealthsimple High yield savings (Non-registered) HQ7HY3E05CAD", "note": "Same account, second label. No new account was opened: a chequing account pays nothing, costs a monthly fee, and would add another statement to import every month."}, "backing": {"account": "HQ7HY3E05CAD", "label": "Wealthsimple High yield savings (Non-registered)", "balance": 9500, "asof": "2026-09-06", "holds": "SGOV and VSC, not cash — spending it means selling first", "note": "Rule 2 already treats this account as earmarked, so naming part of it Travel and part of it Big buys changes no other number on the dashboard."}}], "claimsAgainst": {"source": "Each fund names the account it is claimed against, and the claims have to fit inside that account", "note": "Neither fund is an account of its own. Both are labels on one savings account."}};
 const PLAN  = FUNDS.plan;
 // The plan as flows (schema 5): what comes in, what is paid before anything is chosen, what is
 // moved out to be saved, what is free. The scalars this page reads are sums of them, so a row
@@ -1323,7 +1323,7 @@ const flowNow = f => !f.starts;                      // "fire": begins only afte
 const flowSum = (kind, pred) => FLOWS.filter(f => f.kind === kind && flowNow(f) && (!pred || pred(f))).reduce((s, f) => s + f.amount, 0);
 PLAN.takeHome     = flowSum("income");
 PLAN.invest       = flowSum("saving", f => (f.to || "broker") === "broker");
-PLAN.everyday     = flowSum("allowance");
+PLAN.everyday     = flowSum("everyday");
 // A fund's standing contribution is a saving flow that names the fund (`to`), one row of the
 // plan like every other -- not a number kept on the fund. (findata schema 8, 2026-09-10)
 const fundMonthly = key => key ? flowSum("saving", f => f.to === key) : 0;
@@ -1340,14 +1340,14 @@ const UNSET_HOW = {takeHome:"your take-home pay", invest:"what goes to investing
 const unset = k =>
     k === "takeHome" ? FLOWS.some(f => f.kind === "income" && flowNow(f) && f.amount == null)
   : k === "invest"   ? FLOWS.some(f => f.kind === "saving" && (f.to || "broker") === "broker" && f.amount == null)
-  : k === "everyday" ? FLOWS.some(f => f.kind === "allowance" && f.amount == null)
+  : k === "everyday" ? FLOWS.some(f => f.kind === "everyday" && f.amount == null)
   : k === "planBase" ? PLAN_BASE_DEFAULT === null && !(PLAN_BASE > 0)
   : k === "born"     ? BORN === null : false;
 const notSet = k => numx('<span class="unset">Not set</span>', [], "Never given. Say "+UNSET_HOW[k]+" to set it.");
 const COMMITTED     = FLOWS.filter(f => f.kind === "committed" && flowNow(f));
 const COMMITTED_NOW = COMMITTED.reduce((s, f) => s + f.amount, 0);
 // Funds are found by the ROLE they play in the waterfall, not by name: `topup` catches whatever
-// the allowance did not spend, `big` pays for anything over the big-buy threshold. Any fund can
+// the everyday amount did not spend, `big` pays for anything over the big-buy threshold. Any fund can
 // hold either role and a workspace may have neither — this page used to look for the literal keys
 // "travel" and "bigbuy", so a new owner had to name their funds after someone else's holiday.
 const NOFUND = {key:null, name:"—", color:"var(--muted)", goal:0, by:null, why:"",
@@ -1364,20 +1364,20 @@ const stNum0 = (k, dflt) => {
   const v = Number(ST[k]);
   return ST[k] !== undefined && ST[k] !== "" && isFinite(v) && v >= 0 && Number(ST["of_"+k]) === dflt ? v : dflt;
 };
-let ALW  = stNum("alw",  PLAN.everyday);
+let EVERYDAY  = stNum("everyday", PLAN.everyday);
 let INVM = stNum("invm", PLAN.invest);
 let BIGM = stNum0("bigm", BMON);
 
 // "Big" is a size, not a category. A $1,200 monitor and a $400 language course are the same kind
 // of event -- rare, decided on their own terms, and nothing to do with whether this week's
-// groceries were reasonable. Splitting on size is what lets the allowance stay a flat number.
+// groceries were reasonable. Splitting on size is what lets the everyday amount stay a flat number.
 // A refund is big when what it gives back was: the purchase it refunds came out of the Big buys
-// fund, so the money goes back there, not onto this month's allowance (FINANCE.md §3c).
+// fund, so the money goes back there, not onto this month's everyday amount (FINANCE.md §3c).
 const refundOf   = e  => SPENDING.filter(p => p.amount > 0 && p.acct === e.acct && p.date <= e.date
                                        && merchantOf(p.note) === merchantOf(e.note)).pop();
 const isBig      = e  => e.amount < 0 ? !!refundOf(e) && isBig(refundOf(e))
-                                      : e.amount >= PLAN.bigThreshold && inAllowance(e) && !e.sub;
-const everydayOf = ym => monthOf(ym).filter(e => inAllowance(e) && !isBig(e)).reduce((s,e) => s + e.amount, 0);
+                                      : e.amount >= PLAN.bigThreshold && inEveryday(e) && !e.sub;
+const everydayOf = ym => monthOf(ym).filter(e => inEveryday(e) && !isBig(e)).reduce((s,e) => s + e.amount, 0);
 const bigOf      = ym => monthOf(ym).filter(isBig);
 const monthsBetween = (a,b) => { const [y1,m1] = a.split("-").map(Number), [y2,m2] = b.split("-").map(Number); return (y2-y1)*12 + (m2-m1); };
 const merchantOf = note => note.replace(/\s*\[[^\]]*\]\s*$/, "").replace(/\s+/g, " ").trim();
@@ -1397,7 +1397,7 @@ function fundRun(){
     // Leftovers only from months every card has reported. A part-month always looks underspent,
     // and crediting it would quietly inflate both funds -- the same trap covEnd guards elsewhere.
     if(m <= covEnd){
-      const net = ALW - everydayOf(m);
+      const net = EVERYDAY - everydayOf(m);
       if(net >= 0){
         const toT = TFUND.goal ? Math.min(net, Math.max(0, TFUND.goal - t)) : 0;
         t += toT; tIn += toT; b += net - toT; spill += net - toT;
@@ -1439,20 +1439,20 @@ function renderPlan(){
 // --- the one number ---------------------------------------------------------
 function renderFree(F){
   const ed = everydayOf(viewYM), big = bigOf(viewYM);
-  const left = ALW - ed;
+  const left = EVERYDAY - ed;
   const de = daysElapsed(viewYM);
   const [Y,M] = viewYM.split("-").map(Number);
   const dim = new Date(Y, M, 0).getDate();
   const open = viewYM >= TODAY.slice(0,7);
   const frac = de/dim;
   $("freeLab").innerHTML = term("everyday", "Everyday");
-  if(unset("everyday") && ALW === PLAN.everyday){ $("freeBig").innerHTML = notSet("everyday"); $("freeFill").style.width = "0%"; }
+  if(unset("everyday") && EVERYDAY === PLAN.everyday){ $("freeBig").innerHTML = notSet("everyday"); $("freeFill").style.width = "0%"; }
   else $("freeBig").innerHTML = numx('<span style="color:' + (left < 0 ? "#d03b3b" : "var(--ink)") + '">'
     + fmt(Math.abs(left)) + '</span>'
-    + ' <span style="font-size:13px;font-weight:400;color:var(--muted)">' + (left < 0 ? "over " : "left of ") + fmt(ALW) + '</span>',
-    [["Set for the month", fmt(ALW)], ["Everyday spending", "\u2212" + fmt2(ed)]],
+    + ' <span style="font-size:13px;font-weight:400;color:var(--muted)">' + (left < 0 ? "over " : "left of ") + fmt(EVERYDAY) + '</span>',
+    [["Set for the month", fmt(EVERYDAY)], ["Everyday spending", "\u2212" + fmt2(ed)]],
     "Every purchase under " + fmt(PLAN.bigThreshold) + ". Bills, housing and big buys are not in it.", true);
-  $("freeFill").style.width = Math.min(pc(ed, ALW), 100) + "%";
+  $("freeFill").style.width = Math.min(pc(ed, EVERYDAY), 100) + "%";
   $("freeFill").style.background = left < 0 ? "#d03b3b" : "var(--c-dining)";
   $("freeTick").style.left = (open ? frac*100 : 100) + "%";
   $("freeTick").style.display = open ? "block" : "none";
@@ -1493,7 +1493,7 @@ function planAlloc(){
         + (f.afterFire === "drop" ? " Stops after FIRE." : "")})).concat([
     {k:"Invest",   v:INVM,          c:"#2a78d6", pk:"invm", tm:"pay_yourself_first",
      d:"Two transfers of "+fmt(FUNDS.plan.invest/2)+" to "+BROKER+". It comes off the top before anything else, which is the whole point of pay-yourself-first."},
-    {k:"Everyday", v:ALW,           c:"var(--c-dining)", pk:"alw", tm:"everyday",
+    {k:"Everyday", v:EVERYDAY,           c:"var(--c-dining)", pk:"everyday", tm:"everyday",
      d:"Groceries, dining, transport, subscriptions, small shopping \u2014 everything under " + fmt(PLAN.bigThreshold) + " a transaction."},
     {k:"Big buys", v:BIGM,          c:"var(--c-shopping)", pk:"bigm", tm:"big_buy",
      d:"Goes into the fund that pays for anything at or over " + fmt(PLAN.bigThreshold) + ", so those purchases never land on Everyday."},
@@ -1521,9 +1521,9 @@ function renderSplit(F){
     [["Take-home pay", unset("takeHome") ? notSet("takeHome") : numx(fmt(PLAN.takeHome), [], PLAN.takeHomeNote)]].concat(
     rows.map(a => ['<span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'
         + a.c + ';margin-right:7px;vertical-align:middle"></span>' + (a.tm ? term(a.tm, a.k) : a.k),
-      a.pk ? '<span class="bud-edit num" data-pk="' + a.pk + '">' + (a.v === 0 && unset(a.pk === "alw" ? "everyday" : a.pk === "invm" ? "invest" : "") ? '<span class="unset">Not set</span>' : fmt(a.v)) + '</span>' : numx(fmt(a.v), [], a.d)]))
+      a.pk ? '<span class="bud-edit num" data-pk="' + a.pk + '">' + (a.v === 0 && unset(a.pk === "everyday" ? "everyday" : a.pk === "invm" ? "invest" : "") ? '<span class="unset">Not set</span>' : fmt(a.v)) + '</span>' : numx(fmt(a.v), [], a.d)]))
   );
-  const edited = [ALW !== PLAN.everyday, INVM !== PLAN.invest, BIGM !== BMON].filter(Boolean).length;
+  const edited = [EVERYDAY !== PLAN.everyday, INVM !== PLAN.invest, BIGM !== BMON].filter(Boolean).length;
   $("splitNote").innerHTML =
     (used > PLAN.takeHome && !unset("takeHome")
       ? noteBox("This split asks for <b>" + fmt(used) + "</b> a month against take-home pay of <b>"
@@ -1533,9 +1533,9 @@ function renderSplit(F){
           + "reset at the next update. Say the new number to keep it.") : "");
 }
 
-// The plan drawn as flows, with the step a bar cannot show: where the allowance actually went in
+// The plan drawn as flows, with the step a bar cannot show: where the everyday amount actually went in
 // the month the page is on. Left and middle are the plan; only the right column happened. Every
-// band is drawn at its real size and nothing is scaled to fit, so the allowance node takes in
+// band is drawn at its real size and nothing is scaled to fit, so the everyday amount node takes in
 // whatever it actually paid out:
 //   take-home's share + refunds that came back + an overspend, from the fund that covers it
 //   = the categories it paid + whatever was left over.
@@ -1549,20 +1549,20 @@ function drawFlow(){
   const short = rest < 0;
   $("flowLab").textContent = short ? "Where the plan sends the money" : ym ? "Where the paycheque went" : "Where the paycheque goes";
   const segs = alloc.filter(a => a.v > 0).concat(rest > 0 ? [UNALLOC(rest)] : []);
-  const ev = ym ? monthOf(ym).filter(e => inAllowance(e) && !isBig(e)) : [];
+  const ev = ym ? monthOf(ym).filter(e => inEveryday(e) && !isBig(e)) : [];
   const net = CATS.map(c => ({k:c.k, n:c.n, c:c.c, v:ev.filter(e => e.category === c.k).reduce((s,e) => s + e.amount, 0)}));
   const byCat = net.filter(c => c.v > 0.5);
   const back = -net.filter(c => c.v < 0).reduce((s,c) => s + c.v, 0);
   const gross = byCat.reduce((s,c) => s + c.v, 0), spent = gross - back;
-  const alw = segs.find(a => a.pk === "alw");
-  const over = alw && spent > ALW ? spent - ALW : 0;
+  const everydayNode = segs.find(a => a.pk === "everyday");
+  const over = everydayNode && spent > EVERYDAY ? spent - EVERYDAY : 0;
   const left = [{k:short ? "Planned" : "Take-home", v:Math.max(PLAN.takeHome, used), c:"var(--ink)"}];
-  if(alw && back > 0.5) left.push({k:"Refunds", v:back, c:"#9a9890", tip:"Refunds that came back in " + ymFull(ym)});
+  if(everydayNode && back > 0.5) left.push({k:"Refunds", v:back, c:"#9a9890", tip:"Refunds that came back in " + ymFull(ym)});
   if(over) left.push({k:"From " + (BFUND.key ? BFUND.name : "savings"), v:over, c:"#c98500",
                       tip:fmt(over) + " over Everyday in " + ymFull(ym)});
-  const mid = segs.map(a => Object.assign({}, a, {v: a === alw ? a.v + back + over : a.v}));
-  const right = !alw || !byCat.length ? [] : byCat.concat(spent < ALW
-      ? [{k:open ? "Not spent yet" : "Left over, into the funds", v:ALW - spent, c:"var(--pill)", rest:true}] : []);
+  const mid = segs.map(a => Object.assign({}, a, {v: a === everydayNode ? a.v + back + over : a.v}));
+  const right = !everydayNode || !byCat.length ? [] : byCat.concat(spent < EVERYDAY
+      ? [{k:open ? "Not spent yet" : "Left over, into the funds", v:EVERYDAY - spent, c:"var(--pill)", rest:true}] : []);
   // A node is drawn at its size but laid out in a slot tall enough for its two-line label, so a
   // $130 line never sits on top of the one below it.
   const W = 980, PAD = 10, NW = 10, GAP = 8, SLOT = 34, X = [150, 470, 790];
@@ -1570,7 +1570,7 @@ function drawFlow(){
   const place = (col, top) => { let y = top; col.forEach(n => { n.h = Math.max(1.5, n.v * k);
       n.y = y + Math.max(0, SLOT - n.h) / 2; y += Math.max(n.h, SLOT) + GAP; }); return y - GAP; };
   let H = Math.max(place(left, PAD), place(mid, PAD));
-  const a = mid.find(n => n.pk === "alw");
+  const a = mid.find(n => n.pk === "everyday");
   if(a && right.length){
     const span = right.reduce((s,n) => s + Math.max(n.v * k, SLOT) + GAP, -GAP);
     H = Math.max(H, place(right, Math.max(PAD, a.y + a.h/2 - span/2)));
@@ -1582,14 +1582,14 @@ function drawFlow(){
       +' C'+m+' '+(y1+h)+' '+m+' '+(y0+h)+' '+x0+' '+(y0+h)+' Z" fill="'+col+'" data-tip="'+tip+'"/>';
   };
   let g = "", off = 0;
-  // take-home fans out to every middle node; refunds and an overspend feed the allowance alone,
+  // take-home fans out to every middle node; refunds and an overspend feed the everyday amount alone,
   // stacked under take-home's share in the order they sit on the left
   mid.forEach(n => {
-    const h = (n === a ? ALW : n.v) * k;
-    if(h > 0) g += band(X[0] + NW, left[0].y + off, X[1], n.y, h, n.c, n.k + "<br>" + fmt(n === a ? ALW : n.v) + " a month");
+    const h = (n === a ? EVERYDAY : n.v) * k;
+    if(h > 0) g += band(X[0] + NW, left[0].y + off, X[1], n.y, h, n.c, n.k + "<br>" + fmt(n === a ? EVERYDAY : n.v) + " a month");
     off += h;
   });
-  let into = a ? a.y + ALW * k : 0;
+  let into = a ? a.y + EVERYDAY * k : 0;
   left.slice(1).forEach(n => { g += band(X[0] + NW, n.y, X[1], into, n.v * k, n.c, n.tip); into += n.v * k; });
   if(right.length){
     let o = 0;
@@ -1602,7 +1602,7 @@ function drawFlow(){
     + '<text class="v num" x="'+x+'" y="'+(y+13)+'" text-anchor="'+an+'">'+val+'</text>';
   left.forEach(n => g += node(n, X[0], lbl(X[0] - 8, n.y + n.h/2, "end", n.k, fmt(n.v))));
   mid.forEach(n => g += node(n, X[1], lbl(X[1] + NW + 8, n.y + n.h/2, "start", n.k,
-    n === a && ym ? fmt(ALW) + " planned · " + fmt(spent) + " spent" : fmt(n.v) + (ym ? " planned" : ""))));
+    n === a && ym ? fmt(EVERYDAY) + " planned · " + fmt(spent) + " spent" : fmt(n.v) + (ym ? " planned" : ""))));
   right.forEach(n => g += node(n, X[2], lbl(X[2] + NW + 8, n.y + n.h/2, "start", n.n || n.k, fmt(n.v), n.rest ? null : n.k)));
   svg.setAttribute("viewBox", "0 0 " + W + " " + H);
   svg.innerHTML = g;
@@ -1668,7 +1668,7 @@ function renderFunds(F){
     ]),
     TFUND.by ? [[TFUND.name + " due", ymFull(TFUND.by) + (left > 0 ? ", in " + left + " months" : ", this month")]] : []
   ));
-  const perMonth = PLAN.takeHome - COMMITTED_NOW - INVM - ALW;
+  const perMonth = PLAN.takeHome - COMMITTED_NOW - INVM - EVERYDAY;
   const over = groups.filter(g => g.claim > g.b.balance);
   $("fundNote").innerHTML = over.map(g =>
       noteBox(g.names.join(" and ") + " claim <b>" + fmt(g.claim) + "</b> against <b>" + g.b.label
@@ -1688,7 +1688,7 @@ function renderFunds(F){
 function wirePlanEdits(){
   document.querySelectorAll('.bud-edit[data-pk]').forEach(el => el.onclick = () => {
     const k = el.dataset.pk;
-    const cur = k === "alw" ? ALW : k === "invm" ? INVM : BIGM;
+    const cur = k === "everyday" ? EVERYDAY : k === "invm" ? INVM : BIGM;
     const inp = document.createElement("input");
     inp.type = "number"; inp.min = "0"; inp.step = "10"; inp.value = cur;
     inp.style.cssText = "width:92px;font:inherit;font-size:13px;padding:1px 5px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--ink)";
@@ -1699,7 +1699,7 @@ function wirePlanEdits(){
       if(done) return; done = true;
       const v = Number(inp.value);
       if(isFinite(v) && v >= 0){
-        if(k === "alw") ALW = v; else if(k === "invm") INVM = v; else BIGM = v;
+        if(k === "everyday") EVERYDAY = v; else if(k === "invm") INVM = v; else BIGM = v;
         saveState();
       }
       renderPlan(); drawNav(); renderInsights();
@@ -1778,16 +1778,16 @@ function renderYear(){
     el.onclick = () => { const k = el.dataset.cat; yearCat = (!k || yearCat === k) ? null : k; renderYear(); });
 }
 
-// Each month of the year against the allowance: everyday spending only (big buys have their own
-// fund), against today's allowance, the same comparison fundRun makes when it routes leftovers
+// Each month of the year against the everyday amount: everyday spending only (big buys have their own
+// fund), against today's everyday amount, the same comparison fundRun makes when it routes leftovers
 // and overspends. A month still open is drawn hatched-light and left out of the count.
 function renderAlwYear(){
-  const YM12 = MONTHS_IN(viewYear), svg = $("alwYrChart");
+  const YM12 = MONTHS_IN(viewYear), svg = $("everydayYrChart");
   const has = YM12.filter(m => MONTHS.includes(m));
-  if(!has.length){ svg.innerHTML = '<text x="470" y="110" text-anchor="middle" font-size="13" fill="var(--muted)">No spending recorded in '+viewYear+' yet.</text>'; $("alwYrCap").textContent = ""; return; }
-  const [W, H] = fit("alwYrChart", 220), padB=26, padT=26, step=W/12, bw=Math.min(52, step*0.5);
+  if(!has.length){ svg.innerHTML = '<text x="470" y="110" text-anchor="middle" font-size="13" fill="var(--muted)">No spending recorded in '+viewYear+' yet.</text>'; $("everydayYrCap").textContent = ""; return; }
+  const [W, H] = fit("everydayYrChart", 220), padB=26, padT=26, step=W/12, bw=Math.min(52, step*0.5);
   const ev = YM12.map(m => MONTHS.includes(m) ? everydayOf(m) : null);
-  const mx = Math.max(ALW * 1.15, ...ev.filter(v => v !== null));
+  const mx = Math.max(EVERYDAY * 1.15, ...ev.filter(v => v !== null));
   const y = v => H - padB - v/mx*(H-padB-padT);
   let out = '<line x1="0" y1="'+(H-padB)+'" x2="'+W+'" y2="'+(H-padB)+'" stroke="var(--grid)" stroke-width="1"/>';
   const meta = [];
@@ -1795,22 +1795,22 @@ function renderAlwYear(){
     const v = ev[i], x = step*i + (step-bw)/2;
     out += '<text x="'+(x+bw/2)+'" y="'+(H-9)+'" text-anchor="middle" font-size="12" fill="var(--muted)">'+MN[i]+'</text>';
     if(v === null) return;
-    const open = m > covEnd, inside = Math.min(Math.max(v,0), ALW), over = Math.max(v - ALW, 0);
+    const open = m > covEnd, inside = Math.min(Math.max(v,0), EVERYDAY), over = Math.max(v - EVERYDAY, 0);
     const op = open ? ' opacity=".45"' : '';
     out += '<rect x="'+x+'" y="'+y(inside)+'" width="'+bw+'" height="'+(H-padB-y(inside))+'" fill="var(--c-dining)"'+op+' data-i="'+meta.length+'"/>';
-    if(over) out += '<rect x="'+x+'" y="'+y(v)+'" width="'+bw+'" height="'+(y(ALW)-y(v))+'" fill="#d03b3b"'+op+' data-i="'+meta.length+'"/>';
+    if(over) out += '<rect x="'+x+'" y="'+y(v)+'" width="'+bw+'" height="'+(y(EVERYDAY)-y(v))+'" fill="#d03b3b"'+op+' data-i="'+meta.length+'"/>';
     out += '<text x="'+(x+bw/2)+'" y="'+(y(Math.max(v,0))-5)+'" text-anchor="middle" font-size="12" class="num" fill="'+(over && !open ? '#d03b3b' : 'var(--ink-2)')+'">'+fmt(v)+'</text>';
     meta.push({m, v, open});
   });
-  out += '<line x1="0" y1="'+y(ALW)+'" x2="'+W+'" y2="'+y(ALW)+'" stroke="var(--ink)" stroke-width="1" stroke-dasharray="4 4"/>'
-    + '<text x="'+(W-4)+'" y="'+(y(ALW)-5)+'" text-anchor="end" font-size="11" fill="var(--muted)">set '+fmt(ALW)+'</text>';
+  out += '<line x1="0" y1="'+y(EVERYDAY)+'" x2="'+W+'" y2="'+y(EVERYDAY)+'" stroke="var(--ink)" stroke-width="1" stroke-dasharray="4 4"/>'
+    + '<text x="'+(W-4)+'" y="'+(y(EVERYDAY)-5)+'" text-anchor="end" font-size="11" fill="var(--muted)">set '+fmt(EVERYDAY)+'</text>';
   svg.innerHTML = out;
   svg.querySelectorAll("rect[data-i]").forEach(r => { const d = meta[Number(r.dataset.i)];
-    hoverable(r, ymFull(d.m)+"<br>Everyday "+fmt(d.v)+"<br>"+(d.v > ALW ? fmt(d.v-ALW)+" over" : fmt(ALW-d.v)+" under")+" the "+fmt(ALW)+" set"+(d.open ? "<br>Still open" : "")); });
-  const closed = meta.filter(d => !d.open), kept = closed.filter(d => d.v <= ALW);
+    hoverable(r, ymFull(d.m)+"<br>Everyday "+fmt(d.v)+"<br>"+(d.v > EVERYDAY ? fmt(d.v-EVERYDAY)+" over" : fmt(EVERYDAY-d.v)+" under")+" the "+fmt(EVERYDAY)+" set"+(d.open ? "<br>Still open" : "")); });
+  const closed = meta.filter(d => !d.open), kept = closed.filter(d => d.v <= EVERYDAY);
   // Only months since the plan began had a fund behind them to pay for an overspend.
-  const overSum = closed.filter(d => d.m >= PLAN.start).reduce((s,d) => s + Math.max(d.v - ALW, 0), 0);
-  $("alwYrCap").textContent = closed.length ? "Inside it in " + kept.length + " of " + closed.length + " closed months" : "No month has closed yet";
+  const overSum = closed.filter(d => d.m >= PLAN.start).reduce((s,d) => s + Math.max(d.v - EVERYDAY, 0), 0);
+  $("everydayYrCap").textContent = closed.length ? "Inside it in " + kept.length + " of " + closed.length + " closed months" : "No month has closed yet";
 }
 
 // ===== Income month-by-month: stacked by source (blue family = income domain) =====
@@ -1917,14 +1917,14 @@ const TX_HEAD = '<tr><th>Date</th><th style="text-align:left">Description</th><t
 // A month's spending, each row in exactly one part (FINANCE.md §3a), so the parts add up to the total.
 function monthParts(ym){
   const sum = f => monthOf(ym).filter(f).reduce((s,e) => s + e.amount, 0);
-  return {fixed:sum(e => CGRP[e.category] === "fixed"), everyday:everydayOf(ym),
-          big:sum(e => inAllowance(e) && isBig(e)), time:sum(e => CGRP[e.category] === "time")};
+  return {bills:sum(e => CGRP[e.category] === "bills"), everyday:everydayOf(ym),
+          big:sum(e => inEveryday(e) && isBig(e)), education:sum(e => CGRP[e.category] === "education")};
 }
 function renderCatPage(){
   const es = monthOf(viewYM);
   const total = es.reduce((s,e) => s + e.amount, 0);
   const parts = monthParts(viewYM);
-  const partRows = [["Bills & housing", parts.fixed], ["Everyday", parts.everyday], ["Big buys", parts.big], ["Education", parts.time]]
+  const partRows = [["Bills & housing", parts.bills], ["Everyday", parts.everyday], ["Big buys", parts.big], ["Education", parts.education]]
     .filter(p => Math.abs(p[1]) > 0.005);
   const rows = CATS.map(c => {
     const items = es.filter(e => e.category === c.k).sort((a,b) => b.amount - a.amount);
@@ -2095,7 +2095,7 @@ const covEnd = (() => {
   // for it until then. A source that has reported nothing constrains nothing.
   const ends = Object.values(STMT_END).filter(Boolean).map(full);
   // Nothing reported yet means no month is covered -- not "this month is complete". The first
-  // fresh workspace credited its whole September allowance to the travel fund on day 10.
+  // fresh workspace credited its whole September everyday to the travel fund on day 10.
   return ends.length ? ends.sort()[0] : "";
 })();
 function renderBaseline(){
@@ -3168,7 +3168,7 @@ function renderWsInc(){
 // findata/imports.json is the record (newest first); findata/decisions.json is the queue of things
 // the import could not settle on its own. The story of an update lives on this page and nowhere
 // else: every other page shows a status computed today. (2026-09-10)
-const IMPORTS = [{"date": "2026-09-06", "files": ["Cash Back Visa statement to Aug 19", "MasterCard statement to Aug 20", "Chequing and savings statements to Sep 5", "Holdings report of Sep 6", "Activities export of Sep 6"], "changed": [{"label": "Dry powder", "from": "44.4%", "to": "43.1%"}, {"label": "Holdings", "from": 9, "to": 8}, {"label": "Spending in August", "from": "$0", "to": "$1,244"}], "noticed": [{"sev": "ok", "text": "Dry powder is 43.1%, inside your 40–45% band: SGOV and VSC hold $28,950 of the $67,135 Canadian side."}, {"sev": "ok", "text": "8 holdings, inside your limit of 10. The middle tier is one bond ETF, ZAG at $1,400."}, {"sev": "ok", "text": "August kept the rule: two deposits of $400 reached the broker on Aug 2 and Aug 17."}, {"sev": "ok", "text": "Every statement due has arrived. The next to close are the MasterCard on Sep 20 and the RBC pair on Sep 25."}, {"sev": "warn", "text": "The $1,500 e-Transfer from Sam on Jul 13 is the March loan coming back, so it is not income."}, {"sev": "warn", "text": "June went over the everyday allowance even with the $429.99 monitor set aside as a big buy."}], "judged": ["Filed the $429.99 monitor in June as a big buy rather than everyday spending.", "Typed the Jul 13 e-Transfer from Sam as a repayment, matching the friend ledger."], "asked": ["Whether FARM BOY OTTAWA stays in Grocery, and what the unnamed $200 e-Transfer of Aug 11 was."]}];
+const IMPORTS = [{"date": "2026-09-06", "files": ["Cash Back Visa statement to Aug 19", "MasterCard statement to Aug 20", "Chequing and savings statements to Sep 5", "Holdings report of Sep 6", "Activities export of Sep 6"], "changed": [{"label": "Dry powder", "from": "44.4%", "to": "43.1%"}, {"label": "Holdings", "from": 9, "to": 8}, {"label": "Spending in August", "from": "$0", "to": "$1,244"}], "noticed": [{"sev": "ok", "text": "Dry powder is 43.1%, inside your 40–45% band: SGOV and VSC hold $28,950 of the $67,135 Canadian side."}, {"sev": "ok", "text": "8 holdings, inside your limit of 10. The middle tier is one bond ETF, ZAG at $1,400."}, {"sev": "ok", "text": "August kept the rule: two deposits of $400 reached the broker on Aug 2 and Aug 17."}, {"sev": "ok", "text": "Every statement due has arrived. The next to close are the MasterCard on Sep 20 and the RBC pair on Sep 25."}, {"sev": "warn", "text": "The $1,500 e-Transfer from Sam on Jul 13 is the March loan coming back, so it is not income."}, {"sev": "warn", "text": "June went over the everyday amount even with the $429.99 monitor set aside as a big buy."}], "judged": ["Filed the $429.99 monitor in June as a big buy rather than everyday spending.", "Typed the Jul 13 e-Transfer from Sam as a repayment, matching the friend ledger."], "asked": ["Whether FARM BOY OTTAWA stays in Grocery, and what the unnamed $200 e-Transfer of Aug 11 was."]}];
 const DECISIONS = [{"added": "2026-09-06", "kind": "merchant", "what": "FARM BOY OTTAWA has appeared 33 times and is filed as Grocery.", "default": "Grocery", "source": "Cash Back Visa, most recently Aug 14", "status": "open"}, {"added": "2026-09-06", "kind": "transfer", "what": "A $200 e-Transfer received on Aug 11 carries no sender name.", "default": "Other income", "source": "Chequing statement to Sep 5", "status": "open"}, {"added": "2026-08-12", "kind": "merchant", "what": "STEAM PURCHASE SEATTLE, seen for the first time.", "default": "Shopping", "source": "Cash Back Visa, Aug 3", "status": "confirmed", "answer": "Entertainment", "resolved": "2026-08-12"}, {"added": "2026-10-29", "kind": "merchant", "match": "AMAZON PRIME MEMBER AMAZON.CA", "what": "AMAZON PRIME MEMBER AMAZON.CA was filed as Subscription, which is no longer a category: a charge that repeats is marked as one whatever it bought. It is filed as Other meanwhile.", "default": "Other", "source": "the move to fourteen categories", "status": "confirmed", "answer": "Shopping", "resolved": "2026-10-29"}, {"added": "2026-10-29", "kind": "merchant", "match": "APPLE.COM/BILL TORONTO", "what": "APPLE.COM/BILL TORONTO was filed as Subscription, which is no longer a category: a charge that repeats is marked as one whatever it bought. It is filed as Other meanwhile.", "default": "Other", "source": "the move to fourteen categories", "status": "confirmed", "answer": "Entertainment", "resolved": "2026-10-29"}, {"added": "2026-10-29", "kind": "merchant", "match": "GOODLIFE FITNESS TORONTO", "what": "GOODLIFE FITNESS TORONTO was filed as Subscription, which is no longer a category: a charge that repeats is marked as one whatever it bought. It is filed as Other meanwhile.", "default": "Other", "source": "the move to fourteen categories", "status": "confirmed", "answer": "Health", "resolved": "2026-10-29"}, {"added": "2026-10-29", "kind": "merchant", "match": "KOODO MOBILE", "what": "KOODO MOBILE was filed as Subscription, which is no longer a category: a charge that repeats is marked as one whatever it bought. It is filed as Bills meanwhile.", "default": "Bills", "source": "the move to fourteen categories", "status": "confirmed", "answer": "Bills", "resolved": "2026-10-29"}, {"added": "2026-10-29", "kind": "merchant", "match": "NETFLIX.COM NETFLIX.COM", "what": "NETFLIX.COM NETFLIX.COM was filed as Subscription, which is no longer a category: a charge that repeats is marked as one whatever it bought. It is filed as Entertainment meanwhile.", "default": "Entertainment", "source": "the move to fourteen categories", "status": "confirmed", "answer": "Entertainment", "resolved": "2026-10-29"}, {"added": "2026-10-29", "kind": "merchant", "match": "SPOTIFY SPOTIFY.COM", "what": "SPOTIFY SPOTIFY.COM was filed as Subscription, which is no longer a category: a charge that repeats is marked as one whatever it bought. It is filed as Entertainment meanwhile.", "default": "Entertainment", "source": "the move to fourteen categories", "status": "confirmed", "answer": "Entertainment", "resolved": "2026-10-29"}, {"added": "2026-10-29", "kind": "merchant", "match": "ANNUAL FEE", "what": "ANNUAL FEE is filed as Other. With fifteen categories it fits Fees better; it stays Other until confirmed.", "default": "Other", "suggest": "Fees", "source": "the move to fifteen categories", "status": "confirmed", "answer": "Fees", "resolved": "2026-10-29"}, {"added": "2026-10-29", "kind": "merchant", "match": "SHOPPERS DRUG MART 0781 OTTAWA", "what": "SHOPPERS DRUG MART 0781 OTTAWA is filed as Shopping. With fifteen categories it fits Health better; it stays Shopping until confirmed.", "default": "Shopping", "suggest": "Health", "source": "the move to fifteen categories", "status": "confirmed", "answer": "Health", "resolved": "2026-10-29"}];
 const dLong = d => { const p = String(d).split("-"); return MN[Number(p[1])-1] + " " + Number(p[2]); };
 

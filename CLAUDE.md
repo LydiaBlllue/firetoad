@@ -62,7 +62,7 @@ The rest of `findata/`, and what each carries:
 | `holdings_latest.csv`, `ws_activities.csv` | the broker's exports |
 | `banks.json` | one balance and one as-of date per bank account |
 | `profile.json` | the owner (shown under the Jade Toad wordmark and in the tab), the year of birth, the import day |
-| `funds.json` | the monthly plan as **flows** — `income`, `committed` (rent, a mortgage, a loan), `saving` (to the broker, or to a fund by `to`), `allowance`, each with an amount and, where it applies, `until`, `afterFire`, `pays`, `starts` — and the named funds (`role: topup` / `big`), which carry no number of their own |
+| `funds.json` | the monthly plan as **flows** — `income`, `committed` (rent, a mortgage, a loan), `saving` (to the broker, or to a fund by `to`), `everyday`, each with an amount and, where it applies, `until`, `afterFire`, `pays`, `starts` — and the named funds (`role: topup` / `big`), which carry no number of their own |
 | `plan.json` | planning spend, months excluded from comparisons, deposits into the broker that were gifts (`brokerGifts`), the retirement assumptions, the owner's one-line descriptions of the net-worth parts |
 | `rules.json` | the investing buckets and their target bands, the owner's theses (`notes`) and `checkpoints`, `assetClass` — what each ETF holds (stocks / bonds / cash / gold / crypto), the one thing the broker's export cannot say — and `principles`, the owner's high-level rules, each naming a check the Investing overview runs today (with `placement`, which account each holding belongs in) |
 | `merchants.json` | merchant → category |
@@ -139,10 +139,10 @@ scripts derives what is still owed from it and the ledgers, and D23 holds the ro
 that and fails a borrower who has paid back more than was owed. Selftest plants all three.
 
 Each line of the monthly plan is a **flow** with `kind` (income / committed / saving /
-allowance), `amount` and, where it applies, `until`, `afterFire` (keep / drop), `pays` (the
+everyday), `amount` and, where it applies, `until`, `afterFire` (keep / drop), `pays` (the
 liability it repays) and `starts: "fire"` (rent an owner will pay but does not yet) — FINANCE.md
 §8b. The sums every consumer reads come from one module, `flows.py` in the update-dashboard
-scripts: the page derives take-home, invest and the allowance from `FUNDS.plan.flows` at load,
+scripts: the page derives take-home, invest and the everyday amount from `FUNDS.plan.flows` at load,
 `rebuild.py` reads the pay-yourself-first amount and `COMMITTED_KEEP` (the fixed part of the
 planning figure) from it, and D13 / D15 read the same sums. D21 matches every committed flow
 paid today against the ledgers, the way `WSDEP` matches the investing transfers, and warns when

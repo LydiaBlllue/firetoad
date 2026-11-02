@@ -626,7 +626,7 @@ def check(root):
                            f"{', '.join(FLOW_KINDS)}, not {f_.get('kind')!r}")
             # null is a number the owner has not given yet (flows.unset) -- the page says Not set.
             # Anything else that is not a number, or a negative one, is a broken row.
-            if f_.get("amount") is None and f_.get("kind") in ("income", "saving", "allowance"):
+            if f_.get("amount") is None and f_.get("kind") in ("income", "saving", "everyday"):
                 continue
             if not isinstance(f_.get("amount"), (int, float)) or f_["amount"] < 0:
                 err("D13", f"funds.json flow {f_.get('name') or f_.get('key')!r} has no amount")
@@ -643,7 +643,7 @@ def check(root):
                 err("D13", f"funds.json flow {f_.get('name') or f_.get('key')!r} goes to {to!r}, which is neither "
                            "the broker nor a fund in this file")
         ft = flow_totals(plan)
-        split = ft["committed"] + ft["saving"] + ft["allowance"]
+        split = ft["committed"] + ft["saving"] + ft["everyday"]
         if split > ft["income"] and "takeHome" not in flow_unset(plan):
             err("D13", f"the monthly split asks for ${split:,} against income of ${ft['income']:,}")
         # 2026-09-07: the funds moved off bank cash onto a named Wealthsimple account, so the claim
@@ -1012,7 +1012,7 @@ def check(root):
             want = {"plan_base": pb, "fire_target": tgt, "net_worth": nw, "portfolio": port,
                     "progress": round(port / tgt * 100, 1) if tgt else 0, "gap": tgt - port,
                     "invest_monthly": flow_totals(fj2["plan"])["invest"],
-                    "everyday": flow_totals(fj2["plan"])["allowance"],
+                    "everyday": flow_totals(fj2["plan"])["everyday"],
                     "big_threshold": fj2["plan"]["bigThreshold"],
                     "dry_powder": inv["dryPct"]}
             if trav:

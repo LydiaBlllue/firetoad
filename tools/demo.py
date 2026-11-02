@@ -513,7 +513,7 @@ def build(out):
         ]),
     ]))
     J("funds.json", OrderedDict([
-        ("asof_note", "The guilt-free plan: pay-yourself-first, one everyday allowance, two named funds. The dashboard's FUNDS constant is a copy of this file (check_data D13). Fields that render on the page are English."),
+        ("asof_note", "The guilt-free plan: pay-yourself-first, one everyday amount, two named funds. The dashboard's FUNDS constant is a copy of this file (check_data D13). Fields that render on the page are English."),
         ("plan", OrderedDict(start="2026-08",
             # Schema 5: flows. Take-home is the whole paycheque; rent is a committed flow the
             # ledger shows on the 1st (D21 looks for it), and it stays after FIRE.
@@ -524,21 +524,21 @@ def build(out):
                             note="Pre-authorized on the 1st, from chequing. Still there after FIRE."),
                 OrderedDict(key="invest", kind="saving", name="Invest", amount=P["invest"], to="broker",
                             note="Off the top, before anything else — pay-yourself-first."),
-                OrderedDict(key="everyday", kind="allowance", name="Everyday allowance", amount=P["everyday"],
+                OrderedDict(key="everyday", kind="everyday", name="Everyday", amount=P["everyday"],
                             note="The guilt-free line. No categories and no caps below it."),
                 # A fund's standing contribution is a saving flow that names the fund (schema 8).
                 OrderedDict(key="bigbuy-in", kind="saving", name="Big buys", amount=P["take_home"] - P["invest"] - P["everyday"], to="bigbuy",
-                            note=f"${P['take_home']:,} after rent, less ${P['invest']:,} to the broker and ${P['everyday']:,} of allowance. This is everything the paycheque actually has left."),
+                            note=f"${P['take_home']:,} after rent, less ${P['invest']:,} to the broker and ${P['everyday']:,} of everyday. This is everything the paycheque actually has left."),
             ],
             bigThreshold=P["big"], leftoverGoesTo="travel",
-            bigThresholdNote="A single transaction at or over this is a big buy: kept out of the allowance and paid from the Big buys fund. Only everyday spending can be one, and a subscription never is.",
-            leftoverNote="Each closed month adds (allowance - everyday spending) to the funds, and that figure is signed: an over month takes from Big buys first, then Travel.")),
+            bigThresholdNote="A single transaction at or over this is a big buy: kept out of the everyday amount and paid from the Big buys fund. Only everyday spending can be one, and a subscription never is.",
+            leftoverNote="Each closed month adds (everyday - everyday spending) to the funds, and that figure is signed: an over month takes from Big buys first, then Travel.")),
         ("funds", [
             OrderedDict(key="travel", role="topup", name="Travel", color="#4a3aa7", goal=3000, by="2027-03", why="A week away in March 2027",
                         opening=dict(date="2026-08-01", amount=3000, **{"from": hys_label + " " + ID["hys"]},
                                      note="Not a transfer — a label on money already in that account, so the goal is met on day one and the discipline is leaving it alone."),
                         backing=backing),
-            OrderedDict(key="bigbuy", role="big", name="Big buys", color="#eda100", goal=None, why="One-off purchases like a monitor. If the fund covers it, buy it — it never touches the month's allowance",
+            OrderedDict(key="bigbuy", role="big", name="Big buys", color="#eda100", goal=None, why="One-off purchases like a monitor. If the fund covers it, buy it — it never touches the month's everyday amount",
                         opening=dict(date="2026-08-01", amount=1000, **{"from": hys_label + " " + ID["hys"]},
                                      note="Same account, second label. No new account was opened: a chequing account pays nothing, costs a monthly fee, and would add another statement to import every month."),
                         backing=backing),
@@ -615,7 +615,7 @@ def build(out):
                 dict(sev="ok", text=f"August kept the rule: two deposits of ${P['invest']/2:,.0f} reached the broker on Aug 2 and Aug 17."),
                 dict(sev="ok", text="Every statement due has arrived. The next to close are the MasterCard on Sep 20 and the RBC pair on Sep 25."),
                 dict(sev="warn", text=f"The $1,500 e-Transfer from {P['friend']} on Jul 13 is the March loan coming back, so it is not income."),
-                dict(sev="warn", text="June went over the everyday allowance even with the $429.99 monitor set aside as a big buy."),
+                dict(sev="warn", text="June went over the everyday amount even with the $429.99 monitor set aside as a big buy."),
             ]),
             ("judged", ["Filed the $429.99 monitor in June as a big buy rather than everyday spending.",
                         f"Typed the Jul 13 e-Transfer from {P['friend']} as a repayment, matching the friend ledger."]),
