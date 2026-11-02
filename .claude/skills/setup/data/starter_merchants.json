@@ -697,6 +697,258 @@
     {
       "match": "UBER CANADA UBEREATS",
       "category": "Dining"
+    },
+    {
+      "match": "LOBLAW",
+      "category": "Grocery"
+    },
+    {
+      "match": "T&T",
+      "category": "Grocery"
+    },
+    {
+      "match": "H MART",
+      "category": "Grocery"
+    },
+    {
+      "match": "GALLERIA",
+      "category": "Grocery"
+    },
+    {
+      "match": "NATIONS FRESH",
+      "category": "Grocery"
+    },
+    {
+      "match": "ADONIS",
+      "category": "Grocery"
+    },
+    {
+      "match": "WHOLESALE CLUB",
+      "category": "Grocery"
+    },
+    {
+      "match": "PRICE CHOPPER",
+      "category": "Grocery"
+    },
+    {
+      "match": "RABBA",
+      "category": "Grocery"
+    },
+    {
+      "match": "BULK BARN",
+      "category": "Grocery"
+    },
+    {
+      "match": "SUPERMARKET",
+      "category": "Grocery"
+    },
+    {
+      "match": "GROCERY",
+      "category": "Grocery"
+    },
+    {
+      "match": "MCDONALD",
+      "category": "Dining"
+    },
+    {
+      "match": "SWISS CHALET",
+      "category": "Dining"
+    },
+    {
+      "match": "BOSTON PIZZA",
+      "category": "Dining"
+    },
+    {
+      "match": "MONTANAS",
+      "category": "Dining"
+    },
+    {
+      "match": "EAST SIDE MARIOS",
+      "category": "Dining"
+    },
+    {
+      "match": "THE KEG",
+      "category": "Dining"
+    },
+    {
+      "match": "PANERA",
+      "category": "Dining"
+    },
+    {
+      "match": "DAVIDS TEA",
+      "category": "Dining"
+    },
+    {
+      "match": "FIVE GUYS",
+      "category": "Dining"
+    },
+    {
+      "match": "NANDOS",
+      "category": "Dining"
+    },
+    {
+      "match": "RESTAURANT",
+      "category": "Dining"
+    },
+    {
+      "match": "PIZZA",
+      "category": "Dining"
+    },
+    {
+      "match": "SUSHI",
+      "category": "Dining"
+    },
+    {
+      "match": "SHAWARMA",
+      "category": "Dining"
+    },
+    {
+      "match": "HOTPOT",
+      "category": "Dining"
+    },
+    {
+      "match": "BAKERY",
+      "category": "Dining"
+    },
+    {
+      "match": "CAFE",
+      "category": "Dining"
+    },
+    {
+      "match": "COFFEE",
+      "category": "Dining"
+    },
+    {
+      "match": "HONK",
+      "category": "Transport"
+    },
+    {
+      "match": "IMPARK",
+      "category": "Transport"
+    },
+    {
+      "match": "GREEN P",
+      "category": "Transport"
+    },
+    {
+      "match": "PRECISE PARKING",
+      "category": "Transport"
+    },
+    {
+      "match": "PARKING",
+      "category": "Transport"
+    },
+    {
+      "match": "CANADIAN TIRE GAS",
+      "category": "Transport"
+    },
+    {
+      "match": "AMAZON",
+      "category": "Shopping"
+    },
+    {
+      "match": "BEST BUY",
+      "category": "Shopping"
+    },
+    {
+      "match": "SEPHORA",
+      "category": "Shopping"
+    },
+    {
+      "match": "WINNERS",
+      "category": "Shopping"
+    },
+    {
+      "match": "MARSHALLS",
+      "category": "Shopping"
+    },
+    {
+      "match": "HOMESENSE",
+      "category": "Shopping"
+    },
+    {
+      "match": "CANADIAN TIRE",
+      "category": "Shopping"
+    },
+    {
+      "match": "HOME DEPOT",
+      "category": "Shopping"
+    },
+    {
+      "match": "RONA",
+      "category": "Shopping"
+    },
+    {
+      "match": "LOWES",
+      "category": "Shopping"
+    },
+    {
+      "match": "IKEA",
+      "category": "Shopping"
+    },
+    {
+      "match": "DOLLARAMA",
+      "category": "Shopping"
+    },
+    {
+      "match": "GIANT TIGER",
+      "category": "Shopping"
+    },
+    {
+      "match": "HUDSONS BAY",
+      "category": "Shopping"
+    },
+    {
+      "match": "SPORT CHEK",
+      "category": "Shopping"
+    },
+    {
+      "match": "OLD NAVY",
+      "category": "Shopping"
+    },
+    {
+      "match": "LULULEMON",
+      "category": "Shopping"
+    },
+    {
+      "match": "UNIQLO",
+      "category": "Shopping"
+    },
+    {
+      "match": "ZARA",
+      "category": "Shopping"
+    },
+    {
+      "match": "INDIGO",
+      "category": "Shopping"
+    },
+    {
+      "match": "STAPLES",
+      "category": "Shopping"
+    },
+    {
+      "match": "PET VALU",
+      "category": "Shopping"
+    },
+    {
+      "match": "MOORES",
+      "category": "Shopping"
+    },
+    {
+      "match": "LONG MCQUADE",
+      "category": "Shopping"
+    },
+    {
+      "match": "LONG & MCQUADE",
+      "category": "Shopping"
+    },
+    {
+      "match": "APPLE STORE",
+      "category": "Shopping"
+    },
+    {
+      "match": "UTILITY BILLING",
+      "category": "Bills"
     }
   ]
 }

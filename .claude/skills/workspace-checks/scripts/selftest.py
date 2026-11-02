@@ -50,7 +50,9 @@ def stage(root, dst):
             shutil.copy2(os.path.join(root, f), dst)
     # README names these folders in prose and S4 checks that every path it hands the reader
     # resolves, so the copy has to have them or the baseline fails on paths that are fine.
-    shutil.copytree(os.path.join(root, "inbox"), os.path.join(dst, "inbox"))
+    # Empty: what is waiting in the real inbox is not this copy's. One statement named so preflight
+    # could not place it stopped every update the selftest ran (2026-11).
+    os.makedirs(os.path.join(dst, "inbox"))
     os.makedirs(os.path.join(dst, "archive"))
     for f in os.listdir(os.path.join(root, "archive")):
         open(os.path.join(dst, "archive", f), "w").close()
@@ -718,7 +720,7 @@ def ready_check(root, base):
         return ["  ✗ setup has no ready.py: nothing checks the tools before the questions"]
     r = subprocess.run([sys.executable, rd, root], capture_output=True, text=True, timeout=60)
     try:
-        import pypdf  # noqa: F401
+        import pypdf, cryptography  # noqa: F401,E401
         has = True
     except ImportError:
         has = False
@@ -1892,6 +1894,10 @@ def main(argv):
                 script = {"dash": "check_design.py", "find": "check_data.py",
                           "render": "check_render.py"}[which]
                 out = run(script, dash_args(d) if which in ("dash", "render") else ["."], d)
+                # The page checker is optional. Not run is said as not run: never a pass, never a failure.
+                if which == "render" and "check_render needs Playwright" in out:
+                    print(f"  · [{rule}] {what} — not run: playwright is not installed")
+                    continue
             ok = fired(out, rule)
             print(f"  {'✓' if ok else '✗'} [{rule}] {what}")
             if not ok:

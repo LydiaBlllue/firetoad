@@ -2,6 +2,20 @@
 
 ## 1.3 — unreleased
 
+- **Ready means ready** (2026-11-02, user 002). `ready.py` passed, then an encrypted statement
+  stopped the draft with a traceback, because pypdf needs `cryptography` for it. `ready.py` now
+  checks both, and a missing one is said in a sentence.
+- **The selftest answers for the tool, not for the inbox or an optional browser** (2026-11-02,
+  user 002). It copied the real `inbox/`, so one statement preflight could not name failed 13 checks;
+  the copy's inbox is now empty. Without playwright, the two render faults say "not run" instead
+  of failing, and setup's last step no longer offers the download.
+- **More of a first import is sorted, and the frequent ones come first** (2026-11-02, user 002).
+  The starter map gains 63 public chains and kinds of business, and the one table to confirm is
+  ordered by how often a merchant appears, after any question about money.
+- **A plan above take-home is not called a paycheque** (2026-11-02, user 002). With take-home of
+  $0 the flow chart said Take-home $3,150. It now says Planned, is titled for the plan, says the
+  gap under it, and marks each committed line planned: a chart of the plan shows no payment as made.
+
 - **A chequing statement whose amounts sit alone on a line is read** (2026-11-02, user 002). A long
   description can wrap so its last line holds only the amounts; the BMO parser refused the whole
   statement, and the RBC parser took the first amount for words. Both now read it, and the selftest

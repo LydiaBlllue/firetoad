@@ -1541,8 +1541,10 @@ function renderSplit(F){
 // everydayOf(month), the same figure Free to spend shows.
 function drawFlow(){
   const svg = $("flowSvg"), ym = MONTHS.includes(viewYM) ? viewYM : null, open = ym && ym > covEnd;
-  $("flowLab").textContent = ym ? "Where the paycheque went" : "Where the paycheque goes";
   const alloc = planAlloc(), used = alloc.reduce((s,a) => s + a.v, 0), rest = PLAN.takeHome - used;
+  // A plan above take-home is not a paycheque being split, so the chart does not call it one.
+  const short = rest < 0;
+  $("flowLab").textContent = short ? "Where the plan sends the money" : ym ? "Where the paycheque went" : "Where the paycheque goes";
   const segs = alloc.filter(a => a.v > 0).concat(rest > 0 ? [UNALLOC(rest)] : []);
   const ev = ym ? monthOf(ym).filter(e => inAllowance(e) && !isBig(e)) : [];
   const net = CATS.map(c => ({k:c.k, n:c.n, c:c.c, v:ev.filter(e => e.category === c.k).reduce((s,e) => s + e.amount, 0)}));
@@ -1551,7 +1553,7 @@ function drawFlow(){
   const gross = byCat.reduce((s,c) => s + c.v, 0), spent = gross - back;
   const alw = segs.find(a => a.pk === "alw");
   const over = alw && spent > ALW ? spent - ALW : 0;
-  const left = [{k:"Take-home", v:Math.max(PLAN.takeHome, used), c:"var(--ink)"}];
+  const left = [{k:short ? "Planned" : "Take-home", v:Math.max(PLAN.takeHome, used), c:"var(--ink)"}];
   if(alw && back > 0.5) left.push({k:"Refunds", v:back, c:"#9a9890", tip:"Refunds that came back in " + ymFull(ym)});
   if(over) left.push({k:"From " + (BFUND.key ? BFUND.name : "savings"), v:over, c:"#c98500",
                       tip:fmt(over) + " over the allowance in " + ymFull(ym)});
@@ -1597,7 +1599,7 @@ function drawFlow(){
     + '<text class="v num" x="'+x+'" y="'+(y+13)+'" text-anchor="'+an+'">'+val+'</text>';
   left.forEach(n => g += node(n, X[0], lbl(X[0] - 8, n.y + n.h/2, "end", n.k, fmt(n.v))));
   mid.forEach(n => g += node(n, X[1], lbl(X[1] + NW + 8, n.y + n.h/2, "start", n.k,
-    n === a && ym ? fmt(ALW) + " planned · " + fmt(spent) + " spent" : fmt(n.v))));
+    n === a && ym ? fmt(ALW) + " planned · " + fmt(spent) + " spent" : fmt(n.v) + (ym ? " planned" : ""))));
   right.forEach(n => g += node(n, X[2], lbl(X[2] + NW + 8, n.y + n.h/2, "start", n.n || n.k, fmt(n.v), n.rest ? null : n.k)));
   svg.setAttribute("viewBox", "0 0 " + W + " " + H);
   svg.innerHTML = g;
@@ -1606,7 +1608,8 @@ function drawFlow(){
   const cats = right.filter(n => !n.rest).map(n => n.k);
   svg.querySelectorAll("path.hit").forEach((p, i) => p.onclick = () => pickCat(cats[i]));
   svg.querySelectorAll("text.hit").forEach(t => t.onclick = () => pickCat(t.dataset.k));
-  $("flowCap").innerHTML = a && over ? "Over the allowance by " + fmt(over) : "";
+  $("flowCap").innerHTML = [short ? "The plan asks for " + fmt(used) + " a month against take-home pay of " + fmt(PLAN.takeHome) : "",
+    a && over ? "Over the allowance by " + fmt(over) : ""].filter(Boolean).join(" · ");
 }
 function pickCat(k){
   catSel = k; renderCatPage(); drawFlow();
