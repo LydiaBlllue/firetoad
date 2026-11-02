@@ -92,8 +92,8 @@ What ships today. What is planned is in [`ROADMAP.md`](ROADMAP.md); when each ar
 | group | features |
 |---|---|
 | Header | Net worth across every currency, visible from any page; under it two dates — the day every account is complete to, and the last update |
-| Home | Net worth in one card, a row per purpose, each bar coloured by how easily the money can be reached · four cards: Portfolio, FIRE progress, this month's investing transfer, Free to spend |
-| Spending | Free to spend today, and for how many days · this month by category, each opening its purchases · big buys apart from everyday spending · the year month by month, by category and against the allowance · subscriptions: what repeats, a year's cost, what is due in the next 30 days |
+| Home | Net worth in one card, a row per purpose, each bar coloured by how easily the money can be reached · four cards: Portfolio, FIRE progress, this month's investing transfer, Everyday |
+| Spending | What is left of Everyday today, and for how many days · this month by category, each opening its purchases · big buys apart from everyday spending · the year month by month, by category and against the allowance · subscriptions: what repeats, a year's cost, what is due in the next 30 days |
 | Income | Income by source and how much of it was kept · investment income — dividends, interest, lending, withholding tax — on its own page |
 | Investing | The portfolio by currency, kind of asset and bucket · performance against one benchmark fund bought on the same days · every holding, by role or by account |
 | Plan | What each paycheque is for, and what each fund holds · the FIRE target, progress, the year it is reached and coast to FIRE · whether the money lasts, late-life care included, replayed through every stretch of real years since 1928 · the planning figure against what is really spent |

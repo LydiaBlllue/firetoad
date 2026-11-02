@@ -912,6 +912,19 @@ def chequing_setup_check(root, base):
     return ["  ✓ chequing setup, end to end: a bill and a cash withdrawal are spending, and money in is not"]
 
 
+def month_parts_check(root, base):
+    """The sentence setup ends with: its parts have to add up to the month's total in spending.csv."""
+    r = subprocess.run([sys.executable, os.path.join(root, ".claude", "skills", "setup", "scripts", "month_sentence.py"), root],
+                       capture_output=True, text=True, timeout=60)
+    m = re.match(r"In (\w+) you spent \$([\d,]+): (.+)\.$", r.stdout.strip())
+    if not m:
+        return [] if r.stdout.startswith("No spending") else [f"  ✗ month sentence: {r.stdout.strip() or r.stderr.strip()[-120:]}"]
+    parts = [float(x.replace(",", "")) for x in re.findall(r"\$([\d,]+)", m.group(3))]
+    if abs(sum(parts) - float(m.group(2).replace(",", ""))) > len(parts):
+        return [f"  ✗ month sentence: the parts do not add up: {r.stdout.strip()}"]
+    return [f"  ✓ month sentence: {len(parts)} part(s) add up to the month"]
+
+
 def card_only_setup_check(root, base):
     """Setup end to end for the smallest owner there is: one credit card, two statements, every
     question the files cannot answer skipped (2026-10-28, the first person to set this up had
@@ -1952,7 +1965,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
-                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, starter_check,
+                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, month_parts_check, starter_check,
                     demo_clear_check):
             try:
                 runs += chk(root, base)

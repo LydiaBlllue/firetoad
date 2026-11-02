@@ -297,7 +297,8 @@ Three things, in this order:
    Then drop last month's statements into `inbox/` with the bank's own filenames and say it
    now.) Name anything still *Not set*, and that saying the number sets it.
 2. **Open the dashboard.** `dashboards/finance_dashboard.html`, in a browser, at least 1120px
-   wide.
+   wide. Say what their last full month looks like, in the one sentence
+   `python3 .claude/skills/setup/scripts/month_sentence.py .` prints, and teach no definition.
 3. **Fill in `OWNER.md`.** The scaffold left an empty one. The three governing documents are the tool's and say nothing about
    anyone; everything that is theirs — which bank does what, the traps their statements have,
    the decisions they make out loud — goes in `OWNER.md`, which `CLAUDE.md` loads (and, once a

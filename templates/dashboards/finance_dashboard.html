@@ -348,7 +348,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div class="year-legend" id="yearLegend"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab" id="alwYrLab">Against the allowance</div>
+    <div class="lab" id="alwYrLab">Everyday, month by month</div>
     <svg class="year-svg" id="alwYrChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="cap" id="alwYrCap"></div>
   </div>
@@ -357,12 +357,12 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 <section data-pg="cat" hidden>
   <div class="free-split">
   <div class="card">
-    <div class="lab" id="freeLab">Free to spend</div>
+    <div class="lab" id="freeLab">Everyday</div>
     <div class="big num" id="freeBig"></div>
     <div class="bud-track" style="margin-top:10px;max-width:720px"><div class="bud-fill" id="freeFill"></div><div class="bud-tick" id="freeTick"></div></div>
     <div id="freeMeta"></div>
   </div>
-  <div class="card">
+  <div class="card" id="bigCard">
     <div class="lab" id="bigLab">Big buys this month</div>
     <div id="freeBigBuys"></div>
   </div>
@@ -370,7 +370,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   <div class="grid-stats" id="catStats"></div>
   <div class="card" style="margin-bottom:10px">
     <div class="lab" id="flowLab">Where the paycheque went</div>
-    <svg id="flowSvg" class="flow" role="img" aria-label="How take-home pay splits, and where the allowance went"></svg>
+    <svg id="flowSvg" class="flow" role="img" aria-label="How take-home pay splits, and where everyday money went"></svg>
     <div class="cap" id="flowCap"></div>
   </div>
   <div class="cat-split" id="catSplit">
@@ -945,7 +945,7 @@ const GLOSSARY = {
   kept:           {own:1, w:"Kept", pos:"on this page", def:"Income minus spending over the same months. Money moved to savings or investments counts as kept.", also:["pay_yourself_first"]},
   repayment:      {own:1, w:"Paid back", pos:"on this page", def:"Money someone returns on a loan you made. It lowers what they owe you, and it is never income.", also:["owed_to_you","lent_out"]},
   bucket:         {own:1, w:"bucket", pos:"on this page", def:"A group of holdings your investing rules are written about, such as dry powder. What no bucket claims falls into the last one.", also:["dry_powder","target_band"]},
-  everyday:       {own:1, w:"Everyday", pos:"on this page", def:"The monthly allowance for everything under the big-buy threshold. Inside it, no purchase needs a reason.", also:["big_buy","pay_yourself_first"]},
+  everyday:       {own:1, w:"Everyday", pos:"on this page", def:"The amount you set each month for day-to-day spending. Inside it, no purchase needs a reason. Bills, housing and big buys are not in it.", also:["big_buy","pay_yourself_first"]},
   committed:      {own:1, w:"committed payment", pos:"on this page", def:"A payment made every month before anything is chosen, such as rent, a mortgage or a loan.", also:["planning_figure"]},
   unallocated:    {own:1, w:"Unallocated", pos:"on this page", def:"What is left of take-home pay once every line of the plan is paid. It stays where the paycheque landed.", also:["everyday"]},
   complete_to:    {own:1, w:"Complete to", pos:"on this page", def:"The day every account’s numbers are in up to. After it, some accounts are still waiting for their next statement."},
@@ -1263,9 +1263,9 @@ function renderHome(){
       unset("invest") ? (dep ? numx(fmt(dep.amt), [], "Counted the day "+BROKER+" receives it. The plan has no investing amount yet.") : notSet("invest"))
         : dep ? numx(fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>', [["Planned", fmt(FUNDS.plan.invest)], ["Arrived", fmt(dep.amt)]], "Two transfers of "+fmt(half)+", counted the day "+BROKER+" receives them.") : "\u2014",
       dep && !unset("invest") ? (dep.nRule >= 2 ? "Both transfers arrived \u2713" : dep.nRule === 1 ? "One of two transfers arrived" : "No transfer arrived yet") : "") +
-    card("Free to spend",
+    card(term("everyday", "Everyday"),
       unset("everyday") && ALW === PLAN.everyday ? notSet("everyday")
-        : numx(fmt(freeNow)+' <span class="cap-v">of '+fmt(ALW)+'</span>', [["Allowance", fmt(ALW)], ["Spent in "+ymLabel(curYM), "\u2212"+fmt(spentNow)]], "Everyday spending only. Big buys come from their own fund.", true),
+        : numx(fmt(Math.abs(freeNow))+' <span class="cap-v">'+(freeNow < 0 ? "over " : "left of ")+fmt(ALW)+'</span>', [["Set for the month", fmt(ALW)], ["Spent in "+ymLabel(curYM), "\u2212"+fmt(spentNow)]], "Bills, housing and big buys are not in it.", true),
       unset("everyday") && ALW === PLAN.everyday ? "" : fmt(perDay)+" a day for "+left+" day"+(left > 1 ? "s" : ""));
 
   // Net worth, both cuts in one card: a row per purpose, its bar as long as its share and
@@ -1328,14 +1328,14 @@ PLAN.everyday     = flowSum("allowance");
 // plan like every other -- not a number kept on the fund. (findata schema 8, 2026-09-10)
 const fundMonthly = key => key ? flowSum("saving", f => f.to === key) : 0;
 const fundMonthlyNote = key => (FLOWS.find(f => f.kind === "saving" && f.to === key) || {}).note
-                             || "No standing contribution. Leftover allowance is what tops it up.";
+                             || "No standing contribution. Everyday money left over is what tops it up.";
 PLAN.takeHomeNote = (FLOWS.find(f => f.kind === "income") || {}).note || "";
 // A number the owner never gave is null in the plan, not 0: the first setup that skipped its
 // questions showed take-home pay of $0 and a birth year of 1990 as if they were facts (2026-10-28,
 // first user). Wherever one of these would be shown, the page says Not set and how to set it.
 // Read at render time: PLAN_BASE_DEFAULT and BORN are declared further down.
 const UNSET_HOW = {takeHome:"your take-home pay", invest:"what goes to investing each month",
-  everyday:"your everyday allowance", planBase:"the monthly spending to plan FIRE on",
+  everyday:"your everyday amount", planBase:"the monthly spending to plan FIRE on",
   born:"the year you were born"};
 const unset = k =>
     k === "takeHome" ? FLOWS.some(f => f.kind === "income" && flowNow(f) && f.amount == null)
@@ -1445,13 +1445,13 @@ function renderFree(F){
   const dim = new Date(Y, M, 0).getDate();
   const open = viewYM >= TODAY.slice(0,7);
   const frac = de/dim;
-  $("freeLab").textContent = "Free to spend";
+  $("freeLab").innerHTML = term("everyday", "Everyday");
   if(unset("everyday") && ALW === PLAN.everyday){ $("freeBig").innerHTML = notSet("everyday"); $("freeFill").style.width = "0%"; }
   else $("freeBig").innerHTML = numx('<span style="color:' + (left < 0 ? "#d03b3b" : "var(--ink)") + '">'
-    + (left < 0 ? "\u2212" + fmt(-left) : fmt(left)) + '</span>'
-    + ' <span style="font-size:13px;font-weight:400;color:var(--muted)">of ' + fmt(ALW) + '</span>',
-    [["Allowance", fmt(ALW)], ["Everyday spending", "\u2212" + fmt2(ed)]],
-    "Every purchase under " + fmt(PLAN.bigThreshold) + ". Big buys are paid from their own fund.", true);
+    + fmt(Math.abs(left)) + '</span>'
+    + ' <span style="font-size:13px;font-weight:400;color:var(--muted)">' + (left < 0 ? "over " : "left of ") + fmt(ALW) + '</span>',
+    [["Set for the month", fmt(ALW)], ["Everyday spending", "\u2212" + fmt2(ed)]],
+    "Every purchase under " + fmt(PLAN.bigThreshold) + ". Bills, housing and big buys are not in it.", true);
   $("freeFill").style.width = Math.min(pc(ed, ALW), 100) + "%";
   $("freeFill").style.background = left < 0 ? "#d03b3b" : "var(--c-dining)";
   $("freeTick").style.left = (open ? frac*100 : 100) + "%";
@@ -1460,12 +1460,15 @@ function renderFree(F){
   // One fact under the bar: what a day can take for the rest of the month, or how it ended.
   const daysLeft = dim - de;
   $("freeMeta").innerHTML = '<div class="cap" style="margin-top:8px">' + (open
-      ? (left > 0 && daysLeft > 0 ? fmt(left/daysLeft) + " a day for " + daysLeft + " day" + (daysLeft > 1 ? "s" : "") : left > 0 ? "Last day of the month" : "Allowance used up")
+      ? (left > 0 && daysLeft > 0 ? fmt(left/daysLeft) + " a day for " + daysLeft + " day" + (daysLeft > 1 ? "s" : "") : left > 0 ? "Last day of the month" : "All used")
       : (left >= 0 ? fmt(left) + " left unspent" : "Over by " + fmt(-left))) + '</div>';
   const bsum = big.reduce((a,e) => a + e.amount, 0);
   $("bigLab").innerHTML = term("big_buy", "Big buys");
-  // Beside Free to spend, because it is the other half of the month: every purchase at or over
-  // the threshold lands here instead of there.
+  // Beside Everyday, because it is the other half of the month: every purchase at or over the
+  // threshold lands here instead of there. No big buy this month, no card: a first-time reader
+  // should not have to learn a word the month does not use.
+  $("bigCard").hidden = !big.length;
+  $("bigCard").parentElement.style.gridTemplateColumns = big.length ? "" : "minmax(0,1fr)";
   const fund = (BFUND.key ? BFUND.name : "Big buys") + " fund";
   $("freeBigBuys").innerHTML = big.length
     ? '<div class="big num">' + fmt(bsum) + '</div>'
@@ -1493,7 +1496,7 @@ function planAlloc(){
     {k:"Everyday", v:ALW,           c:"var(--c-dining)", pk:"alw", tm:"everyday",
      d:"Groceries, dining, transport, subscriptions, small shopping \u2014 everything under " + fmt(PLAN.bigThreshold) + " a transaction."},
     {k:"Big buys", v:BIGM,          c:"var(--c-shopping)", pk:"bigm", tm:"big_buy",
-     d:"Goes into the fund that pays for anything at or over " + fmt(PLAN.bigThreshold) + ", so those purchases never land on the allowance."},
+     d:"Goes into the fund that pays for anything at or over " + fmt(PLAN.bigThreshold) + ", so those purchases never land on Everyday."},
     {k:TFUND.name, v:TMON,          c:"var(--c-other)", pk:null, tm:"sinking_fund",
      d:fundMonthlyNote(TFUND.key)}
   ]);
@@ -1524,7 +1527,7 @@ function renderSplit(F){
   $("splitNote").innerHTML =
     (used > PLAN.takeHome && !unset("takeHome")
       ? noteBox("This split asks for <b>" + fmt(used) + "</b> a month against take-home pay of <b>"
-          + fmt(PLAN.takeHome) + "</b>. Lower the allowance or the investing transfer.")
+          + fmt(PLAN.takeHome) + "</b>. Lower Everyday or the investing transfer.")
       : "")
     + (edited ? noteBox(edited + (edited > 1 ? " numbers were" : " number was") + " changed on this page and will "
           + "reset at the next update. Say the new number to keep it.") : "");
@@ -1538,7 +1541,7 @@ function renderSplit(F){
 //   = the categories it paid + whatever was left over.
 // A category whose refunds outweigh its purchases nets below zero and cannot be a band; its
 // refunds come in on the left instead, which is what they are. The total spent is then
-// everydayOf(month), the same figure Free to spend shows.
+// everydayOf(month), the same figure Everyday shows.
 function drawFlow(){
   const svg = $("flowSvg"), ym = MONTHS.includes(viewYM) ? viewYM : null, open = ym && ym > covEnd;
   const alloc = planAlloc(), used = alloc.reduce((s,a) => s + a.v, 0), rest = PLAN.takeHome - used;
@@ -1556,7 +1559,7 @@ function drawFlow(){
   const left = [{k:short ? "Planned" : "Take-home", v:Math.max(PLAN.takeHome, used), c:"var(--ink)"}];
   if(alw && back > 0.5) left.push({k:"Refunds", v:back, c:"#9a9890", tip:"Refunds that came back in " + ymFull(ym)});
   if(over) left.push({k:"From " + (BFUND.key ? BFUND.name : "savings"), v:over, c:"#c98500",
-                      tip:fmt(over) + " over the allowance in " + ymFull(ym)});
+                      tip:fmt(over) + " over Everyday in " + ymFull(ym)});
   const mid = segs.map(a => Object.assign({}, a, {v: a === alw ? a.v + back + over : a.v}));
   const right = !alw || !byCat.length ? [] : byCat.concat(spent < ALW
       ? [{k:open ? "Not spent yet" : "Left over, into the funds", v:ALW - spent, c:"var(--pill)", rest:true}] : []);
@@ -1609,7 +1612,7 @@ function drawFlow(){
   svg.querySelectorAll("path.hit").forEach((p, i) => p.onclick = () => pickCat(cats[i]));
   svg.querySelectorAll("text.hit").forEach(t => t.onclick = () => pickCat(t.dataset.k));
   $("flowCap").innerHTML = [short ? "The plan asks for " + fmt(used) + " a month against take-home pay of " + fmt(PLAN.takeHome) : "",
-    a && over ? "Over the allowance by " + fmt(over) : ""].filter(Boolean).join(" · ");
+    a && over ? "Over Everyday by " + fmt(over) : ""].filter(Boolean).join(" · ");
 }
 function pickCat(k){
   catSel = k; renderCatPage(); drawFlow();
@@ -1639,7 +1642,7 @@ function renderFunds(F){
       + metaList([
           ["Opened with", numx(fmt(TFUND.opening.amount), [], "From " + TFUND.opening.from + ". " + (TFUND.opening.note || ""))],
           ["Added each month", numx(TMON > 0 ? fmt(TMON) : "None", [], fundMonthlyNote(TFUND.key))],
-          ["Leftover allowance since " + ymFull(PLAN.start), fmt(F.tIn)],
+          ["Everyday left over since " + ymFull(PLAN.start), fmt(F.tIn)],
           tOK ? null : ["Short by", fmt(shortBy), "hi"],
           tOK ? null : ["Needed a month from here", fmt(shortBy/Math.max(left,1)), "hi"]
         ])
@@ -1650,7 +1653,7 @@ function renderFunds(F){
       + metaList([
           ["Opened with", numx(fmt(BFUND.opening.amount), [], "From " + BFUND.opening.from + ". " + (BFUND.opening.note || ""))],
           ["Added since " + ymFull(PLAN.start), numx(fmt(F.bIn), [], "Over " + F.months + " months.")],
-          F.spill > 0 ? ["Leftover allowance that spilled in", fmt(F.spill)] : null,
+          F.spill > 0 ? ["Everyday left over that spilled in", fmt(F.spill)] : null,
           F.draws.length ? ["Drawn out", fmt(F.draws.reduce((a,d) => a + d.amount, 0)) + " over " + F.draws.length + " purchase" + (F.draws.length > 1 ? "s" : "")] : null,
           ["Covers today, up to", F.b > 0 ? fmt(F.b) : "Nothing"]
         ])
@@ -1800,10 +1803,10 @@ function renderAlwYear(){
     meta.push({m, v, open});
   });
   out += '<line x1="0" y1="'+y(ALW)+'" x2="'+W+'" y2="'+y(ALW)+'" stroke="var(--ink)" stroke-width="1" stroke-dasharray="4 4"/>'
-    + '<text x="'+(W-4)+'" y="'+(y(ALW)-5)+'" text-anchor="end" font-size="11" fill="var(--muted)">allowance '+fmt(ALW)+'</text>';
+    + '<text x="'+(W-4)+'" y="'+(y(ALW)-5)+'" text-anchor="end" font-size="11" fill="var(--muted)">set '+fmt(ALW)+'</text>';
   svg.innerHTML = out;
   svg.querySelectorAll("rect[data-i]").forEach(r => { const d = meta[Number(r.dataset.i)];
-    hoverable(r, ymFull(d.m)+"<br>Everyday "+fmt(d.v)+"<br>"+(d.v > ALW ? fmt(d.v-ALW)+" over" : fmt(ALW-d.v)+" under")+" the "+fmt(ALW)+" allowance"+(d.open ? "<br>Still open" : "")); });
+    hoverable(r, ymFull(d.m)+"<br>Everyday "+fmt(d.v)+"<br>"+(d.v > ALW ? fmt(d.v-ALW)+" over" : fmt(ALW-d.v)+" under")+" the "+fmt(ALW)+" set"+(d.open ? "<br>Still open" : "")); });
   const closed = meta.filter(d => !d.open), kept = closed.filter(d => d.v <= ALW);
   // Only months since the plan began had a fund behind them to pay for an overspend.
   const overSum = closed.filter(d => d.m >= PLAN.start).reduce((s,d) => s + Math.max(d.v - ALW, 0), 0);
@@ -1911,9 +1914,18 @@ function txRows(items){
 }
 const TX_HEAD = '<tr><th>Date</th><th style="text-align:left">Description</th><th>Account</th><th>Amount</th></tr>';
 
+// A month's spending, each row in exactly one part (FINANCE.md §3a), so the parts add up to the total.
+function monthParts(ym){
+  const sum = f => monthOf(ym).filter(f).reduce((s,e) => s + e.amount, 0);
+  return {fixed:sum(e => CGRP[e.category] === "fixed"), everyday:everydayOf(ym),
+          big:sum(e => inAllowance(e) && isBig(e)), time:sum(e => CGRP[e.category] === "time")};
+}
 function renderCatPage(){
   const es = monthOf(viewYM);
   const total = es.reduce((s,e) => s + e.amount, 0);
+  const parts = monthParts(viewYM);
+  const partRows = [["Bills & housing", parts.fixed], ["Everyday", parts.everyday], ["Big buys", parts.big], ["Education", parts.time]]
+    .filter(p => Math.abs(p[1]) > 0.005);
   const rows = CATS.map(c => {
     const items = es.filter(e => e.category === c.k).sort((a,b) => b.amount - a.amount);
     return {k:c.k, col:c.c, items, v:items.reduce((s,e) => s + e.amount, 0), med:catMedian(c.k, viewYM)};
@@ -1933,7 +1945,8 @@ function renderCatPage(){
   const usual = monthMedian(viewYM), diff = usual === null ? null : total - usual;
   const nWin = catWindow(viewYM).length;
   $("catStats").innerHTML =
-    card("Spent in "+ymLabel(viewYM), numx(fmt(total), [], es.length+" purchase"+(es.length === 1 ? "" : "s")+" in "+rows.length+" categor"+(rows.length === 1 ? "y" : "ies")+"."), "")
+    card("Spent in "+ymLabel(viewYM), numx(fmt(total), partRows.map(p => [p[0], fmt(p[1])]), es.length+" purchase"+(es.length === 1 ? "" : "s")+" in "+rows.length+" categor"+(rows.length === 1 ? "y" : "ies")+"."),
+        partRows.map(p => p[0]+" "+fmt(p[1])).join(" \u00b7 "))
     + (rows.length ? card("Biggest category", catName(rows[0].k), fmt(rows[0].v)+", "+pct(rows[0].v)+"% of the month") : "")
     + card("Against a usual month",
         diff === null ? "\u2014" : numx((diff >= 0 ? "+" : "\u2212") + fmt(Math.abs(diff)),
