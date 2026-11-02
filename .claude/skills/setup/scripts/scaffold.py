@@ -194,7 +194,7 @@ def build(a, today):
     out[layout.rel("profile.json")] = json.dumps({
         "note": "Who this workspace belongs to. The FIRST thing to change when you make it yours: "
                 "the name appears in the browser tab and under the Jade Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. Jade Toad itself is the product, not a setting.",
-        "schema": 13,
+        "schema": 14,
         "owner": a["owner"],
         # A question skipped is null, never a default that reads as a fact (2026-10-28, first
         # user: 1990 and $0 went onto the page). The page says Not set where one is needed.
@@ -231,7 +231,9 @@ def build(a, today):
         if acc.get("ledger"):
             rec["stmtTag"] = tag
             rec["stmtLabel"] = acc["name"]
-        if "Spending" in (acc.get("feeds") or ""):
+        # Chequing always: a bill or cash taken out is spending, whether or not the first statements
+        # showed one (FINANCE.md §3a), and without the tag the import has nowhere to file it.
+        if "Spending" in (acc.get("feeds") or "") or (acc.get("ledger") and acc["kind"] == "Chequing"):
             rec["spendTag"] = tag
         if investment and acc.get("balance") is not None:
             rec["statedBalance"] = acc["balance"]

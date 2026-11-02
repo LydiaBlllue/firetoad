@@ -85,7 +85,7 @@ REACH_ROWS = (("today", "Spendable today", "#1baf7a"), ("costs", "Taxed to take 
 # Subscription category, and chequing rent, bills, cash and fees in spending.csv (2026-10-29);
 # 12 = every merchant held against the fifteen categories, a better fit asked (2026-10-30);
 # 13 = a card's cash back is income in rewards.csv, filed again from the archive (2026-10-30).
-SCHEMA = 13
+SCHEMA = 14
 
 
 def same(a, b):

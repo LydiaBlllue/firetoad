@@ -92,7 +92,8 @@
 for the target user, PRODUCT.md §2). A card purchase, a debit purchase, and from chequing: rent,
 a bill, a payment to anyone outside the register, cash taken out, a bank's fee or interest
 charged, money sent to family. Each is a row in `spending.csv`; a chequing one keeps its ledger
-row too (so the chain closes) and is tagged with that account's spending tag. **Not spending**:
+row too (so the chain closes) and is tagged with that account's spending tag, which every chequing
+account has; D30 fails a row typed as spending that is not in `spending.csv`. **Not spending**:
 money between your own accounts (one abroad included), investing, a card payment, lending, being
 repaid, a loan's principal.
 

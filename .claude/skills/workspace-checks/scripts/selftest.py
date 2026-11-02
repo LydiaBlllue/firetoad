@@ -409,6 +409,8 @@ def m_exclude_left_behind(r):
 def m_alerts_left_behind(r):
     open(layout.path(r, "alerts.json"), "w", encoding="utf-8").write('{"alerts": []}\n')
 
+def m_chequing_no_spend_tag(r):
+    edit_json(r, layout.rel("accounts.json"), lambda d: [a.pop("spendTag", None) for a in d["accounts"] if a.get("ledger")])
 def m_broker_gift_no_deposit(r):
     edit_json(r, layout.rel("plan.json"), lambda d: d.update(brokerGifts=[
         {"date": "2026-02-03", "amount": 12345.67, "currency": "CAD", "why": "planted"}]))
@@ -521,6 +523,7 @@ CASES = [
     ("S8",  "the page speaks in the first person",          m_first_person,       "dash"),
     ("R5", "a broken field leaves NaN on the page",         m_render_nan,         "render"),
     ("D29", "a gift declared in the broker with no such deposit", m_broker_gift_no_deposit, "find"),
+    ("D30", "a chequing bill that never reached spending",  m_chequing_no_spend_tag, "find"),
     ("R3", "a chart pinned to a fixed height",              m_render_chart_capped,"render"),
 ]
 
@@ -865,6 +868,48 @@ def refile_check(root, base):
         return [f"  ✗ re-filing: migrate exit {mig.returncode}, asked {[d.get('suggest') for d in asked]}, untouched before confirming "
                 f"{still}, after confirming {sorted(after)} / {filed.get(pick['match'])}" + ("; the checkers then failed" if "✗" in out else "")]
     return [f"  ✓ re-filing: a merchant left in {wrong} is asked as {right} and moved only once confirmed — merchants.json and spending.csv follow"]
+
+
+def chequing_setup_check(root, base):
+    """A chequing account set up from its statements: a bill and a cash withdrawal are spending.
+    A first owner's whole year of them went missing with every checker clean (2026-11): setup gave
+    the account no spendTag, and the demo's register, written by hand, always had one."""
+    if not demo_like(root) or not os.path.exists(os.path.join(root, "tools", "fixtures.py")):
+        return []
+    ws = os.path.join(base, "chqsetup")
+    os.makedirs(ws); stage(root, ws)
+    sys.path.insert(0, os.path.join(ws, "tools"))
+    import fixtures
+    from pdfgen import write_pdf
+    rows = [{"date": "2026-10-03", "description": "Pre-Authorized Payment, EXAMPLE INSURANCE CO", "amount": -88.40},
+            {"date": "2026-10-06", "description": "Other Bank ABM Withdrawal", "amount": -60.00},
+            {"date": "2026-10-09", "description": "Direct Deposit, CANADA PRO", "amount": 25.00}]
+    bal = 1000.0
+    for r in rows:
+        bal = round(bal + r["amount"], 2); r["balance"] = bal
+    write_pdf(os.path.join(ws, "inbox", "October 13, 2026.pdf"),
+              fixtures.bmo_banking("Primary Chequing", "4471", datetime.date(2026, 9, 14), datetime.date(2026, 10, 13),
+                                   1000.0, rows, "Sam Lee"))
+    sk = os.path.join(ws, ".claude", "skills")
+    step = lambda script, *a: subprocess.run([sys.executable, os.path.join(sk, script), ".", *a],
+                                              cwd=ws, capture_output=True, text=True, timeout=300)
+    r = step("setup/scripts/propose.py", "--write")
+    ans_p = layout.path(ws, "setup-answers.json")
+    if r.returncode or not os.path.exists(ans_p):
+        return [f"  ✗ chequing setup: the draft failed ({(r.stdout + r.stderr).strip().splitlines()[-1:]})"]
+    a = json.load(open(ans_p, encoding="utf-8"))
+    a["owner"] = "Sam Lee"; a.pop("born", None); a["_open"] = []
+    json.dump(a, open(ans_p, "w", encoding="utf-8"), indent=2)
+    for script, args in (("setup/scripts/scaffold.py", ("--answers", ans_p, "--write")),
+                         ("update-dashboard/scripts/rebuild.py", ("--write",)),
+                         ("update-dashboard/scripts/update.py", ("--write",))):
+        r = step(script, *args)
+        if r.returncode:
+            return [f"  ✗ chequing setup: {os.path.basename(script)} exit {r.returncode}: " + " | ".join((r.stdout + r.stderr).strip().splitlines()[-2:])]
+    got = sorted(float(x["amount"]) for x in csv.DictReader(open(layout.path(ws, "spending.csv"), encoding="utf-8")))
+    if got != [60.0, 88.40]:
+        return [f"  ✗ chequing setup: a bill and a cash withdrawal should be spending; spending.csv holds {got}"]
+    return ["  ✓ chequing setup, end to end: a bill and a cash withdrawal are spending, and money in is not"]
 
 
 def card_only_setup_check(root, base):
@@ -1907,7 +1952,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
-                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, starter_check,
+                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, starter_check,
                     demo_clear_check):
             try:
                 runs += chk(root, base)

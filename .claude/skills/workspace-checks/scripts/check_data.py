@@ -142,6 +142,10 @@ def clock(root):
     dates = [d for d in dates if re.fullmatch(r"\d{4}-\d{2}-\d{2}", d)]
     return (datetime.date.fromisoformat(max(dates)), "the demo's newest data") if dates else (today, None)
 
+# The ledger types the import also writes to spending.csv (update.py SPENT).
+SPENDING_TYPES = ("Debit purchase", "Bill", "Payment", "Rent", "Cash", "Fee", "Interest")
+
+
 def check(root):
     # Each rule has a home category; a call may override it, because several rules produce more
     # than one kind of finding. D14 is the clearest case: "this document covers an account that
@@ -150,7 +154,7 @@ def check(root):
             "D3":"rules", "D6":"rules", "D10":"rules", "D13":"rules", "D14":"rules",
             "D11":"build", "D12":"build", "D17":"build", "T1":"build", "T2":"hygiene", "D15":"build", "D16":"conform",
             "D2":"hygiene", "D4":"hygiene", "D9":"hygiene", "D18":"hygiene",
-            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D29":"rules", "D25":"hygiene", "D26":"rules", "D27":"hygiene", "D28":"hygiene"}
+            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D29":"rules", "D30":"reconcile", "D25":"hygiene", "D26":"rules", "D27":"hygiene", "D28":"hygiene"}
     F = []          # (severity, rule, message, category)
     def err(r, m, cat=None):  F.append(("ERROR", r, m, cat or HOME.get(r, "rules")))
     def warn(r, m, cat=None): F.append(("WARN",  r, m, cat or HOME.get(r, "rules")))
@@ -190,6 +194,32 @@ def check(root):
             err("D2", f"rewards.csv {r.get('date')} {(r.get('note') or '')[:40]}: no known [SOURCE/YYYYMMDD] tag")
         elif float(r.get("amount") or 0) <= 0:
             err("D2", f"rewards.csv {r.get('date')}: a reward is money in, but this one is {r.get('amount')}")
+
+    # -- D30 a ledger row typed as spending has to be in spending.csv ----------------------
+    # A first owner's bills and cash went missing with every other check clean (2026-11).
+    p = load(root, "accounts.json")
+    sp = load(root, "spending.csv")
+    if p and sp:
+        filed = collections.Counter()
+        for r in csv.DictReader(open(sp, encoding="utf-8")):
+            m = re.search(r"\[([^/\]]+)/", r.get("note", ""))
+            filed[(m.group(1) if m else "", r["date"], f"{float(r['amount']):.2f}")] += 1
+        for a in json.load(open(p, encoding="utf-8")).get("accounts", []):
+            lp = load(root, a["ledger"]) if a.get("ledger") else None
+            if not lp:
+                continue
+            miss, total = 0, 0.0
+            for r in csv.DictReader(open(lp, encoding="utf-8")):
+                amt = float(r.get("amount") or 0)
+                if r.get("type") in SPENDING_TYPES and amt < 0:
+                    k = (a.get("spendTag") or "", r["date"], f"{-amt:.2f}")
+                    if filed[k] > 0:
+                        filed[k] -= 1
+                    else:
+                        miss += 1; total += -amt
+            if miss:
+                err("D30", f"{a['name']}: {miss} row(s) typed as spending, ${total:,.2f}, are not in spending.csv"
+                           + ("" if a.get("spendTag") else " (the account has no spendTag; run tools/migrate.py)"))
 
     # -- D29 a gift declared in the broker: the deposit has to be in the export ----
     p = load(root, "plan.json")
