@@ -87,9 +87,6 @@ def m_spending_row(r):
     open(p, "w", encoding="utf-8").writelines(lines[:-1])
 def m_funds_drift(r):
     edit_json(r, layout.rel("funds.json"), lambda d: d["plan"].__setitem__("everyday", 9999))
-def m_fund_overclaim(r):
-    edit_json(r, layout.rel("funds.json"),
-              lambda d: d["funds"][0]["opening"].__setitem__("amount", 999999))
 def m_acct_drift(r):
     edit_json(r, layout.rel("accounts.json"), lambda d: d["accounts"][0].__setitem__("balance", 1.0))
 def m_bad_cover(r):
@@ -399,8 +396,6 @@ def m_short_header(r):
     assert lines and lines[0].startswith("date,description,amount,balance,statement,type")
     lines[0] = "date,description,amount,balance,statement\n"
     open(p, "w", encoding="utf-8").writelines(lines)
-def m_fund_monthly_left_behind(r):
-    edit_json(r, "findata/register/funds.json", lambda d: d["funds"][0].__setitem__("monthly", 50))
 
 def m_exclude_left_behind(r):
     edit_json(r, "findata/register/rules.json",
@@ -469,7 +464,6 @@ CASES = [
     ("S1", "a NAV entry with no matching section",          m_nav_orphan,      "dash"),
     ("D12", "a spending.csv row missing from the page",     m_spending_row,    "find"),
     ("D13", "funds.json changed but the page did not",      m_funds_drift,     "find"),
-    ("D13", "a fund claims more than its account holds",    m_fund_overclaim,  "find"),
     ("D14", "accounts.json changed but the page did not",   m_acct_drift,      "find"),
     ("D19", "a liability given a role",                     m_axes_illegal,    "find"),
     ("D20", "a stated balance with no date",                m_stated_no_asof,  "find"),
@@ -515,7 +509,6 @@ CASES = [
     ("S5", "the sidebar wordmark lost its mark",            m_brand_mark_gone,    "dash"),
     ("D18", "alerts.json left behind after the migration",  m_alerts_left_behind, "find"),
     ("D19", "rules.json still carries the exclude list",    m_exclude_left_behind, "find"),
-    ("D13", "a fund still carries a monthly contribution",   m_fund_monthly_left_behind, "find"),
     ("D18", "cashflow.json left behind after the migration", m_cashflow_left_behind, "find"),
     ("D22", "a cash-flow ledger row with no type",            m_untyped_row,         "find"),
     ("D22", "a ledger header that does not name the type column", m_short_header,     "find"),
@@ -1038,7 +1031,7 @@ def demo_clear_check(root, base):
                       "feeds": "Income, Cash flow, Bank cash",
                       "doc": {"file": "Chequing Statement-4021 <date>.pdf", "closes": 31}}],
         "plan": {"takeHome": 4200, "invest": 900, "everyday": 1800},
-        "funds": [], "rules": {"buckets": [{"key": "rest", "name": "Holdings", "catchAll": True}], "maxHoldings": 8},
+        "rules": {"buckets": [{"key": "rest", "name": "Holdings", "catchAll": True}], "maxHoldings": 8},
         "foreign": None})
     json.dump(answers, open(ans, "w", encoding="utf-8"))
     r = subprocess.run([sys.executable, sc, ws, "--answers", ans, "--write"], capture_output=True, text=True)

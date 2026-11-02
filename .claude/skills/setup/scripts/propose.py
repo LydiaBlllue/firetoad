@@ -322,7 +322,6 @@ def propose(root, inbox):
     questions.append({"id": "planBase", "q": "Your planning spend for the FIRE target, a month, rent after FIRE included?",
                       "suggest": plan.get("everyday")})
     plan["planBase"] = plan.get("everyday")
-    questions.append({"id": "funds", "q": "Anything you are saving towards — a trip, big purchases? A name, a goal, a date. (None is fine.)"})
 
     # --- the investing rule
     grow_ids = {a["id"] for a in accounts if a.get("role") == "grow"}
@@ -373,7 +372,7 @@ def propose(root, inbox):
                                               ". What are they?"})
 
     answers = {"owner": None, "born": None, "currency": "CAD", "importDay": 26,
-               "accounts": accounts, "plan": plan, "funds": [], "rules": rules,
+               "accounts": accounts, "plan": plan, "rules": rules,
                "foreign": None, "fx": fx or 1.0,
                "_proposed": proposed, "_open": questions,
                "_files": [{"file": f, "read_as": w, "detail": d} for f, w, d in seen]}

@@ -630,56 +630,10 @@ def check(root):
                 continue
             if not isinstance(f_.get("amount"), (int, float)) or f_["amount"] < 0:
                 err("D13", f"funds.json flow {f_.get('name') or f_.get('key')!r} has no amount")
-        # Schema 8: a fund's standing contribution is a saving flow that names the fund. A `monthly`
-        # left on the fund is the same number said twice, and the page no longer reads it.
-        fund_keys = {f.get("key") for f in fj["funds"]}
-        for f in fj["funds"]:
-            if "monthly" in f or "monthlyNote" in f:
-                err("D13", f"funds.json fund {f.get('name') or f.get('key')!r} still carries `monthly` -- a standing "
-                           "contribution is a saving flow with `to` (schema 8). Run tools/migrate.py")
-        for f_ in plan.get("flows") or []:
-            to = f_.get("to")
-            if f_.get("kind") == "saving" and to not in (None, "broker") and to not in fund_keys:
-                err("D13", f"funds.json flow {f_.get('name') or f_.get('key')!r} goes to {to!r}, which is neither "
-                           "the broker nor a fund in this file")
         ft = flow_totals(plan)
         split = ft["committed"] + ft["saving"] + ft["everyday"]
         if split > ft["income"] and "takeHome" not in flow_unset(plan):
             err("D13", f"the monthly split asks for ${split:,} against income of ${ft['income']:,}")
-        # 2026-09-07: the funds moved off bank cash onto a named Wealthsimple account, so the claim
-        # has to be checked against THAT account. A stale backing.balance is the failure that
-        # matters -- the page would keep reporting a goal as funded out of money that is not there.
-        hp2 = load(root, "holdings_latest.csv")
-        acct = {}
-        if hp2:
-            fxp = load(root, "fx.json")
-            fx = json.load(open(fxp, encoding="utf-8"))["usd_cad"] if fxp else None
-            with open(hp2, encoding="utf-8") as fh:
-                for r in csv.DictReader(fh):
-                    n, mv, cur = r.get("Account Number"), r.get("Market Value"), r.get("Market Value Currency")
-                    if not n or not mv:
-                        continue
-                    v = float(mv)
-                    if cur == "USD":
-                        if fx is None:
-                            continue
-                        v *= fx
-                    acct[n] = acct.get(n, 0) + v
-        claims = collections.defaultdict(float)
-        for f in fj["funds"]:
-            claims[f["backing"]["account"]] += f["opening"]["amount"]
-        for a, c in claims.items():
-            stated = next(f["backing"]["balance"] for f in fj["funds"] if f["backing"]["account"] == a)
-            real = acct.get(a)
-            if real is not None and abs(real - stated) > max(50, real * 0.01):
-                err("D13", f"funds.json says {a} holds ${stated:,.0f} but holdings_latest.csv "
-                           f"totals ${real:,.0f}", "reconcile")
-            if c > stated:
-                err("D13", f"the funds claim ${c:,.0f} against {a}, which holds ${stated:,.0f}")
-            else:
-                note("D13", f"funds claim ${c:,.0f} of ${stated:,.0f} in {a}, "
-                            f"${stated - c:,.0f} unclaimed")
-
     # -- D14 accounts.json is a registry, not a second set of books ---------
     # Added 2026-09-07 with the Accounts page. The registry repeats balances that live in three
     # other files, and a repeated number is a number that drifts. Re-derive every one from its
@@ -1004,18 +958,12 @@ def check(root):
             pb = None if pbm == "null" else int(pbm)
             tgt = (pb or 0) * 300
             fj2 = json.load(open(load(root, "funds.json"), encoding="utf-8"))
-            # The fund is found by the role it plays, not by a name: this looked for the literal
-            # key "travel", so a workspace whose funds are called anything else crashed the
-            # checker outright (2026-09-09, found by the setup acceptance test).
-            trav = next((f for f in fj2["funds"] if f.get("role") == "topup"), None)
             port = inv["portfolio"]
             want = {"plan_base": pb, "fire_target": tgt, "net_worth": nw, "portfolio": port,
                     "progress": round(port / tgt * 100, 1) if tgt else 0, "gap": tgt - port,
                     "invest_monthly": flow_totals(fj2["plan"])["invest"],
                     "everyday": flow_totals(fj2["plan"])["everyday"],
                     "dry_powder": inv["dryPct"]}
-            if trav:
-                want["travel_goal"] = trav["goal"]
             # A number never given is Not set in the table, and only then (flows.unset).
             miss = flow_unset(fj2["plan"])
             gone = ({"plan_base", "fire_target", "progress", "gap"} if pb is None else set()) \

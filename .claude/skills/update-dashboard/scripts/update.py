@@ -959,8 +959,8 @@ def refresh_loan_copies(ws):
 
 
 def refresh_holdings_copies(ws, asof):
-    """The register's balance for every account the holdings export values, and the funds'
-    backing — copies D14 and D13 re-derive from the export every run."""
+    """The register's balance for every account the holdings export values — a copy D14 re-derives
+    from the export every run."""
     fx = jload(ws.fd("fx.json"), {}).get("usd_cad")
     bal = collections.defaultdict(float)
     for r in csv_rows(ws.fd("holdings_latest.csv")):
@@ -976,14 +976,6 @@ def refresh_holdings_copies(ws, asof):
     for a in ws.accounts:
         if a.get("src") == "holdings_latest.csv" and a.get("id") in bal:
             a["balance"], a["asof"] = round(bal[a["id"]], 2), asof
-    changed = False
-    for f in ws.funds.get("funds", []):
-        b = f.get("backing") or {}
-        if b.get("account") in bal:
-            b["balance"], b["asof"] = round(bal[b["account"]]), asof
-            changed = True
-    if changed:
-        jsave(ws.fd("funds.json"), ws.funds)
 
 
 # ---------------------------------------------------------------- what the update leaves behind

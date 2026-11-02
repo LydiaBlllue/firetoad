@@ -2,6 +2,11 @@
 
 ## 1.3 — unreleased
 
+- **The preset funds are gone** (2026-11-02, user 001; findata schema 18, `tools/migrate_17to18.py`).
+  Their roles were too rigid, and an overspent month took money from a trip on the page. Leftover
+  everyday money now stays where it is. The migration keeps each fund in `decisions/`. Custom funds
+  are on the roadmap. Two selftest faults went with them (59 faults).
+
 - **Big buys are gone for now** (2026-11-02, user 001; findata schema 17, `tools/migrate_16to17.py`).
   The threshold, the card, the fund role and the word asked a first-time reader to learn something
   before the basics were solid, and misread a cash withdrawal or a large grocery trip. Everything
