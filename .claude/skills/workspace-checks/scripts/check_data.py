@@ -945,19 +945,38 @@ def check(root):
             lp = load(root, a["ledger"]) if a.get("ledger") else None
             if lp:
                 with open(lp, encoding="utf-8") as fh:
-                    rows_all += [(r["date"], float(r["amount"] or 0)) for r in csv.DictReader(fh) if r.get("date")]
+                    rows_all += [(r["date"], float(r["amount"] or 0), r.get("description") or "")
+                                 for r in csv.DictReader(fh) if r.get("date")]
         if ft3["committedNow"] and rows_all:
-            newest = max(dt for dt, _ in rows_all)
+            newest = max(r[0] for r in rows_all)
             y, m = int(newest[:4]), int(newest[5:7])
             lo = f"{y - (1 if m <= 2 else 0):04d}-{((m - 3) % 12) + 1:02d}-01"
             hi = newest[:7] + "-01"
             unseen = 0
+            # A bill can leave in parts: one insurer, two debits on the same day (2026-11, user 002).
+            # So a payee's debits in one month are added up, and a plan figure is seen when one
+            # payment or one payee's month matches it. When nothing does, the nearest payee-month
+            # is named, so the owner can restate the amount instead of hunting for it.
+            payee = lambda d: merchant_key(d.rsplit(", ", 1)[-1])   # "Pre-Authorized Payment, X" is X
+            win = [(dt, -v, payee(d)) for dt, v, d in rows_all if lo <= dt < hi and v < 0]
+            month_sum, month_n = collections.defaultdict(float), collections.Counter()
+            for dt, v, pk in win:
+                month_sum[(pk, dt[:7])] += v; month_n[(pk, dt[:7])] += 1
             for f_ in ft3["committedNow"]:
                 amt = float(f_["amount"])
-                hits = [dt for dt, v in rows_all if lo <= dt < hi and v < 0 and abs(-v - amt) <= max(1, amt * 0.01)]
-                if not hits:
-                    unseen += 1
-                    warn("D21", f"the plan says {f_.get('name') or f_.get('key')} costs ${amt:,.0f} a month, but no ledger "
+                tol = max(1, amt * 0.01)
+                if any(abs(v - amt) <= tol for _, v, _ in win) or any(abs(v - amt) <= tol for v in month_sum.values()):
+                    continue
+                unseen += 1
+                near = sorted((abs(v - amt), -int(k[1].replace("-", "")), k, v) for k, v in month_sum.items() if abs(v - amt) <= amt * 0.10)
+                nm = f_.get('name') or f_.get('key')
+                if near:
+                    _, _, (pk, ym), v = near[0]
+                    parts = f" in {month_n[(pk, ym)]} payments" if month_n[(pk, ym)] > 1 else ""
+                    warn("D21", f"the plan says {nm} costs ${amt:,.0f} a month; the nearest in the ledgers is "
+                               f"{pk.title()} at ${v:,.2f}{parts} in {ym} — if that is it, restate the amount")
+                else:
+                    warn("D21", f"the plan says {nm} costs ${amt:,.0f} a month, but no ledger "
                                f"shows a payment of that size between {lo[:7]} and {hi[:7]} — declared, not observed")
             if not unseen:
                 note("D21", f"{len(ft3['committedNow'])} committed flow(s) seen in the ledgers")

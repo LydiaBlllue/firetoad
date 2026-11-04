@@ -944,6 +944,30 @@ def no_pay_check(root, base):
     return ["  ✓ no pay: a plan drawn from savings checks clean"]
 
 
+def browser_copy_check(root, base):
+    """A browser's copy number on a statement's name ("October 13, 2026 (1).pdf") is named as the
+    statement it copies, never asked about: a "(1)" stopped a first owner's run (2026-11)."""
+    sys.path.insert(0, os.path.join(root, ".claude", "skills", "update-dashboard", "scripts"))
+    import importlib, preflight
+    importlib.reload(preflight)
+    docs = preflight.load_docs(root)
+    dated = [x for x in docs if x["prefix"] == "" and x["suffix"].endswith(".pdf")
+             and not x["suffix"].startswith("-2") and x["close_day"]]
+    if not dated:
+        return []
+    x, second = dated[0], [d for d in docs if d["prefix"] == "" and d["suffix"].startswith("-2")]
+    name = f"October {x['close_day']}, 2026 (1).pdf"
+    # With a second account in the batch the copy number is that account, as a "-2" is; without
+    # one it is the statement it copies.
+    for label, pool, want in (("with a second account", docs, (second or [x])[0]),
+                              ("without one", [d for d in docs if d not in second], x)):
+        preflight.DOCS = pool
+        got = preflight.classify(name)
+        if not got[0] or want["doc"]["key"] not in got[0]:
+            return [f"  ✗ browser copy {label}: {name!r} was named {got[0]!r}, not {want['doc']['key']!r}"]
+    return ["  ✓ browser copy: a (1) on a statement's name is named as the statement it copies"]
+
+
 def month_parts_check(root, base):
     """The sentence setup ends with: its parts have to add up to the month's total in spending.csv."""
     r = subprocess.run([sys.executable, os.path.join(root, ".claude", "skills", "setup", "scripts", "month_sentence.py"), root],
@@ -1997,7 +2021,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
-                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, month_parts_check, starter_check,
+                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, browser_copy_check, month_parts_check, starter_check,
                     demo_clear_check):
             try:
                 runs += chk(root, base)

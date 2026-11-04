@@ -118,6 +118,14 @@ at once**. Repeat back what you
 heard before writing anything. Everything here ends up in `setup-answers.json`; nothing is typed
 into HTML.
 
+**How to ask** (2026-11, user 002: the question form broke down halfway and the session moved to
+chat). A question with two to four answers to pick from — which account a file is, is this
+account set aside — goes in the question form, several at once. A question whose answer is a
+number or a name — take-home pay, the everyday amount, the year of birth — is asked in chat, a few
+at a time, because a form cannot take a typed amount. A question with one possible answer is not a
+question: say what was assumed instead. If the owner interrupts the form, ask what is left in chat
+and do not open the form again in that session.
+
 **A question they skip stays unanswered.** Leave the key out of `setup-answers.json` — never
 fill in $0, a typical figure or a birth year to get past it. The scaffold writes it as `null`
 and the page says *Not set* wherever it would be shown, so the owner sees what is missing

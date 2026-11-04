@@ -104,19 +104,21 @@ def classify(name):
 
     # Some banks ship several accounts under the same "<Month D, YYYY>.pdf" name. The close DAY
     # separates them (documents[].closes); a -2 suffix is the second account in the same batch.
-    m = re.match(r"^([A-Z][a-z]+) (\d{1,2}), (\d{4})(-2| \(2\))?\.pdf$", n)
+    # A browser numbers a second download of the same name, "(1)" in one and "(2)" in another
+    # (2026-11, user 002: a "(1)" stopped the run). Where the register has a second account in
+    # the batch, that is what it is; otherwise it is the same document again -- a byte-identical
+    # copy is found below, and a statement already in the books is never written twice.
+    m = re.match(r"^([A-Z][a-z]+) (\d{1,2}), (\d{4})(-2| \(\d+\))?\.pdf$", n)
     if m and m.group(1) in MONTHS:
         day, dup = int(m.group(2)), m.group(4)
         cands = [x for x in DOCS if x["prefix"] == "" and x["suffix"].endswith(".pdf")]
-        if dup:
-            c = [x for x in cands if x["suffix"].startswith("-2")]
-            if c:
-                return hit(c[0], " *** The '-2' file is a second ACCOUNT, not a duplicate. ***")
-        else:
-            c = sorted([x for x in cands if not x["suffix"].startswith("-2") and x["close_day"]],
-                       key=lambda x: abs(x["close_day"] - day))
-            if c and abs(c[0]["close_day"] - day) <= 7:
-                return hit(c[0])
+        c = [x for x in cands if x["suffix"].startswith("-2")] if dup else []
+        if c:
+            return hit(c[0], " *** The '-2' file is a second ACCOUNT, not a duplicate. ***")
+        c = sorted([x for x in cands if not x["suffix"].startswith("-2") and x["close_day"]],
+                   key=lambda x: abs(x["close_day"] - day))
+        if c and abs(c[0]["close_day"] - day) <= 7:
+            return hit(c[0], " A browser's copy number; named as the statement it copies." if dup and dup != "-2" else "")
         return (None, None, None,
                 f"A bank statement dated the {day}th -- no document in accounts.json closes near "
                 f"that day. Ask which account it is.")

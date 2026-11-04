@@ -9,7 +9,15 @@ rows there is exactly one way to sign them. `assign_signs` solves that; when two
 and only when two rows carry the same amount) the description decides.
 """
 import datetime
+import logging
 import re
+import warnings
+
+# pypdf and, where it is installed, fontTools under it log a warning for every odd font in a bank's
+# PDF. A parser that reconciles does not need them, and 306 of one draft's 356 lines were these
+# (2026-11, user 002). Errors still come through.
+for _name in ("pypdf", "fontTools"):
+    logging.getLogger(_name).setLevel(logging.ERROR)
 
 from . import ParserUnavailable, ParseError
 
@@ -27,9 +35,11 @@ def text_lines(path):
     from pypdf.errors import DependencyError
     out = []
     try:
-        for p in PdfReader(path).pages:
-            # A non-breaking space (0xa0) between an amount and "CR" is a space to everything below.
-            out += [join_split(l.replace("\xa0", " ").strip()) for l in (p.extract_text() or "").splitlines() if l.strip()]
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for p in PdfReader(path).pages:
+                # A non-breaking space (0xa0) between an amount and "CR" is a space to everything below.
+                out += [join_split(l.replace("\xa0", " ").strip()) for l in (p.extract_text() or "").splitlines() if l.strip()]
     except DependencyError:
         # Some banks encrypt their PDFs with no password, and pypdf needs this to open them.
         raise ParserUnavailable("cryptography is not installed (pip3 install --user cryptography); read the statement by hand")

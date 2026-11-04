@@ -47,6 +47,9 @@ body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system
 .side details.wait button{color:var(--muted)}
 .side details.wait button span{display:flex;flex-direction:column}
 .side details.wait small{font-size:11px;color:var(--muted)}
+/* the open page in the fold reads like any open page: dim grey on the dark pill was unreadable (#37) */
+.side details.wait button.sel{color:#fff}
+.side details.wait button.sel small{color:rgba(255,255,255,.72)}
 .side button .dot-n{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-left:auto}
 .main{flex:1;min-width:0}
 .pghead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;height:var(--headh);
@@ -796,7 +799,7 @@ function pageFlags(){
   if(bd !== null && Math.abs(bd) > DRIFT_FLAG) f.base = "#c98500";
   // The investing pages: the band and the cap from rules.json, never a literal 40/45/10.
   // The plan page: red when the split asks for more than the paycheque.
-  if(PLAN.takeHome > 0 && COMMITTED_NOW + INVM + FUND_NOW + EVERYDAY > PLAN.takeHome && !unset("takeHome")) f.budget = "#d03b3b";
+  if(PLAN.takeHome > 0 && COMMITTED_NOW + INVM + OTHER_SAVING.reduce((s, f) => s + (f.amount || 0), 0) + EVERYDAY > PLAN.takeHome && !unset("takeHome")) f.budget = "#d03b3b";
   return f;
 }
 // What a page needs before it has anything to show. A workspace with only a credit card is a
@@ -1314,6 +1317,11 @@ const FUND_LIST  = FUNDS.funds || [];
 const FUND_C     = ["#4a3aa7", "#1f8a70", "#b5527a", "#8a6d1f", "#3d6f9e", "#a2542c"];
 const fundColor  = key => FUND_C[Math.max(0, FUND_LIST.findIndex(f => f.key === key)) % FUND_C.length];
 const FUND_FLOWS = FLOWS.filter(f => f.kind === "saving" && flowNow(f) && FUND_LIST.some(x => x.key === f.to));
+// Every saving flow that does not go to the broker is a line of the split, a fund's or an
+// account's, and it always has a name: a row drawn as "\u2014" with $0 was a flow with none (#38).
+const OTHER_SAVING = FLOWS.filter(f => f.kind === "saving" && flowNow(f) && (f.to || "broker") !== "broker");
+const savingName = f => f.name || (FUND_LIST.find(x => x.key === f.to) || {}).name
+  || ((typeof ACCT === "object" && (ACCT.accounts || []).find(a => a.key === f.to)) || {}).name || "Saving";
 const FUND_NOW   = FUND_FLOWS.reduce((s, f) => s + (f.amount || 0), 0);
 PLAN.takeHomeNote = (FLOWS.find(f => f.kind === "income") || {}).note || "";
 // A number the owner never gave is null in the plan, not 0: the first setup that skipped its
@@ -1388,9 +1396,10 @@ function planAlloc(){
         + (f.afterFire === "drop" ? " Stops after FIRE." : "")})).concat([
     {k:"Invest",   v:INVM,          c:"#2a78d6", pk:"invm", tm:"pay_yourself_first",
      d:"Two transfers of "+fmt(FUNDS.plan.invest/2)+" to "+BROKER+". It comes off the top before anything else, which is the whole point of pay-yourself-first."},
-  ].concat(FUND_FLOWS.map(f => ({k:f.name || (FUND_LIST.find(x => x.key === f.to) || {}).name, v:f.amount || 0,
-      c:fundColor(f.to), pk:null, tm:"fund",
-      d:(f.note || "Set aside each month for this fund.")})), [
+  ].concat(OTHER_SAVING.map(f => ({k:savingName(f), v:f.amount || 0,
+      c:FUND_LIST.some(x => x.key === f.to) ? fundColor(f.to) : "#3d6f9e", pk:null,
+      tm:FUND_LIST.some(x => x.key === f.to) ? "fund" : null,
+      d:(f.note || "Set aside each month.")})), [
     {k:"Everyday", v:EVERYDAY,           c:"var(--c-dining)", pk:"everyday", tm:"everyday",
      d:"Groceries, dining, transport, subscriptions, shopping \u2014 everything but bills and housing."},
   ]));

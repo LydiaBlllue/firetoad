@@ -2,6 +2,19 @@
 
 ## 1.3 — unreleased
 
+- **Six things a first owner tripped on** (2026-11-03, user 002).
+  - A bill paid in parts is seen: D21 adds up one payee's debits in a month, and when nothing
+    matches it names the nearest payee and amount instead of saying the payment appears nowhere.
+  - A browser's copy number on a statement's name (`October 13, 2026 (1).pdf`) is named, not
+    asked about: the second account in a batch where the register has one, otherwise the statement
+    it copies, which is never written twice. A selftest check holds both.
+  - The open page in the sidebar's *Waiting for data* fold is white on the dark pill, not grey.
+  - Every saving flow that does not go to the broker is a named line of the split; none is drawn
+    as "—".
+  - Reading a PDF no longer prints pypdf's and fontTools' font warnings.
+  - Setup asks a pick-one question in the form and a typed amount in chat, and after an
+    interrupted form goes on in chat.
+
 - **Custom funds** (2026-11-03, user 001). A fund is whatever the owner names: a label on money
   already in one of their accounts, with an optional goal, month and reason, and a saving flow that
   adds to it. Budget shows each one's set-aside amount, what the plan adds and when that pace
