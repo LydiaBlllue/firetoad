@@ -10,7 +10,9 @@
   on the bank's figure: nothing is asked. A file is named by the ids inside it, not its name. BMO's
   two-letter codes ("[DN]") are spelled the way its PDF spells them, so rows type as before. On a
   real BMO download, two months of chequing matched the PDF ledger row for row and the books ended
-  on the bank's balance to the cent. Setup drafts accounts from it and asks which bank and which
+  on the bank's balance to the cent; on a real RBC one, chequing matched row for row and the
+  eSavings, Find & Save and Visa each landed on the bank's figure. An id that ends in the account
+  number the register already has (RBC's) is matched without being asked. Setup drafts accounts from it and asks which bank and which
   account each id is. A debit purchase's merchant no longer keeps "Debit Card Purchase," in its name
   (it made every BMO debit merchant look new, PDFs included).
 

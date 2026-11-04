@@ -1223,8 +1223,24 @@ def ofx_download_check(root, base):
     r2 = upd(ws2)
     if r2.returncode == 0 and "Nothing written" not in r2.stdout and "by hand" not in r2.stdout:
         return ["  ✗ ofx download: a file with a row missing was taken in"]
+    # RBC's shape: tags indented, & written &amp;, a description in NAME and MEMO, an id that ends
+    # in the account number the register already has (so no ofxId is needed).
+    sys.path.insert(0, os.path.join(root, ".claude", "skills", "update-dashboard"))
+    from parsers import ofx as ofx_
+    p = os.path.join(base, "rbc_shape.ofx")
+    open(p, "w").write("OFXHEADER:100\n<OFX>\n <BANKMSGSRSV1>\n  <STMTTRNRS>\n   <STMTRS>\n    <CURDEF>CAD\n    <BANKACCTFROM>\n"
+                       "     <ACCTID>012345024471\n     <ACCTTYPE>CHECKING\n    </BANKACCTFROM>\n    <BANKTRANLIST>\n"
+                       "     <STMTTRN>\n      <TRNTYPE>DEBIT\n      <DTPOSTED>20261002120000[-5:EST]\n      <TRNAMT>-20.00\n"
+                       "      <FITID>A1\n      <NAME>TO FIND &amp; SAVE                  \n     </STMTTRN>\n"
+                       "     <STMTTRN>\n      <TRNTYPE>DEBIT\n      <DTPOSTED>20261003120000[-5:EST]\n      <TRNAMT>-4.50\n"
+                       "      <FITID>A2\n      <NAME>C-IDP PURCHASE-1111             \n      <MEMO>CAFE \n     </STMTTRN>\n"
+                       "    </BANKTRANLIST>\n    <LEDGERBAL>\n     <BALAMT>975.50\n     <DTASOF>20261103\n    </LEDGERBAL>\n"
+                       "   </STMTRS>\n  </STMTTRNRS>\n </BANKMSGSRSV1>\n</OFX>\n")
+    got = ofx_.parse(p)
+    if [r["description"] for r in got["rows"]] != ["TO FIND & SAVE", "C-IDP PURCHASE-1111 CAFE"] or got["opening"] != 1000.0:
+        return [f"  ✗ ofx download: an RBC-shaped file read as {[r['description'] for r in got['rows']]}, opening {got['opening']}"]
     return ["  ✓ ofx download: a chequing month and a card, named by the account ids inside, came back exactly with no balance "
-            "asked; a file with a row missing was refused"]
+            "asked; a file with a row missing was refused; an RBC-shaped file (indented, &amp;, NAME and MEMO) read right"]
 
 
 def month_parts_check(root, base):
