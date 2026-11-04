@@ -286,6 +286,25 @@ def check(path):
                         err("S7", f"{doc} lists the constants rebuild.py derives but omits "
                                   + ", ".join(missing))
 
+            # S8 (2026-11-04): the banks page is written from the tool's own table, and a CSV map
+            # is confirmed only where the table says a real file was read. A status changed in one
+            # place and not the other is a page telling a user something the tool does not know.
+            sk = os.path.join(root, ".claude", "skills", "update-dashboard")
+            if os.path.exists(os.path.join(sk, "parsers", "support.py")):
+                sys.path.insert(0, sk)
+                import importlib
+                import parsers.support as support_, parsers.csv_bank as csv_bank_
+                importlib.reload(support_); importlib.reload(csv_bank_)
+                for lang, rel in (("en", "docs/banks.md"), ("zh", "docs/zh/banks.md")):
+                    bp = os.path.join(root, rel)
+                    if os.path.exists(bp) and open(bp, encoding="utf-8").read() != support_.render(lang):
+                        err("S8", f"{rel} differs from the table in parsers/support.py — run tools/banks.py")
+                for r_ in support_.SUPPORT:
+                    prof = r_.get("profile")
+                    if prof and prof in csv_bank_.PROFILES and csv_bank_.PROFILES[prof]["verified"] != (r_["status"] == "confirmed"):
+                        err("S8", f"{r_['bank']} CSV is '{r_['status']}' in support.py but its map says verified="
+                                  f"{csv_bank_.PROFILES[prof]['verified']} in csv_bank.py")
+
             st = os.path.join(root, ".claude", "skills", "workspace-checks", "scripts", "selftest.py")
             if os.path.exists(st):
                 real = len(re.findall(r'^\s*\("[A-Z]\d+",\s*"',

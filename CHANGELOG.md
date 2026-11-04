@@ -2,6 +2,12 @@
 
 ## 1.0.1 — unreleased
 
+- **A page of the banks and files the tool reads** (2026-11-04, user 001): `docs/banks.md` and
+  `docs/zh/banks.md`, bank by bank — which file, whether it has been confirmed on a real one, how to
+  download it, what to know. Written from one table (`parsers/support.py`) by `tools/banks.py`;
+  check_design's S8 fails when a page differs from the table, or when a CSV map is marked
+  confirmed in one place and not the other. One selftest fault (62).
+
 - **A bank's OFX or QFX download, for any bank** (2026-11-04, user 001). One reader
   (`parsers/ofx.py`) for the standard most Canadian banks offer as *Money* or *Quicken*: every
   account in the file with the bank's id for it (kept as `ofxId`), its type and currency, a unique id

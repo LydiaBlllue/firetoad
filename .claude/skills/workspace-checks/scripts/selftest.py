@@ -97,6 +97,9 @@ def m_fund_flow_nowhere(r):
     # A saving flow sent to a name that is no fund and no account leaves the plan for nowhere.
     edit_json(r, layout.rel("funds.json"), lambda d: d["plan"]["flows"].append(
               {"key": "x", "kind": "saving", "name": "Somewhere", "amount": 10, "to": "nowhere"}))
+def m_banks_drift(r):
+    # A bank marked confirmed on the page that the tool's table does not confirm.
+    edit(r, "docs/banks.md", lambda t: t.replace("Expected to work (a standard format), not yet seen", "✓ Confirmed on a real file", 1))
 def m_acct_drift(r):
     edit_json(r, layout.rel("accounts.json"), lambda d: d["accounts"][0].__setitem__("balance", 1.0))
 def m_bad_cover(r):
@@ -496,6 +499,7 @@ CASES = [
     ("D13", "funds.json changed but the page did not",      m_funds_drift,     "find"),
     ("D13", "a fund on an account the register lacks",      m_fund_no_account, "find"),
     ("D13", "a saving flow sent to no fund and no account", m_fund_flow_nowhere, "find"),
+    ("S8",  "the banks page drifts from the tool's table",  m_banks_drift,     "dash"),
     ("D14", "accounts.json changed but the page did not",   m_acct_drift,      "find"),
     ("D19", "a liability given a role",                     m_axes_illegal,    "find"),
     ("D20", "a stated balance with no date",                m_stated_no_asof,  "find"),
