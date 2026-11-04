@@ -447,6 +447,8 @@ def name_by_contents(ws, plan, path, quiet=False):
         return None
     hits = []
     for name in PARSERS:
+        if name == "csv":
+            continue                          # a download is named by its register entry, not read blind
         try:
             res = parse_file(path, name)
         except ParseError:
@@ -474,12 +476,16 @@ def plan_statement(ws, plan, path, doc):
     res = None
     if doc.get("parser"):
         try:
-            res = parse_file(path, doc["parser"])
+            res = parse_file(path, doc["parser"], doc.get("csv"))
         except ParserUnavailable:
             raise
         except ParseError as e:
             if name not in plan.hand:
                 plan.by_hand.append((name, f"{doc['parser']}: {e}"))
+                return
+        if res is not None and doc["parser"] == "csv":
+            res = csv_fit(ws, plan, doc, res, name)
+            if res is None:
                 return
         if res is not None and not res["reconcile"]["ok"] and name not in plan.hand:
             plan.by_hand.append((name, "does not reconcile: " + res["reconcile"]["detail"]))
@@ -529,6 +535,61 @@ def plan_statement(ws, plan, path, doc):
         plan.files.append(f"{ws.doc_name(pdoc)} statement to {short(p_end)}" + (" (again)" if redrop else ""))
     if not filed_any:
         plan.archive.pop()
+
+
+def csv_fit(ws, plan, doc, res, name):
+    """A bank's download covers the last 30 or 90 days, so it overlaps what is already in the
+    books; and it prints no totals. Rows already filed are dropped (a ledger: up to the row the
+    ledger ends on; a card: a purchase already in spending.csv). A file with no running balance is
+    checked against the balance the owner reads off the banking app (--balance): the last balance
+    known plus every new row has to land on it. Nothing is guessed: without it the run stops."""
+    acc = ws.account_for(doc, None)
+    if not acc:
+        plan.by_hand.append((name, f"the {ws.doc_name(doc)} download covers more than one account; say which"))
+        return None
+    rows = res["rows"]
+    if doc.get("into") == "spending.csv":
+        tag = f"[{acc.get('spendTag')}/"
+        seen = {(r["date"], r["amount"], r["note"].rsplit(" [", 1)[0].strip())
+                for r in csv_rows(ws.fd("spending.csv")) if tag in r.get("note", "")}
+        keep = [r for r in rows if (r["date"], f"{-r['amount']:.2f}", r["description"].strip()) not in seen]
+    else:
+        existing = csv_rows(ws.fd(acc["ledger"])) + [dict(zip(LEDGER_COLS, x)) for x in plan.ledger.get(acc["ledger"], [])] \
+            if acc.get("ledger") else []
+        keep = rows
+        if existing:
+            last = existing[-1]
+            same = lambda r: (r["date"] == last["date"] and abs(r["amount"] - float(last["amount"])) < 0.005
+                              and (r.get("balance") is None or abs(r["balance"] - float(last["balance"])) < 0.005))
+            hit = max((i for i, r in enumerate(rows) if same(r)), default=None)
+            if hit is not None:
+                keep = rows[hit + 1:]
+            else:
+                on_last = {(x["date"], f"{float(x['amount']):.2f}") for x in existing if x["date"] == last["date"]}
+                keep = [r for r in rows if r["date"] > last["date"]
+                        or (r["date"] == last["date"] and (r["date"], f"{r['amount']:.2f}") not in on_last)]
+    dropped = len(rows) - len(keep)
+    if dropped:
+        plan.judged.append(f"The {ws.doc_name(doc)} download repeated {dropped} row(s) already in the books; they were left out.")
+    res = dict(res, rows=keep)
+    if keep:
+        res["period"] = {"from": keep[0]["date"], "to": keep[-1]["date"]}
+    if res["reconcile"].get("needs_balance"):
+        said = plan.stated.get(acc["key"], plan.stated.get(doc["key"]))
+        if said is None:
+            plan.stopped.append(f"The {ws.doc_name(doc)} download has no running balance. Read the balance your banking "
+                                f"app shows for {acc['name']} and run again with --balance \"{acc['key']}=<amount>\"")
+            return None
+        liability = acc.get("side") == "liability"
+        before = float(acc.get("balance") or 0.0)
+        expect = round(before + sum(r["amount"] for r in keep), 2)
+        target = -abs(said) if liability else said
+        ok = abs(expect - target) < 0.01
+        res["closing"] = abs(said) if liability else said
+        res["reconcile"] = {"rule": "the last balance plus every new row lands on the balance the app shows", "ok": ok,
+                            "detail": f"{before:,.2f} and {len(keep)} new row(s) make {expect:,.2f}; the app shows {target:,.2f}"
+                                      + ("" if ok else " — a row is missing or one is counted twice")}
+    return res
 
 
 def hand_result(ws, plan, doc, h):
@@ -1186,6 +1247,8 @@ def main(argv):
     ap.add_argument("--write", action="store_true", help="apply; without it, only say what would happen")
     ap.add_argument("--json", action="store_true", help="print the summary as JSON")
     ap.add_argument("--hand", help="JSON of statements the model read and transcribed (see above)")
+    ap.add_argument("--balance", action="append", default=[], metavar="KEY=AMOUNT",
+                    help="the balance the banking app shows, for a download with no running balance (repeatable)")
     ap.add_argument("--undo", action="store_true", help="put findata/ and inbox/ back as they were before the last --write")
     a = ap.parse_args(argv)
     root = os.path.abspath(a.root)
@@ -1194,6 +1257,13 @@ def main(argv):
     ws = Workspace(root)
     plan = Plan()
     plan.hand = {}
+    plan.stated = {}
+    for b in a.balance:
+        k, _, v = b.partition("=")
+        try:
+            plan.stated[k.strip()] = float(v.replace(",", "").replace("$", ""))
+        except ValueError:
+            print(f"  ✗ --balance {b}: say it as key=amount"); return 1
     if a.hand:
         try:
             for h in json.load(open(a.hand, encoding="utf-8")):

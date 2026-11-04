@@ -85,6 +85,21 @@ often pay arrives, whether last month's transfers are the standing rule, the eve
 payments and rent after FIRE, the planning spend, the investing buckets, a counterparty
 who repays a loan, and anything held abroad.
 
+**A bank's own download (CSV).** A bank with no PDF parser here is read from its transaction
+download: TD, Scotiabank, CIBC, Tangerine, Simplii, EQ (2026-11-03). The draft recognises a
+known layout and writes a `csv` map on the document (which column is the date, the description,
+the money out and in, the balance); its `_open` question asks the kind of account and the
+balance the app shows. A layout it does not recognise is listed as not recognised: show the
+owner its first two lines with the numbers changed, draft the map, and try it before it goes in
+the register —
+
+```bash
+python3 .claude/skills/update-dashboard/scripts/parse.py inbox/<file>.csv --parser csv --csv '{"header": true, "date": "Date", "description": "Description", "amount": "Amount"}'
+```
+
+— until it reads every row. Never guess a column from its position alone: the first rows have to
+read as the owner sees them in the banking app.
+
 ## Before you write anything
 
 Check whether this workspace is already somebody's:

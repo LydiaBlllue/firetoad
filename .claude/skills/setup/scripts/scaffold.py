@@ -270,6 +270,9 @@ def build(a, today):
             # the statement is read by hand; D14 rejects a name no parser has.
             if doc.get("parser"):
                 d["parser"] = doc["parser"]
+            # A bank's own download is read by the column map drafted from the file (csv_bank.py).
+            if doc.get("csv"):
+                d["csv"] = doc["csv"]
             d["reconcile"] = doc.get("reconcile") or (
                 "opening + in - out = closing" if acc.get("ledger")
                 else "positions replace the previous snapshot" if acc["kind"] == "Investment"

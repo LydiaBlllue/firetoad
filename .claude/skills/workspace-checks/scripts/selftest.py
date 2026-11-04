@@ -1039,6 +1039,69 @@ def browser_copy_check(root, base):
     return ["  ✓ browser copy: a (1) on a statement's name is named as the statement it copies"]
 
 
+def csv_download_check(root, base):
+    """A bank's own CSV download, end to end (2026-11-03: banks with no PDF parser here). The demo's
+    newest chequing month goes back in as a TD-style download -- no header, newest first, a few
+    rows of the month before repeated -- and the ledger has to come back exactly as it was, nothing
+    twice. Then a card download with no running balance: the run has to stop for the balance the
+    app shows, refuse a wrong one, and take the right one."""
+    if not demo_like(root):
+        return []
+    ws = os.path.join(base, "csvdl"); os.makedirs(ws); stage(root, ws)
+    sys.path.insert(0, os.path.join(root, ".claude", "skills", "update-dashboard", "scripts"))
+    ap_ = layout.path(ws, "accounts.json"); reg = json.load(open(ap_, encoding="utf-8"))
+    chq = next(d for d in reg["documents"] if d.get("into") == "chequing.csv")
+    card = next(d for d in reg["documents"] if d.get("into") == "spending.csv" and d.get("parser"))
+    chq.update(parser="csv", file="accountactivity.csv", csv={"header": False, "date": 0, "dateFormat": "%m/%d/%Y",
+                                                              "description": 1, "out": 2, "in": 3, "balance": 4})
+    card.update(parser="csv", file="card-activity.csv", csv={"header": False, "date": 0, "dateFormat": "%m/%d/%Y",
+                                                             "description": 1, "out": 2, "in": 3})
+    json.dump(reg, open(ap_, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    lp = layout.path(ws, "chequing.csv")
+    rows = list(csv.DictReader(open(lp, encoding="utf-8"))); cols = list(rows[0].keys())
+    newest = rows[-1]["statement"]
+    first = next(i for i, r in enumerate(rows) if r["statement"] == newest)
+    keep, back = rows[:first], rows[first:]
+    with open(lp, "w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=cols, lineterminator="\n"); w.writeheader(); w.writerows(keep)
+    sp = layout.path(ws, "spending.csv")
+    srows = list(csv.DictReader(open(sp, encoding="utf-8"))); scols = list(srows[0].keys())
+    stamp_ = newest.split("/")[1]
+    srows = [r for r in srows if not (r["note"].rstrip().endswith(f"/{stamp_}]") and "(chequing)" in r["note"] or
+                                      r["note"].rstrip().endswith(f"/{stamp_}]") and "(debit)" in r["note"])]
+    with open(sp, "w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=scols, lineterminator="\n"); w.writeheader(); w.writerows(srows)
+    us = lambda d: f"{d[5:7]}/{d[8:10]}/{d[:4]}"
+    dl = [[us(r["date"]), r["description"], f"{-float(r['amount']):.2f}" if float(r["amount"]) < 0 else "",
+           f"{float(r['amount']):.2f}" if float(r["amount"]) > 0 else "", r["balance"]] for r in keep[-4:] + back]
+    with open(os.path.join(ws, "inbox", "accountactivity.csv"), "w", newline="") as f:
+        csv.writer(f).writerows(reversed(dl))
+    upd = lambda *a: subprocess.run([sys.executable, os.path.join(ws, ".claude", "skills", "update-dashboard", "scripts", "update.py"),
+                                     ".", "--write", *a], cwd=ws, capture_output=True, text=True, timeout=300)
+    r = upd()
+    got = list(csv.DictReader(open(lp, encoding="utf-8")))
+    sig = lambda xs: [(x["date"], x["amount"], x["balance"], x["type"]) for x in xs]
+    if r.returncode not in (0, 2) or sig(got) != sig(keep + back):
+        return [f"  ✗ csv download: the chequing month did not come back as it was (exit {r.returncode}, "
+                f"{len(got)} rows, expected {len(keep) + len(back)}): " + " | ".join((r.stdout + r.stderr).strip().splitlines()[-3:])]
+    # the card: three purchases after the newest, no running balance
+    acc = next(a for a in reg["accounts"] if card["covers"][0] == a["key"])
+    acc = next(a for a in json.load(open(ap_, encoding="utf-8"))["accounts"] if a["key"] == acc["key"])
+    buys = [("09/02/2026", "CORNER GROCER OTTAWA ON", 23.40), ("09/03/2026", "BOOKSHOP OTTAWA ON", 18.00),
+            ("09/04/2026", "CORNER GROCER OTTAWA ON", 11.25)]
+    with open(os.path.join(ws, "inbox", "card-activity.csv"), "w", newline="") as f:
+        csv.writer(f).writerows([[d, m, f"{a:.2f}", ""] for d, m, a in buys])
+    owed = round(-float(acc["balance"]) + sum(a for _, _, a in buys), 2)
+    n0 = len(list(csv.DictReader(open(sp, encoding="utf-8"))))
+    asked, wrong, right = upd(), upd("--balance", f"{acc['key']}={owed + 5:.2f}"), upd("--balance", f"{acc['key']}={owed:.2f}")
+    n1 = len(list(csv.DictReader(open(sp, encoding="utf-8"))))
+    if "--balance" not in asked.stdout or n1 - n0 != 3 or "does not reconcile" not in wrong.stdout:
+        return [f"  ✗ csv download: a card download without balances (asked {'--balance' in asked.stdout}, "
+                f"wrong balance refused {'does not reconcile' in wrong.stdout}, purchases added {n1 - n0} of 3)"]
+    return ["  ✓ csv download: a chequing month (no header, newest first, overlapping the last) came back exactly, nothing twice; "
+            "a card download without balances stopped for the app's balance, refused a wrong one, took the right one"]
+
+
 def month_parts_check(root, base):
     """The sentence setup ends with: its parts have to add up to the month's total in spending.csv."""
     r = subprocess.run([sys.executable, os.path.join(root, ".claude", "skills", "setup", "scripts", "month_sentence.py"), root],
@@ -2093,7 +2156,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
-                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, browser_copy_check, month_parts_check, starter_check,
+                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, browser_copy_check, csv_download_check, month_parts_check, starter_check,
                     demo_clear_check):
             try:
                 runs += chk(root, base)
