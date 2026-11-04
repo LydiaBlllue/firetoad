@@ -1,0 +1,11 @@
+# Development only: kept in the repository, left out of a release's download (git archive).
+# A file listed here must not be something a downloaded copy reads or links to (2026-11-03).
+.gitattributes            export-ignore
+.github/                  export-ignore
+docs/site/                export-ignore
+docs/competitors.md       export-ignore
+docs/pipeline.py          export-ignore
+docs/pipeline.drawio      export-ignore
+docs/zh/product_flow.py   export-ignore
+docs/zh/product_flow.drawio export-ignore
+tools/demo.py             export-ignore

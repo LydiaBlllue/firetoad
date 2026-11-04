@@ -92,7 +92,7 @@ tools/        demo 数据、迁移脚本、同步进工作区
 
 ![流程](../pipeline.svg)
 
-*可编辑的源文件：[`../pipeline.drawio`](../pipeline.drawio)，由 `../pipeline.py` 生成。*
+*可编辑的源文件：`pipeline.drawio`（只在仓库里，下载包里没有），由仓库里的 `docs/pipeline.py` 生成。*
 </details>
 
 <details>

@@ -2,6 +2,11 @@
 
 ## 1.3 — unreleased
 
+- **A download holds only what a user runs** (2026-11-03, user 001). `.gitattributes` leaves the
+  demo site, its deploy workflow, the diagram sources, the demo generator and the competitor survey
+  out of a release's zip; they stay in the repository, and the documents link there. The zip passes
+  every checker and the selftest on its own.
+
 - **No pay and nothing invested read as a plan, not a failure** (2026-11-03, user 002). D13 no
   longer fails a plan with no pay: it is living off savings, a note; a plan above some pay is a
   warning naming the gap. Budget says how each month is planned, not how a paycheque is split.
