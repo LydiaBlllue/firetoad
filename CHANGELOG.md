@@ -1,6 +1,11 @@
 # Changelog
 
-## 1.3 — 2026-11-03
+## 1.0.0 — 2026-11-03
+
+The first public release. It gathers everything built under the old two-digit numbers: the
+entries of what was called 1.3 come first, then those of 1.2, 1.1 and 1.0 under their old names.
+Three-digit versions from here on (2026-11-03, user 001).
+
 
 - **The four smaller things a first owner noticed** (2026-11-03, user 002).
   - A page slides in and never fades: a fade held by a throttled browser read as a blank page.
@@ -238,7 +243,7 @@
   every sync. Question choices are the fifteen categories, and a suggestion is the pill
   selected. An account read off a phone screenshot can say where with `capture` (CLAUDE.md).
 
-## 1.2 — 2026-10-29
+### Built as 1.2 (on `main` 2026-10-29)
 
 - **R4 retired** (2026-10-29). "A page should fill a screen" warned on Home on every run, and
   Home is short on purpose; a warning nobody acts on only teaches everyone to skip the output.
@@ -325,7 +330,7 @@
   in Chinese or English by the phone's language, with a button that sends the link to a
   computer; a wide screen goes straight to the page.
 
-## 1.1 — unreleased
+### Built as 1.1
 
 - **Setup leaves nothing of the demo owner behind** (2026-10-28). On a fresh clone it cleared the
   demo's ledgers and rewrote the register, but the demo's statements stayed in `archive/` beside
@@ -388,7 +393,7 @@
   the deny list. Selftest makes a clone with a remote and expects the demo through and the owner
   refused.
 
-## 1.0 — unreleased
+### Built as 1.0
 
 The tool is the repository; every workspace, the author's included, is an instance of it.
 
