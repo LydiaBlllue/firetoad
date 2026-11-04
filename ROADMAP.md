@@ -148,7 +148,8 @@ category.
   | Money in & out | This month · Year · Income · Subscriptions · Spending baseline |
   | Plan | Budget · Safety net · FIRE · Drawdown & care |
   | Investing | Portfolio · Performance · Holdings · Investment income |
-  | Records | Accounts · Updates · Statements |
+  | — | Accounts |
+  | Monthly import | Updates · Statements |
   | — | Waiting for data (the fold) · Glossary |
 
 - **What each page waits for** (`WAITS`), the two signals in PRODUCT.md §2:

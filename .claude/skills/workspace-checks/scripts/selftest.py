@@ -76,8 +76,8 @@ def rules_seen(out):
 def m_readme_path(r):
     edit(r, "README.md", lambda s: s.replace("(docs/how-it-works.md)", "(docs/how-it-works_MOVED.md)"))
 def m_design_pages(r):
-    # The Records row's first page swapped for one that does not exist, whatever the row lists.
-    edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Records \| )[^·|]+·", r"\1Insights ·", s, count=1))
+    # The Monthly import row's first page swapped for one that does not exist, whatever the row lists.
+    edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Monthly import \| )[^·|]+·", r"\1Insights ·", s, count=1))
 def m_nav_orphan(r):
     edit(r, main_dash(r),
          lambda s: s.replace('<section data-pg="acct" hidden>', '<section data-pg="acctX" hidden>'))
@@ -137,7 +137,7 @@ def m_nav_marker_gone(r):
 def m_readme_sidebar(r):
     # the "·" list under the marker is what a reader is shown; it has to match the real sidebar
     edit(r, "README.md",
-         lambda s: s.replace("Home · Spending", "Home · Spendingg", 1))
+         lambda s: s.replace(" · Spending · ", " · Spendingg · ", 1))
 def m_figures_end_gone(r):
     edit(r, "FINANCE.md", lambda s: s.replace("<!-- LINT:FIGURES:END -->", "", 1))
 

@@ -2,6 +2,12 @@
 
 ## 1.3 — unreleased
 
+- **Accounts sits under Home; Records is the Monthly import** (2026-11-03, user 001). Records held
+  two kinds of page: Accounts answers where the money is, which is net worth opened up, and
+  Updates and Statements answer whether the data is in and what each update changed. Accounts
+  moves under Home, and the other two are the *Monthly import* group, the word the owner
+  already uses. 17 pages, 5 groups, as before.
+
 - **The import day defaults to the 1st** (2026-11-03, user 001), not the 26th. Any day works;
   setup asks, and the one that suits the owner is the right one. A workspace keeps its own.
 

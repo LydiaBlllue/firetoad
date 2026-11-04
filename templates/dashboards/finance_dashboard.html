@@ -244,7 +244,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .ht tr.grp td{background:var(--pill);font-weight:700;font-size:12.5px;padding:5px 8px}.ht tr.grp td .gp{float:right;font-weight:600;color:var(--muted)}
 .pos{color:#008300}.neg{color:#a3423a}
 .foot{font-size:12px;color:var(--muted);margin-top:9px}
-/* Records: a secondary group at the foot of the sidebar, closed unless you are in it */
+/* the Glossary: on its own at the foot of the sidebar */
 .side .grp.foot{margin-top:14px}
 .side [hidden]{display:none!important}
 .dt{width:100%;border-collapse:collapse;font-size:13px}
@@ -760,7 +760,10 @@ addEventListener("DOMContentLoaded", () => {
 });
 
 const NAV = [
-  {sec:"",          items:[{k:"home",  n:"Home",             t:"Home",                 d:""}]},
+  // Accounts sits with Home (2026-11-03): it is net worth opened up, a question about the money,
+  // not about the import.
+  {sec:"",          items:[{k:"home",  n:"Home",             t:"Home",                 d:""},
+                           {k:"acct",  n:"Accounts",         t:"Accounts",             d:""}]},
   // Spending is read two ways and in this order (2026-09-10): this month, opened up, is what
   // you look at every week; the year is what you look at now and then.
   {sec:"Spending",  items:[{k:"cat",   n:"This month",       t:"This month",           d:""},
@@ -775,10 +778,10 @@ const NAV = [
                            {k:"fire",  n:"FIRE",             t:"FIRE",                 d:""},
                            {k:"coast", n:"Drawdown & care",  t:"Drawdown and care",    d:""},
                            {k:"base",  n:"Spending baseline", t:"Spending baseline",   d:""}]},
-  {sec:"Records",   items:[{k:"upd",   n:"Updates",          t:"Updates",              d:""},
-                           {k:"acct",  n:"Accounts",         t:"Accounts",             d:""},
+  // The monthly import's two pages: what each update changed, and which statements are in.
+  {sec:"Monthly import", items:[{k:"upd", n:"Updates",       t:"Updates",              d:""},
                            {k:"src",   n:"Statements",       t:"Statements",           d:""}]},
-  // The Glossary is a reference, not a record: on its own at the foot of the sidebar (2026-10-28).
+  // The Glossary is a reference: on its own at the foot of the sidebar (2026-10-28).
   {sec:"",          items:[{k:"gloss", n:"Glossary",         t:"Glossary",             d:""}]}
 ];
 const PAGES = NAV.flatMap(g => g.items);

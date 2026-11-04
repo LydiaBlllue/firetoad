@@ -67,7 +67,7 @@ report and any questions a program cannot answer, like a merchant it has not see
 
 <!-- LINT:NAV main=17/5 minwidth=1120 -->
 The page is 17 pages in 5 sidebar groups —
-Home · Spending · Income · Investing · Plan · Records · Glossary
+Home · Accounts · Spending · Income · Investing · Plan · Monthly import · Glossary
 — desktop only, at least 1120px wide.
 
 MIT licence: see [`LICENSE`](LICENSE).

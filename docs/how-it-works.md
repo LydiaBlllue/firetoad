@@ -19,8 +19,8 @@ The detail behind the [README](../README.md).
 | | FIRE | How far the portfolio is from the target, and when it gets there |
 | | Drawdown & care | Whether the money lasts, care included, and in how many real stretches of history it would have |
 | | Spending baseline | The monthly figure the target is built on, against what you really spend |
-| Records | Updates | What each update changed |
-| | Accounts | Every place the money sits |
+| — | Accounts | Every place the money sits |
+| Monthly import | Updates | What each update changed |
 | | Statements | Which statement arrived which month, and what is missing |
 | — | Glossary | Every finance term, and every word the page coined |
 
@@ -47,7 +47,7 @@ The detail behind the [README](../README.md).
    to you what a program cannot decide — a merchant it has not seen, a statement no parser could
    read — and you get a short report: what changed, what was noticed, what was decided without
    asking, what needs your word.
-3. **Open the page.** Records → Statements shows which month got which file, so a gap is
+3. **Open the page.** Monthly import → Statements shows which month got which file, so a gap is
    visible at a glance.
 
 For Emma the monthly drop is eight files: three RBC PDFs, three BMO PDFs and two Wealthsimple
@@ -141,6 +141,6 @@ tool's data shape moves ahead of your folder, `tools/migrate.py <workspace>` bri
 up one step at a time.
 
 The page is 17 pages in 5 sidebar groups —
-Home · Spending · Income · Investing · Plan · Records · Glossary
+Home · Accounts · Spending · Income · Investing · Plan · Monthly import · Glossary
 — desktop only, at least 1120px wide.
 </details>

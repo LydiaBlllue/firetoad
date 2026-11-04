@@ -63,7 +63,7 @@
 
 <!-- LINT:NAV main=17/5 minwidth=1120 -->
 页面共 17 页、5 个侧栏分组 ——
-Home · Spending · Income · Investing · Plan · Records · Glossary
+Home · Accounts · Spending · Income · Investing · Plan · Monthly import · Glossary
 —— 仅桌面端，至少 1120px 宽。
 
 MIT 许可：见 [`LICENSE`](LICENSE)。

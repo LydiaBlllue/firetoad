@@ -74,13 +74,13 @@
   constant. Home sits above the sections under no heading.
   - **A new page is one entry in `NAV` plus one `<section data-pg="key" hidden>`**, nothing
     else; `setPage()` is driven entirely by `NAV`.
-  - **Every group is open.** No section folds away; Records is listed like the others. The one
+  - **Every group is open.** No section folds away; Monthly import is listed like the others. The one
     fold is **Waiting for data**, above the Glossary: a page whose data has not arrived yet
     (`WAITS` — Income without a chequing ledger, Investing and FIRE with nothing invested) is
     listed there with what it waits for, closed by default, and returns to its section by itself
     the day the data arrives. A workspace with only a credit card is then a complete product.
-  - **The Glossary is on its own at the foot**, below Records and above the version, under no
-    heading: it is a reference for reading the page, not a record.
+  - **The Glossary is on its own at the foot**, below Monthly import and above the version,
+    under no heading: it is a reference for reading the page.
   - **Dots**: `pageFlags()` hangs a 6px dot on a sidebar entry when its page has something on
     it — amber `#c98500` = look at this, red `#d03b3b` = a rule is broken or something is due.
     A new rule is wired into it.
@@ -99,12 +99,12 @@
   reader:
   | Section | Pages |
   |---|---|
-  | — | Home (four cards, net worth in one card, net worth over time) |
+  | — | Home (four cards, net worth in one card, net worth over time) · Accounts |
   | Spending | This month · Year · Subscriptions |
   | Income | Income · Investment income |
   | Investing | Portfolio · Performance · Holdings |
   | Plan | Budget · FIRE · Drawdown & care · Spending baseline |
-  | Records | Updates · Accounts · Statements |
+  | Monthly import | Updates · Statements |
   | — | Glossary, at the foot of the sidebar |
 
 ### Home
@@ -217,7 +217,11 @@
   chart, the months in the average highlighted, the average of up to twelve usable months a red
   dashed line.
 
-### Records
+### Accounts, and the Monthly import
+
+- **Accounts sits under Home**, not with the import (2026-11-03): it answers *where is my money*,
+  which is net worth opened up, while Updates and Statements answer *is the data in, and what
+  did each update change*.
 
 - **No To do page** (taken off 2026-10-28). `tasks.json` and `decisions.json` are still
   written and read by the import; nothing on the page lists them, and an old link opens Updates.

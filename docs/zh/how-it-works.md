@@ -19,8 +19,8 @@
 | | FIRE | 离目标还有多远，哪年到 |
 | | Drawdown & care | 钱够不够用（含养老护理），历史上多少段真实年份里撑得住 |
 | | Spending baseline | 目标所依据的月支出，和实际花了多少 |
-| Records | Updates | 每次更新改了什么 |
-| | Accounts | 钱放在哪些地方 |
+| — | Accounts | 钱放在哪些地方 |
+| Monthly import | Updates | 每次更新改了什么 |
 | | Statements | 哪份对账单哪个月到了，还缺什么 |
 | — | Glossary | 每个金融术语，以及页面自己起的每个词 |
 
@@ -32,7 +32,7 @@
    由它的解析器读取，必须和对账单自己的合计对平才允许写入；消费按商户归类；页面重建；原件移进
    `archive/`。Claude 只读脚本的摘要，把程序决定不了的事拿来问你 —— 没见过的商户、解析器读不了的
    对账单 —— 然后给你一份简短的报告：变了什么、注意到什么、替你做了哪些判断、哪些要你拍板。
-3. **打开页面。** Records → Statements 是一张打卡表，哪个月缺了哪份文件一眼可见。
+3. **打开页面。** Monthly import → Statements 是一张打卡表，哪个月缺了哪份文件一眼可见。
 
 Emma 每月要丢八份文件：RBC 三份 PDF、BMO 三份 PDF、Wealthsimple 两份导出。你的是你注册表里写的那些。
 
@@ -120,6 +120,6 @@ tools/        demo 数据、迁移脚本、同步进工作区
 的东西；工具的数据形状比你的文件夹新时，`tools/migrate.py <workspace>` 会一步一步把文件夹迁上来。
 
 页面共 17 页、5 个侧栏分组 ——
-Home · Spending · Income · Investing · Plan · Records · Glossary
+Home · Accounts · Spending · Income · Investing · Plan · Monthly import · Glossary
 —— 仅桌面，窗口至少 1120px 宽。
 </details>
