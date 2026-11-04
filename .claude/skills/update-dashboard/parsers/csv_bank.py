@@ -1,7 +1,7 @@
 """csv_bank — a bank's own transaction download (CSV), read by the column map the register keeps.
 
 Most Canadian banks let you download an account's recent transactions as a spreadsheet: TD,
-Scotiabank, CIBC, Tangerine, Simplii and EQ among them (2026-11-03, user 001: lower the barrier
+Scotiabank, CIBC, Tangerine and Simplii among them (2026-11-03, user 001: lower the barrier
 for people whose bank has no PDF parser here). The layouts differ and change, so nothing here is
 guessed per bank. The register's document carries a `csv` map, written at setup from the file
 the owner actually dropped, and this module only follows it:
@@ -34,24 +34,52 @@ from . import ParseError
 DATE_FORMATS = ("%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%Y/%m/%d", "%b %d, %Y", "%d %b %Y", "%m/%d/%y")
 
 # Starting points only: setup shows the owner the map it drafted and the first rows read with it.
-# `verified` stays False until a real file from that bank has been read and reconciled.
+# Each comes from open-source importers' configs and fixtures (2025-26), not from a bank: no bank
+# documents its columns. `verified` stays False until a real file from that bank has been read and
+# reconciled here. Order matters for files with no header: the first map that reads every row
+# wins, so the stricter ones come first. EQ Bank is left out on purpose: nothing showed its columns.
 PROFILES = {
-    "td": {"label": "TD", "header": False, "date": 0, "dateFormat": "%m/%d/%Y", "description": 1,
-           "out": 2, "in": 3, "balance": 4, "columns": 5, "verified": False},
+    # TD, chequing and Visa: no header; date, description, money out, money in, balance. Chequing
+    # dates have moved to YYYY-MM-DD, the Visa's are still MM/DD/YYYY, so the format is left to
+    # each file. A card's balance column counts what is owed, the other way round from chequing.
+    "td": {"label": "TD", "header": False, "date": 0, "description": 1, "out": 2, "in": 3, "balance": 4,
+           "columns": (5,), "verified": False},
+    # CIBC: no header, YYYY-MM-DD; chequing date, description, out, in (sometimes a fifth column);
+    # a card's fifth column is its masked number, never a balance, so no balance is read.
     "cibc": {"label": "CIBC", "header": False, "date": 0, "dateFormat": "%Y-%m-%d", "description": 1,
              "out": 2, "in": 3, "columns": (4, 5), "verified": False},
-    "tangerine": {"label": "Tangerine", "header": True, "date": "Transaction date", "dateFormat": "%m/%d/%Y",
-                  "description": ["Name", "Memo"], "amount": "Amount", "match": {"Transaction date", "Name", "Amount"},
-                  "verified": False},
+    # Scotiabank's current download: a header, a byte-order mark, YYYY-MM-DD, the merchant in
+    # Sub-description. Chequing has a signed Amount and a Balance; a card has Status, no Balance,
+    # and shows a purchase as a positive amount. The web export stops at 100 rows.
+    "scotia": {"label": "Scotiabank", "header": True, "date": "Date", "dateFormat": "%Y-%m-%d",
+               "description": ["Sub-description", "Description"], "amount": "Amount", "balance": "Balance",
+               "match": {"Filter", "Date", "Sub-description", "Type of Transaction", "Amount", "Balance"},
+               "cap": 100, "verified": False},
+    "scotia_card": {"label": "Scotiabank", "header": True, "date": "Date", "dateFormat": "%Y-%m-%d",
+                    "description": ["Sub-description", "Description"], "amount": "Amount", "sign": -1,
+                    "match": {"Filter", "Date", "Sub-description", "Status", "Type of Transaction", "Amount"},
+                    "cap": 100, "verified": False},
+    # Tangerine: a header naming the date either way, M/D/YYYY, one signed Amount, no balance.
+    "tangerine": {"label": "Tangerine", "header": True, "date": "Date", "dateFormat": "%m/%d/%Y",
+                  "description": ["Name", "Memo"], "amount": "Amount",
+                  "match": {"Date", "Transaction", "Name", "Memo", "Amount"}, "verified": False},
+    "tangerine_alt": {"label": "Tangerine", "header": True, "date": "Transaction date", "dateFormat": "%m/%d/%Y",
+                      "description": ["Name", "Memo"], "amount": "Amount",
+                      "match": {"Transaction date", "Transaction", "Name", "Memo", "Amount"}, "verified": False},
+    # Simplii: a header with spaces after the commas (names are read stripped), MM/DD/YYYY, no balance.
     "simplii": {"label": "Simplii", "header": True, "date": "Date", "dateFormat": "%m/%d/%Y",
                 "description": "Transaction Details", "out": "Funds Out", "in": "Funds In",
                 "match": {"Date", "Transaction Details", "Funds Out", "Funds In"}, "verified": False},
-    "eq": {"label": "EQ Bank", "header": True, "date": "Transfer date", "description": "Description",
-           "amount": "Amount", "balance": "Balance", "match": {"Transfer date", "Description", "Amount", "Balance"},
-           "verified": False},
-    "scotia": {"label": "Scotiabank", "header": True, "date": "Date", "description": ["Description", "Sub-description"],
-               "amount": "Amount", "balance": "Balance", "match": {"Date", "Description", "Amount"}, "verified": False},
+    # Scotiabank's older download: no header; date, signed amount, "-", type, description.
+    "scotia_old": {"label": "Scotiabank", "header": False, "date": 0, "dateFormat": "%m/%d/%Y", "amount": 1,
+                   "description": [3, 4], "columns": (5,), "verified": False},
 }
+MAP_KEYS = ("header", "date", "dateFormat", "description", "amount", "out", "in", "balance", "sign", "cap")
+
+
+def spec_of(key):
+    """The map a profile drafts: what goes into the register's `csv`, nothing else."""
+    return {k: v for k, v in PROFILES[key].items() if k in MAP_KEYS}
 
 
 def read_lines(path):
@@ -94,8 +122,9 @@ def when(s, fmt):
 
 
 def detect(path):
-    """The profile whose header or shape the file has, or None. A suggestion for setup, never a
-    reading: the map that is used is the one in the register."""
+    """The profile whose layout the file has, or None. A file with a header is matched on its
+    column names; one without is matched by the first map that reads every row. A suggestion
+    for setup, never a reading: the map that is used is the one in the register."""
     lines = read_lines(path)
     if not lines:
         return None
@@ -104,11 +133,13 @@ def detect(path):
         if p.get("header") and p["match"] <= head:
             return key
     for key, p in PROFILES.items():
-        if p.get("header"):
+        if p.get("header") or not all(len(r) in p["columns"] for r in lines):
             continue
-        cols = p["columns"] if isinstance(p["columns"], tuple) else (p["columns"],)
-        if all(len(r) in cols for r in lines[:5]) and when(lines[0][p["date"]], p["dateFormat"]):
+        try:
+            parse(path, spec_of(key))
             return key
+        except ParseError:
+            continue
     return None
 
 
@@ -154,6 +185,11 @@ def parse(path, spec):
         raise ParseError("no row with a date this map can read")
     if skipped > 3:
         raise ParseError(f"{skipped} lines had no date the map can read — the date column or its format is wrong")
+    # A bank that stops its download at a fixed number of rows (Scotiabank: 100) has cut this one
+    # off if it holds exactly that many: the rest would be missing without a word.
+    if spec.get("cap") and len(rows) >= spec["cap"]:
+        raise ParseError(f"exactly {len(rows)} rows, the most this bank puts in one download, so it is cut off — "
+                         f"download one statement period at a time")
     # Some banks list the newest first. The ledger runs oldest first.
     if rows[0]["date"] > rows[-1]["date"]:
         rows.reverse()
@@ -162,9 +198,19 @@ def parse(path, spec):
            "opening": None, "closing": None, "rows": rows, "totals": {},
            "product": None, "holder": None, "kind": None}
     if all(r["balance"] is not None for r in rows):
-        breaks = [(a, b) for a, b in zip(rows, rows[1:]) if abs(a["balance"] + b["amount"] - b["balance"]) > 0.005]
+        # A card's balance counts what is owed, so it runs the other way from the money: a
+        # purchase (negative) raises it. Whichever way every row follows is the way it runs; the
+        # register keeps a card's balance as a negative number, so an owed balance is flipped.
+        follows = lambda k: [(a, b) for a, b in zip(rows, rows[1:]) if abs(k * a["balance"] + b["amount"] - k * b["balance"]) > 0.005]
+        if follows(1) and len(rows) > 1 and not follows(-1):
+            for r_ in rows:
+                r_["balance"] = -r_["balance"]
+            out["owed"] = True
+        breaks = follows(1)
         out["opening"] = round(rows[0]["balance"] - rows[0]["amount"], 2)
         out["closing"] = rows[-1]["balance"]
+        if out.get("owed"):                    # a card prints what is owed, a positive number
+            out["opening"], out["closing"] = -out["opening"], -out["closing"]
         out["reconcile"] = {"rule": "every balance follows from the one before it",
                             "ok": not breaks,
                             "detail": (f"{len(rows)} rows, {out['opening']:,.2f} to {out['closing']:,.2f}, every balance follows"

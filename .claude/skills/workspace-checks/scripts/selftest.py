@@ -1102,6 +1102,50 @@ def csv_download_check(root, base):
             "a card download without balances stopped for the app's balance, refused a wrong one, took the right one"]
 
 
+def csv_layouts_check(root, base):
+    """Each bank layout the csv reader starts from, as open-source importers describe it (2026-11),
+    is recognised as that bank and read with money out negative; a Scotiabank download cut at 100
+    rows is refused; a layout nobody described is not read at all."""
+    sys.path.insert(0, os.path.join(root, ".claude", "skills", "update-dashboard"))
+    import importlib
+    from parsers import csv_bank, ParseError as PE
+    importlib.reload(csv_bank)
+    d = os.path.join(base, "csvlayouts"); os.makedirs(d)
+    cases = [
+        ("td_chequing.csv", "2026-10-01,PAYROLL CO,,2100.00,3100.00\n2026-10-02,RENT,1450.00,,1650.00\n", "td", [2100.0, -1450.0]),
+        ("td_visa.csv", "10/02/2026,CAFE,4.50,,504.50\n10/05/2026,PAYMENT - THANK YOU,,200.00,304.50\n", "td", [-4.5, 200.0]),
+        ("cibc_card.csv", '2026-10-02,"CAFE",4.50,,4500********1234\n2026-10-05,"PAYMENT",,200.00,4500********1234\n', "cibc", [-4.5, 200.0]),
+        ("scotia.csv", "\ufeffFilter,Date,Description,Sub-description,Type of Transaction,Amount,Balance\n"
+                       "Current statement period,2026-10-01,Deposit,PAYROLL CO,Credit,2100.00,3100.00\n,2026-10-02,POS purchase,CAFE,Debit,-4.50,3095.50\n",
+         "scotia", [2100.0, -4.5]),
+        ("scotia_card.csv", "Filter,Date,Description,Sub-description,Status,Type of Transaction,Amount\n"
+                            ",2026-10-02,Purchase,CAFE,Posted,Debit,4.50\n,2026-10-05,Payment,PAYMENT,Posted,Credit,-200.00\n",
+         "scotia_card", [-4.5, 200.0]),
+        ("tangerine.csv", "Date,Transaction,Name,Memo,Amount\n10/2/2026,DEBIT,CAFE,Interac purchase,-4.50\n", "tangerine", [-4.5]),
+        ("simplii.csv", "Date, Transaction Details, Funds Out, Funds In\n10/01/2026, PAYROLL CO,, 2100.00\n10/02/2026, CAFE, 4.50,\n",
+         "simplii", [2100.0, -4.5]),
+    ]
+    out = []
+    for name, text, want, amts in cases:
+        p = os.path.join(d, name); open(p, "w", encoding="utf-8").write(text)
+        got = csv_bank.detect(p)
+        rows = [r["amount"] for r in csv_bank.parse(p, csv_bank.spec_of(got))["rows"]] if got else None
+        if got != want or rows != amts:
+            out.append(f"  ✗ csv layouts: {name} read as {got} with {rows}, expected {want} with {amts}")
+    p = os.path.join(d, "cut.csv")
+    open(p, "w").write("Filter,Date,Description,Sub-description,Type of Transaction,Amount,Balance\n"
+                       + "".join(f",2026-10-01,POS purchase,SHOP{i},Debit,-1.00,{999 - i:.2f}\n" for i in range(100)))
+    try:
+        csv_bank.parse(p, csv_bank.spec_of("scotia")); out.append("  ✗ csv layouts: a Scotiabank download of exactly 100 rows was read")
+    except PE:
+        pass
+    p = os.path.join(d, "odd.csv"); open(p, "w").write("Posted,What,Value\n2026-10-01,CAFE,-4.50\n")
+    if csv_bank.detect(p):
+        out.append("  ✗ csv layouts: a layout nobody described was recognised as a bank's")
+    return out or [f"  ✓ csv layouts: {len(cases)} bank layouts recognised and read with money out negative; "
+                   "a download cut at 100 rows refused; an unknown layout left alone"]
+
+
 def month_parts_check(root, base):
     """The sentence setup ends with: its parts have to add up to the month's total in spending.csv."""
     r = subprocess.run([sys.executable, os.path.join(root, ".claude", "skills", "setup", "scripts", "month_sentence.py"), root],
@@ -2156,7 +2200,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
-                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, browser_copy_check, csv_download_check, month_parts_check, starter_check,
+                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, browser_copy_check, csv_download_check, csv_layouts_check, month_parts_check, starter_check,
                     demo_clear_check):
             try:
                 runs += chk(root, base)

@@ -86,7 +86,7 @@ payments and rent after FIRE, the planning spend, the investing buckets, a count
 who repays a loan, and anything held abroad.
 
 **A bank's own download (CSV).** A bank with no PDF parser here is read from its transaction
-download: TD, Scotiabank, CIBC, Tangerine, Simplii, EQ (2026-11-03). The draft recognises a
+download: TD, Scotiabank, CIBC, Tangerine and Simplii have starting maps; any other bank, EQ among them, is mapped from its first lines (2026-11-03). The draft recognises a
 known layout and writes a `csv` map on the document (which column is the date, the description,
 the money out and in, the balance); its `_open` question asks the kind of account and the
 balance the app shows. A layout it does not recognise is listed as not recognised: show the
