@@ -516,6 +516,11 @@ def plan_statement(ws, plan, path, doc):
             continue
         pdoc = ws.doc_for_account(acc["key"]) or doc
         into = pdoc.get("into")
+        if doc.get("parser") == "csv":
+            # A download is filed under itself, and each account in it goes where that account's
+            # money goes: a card to spending, a ledger to its ledger, a balance-only one to banks.
+            pdoc = doc
+            into = "spending.csv" if acc.get("side") == "liability" else (acc.get("ledger") or "banks.json")
         p_end = iso_to_date(part["period"]["to"])
         month = p_end.strftime("%Y-%m")
         if into == "spending.csv":
@@ -542,20 +547,39 @@ def csv_fit(ws, plan, doc, res, name):
     books; and it prints no totals. Rows already filed are dropped (a ledger: up to the row the
     ledger ends on; a card: a purchase already in spending.csv). A file with no running balance is
     checked against the balance the owner reads off the banking app (--balance): the last balance
-    known plus every new row has to land on it. Nothing is guessed: without it the run stops."""
-    acc = ws.account_for(doc, None)
-    if not acc:
-        plan.by_hand.append((name, f"the {ws.doc_name(doc)} download covers more than one account; say which"))
+    known plus every new row has to land on it. Nothing is guessed: without it the run stops.
+    One download can carry several accounts (RBC's does); each is fitted on its own."""
+    parts = res.get("accounts") or [res]
+    fitted = []
+    for part in parts:
+        acc = ws.account_for(doc, part.get("account"))
+        if not acc:
+            plan.by_hand.append((name, f"the {ws.doc_name(doc)} download has rows for …{part.get('account') or '?'}, "
+                                       f"which matches no account in the register; say which"))
+            return None
+        fitted.append(csv_fit_part(ws, plan, doc, acc, part))
+    if any(f_ is None for f_ in fitted):          # every balance still needed is asked at once
         return None
+    if not res.get("accounts"):
+        return fitted[0]
+    return dict(res, accounts=fitted,
+                reconcile={"rule": "each account on its own", "ok": all(p_["reconcile"]["ok"] for p_ in fitted),
+                           "detail": "; ".join(f"…{p_['account']}: {p_['reconcile']['detail']}" for p_ in fitted)})
+
+
+def csv_fit_part(ws, plan, doc, acc, res):
     rows = res["rows"]
-    if doc.get("into") == "spending.csv":
+    if acc.get("spendTag") and (acc.get("side") == "liability" or doc.get("into") == "spending.csv"):
         tag = f"[{acc.get('spendTag')}/"
         seen = {(r["date"], r["amount"], r["note"].rsplit(" [", 1)[0].strip())
                 for r in csv_rows(ws.fd("spending.csv")) if tag in r.get("note", "")}
         keep = [r for r in rows if (r["date"], f"{-r['amount']:.2f}", r["description"].strip()) not in seen]
+    elif not acc.get("ledger"):
+        # A balance-only account keeps no rows: what it holds as of its date already counts every
+        # row up to then, so only what came after can move it.
+        keep = [r for r in rows if r["date"] > (acc.get("asof") or "")]
     else:
-        existing = csv_rows(ws.fd(acc["ledger"])) + [dict(zip(LEDGER_COLS, x)) for x in plan.ledger.get(acc["ledger"], [])] \
-            if acc.get("ledger") else []
+        existing = csv_rows(ws.fd(acc["ledger"])) + [dict(zip(LEDGER_COLS, x)) for x in plan.ledger.get(acc["ledger"], [])]
         keep = rows
         if existing:
             last = existing[-1]
@@ -570,22 +594,34 @@ def csv_fit(ws, plan, doc, res, name):
                         or (r["date"] == last["date"] and (r["date"], f"{r['amount']:.2f}") not in on_last)]
     dropped = len(rows) - len(keep)
     if dropped:
-        plan.judged.append(f"The {ws.doc_name(doc)} download repeated {dropped} row(s) already in the books; they were left out.")
+        plan.judged.append(f"The {acc['name']} rows of the {ws.doc_name(doc)} file repeated {dropped} already in the books; "
+                           f"they were left out.")
     res = dict(res, rows=keep)
     if keep:
         res["period"] = {"from": keep[0]["date"], "to": keep[-1]["date"]}
-    if res["reconcile"].get("needs_balance"):
+    since = acc.get("asof") or ""
+    moving = [r for r in keep if r["date"] > since]
+    if res["reconcile"].get("needs_balance") and not moving:
+        # nothing after the balance on hand: it stands, and there is nothing to ask
+        res["closing"] = None
+        res["reconcile"] = {"rule": "nothing new since the balance on hand", "ok": True,
+                            "detail": f"no row after {since}; the balance stays as it was"}
+    elif res["reconcile"].get("needs_balance"):
         said = plan.stated.get(acc["key"], plan.stated.get(doc["key"]))
         if said is None:
-            plan.stopped.append(f"The {ws.doc_name(doc)} download has no running balance. Read the balance your banking "
-                                f"app shows for {acc['name']} and run again with --balance \"{acc['key']}=<amount>\"")
+            plan.stopped.append(f"The {ws.doc_name(doc)} file has no running balance for {acc['name']}. Read the balance your "
+                                f"banking app shows for it and run again with --balance \"{acc['key']}=<amount>\"")
             return None
         liability = acc.get("side") == "liability"
         before = float(acc.get("balance") or 0.0)
-        expect = round(before + sum(r["amount"] for r in keep), 2)
-        target = -abs(said) if liability else said
+        # The balance known is as of its date: only rows after it move it (a card's purchases
+        # before that day are new to spending.csv but already in what the statement said was owed).
+        # A card's balance is said the way the app shows it: owed is positive, in credit negative;
+        # the register keeps it the other way round.
+        expect = round(before + sum(r["amount"] for r in moving), 2)
+        target = -said if liability else said
         ok = abs(expect - target) < 0.01
-        res["closing"] = abs(said) if liability else said
+        res["closing"] = said
         res["reconcile"] = {"rule": "the last balance plus every new row lands on the balance the app shows", "ok": ok,
                             "detail": f"{before:,.2f} and {len(keep)} new row(s) make {expect:,.2f}; the app shows {target:,.2f}"
                                       + ("" if ok else " — a row is missing or one is counted twice")}

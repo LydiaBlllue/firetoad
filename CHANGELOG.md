@@ -14,6 +14,12 @@
   one without stops for the balance the banking app shows (`update.py --balance`). The selftest
   puts the demo's newest chequing month back in as a download and expects it back exactly, and
   a card download has to be refused with a wrong balance and taken with the right one.
+  - **RBC's download, confirmed on a real one** (user 001): one file for every account, each row
+    naming its account, so a download is split by account and each is fitted on its own. Its 28
+    chequing rows matched the ledger read from the PDFs one for one. A balance-only account counts
+    only the rows after the balance on hand, an account with nothing new is not asked about, every
+    balance still needed is asked at once, and a card's balance is said the way the app shows it
+    (owed positive, in credit negative). A second drop of the same file adds nothing.
 
 - **The repository says what a user can rely on, and no more** (2026-11-03, user 001). The
   product notes, the competitor survey and the internal plan left the repository; ROADMAP.md is
