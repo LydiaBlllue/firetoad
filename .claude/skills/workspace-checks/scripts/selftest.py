@@ -99,7 +99,7 @@ def m_fund_flow_nowhere(r):
               {"key": "x", "kind": "saving", "name": "Somewhere", "amount": 10, "to": "nowhere"}))
 def m_banks_drift(r):
     # A bank marked confirmed on the page that the tool's table does not confirm.
-    edit(r, "docs/banks.md", lambda t: t.replace("Expected to work (a standard format), not yet seen", "✓ Confirmed on a real file", 1))
+    edit(r, "docs/banks.md", lambda t: t.replace("| **TD** | — | ○ |", "| **TD** | — | ✓ |", 1))
 def m_acct_drift(r):
     edit_json(r, layout.rel("accounts.json"), lambda d: d["accounts"][0].__setitem__("balance", 1.0))
 def m_bad_cover(r):
