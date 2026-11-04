@@ -2,6 +2,13 @@
 
 ## 1.3 — unreleased
 
+- **Accounts lists accounts, in dollars** (2026-11-03, user 001). A home, a car or anything else
+  that is not money is no longer a row: it is on Home under Other assets, and the last row says
+  what it adds to make net worth. Every balance is in dollars — an institution is one figure, an
+  account in yuan or US dollars shows its own amount beneath and the rate on hover (DESIGN.md §7
+  names the table as one of the two places currencies are converted). A date from another year
+  carries its year on Home too.
+
 - **A table taller than the window folds** (2026-11-03, user 001). Accounts by institution and
   Holdings by group show only their group rows, each with how many accounts or holdings it holds,
   when the table would run past the bottom of the window; a click opens one. A short table stays

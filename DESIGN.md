@@ -233,23 +233,25 @@
   (label, from, to), what was noticed, what was decided without asking, what you were asked.
   **The story of an update lives here and nowhere else; every other page shows a status computed
   today.**
-- **Accounts**: one row per place money sits, grouped by institution, the biggest institution
-  first and the biggest account first inside it. Each institution is a band in ink with a gap
-  above it. Four columns: the account (its type and number beneath, a long number cut to its
-  last four), what it is for in one line, the date (with the year when it is not this year), the
-  balance, the heaviest thing on the row; a balance under a dollar is muted.
-  **A grouped table taller than the window folds to its group rows** (2026-11-03, the owner) —
-  Accounts by institution, Holdings by role or account — each saying how many rows it holds
-  ("Wealthsimple ▸ 10 accounts"); a click opens or closes one. Decided the first time the table
-  is seen; a short one stays open. The institution row gives its net position (credit cards negative, currencies never
-  added together), and for another currency roughly what that is in dollars. A **home-currency
-  total on the last row** — one of the two places currencies are added (§7), so its explanation
-  states the rate and its date and how many accounts without a balance were left out, and it
-  reconciles against the header's net worth (⚠ when it does not). Money lent is a row like any
-  other; its balance opens what was agreed and what has come back. No card for money abroad and
-  none for money lent (2026-11-03): the table already says both. Below, a card of what is missing,
-  why, and how to fix it, a borrower gone quiet among them. The source is `findata/register/accounts.json`, **a register, not a
-  second set of books**.
+- **Accounts**: one row per place money sits — a bank or broker account, a card, a loan, money
+  lent. **A home, a car or anything else that is not money (`role: none`) is not an account**: it
+  is on Home under Other assets, and here only in the reconciliation (2026-11-03, the owner).
+  Grouped by institution, the biggest first and the biggest account first inside it; each
+  institution a band in ink with a gap above it. Four columns: the account (its type and number
+  beneath, a long number cut to its last four), what it is for in one line, the date (with the
+  year when it is not this year), the balance, the heaviest thing on the row; a balance under a
+  dollar is muted. **The balance column is in the home currency throughout**: an institution is
+  one figure, and an account held in another currency shows its dollar value with its own amount
+  beneath and the rate on hover (§7). **A grouped table taller than the window folds to its group
+  rows** — Accounts by institution, Holdings by role or account — each saying how many rows it
+  holds ("Wealthsimple ▸ 10 accounts"); a click opens or closes one. Decided the first time the
+  table is seen; a short one stays open. The **last row is all accounts in the home currency**,
+  and beside it what is owned outside accounts and that the two make the header's net worth (⚠
+  when they do not); its explanation states each rate. Money lent is a row like any other; its
+  balance opens what was agreed and what has come back. No card for money abroad and none for
+  money lent: the table already says both. Below, a card of what is missing, why, and how to fix
+  it, a borrower gone quiet among them. The source is `findata/register/accounts.json`, **a
+  register, not a second set of books**.
 - **Statements**: the filing grid (§5c), and every source's date.
 
 ### Glossary
@@ -436,8 +438,10 @@ What breaks is **how much fits on one screen**.
   not enter it.
 - Every source is labelled with its own as-of date. Amounts are kept per currency, home
   currency first, and never mixed into a total. **Two exceptions, both explicit conversions
-  carrying their rate**: the header Net worth (`NW_GLOBAL`) and the home-currency total at the
-  foot of the Accounts table. Adding currencies anywhere else is a bug.
+  carrying their rate**: the header Net worth (`NW_GLOBAL`) and the Accounts table, which shows
+  every balance, institution and total in the home currency (2026-11-03, the owner: several
+  currencies in one column read as a mess), an account held in another currency carrying its own
+  amount beneath and its rate on hover. Adding currencies anywhere else is a bug.
 - Refunds and negative amounts are shown as green negatives.
 - Restraint in labelling chart values: totals on top of bars, amounts in the legend — never a
   number stacked on every data point.
