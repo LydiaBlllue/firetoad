@@ -12,7 +12,7 @@ How work reaches a release (since 2026-10-30):
 
 - **`main` is the released tool**, and only a release or a hotfix changes it, so what users get
   and what the demo shows are always a finished version.
-- **One branch per coming version**, named for it (`v1.3`). Everything for that version is
+- **One branch per coming version**, named for it (`v1.0.1`). Everything for that version is
   committed there, without a pull request; work done side by side starts a short branch from it
   and is merged back locally.
 - **A hotfix** — a bug in the released tool that users would hit — is a small pull request
@@ -23,6 +23,11 @@ How work reaches a release (since 2026-10-30):
 
 Items marked *(first user)* came from the first person other than the owner to set the tool up
 from scratch: one credit card, nine statements, a cloud session.
+
+
+> **Version numbers** (2026-11-03, user 001): three digits. What was built as 1.1, 1.2 and 1.3 is
+> **1.0.0**, released 2026-11-03; the next is **1.0.1**; the change of technology is **2.0.0**.
+> The planning history below keeps the names it was written under.
 
 ## The first release — by 2026-11-29
 
@@ -122,17 +127,17 @@ the selftest now does that every time; the migration was run on a copy of user 0
 - **Setup, tested end to end.** A fresh workspace set up the way a new owner would, then
   compared with a real one: what the interview misses becomes the next list.
 
-## v1.3 — shipped 2026-11-03
+## 1.0.0 — shipped 2026-11-03 (built as 1.1–1.3)
 
 Merged into `main`; what it carries is in CHANGELOG, 1.3. The monthly import panel is in it but
 not yet announced: it still has to run through one real import.
 
-## v1.4 — January 2027
+## 1.0.1 — January 2027
 
 **One page for both kinds of user** comes first (decided 2026-11-02, user 001; PRODUCT.md §2).
-It is built after v1.3 ships, on the v1.4 branch. DESIGN.md §4 stays the page's rule until then:
+It is built after 1.0.0, on the `v1.0.1` branch. DESIGN.md §4 stays the page's rule until then:
 S4 checks that table against `NAV`, so the table changes in the same commit as the navigation.
-This is the product's structure, so it is a minor version; v2.0 is the change of technology.
+This is the product's structure, and it ships as 1.0.1; 2.0.0 is the change of technology.
 Before any of it, the first page has to be
 believable: a chequing statement must not be refused, and most purchases must arrive with a
 category.
@@ -226,7 +231,7 @@ The rest of this release:
 - **A checker for charts drawn by month**: the months must have an end (DESIGN.md §5f).
 - **Charts draw in** the first time they appear (optional).
 
-## v2.0 — after v1.4 — the page on a framework, the data in a database
+## 2.0.0 — after 1.0.1 — the page on a framework, the data in a database
 
 Decided 2026-10-30 (user 001). This month was built twice in React to compare, on the
 `proto-react-month` branch (`prototypes/`): with Tremor, and with shadcn/ui. The shadcn/ui build
