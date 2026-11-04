@@ -249,8 +249,11 @@
   and beside it what is owned outside accounts and that the two make the header's net worth (⚠
   when they do not); its explanation states each rate. Money lent is a row like any other; its
   balance opens what was agreed and what has come back. No card for money abroad and none for
-  money lent: the table already says both. Below, a card of what is missing, why, and how to fix
-  it, a borrower gone quiet among them. The source is `findata/register/accounts.json`, **a
+  money lent: the table already says both. **What is still unaccounted for sits on its row**
+  (2026-11-03, the owner): a ⚠ beside the balance of the account a gap belongs to (`gap` in the
+  register), or of a borrower gone quiet, with what, why and how to close it on hover; a gap that
+  belongs to no account (`standalone`) is one small line above the table. With none, nothing is
+  shown — no card saying all is well. The source is `findata/register/accounts.json`, **a
   register, not a second set of books**.
 - **Statements**: the filing grid (§5c), and every source's date.
 
