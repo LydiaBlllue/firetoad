@@ -20,6 +20,7 @@ import sys, os, re, json, csv, collections
 import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from clock import clock  # noqa: E402
 from flows import totals as flow_totals   # the plan's sums, read from its flows -- one place
 from flows import unset as flow_unset    # the numbers the owner never gave
 NOT_SET = "Not set"                       # what the figures table says for one of them
@@ -157,6 +158,7 @@ def load(root):
                          f"tools/migrate_{have}to{have+1}.py on the workspace first, then rebuild")
     if have > SCHEMA:
         raise SystemExit(f"findata/ is schema {have}, newer than this tool ({SCHEMA}) — sync a newer tool")
+    d["clock"] = clock(root)[0].isoformat()     # the date age is measured from (clock.py)
     return d
 
 
@@ -388,7 +390,8 @@ def derive(d):
         if brands.get(b, b) in yr and float(r["amount"]) > 0:
             e["yr"] = 1
 
-    today = datetime.date.today().isoformat()
+    # The demo's "today" is its own newest data, the same clock the checkers use (clock.py).
+    today = d["clock"]
     out["TODAY"] = today
     out["PROFILE"] = clean(prof)
     out["RULES"] = clean(d["rules"])

@@ -2,6 +2,13 @@
 
 ## 1.0.1 — unreleased
 
+- **One mark, one meaning, and a demo that is not stale** (2026-11-03, user 001). On Accounts an
+  old balance is its date in amber with its age on hover; ⚠ means only "unaccounted for". The demo
+  is dated by its own newest data on the page as it already was in the checkers (`clock.py`, one
+  module for both), so the live demo no longer shows every balance as old.
+- **CONTRIBUTING.md and SECURITY.md**: how to report a problem without sharing a statement, and
+  a privacy problem privately.
+
 - **One rule for version numbers** (2026-11-03, user 001), at the top of ROADMAP.md: a version a
   workspace takes with a sync is a patch, one that also needs a migration is a minor, a change of
   technology is a major.
