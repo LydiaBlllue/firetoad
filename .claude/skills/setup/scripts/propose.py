@@ -153,7 +153,7 @@ def propose(root, inbox):
                 # A bank's own transaction download (2026-11-03): its layout is recognised, never
                 # guessed, and the map that reads it goes into the register for the owner to check.
                 prof = csv_bank.detect(p)
-                spec = {k: v for k, v in csv_bank.PROFILES[prof].items() if k not in ("label", "match", "columns", "verified")} if prof else None
+                spec = csv_bank.spec_of(prof) if prof else None
                 try:
                     res = csv_bank.parse(p, spec) if spec else None
                 except ParseError as e:
@@ -165,8 +165,8 @@ def propose(root, inbox):
                 inst = csv_bank.PROFILES[prof]["label"]
                 named = re.findall(r"\d{3,}", f)
                 digits = named[-1][-4:] if named else f"{prof}{len(stmts) + 1}"
-                has_bal = res["closing"] is not None
-                part = dict(res, parser="csv", account=digits, kind="Chequing" if has_bal else "Credit card",
+                card = res.get("owed") or prof == "scotia_card"
+                part = dict(res, parser="csv", account=digits, kind="Credit card" if card else "Chequing",
                             _file=f, _inst=inst, _csv=spec, _verified=csv_bank.PROFILES[prof]["verified"],
                             _nodigits=not named)
                 k = (inst, digits)

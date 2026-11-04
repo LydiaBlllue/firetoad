@@ -5,8 +5,11 @@
 - **A bank's own CSV download** (2026-11-03, user 001: lower the barrier for banks with no PDF
   parser). One reader, `parsers/csv_bank.py`, follows a `csv` map kept on the register's
   document — which column is the date, the description, the money out and in, the balance — that
-  setup drafts from the file itself, with starting points for TD, Scotiabank, CIBC, Tangerine,
-  Simplii and EQ (each marked unconfirmed until a real file has been read). A download overlapping
+  setup drafts from the file itself, with starting points for TD, Scotiabank (current and older),
+  CIBC, Tangerine and Simplii, taken from open-source importers since no bank publishes its
+  columns, each marked unconfirmed until a real file has been read. A card's owed balance is
+  told apart from a chequing balance by which way the rows follow, and a Scotiabank download cut
+  at its 100-row limit is refused. A download overlapping
   the last one has its repeated rows left out; one with a running balance reconciles by it, and
   one without stops for the balance the banking app shows (`update.py --balance`). The selftest
   puts the demo's newest chequing month back in as a download and expects it back exactly, and
