@@ -50,8 +50,8 @@ The detail behind the [README](../README.md).
 3. **Open the page.** Monthly import → Statements shows which month got which file, so a gap is
    visible at a glance.
 
-For Emma the monthly drop is eight files: three RBC PDFs, three BMO PDFs and two Wealthsimple
-exports. Yours is whatever your register says.
+For Emma the monthly drop is five files: three BMO PDFs (chequing, savings, MasterCard) and two
+Wealthsimple exports. Yours is whatever your register says.
 
 ## Why the numbers can be trusted
 

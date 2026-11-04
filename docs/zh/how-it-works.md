@@ -34,7 +34,7 @@
    对账单 —— 然后给你一份简短的报告：变了什么、注意到什么、替你做了哪些判断、哪些要你拍板。
 3. **打开页面。** Monthly import → Statements 是一张打卡表，哪个月缺了哪份文件一眼可见。
 
-Emma 每月要丢八份文件：RBC 三份 PDF、BMO 三份 PDF、Wealthsimple 两份导出。你的是你注册表里写的那些。
+Emma 每月要丢五份文件：BMO 三份 PDF（支票、储蓄、MasterCard）、Wealthsimple 两份导出。你的是你注册表里写的那些。
 
 ## 为什么数字可信
 
