@@ -66,7 +66,7 @@ Anthropic,解析器读成功的对账单它从不看。**
 
 ![产品流程:试用 → 建立 → 每月 → 随时](product_flow.svg)
 
-*可编辑的源文件:[`product_flow.drawio`](product_flow.drawio),由 `product_flow.py` 生成。
+*可编辑的源文件:`product_flow.drawio`（只在仓库里，下载包里没有）,由仓库里的 `docs/zh/product_flow.py` 生成。
 这张图是用的人看到的顺序;`../pipeline.svg` 那张画的是数据怎么流过脚本和检查器。*
 
 ---

@@ -24,7 +24,7 @@ reads their own statements once a month and makes one page: where they stand tod
 the plan still holds. Every number reconciles; no bank connection, nothing typed by hand.* This
 is where it starts, not where it stops: the first users come from the owner's friends and from
 Chinese-language social media, and the money abroad in one figure is what no nearby tool does
-([`docs/competitors.md`](docs/competitors.md)).
+(`docs/competitors.md` (in the repository, not in a download)).
 
 **Two kinds of user, one product** (decided 2026-11-02):
 
@@ -249,7 +249,7 @@ The full rules are DESIGN.md §5b and §5b′.
   kept out of every figure.
 
 How this sits beside the open-source tools nearby (Actual, Firefly III, Beancount and others) is
-[`docs/competitors.md`](docs/competitors.md), a dated survey.
+`docs/competitors.md` (in the repository, not in a download), a dated survey.
 
 ## 10. Known gaps between this file and the pages
 

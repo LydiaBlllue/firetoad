@@ -293,4 +293,4 @@ data layer is rewritten once with the page rather than twice:
   and SnapTrade Personal for brokers (Wealthsimple listed). First step: confirm the owner's banks
   are on the Trial list, then a local experiment. The key stays out of `findata/` and out of the
   repository, and statements stay the way in for anyone who does not connect. See
-  [`docs/competitors.md`](docs/competitors.md) and PRODUCT.md §9.
+  `docs/competitors.md` (in the repository, not in a download) and PRODUCT.md §9.
