@@ -2,7 +2,7 @@
 
 Which files Jade Toad reads, bank by bank. Every file has to reconcile before it is let in: a statement to the totals it prints, an OFX download to the bank's own balance, a CSV to its balances or to the balance your app shows. **Prefer OFX / QFX** where your bank offers it, and always download a **date range**, never "since last download": the bank moves that mark every time you download.
 
-| Bank | PDF statement | OFX / QFX | CSV |
+| Bank or broker | PDF statement | OFX / QFX | CSV |
 |---|:---:|:---:|:---:|
 | **RBC** | ✓ | ✓ | ✓ |
 | **BMO** | ✓ | ✓ Chequing, savings, US-dollar accounts · ○ Mastercard | ✗ |
@@ -12,11 +12,10 @@ Which files Jade Toad reads, bank by bank. Every file has to reconcile before it
 | **Tangerine** | — | ○ | ○ |
 | **Simplii** | — | — | ○ |
 | **EQ Bank** | — | — | ○ |
+| **Wealthsimple** | — | — | ✓ |
 | **Any other bank** | — | ○ | — |
 
 ✓ read here from a real file and reconciled · ○ should work, not yet confirmed on a real file · ✗ not read · — no reader here (a PDF statement can still be read by Claude, by hand)
-
-**Wealthsimple**: ✓ Broker export (TFSA, RRSP, FHSA, non-registered, crypto)
 
 ## How to download each, and what to know
 
@@ -63,7 +62,7 @@ Which files Jade Toad reads, bank by bank. Every file has to reconcile before it
 
 **Wealthsimple**
 
-- ✓ Broker export · TFSA, RRSP, FHSA, non-registered, crypto: The holdings report and the activities export
+- ✓ CSV download · TFSA, RRSP, FHSA, non-registered, crypto: Two CSV exports from the app: the holdings report and the activities export
 
 **Any other bank**
 

@@ -17,7 +17,6 @@ FORMATS = {
     "pdf": ("PDF statement", "PDF 对账单"),
     "ofx": ("OFX / QFX download", "OFX / QFX 下载"),
     "csv": ("CSV download", "CSV 下载"),
-    "export": ("Broker export", "券商导出"),
 }
 
 STATUS = {
@@ -81,8 +80,8 @@ SUPPORT = [
      "how": ("The account's transactions → the download arrow", "账户交易页 → 下载箭头"),
      "note": ("Nothing describes its columns: setup reads the first lines with you and maps them.",
               "查不到它的列格式：setup 会和你一起看前几行，再起草对应表。")},
-    {"bank": "Wealthsimple", "accounts": ("TFSA, RRSP, FHSA, non-registered, crypto", "TFSA、RRSP、FHSA、非注册、加密"), "format": "export", "status": "confirmed",
-     "how": ("The holdings report and the activities export", "持仓报告和活动导出"), "note": ("", "")},
+    {"bank": "Wealthsimple", "accounts": ("TFSA, RRSP, FHSA, non-registered, crypto", "TFSA、RRSP、FHSA、非注册、加密"), "format": "csv", "status": "confirmed",
+     "how": ("Two CSV exports from the app: the holdings report and the activities export", "从 App 导出的两个 CSV：持仓报告和活动导出"), "note": ("", "")},
     {"bank": "Any other bank", "accounts": ("—", "—"), "format": "ofx", "status": "expected",
      "how": ("The Money or Quicken choice in online banking", "网银下载里的 Money 或 Quicken"),
      "note": ("OFX is one standard; a file that does not check itself against its balance is refused, never guessed.",
@@ -111,7 +110,7 @@ LEGEND = ("✓ read here from a real file and reconciled · ○ should work, not
           "— 没有现成的读取方式（PDF 对账单仍可由 Claude 手读）")
 BANK_ZH = {"Any other bank": "其他银行"}
 COLS = ("pdf", "ofx", "csv")
-HEAD = (("Bank", "PDF statement", "OFX / QFX", "CSV"), ("银行", "PDF 对账单", "OFX / QFX", "CSV"))
+HEAD = (("Bank or broker", "PDF statement", "OFX / QFX", "CSV"), ("银行 / 券商", "PDF 对账单", "OFX / QFX", "CSV"))
 DETAILS = ("How to download each, and what to know", "每种怎么下载、要注意什么")
 
 
