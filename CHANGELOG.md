@@ -2,6 +2,11 @@
 
 ## 1.3 — unreleased
 
+- **Home shows what the month cost** (2026-11-03, user 001). The fourth card is *Spent in
+  <month>*, the whole month's spending with bills & housing and everyday beneath it, in place of
+  what is left of Everyday, which stays on This month. Before a purchase in today's month it shows
+  the newest month the statements reach.
+
 - **Six things a first owner tripped on** (2026-11-03, user 002).
   - A bill paid in parts is seen: D21 adds up one payee's debits in a month, and when nothing
     matches it names the nearest payee and amount instead of saying the payment appears nowhere.

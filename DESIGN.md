@@ -121,7 +121,9 @@
   projected, from two months on. It is not the FIRE chart, which follows the portfolio to a target.
 - **Four stat cards**, one per section: **Portfolio** (with its dry-powder share), **FIRE progress**
   (with the on-track year), **Invested in \<month\>** (pay-yourself-first, from the broker's
-  record), **Everyday** (what is left of the month's amount).
+  record), **Spent in \<month\>** (the month's whole spending, bills & housing and everyday beneath
+  it; today's month once it has a purchase, otherwise the newest one the statements reach. What is
+  left of Everyday is This month's to say, 2026-11-03).
 - **Net worth in one card, cut both ways at once**: one row per `role`, cash split by where it
   is — For FIRE / Set aside / Cash / Cash in \<abroad\> / Owed to you / Other assets (only for
   things that are not money). Each row's bar is as long as its share and coloured by `reach`

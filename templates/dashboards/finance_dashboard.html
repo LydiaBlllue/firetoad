@@ -1226,15 +1226,13 @@ function renderHome(){
   const target = PLAN_BASE * 300;
   const invested = INVEST.portfolio;   // every account held to grow, the foreign funds included; 0 until the first holdings export
   // Four questions, one per section: is the money growing, how far along, did this month's rule
-  // hold, and what is free to spend today. Net worth is the header line; "reach" is the table.
+  // hold, and what the month cost. Net worth is the header line; "reach" is the table.
   const pctP = Math.round(PORTFOLIO/target*1000)/10;
   const crossP = crossMonth(project(PORTFOLIO, 0.05, 300), target);
   const dep = (WSDEP||[]).slice(-1)[0] || null, half = FUNDS.plan.invest/2;
-  const curYM = TODAY.slice(0,7), dayNow = Number(TODAY.slice(8)), dim = new Date(Number(curYM.slice(0,4)), Number(curYM.slice(5)), 0).getDate();
-  const spentNow = everydayOf(curYM), freeNow = EVERYDAY - spentNow;
+  const curYM = TODAY.slice(0,7);
   const gross = NWPARTS.reduce((a,r) => a + r.v, 0);
   const grow = NWPARTS.find(r => r.role === "grow") || {by: []};
-  const left = Math.max(1, dim - dayNow + 1), perDay = Math.max(0, freeNow) / left;
   const partTerm = r => term(r.role === "buffer" && r.k !== "Cash" ? "cash_abroad" : ROLE_TERM[r.role], r.k);
   const split = by => by.map(b => [b[0], fmt(b[1])]);
   // Four cards, each a label, a number and at most one fact (DESIGN.md §5b′). How a number is
@@ -1252,10 +1250,17 @@ function renderHome(){
       unset("invest") ? (dep ? numx(fmt(dep.amt), [], "Counted the day "+BROKER+" receives it. The plan has no investing amount yet.") : notSet("invest"))
         : dep ? numx(fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>', [["Planned", fmt(FUNDS.plan.invest)], ["Arrived", fmt(dep.amt)]], "Two transfers of "+fmt(half)+", counted the day "+BROKER+" receives them.") : "\u2014",
       dep && !unset("invest") ? (dep.nRule >= 2 ? "Both transfers arrived \u2713" : dep.nRule === 1 ? "One of two transfers arrived" : "No transfer arrived yet") : "") +
-    card(term("everyday", "Everyday"),
-      unset("everyday") && EVERYDAY === PLAN.everyday ? notSet("everyday")
-        : numx(fmt(Math.abs(freeNow))+' <span class="cap-v">'+(freeNow < 0 ? "over " : "left of ")+fmt(EVERYDAY)+'</span>', [["Set for the month", fmt(EVERYDAY)], ["Spent in "+ymLabel(curYM), "\u2212"+fmt(spentNow)]], "Bills and housing are not in it.", true),
-      unset("everyday") && EVERYDAY === PLAN.everyday ? "" : fmt(perDay)+" a day for "+left+" day"+(left > 1 ? "s" : ""));
+    // The month's whole spending, not the everyday amount (2026-11-03, the owner): Home says what
+    // the month cost, and what is left of Everyday is This month's to say. The month is today's
+    // when it has a purchase yet, otherwise the newest one the statements reach.
+    (() => {
+      const ym = MONTHS.includes(curYM) || !MONTHS.length ? curYM : MONTHS[MONTHS.length - 1];
+      const es = monthOf(ym), total = es.reduce((s,e) => s + e.amount, 0), parts = monthParts(ym);
+      const rows = [["Bills & housing", parts.bills], ["Everyday", parts.everyday]].filter(p => Math.abs(p[1]) > 0.005);
+      return card("Spent in "+ymLabel(ym),
+        numx(fmt(total), rows.map(p => [p[0], fmt(p[1])]), es.length+" purchase"+(es.length === 1 ? "" : "s")+(ym > covEnd ? ", and the month is still open." : "."), true),
+        rows.map(p => p[0]+" "+fmt(p[1])).join(" \u00b7 "));
+    })();
 
   // Net worth, both cuts in one card: a row per purpose, its bar as long as its share and
   // coloured by reach; the row's number opens the accounts in it. Then total assets and what is
