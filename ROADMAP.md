@@ -122,12 +122,10 @@ the selftest now does that every time; the migration was run on a copy of user 0
 - **Setup, tested end to end.** A fresh workspace set up the way a new owner would, then
   compared with a real one: what the interview misses becomes the next list.
 
-## v1.3 — 2026-12-15
+## v1.3 — shipped 2026-11-03
 
-- **The monthly import as a panel.** Everything to bring this month (statements, broker
-  exports, phone screenshots, balances no file carries, open questions), each with the one
-  button that moves it forward. In the tool since 2026-10-30, so a sync no longer removes it;
-  still to run through one real import before it is announced.
+Merged into `main`; what it carries is in CHANGELOG, 1.3. The monthly import panel is in it but
+not yet announced: it still has to run through one real import.
 
 ## v1.4 — January 2027
 

@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3 — unreleased
+## 1.3 — 2026-11-03
 
 - **The four smaller things a first owner noticed** (2026-11-03, user 002).
   - A page slides in and never fades: a fade held by a throttled browser read as a blank page.
