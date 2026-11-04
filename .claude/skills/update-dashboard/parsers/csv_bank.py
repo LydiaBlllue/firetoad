@@ -70,11 +70,19 @@ PROFILES = {
     "simplii": {"label": "Simplii", "header": True, "date": "Date", "dateFormat": "%m/%d/%Y",
                 "description": "Transaction Details", "out": "Funds Out", "in": "Funds In",
                 "match": {"Date", "Transaction Details", "Funds Out", "Funds In"}, "verified": False},
+    # RBC: one file for every account, a header, M/D/YYYY, one signed amount in CAD$, no balance;
+    # each row names its account. Confirmed on a real download (2026-11-03, user 001): 28 chequing
+    # rows matched the ledger read from the PDFs one for one, and the Visa's purchases matched too.
+    "rbc": {"label": "RBC", "header": True, "date": "Transaction Date", "dateFormat": "%m/%d/%Y",
+            "description": ["Description 1", "Description 2"], "amount": "CAD$", "account": "Account Number",
+            "kindCol": "Account Type", "match": {"Account Type", "Account Number", "Transaction Date", "Description 1", "CAD$"},
+            "verified": True},
     # Scotiabank's older download: no header; date, signed amount, "-", type, description.
     "scotia_old": {"label": "Scotiabank", "header": False, "date": 0, "dateFormat": "%m/%d/%Y", "amount": 1,
                    "description": [3, 4], "columns": (5,), "verified": False},
 }
-MAP_KEYS = ("header", "date", "dateFormat", "description", "amount", "out", "in", "balance", "sign", "cap")
+MAP_KEYS = ("header", "date", "dateFormat", "description", "amount", "out", "in", "balance", "sign", "cap",
+            "account", "kindCol")
 
 
 def spec_of(key):
@@ -179,8 +187,12 @@ def parse(path, spec):
                 raise ParseError(f"a row on {d} has neither money out nor money in")
             amt = (inn or 0.0) - abs(out or 0.0)
         bal = number(col(r, spec["balance"])) if spec.get("balance") is not None else None
-        rows.append({"date": d, "description": desc, "amount": round(sign * amt, 2),
-                     "balance": None if bal is None else round(bal, 2)})
+        row = {"date": d, "description": desc, "amount": round(sign * amt, 2),
+               "balance": None if bal is None else round(bal, 2)}
+        if spec.get("account") is not None:       # one download, several accounts (RBC)
+            row["_acct"] = (re.sub(r"\D", "", col(r, spec["account"]) or "")[-4:],
+                            (col(r, spec["kindCol"]) or "").strip() if spec.get("kindCol") is not None else "")
+        rows.append(row)
     if not rows:
         raise ParseError("no row with a date this map can read")
     if skipped > 3:
@@ -190,9 +202,35 @@ def parse(path, spec):
     if spec.get("cap") and len(rows) >= spec["cap"]:
         raise ParseError(f"exactly {len(rows)} rows, the most this bank puts in one download, so it is cut off — "
                          f"download one statement period at a time")
-    # Some banks list the newest first. The ledger runs oldest first.
-    if rows[0]["date"] > rows[-1]["date"]:
-        rows.reverse()
+    if spec.get("account") is None:
+        return one(path, rows)
+    groups = {}
+    for x in rows:
+        groups.setdefault(x.pop("_acct"), []).append(x)
+    parts = [dict(one(path, g), account=d4, kind=KIND_OF.get(kind.lower(), kind or None)) for (d4, kind), g in groups.items()]
+    ok = all(p_["reconcile"]["ok"] for p_ in parts)
+    return {"parser": "csv", "file": path, "account": None, "accounts": parts,
+            "period": {"from": min(p_["period"]["from"] for p_ in parts), "to": max(p_["period"]["to"] for p_ in parts)},
+            "opening": None, "closing": None, "rows": [x for p_ in parts for x in p_["rows"]], "totals": {},
+            "product": None, "holder": None, "kind": None,
+            "reconcile": {"rule": "each account by its own balances", "ok": ok,
+                          "needs_balance": any(p_["reconcile"].get("needs_balance") for p_ in parts),
+                          "detail": "; ".join(f"…{p_['account']}: {p_['reconcile']['detail']}" for p_ in parts)}}
+
+
+KIND_OF = {"chequing": "Chequing", "savings": "Savings", "visa": "Credit card", "mastercard": "Credit card",
+           "credit card": "Credit card"}
+
+
+def one(path, rows):
+    """One account's rows, oldest first, reconciled by its balances when it has them."""
+    # Oldest first, the way the ledger runs. A file listed newest first is turned round whole, so
+    # rows of one day keep their order against their balances; one in no order at all is sorted.
+    pairs = list(zip(rows, rows[1:]))
+    if pairs and all(a["date"] >= b["date"] for a, b in pairs) and rows[0]["date"] > rows[-1]["date"]:
+        rows = rows[::-1]
+    elif any(a["date"] > b["date"] for a, b in pairs):
+        rows = sorted(rows, key=lambda x: x["date"])
     out = {"parser": "csv", "file": path, "account": None,
            "period": {"from": rows[0]["date"], "to": rows[-1]["date"]},
            "opening": None, "closing": None, "rows": rows, "totals": {},
