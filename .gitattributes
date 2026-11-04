@@ -3,7 +3,6 @@
 .gitattributes            export-ignore
 .github/                  export-ignore
 docs/site/                export-ignore
-docs/competitors.md       export-ignore
 docs/pipeline.py          export-ignore
 docs/pipeline.drawio      export-ignore
 docs/zh/product_flow.py   export-ignore
