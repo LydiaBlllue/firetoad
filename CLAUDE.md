@@ -57,12 +57,13 @@ The rest of `findata/`, and what each carries:
 | file | what it is |
 |---|---|
 | `spending.csv` | every purchase, tagged with the statement it came from |
+| `rewards.csv` | a card's cash back, tagged the same way — income, never pay, never spending |
 | each account's ledger CSV | date, description, amount, balance, statement, **`type`**, `label` — the balance chain must close (D1), and `type` is the classification the page shows |
 | `holdings_latest.csv`, `ws_activities.csv` | the broker's exports |
 | `banks.json` | one balance and one as-of date per bank account |
 | `profile.json` | the owner (shown under the Jade Toad wordmark and in the tab), the year of birth, the import day |
-| `funds.json` | the monthly plan as **flows** — `income`, `committed` (rent, a mortgage, a loan), `saving` (to the broker, or to a fund by `to`), `allowance`, each with an amount and, where it applies, `until`, `afterFire`, `pays`, `starts` — and the named funds (`role: topup` / `big`), which carry no number of their own |
-| `plan.json` | planning spend, months excluded from comparisons, the retirement assumptions, the owner's one-line descriptions of the net-worth parts |
+| `funds.json` | the monthly plan as **flows** — `income`, `committed` (rent, a mortgage, a loan), `saving` (to the broker), `everyday`, each with an amount and, where it applies, `until`, `afterFire`, `pays`, `starts`, `to`; and `funds`, the owner's own funds, each a label on money in one account |
+| `plan.json` | planning spend, months excluded from comparisons, deposits into the broker that were gifts (`brokerGifts`), the retirement assumptions, the owner's one-line descriptions of the net-worth parts |
 | `rules.json` | the investing buckets and their target bands, the owner's theses (`notes`) and `checkpoints`, `assetClass` — what each ETF holds (stocks / bonds / cash / gold / crypto), the one thing the broker's export cannot say — and `principles`, the owner's high-level rules, each naming a check the Investing overview runs today (with `placement`, which account each holding belongs in) |
 | `merchants.json` | merchant → category |
 | `fx.json` | a dated exchange rate — absent means "no foreign-currency holdings" |
@@ -84,7 +85,7 @@ checker guards it, and whether the page may read it:
 | layer | answers | only writer | how it changes |
 |---|---|---|---|
 | **evidence** — `inbox/` → `archive/` | where is the original | the import (rename and move) | append only |
-| **facts** — `findata/ledgers/`: the ledgers, `spending.csv`, the broker exports, `banks.json`, `fx.json`, `foreign.json` | what actually happened to the money | the import's parse step | a ledger is append only and every row carries its statement tag; a snapshot (`holdings_latest.csv`, `banks.json`, `fx.json`, `foreign.json`) is replaced whole and dated by `asof`, its previous state living in `archive/` and in `history/` |
+| **facts** — `findata/ledgers/`: the ledgers, `spending.csv`, `rewards.csv`, the broker exports, `banks.json`, `fx.json`, `foreign.json` | what actually happened to the money | the import's parse step | a ledger is append only and every row carries its statement tag; a snapshot (`holdings_latest.csv`, `banks.json`, `fx.json`, `foreign.json`) is replaced whole and dated by `asof`, its previous state living in `archive/` and in `history/` |
 | **history** — `findata/history/`: `imports.json`, `decisions.json`, `filings.json`, the two `*_history.json` | what the world looked like at each update | the import's last step | one record per update, never rewritten — except a `decisions.json` item, which is closed in place (`answer`, `resolved`) when the owner answers |
 | **declarations** — `findata/register/`: `accounts.json`, `funds.json`, `plan.json`, `rules.json`, `merchants.json`, `profile.json`, `tasks.json` | how the owner chooses to see the money | the owner, through `setup` or out loud | edited, with a dated reason beside the value |
 | **derived** — `dashboards/`, the figures table in `FINANCE.md` | what the page shows | `rebuild.py` | overwritten whole, idempotent |
@@ -92,7 +93,7 @@ checker guards it, and whether the page may read it:
 The rules that follow, each with the checker that holds it:
 
 - **One fact lives in one layer.** A copy is allowed only if a checker re-derives it from its
-  source every time: the balances in `accounts.json` (D14), a fund's `backing` (D13), the
+  source every time: the balances in `accounts.json` (D14), the
   figures table (D15), the built page (T1).
 - **No back-edges.** Derived output is never an input. What the page lets you change — planning
   spend, the toggles — lives in the browser's localStorage and never flows back into `findata/`.
@@ -107,7 +108,7 @@ The rules that follow, each with the checker that holds it:
 When something new has to be stored, first ask which layer it belongs to. The answer settles who
 writes it, which check guards it and whether the page may read it. Something that fits no single
 layer is usually two things stuck together — `feeds` was: a net-worth part, a location, a
-strategy word and a fund label in one tag.
+strategy word and a label in one tag.
 
 ### The register's axes
 
@@ -138,10 +139,10 @@ scripts derives what is still owed from it and the ledgers, and D23 holds the ro
 that and fails a borrower who has paid back more than was owed. Selftest plants all three.
 
 Each line of the monthly plan is a **flow** with `kind` (income / committed / saving /
-allowance), `amount` and, where it applies, `until`, `afterFire` (keep / drop), `pays` (the
+everyday), `amount` and, where it applies, `until`, `afterFire` (keep / drop), `pays` (the
 liability it repays) and `starts: "fire"` (rent an owner will pay but does not yet) — FINANCE.md
 §8b. The sums every consumer reads come from one module, `flows.py` in the update-dashboard
-scripts: the page derives take-home, invest and the allowance from `FUNDS.plan.flows` at load,
+scripts: the page derives take-home, invest and the everyday amount from `FUNDS.plan.flows` at load,
 `rebuild.py` reads the pay-yourself-first amount and `COMMITTED_KEEP` (the fixed part of the
 planning figure) from it, and D13 / D15 read the same sums. D21 matches every committed flow
 paid today against the ledgers, the way `WSDEP` matches the investing transfers, and warns when
@@ -174,7 +175,7 @@ report template are all in that file. **Do not work from memory.**
   `.claude/skills/update-dashboard/parsers/`, and `scripts/parse.py <file> --doc <key>` runs it:
   rows signed the ledger's way, dated with the right year, with a running balance, reconciled
   the way the document's `reconcile` says. The parser takes the account from the statement's
-  own text, never from the filename. They need `pypdf` (`pip3 install --user pypdf`); without it
+  own text, never from the filename. They need `pypdf` (`pip3 install --user pypdf cryptography`); without it
   the import reads by hand, as it always could. A parser that reconciles is trusted over a
   reading by eye. The proof: `tools/fixtures.py` renders the demo owner's ledgers back into
   statements in the exact text shape the real ones have, and the selftest holds every parser to
@@ -187,9 +188,9 @@ report template are all in that file. **Do not work from memory.**
 
 ## Nothing in a dashboard is typed by hand
 
-<!-- LINT:CONSTS n=48 -->
+<!-- LINT:CONSTS n=49 -->
 `rebuild.py` builds the dashboard from `templates/dashboards/` and `findata/`, deriving
-**48 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CATS, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DECISIONS, DOC_LATEST, FGN, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
+**49 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CATS, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DEBT_ACCTS, DECISIONS, DOC_LATEST, FGN, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
 applies, and it is idempotent. `--template DIR` writes the page with every constant emptied,
 which is what the template *is*: page code and nobody's numbers.
 
@@ -233,14 +234,14 @@ python3 .claude/skills/workspace-checks/scripts/selftest.py .
 
 - `check_data.py` — whether the numbers are real. Its output is grouped by what actually failed:
   `reconcile` (balance chains, cross-file totals), `rules` (a repayment is never income, a
-  category is one of the fifteen, a fund claim never exceeds its account), `build` (is the page
+  category is one of the fifteen), `build` (is the page
   current with the data, and is it what the template builds), `hygiene` (missing tags, duplicate
   rows, a stale rate, filings without a file). **The category is attached to each finding, not to
   the rule** — "the register contradicts itself" and "the page is stale" are not the same
   severity. `-v` shows what passed.
 - `check_design.py` — DESIGN.md's mechanical rules, including S4, which checks that the page
   counts, lists, paths and images DESIGN.md and README.md state about themselves are still true.
-- `check_render.py` — headless Chromium at 1120 / 1440 / 1760px: every page draws, nothing scrolls
+- `check_render.py` — headless Chromium at 800 / 1120 / 1440 / 1760px: every page draws, nothing scrolls
   sideways, a chart's **painted** width really grows with the window, and no `undefined` reaches
   the screen. Needs
   `pip3 install --user playwright && python3 -m playwright install chromium`. Not on the hook;

@@ -52,14 +52,16 @@ def wrapped(desc, amounts, row):
     """A row may ask to look the way a long one does on a real statement (2026-10): `wrap` = n
     puts the last n words of the description on lines of their own, the amounts after the last;
     `split` puts the space pypdf sometimes reads into a number on one side of its comma
-    (" ," → "1 ,215.05", ", " → "3, 000.00"). Returns the description's first line and the
-    lines that follow it."""
+    (" ," → "1 ,215.05", ", " → "3, 000.00"); `alone` leaves the amounts on a line with no words.
+    Returns the description's first line and the lines that follow it."""
     if row.get("split"):
         amounts = re.sub(r"(\d),(\d{3}\.\d{2})", lambda m: m.group(1) + row["split"] + m.group(2), amounts, count=1)
     words, n = desc.split(), int(row.get("wrap") or 0)
     if not n or len(words) <= n:
         return f"{desc} {amounts}", []
     more = words[-n:]
+    if row.get("alone"):
+        return " ".join(words[:-n]), more + [amounts]
     return " ".join(words[:-n]), more[:-1] + [f"{more[-1]} {amounts}"]
 
 

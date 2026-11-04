@@ -12,7 +12,7 @@
   into the markup. In the sidebar it is the product name, **Jade Toad**, with the owner's name in
   small type beneath it.
 - Interface language: **English throughout** — labels, buttons, hints, empty states, every page.
-- Fifteen fixed spending categories in three groups, in English (FINANCE.md §3a,
+- Fifteen fixed spending categories in two groups, in English (FINANCE.md §3a,
   `categories.py`): Housing, Bills · Groceries, Dining, Transport, Shopping, Software & tools, Entertainment,
   Health, Travel, Family & gifts, Cash, Fees & interest, Other · Education. The category name
   *is* the definition; never mix languages in it. Subscription is a mark on a repeating charge,
@@ -46,10 +46,11 @@
   its colour: in the list, the legend and the tooltip. A legend lists only the categories its
   period has.
 - **Colour follows the category, permanently. It is never reassigned by rank or by size.**
-- **Income is one blue family** (Payroll `#1c5cab` / Rent `#5598e7` / Gift `#9ec5f4`), so income
+- **Income is one blue family** (Payroll `#1c5cab` / Gift `#9ec5f4` / Rewards
+  `#4a6fa5`), so income
   and spending read as two domains.
 - **The plan's parts do not use the category palette**: Invest blue `#2a78d6` / Everyday orange
-  `--c-dining` / Big buys yellow `--c-shopping` / Travel purple `--c-other` / Unallocated
+  `--c-dining` / Unallocated
   `--pill`; committed payments in `--muted`. Home's net-worth rows use the same semantic set.
 - Anything semantic — up or down, good or bad — carries **colour *and* a symbol or arrow**.
   Colour alone is never the signal.
@@ -57,8 +58,11 @@
 ## 4. Page structure
 
 - **One self-contained HTML file**, no external dependencies.
-- **Desktop only**: `body` is `min-width:1120px; max-width:1760px`, with no narrow-screen
-  `@media` block. **What widens is the charts and the wide tables, not everything**:
+- **Desktop, down to 800px**: `body` is `min-width:800px; max-width:1760px`. Below 1120px one
+  `@media` block collapses what would run past the page (2026-11-03, the owner): cards that sit
+  side by side stack, a table drops its `.opt` columns (secondary detail the row's hover or another
+  page still carries — Accounts' *For*, Holdings' *Accounts* and *Qty*), and a long value in a
+  `.meta` row wraps. A new wide table marks its secondary columns `.opt`. **What widens is the charts and the wide tables, not everything**:
   - Stat cards and long text are capped (§5d); charts and wide tables are not.
   - ⚠ **A chart is `width:100%; height:auto`, never a fixed pixel height.** With a `viewBox`,
     `preserveAspectRatio="xMidYMid meet"` and a fixed height, the drawing scales to its height
@@ -73,19 +77,20 @@
   constant. Home sits above the sections under no heading.
   - **A new page is one entry in `NAV` plus one `<section data-pg="key" hidden>`**, nothing
     else; `setPage()` is driven entirely by `NAV`.
-  - **Every group is open.** No section folds away; Records is listed like the others. The one
+  - **Every group is open.** No section folds away; Monthly import is listed like the others. The one
     fold is **Waiting for data**, above the Glossary: a page whose data has not arrived yet
     (`WAITS` — Income without a chequing ledger, Investing and FIRE with nothing invested) is
     listed there with what it waits for, closed by default, and returns to its section by itself
     the day the data arrives. A workspace with only a credit card is then a complete product.
-  - **The Glossary is on its own at the foot**, below Records and above the version, under no
-    heading: it is a reference for reading the page, not a record.
+  - **The Glossary is on its own at the foot**, below Monthly import and above the version,
+    under no heading: it is a reference for reading the page.
   - **Dots**: `pageFlags()` hangs a 6px dot on a sidebar entry when its page has something on
     it — amber `#c98500` = look at this, red `#d03b3b` = a rule is broken or something is due.
     A new rule is wired into it.
   - The month pills appear only on `PILL_PAGES`, the year pills only on `YEAR_PAGES`.
   - The foot of the sidebar carries the tool version (`VERSION`) in muted 10.5px. MAJOR.MINOR:
-    polish moves the minor, a change of shape moves the major.
+    the major moves only with a change of technology (v2.0: the page's framework, the data's
+    store); everything else, a new product structure included, moves the minor.
 - **One page, one question, one kind of time**: a page follows the month cursor, the year cursor
   or no time at all, never half of each; a thing is judged in one place, and Home only
   summarises.
@@ -97,12 +102,12 @@
   reader:
   | Section | Pages |
   |---|---|
-  | — | Home (four cards, net worth in one card) |
+  | — | Home (four cards, net worth in one card, net worth over time) · Accounts |
   | Spending | This month · Year · Subscriptions |
   | Income | Income · Investment income |
   | Investing | Portfolio · Performance · Holdings |
   | Plan | Budget · FIRE · Drawdown & care · Spending baseline |
-  | Records | Updates · Accounts · Statements |
+  | Monthly import | Updates · Statements |
   | — | Glossary, at the foot of the sidebar |
 
 ### Home
@@ -112,9 +117,16 @@
 - **No list of things to do on Home** (taken off 2026-10-28 with Rules): what waits for the owner
   is asked in the conversation with Claude at each import, and a page that needs attention
   carries its dot in the sidebar.
+- **Each net-worth row opens in place** to the accounts behind it, largest first, each with its
+  institution, amount, share of the row, the date of its balance and any currency not the
+  home one; the amounts sum to the row. So does *Less what you owe*.
+- **Net worth over time** under the net-worth card: one point per month, what really was, nothing
+  projected, from two months on. It is not the FIRE chart, which follows the portfolio to a target.
 - **Four stat cards**, one per section: **Portfolio** (with its dry-powder share), **FIRE progress**
   (with the on-track year), **Invested in \<month\>** (pay-yourself-first, from the broker's
-  record), **Free to spend** (the allowance today).
+  record), **Spent in \<month\>** (the month's whole spending, bills & housing and everyday beneath
+  it; today's month once it has a purchase, otherwise the newest one the statements reach. What is
+  left of Everyday is This month's to say, 2026-11-03).
 - **Net worth in one card, cut both ways at once**: one row per `role`, cash split by where it
   is — For FIRE / Set aside / Cash / Cash in \<abroad\> / Owed to you / Other assets (only for
   things that are not money). Each row's bar is as long as its share and coloured by `reach`
@@ -128,26 +140,23 @@
 
 ### Spending
 
-- **This month** — the month on the cursor, all of it: **Free to spend** (the headline: the
-  allowance less this month's everyday spending, no categories, a track bar with an even-pace
-  marker for the current month only) with **Big buys** beside it, a third of the row — the other
-  half of the month, every purchase at or over the threshold: the total, how many and which fund
-  paid, the four largest, and when there are none, what would land there; three stat cards (spent, biggest category, against a usual
-  month); **Where the paycheque went** (the plan as flows, the allowance fanning out into that
-  month's categories — refunds a source coming in, an overspend a second source from the fund
-  that covers it, so every band is its real size and the total is Free to spend's); the category
+- **This month** — the month on the cursor, all of it: **Everyday** (the headline: the
+  everyday less this month's everyday spending, no categories, a track bar with an even-pace
+  marker for the current month only); three stat cards (spent, split into the parts that month has, biggest category, against a usual
+  month); **Where the paycheque went** (the plan as flows, each marked planned, and titled for the plan rather than the paycheque when it asks for more than take-home; the everyday amount fanning out into that
+  month's categories — refunds a source coming in, an overspend a second source from savings, so every band is its real size and the total is Everyday's); the category
   list and the line-by-line of the chosen category.
 - **Year** — the year pills, the yearly stat cards, "What stands out" and the year by category
-  side by side, the monthly stacked chart, and **Inside the allowance, month by month** (everyday spending against
-  today's allowance, the overspend in red, the open month faded).
+  side by side, the monthly stacked chart, and **Everyday, month by month** (everyday spending against
+  today's everyday amount, the overspend in red, the open month faded).
 - **Subscriptions** follows no time.
 - No transactions page: a month's purchases are reached through a category on This month.
 
 ### Income
 
-- **Follows the year only**: Income / Spent / Kept, the year by source — Investment carries its
-  explanation, since it never reaches chequing — a line for what a borrower paid back, which is
-  never income, and the months by source.
+- **Follows the year only**: Income / Spent / Kept, the year by source — Investment and Rewards
+  (a card's cash back) carry their explanation, since neither reaches chequing — a line for what
+  a borrower paid back, which is never income, and the months by source.
 - **Investment income**: what was paid, a month on average, its share of spending, the tax
   withheld; the months, each split into dividends, interest, lending and tax; and **By holding**
   — which funds paid the dividends, how often each pays (every month, every quarter), and its
@@ -176,24 +185,26 @@
 
 ### Plan
 
-- **Budget** follows no time: the plan and the funds, no category caps.
+- **Budget** follows no time: the plan, no category caps. Below the split, a Funds card appears
+  only when the owner has a fund: each one's set-aside amount against its goal, what the plan adds,
+  and when that pace reaches the goal.
   - **How each paycheque is split**: one stacked bar cutting take-home into the committed
-    payments (one segment each) / Invest / Everyday / Big buys / Travel / Unallocated, with one
+    payments (one segment each) / Invest / Everyday / Unallocated, with one
     line per part beneath it. Take-home, Invest and Everyday are sums of `funds.json`
     `plan.flows`, derived at load; Unallocated is what nothing names and stays where the
     paycheque landed.
-  - Invest, Everyday and Big buys can be edited on the page (`.bud-edit[data-pk]`, kept in the
+  - Invest and Everyday can be edited on the page (`.bud-edit[data-pk]`, kept in the
     URL hash and localStorage, never written back). Parts that add to more than take-home get a
     `noteBox`.
-  - **The funds**: a goal fund with its bar and deadline; a fund with no goal with its opening
-    amount, contributions, draw-downs and the largest purchase it covers today.
 - **FIRE** answers *when*: the stat cards, the progress bar, the trajectory, and *If you stopped
   adding today* — the age today's money reaches the target alone, with the year and the return
   assumed.
   - **The trajectory**: the portfolio under today's contribution at three real returns, drawn to
     the target's dashed line, each curve stopping where it arrives, the legend giving
-    "X.X years · month year". A money y-axis on nice steps; **the x-axis is calendar years
-    anchored at `plan.json` `retirement.anchorYear`**, so it does not drift across a new year.
+    "X.X years · month year". A money y-axis on nice steps; **the x-axis is calendar time**
+    (quarters, years or every five years, by span). **Four spans**: 1 year, 5 years, 10 years, and
+    To FIRE, the default, which stops just past the month the middle return arrives; the choice is
+    kept. A span that does not reach the target says so, and its y-axis fits what it shows.
     The real snapshots are a black line with dots, first in the legend as Actual; the projections
     continue from the current month.
 - **Drawdown & care** answers *does it last*: a headline sentence; two sliders (the age you stop
@@ -206,9 +217,14 @@
   early it ran out), and a note that this is American history and the stretches overlap. Only
   the years of taking money out are replayed; the first day's pot is the steady path's.
 - **Spending baseline**: the planning figure against what is really spent, with a 12-month bar
-  chart, the months in the median highlighted, the median a red dashed line.
+  chart, the months in the average highlighted, the average of up to twelve usable months a red
+  dashed line.
 
-### Records
+### Accounts, and the Monthly import
+
+- **Accounts sits under Home**, not with the import (2026-11-03): it answers *where is my money*,
+  which is net worth opened up, while Updates and Statements answer *is the data in, and what
+  did each update change*.
 
 - **No To do page** (taken off 2026-10-28). `tasks.json` and `decisions.json` are still
   written and read by the import; nothing on the page lists them, and an old link opens Updates.
@@ -217,14 +233,25 @@
   (label, from, to), what was noticed, what was decided without asking, what you were asked.
   **The story of an update lives here and nowhere else; every other page shows a status computed
   today.**
-- **Accounts**: one row per place money sits, grouped by institution, the institution row giving
-  its net position (credit cards negative, currencies never added together); a **home-currency
-  total on the last row** — one of the two places currencies are added (§7), so its explanation
-  states the rate and its date and how many accounts without a balance were left out, and it
-  reconciles against the header's net worth (⚠ when it does not). Money held abroad is a card of
-  its own ("Held in \<currency\>", hidden when there is none). Below, a card of what is missing,
-  why, and how to fix it. The source is `findata/register/accounts.json`, **a register, not a
-  second set of books**.
+- **Accounts**: one row per place money sits — a bank or broker account, a card, a loan, money
+  lent. **A home, a car or anything else that is not money (`role: none`) is not an account**: it
+  is on Home under Other assets, and here only in the reconciliation (2026-11-03, the owner).
+  Grouped by institution, the biggest first and the biggest account first inside it; each
+  institution a band in ink with a gap above it. Four columns: the account (its type and number
+  beneath, a long number cut to its last four), what it is for in one line, the date (with the
+  year when it is not this year), the balance, the heaviest thing on the row; a balance under a
+  dollar is muted. **The balance column is in the home currency throughout**: an institution is
+  one figure, and an account held in another currency shows its dollar value with its own amount
+  beneath and the rate on hover (§7). **A grouped table taller than the window folds to its group
+  rows** — Accounts by institution, Holdings by role or account — each saying how many rows it
+  holds ("Wealthsimple ▸ 10 accounts"); a click opens or closes one. Decided the first time the
+  table is seen; a short one stays open. The **last row is all accounts in the home currency**,
+  and beside it what is owned outside accounts and that the two make the header's net worth (⚠
+  when they do not); its explanation states each rate. Money lent is a row like any other; its
+  balance opens what was agreed and what has come back. No card for money abroad and none for
+  money lent: the table already says both. Below, a card of what is missing, why, and how to fix
+  it, a borrower gone quiet among them. The source is `findata/register/accounts.json`, **a
+  register, not a second set of books**.
 - **Statements**: the filing grid (§5c), and every source's date.
 
 ### Glossary
@@ -311,7 +338,7 @@ these jobs is deleted, not shortened.
 
 | line | job | rule |
 |---|---|---|
-| **label** | names the thing | a noun phrase of at most four words: `Net worth`, `Free to spend`. No verb, no sentence, no colon, no "your". |
+| **label** | names the thing | a noun phrase of at most four words: `Net worth`, `Spent in Oct`. No verb, no sentence, no colon, no "your". |
 | **value** | answers it | one number with its unit; `$838 of $1,300` is still one number. |
 | **status** | the one fact the value cannot show | optional; at most seven words, one fact, no `·`, never a restatement of the label, never where a number came from. `On track for May 2039`, `Both transfers landed`. |
 
@@ -411,8 +438,10 @@ What breaks is **how much fits on one screen**.
   not enter it.
 - Every source is labelled with its own as-of date. Amounts are kept per currency, home
   currency first, and never mixed into a total. **Two exceptions, both explicit conversions
-  carrying their rate**: the header Net worth (`NW_GLOBAL`) and the home-currency total at the
-  foot of the Accounts table. Adding currencies anywhere else is a bug.
+  carrying their rate**: the header Net worth (`NW_GLOBAL`) and the Accounts table, which shows
+  every balance, institution and total in the home currency (2026-11-03, the owner: several
+  currencies in one column read as a mess), an account held in another currency carrying its own
+  amount beneath and its rate on hover. Adding currencies anywhere else is a bug.
 - Refunds and negative amounts are shown as green negatives.
 - Restraint in labelling chart values: totals on top of bars, amounts in the legend — never a
   number stacked on every data point.

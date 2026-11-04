@@ -44,13 +44,15 @@ def stage(root, dst):
     # OWNER.md is optional (a workspace may not have written one yet); README names it.
     # .gitignore too: S4 exempts the files an owner writes and the tool deliberately does not ship
     # (setup-answers.json), and it learns which those are from there (2026-09-13).
-    # CHANGELOG.md, ROADMAP.md and PRODUCT.md: README links to them, and S4 resolves every link.
-    for f in ("CLAUDE.md", "DESIGN.md", "FINANCE.md", "README.md", "OWNER.md", ".gitignore", "CHANGELOG.md", "ROADMAP.md", "PRODUCT.md"):
+    # LICENSE, CHANGELOG.md, ROADMAP.md and PRODUCT.md: README links to them, and S4 resolves every link.
+    for f in ("CLAUDE.md", "DESIGN.md", "FINANCE.md", "README.md", "OWNER.md", ".gitignore", "LICENSE", "CHANGELOG.md", "ROADMAP.md", "PRODUCT.md"):
         if os.path.exists(os.path.join(root, f)):
             shutil.copy2(os.path.join(root, f), dst)
     # README names these folders in prose and S4 checks that every path it hands the reader
     # resolves, so the copy has to have them or the baseline fails on paths that are fine.
-    shutil.copytree(os.path.join(root, "inbox"), os.path.join(dst, "inbox"))
+    # Empty: what is waiting in the real inbox is not this copy's. One statement named so preflight
+    # could not place it stopped every update the selftest ran (2026-11).
+    os.makedirs(os.path.join(dst, "inbox"))
     os.makedirs(os.path.join(dst, "archive"))
     for f in os.listdir(os.path.join(root, "archive")):
         open(os.path.join(dst, "archive", f), "w").close()
@@ -72,10 +74,10 @@ def rules_seen(out):
 
 # --- the faults, each one a mistake that has really happened or really could -------------
 def m_readme_path(r):
-    edit(r, "README.md", lambda s: s.replace("check_data.py", "check_data_MOVED.py"))
+    edit(r, "README.md", lambda s: s.replace("(docs/how-it-works.md)", "(docs/how-it-works_MOVED.md)"))
 def m_design_pages(r):
-    # The Records row's first page swapped for one that does not exist, whatever the row lists.
-    edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Records \| )[^·|]+·", r"\1Insights ·", s, count=1))
+    # The Monthly import row's first page swapped for one that does not exist, whatever the row lists.
+    edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Monthly import \| )[^·|]+·", r"\1Insights ·", s, count=1))
 def m_nav_orphan(r):
     edit(r, main_dash(r),
          lambda s: s.replace('<section data-pg="acct" hidden>', '<section data-pg="acctX" hidden>'))
@@ -85,9 +87,14 @@ def m_spending_row(r):
     open(p, "w", encoding="utf-8").writelines(lines[:-1])
 def m_funds_drift(r):
     edit_json(r, layout.rel("funds.json"), lambda d: d["plan"].__setitem__("everyday", 9999))
-def m_fund_overclaim(r):
-    edit_json(r, layout.rel("funds.json"),
-              lambda d: d["funds"][0]["opening"].__setitem__("amount", 999999))
+def m_fund_no_account(r):
+    # A fund on an account the register does not have: money the page would show that is nowhere.
+    edit_json(r, layout.rel("funds.json"), lambda d: d.__setitem__("funds",
+              [{"key": "trip", "name": "Trip", "goal": 3000, "account": "nope", "saved": {"amount": 100, "asof": "2026-09-26"}}]))
+def m_fund_flow_nowhere(r):
+    # A saving flow sent to a name that is no fund and no account leaves the plan for nowhere.
+    edit_json(r, layout.rel("funds.json"), lambda d: d["plan"]["flows"].append(
+              {"key": "x", "kind": "saving", "name": "Somewhere", "amount": 10, "to": "nowhere"}))
 def m_acct_drift(r):
     edit_json(r, layout.rel("accounts.json"), lambda d: d["accounts"][0].__setitem__("balance", 1.0))
 def m_bad_cover(r):
@@ -130,7 +137,7 @@ def m_nav_marker_gone(r):
 def m_readme_sidebar(r):
     # the "·" list under the marker is what a reader is shown; it has to match the real sidebar
     edit(r, "README.md",
-         lambda s: s.replace("Home · Spending", "Home · Spendingg", 1))
+         lambda s: s.replace(" · Spending · ", " · Spendingg · ", 1))
 def m_figures_end_gone(r):
     edit(r, "FINANCE.md", lambda s: s.replace("<!-- LINT:FIGURES:END -->", "", 1))
 
@@ -397,8 +404,6 @@ def m_short_header(r):
     assert lines and lines[0].startswith("date,description,amount,balance,statement,type")
     lines[0] = "date,description,amount,balance,statement\n"
     open(p, "w", encoding="utf-8").writelines(lines)
-def m_fund_monthly_left_behind(r):
-    edit_json(r, "findata/register/funds.json", lambda d: d["funds"][0].__setitem__("monthly", 50))
 
 def m_exclude_left_behind(r):
     edit_json(r, "findata/register/rules.json",
@@ -407,6 +412,11 @@ def m_exclude_left_behind(r):
 def m_alerts_left_behind(r):
     open(layout.path(r, "alerts.json"), "w", encoding="utf-8").write('{"alerts": []}\n')
 
+def m_chequing_no_spend_tag(r):
+    edit_json(r, layout.rel("accounts.json"), lambda d: [a.pop("spendTag", None) for a in d["accounts"] if a.get("ledger")])
+def m_broker_gift_no_deposit(r):
+    edit_json(r, layout.rel("plan.json"), lambda d: d.update(brokerGifts=[
+        {"date": "2026-02-03", "amount": 12345.67, "currency": "CAD", "why": "planted"}]))
 def m_decision_no_default(r):
     # An empty queue (an owner with nothing waiting) gets one item planted without its default;
     # this used to index [0] and crash the whole selftest in such a workspace (2026-09-10).
@@ -462,7 +472,8 @@ CASES = [
     ("S1", "a NAV entry with no matching section",          m_nav_orphan,      "dash"),
     ("D12", "a spending.csv row missing from the page",     m_spending_row,    "find"),
     ("D13", "funds.json changed but the page did not",      m_funds_drift,     "find"),
-    ("D13", "a fund claims more than its account holds",    m_fund_overclaim,  "find"),
+    ("D13", "a fund on an account the register lacks",      m_fund_no_account, "find"),
+    ("D13", "a saving flow sent to no fund and no account", m_fund_flow_nowhere, "find"),
     ("D14", "accounts.json changed but the page did not",   m_acct_drift,      "find"),
     ("D19", "a liability given a role",                     m_axes_illegal,    "find"),
     ("D20", "a stated balance with no date",                m_stated_no_asof,  "find"),
@@ -508,13 +519,14 @@ CASES = [
     ("S5", "the sidebar wordmark lost its mark",            m_brand_mark_gone,    "dash"),
     ("D18", "alerts.json left behind after the migration",  m_alerts_left_behind, "find"),
     ("D19", "rules.json still carries the exclude list",    m_exclude_left_behind, "find"),
-    ("D13", "a fund still carries a monthly contribution",   m_fund_monthly_left_behind, "find"),
     ("D18", "cashflow.json left behind after the migration", m_cashflow_left_behind, "find"),
     ("D22", "a cash-flow ledger row with no type",            m_untyped_row,         "find"),
     ("D22", "a ledger header that does not name the type column", m_short_header,     "find"),
     ("D18", "an item to confirm with nothing assumed meanwhile", m_decision_no_default, "find"),
     ("S8",  "the page speaks in the first person",          m_first_person,       "dash"),
     ("R5", "a broken field leaves NaN on the page",         m_render_nan,         "render"),
+    ("D29", "a gift declared in the broker with no such deposit", m_broker_gift_no_deposit, "find"),
+    ("D30", "a chequing bill that never reached spending",  m_chequing_no_spend_tag, "find"),
     ("R3", "a chart pinned to a fixed height",              m_render_chart_capped,"render"),
 ]
 
@@ -617,8 +629,8 @@ def credit_balance_check(ws):
 
 def wrap_check(ws):
     """A first user's chequing statements were all refused (2026-10): a long description wrapped
-    so its amounts landed on the second or third line, and pypdf read '1 ,215.05' and
-    '3, 000.00'. Render a BMO and an RBC statement with both, and expect every row back, signed
+    so its amounts landed on the second or third line, or on a line of their own (2026-11), and
+    pypdf read '1 ,215.05' and '3, 000.00'. Render a BMO and an RBC statement with both, and expect every row back, signed
     and reconciled, with the whole description."""
     if not os.path.exists(os.path.join(ws, "tools", "fixtures.py")):
         return []
@@ -628,7 +640,9 @@ def wrap_check(ws):
     rows = [{"date": "2026-10-03", "description": "PAYROLL DEPOSIT EXAMPLE CO", "amount": 3000.0, "split": ", "},
             {"date": "2026-10-09", "description": "INTERAC e-Transfer Sent SOMEONE WITH A LONG NAME CA2Kx7Q",
              "amount": -1215.05, "wrap": 2, "split": " ,"},
-            {"date": "2026-10-14", "description": "Bill payment CITY OF EXAMPLE PROPERTY TAX", "amount": -82.10, "wrap": 1}]
+            {"date": "2026-10-14", "description": "Bill payment CITY OF EXAMPLE PROPERTY TAX", "amount": -82.10, "wrap": 1},
+            {"date": "2026-10-20", "description": "Pre-Authorized Payment, EXAMPLE HOME SERVICES PLAN",
+             "amount": -48.20, "wrap": 2, "alone": True}]
     bal = 1000.0
     for r in rows:
         bal = round(bal + r["amount"], 2); r["balance"] = bal
@@ -653,7 +667,7 @@ def wrap_check(ws):
         else:
             out.append(f"  ✗ parsers: a wrapped {parser} statement: {res['reconcile']['detail']}; rows {got}")
     if good == 2:
-        out.append("  ✓ parsers: chequing rows whose description wraps onto a second and third line, and numbers read as '1 ,215.05' and '3, 000.00' (BMO, RBC), read and reconciled")
+        out.append("  ✓ parsers: chequing rows whose description wraps onto a second and third line, amounts on a line of their own, and numbers read as '1 ,215.05' and '3, 000.00' (BMO, RBC), read and reconciled")
     return out
 
 
@@ -680,13 +694,13 @@ def first_import_quiet_check(root, base):
 def unset_check(root, base):
     """A question skipped at setup is null and reads Not set (2026-10-28, first user: take-home
     pay of $0 and a 1990 birth year went onto the page as facts). Null out take-home, the
-    investing transfer, the allowance, the planning figure and the birth year in a copy: it has
+    investing transfer, the everyday amount, the planning figure and the birth year in a copy: it has
     to build, check clean, and say Not set in the figures table."""
     ws = os.path.join(base, "unset")
     os.makedirs(ws); stage(root, ws)
     def flows(d):
         for f in d["plan"]["flows"]:
-            if f["kind"] in ("income", "allowance") or (f["kind"] == "saving" and (f.get("to") or "broker") == "broker"):
+            if f["kind"] in ("income", "everyday") or (f["kind"] == "saving" and (f.get("to") or "broker") == "broker"):
                 f["amount"] = None
     edit_json(ws, layout.rel("funds.json"), flows)
     edit_json(ws, layout.rel("plan.json"), lambda d: d.__setitem__("planBase", None))
@@ -700,7 +714,7 @@ def unset_check(root, base):
     if b.returncode or bad or (fin and fin.count("Not set") < 6) or "const BORN = null" not in page:
         return [f"  ✗ answers never given: rebuild exit {b.returncode}; " + ("; ".join(bad[:3]) or
                 f"{fin.count('Not set')} Not set in FINANCE.md, BORN {'null' if 'const BORN = null' in page else 'not null'}")]
-    return ["  ✓ answers never given: take-home, investing, allowance, planning figure and birth year null, built and checked clean, Not set in the figures table"]
+    return ["  ✓ answers never given: take-home, investing, everyday, planning figure and birth year null, built and checked clean, Not set in the figures table"]
 
 
 def ready_check(root, base):
@@ -712,7 +726,7 @@ def ready_check(root, base):
         return ["  ✗ setup has no ready.py: nothing checks the tools before the questions"]
     r = subprocess.run([sys.executable, rd, root], capture_output=True, text=True, timeout=60)
     try:
-        import pypdf  # noqa: F401
+        import pypdf, cryptography  # noqa: F401,E401
         has = True
     except ImportError:
         has = False
@@ -764,13 +778,13 @@ def spending_check(root, base):
     plan = {"flows": [{"kind": "committed", "amount": 1500}, {"kind": "committed", "amount": 1200, "starts": "fire"},
                       {"kind": "committed", "amount": 900, "pays": "mortgage"}]}
     keep = fl.totals(plan)["committedKeep"]
-    g = cats.groups({"categoryGroups": {"Transport": "fixed", "Dining": "nonsense"}})
+    g = cats.groups({"categoryGroups": {"Transport": "bills", "Dining": "nonsense"}})
     bad = []
     if rec != {"SPOTIFY", "KOODO MOBILE"}:
         bad.append(f"repeats found {sorted(rec)}")
     if keep != 2100:
         bad.append(f"calibration adds {keep}, not 2100")
-    if (g["Transport"], g["Dining"], g["Education"]) != ("fixed", "everyday", "time"):
+    if (g["Transport"], g["Dining"], g["Education"]) != ("bills", "everyday", "everyday") or cats.not_in_fire({}) != ["Education"] or cats.not_in_fire({"notInFire": []}) != []:
         bad.append(f"groups {g['Transport']}/{g['Dining']}/{g['Education']}")
     if bad:
         return ["  ✗ spending: " + "; ".join(bad)]
@@ -840,7 +854,7 @@ def refile_check(root, base):
         w = csv.DictWriter(fh, fieldnames=["date", "amount", "currency", "category", "note"]); w.writeheader()
         w.writerows(dict(r, category=wrong) if merchant_key(r["note"]) == pick["match"] else r for r in sp)
     edit_json(ws, layout.rel("profile.json"), lambda d: d.update(schema=11))
-    mig = subprocess.run([sys.executable, os.path.join(ws, "tools", "migrate_11to12.py"), ws],
+    mig = subprocess.run([sys.executable, os.path.join(ws, "tools", "migrate.py"), ws],
                          capture_output=True, text=True, timeout=120)
     dec = json.load(open(layout.path(ws, "decisions.json"), encoding="utf-8"))["decisions"]
     asked = [d for d in dec if d.get("status") == "open" and d.get("match") == pick["match"]]
@@ -857,6 +871,114 @@ def refile_check(root, base):
         return [f"  ✗ re-filing: migrate exit {mig.returncode}, asked {[d.get('suggest') for d in asked]}, untouched before confirming "
                 f"{still}, after confirming {sorted(after)} / {filed.get(pick['match'])}" + ("; the checkers then failed" if "✗" in out else "")]
     return [f"  ✓ re-filing: a merchant left in {wrong} is asked as {right} and moved only once confirmed — merchants.json and spending.csv follow"]
+
+
+def chequing_setup_check(root, base):
+    """A chequing account set up from its statements: a bill and a cash withdrawal are spending.
+    A first owner's whole year of them went missing with every checker clean (2026-11): setup gave
+    the account no spendTag, and the demo's register, written by hand, always had one."""
+    if not demo_like(root) or not os.path.exists(os.path.join(root, "tools", "fixtures.py")):
+        return []
+    ws = os.path.join(base, "chqsetup")
+    os.makedirs(ws); stage(root, ws)
+    sys.path.insert(0, os.path.join(ws, "tools"))
+    import fixtures
+    from pdfgen import write_pdf
+    rows = [{"date": "2026-10-03", "description": "Pre-Authorized Payment, EXAMPLE INSURANCE CO", "amount": -88.40},
+            {"date": "2026-10-06", "description": "Other Bank ABM Withdrawal", "amount": -60.00},
+            {"date": "2026-10-09", "description": "Direct Deposit, CANADA PRO", "amount": 25.00}]
+    bal = 1000.0
+    for r in rows:
+        bal = round(bal + r["amount"], 2); r["balance"] = bal
+    write_pdf(os.path.join(ws, "inbox", "October 13, 2026.pdf"),
+              fixtures.bmo_banking("Primary Chequing", "4471", datetime.date(2026, 9, 14), datetime.date(2026, 10, 13),
+                                   1000.0, rows, "Sam Lee"))
+    sk = os.path.join(ws, ".claude", "skills")
+    step = lambda script, *a: subprocess.run([sys.executable, os.path.join(sk, script), ".", *a],
+                                              cwd=ws, capture_output=True, text=True, timeout=300)
+    r = step("setup/scripts/propose.py", "--write")
+    ans_p = layout.path(ws, "setup-answers.json")
+    if r.returncode or not os.path.exists(ans_p):
+        return [f"  ✗ chequing setup: the draft failed ({(r.stdout + r.stderr).strip().splitlines()[-1:]})"]
+    a = json.load(open(ans_p, encoding="utf-8"))
+    a["owner"] = "Sam Lee"; a.pop("born", None); a["_open"] = []
+    json.dump(a, open(ans_p, "w", encoding="utf-8"), indent=2)
+    for script, args in (("setup/scripts/scaffold.py", ("--answers", ans_p, "--write")),
+                         ("update-dashboard/scripts/rebuild.py", ("--write",)),
+                         ("update-dashboard/scripts/update.py", ("--write",))):
+        r = step(script, *args)
+        if r.returncode:
+            return [f"  ✗ chequing setup: {os.path.basename(script)} exit {r.returncode}: " + " | ".join((r.stdout + r.stderr).strip().splitlines()[-2:])]
+    got = sorted(float(x["amount"]) for x in csv.DictReader(open(layout.path(ws, "spending.csv"), encoding="utf-8")))
+    if got != [60.0, 88.40]:
+        return [f"  ✗ chequing setup: a bill and a cash withdrawal should be spending; spending.csv holds {got}"]
+    return ["  ✓ chequing setup, end to end: a bill and a cash withdrawal are spending, and money in is not"]
+
+
+def no_pay_check(root, base):
+    """An owner with no pay: income $0 and a plan above it is living off savings, not a broken
+    plan. A first owner between jobs failed D13 on every import (2026-11), so every run exited 2
+    and the selftest counted it nine more times."""
+    ws = os.path.join(base, "nopay")
+    os.makedirs(ws); stage(root, ws)
+    fp = layout.path(ws, "funds.json")
+    if not os.path.exists(fp):
+        return []
+    fj = json.load(open(fp, encoding="utf-8"))
+    pay = [f for f in fj["plan"].get("flows") or [] if f.get("kind") == "income"]
+    if not pay:
+        return []
+    for f in pay:
+        f["amount"] = 0
+    json.dump(fj, open(fp, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    sk = os.path.join(ws, ".claude", "skills")
+    r = subprocess.run([sys.executable, os.path.join(sk, "update-dashboard", "scripts", "rebuild.py"), ".", "--write"],
+                       cwd=ws, capture_output=True, text=True, timeout=300)
+    if r.returncode:
+        return [f"  ✗ no pay: rebuild exit {r.returncode}"]
+    r = subprocess.run([sys.executable, os.path.join(sk, "workspace-checks", "scripts", "check_data.py"), "."],
+                       cwd=ws, capture_output=True, text=True, timeout=300)
+    bad = [l.strip() for l in r.stdout.splitlines() if "[D13]" in l]
+    if r.returncode or bad:
+        return [f"  ✗ no pay: a plan with no pay should check clean; got exit {r.returncode} {bad[:1]}"]
+    return ["  ✓ no pay: a plan drawn from savings checks clean"]
+
+
+def browser_copy_check(root, base):
+    """A browser's copy number on a statement's name ("October 13, 2026 (1).pdf") is named as the
+    statement it copies, never asked about: a "(1)" stopped a first owner's run (2026-11)."""
+    sys.path.insert(0, os.path.join(root, ".claude", "skills", "update-dashboard", "scripts"))
+    import importlib, preflight
+    importlib.reload(preflight)
+    docs = preflight.load_docs(root)
+    dated = [x for x in docs if x["prefix"] == "" and x["suffix"].endswith(".pdf")
+             and not x["suffix"].startswith("-2") and x["close_day"]]
+    if not dated:
+        return []
+    x, second = dated[0], [d for d in docs if d["prefix"] == "" and d["suffix"].startswith("-2")]
+    name = f"October {x['close_day']}, 2026 (1).pdf"
+    # With a second account in the batch the copy number is that account, as a "-2" is; without
+    # one it is the statement it copies.
+    for label, pool, want in (("with a second account", docs, (second or [x])[0]),
+                              ("without one", [d for d in docs if d not in second], x)):
+        preflight.DOCS = pool
+        got = preflight.classify(name)
+        if not got[0] or want["doc"]["key"] not in got[0]:
+            return [f"  ✗ browser copy {label}: {name!r} was named {got[0]!r}, not {want['doc']['key']!r}"]
+    return ["  ✓ browser copy: a (1) on a statement's name is named as the statement it copies"]
+
+
+def month_parts_check(root, base):
+    """The sentence setup ends with: its parts have to add up to the month's total in spending.csv."""
+    r = subprocess.run([sys.executable, os.path.join(root, ".claude", "skills", "setup", "scripts", "month_sentence.py"), root],
+                       capture_output=True, text=True, timeout=60)
+    m = re.match(r"In (\w+) you spent \$([\d,]+): (.+)\.$", r.stdout.strip())
+    if not m:
+        return [] if r.stdout.startswith("No spending") else [f"  ✗ month sentence: {r.stdout.strip() or r.stderr.strip()[-120:]}"]
+    parts = [float(x.replace(",", "")) for x in re.findall(r"\$([\d,]+)", m.group(3))]
+    if abs(sum(parts) - float(m.group(2).replace(",", ""))) > len(parts):
+        return [f"  ✗ month sentence: the parts do not add up: {r.stdout.strip()}"]
+    return [f"  ✓ month sentence: {len(parts)} part(s) add up to the month"]
 
 
 def card_only_setup_check(root, base):
@@ -971,8 +1093,8 @@ def demo_clear_check(root, base):
                       "balance": 4210.55, "asof": "2026-08-31", "ledger": "chequing.csv",
                       "feeds": "Income, Cash flow, Bank cash",
                       "doc": {"file": "Chequing Statement-4021 <date>.pdf", "closes": 31}}],
-        "plan": {"takeHome": 4200, "invest": 900, "everyday": 1800, "bigThreshold": 300},
-        "funds": [], "rules": {"buckets": [{"key": "rest", "name": "Holdings", "catchAll": True}], "maxHoldings": 8},
+        "plan": {"takeHome": 4200, "invest": 900, "everyday": 1800},
+        "rules": {"buckets": [{"key": "rest", "name": "Holdings", "catchAll": True}], "maxHoldings": 8},
         "foreign": None})
     json.dump(answers, open(ans, "w", encoding="utf-8"))
     r = subprocess.run([sys.executable, sc, ws, "--answers", ans, "--write"], capture_output=True, text=True)
@@ -1030,6 +1152,10 @@ def propose_check(ws, man):
     got_h = sum(1 for a in draft["accounts"] if a["id"] and not a["id"].startswith("…") and a.get("balance") is not None
                 and a["kind"] in ("TFSA", "RRSP", "FHSA", "Non-registered", "Crypto", "Investment"))
     ids = {q["id"] for q in draft.get("_open", [])}
+    # every account the demo moves money between has a statement here, so none is asked by number
+    seen = next((q.get("seen") for q in draft.get("_open", []) if q["id"] == "missing"), None)
+    if seen:
+        miss.append(f"asked about account(s) {', '.join(seen)} that every statement already covers")
     out = []
     ok = not miss and got_h == want_h and {"owner", "born"} <= ids
     detail = (f"{len(got)} statement account(s), {got_h} of {want_h} broker account(s), {len(ids)} question(s) left open"
@@ -1145,6 +1271,15 @@ def update_check(root, base):
         name = doc["file"].replace("<Month D, YYYY>", f"{LONG[end.month - 1]} {end.day}, {end.year}").replace("<date>", end.isoformat())
         if m["parser"] == "rbc_visa":
             name = f"{tag}.pdf"      # the way an RBC download really arrives: the statement has to name itself
+        # Two documents under one filename pattern (2026-10-28): the first arrives the way an
+        # upload renames it, underscores for spaces and commas; the second under the OTHER one's
+        # close day, so only the account it prints can say which it is.
+        twins = sorted(k for k, d in docs.items() if d.get("parser") and d.get("file") == doc.get("file"))
+        if len(twins) > 1 and key == twins[0]:
+            name = name.replace(", ", " ").replace(" ", "_")
+        elif len(twins) > 1 and key == twins[1]:
+            other = int(re.search(r"\d+", docs[twins[0]].get("closes", "")).group(0))
+            name = f"{LONG[end.month - 1]} {other}, {end.year}.pdf"
         shutil.copy(m["file"], os.path.join(ws, "inbox", name))
         dropped[key] = (name, f"{tag}_{doc['tags'][0]}_{name}")
     json.dump(banks, open(fd("banks.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
@@ -1159,6 +1294,9 @@ def update_check(root, base):
     bad = []
     if rc != 0:
         bad.append(f"update.py exited {rc}: " + " | ".join(out.strip().splitlines()[-3:]))
+    if any(len([k for k, d in docs.items() if d.get("parser") and d.get("file") == x.get("file")]) > 1 for x in docs.values()) \
+            and "prints the" not in out:
+        bad.append("a statement under the other account's close day was not named by the account it prints")
     for ledger, rows in want["ledger"].items():
         now = list(csv.DictReader(open(fd(ledger), encoding="utf-8")))
         if len(now) != len(rows):
@@ -1245,12 +1383,13 @@ def update_check(root, base):
     if bad:
         return ["  ✗ update.py: " + b for b in bad[:8]]
     return [f"  ✓ update.py: {len(newest)} statements round-tripped — {n_led} ledger rows and every purchase back where the "
-            f"demo had them, banks and filings as they were, a date-only PDF named by its contents, checkers clean, rebuild idempotent, a second drop wrote nothing, a transcribed statement filed and a wrong one refused"]
+            f"demo had them, banks and filings as they were, a date-only PDF named by its contents, a renamed one recognised and a card under the chequing's date named by the account it prints, checkers clean, rebuild idempotent, a second drop wrote nothing, a transcribed statement filed and a wrong one refused"]
 
 
 def strip_statement(ws, m):
-    """Take one statement's rows out of its ledger (and the copies of its balance), drop the
-    PDF into inbox/ under the bank's own filename, the way update_check does."""
+    """Take one statement's rows out of its ledger — or, for a card, out of spending.csv — and
+    the copies of its balance, drop the PDF into inbox/ under the bank's own filename, the way
+    update_check does."""
     fd = lambda n: layout.path(ws, n)
     reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
     docs = {d["key"]: d for d in reg["documents"]}; by_key = {a["key"]: a for a in reg["accounts"]}
@@ -1259,11 +1398,25 @@ def strip_statement(ws, m):
     doc = docs[m["doc"]]; acc = by_key[doc["covers"][0]]
     tag = re.search(r"(\d{8})\.pdf$", m["file"]).group(1)
     end = datetime.date(int(tag[:4]), int(tag[4:6]), int(tag[6:]))
-    rows = list(csv.DictReader(open(fd(acc["ledger"]), encoding="utf-8")))
-    keep = [r for r in rows if r["statement"] != f"{acc['stmtTag']}/{tag}"]
-    with open(fd(acc["ledger"]), "w", encoding="utf-8", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(keep)
-    for p, side in (("banks.json", "assets"), ("accounts.json", "accounts")):
+    if not acc.get("ledger"):
+        # a card: its rows are spending.csv's, and its balance is a debt known again on import
+        sp = [r for r in csv.DictReader(open(fd("spending.csv"), encoding="utf-8"))
+              if not r["note"].endswith(f"[{acc['spendTag']}/{tag}]")]
+        with open(fd("spending.csv"), "w", encoding="utf-8", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=["date", "amount", "currency", "category", "note"]); w.writeheader(); w.writerows(sp)
+        for p, side in (("banks.json", "debts"), ("accounts.json", "accounts")):
+            j = json.load(open(fd(p), encoding="utf-8"))
+            for x in j[side]:
+                if x.get("account", x.get("name")) == acc["name"] and (side == "debts" or x["key"] == acc["key"]):
+                    x["balance"], x["asof"] = 0.0, "2000-01-01"
+            json.dump(j, open(fd(p), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+        keep = None
+    else:
+        rows = list(csv.DictReader(open(fd(acc["ledger"]), encoding="utf-8")))
+        keep = [r for r in rows if r["statement"] != f"{acc['stmtTag']}/{tag}"]
+        with open(fd(acc["ledger"]), "w", encoding="utf-8", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(keep)
+    for p, side in (() if keep is None else (("banks.json", "assets"), ("accounts.json", "accounts"))):
         j = json.load(open(fd(p), encoding="utf-8"))
         for x in j[side]:
             if x.get("account", x.get("name")) == acc["name"] and (side == "assets" or x["key"] == acc["key"]):
@@ -1429,13 +1582,18 @@ def undo_check(root, base):
         w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), quoting=csv.QUOTE_ALL); w.writeheader(); w.writerows(rows)
     before = hashes()
     bad = []
+    # The last step is moving the statements into archive/; a FILE where the folder should be
+    # makes it fail. A read-only folder did too, except for root, which writes anyway: in a cloud
+    # session the run went through and this case failed (2026-10-28, user 002).
     arc = os.path.join(ws, "archive")
     os.makedirs(arc, exist_ok=True)
-    os.chmod(arc, 0o555)
+    os.rename(arc, arc + ".aside")
+    open(arc, "w").close()
     try:
         rc, out = go("--write")
     finally:
-        os.chmod(arc, 0o755)
+        os.remove(arc)
+        os.rename(arc + ".aside", arc)
     torn = sorted(k for k in set(before) | set(hashes()) if before.get(k) != hashes().get(k))
     if rc != 1 or "nothing was written" not in out or torn or not os.path.exists(os.path.join(ws, "inbox", name)):
         bad.append(f"a run that failed at its last step: exit {rc}, findata/ changed in {torn[:3]}, "
@@ -1534,6 +1692,185 @@ def own_name_check(root, base):
     if r.returncode in (0, 2) and not wrong and not asked:
         return [f"  ✓ update.py: an e-Transfer naming the owner by the bank's name, not the profile's, filed as their own money ({len(want)} row(s))"]
     return [f"  ✗ update.py: own-name e-Transfer under a different profile name: exit {r.returncode}, typed {wrong}, asked {asked[:2]}"]
+
+
+def pay_etransfer_check(root, base):
+    """Pay that arrives by e-Transfer from no named sender (2026-10-28, user 002: pay stopped in
+    May, and a same-size e-Transfer every month since waited as Other income). Put one into each
+    of the last three statements of a chequing ledger, import the newest, and expect the question
+    to suggest Pay; confirm it as suggested and expect the ledger row retyped Payroll."""
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    cf = os.path.join(os.path.dirname(upd), "confirm.py")
+    ws = os.path.join(base, "payet"); os.makedirs(ws); stage(root, ws)
+    if not (os.path.exists(os.path.join(ws, "tools", "fixtures.py")) and os.path.exists(upd)):
+        return []
+    fd = lambda n: layout.path(ws, n)
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    acc = next((a for a in reg["accounts"] if a.get("ledger") and "Income" in (a.get("feeds") or "")), None)
+    if acc is None:
+        return []
+    AMT, DESC = 1234.56, "Interac e-Transfer Received"
+    rows = csv_rows_of(fd(acc["ledger"]))
+    for st in sorted({r["statement"] for r in rows})[-3:]:
+        i = max(j for j, r in enumerate(rows) if r["statement"] == st)
+        rows.insert(i, dict(rows[i], description=DESC, amount=f"{AMT:.2f}", type="Other", label="e-Transfer received"))
+    for j in range(1, len(rows)):
+        rows[j]["balance"] = f"{float(rows[j - 1]['balance']) + float(rows[j]['amount']):.2f}"
+    with open(fd(acc["ledger"]), "w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
+    man = fixtures_for(ws) or []
+    mine = [m for m in man if next((d for d in reg["documents"] if d["key"] == m["doc"]), {}).get("covers", [None])[0] == acc["key"]]
+    if not mine:
+        return []
+    strip_statement(ws, max(mine, key=lambda m: os.path.basename(m["file"])))
+    subprocess.run([sys.executable, os.path.join(os.path.dirname(upd), "rebuild.py"), ".", "--write"], cwd=ws, capture_output=True)
+    r = subprocess.run([sys.executable, upd, ".", "--write"], cwd=ws, capture_output=True, text=True, timeout=300)
+    asked = [x for x in json.load(open(fd("decisions.json"), encoding="utf-8"))["decisions"]
+             if x.get("status") == "open" and (x.get("credit") or {}).get("amount") == AMT]
+    c = subprocess.run([sys.executable, cf, ".", "--write", "--ok"], cwd=ws, capture_output=True, text=True, timeout=300)
+    typed = [x["type"] for x in csv_rows_of(fd(acc["ledger"])) if x["description"] == DESC]
+    if r.returncode in (0, 2) and asked and asked[0].get("suggest") == "Payroll" and c.returncode == 0 and typed and typed[-1] == "Payroll":
+        return ["  ✓ update.py: a same-size e-Transfer from no named sender, three months running, suggested as Pay and retyped once confirmed"]
+    return [f"  ✗ pay by e-Transfer: update exit {r.returncode}, asked {[(x.get('default'), x.get('suggest')) for x in asked]}, "
+            f"confirm exit {c.returncode}, ledger types {typed}"]
+
+
+def seen_account_check(root, base):
+    """An account the statements move money to or from, that nobody registered (2026-10-28, user
+    002: a card-only owner's chequing account, three other numbers in a chequing ledger). Point one
+    transfer in the newest chequing statement at an account the register does not have, import it,
+    and expect the update to name that account; the demo's own transfers, all between registered
+    accounts, must name none."""
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    ws = os.path.join(base, "seenacct"); os.makedirs(ws); stage(root, ws)
+    if not (os.path.exists(os.path.join(ws, "tools", "fixtures.py")) and os.path.exists(upd)):
+        return []
+    fd = lambda n: layout.path(ws, n)
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    acc = next((a for a in reg["accounts"] if a.get("ledger") and "Income" in (a.get("feeds") or "")), None)
+    if acc is None:
+        return []
+    rows = csv_rows_of(fd(acc["ledger"]))
+    newest = max(r["statement"] for r in rows)
+    i = next((j for j, r in enumerate(rows) if r["statement"] == newest and r["type"] == "Transfer"
+              and re.search(r"#\d{3,5}-\d{3,5}", r["description"])), None)
+    if i is None:
+        return []
+    rows[i]["description"] = re.sub(r"#\d{3,5}-\d{3,5}", "#3321-7788", rows[i]["description"])
+    with open(fd(acc["ledger"]), "w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
+    man = fixtures_for(ws) or []
+    mine = [m for m in man if next((d for d in reg["documents"] if d["key"] == m["doc"]), {}).get("covers", [None])[0] == acc["key"]]
+    if not mine:
+        return []
+    strip_statement(ws, max(mine, key=lambda m: os.path.basename(m["file"])))
+    subprocess.run([sys.executable, os.path.join(os.path.dirname(upd), "rebuild.py"), ".", "--write"], cwd=ws, capture_output=True)
+    r = subprocess.run([sys.executable, upd, ".", "--write"], cwd=ws, capture_output=True, text=True, timeout=300)
+    named = re.findall(r"account …(\d+)", r.stdout)
+    if r.returncode in (0, 2) and named == ["7788"]:
+        return ["  ✓ update.py: a transfer to an account nobody registered named it (…7788); the registered ones named nothing"]
+    return [f"  ✗ unregistered account: update exit {r.returncode}, named {named or 'nothing'}"]
+
+
+def yearly_check(root, base):
+    """A bill paid once a year is spread over twelve months when months are compared (2026-10-29,
+    FINANCE.md §3a). Say of one merchant that it is paid once a year, rebuild, and expect each of
+    its rows marked `yr` on the page and no other row; then expect the same of a merchant whose
+    two charges are a year apart, said of by nobody."""
+    rb = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "rebuild.py"))
+    sys.path.insert(0, os.path.dirname(rb))
+    import categories
+    ws = os.path.join(base, "yearly"); os.makedirs(ws); stage(root, ws)
+    fd = lambda n: layout.path(ws, n)
+    sp = csv_rows_of(fd("spending.csv"))
+    mj = json.load(open(fd("merchants.json"), encoding="utf-8"))
+    pick = next((e for e in mj["merchants"] if e.get("category") not in ("Housing", "Cash")
+                 and any(categories.brand_of(r["note"]) == categories.brand_of(e["match"]) for r in sp)), None)
+    if pick is None:
+        return []
+    pick["every"] = "year"
+    json.dump(mj, open(fd("merchants.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    subprocess.run([sys.executable, rb, ".", "--write"], cwd=ws, capture_output=True)
+    page = open(main_dash(ws) and os.path.join(ws, main_dash(ws)), encoding="utf-8").read()
+    rows = json.loads(re.search(r"^const SPENDING = (\[.*\]);", page, re.M).group(1))
+    mine = [e for e in rows if categories.brand_of(e["note"]) == categories.brand_of(pick["match"]) and e["amount"] > 0]
+    marked = [e for e in rows if e.get("yr")]
+    found = categories.yearly([{"date": "2025-03-14", "amount": "480.00", "note": "ACME INSURANCE [X/1]", "category": "Bills"},
+                               {"date": "2026-03-12", "amount": "492.00", "note": "ACME INSURANCE [X/2]", "category": "Bills"},
+                               {"date": "2026-03-12", "amount": "4.50", "note": "CAFE [X/2]", "category": "Dining"},
+                               {"date": "2026-04-12", "amount": "4.50", "note": "CAFE [X/3]", "category": "Dining"}])
+    out = run("check_data.py", ["."], ws)
+    if mine and len(marked) == len(mine) and found == {categories.brand_of("ACME INSURANCE")} and "✗" not in out:
+        return [f"  ✓ once a year: a merchant said to be yearly has its {len(mine)} row(s) marked for spreading, and two charges a year apart are found by themselves"]
+    return [f"  ✗ once a year: marked {len(marked)} of {len(mine)}, found {sorted(found)}" + ("; the checkers then failed" if "✗" in out else "")]
+
+
+def reward_check(root, base):
+    """A card's cash back is income, on its own line, never pay (2026-10-30, user 002: a
+    redemption sat as a credit nobody claimed). Put a cash-back credit on the newest statement of
+    a card, import it, and expect it in rewards.csv, not in spending.csv, and on the page as the
+    month's Rewards."""
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    ws = os.path.join(base, "reward"); os.makedirs(ws); stage(root, ws)
+    if not (os.path.exists(os.path.join(ws, "tools", "fixtures.py")) and os.path.exists(upd)):
+        return []
+    fd = lambda n: layout.path(ws, n)
+    reg = json.load(open(fd("accounts.json"), encoding="utf-8"))
+    sp = csv_rows_of(fd("spending.csv"))
+    card = next((a for a in reg["accounts"] if a.get("spendTag") and not a.get("ledger")
+                 and any(r["note"].endswith("]") and f"[{a['spendTag']}/" in r["note"] for r in sp)), None)
+    if card is None:
+        return []
+    tag = max(r["note"].rsplit("/", 1)[1].rstrip("]") for r in sp if f"[{card['spendTag']}/" in r["note"])
+    last = max((r for r in sp if r["note"].endswith(f"[{card['spendTag']}/{tag}]")), key=lambda r: r["date"])
+    AMT = 25.00
+    sp.append({"date": last["date"], "amount": f"{-AMT:.2f}", "currency": "CAD", "category": "Other",
+               "note": f"CASH BACK REDEMPTION [{card['spendTag']}/{tag}]"})
+    with open(fd("spending.csv"), "w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=["date", "amount", "currency", "category", "note"]); w.writeheader(); w.writerows(sp)
+    man = fixtures_for(ws) or []
+    mine = [m for m in man if next((d for d in reg["documents"] if d["key"] == m["doc"]), {}).get("covers", [None])[0] == card["key"]
+            and m["file"].endswith(f"{tag}.pdf")]
+    if not mine:
+        return []
+    strip_statement(ws, mine[0])
+    subprocess.run([sys.executable, os.path.join(os.path.dirname(upd), "rebuild.py"), ".", "--write"], cwd=ws, capture_output=True)
+    r = subprocess.run([sys.executable, upd, ".", "--write"], cwd=ws, capture_output=True, text=True, timeout=300)
+    rw = [x for x in csv_rows_of(fd("rewards.csv")) if "CASH BACK" in x["note"].upper()]
+    spent = [x for x in csv_rows_of(fd("spending.csv")) if "CASH BACK" in x["note"].upper()]
+    page = open(os.path.join(ws, main_dash(ws)), encoding="utf-8").read()
+    inv = json.loads(re.search(r"^const INVEST = (\{.*\});", page, re.M).group(1))
+    shown = sum(m.get("rewards", 0) for m in inv.get("cashflow", []))
+    if r.returncode in (0, 2) and len(rw) == 1 and float(rw[0]["amount"]) == AMT and not spent and abs(shown - AMT) < 0.01:
+        return [f"  ✓ update.py: a card's cash back filed as a reward ({AMT:.2f} in rewards.csv, none in spending, the month's Rewards on the page)"]
+    return [f"  ✗ cash back: update exit {r.returncode}, rewards.csv {[(x['date'], x['amount']) for x in rw]}, "
+            f"spending {len(spent)} row(s), page Rewards {shown}"]
+
+
+def broker_gift_check(root, base):
+    """A deposit straight into the broker that the owner says was family money (2026-10-30). Declare
+    one of the demo's real deposits and expect it on the month's Gift line, with the checkers clean."""
+    rb = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "rebuild.py"))
+    ws = os.path.join(base, "brokergift"); os.makedirs(ws); stage(root, ws)
+    fd = lambda n: layout.path(ws, n)
+    dep = next((r for r in csv_rows_of(fd("ws_activities.csv")) if r["activity_type"] == "MoneyMovement"
+                and r["currency"] == "CAD" and float(r["net_cash_amount"] or 0) > 0), None)
+    if dep is None:
+        return []
+    def gift():
+        subprocess.run([sys.executable, rb, ".", "--write"], cwd=ws, capture_output=True)
+        page = open(os.path.join(ws, main_dash(ws)), encoding="utf-8").read()
+        inv = json.loads(re.search(r"^const INVEST = (\{.*\});", page, re.M).group(1))
+        return sum(m["gift"] for m in inv["cashflow"] if m["ym"] == dep["effective_date"][:7])
+    before = gift()
+    amt = float(dep["net_cash_amount"])
+    edit_json(ws, layout.rel("plan.json"), lambda d: d.update(brokerGifts=[
+        {"date": dep["effective_date"], "amount": amt, "currency": "CAD", "why": "family support"}]))
+    after = gift()
+    out = run("check_data.py", ["."], ws)
+    if abs(after - before - amt) < 0.01 and "✗" not in out:
+        return [f"  ✓ a broker deposit declared as a gift: {amt:,.2f} on the month's Gift line, checkers clean"]
+    return [f"  ✗ broker gift: Gift went {before} → {after} for {amt}" + ("; the checkers failed" if "✗" in out else "")]
 
 
 def loan_import_check(root, base):
@@ -1671,6 +2008,10 @@ def main(argv):
                 script = {"dash": "check_design.py", "find": "check_data.py",
                           "render": "check_render.py"}[which]
                 out = run(script, dash_args(d) if which in ("dash", "render") else ["."], d)
+                # The page checker is optional. Not run is said as not run: never a pass, never a failure.
+                if which == "render" and "check_render needs Playwright" in out:
+                    print(f"  · [{rule}] {what} — not run: playwright is not installed")
+                    continue
             ok = fired(out, rule)
             print(f"  {'✓' if ok else '✗'} [{rule}] {what}")
             if not ok:
@@ -1680,7 +2021,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
-                    own_name_check, loan_import_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, starter_check,
+                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, browser_copy_check, month_parts_check, starter_check,
                     demo_clear_check):
             try:
                 runs += chk(root, base)

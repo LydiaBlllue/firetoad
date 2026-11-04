@@ -45,6 +45,7 @@ or the write failed and was rolled back. 2: written, but a checker found somethi
 is missing; nothing can be parsed.
 """
 import argparse
+import time
 import collections
 import csv
 import datetime
@@ -64,6 +65,7 @@ from parsers import parse as parse_file, ParserUnavailable, ParseError, NAMES as
 sys.path.insert(0, HERE)
 import layout  # noqa: E402
 import preflight  # noqa: E402
+import seen_accounts  # noqa: E402
 import rebuild  # noqa: E402
 import loans  # noqa: E402  what a borrower still owes (loans.py)
 sys.path.insert(0, CHECKS)
@@ -74,6 +76,10 @@ LONG = ("January", "February", "March", "April", "May", "June", "July", "August"
         "October", "November", "December")
 LEDGER_COLS = layout.LEDGER_COLS
 SPEND_COLS = ["date", "amount", "currency", "category", "note"]
+REWARD_COLS = ["date", "amount", "currency", "note"]
+# A card's cash back or points turned into money (2026-10-28, user 002: a redemption sat as a
+# credit nobody claimed). Income, shown on its own line, never pay (FINANCE.md §2).
+REWARD = re.compile(r"CASH\s*BACK|REWARDS?\b|REDEMPTION|REDEEM|POINTS\s+(?:CREDIT|CONVERSION)", re.I)
 NEW_MERCHANT_CATEGORY = "Other"      # a merchant nobody has decided, until the owner does
 # Common Canadian chains, shipped with the setup and owned by nobody: a first sighting the starter
 # map knows is filed under its category instead of Other, and is still asked (a first user's
@@ -362,6 +368,7 @@ class Plan:
         self.bank = {}                                  # register name -> (balance, asof, is_debt)
         self.filed = collections.defaultdict(set)       # doc key -> months
         self.archive = []                               # (src, dst)
+        self.moves = []                                 # rows moving money between accounts, for seen_accounts
         self.delete = []                                # true duplicates
         self.merchant_seen = collections.Counter()      # key -> count
         self.merchant_dates = {}                        # key -> (first, last)
@@ -374,6 +381,7 @@ class Plan:
         self.unknown = []
         self.untyped = []
         self.credits = []
+        self.rewards = []                               # rewards.csv rows: cash back a card paid
         self.files = []                                 # sentences, the way the owner knows them
         self.holdings = None                            # (src path, asof)
         self.activities = None
@@ -417,11 +425,21 @@ def classify_inbox(ws, plan):
         if label.startswith("Screenshot:"):
             plan.by_hand.append((os.path.basename(f["name"]), "a screenshot of an account held abroad: read the balances off the image into foreign.json"))
             continue
-        named.append((f["path"], label_to_doc[label]))
+        doc = label_to_doc[label]
+        # Two documents arriving under one filename pattern (a card and a chequing account, both
+        # `<Month D, YYYY>.pdf`) are told apart by the account the statement prints; the close
+        # day the name carries is only the fallback (2026-10-28).
+        if sum(1 for d in ws.docs if d.get("file") == doc.get("file")) > 1:
+            printed = name_by_contents(ws, plan, f["path"], quiet=True)
+            if printed is not None and printed is not doc:
+                plan.judged.append(f"{os.path.basename(f['name'])} has the name of the {ws.doc_name(doc)} statement, but it "
+                                   f"prints the {ws.doc_name(printed)} account; filed as that.")
+                doc = printed
+        named.append((f["path"], doc))
     return named
 
 
-def name_by_contents(ws, plan, path):
+def name_by_contents(ws, plan, path, quiet=False):
     """A PDF whose name says nothing — an RBC download arrives as `20260819.pdf` — is named by
     the statement itself: every parser is offered the file (the way setup drafts the register),
     and the one that reads it and reconciles says which account. Still never the filename."""
@@ -445,8 +463,9 @@ def name_by_contents(ws, plan, path):
                 hits.append(doc)
     if len(hits) != 1:
         return None
-    plan.judged.append(f"{os.path.basename(path)} carried no account in its name; the statement itself says it is "
-                       f"the {ws.doc_name(hits[0])} statement.")
+    if not quiet:
+        plan.judged.append(f"{os.path.basename(path)} carried no account in its name; the statement itself says it is "
+                           f"the {ws.doc_name(hits[0])} statement.")
     return hits[0]
 
 
@@ -601,10 +620,24 @@ def plan_ledger(ws, plan, acc, doc, part, end):
                 ask["row"] = {"date": r["date"], "amount": -amt, "cur": acc.get("cur", "CAD"),
                               "note": f"{r['description'].strip()} (chequing) [{acc['spendTag']}/{stamp(end)}]",
                               "ledger": ledger, "statement": tag}
+            if ask.get("kind") == "transfer" and amt > 0:
+                # where the answer lands: the ledger row's type (pay, other income, a transfer)
+                ask["credit"] = {"ledger": ledger, "statement": tag, "date": r["date"],
+                                 "amount": amt, "description": r["description"].strip()}
+                # The same amount from no named sender in earlier months is most likely pay: an
+                # employer paying by e-Transfer (2026-10-28, user 002 — pay stopped in May, and
+                # every month since a same-size e-Transfer waited as Other income).
+                months = {x["date"][:7] for x in existing if x.get("type") in ("Other", "Payroll")
+                          and re.search(r"INTERAC|E-TRANSFER", (x.get("description") or "").upper())
+                          and abs(float(x["amount"]) - amt) < 0.01} - {r["date"][:7]}
+                if len(months) >= 2:
+                    ask["suggest"] = "Payroll"
+                    ask["what"] += f" The same amount came in {len(months)} earlier months, so it may be pay."
             plan.decisions.append(ask)
         if not t:
             plan.untyped.append((ledger, r["date"], r["description"], amt))
         plan.ledger[ledger].append([r["date"], r["description"], f"{amt:.2f}", f"{bal:.2f}", tag, t, label])
+        plan.moves.append({"description": r["description"], "amount": amt})
         # a fee given back is a refund of the fee: a negative Fees row (FINANCE.md §3c)
         if t in SPENT and (amt < 0 or t == "Fee") and acc.get("spendTag"):
             merchant, cat = spent_of(ws, plan, table, t, r["description"], r["date"], src)
@@ -640,7 +673,7 @@ def spent_of(ws, plan, table, t, desc, when, src):
 def plan_card(ws, plan, acc, doc, part, end):
     existing = csv_rows(ws.fd("spending.csv"))
     tagend = f"[{acc['spendTag']}/{stamp(end)}]"
-    if any(r["note"].rstrip().endswith(tagend) for r in existing):
+    if any(r["note"].rstrip().endswith(tagend) for r in existing + csv_rows(ws.fd("rewards.csv"))):
         plan.judged.append(f"The {ws.doc_name(doc)} statement to {short(end)} was already in the books; nothing was written twice.")
         return 0
     table = {e["match"]: e for e in ws.merchants.get("merchants", [])}
@@ -650,7 +683,13 @@ def plan_card(ws, plan, acc, doc, part, end):
         amt = round(float(r["amount"]), 2)
         desc = r["description"].strip()
         if amt >= 0:
+            if REWARD.search(desc):
+                # cash back is income the card paid, not a refund and not a stranger's credit
+                plan.rewards.append([r["date"], f"{amt:.2f}", acc.get("cur", "CAD"), f"{desc} {tagend}"])
+                plan.judged.append(f"Filed the {money(amt)} {desc[:40]!r} ({src}, {short(iso_to_date(r['date']))}) as a reward: income, not pay.")
+                continue
             if re.search(r"PAYMENT|THANK YOU|AUTOPAY|TRSF FROM|TRANSFER FROM", desc, re.I):   # a card payment, not a refund
+                plan.moves.append({"description": desc, "amount": amt})
                 continue
             if not plan_refund(plan, existing, acc, desc, amt, r["date"], src, tagend):
                 plan.credits.append((src, r["date"], desc, amt))
@@ -776,6 +815,14 @@ def write_plan(ws, plan):
             if new:
                 w.writerow(SPEND_COLS)
             w.writerows(sorted(plan.spend, key=lambda r: (r[0], r[4])))
+    if plan.rewards:
+        p = fd("rewards.csv")
+        new = not os.path.exists(p) or os.path.getsize(p) == 0
+        with open(p, "a", encoding="utf-8", newline="") as fh:
+            w = csv.writer(fh)
+            if new:
+                w.writerow(REWARD_COLS)
+            w.writerows(sorted(plan.rewards))
     # merchants.json: hits are counted, misses appended — the one place a category is decided.
     if plan.merchant_seen:
         table = {e["match"]: e for e in ws.merchants.setdefault("merchants", [])}
@@ -832,7 +879,9 @@ def write_plan(ws, plan):
         for d in plan.decisions:
             ws.decisions.setdefault("decisions", []).append(
                 {"added": ws.today.isoformat(), "kind": d["kind"], **({"match": d["match"]} if d.get("match") else {}),
-                 "what": d["what"], "default": d["default"], "source": d.get("source", ""), "status": "open"})
+                 "what": d["what"], "default": d["default"], "source": d.get("source", ""), "status": "open",
+                 # what confirm.py needs to act on the answer: a suggestion, and the row it lands on
+                 **{k: d[k] for k in ("suggest", "row", "credit") if d.get(k)}})
         jsave(fd("decisions.json"), ws.decisions)
     os.makedirs(os.path.join(ws.root, "archive"), exist_ok=True)
     for src, dst in plan.archive:
@@ -911,8 +960,8 @@ def refresh_loan_copies(ws):
 
 
 def refresh_holdings_copies(ws, asof):
-    """The register's balance for every account the holdings export values, and the funds'
-    backing — copies D14 and D13 re-derive from the export every run."""
+    """The register's balance for every account the holdings export values — a copy D14 re-derives
+    from the export every run."""
     fx = jload(ws.fd("fx.json"), {}).get("usd_cad")
     bal = collections.defaultdict(float)
     for r in csv_rows(ws.fd("holdings_latest.csv")):
@@ -928,14 +977,6 @@ def refresh_holdings_copies(ws, asof):
     for a in ws.accounts:
         if a.get("src") == "holdings_latest.csv" and a.get("id") in bal:
             a["balance"], a["asof"] = round(bal[a["id"]], 2), asof
-    changed = False
-    for f in ws.funds.get("funds", []):
-        b = f.get("backing") or {}
-        if b.get("account") in bal:
-            b["balance"], b["asof"] = round(bal[b["account"]]), asof
-            changed = True
-    if changed:
-        jsave(ws.fd("funds.json"), ws.funds)
 
 
 # ---------------------------------------------------------------- what the update leaves behind
@@ -1023,15 +1064,20 @@ def noticed_lines(ws, out, plan):
             lines.append({"sev": "ok", "text": f"{mon} kept the rule: {last['nRule']} deposits of {money(half)} reached the broker."})
         else:
             lines.append({"sev": "warn", "text": f"{mon} shows {money(last['amt'])} reaching the broker against the {money(half * 2)} you planned. Move the rest when you can."})
-    allowance = rebuild.flow_totals(ws.funds["plan"]).get("allowance")
+    everyday = rebuild.flow_totals(ws.funds["plan"]).get("everyday")
     sp = spending_by_month(ws.root)
-    if allowance and sp:
+    if everyday and sp:
         m = max(sp)
         mon = LONG[int(m[5:]) - 1]
-        over = sp[m] > allowance
+        over = sp[m] > everyday
         lines.append({"sev": "warn" if over else "ok",
-                      "text": f"Purchases in {mon} come to {money(sp[m])} against the {money(allowance)} allowance."
-                              + (" Some of it may be a big buy; say so and it moves." if over else "")})
+                      "text": f"Purchases in {mon} come to {money(sp[m])} against the {money(everyday)} everyday."})
+    # an account these statements move money to or from, that the register does not have
+    mine = [digits(a.get("id")) for a in ws.accounts] + [digits(x.get("id") or x.get("account")) for x in ws.reg.get("notOwned", [])]
+    for n, (c, i, o) in sorted(seen_accounts.unregistered(plan.moves, mine).items()):
+        flow = " and ".join(x for x in (f"{money(i)} in" if i else "", f"{money(o)} out" if o else "") if x)
+        lines.append({"sev": "warn", "text": f"Money moved to or from account …{n} ({c} time{'s' if c > 1 else ''}, {flow}), which is "
+                                             f"not one of your accounts. If it is yours, add it, so net worth counts it."})
     for g in ws.reg.get("gaps", []):
         if g.get("sev") in ("warn", "bad"):
             lines.append({"sev": g["sev"], "text": f"{g.get('what', '')}. {g.get('fix', '')}".strip()})
@@ -1043,7 +1089,7 @@ def noticed_lines(ws, out, plan):
     return lines
 
 
-def record(ws, plan, changed, noticed):
+def record(ws, plan, changed, noticed, seconds=None):
     asked = [d["what"] + f" Filed as {d['default']} meanwhile." for d in plan.decisions]
     for name, why in plan.by_hand:
         asked.append(f"{name} needs a pair of eyes: {why}.")
@@ -1051,6 +1097,8 @@ def record(ws, plan, changed, noticed):
         asked.append(f"What the {money(abs(amt))} on {short(iso_to_date(d))} ({desc[:40]}) was.")
     rec = {"date": ws.today.isoformat(), "files": plan.files, "changed": changed, "noticed": noticed,
            "judged": plan.judged, "asked": asked}
+    if seconds:
+        rec["seconds"] = seconds   # how long each stage took, so one import can be compared with another
     ws.imports.setdefault("imports", []).append(rec)
     jsave(ws.fd("imports.json"), ws.imports)
     return rec
@@ -1153,6 +1201,12 @@ def main(argv):
         except (ValueError, KeyError, TypeError, OSError) as e:
             print(f"  ✗ --hand {a.hand}: not a list of transcriptions ({e})"); return 1
     summary = {"date": ws.today.isoformat(), "written": False}
+    # Seconds per stage (2026-11, user 002: nothing said how long an import took, so two could not
+    # be compared). Tokens are the session's, not this script's: the app's usage view has them.
+    t0 = time.monotonic(); secs = {}
+    def lap(name):
+        nonlocal t0
+        now = time.monotonic(); secs[name] = round(now - t0, 1); t0 = now
 
     named = sorted(classify_inbox(ws, plan), key=lambda pd: name_date(pd[0]))
     try:
@@ -1164,8 +1218,9 @@ def main(argv):
             else:
                 plan_export(ws, plan, path, doc)
     except ParserUnavailable as e:
-        print(f"  ✗ {e}. Nothing can be parsed: pip3 install --user pypdf, then run again.")
+        print(f"  ✗ {e}. Nothing can be parsed until it is installed; then run again.")
         return 3
+    lap("read")
 
     say = print if not a.json else (lambda *x, **k: None)
     say(f"=== update — {len(named)} file(s) named in inbox/, {len(plan.unknown)} unnamed ===\n")
@@ -1175,6 +1230,8 @@ def main(argv):
         say(f"  {v} {k}")
     if plan.spend:
         say(f"  {len(plan.spend)} rows → spending.csv (refunds negative); {len(plan.new_merchants)} merchant(s) not seen before")
+    if plan.rewards:
+        say(f"  {len(plan.rewards)} reward(s) → rewards.csv")
     for name, why in plan.by_hand:
         say(f"  · by hand: {name} — {why}")
     for ledger, d, desc, amt in plan.untyped:
@@ -1218,16 +1275,19 @@ def main(argv):
     try:
         before, sp_before = derive(root), spending_by_month(root)
         write_plan(ws, plan)
+        lap("write")
         # The benchmark's prices, for the Performance page: the one step that goes online, so a
         # failure is said and the import goes on — the last prices stay, and D27 says how old.
         prc, pout = run(os.path.join(HERE, "prices.py"), [".", "--write", "--if-needed"], root)
         say("  prices: " + (pout.strip().splitlines()[-1].strip() if pout.strip() else f"exit {prc}"))
+        lap("prices")
         after, sp_after = derive(root), spending_by_month(root)
         write_history(ws, after)
         after = derive(root)
         changed = changed_lines(before, after, sp_before, sp_after)
         noticed = noticed_lines(ws, after, plan)
-        rec = record(ws, plan, changed, noticed)
+        lap("history")
+        rec = record(ws, plan, changed, noticed, dict(secs))
     except BaseException as e:            # a crash, a SystemExit, Ctrl-C: none of it may leave the books torn
         restore(root, snap)
         shutil.rmtree(snap, ignore_errors=True)
@@ -1237,12 +1297,15 @@ def main(argv):
     summary.update(written=True, changed=changed, noticed=noticed, record=rec)
 
     rc, out = run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
+    lap("rebuild")
     say("\n  rebuild: " + (out.strip().splitlines()[-1].strip() if out.strip() else f"exit {rc}"))
     findings = []
     for script, args in (("check_data.py", ["."]), ("check_design.py", [rebuild_page(root)])):
         rc2, out2 = run(os.path.join(CHECKS, script), args, root)
         findings += [l.strip() for l in out2.splitlines() if l.strip().startswith(("✗", "⚠"))]
     summary["findings"] = findings
+    lap("checks")
+    summary["seconds"] = secs
     run(os.path.join(HERE, "preflight.py"), [".", "--reseed"], root)
     # findata/ as this run left it: --undo puts the copy back only while this is still what is there
     m = jload(os.path.join(snap, "undo.json")); m["after"] = findata_hashes(root)
@@ -1252,6 +1315,7 @@ def main(argv):
         say(f"  {c['label']}: {c['from']} → {c['to']}")
     for n in noticed:
         say(f"  {'✓' if n['sev'] == 'ok' else '!'} {n['text']}")
+    say("  time: " + ", ".join(f"{k} {v}s" for k, v in secs.items()) + f" — {round(sum(secs.values()), 1)}s in all")
     if findings:
         say("\n  the checkers found:")
         for f in findings:

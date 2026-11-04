@@ -38,7 +38,7 @@ SEED = 20260908
 
 P = dict(first="Emma", last="Roy", name="Emma Roy", initials="ER", upper="EMMA ROY",
          city="Ottawa", friend="Sam", friend_upper="SAM DOE",
-         pay=1800.00, rent=1250.00, invest=800, everyday=1300, big=300, take_home=2350)
+         pay=1800.00, rent=1250.00, invest=800, everyday=1300, take_home=2350)
 
 ID = dict(bmo_chq="4471", bmo_sav="9032", bmo_mc="5518", rbc_chq="7740", rbc_esav="7758", rbc_visa="3306",
           tfsa="HQ7TF4A21CAD", rrsp="HQ7RR9B33CAD", fhsa="HQ7FH2C17CAD", nr="HQ7NR6D48CAD",
@@ -94,7 +94,7 @@ VAR = [          # merchant, category, times a month, low, high, may go on the M
  ("CANADA POST OTTAWA ON", "Other", 0.3, 5, 20, False),
 ]
 ONE_OFF = [      # date, merchant, amount, category, card
- ("2026-06-14", "BEST BUY #957 OTTAWA ON", 429.99, "Shopping", "V"),     # the one big buy
+ ("2026-06-14", "BEST BUY #957 OTTAWA ON", 429.99, "Shopping", "V"),   
  ("2026-04-25", "IKEA OTTAWA ON", 186.40, "Shopping", "M"),
  ("2026-07-18", "TICKETMASTER CANADA TORONTO ON", 92.50, "Entertainment", "V"),
 ]
@@ -484,10 +484,6 @@ def build(out):
     ]))
 
     # funds.json
-    hys_label = "Wealthsimple High yield savings (Non-registered)"
-    backing = dict(account=ID["hys"], label=hys_label, balance=hys_bal, asof="2026-09-06",
-                   holds="SGOV and VSC, not cash — spending it means selling first",
-                   note="Rule 2 already treats this account as earmarked, so naming part of it Travel and part of it Big buys changes no other number on the dashboard.")
     J("rules.json", OrderedDict([
         ("note", "Your investing rules, as data. ONE thing is computed: every bucket that carries a `target` is checked against that range, and the Rules page reports the drift. Buckets are matched in order and the one marked catchAll takes whatever is left. `notes` are your own theses, shown with the status you gave them and judged by you; `{mv:SYM}`, `{n:SYM}` and `{split:SYM}` in the text are filled from the holdings. `checkpoints` are dates you promised to look at something again."),
         ("buckets", [
@@ -513,7 +509,7 @@ def build(out):
         ]),
     ]))
     J("funds.json", OrderedDict([
-        ("asof_note", "The guilt-free plan: pay-yourself-first, one everyday allowance, two named funds. The dashboard's FUNDS constant is a copy of this file (check_data D13). Fields that render on the page are English."),
+        ("asof_note", "The guilt-free plan: pay-yourself-first, one everyday amount. The dashboard's FUNDS constant is a copy of this file (check_data D13). Fields that render on the page are English."),
         ("plan", OrderedDict(start="2026-08",
             # Schema 5: flows. Take-home is the whole paycheque; rent is a committed flow the
             # ledger shows on the 1st (D21 looks for it), and it stays after FIRE.
@@ -524,34 +520,16 @@ def build(out):
                             note="Pre-authorized on the 1st, from chequing. Still there after FIRE."),
                 OrderedDict(key="invest", kind="saving", name="Invest", amount=P["invest"], to="broker",
                             note="Off the top, before anything else — pay-yourself-first."),
-                OrderedDict(key="everyday", kind="allowance", name="Everyday allowance", amount=P["everyday"],
+                OrderedDict(key="everyday", kind="everyday", name="Everyday", amount=P["everyday"],
                             note="The guilt-free line. No categories and no caps below it."),
-                # A fund's standing contribution is a saving flow that names the fund (schema 8).
-                OrderedDict(key="bigbuy-in", kind="saving", name="Big buys", amount=P["take_home"] - P["invest"] - P["everyday"], to="bigbuy",
-                            note=f"${P['take_home']:,} after rent, less ${P['invest']:,} to the broker and ${P['everyday']:,} of allowance. This is everything the paycheque actually has left."),
             ],
-            bigThreshold=P["big"], leftoverGoesTo="travel",
-            bigThresholdNote="A single transaction at or over this is a big buy: kept out of the allowance and paid from the Big buys fund. Only everyday spending can be one, and a subscription never is.",
-            leftoverNote="Each closed month adds (allowance - everyday spending) to the funds, and that figure is signed: an over month takes from Big buys first, then Travel.")),
-        ("funds", [
-            OrderedDict(key="travel", role="topup", name="Travel", color="#4a3aa7", goal=3000, by="2027-03", why="A week away in March 2027",
-                        opening=dict(date="2026-08-01", amount=3000, **{"from": hys_label + " " + ID["hys"]},
-                                     note="Not a transfer — a label on money already in that account, so the goal is met on day one and the discipline is leaving it alone."),
-                        backing=backing),
-            OrderedDict(key="bigbuy", role="big", name="Big buys", color="#eda100", goal=None, why="One-off purchases like a monitor. If the fund covers it, buy it — it never touches the month's allowance",
-                        opening=dict(date="2026-08-01", amount=1000, **{"from": hys_label + " " + ID["hys"]},
-                                     note="Same account, second label. No new account was opened: a chequing account pays nothing, costs a monthly fee, and would add another statement to import every month."),
-                        backing=backing),
-        ]),
-        ("claimsAgainst", dict(source="Each fund names the account it is claimed against, and the claims have to fit inside that account",
-                               note="Neither fund is an account of its own. Both are labels on one savings account.")),
+        )),
     ]))
-    assert 3000 + 1000 <= hys_bal
 
     J("profile.json", OrderedDict([
         ("note", "Who this workspace belongs to. The FIRST thing to change when you make it yours: "
                  "the name appears in the browser tab and under the Jade Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. Jade Toad itself is the product, not a setting."),
-        ("schema", 12), ("demo", True), ("owner", P["name"]), ("born", 1995), ("importDay", 26)]))
+        ("schema", 13), ("demo", True), ("owner", P["name"]), ("born", 1995), ("importDay", 26)]))
     J("plan.json", OrderedDict([
         ("note", "Your planning assumptions. `planBase` is the monthly planning spend the FIRE target is built on (× 12 × 25); `skipMonths` are months excluded from every comparison, each with the reason the page shows. `retirement` holds the projection scenarios and the late-life care model; `descriptions` are your own one-liners under the net-worth parts (leave them out and the page describes each part from the register)."),
         ("planBase", int(P["rent"] + P["everyday"])),
@@ -615,10 +593,8 @@ def build(out):
                 dict(sev="ok", text=f"August kept the rule: two deposits of ${P['invest']/2:,.0f} reached the broker on Aug 2 and Aug 17."),
                 dict(sev="ok", text="Every statement due has arrived. The next to close are the MasterCard on Sep 20 and the RBC pair on Sep 25."),
                 dict(sev="warn", text=f"The $1,500 e-Transfer from {P['friend']} on Jul 13 is the March loan coming back, so it is not income."),
-                dict(sev="warn", text="June went over the everyday allowance even with the $429.99 monitor set aside as a big buy."),
             ]),
-            ("judged", ["Filed the $429.99 monitor in June as a big buy rather than everyday spending.",
-                        f"Typed the Jul 13 e-Transfer from {P['friend']} as a repayment, matching the friend ledger."]),
+            ("judged", [f"Typed the Jul 13 e-Transfer from {P['friend']} as a repayment, matching the friend ledger."]),
             ("asked", ["Whether FARM BOY OTTAWA stays in Grocery, and what the unnamed $200 e-Transfer of Aug 11 was."]),
         ])])]))
     J("decisions.json", OrderedDict([
@@ -636,7 +612,6 @@ def build(out):
         ("note", "Open tasks, shown on Data → Tasks. Added and closed out loud by the owner; `due` is optional and sorts to the top; `status: done` moves a task to the closed list."),
         ("tasks", [
             dict(added="2026-09-06", tag="Money", text="Decide whether the emergency fund stays in RBC eSavings ($5,000, balance only) or moves to the high-yield account beside the two funds.", status="open"),
-            dict(added="2026-09-07", tag="Plan", text="Big buys: the $429.99 monitor in June came out of the fund. Confirm the $250/month top-up still makes sense.", status="open"),
             dict(added="2026-09-07", due="2027-03-01", tag="Money", text="RRSP top-up before the March 1 deadline — decide the amount once the January pay stubs are in.", status="open"),
             dict(added="2026-08-20", tag="Data", text="RBC eSavings has a balance but no ledger — decide whether the PDF is worth parsing line by line.", status="open"),
             dict(added="2026-08-12", tag="Money", text="Consolidate SHOP into the TFSA. <b>Done 2026-08-12</b> — bought 20.46 shares in the TFSA.", status="done")])]))

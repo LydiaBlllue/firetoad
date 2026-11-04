@@ -24,17 +24,32 @@
 | progress | Progress | 8.8% | portfolio ÷ target |
 | gap | Gap | $697,865 | target − portfolio |
 | invest_monthly | Monthly contribution | $800 | `funds.json` flows: `saving` to the broker |
-| everyday | Everyday allowance | $1,300 | `funds.json` flows: `allowance` |
-| big_threshold | Big-buy threshold | $300 | `funds.json` plan.bigThreshold |
-| travel_goal | Travel goal | $3,000 | `funds.json`, due 2027-02 |
+| everyday | Everyday | $1,300 | `funds.json` flows: `everyday` |
 | dry_powder | Dry powder | 43.1% | `INVEST.dryPct`, band 40–45% |
 <!-- LINT:FIGURES:END -->
 
 - The target is **planning spend × 12 × 25** (the 4% rule), and progress is measured on the
   **portfolio** — the money that will be drawn down — not on net worth, which also holds
   earmarked accounts, bank cash and money abroad. Planning spend (`plan.json`
-  `planBase`) is set by hand; the Baseline page shows the measured median beside it and warns past
+  `planBase`) is set by hand; the Baseline page shows the measured average beside it and warns past
   10% of drift, but **never changes the target by itself**.
+- **Where these come from.** The 25 is research; the spending figures are this tool's own.
+  - Bengen, "Determining Withdrawal Rates Using Historical Data", *Journal of Financial Planning*,
+    October 1994: US data from 1926, 50% stocks and 50% intermediate Treasuries, inflation-adjusted
+    withdrawals, tax-deferred accounts. 4% never ran out before 33 years; 3 to 3.5% lasted 50.
+  - Cooley, Hubbard and Walz (the Trinity study), *AAII Journal*, February 1998: US data, 1926–1995.
+  - Pfau, "An International Perspective on Safe Withdrawal Rates", *Journal of Financial Planning*,
+    December 2010: 17 countries, 30 years. 4% held in only four of them; Canada was the highest, 4.42%.
+  - Anarkulova, Cederburg, O'Doherty and Sias, *Journal of Pension Economics and Finance* 24(3), 2025,
+    doi:10.1017/S1474747225000010: 38 developed countries; 2.31% for a couple aged 65 accepting a 5%
+    chance of running out.
+  - Early Retirement Now, "The Ultimate Guide to Safe Withdrawal Rates", part 1 (2016; a blog, not a
+    journal; US data from 1871): a 50/50 portfolio at 4% succeeds 95% of the time over 30 years and
+    65% over 60.
+  - So 25 fits a retirement of about 30 years and has no margin for a much longer one. The target
+    stays × 25 until the owner chooses otherwise.
+  - The average of up to twelve months, and adding fixed costs to it, have no outside source:
+    they are this tool's calibration of the planning figure.
 - Net worth covers every account in every currency: the Canadian side plus foreign-currency
   accounts at the reference rate in `foreign.json`.
 - The trajectory chart anchors at `plan.json` `retirement.anchorYear` and projects the three
@@ -47,11 +62,20 @@
 - **Not income**: transfers between your own accounts; a counterparty paying you back (their
   ledger is the register document that carries `counterparty`, and D10 checks that every
   matching e-Transfer is typed Repayment); dividends and interest that stay with the broker.
-- **Government** money (a tax refund, the GST/HST credit, a benefit) is counted with Other
-  income, and so is money from family (a parent paying toward tuition). Rent, a bill, cash taken
+- **Money from family** (a parent paying toward tuition, support sent from abroad) and other
+  gifts are income, on the **Gift** line and never pay. Money that went straight into the broker
+  shows in no ledger, and the export cannot say whose it was: the owner declares it in `plan.json`
+  `brokerGifts` (date, amount, currency, why, and `counted` when only part of the deposit was
+  for the owner), D29 holds each to a deposit in the export, and a US-dollar one counts at today's
+  rate. **Government** money (a tax refund, the
+  GST/HST credit, a benefit) is counted with Other income. Rent, a bill, cash taken
   out and a bank's fee are money out, never income: they are spending (§3a).
 - Investment income (dividends, interest, stock lending, withholding tax) is shown on its own on
   the Income → Investment income page and is not part of the income figure.
+- **Rewards** — a card's cash back, points turned into money — are income, on a line of their
+  own in the year by source and never pay. The import files a card credit that names cash back
+  or a redemption into `rewards.csv` (a fact, tagged with its statement like every row); like
+  investment income, it never reaches chequing: it stays on the card.
 
 ## 3. The budget method: pay-yourself-first
 
@@ -66,19 +90,22 @@
 for the target user, PRODUCT.md §2). A card purchase, a debit purchase, and from chequing: rent,
 a bill, a payment to anyone outside the register, cash taken out, a bank's fee or interest
 charged, money sent to family. Each is a row in `spending.csv`; a chequing one keeps its ledger
-row too (so the chain closes) and is tagged with that account's spending tag. **Not spending**:
+row too (so the chain closes) and is tagged with that account's spending tag, which every chequing
+account has; D30 fails a row typed as spending that is not in `spending.csv`. **Not spending**:
 money between your own accounts (one abroad included), investing, a card payment, lending, being
 repaid, a loan's principal.
 
-- **Fifteen categories in three groups** (`categories.py`, the one definition):
+- **Fifteen categories in two groups** (`categories.py`, the one definition):
 
   | group | categories | counts for |
   |---|---|---|
-  | fixed | Housing, Bills | the spending FIRE is planned on; never the allowance |
-  | everyday | Groceries, Dining, Transport, Shopping, Software & tools, Entertainment, Health, Travel, Family & gifts, Cash, Fees & interest, Other | the allowance, and the spending FIRE is planned on |
-  | for a time | Education — tuition, books, exams, credential assessments | the year's total only: it ends, so never the FIRE target |
-
+  | bills | Housing, Bills | the spending FIRE is planned on; never the everyday amount |
+  | everyday | Groceries, Dining, Transport, Shopping, Software & tools, Entertainment, Health, Travel, Family & gifts, Cash, Fees & interest, Other | the everyday amount, and the spending FIRE is planned on |
+  
   The owner may move a category to another group (`plan.json` `categoryGroups`).
+- **Spending that ends before FIRE** is a mark on a category, not a kind of spending: `plan.json`
+  `notInFire`, Education (tuition, books, exams, credential assessments) by default. It counts like
+  any other category today, and is left out of the FIRE target.
 - **A merchant is filed once and asked once.** `merchants.json` wins; a merchant it does not know
   takes the starter map's category (`setup/data/starter_merchants.json`: public chains, and words
   that name a kind of business — DENTAL, MASSAGE, PHARMACY) or Other, and is asked. A pharmacy is
@@ -92,52 +119,69 @@ repaid, a loan's principal.
   in most of the months a merchant is paid, or an amount that holds month to month seven times
   in ten — is marked at build time (`categories.recurring`), whatever it bought; the
   Subscriptions page lists the marked charges. A brand seen once can never be one. A
-  subscription is never a big buy. Rent, cash and fees are never marked.
+  Rent, cash and fees are never marked.
+- **A bill paid once a year is spread when months are compared.** Insurance for the year, a
+  card's annual fee: one large row in one month makes that month look unusual and the others
+  cheap. A merchant the owner says is paid once a year (`merchants.json` `every: "year"`), or
+  whose charges come back eleven to thirteen months apart within a tenth of the amount, has its
+  rows marked at build time (`categories.yearly`), and every comparison between months — a
+  usual month, a category's usual, the planning baseline — counts a twelfth of each in the twelve
+  months from the one it was paid in. A month's own total and the year's keep it whole. Rent and
+  cash are never spread.
 - **Money sent to someone nobody named** is a transfer until the owner says otherwise, because a
   program cannot tell a parent from the owner's own account abroad; answered with a category
   (`confirm.py --set N=Family`) it becomes spending.
+
+### A month adds up
+
+Every row of spending is in exactly one part, so the parts always sum to the month's total:
+
+> **spent = bills & housing + everyday**
+
+| part | what is in it | measured against |
+|---|---|---|
+| bills & housing | the `bills` group | nothing yet |
+| everyday | the `everyday` group | the `everyday` flow |
+
+Money that leaves and nobody has named is a transfer, outside the sum, until the owner answers.
+
+**There is one word for each part**, and a part the month does not have is not shown.
+The same words are used in the page, this file, the code and the register. A reader is never asked to learn these rules first: the page shows their own
+month split, and the definitions wait behind the question mark.
 
 ## 3b. Guilt-free spending
 
 The monthly waterfall, from `funds.json`:
 
 1. Invest — the `saving` flow to the broker
-2. Everyday allowance — the `allowance` flow; below that line there are no categories and no caps
-3. A single everyday transaction at or above `plan.bigThreshold` is a big buy: outside the
-   allowance, paid from the fund with `role: "big"`
-4. Whatever allowance is left goes to the fund with `role: "topup"`, overflowing into the big-buys
-   fund once it is full
+2. Everyday — the `everyday` flow; below that line there are no categories and no caps
+3. Whatever everyday is left stays where it is
 
-These four steps are the flows of §8b: `saving` (to the broker, or to a fund it names with
-`to`), `allowance`, and the leftover routed by `leftoverGoesTo`. A `committed` flow — rent, a mortgage, a loan — sits above them and is paid before
+These are the flows of §8b: `saving` and `everyday`. A `committed` flow — rent, a mortgage, a loan — sits above them and is paid before
 anything is chosen; `income` is the whole paycheque, before it.
 
-A fund is a **label on an account you already have**, not an account of its own; each names its
-`backing`. The hard constraint is that the claims against an account never exceed its balance
-(D13), and a fund can be renamed, re-backed or removed as data.
 
 ## 3c. Refunds
 
 Spending is counted **net of refunds**. A refund is a fact on a card statement, so it is a row in
 `spending.csv` like the purchase it gives back: dated the day it posted, in the statement it came
 from, with a **negative** amount and **the purchase's category**. Every total that adds spending
-rows up — the month, a category, the year, the medians the planning figure is calibrated on — is
+rows up — the month, a category, the year, the average the planning figure is calibrated on — is
 therefore after refunds without any of them knowing refunds exist.
 
 - **A refund points at a purchase**: an earlier row on the same card at the same merchant, with
   at least that much not yet refunded. A fee or interest credit (an annual-fee rebate) has no
   merchant; it gives back a charge the card made, so it points at an earlier fee or interest row
   on that card and takes its category. D24 holds every negative row to this.
-- **What points at nothing is not a refund.** Cash back, a reward, a credit for a purchase made
-  before the books begin: the import leaves it out of spending and lists it (`credit not filed`)
-  for the owner. Counting it would lower the spending baseline with money that was never spent.
+- **What points at nothing is not a refund.** Cash back is a reward, income (§2). A credit for
+  a purchase made before the books begin, or one that points at nothing on the card, the import
+  leaves out of spending and lists (`credit not filed`) for the owner. Counting it would lower
+  the spending baseline with money that was never spent.
 - **A refund lands in the month it posted**, not the month of the purchase, so a category can be
   negative in a month with a large refund and nothing else. The month's total is still exact; a
   chart that stacks categories cannot stack a negative one, so it takes it off the top of the
   month's bar as a hatched band and labels the month with its net — the bars add up to the
   year's total.
-- **A refund of a big buy goes back to the Big buys fund**, not onto the month's allowance:
-  it is big exactly when the purchase it gives back was (§3b).
 - A card payment (`PAYMENT`, `THANK YOU`, a transfer in) is neither spending nor a refund.
 
 ## 4. The rhythm
@@ -208,7 +252,6 @@ and needs no special case.
   income figure. An export carrying an account in neither list stops the import until the owner
   says which it is.
 - Dry powder is not an axis: `rules.json` names the symbols, counted inside `grow`.
-- A fund (§3b) is not an axis either: a label claimed against one `set-aside` item.
 - The two cuts of net worth — by purpose, by reach — read the same rows and agree by
   construction. The assert stays, because `against` netting is new and negative equity is a real
   case.
@@ -220,26 +263,40 @@ order.
 
 | axis | values | what reads it |
 |---|---|---|
-| `kind` | income · committed · saving · allowance | the waterfall, top down; §3's pay-yourself-first is `saving` placed before `allowance` |
+| `kind` | income · committed · saving · everyday | the waterfall, top down; §3's pay-yourself-first is `saving` placed before `everyday` |
 | `amount` | per month, or `null` when never given | the waterfall; `null` counts as nothing and reads *Not set* |
 | `starts` | absent, or `fire` | a flow that begins only after FIRE — rent an owner will pay but does not yet — is out of this month's split and inside the planning figure |
 | `until` | a date, or open | the FIRE projection drops a flow after its end — a loan paid off |
 | `afterFire` | keep · drop | rent keeps, a mortgage payment drops, property tax keeps |
 | `pays` | the liability it repays | the principal part is saving, not spending |
-| `to` | `broker` (the default) or a fund's key | pay-yourself-first counts only the broker; a fund's standing contribution is the saving flow that names it, and nothing on the fund repeats the number |
+| `estimate` | absent, or `true` | one figure for several bills; D21 notes it and does not look for one payment of that size |
+| `to` | `broker` (the default), a fund's key, or an account's key | pay-yourself-first counts only the broker |
 
-- **A number never given is `null`, not 0** — take-home, the investing transfer, the allowance,
+- **A number never given is `null`, not 0** — take-home, the investing transfer, the everyday amount,
   `plan.json` `planBase` and `profile.json` `born`. The page says *Not set* where it would show
   one, the figures table below says the same, and what is a share of a missing number (the
   target, progress, the drawdown) is not drawn. A $0 that looks like a fact is the failure this
   rule exists for.
 - **Unallocated** is income less every other kind. It is a hard constraint: below zero the plan
-  does not hold and the page says so in red. It is never "money that flows to the funds".
+  does not hold and the page says so in red.
 - **Planning spend** is still set by hand and §1's target is still planning spend × 12 × 25.
-  The calibration beside it is the measured median of fixed and everyday spending (§3a) plus
+  The calibration beside it is the measured average of bills, housing and everyday spending (§3a) plus
   every committed flow marked `keep` that spending does not already show: one that starts at
   FIRE, and a repayment (`pays`). Rent or a tax paid today is in spending, so it is not added. What used to be
   `plan.json` `imputedRent` is an ordinary committed flow with `starts: "fire"`.
+- **The calibration is an average, not a median.** It covers up to the last twelve usable months, so
+  the big months count, which a lifetime of spending also has to pay for. It needs three months,
+  and the drift warning reads it. It sets nothing.
+- **A fund is the owner's own** (2026-11-03). `funds.json` `funds` is a list, empty or absent
+  when there are none. Each has a `key`, a `name`, the `account` (a register key, an asset) whose
+  money it is a label on, and optionally a `goal`, a `by` month, a `why`, and `saved` — an amount
+  and its `asof`, as the owner says it. What the plan adds is a `saving` flow with `to` naming the
+  fund, so it is a line of the split like any other. Nothing is moved into a fund and no
+  statement can say what is in one, so `saved` is never advanced by the page: *At this pace* is
+  `saved` plus that flow from `asof`, and the owner restates `saved` when it changes. A month's
+  leftover goes to no fund by itself. D13 fails a fund on an account the register does not have
+  or on a liability, and a saving flow whose `to` is no fund and no account, and warns when what
+  is set aside on one account is more than it holds.
 - **A committed flow is declared, not observed.** D21 matches each one paid today against the
   ledgers the way the investing transfers are matched against the broker's activities — a
   payment of that size in the two whole months before the newest ledger date — and reports an

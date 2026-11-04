@@ -1,7 +1,210 @@
 # Changelog
 
-## 1.3 — unreleased
+## 1.3 — 2026-11-03
 
+- **The four smaller things a first owner noticed** (2026-11-03, user 002).
+  - A page slides in and never fades: a fade held by a throttled browser read as a blank page.
+  - Subscriptions says what one is — anything charged again and again, a parking app as well as
+    a streaming service.
+  - A committed flow can be `estimate: true`, one figure for several bills; D21 notes it instead of
+    warning every run, and setup writes it when the owner gives one figure for several.
+  - An import records how long each stage took (`seconds` in its record; the summary adds rebuild
+    and the checks), and the setup draft says how long it took. Tokens are the app's to count.
+
+- **Accounts lists accounts, in dollars** (2026-11-03, user 001). A home, a car or anything else
+  that is not money is no longer a row: it is on Home under Other assets, and the last row says
+  what it adds to make net worth. Every balance is in dollars — an institution is one figure, an
+  account in yuan or US dollars shows its own amount beneath and the rate on hover (DESIGN.md §7
+  names the table as one of the two places currencies are converted). A date from another year
+  carries its year on Home too.
+
+- **A table taller than the window folds** (2026-11-03, user 001). Accounts by institution and
+  Holdings by group show only their group rows, each with how many accounts or holdings it holds,
+  when the table would run past the bottom of the window; a click opens one. A short table stays
+  open. On user 001's pages both fold; on user 002's four accounts nothing does.
+
+- **A narrow window collapses instead of cutting off** (2026-11-03, user 001). The page works
+  from 800px (it needed 1120). Below 1120px cards that sit side by side stack, a table drops its
+  secondary `.opt` columns (Accounts' *For*, Holdings' *Accounts* and *Qty*), and a long value
+  wraps. `check_render` adds 800px; L1 and L2 follow. Checked on two owners' pages at 800, 900,
+  1000 and 1119px.
+
+- **Accounts reads at a glance** (2026-11-03, user 001). The *Held in <currency>* and *Money
+  lent* cards are gone; the table says both. It is four columns now — the account with its type
+  and number beneath, what it is for in one line, the date, the balance — the biggest institution
+  and account first, another currency's group row with roughly what it is in dollars, and a
+  balance under a dollar muted. Each institution is a band in ink, rows have room, a broker's long
+  account number is cut to its last four, and a date from another year carries its year. A borrower gone quiet moves to the card of what is missing.
+
+- **Accounts sits under Home; Records is the Monthly import** (2026-11-03, user 001). Records held
+  two kinds of page: Accounts answers where the money is, which is net worth opened up, and
+  Updates and Statements answer whether the data is in and what each update changed. Accounts
+  moves under Home, and the other two are the *Monthly import* group, the word the owner
+  already uses. 17 pages, 5 groups, as before.
+
+- **The import day defaults to the 1st** (2026-11-03, user 001), not the 26th. Any day works;
+  setup asks, and the one that suits the owner is the right one. A workspace keeps its own.
+
+- **Home shows what the month cost** (2026-11-03, user 001). The fourth card is *Spent in
+  <month>*, the whole month's spending with bills & housing and everyday beneath it, in place of
+  what is left of Everyday, which stays on This month. Before a purchase in today's month it shows
+  the newest month the statements reach.
+
+- **Six things a first owner tripped on** (2026-11-03, user 002).
+  - A bill paid in parts is seen: D21 adds up one payee's debits in a month, and when nothing
+    matches it names the nearest payee and amount instead of saying the payment appears nowhere.
+  - A browser's copy number on a statement's name (`October 13, 2026 (1).pdf`) is named, not
+    asked about: the second account in a batch where the register has one, otherwise the statement
+    it copies, which is never written twice. A selftest check holds both.
+  - The open page in the sidebar's *Waiting for data* fold is white on the dark pill, not grey.
+  - Every saving flow that does not go to the broker is a named line of the split; none is drawn
+    as "—".
+  - Reading a PDF no longer prints pypdf's and fontTools' font warnings.
+  - Setup asks a pick-one question in the form and a typed amount in chat, and after an
+    interrupted form goes on in chat.
+
+- **Funds an owner names, built but not announced** (2026-11-03, user 001). The code is in —
+  `funds.json` `funds`, a Funds card on Budget when one exists, D13's checks and two selftest
+  faults (61) — and nothing in setup, the demo or the guides offers it: customisation arrives
+  with 2.0.
+- **A download holds only what a user runs** (2026-11-03, user 001). `.gitattributes` leaves the
+  demo site, its deploy workflow, the diagram sources, the demo generator and the competitor survey
+  out of a release's zip; they stay in the repository, and the documents link there. The zip passes
+  every checker and the selftest on its own.
+
+- **No pay and nothing invested read as a plan, not a failure** (2026-11-03, user 002). D13 no
+  longer fails a plan with no pay: it is living off savings, a note; a plan above some pay is a
+  warning naming the gap. Budget says how each month is planned, not how a paycheque is split.
+  With an empty pot, Drawdown says there is nothing to draw from yet instead of "runs out at" the
+  owner's own age, FIRE says the target is not getting closer, and the US dollars card and the
+  Holdings rate line appear only when something is held in US dollars. A selftest check sets the
+  demo's pay to $0 and expects a clean run.
+
+- **The preset funds are gone** (2026-11-02, user 001; findata schema 18, `tools/migrate_17to18.py`).
+  Their roles were too rigid, and an overspent month took money from a trip on the page. Leftover
+  everyday money now stays where it is. The migration keeps each fund in `decisions/`. Custom funds
+  are on the roadmap. Two selftest faults went with them (59 faults).
+
+- **Big buys are gone for now** (2026-11-02, user 001; findata schema 17, `tools/migrate_16to17.py`).
+  The threshold, the card, the fund role and the word asked a first-time reader to learn something
+  before the basics were solid, and misread a cash withdrawal or a large grocery trip. Everything
+  everyday counts against Everyday. The migration keeps what it removes in `decisions/`, so it can
+  come back. On the roadmap once the basics are done.
+
+- **Education is an ordinary category** (2026-11-02, user 001; findata schema 16,
+  `tools/migrate_15to16.py`). It was a group of its own because tuition ends, which mixed what money
+  bought with whether it continues after FIRE. A month now has three parts, and `plan.json`
+  `notInFire` marks what stays out of the FIRE target, Education by default. The target does not change.
+
+- **The tool uses the page's words** (2026-11-02, user 001; findata schema 15,
+  `tools/migrate_14to15.py`). The `allowance` flow is `everyday`, and the category groups are
+  `bills`, `everyday` and `education`, in the register, the code and the documents.
+
+- **One name, and a month that adds up** (2026-11-02, user 002 and user 001: neither could say what
+  the allowance was). Free to spend, Everyday and allowance were one thing under three names; the
+  page says Everyday. Spent in a month is shown split into bills & housing, everyday, and big buys
+  or education when the month has them, and the Big buys card appears only when there is one. Setup
+  ends with the owner's last full month in one sentence.
+
+- **A chequing account's bills and cash count as spending after setup** (2026-11-02, user 002;
+  findata schema 14, `tools/migrate_13to14.py`). Setup gave a chequing account a spending tag only
+  if its first statements showed a debit purchase, and the import quietly skipped the rest, so bills
+  and cash were in no figure. Every chequing account now has the tag, D30 fails a row typed as
+  spending that is not in `spending.csv` (61 faults), and the migration files what was missed.
+- **Ready means ready** (2026-11-02, user 002). `ready.py` passed, then an encrypted statement
+  stopped the draft with a traceback, because pypdf needs `cryptography` for it. `ready.py` now
+  checks both, and a missing one is said in a sentence.
+- **The selftest answers for the tool, not for the inbox or an optional browser** (2026-11-02,
+  user 002). It copied the real `inbox/`, so one statement preflight could not name failed 13 checks;
+  the copy's inbox is now empty. Without playwright, the two render faults say "not run" instead
+  of failing, and setup's last step no longer offers the download.
+- **More of a first import is sorted, and the frequent ones come first** (2026-11-02, user 002).
+  The starter map grows to 729 public Canadian chains and kinds of business, and the one table to confirm is
+  ordered by how often a merchant appears, after any question about money.
+- **A plan above take-home is not called a paycheque** (2026-11-02, user 002). With take-home of
+  $0 the flow chart said Take-home $3,150. It now says Planned, is titled for the plan, says the
+  gap under it, and marks each committed line planned: a chart of the plan shows no payment as made.
+
+- **A chequing statement whose amounts sit alone on a line is read** (2026-11-02, user 002). A long
+  description can wrap so its last line holds only the amounts; the BMO parser refused the whole
+  statement, and the RBC parser took the first amount for words. Both now read it, and the selftest
+  renders that shape for both.
+- **A new plan figure reaches the page** (2026-10-30, user 001). Every page turn saved the planning figure,
+  the allowance and the other plan numbers in the browser, so an open or reopened page kept the old
+  ones after a rebuild, and the target did not move. An edit now holds only until the built value changes.
+- **FINANCE.md names the research behind the × 25** (2026-10-30, user 001), what it does not cover, and
+  which spending figures are the tool's own.
+- **The Spending baseline is an average now, not a median** (2026-10-30, user 001). Three months' median
+  swung with whichever months were latest, and left the big months out. It covers up to twelve usable
+  months, and the drift warning reads it. It sets nothing.
+- **The page says its version again**: the sidebar had read v1.0 through 1.1 and 1.2.
+- **Home's net-worth rows open to their accounts** (2026-10-30, user 001). "How much cash, and
+  where" had only a total on Home and a table sorted by bank on Accounts. Click Cash, or any row,
+  and it lists the accounts behind it in place; the amounts sum to the row.
+- **A gift that went straight into the broker counts** (2026-10-30, user 001). Family support
+  wired to a brokerage account reached no bank ledger, so the income page never saw it. `plan.json`
+  `brokerGifts` declares such a deposit; it lands on the month's Gift line, and D29 fails one the
+  broker's export does not show.
+- **Money from family is Gift; Rent is no longer an income source** (2026-10-30, user 001). Family
+  support was counted with Other income, hiding how much of the income it was. It has the Gift
+  line now, and a question about money from no named sender offers it. A received row typed Rent
+  counts with Other.
+- **The README is short, and says what you need** (2026-10-30). Both languages: what it is, a table
+  of what it takes (a paid Claude plan, the desktop app on Mac or Windows, Python, a statement), how
+  to start, each month, your data. The pages, the monthly run, the checkers and the folder moved to
+  `docs/how-it-works.md`; what was new in each release is here. It no longer suggests a folder that
+  syncs between devices.
+- **Net worth over time, on Home** (2026-10-30). Every import has kept a point a month and nothing
+  drew them. One line, what really was, nothing projected.
+- **The FIRE chart has a span: 1 year, 5 years, 10 years, To FIRE** (2026-10-30). It was always
+  twenty-five years, with the real months squeezed into its left edge. To FIRE, the default, stops
+  just past the month the middle return arrives; a span short of the target says so, and its axis
+  fits what it shows, so the one-year view shows whether the portfolio is keeping to the plan. The
+  Actual line's tooltip said net worth; it is the portfolio.
+- **Cash back imported before 1.3 is found again** (findata schema 13, `tools/migrate_12to13.py`).
+  Every card statement in `archive/` is read again by its parser, and a cash-back or redemption
+  credit not yet in `rewards.csv` is written there with its statement's tag.
+- **Cash back is income, on a line of its own** (2026-10-30, user 001's call on user 002's
+  report). A card's cash-back redemption sat as a credit nobody claimed. The import now files a
+  card credit that names cash back or a redemption into `rewards.csv` — a fact, tagged with its
+  statement — and the Income page shows it as **Rewards** in the year by source, with a Glossary
+  entry: income, never pay, and like investment income it never reaches chequing. D2 holds
+  every reward row to a known statement tag. The selftest puts a cash-back credit on a card
+  statement and expects it in rewards.csv, out of spending, and on the page.
+- **The selftest passes when run as root** (2026-10-30, user 002). The all-or-nothing case
+  made the import's last step fail by turning `archive/` read-only, which root writes through:
+  in a cloud session the run succeeded and the case reported a failure. It now puts a file
+  where the folder should be, which stops anyone.
+- **A bill paid once a year is spread when months are compared** (2026-10-30, designed in 1.2).
+  A merchant the owner says is yearly (`merchants.json` `every: "year"`), or whose charges come
+  back a year apart within a tenth of the amount, is marked at build time
+  (`categories.yearly`); a usual month, a category's usual and the planning baseline count a
+  twelfth of it in each of the twelve months from the one it was paid in, while the month's and
+  the year's totals keep it whole. Found by itself only once there is a year of rows; until
+  then, said. The selftest marks one merchant yearly and expects its rows marked and no other.
+- **An account seen only in payments is asked about by its number** (2026-10-30, user 002).
+  A card-only owner's statements show every payment coming from a chequing account that was
+  never registered, so net worth was the card's debt; a chequing ledger showed three other
+  account numbers. `seen_accounts.py` reads an account number where it is shaped like one —
+  masked, two groups joined, or ten digits and more — in a row that moves money between
+  accounts. Setup's question about missing accounts now lists each one, with how often and how
+  much moved; the import says when a new one appears. The selftest points one transfer at an
+  unregistered account and expects it named, and the demo's own transfers to name none.
+- **Pay that arrives by e-Transfer is offered as pay** (2026-10-30, user 002). Money in from no
+  named sender waited as Other income however regular it was. When the same amount came in at
+  least two earlier months, the question now suggests Pay, and answering it retypes the ledger
+  row; money in is answered with what it was — Pay, Other income, Own money, Paid back — on the
+  panel and in `confirm.py`. A question saved to `decisions.json` now keeps its suggestion and
+  the row it lands on, which it had been dropping: a transfer answered as spending (1.2) never
+  reached `spending.csv` in a real import. The selftest puts the same e-Transfer in three
+  statements and expects Pay suggested and the row retyped once confirmed.
+- **A renamed statement is still recognised, and a shared filename is told apart by the
+  account it prints** (2026-10-30, user 002). An upload that turns spaces and commas into
+  underscores (`April_16_2026.pdf`) is read as the bank's own name. Two documents under one
+  pattern — a card and a chequing account, both `<Month D, YYYY>.pdf` — were told apart by the
+  close day the name carries; the statement's printed account now decides, and the close day is
+  only the fallback. The archived name carries the account's tag either way. The selftest drops
+  one statement renamed and the card under the chequing's date, and expects both filed right.
 - **Big buys sit beside Free to spend** (2026-10-30, user 001). The card was the last on This
   month, under the chosen category's purchases, so a long list pushed it off the screen. It is
   the other half of the month — every purchase at or over the threshold — so it now shares the

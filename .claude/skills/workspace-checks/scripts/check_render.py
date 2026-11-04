@@ -3,7 +3,7 @@
 
 check_design.py reads the file as text, so it can prove a chart has no fixed height in the
 CSS. It cannot prove the chart then actually grows on a 32" screen, that every page still
-draws instead of throwing, or that nothing scrolls sideways at 1120px. Those four things were
+draws instead of throwing, or that nothing scrolls sideways at 800px. Those four things were
 checked by hand every time -- about 28 tool calls a run, and the findings were re-derived from
 scratch each month because nothing wrote down how the navigation works.
 
@@ -15,7 +15,7 @@ Needs Playwright + Chromium (installed 2026-09-08):
 """
 import os, sys
 
-WIDTHS = [1120, 1440, 1760]   # DESIGN.md §4: min-width 1120, max-width 1760
+WIDTHS = [800, 1120, 1440, 1760]   # DESIGN.md §4: min-width 800 (collapsed below 1120), max-width 1760
 TALL   = 900                  # viewport height
 
 CATS = [("build",   "is the artefact current with findata/"),

@@ -39,6 +39,7 @@ sys.path.insert(0, os.path.join(SKILLS, "update-dashboard"))
 sys.path.insert(0, os.path.join(SKILLS, "update-dashboard", "scripts"))
 import layout  # noqa: E402
 import scaffold  # noqa: E402  default_axes and the kinds the tool understands
+import seen_accounts  # noqa: E402
 from parsers import NAMES, ParseError, ParserUnavailable, parse  # noqa: E402
 
 IGNORE = {"README.txt", ".gitkeep", ".DS_Store"}
@@ -60,7 +61,6 @@ EXPORTS = {
 PAY = re.compile(r"\b(PAY|PAYROLL|PYRL|SALARY|WAGES)\b")
 DEBIT_PURCHASE = re.compile(r"INTERAC PURCHASE|CONTACTLESS INTERAC|POINT OF SALE|DEBIT PURCHASE|POS PURCHASE", re.I)
 CARD_CREDIT = re.compile(r"PAYMENT|TRSF FROM|CASHBACK|REMISES", re.I)
-BIG = 300
 
 
 def pattern_of(name):
@@ -115,15 +115,16 @@ def propose(root, inbox):
     first = {}                      # (inst, digits) -> the earliest month seen
     holdings = activities = None
     images, unknown, by_hand = [], [], []
+    moves = []                      # every row, for the accounts they name (seen_accounts)
     for f in files:
         p = os.path.join(inbox, f)
         low = f.lower()
         if low.endswith(".pdf"):
             try:
                 res, why = read_statement(p)
-            except ParserUnavailable:
+            except ParserUnavailable as e:
                 by_hand.append(f)
-                seen.append((f, "a PDF", "pypdf is not installed — it will be read by hand"))
+                seen.append((f, "a PDF", f"{e}"))
                 continue
             if not res:
                 unknown.append(f)
@@ -133,6 +134,7 @@ def propose(root, inbox):
                 inst = INST_OF_PARSER.get(part["parser"].split("_")[0], part["parser"])
                 k = (inst, part["account"])
                 part = dict(part, _file=f, _inst=inst)
+                moves += part["rows"]
                 if k not in stmts or part["period"]["to"] > stmts[k]["period"]["to"]:
                     stmts[k] = part
                 first[k] = min(first.get(k, part["period"]["to"][:7]), part["period"]["to"][:7])
@@ -274,8 +276,7 @@ def propose(root, inbox):
                            "alsoCovers": others}
 
     # --- the plan
-    plan = {"bigThreshold": BIG}
-    src("plan.bigThreshold", "default: a single purchase of $300 or more is a big buy")
+    plan = {}
     if pay_amounts:
         per = collections.Counter(round(x, 2) for x in pay_amounts).most_common(1)[0][0]
         plan["takeHome"] = round(per * 2)
@@ -306,22 +307,21 @@ def propose(root, inbox):
     spend = 0.0
     for (inst, digits), s in stmts.items():
         if (s.get("kind") or "") in scaffold.DEBT_KINDS:
-            spend += sum(-r["amount"] for r in s["rows"] if r["amount"] < 0 and -r["amount"] < BIG
+            spend += sum(-r["amount"] for r in s["rows"] if r["amount"] < 0
                          and not CARD_CREDIT.search(r["description"]))
     if spend:
         plan["everyday"] = int(round(spend / 50.0) * 50)
-        src("plan.everyday", f"{money(spend)} of card purchases under {money(BIG)} on the newest statements, rounded")
+        src("plan.everyday", f"{money(spend)} of card purchases on the newest statements, rounded")
         questions.append({"id": "everyday", "q": f"Your cards show {money(spend)} of everyday spending this month. "
-                                                 f"Set the guilt-free allowance at {money(plan['everyday'])}?",
+                                                 f"Set the guilt-free everyday amount at {money(plan['everyday'])}?",
                           "suggest": plan["everyday"]})
     else:
-        questions.append({"id": "everyday", "q": "What everyday allowance a month — the guilt-free line, no categories under it?"})
+        questions.append({"id": "everyday", "q": "What everyday amount a month — the guilt-free line, no categories under it?"})
     questions.append({"id": "committed", "q": "Anything paid every month before you choose anything — rent, a mortgage, a loan? "
                                               "And rent you do not pay now but will after FIRE?"})
     questions.append({"id": "planBase", "q": "Your planning spend for the FIRE target, a month, rent after FIRE included?",
                       "suggest": plan.get("everyday")})
     plan["planBase"] = plan.get("everyday")
-    questions.append({"id": "funds", "q": "Anything you are saving towards — a trip, big purchases? A name, a goal, a date. (None is fine.)"})
 
     # --- the investing rule
     grow_ids = {a["id"] for a in accounts if a.get("role") == "grow"}
@@ -341,8 +341,20 @@ def propose(root, inbox):
     questions.insert(1, {"id": "born", "q": "Roughly what year were you born? (Only the retirement-age arithmetic uses it.)"})
     questions.insert(2, {"id": "accounts", "q": f"Is the accounts table right? Change a name, a kind, what an account is for, "
                                                 f"or which ones keep a line-by-line ledger."})
-    questions.insert(3, {"id": "missing", "q": "Any account these files do not show — savings with no statement this month, "
-                                               "a loan, a home, an account abroad?"})
+    # Accounts the statements show money moving to or from, with no statement of their own: a
+    # card-only owner's chequing account is one (2026-10-28, user 002). Asked by number.
+    named = seen_accounts.unregistered(moves, [d for (_i, d) in stmts])
+    if named:
+        seen_q = "; ".join(f"…{n} ({c} time{'s' if c > 1 else ''}"
+                           + "".join(f", {money(v)} {w}" for v, w in ((i, "in"), (o, "out")) if v) + ")"
+                           for n, (c, i, o) in sorted(named.items(), key=lambda kv: -(kv[1][1] + kv[1][2])))
+        questions.insert(3, {"id": "missing", "q": f"Money moved to or from accounts these files have no statement for: {seen_q}. "
+                                                   f"Which are yours — the bank, the kind, the currency, today's balance? "
+                                                   f"And any other account these files do not show — a loan, a home, an account abroad?",
+                             "seen": sorted(named)})
+    else:
+        questions.insert(3, {"id": "missing", "q": "Any account these files do not show — savings with no statement this month, "
+                                                   "a loan, a home, an account abroad?"})
     if cash_asked:
         questions.insert(4, {"id": "cash", "q": f"What balance does the app show for {', '.join(cash_asked)}? The exports name "
                                                 f"{'them' if len(cash_asked) > 1 else 'it'} but carry no balance."})
@@ -359,12 +371,12 @@ def propose(root, inbox):
         questions.append({"id": "files", "q": "These files were not recognised: " + ", ".join(unknown + by_hand) +
                                               ". What are they?"})
 
-    answers = {"owner": None, "born": None, "currency": "CAD", "importDay": 26,
-               "accounts": accounts, "plan": plan, "funds": [], "rules": rules,
+    answers = {"owner": None, "born": None, "currency": "CAD", "importDay": 1,
+               "accounts": accounts, "plan": plan, "rules": rules,
                "foreign": None, "fx": fx or 1.0,
                "_proposed": proposed, "_open": questions,
                "_files": [{"file": f, "read_as": w, "detail": d} for f, w, d in seen]}
-    src("importDay", "default: the 26th")
+    src("importDay", "default: the 1st")
     if fx:
         src("fx", fx_note)
     return answers
@@ -386,7 +398,7 @@ def report(a):
         out.append(f"  {d.get('file', '')[:44]:44}  closes {str(d.get('closes') or d.get('closes_label')):9} "
                    f"{d.get('parser') or '—':15} → {d['into']}")
     out += ["", "PLAN"]
-    for k in ("takeHome", "invest", "everyday", "bigThreshold"):
+    for k in ("takeHome", "invest", "everyday"):
         if k in a["plan"]:
             out.append(f"  {k:13} {money(a['plan'][k]):>11}   {a['_proposed'].get('plan.' + k, '')}")
     out += ["", f"QUESTIONS ({len(a['_open'])}) — the scaffold will not run until every one is answered"]
@@ -425,4 +437,10 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    # How long the draft took, so one setup can be compared with another (2026-11, user 002).
+    import time
+    _t = time.monotonic()
+    _rc = main(sys.argv)
+    if "--json" not in sys.argv:
+        print(f"  time: {time.monotonic() - _t:.1f}s to read the files and draft")
+    sys.exit(_rc)

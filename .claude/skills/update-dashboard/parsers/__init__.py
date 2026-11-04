@@ -21,7 +21,7 @@ Every parser returns the same shape:
 
 Amounts are signed the ledger's way: money out is negative. Row order is the statement's.
 
-They depend on pypdf for the text (`pip3 install --user pypdf`). Without it every parser raises
+They depend on pypdf for the text (`pip3 install --user pypdf cryptography`). Without it every parser raises
 ParserUnavailable, and the skill reads the file itself — the tool degrades to what it was, it
 does not guess.
 """
