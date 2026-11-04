@@ -87,7 +87,7 @@
 ## 3a. What spending is
 
 **Spending is money that leaves and buys nothing you still own — whatever paid it** (2026-10-29,
-for the target user, PRODUCT.md §2). A card purchase, a debit purchase, and from chequing: rent,
+for someone starting out as much as for someone who invests). A card purchase, a debit purchase, and from chequing: rent,
 a bill, a payment to anyone outside the register, cash taken out, a bank's fee or interest
 charged, money sent to family. Each is a row in `spending.csv`; a chequing one keeps its ledger
 row too (so the chain closes) and is tagged with that account's spending tag, which every chequing
