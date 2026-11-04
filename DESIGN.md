@@ -3,8 +3,7 @@
 > This file owns **how the page looks and talks**. It states the rules that hold today; where an
 > old habit conflicts with it, this file wins. A rule changes only once the owner has confirmed
 > it, and the story of how each one came about — the dates, the measurements, what was there
-> before — is in [`CHANGELOG.md`](CHANGELOG.md). The product the rules serve is
-> [`PRODUCT.md`](PRODUCT.md).
+> before — is in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## 1. Brand and language
 
@@ -88,9 +87,9 @@
     it — amber `#c98500` = look at this, red `#d03b3b` = a rule is broken or something is due.
     A new rule is wired into it.
   - The month pills appear only on `PILL_PAGES`, the year pills only on `YEAR_PAGES`.
-  - The foot of the sidebar carries the tool version (`VERSION`) in muted 10.5px. MAJOR.MINOR.PATCH
-    (three digits since 2026-11-03): the major moves only with a change of technology (2.0.0: the
-    page's framework, the data's store); everything else moves the minor or the patch.
+  - The foot of the sidebar carries the tool version (`VERSION`) in muted 10.5px. MAJOR.MINOR.PATCH,
+    by the rule in ROADMAP.md, Version numbers: a patch needs only a sync, a minor also a migration, a
+    major a change of technology.
 - **One page, one question, one kind of time**: a page follows the month cursor, the year cursor
   or no time at all, never half of each; a thing is judged in one place, and Home only
   summarises.
@@ -239,7 +238,8 @@
   Grouped by institution, the biggest first and the biggest account first inside it; each
   institution a band in ink with a gap above it. Four columns: the account (its type and number
   beneath, a long number cut to its last four), what it is for in one line, the date (with the
-  year when it is not this year), the balance, the heaviest thing on the row; a balance under a
+  year when it is not this year; amber, with its age on hover, past 30 days — never a ⚠, which
+  is kept for what is unaccounted for), the balance, the heaviest thing on the row; a balance under a
   dollar is muted. **The balance column is in the home currency throughout**: an institution is
   one figure, and an account held in another currency shows its dollar value with its own amount
   beneath and the rate on hover (§7). **A grouped table taller than the window folds to its group
@@ -249,8 +249,11 @@
   and beside it what is owned outside accounts and that the two make the header's net worth (⚠
   when they do not); its explanation states each rate. Money lent is a row like any other; its
   balance opens what was agreed and what has come back. No card for money abroad and none for
-  money lent: the table already says both. Below, a card of what is missing, why, and how to fix
-  it, a borrower gone quiet among them. The source is `findata/register/accounts.json`, **a
+  money lent: the table already says both. **What is still unaccounted for sits on its row**
+  (2026-11-03, the owner): a ⚠ beside the balance of the account a gap belongs to (`gap` in the
+  register), or of a borrower gone quiet, with what, why and how to close it on hover; a gap that
+  belongs to no account (`standalone`) is one small line above the table. With none, nothing is
+  shown — no card saying all is well. The source is `findata/register/accounts.json`, **a
   register, not a second set of books**.
 - **Statements**: the filing grid (§5c), and every source's date.
 
