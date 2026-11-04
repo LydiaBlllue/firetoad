@@ -39,7 +39,7 @@ NODES = [
  ("you_drop","you",0,"Drop the month's statements and broker exports into inbox/",INK,False),
  ("you_say","you",1,"Say “update dashboards”",INK,False),
  ("you_read","you",5,"Claude reads the summary — never the rows — and asks you only what a program cannot decide; the report is the record read out",INK,False),
- ("sched","guard",0,"Scheduled task · 26th 09:00 — readiness check only, writes nothing",MUTED,True),
+ ("sched","guard",0,"Scheduled task · import day 09:00 — readiness check only, writes nothing",MUTED,True),
  ("pre","guard",1,"preflight.py — names every inbox file, hashes inbox/ + findata/, flags anything over 30 days",BLUE,False),
  ("ver","guard",3,"--verify before every write · --reseed after your own",BLUE,True),
  ("parse","skill",2,"Steps 1–2 · parsers read each statement, reconcile it (documents[].reconcile), categorise via merchants.json",PURPLE,False),

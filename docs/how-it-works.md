@@ -37,7 +37,7 @@ The detail behind the [README](../README.md).
 
 ## What a month looks like
 
-1. **Import day** (the 26th by default; a reminder lists what has arrived and what is missing).
+1. **Import day** (the 1st by default, any day you like; a reminder lists what has arrived and what is missing).
    Download the month's statements into `inbox/`. Leave the bank's filenames alone — that is how
    each file is recognised.
 2. **Say "update dashboards".** One local script does the month: every file is named and checked

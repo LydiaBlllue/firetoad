@@ -50,9 +50,9 @@
 <text x="1266.0" y="108" text-anchor="middle" fill="#1c1c1a">cannot decide; the report</text>
 <text x="1266.0" y="123" text-anchor="middle" fill="#1c1c1a">is the record read out</text>
 <rect x="175" y="181" width="182" height="76" rx="9" fill="#fcfcfb" stroke="#6b6f6c" stroke-width="2" stroke-dasharray="6,4"/>
-<text x="266.0" y="208" text-anchor="middle" fill="#1c1c1a">Scheduled task · 26th</text>
-<text x="266.0" y="223" text-anchor="middle" fill="#1c1c1a">09:00 — readiness check</text>
-<text x="266.0" y="238" text-anchor="middle" fill="#1c1c1a">only, writes nothing</text>
+<text x="266.0" y="208" text-anchor="middle" fill="#1c1c1a">Scheduled task · import</text>
+<text x="266.0" y="223" text-anchor="middle" fill="#1c1c1a">day 09:00 — readiness</text>
+<text x="266.0" y="238" text-anchor="middle" fill="#1c1c1a">check only, writes nothing</text>
 <rect x="375" y="181" width="182" height="76" rx="9" fill="#fcfcfb" stroke="#2a78d6" stroke-width="2"/>
 <text x="466.0" y="200" text-anchor="middle" fill="#1c1c1a">preflight.py — names every</text>
 <text x="466.0" y="216" text-anchor="middle" fill="#1c1c1a">inbox file, hashes inbox/</text>
@@ -75,7 +75,7 @@
 <text x="866.0" y="360" text-anchor="middle" fill="#1c1c1a">banks.json and the</text>
 <text x="866.0" y="376" text-anchor="middle" fill="#1c1c1a">registry copies</text>
 <rect x="975" y="311" width="182" height="76" rx="9" fill="#fcfcfb" stroke="#4a3aa7" stroke-width="2"/>
-<text x="1066.0" y="338" text-anchor="middle" fill="#1c1c1a">Step 4 · rebuild.py — 44</text>
+<text x="1066.0" y="338" text-anchor="middle" fill="#1c1c1a">Step 4 · rebuild.py — 49</text>
 <text x="1066.0" y="353" text-anchor="middle" fill="#1c1c1a">dashboard constants</text>
 <text x="1066.0" y="368" text-anchor="middle" fill="#1c1c1a">recomputed from findata/</text>
 <rect x="1175" y="311" width="182" height="76" rx="9" fill="#fcfcfb" stroke="#4a3aa7" stroke-width="2"/>
@@ -95,7 +95,7 @@
 <rect x="1175" y="441" width="182" height="76" rx="9" fill="#fcfcfb" stroke="#eda100" stroke-width="2"/>
 <text x="1266.0" y="483" text-anchor="middle" fill="#1c1c1a">archive/</text>
 <rect x="375" y="571" width="182" height="76" rx="9" fill="#fcfcfb" stroke="#008300" stroke-width="2" stroke-dasharray="6,4"/>
-<text x="466.0" y="598" text-anchor="middle" fill="#1c1c1a">selftest.py — plants 44</text>
+<text x="466.0" y="598" text-anchor="middle" fill="#1c1c1a">selftest.py — plants 61</text>
 <text x="466.0" y="613" text-anchor="middle" fill="#1c1c1a">faults; every checker must</text>
 <text x="466.0" y="628" text-anchor="middle" fill="#1c1c1a">fire</text>
 <rect x="775" y="571" width="182" height="76" rx="9" fill="#fcfcfb" stroke="#008300" stroke-width="2"/>

@@ -199,7 +199,7 @@ def build(a, today):
         # A question skipped is null, never a default that reads as a fact (2026-10-28, first
         # user: 1990 and $0 went onto the page). The page says Not set where one is needed.
         "born": a.get("born"),
-        "importDay": int(a.get("importDay", 26)),
+        "importDay": int(a.get("importDay", 1)),
     }, ensure_ascii=False, indent=2) + "\n"
 
     # --- the register: accounts, and the documents that arrive for them ------------------

@@ -371,12 +371,12 @@ def propose(root, inbox):
         questions.append({"id": "files", "q": "These files were not recognised: " + ", ".join(unknown + by_hand) +
                                               ". What are they?"})
 
-    answers = {"owner": None, "born": None, "currency": "CAD", "importDay": 26,
+    answers = {"owner": None, "born": None, "currency": "CAD", "importDay": 1,
                "accounts": accounts, "plan": plan, "rules": rules,
                "foreign": None, "fx": fx or 1.0,
                "_proposed": proposed, "_open": questions,
                "_files": [{"file": f, "read_as": w, "detail": d} for f, w, d in seen]}
-    src("importDay", "default: the 26th")
+    src("importDay", "default: the 1st")
     if fx:
         src("fx", fx_note)
     return answers

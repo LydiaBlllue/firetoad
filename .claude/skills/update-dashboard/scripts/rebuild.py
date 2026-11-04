@@ -392,7 +392,7 @@ def derive(d):
     out["TODAY"] = today
     out["PROFILE"] = clean(prof)
     out["RULES"] = clean(d["rules"])
-    out["IMPORT_DAY"] = prof.get("importDay", 26)
+    out["IMPORT_DAY"] = prof.get("importDay", 1)
     # The institution that holds the portfolio. Its name was written into a dozen strings on
     # both pages; now every one of them reads this.
     broker = next((a["inst"] for a in accs if a.get("role") == "grow" and a.get("value") == "export"), None) or "your broker"

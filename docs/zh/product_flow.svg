@@ -9,7 +9,7 @@
 <text x="34" y="238" fill="#6b6f6c" font-size="10.5">约 20 分钟,只做一次</text>
 <rect x="20" y="620" width="1140" height="358" rx="8" fill="#f9f9f7" stroke="#d8dcd9"/>
 <text x="34" y="650" fill="#1c1c1a" font-weight="700" font-size="15">每月</text>
-<text x="34" y="670" fill="#6b6f6c" font-size="10.5">导入日,默认 26 号</text>
+<text x="34" y="670" fill="#6b6f6c" font-size="10.5">导入日,默认 1 号</text>
 <rect x="20" y="1006" width="1140" height="170" rx="8" fill="#f9f9f7" stroke="#d8dcd9"/>
 <text x="34" y="1036" fill="#1c1c1a" font-weight="700" font-size="15">随时</text>
 <text x="34" y="1056" fill="#6b6f6c" font-size="10.5">每周、每季、工具更新</text>

@@ -185,7 +185,7 @@ For each account that produces a statement: **what the file is called** (a patte
 can cover several accounts (a broker's holdings file usually does): put the document on one of
 them and list the others in `alsoCovers`, by name.
 
-Then: **which day of the month they will sit down and import** (the default is the 26th).
+Then: **which day of the month they will sit down and import** (the default is the 1st; any day works, and the one that suits them is the right one).
 
 ### 4 · The monthly plan
 
@@ -316,7 +316,7 @@ Three things, in this order:
   "owner": "Alex Chen",
   "born": 1993,
   "currency": "CAD",
-  "importDay": 26,
+  "importDay": 1,
   "accounts": [
     {"inst":"TD","name":"Everyday Chequing","kind":"Chequing","id":"…4021",
      "balance":4210.55,"asof":"2026-08-31","ledger":"chequing.csv",

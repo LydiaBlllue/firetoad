@@ -2,6 +2,9 @@
 
 ## 1.3 — unreleased
 
+- **The import day defaults to the 1st** (2026-11-03, user 001), not the 26th. Any day works;
+  setup asks, and the one that suits the owner is the right one. A workspace keeps its own.
+
 - **Home shows what the month cost** (2026-11-03, user 001). The fourth card is *Spent in
   <month>*, the whole month's spending with bills & housing and everyday beneath it, in place of
   what is left of Everyday, which stays on This month. Before a purchase in today's month it shows
