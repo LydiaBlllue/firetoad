@@ -32,7 +32,7 @@ other bank, download your transactions as **OFX or QFX** (the *Money* or *Quicke
 online banking): they carry the bank's own balance, so every download checks itself. Read the same
 way for any bank, and confirmed on a real BMO one. A bank that offers only a spreadsheet (CSV)
 works too, with its balance read off the app once a month. Anything else, Claude reads by hand:
-slower, and it means Claude sees it. Bank by bank: **[Banks and files](docs/banks.md)**.
+slower, and it means Claude sees it. Bank by bank and broker by broker: **[Supported banks and brokers](docs/banks.md)**.
 
 **Built for Canada.** Canadian dollars, TFSA / RRSP / FHSA, CPP and OAS. Accounts abroad count in
 net worth.
@@ -87,7 +87,7 @@ report and any questions a program cannot answer, like a merchant it has not see
   checkers that keep the numbers honest.
 <!-- LINT:FAULTS n=62 -->
   Four checkers hold every figure to its source; a selftest plants 62 faults to prove they still catch them.
-- **[Banks and files](docs/banks.md)**: which banks' files are read, which are confirmed on a real
+- **[Supported banks and brokers](docs/banks.md)**: which to use, which banks' files are read, which are confirmed on a real
   one, and how to download each.
 - **[Roadmap](ROADMAP.md)** and **[Changelog](CHANGELOG.md)**.
 
