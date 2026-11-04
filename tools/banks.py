@@ -4,7 +4,7 @@
     python3 tools/banks.py          # write both
     python3 tools/banks.py --check  # exit 1 if either differs from what would be written
 
-check_design's S8 runs the same comparison, so a status changed in the table and not here fails.
+check_design's S9 runs the same comparison, so a status changed in the table and not here fails.
 """
 import os
 import sys

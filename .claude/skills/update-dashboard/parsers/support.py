@@ -1,7 +1,7 @@
 """support.py — which banks' files the tool reads, in one place.
 
 docs/banks.md and docs/zh/banks.md are written from this table by `tools/banks.py`, and
-check_design's S8 fails when either differs from what it would write: a bank marked confirmed
+check_design's S9 fails when either differs from what it would write: a bank marked confirmed
 here is confirmed there, and nowhere else says otherwise (2026-11-04, user 001).
 
 `status`:

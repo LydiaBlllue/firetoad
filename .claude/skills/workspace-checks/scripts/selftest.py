@@ -499,7 +499,7 @@ CASES = [
     ("D13", "funds.json changed but the page did not",      m_funds_drift,     "find"),
     ("D13", "a fund on an account the register lacks",      m_fund_no_account, "find"),
     ("D13", "a saving flow sent to no fund and no account", m_fund_flow_nowhere, "find"),
-    ("S8",  "the banks page drifts from the tool's table",  m_banks_drift,     "dash"),
+    ("S9",  "the banks page drifts from the tool's table",  m_banks_drift,     "dash"),
     ("D14", "accounts.json changed but the page did not",   m_acct_drift,      "find"),
     ("D19", "a liability given a role",                     m_axes_illegal,    "find"),
     ("D20", "a stated balance with no date",                m_stated_no_asof,  "find"),
