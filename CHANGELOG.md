@@ -2,6 +2,12 @@
 
 ## 1.3 — unreleased
 
+- **Accounts reads at a glance** (2026-11-03, user 001). The *Held in <currency>* and *Money
+  lent* cards are gone; the table says both. It is four columns now — the account with its type
+  and number beneath, what it is for in one line, the date, the balance — the biggest institution
+  and account first, another currency's group row with roughly what it is in dollars, and a
+  balance under a dollar dimmed. A borrower gone quiet moves to the card of what is missing.
+
 - **Accounts sits under Home; Records is the Monthly import** (2026-11-03, user 001). Records held
   two kinds of page: Accounts answers where the money is, which is net worth opened up, and
   Updates and Statements answer whether the data is in and what each update changed. Accounts

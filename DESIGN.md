@@ -230,13 +230,17 @@
   (label, from, to), what was noticed, what was decided without asking, what you were asked.
   **The story of an update lives here and nowhere else; every other page shows a status computed
   today.**
-- **Accounts**: one row per place money sits, grouped by institution, the institution row giving
-  its net position (credit cards negative, currencies never added together); a **home-currency
+- **Accounts**: one row per place money sits, grouped by institution, the biggest institution
+  first and the biggest account first inside it. Four columns: the account (its type and number
+  beneath, small), what it is for in one line, the date, the balance; a balance under a dollar is
+  dimmed. The institution row gives its net position (credit cards negative, currencies never
+  added together), and for another currency roughly what that is in dollars. A **home-currency
   total on the last row** — one of the two places currencies are added (§7), so its explanation
   states the rate and its date and how many accounts without a balance were left out, and it
-  reconciles against the header's net worth (⚠ when it does not). Money held abroad is a card of
-  its own ("Held in \<currency\>", hidden when there is none). Below, a card of what is missing,
-  why, and how to fix it. The source is `findata/register/accounts.json`, **a register, not a
+  reconciles against the header's net worth (⚠ when it does not). Money lent is a row like any
+  other; its balance opens what was agreed and what has come back. No card for money abroad and
+  none for money lent (2026-11-03): the table already says both. Below, a card of what is missing,
+  why, and how to fix it, a borrower gone quiet among them. The source is `findata/register/accounts.json`, **a register, not a
   second set of books**.
 - **Statements**: the filing grid (§5c), and every source's date.
 

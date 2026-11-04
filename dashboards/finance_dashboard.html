@@ -285,7 +285,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .dt tr.grp td{padding-top:14px;font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--grid)}
 .dt tr.grp.first td{padding-top:2px}
 .dt td.note-c{font-size:11.5px;color:var(--muted);text-align:left;max-width:420px}
-#acctTable th + th, #acctTable td + td, #loanTable th + th, #loanTable td + td{padding-left:16px}
+#acctTable th + th, #acctTable td + td{padding-left:16px}
 #acctTable tr.grp td{padding-left:0}
 #acctTable tr.tot td{padding-top:12px;border-top:2px solid var(--border);font-weight:700}
 #acctTable tr.tot td.sub{font-weight:400;color:var(--muted);font-size:12px}
@@ -553,22 +553,6 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div class="lab">Every account, by institution</div>
     <table class="dt" id="acctTable"></table>
     <div class="cap" id="acctCap"></div>
-  </div>
-  <div class="card" id="fgnCard" style="margin-bottom:10px" hidden>
-    <div class="lab" id="fgnLab">Held in another currency</div>
-    <div class="donut-wrap">
-      <div class="donut-box">
-        <svg id="fgnDonut" viewBox="0 0 170 170" width="170" height="170"></svg>
-        <div class="donut-center"><div class="t num" id="fgnDonutTotal"></div><div class="s" id="fgnUnit">total</div></div>
-      </div>
-      <div class="legend" id="fgnCats"></div>
-    </div>
-    <div class="cap" id="fgnCap"></div>
-  </div>
-  <div class="card" id="loanCard" style="margin-bottom:10px" hidden>
-    <div class="lab">Money lent</div>
-    <table class="dt" id="loanTable"></table>
-    <div id="loanNote"></div>
   </div>
   <div class="card">
     <div class="lab">What is still unaccounted for</div>
@@ -2045,7 +2029,6 @@ function renderInv(){
   $("invStale").innerHTML = I.stale ?
     '<div class="stale-banner">⚠ <b>Holdings are '+I.staleDays+' days old</b>, as of '+dLong(I.asof)+'. A fresh holdings export brings them up to date.</div>' : "";
   // The stat cards are drawn by IV.renderAll(); this function keeps the stale banner.
-  renderForeign();
 }
 
 // ===== foreign-currency assets (findata/foreign.json; rule 8 — never merged into CAD dry powder or net worth) =====
@@ -2058,29 +2041,6 @@ const PORTFOLIO = INVEST.portfolio;
 const PERF = {"symbol": "VT", "name": "Vanguard Total World Stock ETF", "why": "The whole world's stocks in one fund: what the same money would have earned with no choices at all.", "from": "2026-06-15", "to": "2026-09-06", "start": 61204, "end": 67135, "put": 2400, "flows": [["2026-06-18", 800.0], ["2026-07-18", 800.0], ["2026-08-18", 800.0]], "shadow": 64390, "benchRet": 0.0123, "path": [["2026-06-15", 61204], ["2026-06-16", 60984], ["2026-06-17", 60538], ["2026-06-18", 62466], ["2026-06-22", 62563], ["2026-06-23", 61445], ["2026-06-24", 61564], ["2026-06-25", 61669], ["2026-06-26", 61233], ["2026-06-29", 62068], ["2026-06-30", 62532], ["2026-07-01", 62201], ["2026-07-02", 62094], ["2026-07-06", 62914], ["2026-07-07", 62241], ["2026-07-08", 61920], ["2026-07-09", 62371], ["2026-07-10", 62520], ["2026-07-13", 61794], ["2026-07-14", 61836], ["2026-07-15", 61957], ["2026-07-16", 61452], ["2026-07-17", 60817], ["2026-07-20", 61597], ["2026-07-21", 62517], ["2026-07-22", 62438], ["2026-07-23", 61732], ["2026-07-24", 61732], ["2026-07-27", 61924], ["2026-07-28", 61831], ["2026-07-29", 60896], ["2026-07-30", 61883], ["2026-07-31", 62113], ["2026-08-03", 62810], ["2026-08-04", 64120], ["2026-08-05", 63817], ["2026-08-06", 63681], ["2026-08-07", 63887], ["2026-08-10", 63752], ["2026-08-11", 63624], ["2026-08-12", 63918], ["2026-08-13", 64296], ["2026-08-14", 63950], ["2026-08-17", 63738], ["2026-08-18", 63950], ["2026-08-19", 63905], ["2026-08-20", 63420], ["2026-08-21", 63637], ["2026-08-24", 63750], ["2026-08-25", 64090], ["2026-08-26", 64214], ["2026-08-27", 64423], ["2026-08-28", 64325], ["2026-08-31", 64040], ["2026-09-01", 63683], ["2026-09-02", 63850], ["2026-09-03", 64164], ["2026-09-04", 64390]], "actual": [["2026-06-15", 61204], ["2026-08-05", 64852], ["2026-09-06", 67135]], "pricesAsof": "2026-09-06", "source": {"benchmark": "Yahoo Finance, adjusted close (dividends included)", "usdcad": "Bank of Canada, daily average rate"}};   // the benchmark comparison, from prices.json and the snapshots (rebuild.py benchmark_run)
 const PORT_HISTORY = [{"ym": "2026-06", "v": 61204}, {"ym": "2026-08", "v": 64852}, {"ym": "2026-09", "v": 67135}];   // one portfolio value per month, from investment_history.json
 const NW_GLOBAL = INVEST.netWorth + FOREIGN_CAD;             // net worth  (2026-08-14: the owner)
-function renderForeign(){
-  // A card on Accounts since 2026-10-26: money held in another currency is a property of where it
-  // sits, not a page of its own (it used to be one, under Investing, though most of it is cash).
-  if(!$("fgnCard")) return;
-  $("fgnCard").hidden = !FOREIGN.rows.length;
-  if(!FOREIGN.rows.length) return;
-  $("fgnLab").textContent = "Held in " + (FOREIGN.currency || "another currency") + (FOREIGN.label ? ", in " + FOREIGN.label : "");
-  $("fgnUnit").textContent = "in " + (FOREIGN.currency || "its currency");
-  const fmtFgn = n => (FOREIGN.symbol || "") + Math.round(n).toLocaleString("en-CA");
-  // One segment per account, in the currency it is held in (§7): the owner, 2026-10-26, asked
-  // for the yuan side drawn the way the Canadian buckets are.
-  const FCOL = ["#4a3aa7", "#2a78d6", "#1baf7a", "#eda100", "#e87ba4", "#eb6834", "#008300"];
-  const fRows = FOREIGN.rows.filter(r => r.v > 0).sort((a,b) => b.v - a.v)
-    .map((r,i) => ({k: r.inst + " \u00b7 " + r.n, v: r.v, col: FCOL[i % FCOL.length]}));
-  drawDonut("fgnDonut", "fgnDonutTotal", "fgnCats", fRows, FOREIGN.total, "No accounts abroad.", true, fmtFgn);
-  const cash = FOREIGN.rows.filter(r => r.cash).reduce((s,r) => s + r.v, 0);
-  $("fgnCap").innerHTML = metaList([
-    ["As of", dLong(FOREIGN.asof)],
-    ["Roughly worth", numx(fmt(FOREIGN_CAD), [], "At " + FOREIGN.cadPerUnit + " to the dollar.")],
-    ["Share of net worth", Math.round(pc(FOREIGN_CAD, NW_GLOBAL))+"%"],
-    ["Sitting in cash", Math.round(pc(cash, FOREIGN.total))+"%"]
-  ]);
-}
 
 // ===== Line chart: cumulative net transfers to the broker (wsOut − wsIn from chequing) =====
 
@@ -2829,82 +2789,67 @@ function renderAccounts(){
     + '<div class="card"><div class="lab">Open gaps</div><div class="big num">' + G.length + '</div>'
       + '<div class="cap">' + (bad ? bad + " affects net worth" : "None affect net worth") + '</div></div>';
 
-  // Grouped by institution, with that institution's net position per currency in the group row --
-  // a credit card counts against the bank holding it. Currencies are never added together (§7).
-  let out = '<tr><th style="text-align:left">Account</th><th style="text-align:left">Number</th>'
-          + '<th style="text-align:left">Type</th><th>Balance</th><th>As of</th>'
-          + '<th style="text-align:left">Role</th></tr>';
-  // What the row is for, in the axes' words: a liability is owed (on a named asset, if it sits on
-  // one); an asset says its purpose and how easily it can be reached.
+  // Grouped by institution, biggest first, and inside each the biggest account first (2026-11-03,
+  // the owner asked for a table that reads at a glance). Four columns: the account, with its type
+  // and number beneath; what it is for, in one line; the date; the balance. A group row gives the
+  // institution's net position in each currency it holds and, for another currency, roughly what
+  // that is in dollars. Currencies are never added together inside a row (§7).
+  const RATE = {CAD:1, USD:INVEST.fx, [FOREIGN.currency || "XXX"]: FOREIGN.cadPerUnit};
+  const cad = a => a.balance === null ? 0 : a.balance * (RATE[a.cur] || 0);
   const byKey = {}; A.forEach(a => byKey[a.key] = a);
   const roleOf = a => a.side === "liability"
       ? term("liabilities", "Owed") + (a.against && byKey[a.against] ? " on " + byKey[a.against].name : "")
-      : (ROLE_TERM[a.role] ? term(ROLE_TERM[a.role]) : "\u2014")
-        + (REACH_TERM[a.reach] ? '<br><span style="color:var(--muted)">' + term(REACH_TERM[a.reach]) + '</span>' : "");
-  let first = true;
-  [...new Set(A.map(a => a.inst))].forEach(inst => {
-    const rows = A.filter(a => a.inst === inst);
+      : [ROLE_TERM[a.role] ? term(ROLE_TERM[a.role]) : "", REACH_TERM[a.reach] && a.reach !== "today" ? term(REACH_TERM[a.reach]) : ""]
+          .filter(Boolean).join(" \u00b7 ") || "\u2014";
+  const loanOf = a => LOANS.find(l => l.key === a.key || l.name === a.name);
+  let out = '<tr><th style="text-align:left">Account</th><th style="text-align:left">For</th>'
+          + '<th>As of</th><th>Balance</th></tr>';
+  const groups = [...new Set(A.map(a => a.inst))]
+    .map(inst => ({inst, rows:A.filter(a => a.inst === inst).sort((x,y) => cad(y) - cad(x))}))
+    .map(g => Object.assign(g, {v:g.rows.reduce((t,a) => t + cad(a), 0)}))
+    .sort((x,y) => y.v - x.v);
+  groups.forEach((g, gi) => {
     const byCur = {};
-    rows.filter(a => a.balance !== null).forEach(a => byCur[a.cur] = (byCur[a.cur]||0) + a.balance);
-    const sums = Object.entries(byCur).map(([c,v]) => money2(v,c)).join(" \u00b7 ") || "no balance yet";
-    out += '<tr class="grp' + (first ? " first" : "") + '"><td colspan="3">' + inst + '</td>'
-         + '<td class="num">' + sums + '</td><td colspan="2"></td></tr>';
-    first = false;
-    rows.forEach(a => {
+    g.rows.filter(a => a.balance !== null).forEach(a => byCur[a.cur] = (byCur[a.cur]||0) + a.balance);
+    const sums = Object.entries(byCur).map(([c,v]) => money2(v,c)
+        + (c !== "CAD" && RATE[c] && Math.abs(v * RATE[c]) >= 1 ? ' <span style="color:var(--muted)">\u2248 ' + fmt(v * RATE[c]) + '</span>' : "")).join(" \u00b7 ") || "no balance yet";
+    out += '<tr class="grp' + (gi ? "" : " first") + '"><td colspan="3">' + g.inst + '</td><td class="num">' + sums + '</td></tr>';
+    g.rows.forEach(a => {
       const age = acctAge(a), old = age !== null && age > 30;
-      out += '<tr><td style="text-align:left">' + a.name + '</td>'
-        + '<td class="num" style="text-align:left;color:var(--muted);font-size:12px">' + a.id + '</td>'
-        + '<td style="text-align:left;color:var(--muted);font-size:12px">' + a.kind + '</td>'
-        + '<td class="num"' + (a.balance === null ? ' style="color:#c98500;font-weight:700"' : '') + '>'
-          + (a.balance === null ? "\u26a0 Unknown" : a.note ? numx(money2(a.balance, a.cur), [], a.note) : money2(a.balance, a.cur)) + '</td>'
+      const tiny = a.balance !== null && Math.abs(cad(a)) < 1;
+      const l = loanOf(a);
+      const note = l ? "Agreed " + money2(l.agreed, l.cur) + " on " + dLong(l.since) + "; " + money2(l.back, l.cur) + " paid back since"
+                       + (l.last ? ", the last on " + dLong(l.last) : "") + ". Every repayment comes off by itself." : a.note;
+      const sub = [a.kind, a.id && a.id !== "\u2014" ? a.id : ""].filter(Boolean).join(" \u00b7 ");
+      out += '<tr' + (tiny ? ' style="opacity:.55"' : '') + '><td style="text-align:left">' + a.name
+        + (sub ? '<div style="color:var(--muted);font-size:11.5px">' + sub + '</div>' : '') + '</td>'
+        + '<td style="text-align:left;font-size:12px">' + roleOf(a) + '</td>'
         + '<td class="num"' + (old ? ' style="color:#c98500"' : '') + '>'
           + (a.asof ? dLong(a.asof) + (old ? " \u26a0" : "") : "\u2014") + '</td>'
-        + '<td style="text-align:left;font-size:12px">' + roleOf(a) + '</td></tr>';
+        + '<td class="num"' + (a.balance === null ? ' style="color:#c98500;font-weight:700"' : '') + '>'
+          + (a.balance === null ? "\u26a0 Unknown" : note ? numx(money2(a.balance, a.cur), [], note) : money2(a.balance, a.cur)) + '</td></tr>';
     });
   });
   // The owner, 2026-09-08: "add a CAD total to the accounts page". This is the one place the page crosses
   // currencies, so it shows the rate it used and what it had to leave out. It is a check, not a
   // new number -- it has to land on the same figure as the header's net worth.
-  const RATE = {CAD:1, USD:INVEST.fx, [FOREIGN.currency || "XXX"]: FOREIGN.cadPerUnit};
   const totCad  = known.reduce((t,a) => t + a.balance * RATE[a.cur], 0);
   const missing = A.length - known.length;
   const byCurAll = Object.entries(known.reduce((m,a) => (m[a.cur]=(m[a.cur]||0)+a.balance, m), {}));
   const rateNote = byCurAll.filter(([c]) => c !== "CAD").map(([c]) => c + " at " + RATE[c]).join(", ");
-  out += '<tr class="tot"><td colspan="3" style="text-align:left">All accounts, in CAD</td>'
-       + '<td class="num">' + numx(fmt(totCad), byCurAll.map(([c,v]) => [money2(v,c), money2(v*RATE[c], "CAD")]),
-           (rateNote ? rateNote + ". " : "") + (missing ? missing + " account" + (missing>1?"s":"") + " with no balance left out." : ""), true) + '</td>'
+  out += '<tr class="tot"><td style="text-align:left">All accounts, in CAD</td>'
        + '<td colspan="2" class="sub" style="text-align:left">'
        + (Math.abs(totCad - NW_GLOBAL) < 2 ? "\u2713 Matches net worth" : "\u26a0 " + fmt(Math.abs(totCad-NW_GLOBAL)) + " apart from net worth")
-       + '</td></tr>';
+       + '</td><td class="num">' + numx(fmt(totCad), byCurAll.map(([c,v]) => [money2(v,c), money2(v*RATE[c], "CAD")]),
+           (rateNote ? rateNote + ". " : "") + (missing ? missing + " account" + (missing>1?"s":"") + " with no balance left out." : ""), true) + '</td></tr>';
   $("acctTable").innerHTML = out;
   $("acctCap").innerHTML = "";
 
-  // Money lent: what each borrower still owes, what has come back since the amount was agreed,
-  // and a warning once nothing has come back for a long while. Each figure stays in the loan's
-  // own currency (\u00a77).
-  $("loanCard").hidden = !LOANS.length;
-  if (LOANS.length) {
-    let lt = '<tr><th style="text-align:left">Borrower</th><th>Still owed</th>'
-           + '<th style="text-align:left">Paid back so far</th><th>Last repayment</th></tr>';
-    LOANS.forEach(l => {
-      const start = (l.agreed || 0) + (l.out || 0);
-      const done = start > 0 ? Math.max(0, Math.min(100, 100 * l.back / start)) : 0;
-      lt += '<tr><td style="text-align:left">' + l.name + '</td>'
-          + '<td class="num">' + (l.note ? numx(money2(l.owed, l.cur), [], l.note) : money2(l.owed, l.cur)) + '</td>'
-          + '<td style="text-align:left"><div class="stack" style="height:8px;max-width:160px;display:inline-block;width:100%;vertical-align:middle">'
-          + '<span style="width:' + done.toFixed(1) + '%;background:#e87ba4"></span></div> '
-          + '<span class="num" style="color:var(--muted);font-size:12px">' + money2(l.back, l.cur) + ' of ' + money2(start, l.cur) + '</span></td>'
-          + '<td class="num">' + (l.last ? dLong(l.last) : "\u2014") + '</td></tr>';
-    });
-    $("loanTable").innerHTML = lt;
-    const quiet = LOANS.filter(l => l.quiet);
-    $("loanNote").innerHTML = metaList(LOANS.map(l => ["Agreed with " + l.name,
-       numx(money2(l.agreed, l.cur) + " on " + dLong(l.since), [], "Every repayment after this date comes off by itself."), "mut"]))
-    + quiet.map(l => noteBox("Nothing has come back from " + l.name + " in " + l.quiet + " days. Ask when the next repayment is coming, or settle a new amount and date with them.")).join("");
-  }
-
   const SYM = {bad:['\u2717','#d03b3b'], warn:['\u26a0','#c98500']};
-  $("acctGaps").innerHTML = G.length ? G.map(g =>
+  // A borrower who has gone quiet is a gap like any other (the Money lent card left 2026-11-03).
+  const Gq = G.concat(LOANS.filter(l => l.quiet).map(l => ({sev:"warn", what:"Nothing back from " + l.name + " in " + l.quiet + " days",
+      why:money2(l.owed, l.cur) + " is still owed.", fix:"ask when the next repayment is coming, or settle a new amount and date"})));
+  $("acctGaps").innerHTML = Gq.length ? Gq.map(g =>
     '<div class="alert-row"><span class="sym" style="color:' + SYM[g.sev][1] + '">' + SYM[g.sev][0] + '</span>'
     + '<span><b>' + g.what + '</b><br>' + g.why + '<br><span style="color:var(--muted)">To close it: ' + g.fix + '</span></span></div>').join("")
     : '<div class="empty">Every account has a current balance and a named institution.</div>';
