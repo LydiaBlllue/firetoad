@@ -267,8 +267,8 @@ python3 .claude/skills/workspace-checks/scripts/check_render.py \
   dashboards/finance_dashboard.html
 ```
 
-It drives headless Chromium (Playwright, installed 2026-09-08), loads each page at 1120 / 1440 /
-1760 px, clicks every sidebar entry and measures what was drawn. About 11 seconds, and it replaces
+It drives headless Chromium (Playwright, installed 2026-09-08), loads each page at 800 / 1120 /
+1440 / 1760 px, clicks every sidebar entry and measures what was drawn. About 11 seconds, and it replaces
 roughly 28 hand-driven browser calls a run.
 
 One thing worth knowing before trusting it: **it measures the chart's painted width, not its

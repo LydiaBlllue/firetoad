@@ -58,8 +58,11 @@
 ## 4. Page structure
 
 - **One self-contained HTML file**, no external dependencies.
-- **Desktop only**: `body` is `min-width:1120px; max-width:1760px`, with no narrow-screen
-  `@media` block. **What widens is the charts and the wide tables, not everything**:
+- **Desktop, down to 800px**: `body` is `min-width:800px; max-width:1760px`. Below 1120px one
+  `@media` block collapses what would run past the page (2026-11-03, the owner): cards that sit
+  side by side stack, a table drops its `.opt` columns (secondary detail the row's hover or another
+  page still carries — Accounts' *For*, Holdings' *Accounts* and *Qty*), and a long value in a
+  `.meta` row wraps. A new wide table marks its secondary columns `.opt`. **What widens is the charts and the wide tables, not everything**:
   - Stat cards and long text are capped (§5d); charts and wide tables are not.
   - ⚠ **A chart is `width:100%; height:auto`, never a fixed pixel height.** With a `viewBox`,
     `preserveAspectRatio="xMidYMid meet"` and a fixed height, the drawing scales to its height

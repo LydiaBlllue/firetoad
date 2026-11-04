@@ -241,7 +241,7 @@ python3 .claude/skills/workspace-checks/scripts/selftest.py .
   severity. `-v` shows what passed.
 - `check_design.py` — DESIGN.md's mechanical rules, including S4, which checks that the page
   counts, lists, paths and images DESIGN.md and README.md state about themselves are still true.
-- `check_render.py` — headless Chromium at 1120 / 1440 / 1760px: every page draws, nothing scrolls
+- `check_render.py` — headless Chromium at 800 / 1120 / 1440 / 1760px: every page draws, nothing scrolls
   sideways, a chart's **painted** width really grows with the window, and no `undefined` reaches
   the screen. Needs
   `pip3 install --user playwright && python3 -m playwright install chromium`. Not on the hook;

@@ -298,7 +298,7 @@ Three things, in this order:
 1. **Next month, say "update dashboards".** The first import is done. (Set up without files?
    Then drop last month's statements into `inbox/` with the bank's own filenames and say it
    now.) Name anything still *Not set*, and that saying the number sets it.
-2. **Open the dashboard.** `dashboards/finance_dashboard.html`, in a browser, at least 1120px
+2. **Open the dashboard.** `dashboards/finance_dashboard.html`, in a browser, at least 800px
    wide. Say what their last full month looks like, in the one sentence
    `python3 .claude/skills/setup/scripts/month_sentence.py .` prints, and teach no definition.
 3. **Fill in `OWNER.md`.** The scaffold left an empty one. The three governing documents are the tool's and say nothing about

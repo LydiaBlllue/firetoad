@@ -244,7 +244,7 @@ The full rules are DESIGN.md §5b and §5b′.
   welcome once one exists.
 - **Not real-time.** It is monthly by design. A number is as of a stated day.
 - **Not a budget with category caps.** One everyday amount, and everything under it is guilt-free.
-- **Not mobile, not dark.** Desktop at 1120px and wider, light theme only.
+- **Not mobile, not dark.** Desktop at 800px and wider (below 1120px secondary columns collapse), light theme only.
 - **Not a mixer of currencies.** Amounts stay per currency; the two converted totals carry
   their rate.
 - **Not multi-user.** One owner per workspace; money in the owner's login that is not theirs is

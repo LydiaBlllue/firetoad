@@ -21,7 +21,7 @@
   --headh:92px;   /* sidebar wordmark and page header share this so their rules line up */
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;padding:38px 28px 72px;min-width:1120px;max-width:1760px;margin:0 auto}
+body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;padding:38px 28px 72px;min-width:800px;max-width:1760px;margin:0 auto}
 /* Desktop-only layout (2026-09-06: the owner dropped the mobile view). Sidebar left, content right. */
 .shell{display:flex;gap:28px;align-items:flex-start}
 .side{width:210px;flex-shrink:0;position:sticky;top:38px}
@@ -298,10 +298,19 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 #acctTable .as{color:var(--muted);font-size:12px;margin-top:2px}
 #acctTable td.bal{font-weight:600}
 #acctTable tr.tiny td.bal{color:var(--muted);font-weight:400}
+#acctTable td.num{white-space:nowrap}
 #acctTable tr.tot td{padding-top:12px;border-top:2px solid var(--border);font-weight:700}
 #acctTable tr.tot td.sub{font-weight:400;color:var(--muted);font-size:12px}
 .alert-row .tag{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--pill);border-radius:4px;padding:1px 5px;vertical-align:1px;margin-right:2px}
 .unset{color:var(--muted);font-weight:500}
+/* Narrower than 1120px (2026-11-03, the owner: "if a card runs past the page, collapse part of
+   it"): side-by-side cards stack, and a table drops its .opt columns -- secondary detail that the
+   row's hover or another page still carries. Below 800px the page scrolls. */
+@media (max-width:1119px){
+  .cat-split,.yr-split,.grid-2,.split3{grid-template-columns:minmax(0,1fr)}
+  .opt{display:none!important}
+  .meta .v{white-space:normal;min-width:0}
+}
 </style>
 </head>
 <body>
@@ -2813,7 +2822,7 @@ function renderAccounts(){
       : [ROLE_TERM[a.role] ? term(ROLE_TERM[a.role]) : "", REACH_TERM[a.reach] && a.reach !== "today" ? term(REACH_TERM[a.reach]) : ""]
           .filter(Boolean).join(" \u00b7 ") || "\u2014";
   const loanOf = a => LOANS.find(l => l.key === a.key || l.name === a.name);
-  let out = '<tr><th style="text-align:left">Account</th><th style="text-align:left">For</th>'
+  let out = '<tr><th style="text-align:left">Account</th><th class="opt" style="text-align:left">For</th>'
           + '<th>As of</th><th>Balance</th></tr>';
   const groups = [...new Set(A.map(a => a.inst))]
     .map(inst => ({inst, rows:A.filter(a => a.inst === inst).sort((x,y) => cad(y) - cad(x))}))
@@ -2825,7 +2834,7 @@ function renderAccounts(){
     const sums = Object.entries(byCur).map(([c,v]) => money2(v,c)
         + (c !== "CAD" && RATE[c] && Math.abs(v * RATE[c]) >= 1 ? ' <span style="color:var(--muted)">\u2248 ' + fmt(v * RATE[c]) + '</span>' : "")).join(" \u00b7 ") || "no balance yet";
     out += (gi ? '<tr class="gap"><td colspan="4"></td></tr>' : '')
-         + '<tr class="grp' + (gi ? "" : " first") + '"><td colspan="3">' + g.inst + '</td><td class="num">' + sums + '</td></tr>';
+         + '<tr class="grp' + (gi ? "" : " first") + '"><td>' + g.inst + '</td><td class="opt"></td><td></td><td class="num">' + sums + '</td></tr>';
     g.rows.forEach(a => {
       const age = acctAge(a), old = age !== null && age > 30;
       const tiny = a.balance !== null && Math.abs(cad(a)) < 1;
@@ -2837,7 +2846,7 @@ function renderAccounts(){
       const sub = [a.kind, id].filter(Boolean).join(" \u00b7 ");
       out += '<tr' + (tiny ? ' class="tiny"' : '') + '><td style="text-align:left"><div class="an">' + a.name + '</div>'
         + (sub ? '<div class="as">' + sub + '</div>' : '') + '</td>'
-        + '<td style="text-align:left;font-size:12px">' + roleOf(a) + '</td>'
+        + '<td class="opt" style="text-align:left;font-size:12px">' + roleOf(a) + '</td>'
         + '<td class="num"' + (old ? ' style="color:#c98500"' : '') + '>'
           + (a.asof ? dLong(a.asof) + (a.asof.slice(0,4) !== TODAY.slice(0,4) ? ", " + a.asof.slice(0,4) : "") + (old ? " \u26a0" : "") : "\u2014") + '</td>'
         + '<td class="num bal"' + (a.balance === null ? ' style="color:#c98500;font-weight:700"' : '') + '>'
@@ -2851,8 +2860,8 @@ function renderAccounts(){
   const missing = A.length - known.length;
   const byCurAll = Object.entries(known.reduce((m,a) => (m[a.cur]=(m[a.cur]||0)+a.balance, m), {}));
   const rateNote = byCurAll.filter(([c]) => c !== "CAD").map(([c]) => c + " at " + RATE[c]).join(", ");
-  out += '<tr class="tot"><td style="text-align:left">All accounts, in CAD</td>'
-       + '<td colspan="2" class="sub" style="text-align:left">'
+  out += '<tr class="tot"><td style="text-align:left">All accounts, in CAD</td><td class="opt"></td>'
+       + '<td class="sub" style="text-align:left">'
        + (Math.abs(totCad - NW_GLOBAL) < 2 ? "\u2713 Matches net worth" : "\u26a0 " + fmt(Math.abs(totCad-NW_GLOBAL)) + " apart from net worth")
        + '</td><td class="num">' + numx(fmt(totCad), byCurAll.map(([c,v]) => [money2(v,c), money2(v*RATE[c], "CAD")]),
            (rateNote ? rateNote + ". " : "") + (missing ? missing + " account" + (missing>1?"s":"") + " with no balance left out." : ""), true) + '</td></tr>';
@@ -3283,7 +3292,7 @@ const IV = (function(){
       agg[k].mv+=p.mv; agg[k].bv+=p.bv; if(p.cn) agg[k].fgn+=p.amount;
       if(!agg[k].accs.includes(p.account)) agg[k].accs.push(p.account);
     }
-    let h=`<table class="ht"><tr><th>Position</th><th>Value CAD</th>${showPL?"<th>Unrealized</th>":""}<th>Accounts</th><th>% of Portfolio</th></tr>`;
+    let h=`<table class="ht"><tr><th>Position</th><th>Value CAD</th>${showPL?"<th>Unrealized</th>":""}<th class="opt">Accounts</th><th>% of Portfolio</th></tr>`;
     for(const [label,key] of order){
       const rows=buckets[key].sort((a,b)=>b.mv-a.mv);
       if(!rows.length) continue;
@@ -3296,7 +3305,7 @@ const IV = (function(){
         // a fund held abroad is named (its code says nothing) and shown in the currency it is held in too
         const symCell = r.name ? `${r.sym} <span style="color:var(--muted);font-weight:400">${r.name}</span>` : r.sym;
         const valCell = r.fgn ? `${fmt(r.mv)} <span style="color:var(--muted)">${fmtFgn(r.fgn)}</span>` : fmt(r.mv);
-        h+=`<tr><td class="sym">${symCell}</td><td class="num">${valCell}</td>${showPL?`<td class="num ${p>=0?"pos":"neg"}">${fmtS(p)}</td>`:""}<td><span class="accs">${r.accs.join(" \u00b7 ")}</span></td><td class="num">${share}</td></tr>`;
+        h+=`<tr><td class="sym">${symCell}</td><td class="num">${valCell}</td>${showPL?`<td class="num ${p>=0?"pos":"neg"}">${fmtS(p)}</td>`:""}<td class="opt"><span class="accs">${r.accs.join(" \u00b7 ")}</span></td><td class="num">${share}</td></tr>`;
       }
     }
     return h+"</table>";
@@ -3304,7 +3313,7 @@ const IV = (function(){
   function accountView(){
     const accs={};
     for(const p of positions){ (accs[p.account]=accs[p.account]||[]).push(p); }
-    let h=`<table class="ht"><tr><th>Position</th><th>Qty</th><th>Value CAD</th>${showPL?"<th>Unrealized</th>":""}<th>% of Portfolio</th></tr>`;
+    let h=`<table class="ht"><tr><th>Position</th><th class="opt">Qty</th><th>Value CAD</th>${showPL?"<th>Unrealized</th>":""}<th>% of Portfolio</th></tr>`;
     for(const a of Object.keys(accs).sort((x,y)=>accs[y].reduce((s,p)=>s+p.mv,0)-accs[x].reduce((s,p)=>s+p.mv,0))){
       const rows=accs[a].sort((x,y)=>y.mv-x.mv);
       const sub=rows.reduce((s,p)=>s+p.mv,0);
@@ -3315,7 +3324,7 @@ const IV = (function(){
         const pl=p.mv-p.bv;
         const share = isE ? '<span style="color:var(--muted)">\u2014</span>' : pctS(pc(p.mv, portfolio));
         const qty = p.qty==null ? '<span style="color:var(--muted)">'+fmtFgn(p.amount)+'</span>' : (p.qty%1?p.qty.toFixed(4):p.qty);
-        h+=`<tr><td class="sym">${p.sym}</td><td class="num">${qty}</td><td class="num">${fmt(p.mv)}</td>${showPL?`<td class="num ${pl>=0?"pos":"neg"}">${fmtS(pl)}</td>`:""}<td class="num">${share}</td></tr>`;
+        h+=`<tr><td class="sym">${p.sym}</td><td class="num opt">${qty}</td><td class="num">${fmt(p.mv)}</td>${showPL?`<td class="num ${pl>=0?"pos":"neg"}">${fmtS(pl)}</td>`:""}<td class="num">${share}</td></tr>`;
       }
     }
     return h+"</table>";

@@ -2,6 +2,12 @@
 
 ## 1.3 — unreleased
 
+- **A narrow window collapses instead of cutting off** (2026-11-03, user 001). The page works
+  from 800px (it needed 1120). Below 1120px cards that sit side by side stack, a table drops its
+  secondary `.opt` columns (Accounts' *For*, Holdings' *Accounts* and *Qty*), and a long value
+  wraps. `check_render` adds 800px; L1 and L2 follow. Checked on two owners' pages at 800, 900,
+  1000 and 1119px.
+
 - **Accounts reads at a glance** (2026-11-03, user 001). The *Held in <currency>* and *Money
   lent* cards are gone; the table says both. It is four columns now — the account with its type
   and number beneath, what it is for in one line, the date, the balance — the biggest institution

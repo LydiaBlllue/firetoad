@@ -66,7 +66,7 @@ screens change. Setup was run end to end for a card-only owner, and
 the selftest now does that every time; the migration was run on a copy of user 001's workspace.
 
 - **The demo on a phone.** A link shared on social media is opened on a phone, and the page is
-  built for 1120px and wider. First step: the live demo's front door shows a phone the
+  built for 800px and wider. First step: the live demo's front door shows a phone the
   screenshots, in Chinese or English by the phone's language, with a button to send the link to
   a computer; a wide screen goes straight to the page. Next: a simplified view of Home that
   reads at phone width.

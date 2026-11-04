@@ -121,5 +121,5 @@ tools/        demo 数据、迁移脚本、同步进工作区
 
 页面共 17 页、5 个侧栏分组 ——
 Home · Accounts · Spending · Income · Investing · Plan · Monthly import · Glossary
-—— 仅桌面，窗口至少 1120px 宽。
+—— 仅桌面，窗口至少 800px 宽。
 </details>

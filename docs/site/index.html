@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- The live demo's front door. A screen wide enough for the dashboard (DESIGN.md: 1120px and up)
+<!-- The live demo's front door. A screen wide enough for the dashboard (DESIGN.md: 800px and up)
      goes straight to it; a phone sees the README's screenshots and a way to open it on a computer.
      The workflow (.github/workflows/pages.yml) publishes this as index.html beside dashboard.html. -->
 <html lang="en">
@@ -8,7 +8,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jade Toad · demo</title>
 <script>
-  if (matchMedia('(min-width: 1120px)').matches) location.replace('dashboard.html' + location.hash);
+  if (matchMedia('(min-width: 800px)').matches) location.replace('dashboard.html' + location.hash);
 </script>
 <style>
   :root {

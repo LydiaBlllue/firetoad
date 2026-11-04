@@ -24,7 +24,7 @@
 | **Claude 桌面应用** | 装在 **Mac 或 Windows** 电脑上，用里面的 **Code** 标签页，不是 Chat。Claude Code 已包含在内 |
 | **Python 3 和 pypdf** | setup 会检查，缺什么就给你一条安装命令 |
 | **你的对账单** | 上个月的 PDF。只有一张信用卡也能开始 |
-| **屏幕** | 页面要求窗口至少 1120px 宽；手机上只能看截图 |
+| **屏幕** | 页面要求窗口至少 800px 宽；手机上只能看截图 |
 
 **银行。** RBC、BMO 的对账单和 Wealthsimple 的导出由本地解析器读取。其他银行也能用，但要由 Claude
 逐份手读：更慢，而且 Claude 会看到对账单内容。
@@ -61,9 +61,9 @@
 - **[路线图](ROADMAP.md)** 和 **[更新记录](CHANGELOG.md)**。
 - **[产品的目的](PRODUCT.md)**。
 
-<!-- LINT:NAV main=17/5 minwidth=1120 -->
+<!-- LINT:NAV main=17/5 minwidth=800 -->
 页面共 17 页、5 个侧栏分组 ——
 Home · Accounts · Spending · Income · Investing · Plan · Monthly import · Glossary
-—— 仅桌面端，至少 1120px 宽。
+—— 仅桌面端，至少 800px 宽。
 
 MIT 许可：见 [`LICENSE`](LICENSE)。

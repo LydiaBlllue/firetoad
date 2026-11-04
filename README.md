@@ -25,7 +25,7 @@ page: what you spent, what you own, how far you are from FIRE. No bank login, no
 | **Claude desktop app** | On a **Mac or Windows** computer, using its **Code** tab, not Chat. Claude Code comes with it |
 | **Python 3 and pypdf** | Setup checks for them and gives you the one command if one is missing |
 | **Your statements** | Last month's PDFs. A single credit card is enough to start |
-| **A screen** | The page needs a window at least 1120px wide; a phone shows screenshots only |
+| **A screen** | The page needs a window at least 800px wide; a phone shows screenshots only |
 
 **Banks.** RBC and BMO statements and Wealthsimple exports are read by a local parser. Any other
 bank works too, but Claude reads those statements by hand: slower, and it means Claude sees them.
@@ -65,9 +65,9 @@ report and any questions a program cannot answer, like a merchant it has not see
 - **[Roadmap](ROADMAP.md)** and **[Changelog](CHANGELOG.md)**.
 - **[What the product is for](PRODUCT.md)**.
 
-<!-- LINT:NAV main=17/5 minwidth=1120 -->
+<!-- LINT:NAV main=17/5 minwidth=800 -->
 The page is 17 pages in 5 sidebar groups —
 Home · Accounts · Spending · Income · Investing · Plan · Monthly import · Glossary
-— desktop only, at least 1120px wide.
+— desktop only, at least 800px wide.
 
 MIT licence: see [`LICENSE`](LICENSE).

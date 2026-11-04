@@ -127,19 +127,21 @@ def check(path):
     # -- §4 desktop-only layout -------------------------------------------
     body = re.search(r'\bbody\s*\{([^}]*)\}', css)
     bodycss = body.group(1) if body else ""
-    if "min-width:1120px" not in bodycss.replace(" ", ""):
-        err("L1", "body is missing min-width:1120px (DESIGN.md §4, desktop only)")
+    if "min-width:800px" not in bodycss.replace(" ", ""):
+        err("L1", "body is missing min-width:800px (DESIGN.md §4: below 1120px cards stack and tables drop their .opt columns)")
     mw = re.search(r'max-width:\s*(\d+)px', bodycss)
     if not mw:
         err("L1", "body is missing a max-width (§4 expects 1760px)")
     elif int(mw.group(1)) < 1600:
         warn("L1", f"body max-width is {mw.group(1)}px; §4 widened it to 1760px for the 32\" screen")
+    # One width query is the design (2026-11-03): below 1120px what would run past the page
+    # collapses. Any other is a second layout nobody checks.
     for m in re.finditer(r'@media([^{]*)\{', css):
         q = m.group(1)
-        if "width" not in q:
-            continue    # prefers-reduced-motion and friends are fine; only width queries were dropped
+        if "width" not in q or q.replace(" ", "") == "(max-width:1119px)":
+            continue    # prefers-reduced-motion and friends are fine, and so is the one collapse block
         warn("L2", f"@media ({q.strip()}) at style line {css[:m.start()].count(chr(10))+1} — "
-                   "the narrow-screen view was dropped (§4)")
+                   "the only width query §4 allows is (max-width:1119px), the collapse below 1120px")
     if "col-hide-sm" in src:
         warn("L3", "col-hide-sm is a leftover narrow-screen class; §4 removed responsive column hiding")
 

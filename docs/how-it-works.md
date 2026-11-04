@@ -142,5 +142,5 @@ up one step at a time.
 
 The page is 17 pages in 5 sidebar groups —
 Home · Accounts · Spending · Income · Investing · Plan · Monthly import · Glossary
-— desktop only, at least 1120px wide.
+— desktop only, at least 800px wide.
 </details>
