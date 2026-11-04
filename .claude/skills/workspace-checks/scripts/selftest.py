@@ -87,6 +87,14 @@ def m_spending_row(r):
     open(p, "w", encoding="utf-8").writelines(lines[:-1])
 def m_funds_drift(r):
     edit_json(r, layout.rel("funds.json"), lambda d: d["plan"].__setitem__("everyday", 9999))
+def m_fund_no_account(r):
+    # A fund on an account the register does not have: money the page would show that is nowhere.
+    edit_json(r, layout.rel("funds.json"), lambda d: d.__setitem__("funds",
+              [{"key": "trip", "name": "Trip", "goal": 3000, "account": "nope", "saved": {"amount": 100, "asof": "2026-09-26"}}]))
+def m_fund_flow_nowhere(r):
+    # A saving flow sent to a name that is no fund and no account leaves the plan for nowhere.
+    edit_json(r, layout.rel("funds.json"), lambda d: d["plan"]["flows"].append(
+              {"key": "x", "kind": "saving", "name": "Somewhere", "amount": 10, "to": "nowhere"}))
 def m_acct_drift(r):
     edit_json(r, layout.rel("accounts.json"), lambda d: d["accounts"][0].__setitem__("balance", 1.0))
 def m_bad_cover(r):
@@ -464,6 +472,8 @@ CASES = [
     ("S1", "a NAV entry with no matching section",          m_nav_orphan,      "dash"),
     ("D12", "a spending.csv row missing from the page",     m_spending_row,    "find"),
     ("D13", "funds.json changed but the page did not",      m_funds_drift,     "find"),
+    ("D13", "a fund on an account the register lacks",      m_fund_no_account, "find"),
+    ("D13", "a saving flow sent to no fund and no account", m_fund_flow_nowhere, "find"),
     ("D14", "accounts.json changed but the page did not",   m_acct_drift,      "find"),
     ("D19", "a liability given a role",                     m_axes_illegal,    "find"),
     ("D20", "a stated balance with no date",                m_stated_no_asof,  "find"),

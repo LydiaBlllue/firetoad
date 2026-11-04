@@ -275,9 +275,6 @@ data layer is rewritten once with the page rather than twice:
 
 ## Later
 
-- **Custom funds.** The owner names what they save for, a goal and a date, with no preset names or
-  roles. The preset Travel and Big buys funds came out on 2026-11-02; a workspace keeps its old ones in
-  `decisions/`.
 - **Big buys, back**, as something an owner can opt into, once the basics are done.
 
 - **Without the desktop app.** *(first user)* Today setup and the import need Claude Code on a

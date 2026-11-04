@@ -302,7 +302,9 @@ and asked; you add what you settled by hand — and the message to the owner is 
 out. Five parts, in this order — the same five keys of the record:
 
 1. **`changed`** — net worth, FIRE progress, spending, dry powder: label, from, to.
-2. **`asked`** — new merchants and anything else that needs the owner's word. Each one is ALSO a
+2. **`asked`** — new merchants and anything else that needs the owner's word. With a fund in
+   `funds.json` `funds`, ask once whether what is set aside in it changed; an answer restates
+   `saved` (amount and `asof`), and no answer leaves it as it was. Each one is ALSO a
    row in `findata/history/decisions.json` (`status: open`, the `default` applied meanwhile, the `source`
    statement and line it came from); the page header counts them until the owner answers.
 3. **`noticed`** — rules kept or broken (pay-yourself-first, the band, the holding count, the
