@@ -10,7 +10,7 @@ here is confirmed there, and nowhere else says otherwise (2026-11-04, user 001).
   unconfirmed  a layout taken from others' descriptions; not yet seen from this bank
   no           offered by the bank but not read, and why
 
-A CSV map's `verified` flag in csv_bank.PROFILES has to agree with its row here (S8 checks it).
+A CSV map's `verified` flag in csv_bank.PROFILES has to agree with its row here (S9 checks it).
 """
 
 FORMATS = {
