@@ -19,20 +19,8 @@ numbers changed ("a description on one line, the two amounts alone on the next")
 
 A privacy or security problem goes privately: see [SECURITY.md](SECURITY.md).
 
-## Changing the tool
+## Code
 
-- Work on the current version branch (the newest `v*` branch), not on `main`: `main` is the
-  released tool. Version numbers follow the rule at the top of [ROADMAP.md](ROADMAP.md).
-- Read `CLAUDE.md`, then `FINANCE.md` before touching a number and `DESIGN.md` before touching
-  the page. The page is built, never edited: change `templates/dashboards/` and run
-  `rebuild.py`.
-- Before a pull request, every checker is clean and every planted fault is caught:
-
-  ```bash
-  python3 .claude/skills/workspace-checks/scripts/check_data.py .
-  python3 .claude/skills/workspace-checks/scripts/check_design.py dashboards/finance_dashboard.html
-  python3 .claude/skills/workspace-checks/scripts/selftest.py .
-  ```
-
-- Test data is the made-up demo owner's. No real name, account number or amount goes into
-  code, comments, fixtures or commit messages.
+Pull requests are not being taken for now: the tool is still finding its shape, and every change
+is tested against real statements that cannot be shared. An idea for the code is very welcome as
+an issue instead.
