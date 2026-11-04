@@ -239,7 +239,8 @@
   Grouped by institution, the biggest first and the biggest account first inside it; each
   institution a band in ink with a gap above it. Four columns: the account (its type and number
   beneath, a long number cut to its last four), what it is for in one line, the date (with the
-  year when it is not this year), the balance, the heaviest thing on the row; a balance under a
+  year when it is not this year; amber, with its age on hover, past 30 days — never a ⚠, which
+  is kept for what is unaccounted for), the balance, the heaviest thing on the row; a balance under a
   dollar is muted. **The balance column is in the home currency throughout**: an institution is
   one figure, and an account held in another currency shows its dollar value with its own amount
   beneath and the rate on hover (§7). **A grouped table taller than the window folds to its group
