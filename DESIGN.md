@@ -88,9 +88,9 @@
     it — amber `#c98500` = look at this, red `#d03b3b` = a rule is broken or something is due.
     A new rule is wired into it.
   - The month pills appear only on `PILL_PAGES`, the year pills only on `YEAR_PAGES`.
-  - The foot of the sidebar carries the tool version (`VERSION`) in muted 10.5px. MAJOR.MINOR:
-    the major moves only with a change of technology (v2.0: the page's framework, the data's
-    store); everything else, a new product structure included, moves the minor.
+  - The foot of the sidebar carries the tool version (`VERSION`) in muted 10.5px. MAJOR.MINOR.PATCH
+    (three digits since 2026-11-03): the major moves only with a change of technology (2.0.0: the
+    page's framework, the data's store); everything else moves the minor or the patch.
 - **One page, one question, one kind of time**: a page follows the month cursor, the year cursor
   or no time at all, never half of each; a thing is judged in one place, and Home only
   summarises.

@@ -269,4 +269,4 @@ What the principles ask and the page does not do yet. Each is on the roadmap.
   is not announced. v1.3.
 - The page does not yet follow §2's two signals: there is no FIRE question, FIRE waits only on
   money invested, Home's cards do not change, and nothing says how long the money would last.
-  The navigation in §3, §4 and DESIGN.md is still the old one. ROADMAP, v1.4.
+  The navigation in §3, §4 and DESIGN.md is still the old one. ROADMAP, 1.0.1.
