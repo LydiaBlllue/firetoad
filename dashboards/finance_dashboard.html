@@ -580,12 +580,9 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
   <div class="grid-stats" id="acctStats"></div>
   <div class="card" style="margin-bottom:10px">
     <div class="lab">Every account, by institution</div>
+    <div id="acctLoose"></div>
     <table class="dt" id="acctTable"></table>
     <div class="cap" id="acctCap"></div>
-  </div>
-  <div class="card">
-    <div class="lab">What is still unaccounted for</div>
-    <div id="acctGaps"></div>
   </div>
 </section>
 
@@ -2875,6 +2872,15 @@ function renderAccounts(){
       : [ROLE_TERM[a.role] ? term(ROLE_TERM[a.role]) : "", REACH_TERM[a.reach] && a.reach !== "today" ? term(REACH_TERM[a.reach]) : ""]
           .filter(Boolean).join(" \u00b7 ") || "\u2014";
   const loanOf = a => LOANS.find(l => l.key === a.key || l.name === a.name);
+  // What is still unaccounted for sits on the row it is about (2026-11-03, the owner: not a card
+  // at the foot): a mark beside the balance, the story and the fix on hover. A gap that belongs to
+  // no account is one line above the table; with none, nothing is said.
+  const SYM = {bad:['\u2717','#d03b3b'], warn:['\u26a0','#c98500']};
+  const story = g => g.what + ". " + g.why + (/[.!?]$/.test(g.why) ? "" : ".") + " To close it: " + g.fix + (/[.!?]$/.test(g.fix) ? "" : ".");
+  const flag = g => '<span class="gap-f" style="color:' + SYM[g.sev][1] + '">' + numx(SYM[g.sev][0], [], story(g)) + '</span> ';
+  const quietOf = l => l && l.quiet ? {sev:"warn", what:"Nothing back from " + l.name + " in " + l.quiet + " days",
+      why:money2(l.owed, l.cur) + " is still owed", fix:"ask when the next repayment is coming, or settle a new amount and date"} : null;
+  const gapsOf = a => G.filter(g => g.k === a.gap).concat(quietOf(loanOf(a)) || []);
   let out = '<tr><th style="text-align:left">Account</th><th class="opt" style="text-align:left">For</th>'
           + '<th>As of</th><th>Balance</th></tr>';
   const groups = [...new Set(A.map(a => a.inst))]
@@ -2902,6 +2908,7 @@ function renderAccounts(){
         + '<td class="num"' + (old ? ' style="color:#c98500"' : '') + '>'
           + (a.asof ? dLong(a.asof) + (a.asof.slice(0,4) !== TODAY.slice(0,4) ? ", " + a.asof.slice(0,4) : "") + (old ? " \u26a0" : "") : "\u2014") + '</td>'
         + '<td class="num bal"' + (a.balance === null ? ' style="color:#c98500;font-weight:700"' : '') + '>'
+          + gapsOf(a).map(flag).join("")
           + (a.balance === null ? "\u26a0 Unknown"
              : a.cur === "CAD" ? (note ? numx(money2(a.balance, "CAD"), [], note) : money2(a.balance, "CAD"))
              : numx(money2(cad(a), "CAD"), [[a.cur, money2(a.balance, a.cur)], ["At", String(RATE[a.cur]) + " to the dollar"]], note || "")
@@ -2926,14 +2933,9 @@ function renderAccounts(){
   foldGroups($("acctTable"), "account");
   $("acctCap").innerHTML = "";
 
-  const SYM = {bad:['\u2717','#d03b3b'], warn:['\u26a0','#c98500']};
-  // A borrower who has gone quiet is a gap like any other (the Money lent card left 2026-11-03).
-  const Gq = G.concat(LOANS.filter(l => l.quiet).map(l => ({sev:"warn", what:"Nothing back from " + l.name + " in " + l.quiet + " days",
-      why:money2(l.owed, l.cur) + " is still owed.", fix:"ask when the next repayment is coming, or settle a new amount and date"})));
-  $("acctGaps").innerHTML = Gq.length ? Gq.map(g =>
-    '<div class="alert-row"><span class="sym" style="color:' + SYM[g.sev][1] + '">' + SYM[g.sev][0] + '</span>'
-    + '<span><b>' + g.what + '</b><br>' + g.why + '<br><span style="color:var(--muted)">To close it: ' + g.fix + '</span></span></div>').join("")
-    : '<div class="empty">Every account has a current balance and a named institution.</div>';
+  const owned = new Set(ACCT.accounts.map(a => a.gap).filter(Boolean));
+  const loose = G.filter(g => !owned.has(g.k));
+  $("acctLoose").innerHTML = loose.map(g => '<div class="cap" style="margin:0 0 8px 10px">' + flag(g) + g.what + '</div>').join("");
 }
 
 // ===== Data sources: one row per file the owner drops in, one list of what is still missing =====

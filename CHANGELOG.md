@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4 — unreleased
+
+- **What is still unaccounted for sits on its row** (2026-11-03, user 001). The card at the foot of
+  Accounts is gone: a ⚠ beside the balance of the account a gap belongs to, its story on hover; a
+  gap that belongs to no account is one line above the table; with none, nothing is shown.
+
 ## 1.3 — 2026-11-03
 
 - **The four smaller things a first owner noticed** (2026-11-03, user 002).
