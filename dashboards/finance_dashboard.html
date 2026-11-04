@@ -286,7 +286,18 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .dt tr.grp.first td{padding-top:2px}
 .dt td.note-c{font-size:11.5px;color:var(--muted);text-align:left;max-width:420px}
 #acctTable th + th, #acctTable td + td{padding-left:16px}
-#acctTable tr.grp td{padding-left:0}
+/* Accounts, for reading at a glance (2026-11-03): an institution is a band in ink, not a grey
+   caption; rows have room; the balance is the heaviest thing on the row. */
+#acctTable tr.grp td{padding:7px 10px;background:var(--pill);color:var(--ink);font-size:12.5px;font-weight:700;letter-spacing:0;text-transform:none;border-bottom:none}
+#acctTable tr.grp td.num{font-weight:600}
+#acctTable tr.gap td{padding:0;height:12px;border:none}
+#acctTable td{padding-top:8px;padding-bottom:8px;vertical-align:top}
+#acctTable td:first-child, #acctTable th:first-child{padding-left:10px}
+#acctTable td:last-child, #acctTable th:last-child{padding-right:10px}
+#acctTable .an{font-size:13.5px;font-weight:500}
+#acctTable .as{color:var(--muted);font-size:12px;margin-top:2px}
+#acctTable td.bal{font-weight:600}
+#acctTable tr.tiny td.bal{color:var(--muted);font-weight:400}
 #acctTable tr.tot td{padding-top:12px;border-top:2px solid var(--border);font-weight:700}
 #acctTable tr.tot td.sub{font-weight:400;color:var(--muted);font-size:12px}
 .alert-row .tag{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--pill);border-radius:4px;padding:1px 5px;vertical-align:1px;margin-right:2px}
@@ -2813,20 +2824,23 @@ function renderAccounts(){
     g.rows.filter(a => a.balance !== null).forEach(a => byCur[a.cur] = (byCur[a.cur]||0) + a.balance);
     const sums = Object.entries(byCur).map(([c,v]) => money2(v,c)
         + (c !== "CAD" && RATE[c] && Math.abs(v * RATE[c]) >= 1 ? ' <span style="color:var(--muted)">\u2248 ' + fmt(v * RATE[c]) + '</span>' : "")).join(" \u00b7 ") || "no balance yet";
-    out += '<tr class="grp' + (gi ? "" : " first") + '"><td colspan="3">' + g.inst + '</td><td class="num">' + sums + '</td></tr>';
+    out += (gi ? '<tr class="gap"><td colspan="4"></td></tr>' : '')
+         + '<tr class="grp' + (gi ? "" : " first") + '"><td colspan="3">' + g.inst + '</td><td class="num">' + sums + '</td></tr>';
     g.rows.forEach(a => {
       const age = acctAge(a), old = age !== null && age > 30;
       const tiny = a.balance !== null && Math.abs(cad(a)) < 1;
       const l = loanOf(a);
       const note = l ? "Agreed " + money2(l.agreed, l.cur) + " on " + dLong(l.since) + "; " + money2(l.back, l.cur) + " paid back since"
                        + (l.last ? ", the last on " + dLong(l.last) : "") + ". Every repayment comes off by itself." : a.note;
-      const sub = [a.kind, a.id && a.id !== "\u2014" ? a.id : ""].filter(Boolean).join(" \u00b7 ");
-      out += '<tr' + (tiny ? ' style="opacity:.55"' : '') + '><td style="text-align:left">' + a.name
-        + (sub ? '<div style="color:var(--muted);font-size:11.5px">' + sub + '</div>' : '') + '</td>'
+      // A long number (a broker's account id) is shortened to its last four; the whole one is on hover.
+      const id = a.id && a.id !== "\u2014" ? (a.id.replace(/^[…\.]+/, "").length > 8 ? '<span title="' + a.id + '">\u2026' + a.id.replace(/[^A-Za-z0-9]/g, "").replace(/(CAD|USD|CNY)$/, "").slice(-4) + '</span>' : a.id) : "";
+      const sub = [a.kind, id].filter(Boolean).join(" \u00b7 ");
+      out += '<tr' + (tiny ? ' class="tiny"' : '') + '><td style="text-align:left"><div class="an">' + a.name + '</div>'
+        + (sub ? '<div class="as">' + sub + '</div>' : '') + '</td>'
         + '<td style="text-align:left;font-size:12px">' + roleOf(a) + '</td>'
         + '<td class="num"' + (old ? ' style="color:#c98500"' : '') + '>'
-          + (a.asof ? dLong(a.asof) + (old ? " \u26a0" : "") : "\u2014") + '</td>'
-        + '<td class="num"' + (a.balance === null ? ' style="color:#c98500;font-weight:700"' : '') + '>'
+          + (a.asof ? dLong(a.asof) + (a.asof.slice(0,4) !== TODAY.slice(0,4) ? ", " + a.asof.slice(0,4) : "") + (old ? " \u26a0" : "") : "\u2014") + '</td>'
+        + '<td class="num bal"' + (a.balance === null ? ' style="color:#c98500;font-weight:700"' : '') + '>'
           + (a.balance === null ? "\u26a0 Unknown" : note ? numx(money2(a.balance, a.cur), [], note) : money2(a.balance, a.cur)) + '</td></tr>';
     });
   });

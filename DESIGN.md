@@ -231,9 +231,10 @@
   **The story of an update lives here and nowhere else; every other page shows a status computed
   today.**
 - **Accounts**: one row per place money sits, grouped by institution, the biggest institution
-  first and the biggest account first inside it. Four columns: the account (its type and number
-  beneath, small), what it is for in one line, the date, the balance; a balance under a dollar is
-  dimmed. The institution row gives its net position (credit cards negative, currencies never
+  first and the biggest account first inside it. Each institution is a band in ink with a gap
+  above it. Four columns: the account (its type and number beneath, a long number cut to its
+  last four), what it is for in one line, the date (with the year when it is not this year), the
+  balance, the heaviest thing on the row; a balance under a dollar is muted. The institution row gives its net position (credit cards negative, currencies never
   added together), and for another currency roughly what that is in dollars. A **home-currency
   total on the last row** — one of the two places currencies are added (§7), so its explanation
   states the rate and its date and how many accounts without a balance were left out, and it

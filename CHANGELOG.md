@@ -6,7 +6,8 @@
   lent* cards are gone; the table says both. It is four columns now — the account with its type
   and number beneath, what it is for in one line, the date, the balance — the biggest institution
   and account first, another currency's group row with roughly what it is in dollars, and a
-  balance under a dollar dimmed. A borrower gone quiet moves to the card of what is missing.
+  balance under a dollar muted. Each institution is a band in ink, rows have room, a broker's long
+  account number is cut to its last four, and a date from another year carries its year. A borrower gone quiet moves to the card of what is missing.
 
 - **Accounts sits under Home; Records is the Monthly import** (2026-11-03, user 001). Records held
   two kinds of page: Accounts answers where the money is, which is net worth opened up, and
