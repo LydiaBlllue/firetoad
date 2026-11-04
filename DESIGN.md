@@ -180,7 +180,9 @@
 
 ### Plan
 
-- **Budget** follows no time: the plan, no category caps.
+- **Budget** follows no time: the plan, no category caps. Below the split, a Funds card appears
+  only when the owner has a fund: each one's set-aside amount against its goal, what the plan adds,
+  and when that pace reaches the goal.
   - **How each paycheque is split**: one stacked bar cutting take-home into the committed
     payments (one segment each) / Invest / Everyday / Unallocated, with one
     line per part beneath it. Take-home, Invest and Everyday are sums of `funds.json`

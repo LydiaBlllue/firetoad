@@ -2,6 +2,13 @@
 
 ## 1.3 — unreleased
 
+- **Custom funds** (2026-11-03, user 001). A fund is whatever the owner names: a label on money
+  already in one of their accounts, with an optional goal, month and reason, and a saving flow that
+  adds to it. Budget shows each one's set-aside amount, what the plan adds and when that pace
+  reaches the goal; the split shows the flow as a line. No preset names, no roles, and a month's
+  leftover goes nowhere by itself. D13 checks the account and the flow's destination; two selftest
+  faults (61). The demo has one fund. No schema change: a workspace without `funds` has none.
+
 - **A download holds only what a user runs** (2026-11-03, user 001). `.gitattributes` leaves the
   demo site, its deploy workflow, the diagram sources, the demo generator and the competitor survey
   out of a release's zip; they stay in the repository, and the documents link there. The zip passes

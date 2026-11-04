@@ -409,6 +409,10 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div id="splitRows"></div>
     <div id="splitNote"></div>
   </div>
+  <div class="card" style="margin-bottom:10px" id="fundCard" hidden>
+    <div class="lab">Funds</div>
+    <div id="fundRows"></div>
+  </div>
 </section>
 
 <section data-pg="port" hidden>
@@ -792,7 +796,7 @@ function pageFlags(){
   if(bd !== null && Math.abs(bd) > DRIFT_FLAG) f.base = "#c98500";
   // The investing pages: the band and the cap from rules.json, never a literal 40/45/10.
   // The plan page: red when the split asks for more than the paycheque.
-  if(COMMITTED_NOW + INVM + EVERYDAY > PLAN.takeHome && !unset("takeHome")) f.budget = "#d03b3b";
+  if(PLAN.takeHome > 0 && COMMITTED_NOW + INVM + FUND_NOW + EVERYDAY > PLAN.takeHome && !unset("takeHome")) f.budget = "#d03b3b";
   return f;
 }
 // What a page needs before it has anything to show. A workspace with only a credit card is a
@@ -928,6 +932,7 @@ const GLOSSARY = {
   bucket:         {own:1, w:"bucket", pos:"on this page", def:"A group of holdings your investing rules are written about, such as dry powder. What no bucket claims falls into the last one.", also:["dry_powder","target_band"]},
   everyday:       {own:1, w:"Everyday", pos:"on this page", def:"The amount you set each month for day-to-day spending. Inside it, no purchase needs a reason. Bills and housing are not in it.", also:["pay_yourself_first"]},
   committed:      {own:1, w:"committed payment", pos:"on this page", def:"A payment made every month before anything is chosen, such as rent, a mortgage or a loan.", also:["planning_figure"]},
+  fund:           {own:1, w:"fund", pos:"on this page", def:"A name you put on part of the money in one of your accounts, for something you are saving toward. Nothing is moved: the money stays where it is, and the plan can add to it each month.", also:["unallocated"]},
   unallocated:    {own:1, w:"Unallocated", pos:"on this page", def:"What is left of take-home pay once every line of the plan is paid. It stays where the paycheque landed.", also:["everyday"]},
   complete_to:    {own:1, w:"Complete to", pos:"on this page", def:"The day every account’s numbers are in up to. After it, some accounts are still waiting for their next statement."},
 };
@@ -1290,7 +1295,7 @@ function renderHome(){
 // ONE number to stay under. No category caps, because a category cap is a small guilt machine --
 // it asks you to justify dinner while saying nothing about whether the month was fine overall.
 // findata/funds.json is the source of truth for every number below; check_data D12 checks it.
-const FUNDS = {"asof_note": "The guilt-free plan: pay-yourself-first, one everyday amount. The dashboard's FUNDS constant is a copy of this file (check_data D13). Fields that render on the page are English.", "plan": {"start": "2026-08", "flows": [{"key": "pay", "kind": "income", "name": "Take-home pay", "amount": 3600, "note": "Payroll of $1,800 twice a month. Investment income stays with the broker and is not counted."}, {"key": "rent", "kind": "committed", "name": "Rent", "amount": 1250, "afterFire": "keep", "note": "Pre-authorized on the 1st, from chequing. Still there after FIRE."}, {"key": "invest", "kind": "saving", "name": "Invest", "amount": 800, "to": "broker", "note": "Off the top, before anything else — pay-yourself-first."}, {"key": "everyday", "kind": "everyday", "name": "Everyday", "amount": 1300, "note": "The guilt-free line. No categories and no caps below it."}]}};
+const FUNDS = {"asof_note": "The guilt-free plan: pay-yourself-first, one everyday amount. The dashboard's FUNDS constant is a copy of this file (check_data D13). Fields that render on the page are English.", "plan": {"start": "2026-08", "flows": [{"key": "pay", "kind": "income", "name": "Take-home pay", "amount": 3600, "note": "Payroll of $1,800 twice a month. Investment income stays with the broker and is not counted."}, {"key": "rent", "kind": "committed", "name": "Rent", "amount": 1250, "afterFire": "keep", "note": "Pre-authorized on the 1st, from chequing. Still there after FIRE."}, {"key": "invest", "kind": "saving", "name": "Invest", "amount": 800, "to": "broker", "note": "Off the top, before anything else — pay-yourself-first."}, {"key": "trip-monthly", "kind": "saving", "name": "Trip", "amount": 200, "to": "trip", "note": "Set aside each month for the trip."}, {"key": "everyday", "kind": "everyday", "name": "Everyday", "amount": 1300, "note": "The guilt-free line. No categories and no caps below it."}]}, "funds": [{"key": "trip", "name": "Trip", "goal": 3000, "by": "2027-06", "account": "ws-hys", "saved": {"amount": 1200, "asof": "2026-09-26"}, "why": "Two weeks away next summer"}]};
 const PLAN  = FUNDS.plan;
 // The plan as flows (schema 5): what comes in, what is paid before anything is chosen, what is
 // moved out to be saved, what is free. The scalars this page reads are sums of them, so a row
@@ -1303,6 +1308,13 @@ PLAN.invest       = flowSum("saving", f => (f.to || "broker") === "broker");
 PLAN.everyday     = flowSum("everyday");
 // A fund's standing contribution is a saving flow that names the fund (`to`), one row of the
 // plan like every other -- not a number kept on the fund. (findata schema 8, 2026-09-10)
+// Funds are the owner's own (2026-11-03): any name, any number of them, each a label on money
+// already in one of their accounts. No preset roles, and a month's leftover goes nowhere by itself.
+const FUND_LIST  = FUNDS.funds || [];
+const FUND_C     = ["#4a3aa7", "#1f8a70", "#b5527a", "#8a6d1f", "#3d6f9e", "#a2542c"];
+const fundColor  = key => FUND_C[Math.max(0, FUND_LIST.findIndex(f => f.key === key)) % FUND_C.length];
+const FUND_FLOWS = FLOWS.filter(f => f.kind === "saving" && flowNow(f) && FUND_LIST.some(x => x.key === f.to));
+const FUND_NOW   = FUND_FLOWS.reduce((s, f) => s + (f.amount || 0), 0);
 PLAN.takeHomeNote = (FLOWS.find(f => f.kind === "income") || {}).note || "";
 // A number the owner never gave is null in the plan, not 0: the first setup that skipped its
 // questions showed take-home pay of $0 and a birth year of 1990 as if they were facts (2026-10-28,
@@ -1333,6 +1345,7 @@ function renderPlan(){
   renderFree();
   drawFlow();
   renderSplit();
+  renderFunds();
   wirePlanEdits();
 }
 
@@ -1375,12 +1388,43 @@ function planAlloc(){
         + (f.afterFire === "drop" ? " Stops after FIRE." : "")})).concat([
     {k:"Invest",   v:INVM,          c:"#2a78d6", pk:"invm", tm:"pay_yourself_first",
      d:"Two transfers of "+fmt(FUNDS.plan.invest/2)+" to "+BROKER+". It comes off the top before anything else, which is the whole point of pay-yourself-first."},
+  ].concat(FUND_FLOWS.map(f => ({k:f.name || (FUND_LIST.find(x => x.key === f.to) || {}).name, v:f.amount || 0,
+      c:fundColor(f.to), pk:null, tm:"fund",
+      d:(f.note || "Set aside each month for this fund.")})), [
     {k:"Everyday", v:EVERYDAY,           c:"var(--c-dining)", pk:"everyday", tm:"everyday",
      d:"Groceries, dining, transport, subscriptions, shopping \u2014 everything but bills and housing."},
-  ]);
+  ]));
 }
 const UNALLOC = v => ({k:"Unallocated", v, c:"var(--pill)", pk:null, tm:"unallocated",
     d:"Nothing in the plan names this. It stays where the paycheque landed."});
+
+// Each fund: what is set aside, what the plan adds, and when the goal is reached at that pace.
+// "Set aside" is the owner's own figure with its date: nothing is moved into a fund, so no
+// statement can say it, and the page never adds months to it by itself.
+function renderFunds(){
+  $("fundCard").hidden = !FUND_LIST.length;
+  if(!FUND_LIST.length) return;
+  const addYM = (ym, n) => { const [y, m] = ym.split("-").map(Number), t = m - 1 + n; return (y + Math.floor(t / 12)) + "-" + String(t % 12 + 1).padStart(2, "0"); };
+  $("fundRows").innerHTML = FUND_LIST.map(fd => {
+    const monthly = FUND_FLOWS.filter(f => f.to === fd.key).reduce((s, f) => s + (f.amount || 0), 0);
+    const saved = (fd.saved || {}).amount || 0, asof = (fd.saved || {}).asof;
+    const acct = (ACCT.accounts || []).find(a => a.key === fd.account);
+    const goal = fd.goal || 0, left = Math.max(0, goal - saved);
+    const at = !goal ? null : !left ? "reached" : monthly > 0 && asof ? addYM(asof.slice(0, 7), Math.ceil(left / monthly)) : null;
+    const late = at && at !== "reached" && fd.by && at > fd.by;
+    const bar = goal ? '<div style="height:8px;border-radius:4px;background:var(--pill);overflow:hidden;margin:6px 0 8px">'
+      + '<div style="height:100%;width:' + Math.min(100, pc(saved, goal)).toFixed(1) + '%;background:' + fundColor(fd.key) + '"></div></div>' : "";
+    return '<div style="margin-bottom:14px"><div style="font-weight:600">' + fd.name + '</div>'
+      + (fd.why ? '<div class="cap">' + fd.why + '</div>' : "") + bar
+      + metaList([
+        ["Set aside", fmt(saved) + (asof ? " on " + dLong(asof) + ", " + asof.slice(0, 4) : "")],
+        ["Added each month", monthly > 0 ? fmt(monthly) : "Nothing yet", monthly > 0 ? "" : "mut"],
+        goal ? ["Goal", fmt(goal) + (fd.by ? " by " + ymFull(fd.by) : "")] : null,
+        goal ? ["At this pace", at === "reached" ? "Reached" : at ? ymFull(at) + (late ? ", after " + ymFull(fd.by) : "") : "Never, with nothing added", late || (!at && left) ? "hi" : ""] : null,
+        acct ? ["Held in", (acct.inst ? acct.inst + " " : "") + acct.name] : null
+      ]) + '</div>';
+  }).join("");
+}
 
 function renderSplit(){
   const alloc = planAlloc();

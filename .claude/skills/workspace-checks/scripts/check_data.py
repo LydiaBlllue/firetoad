@@ -641,6 +641,47 @@ def check(root):
             else:
                 warn("D13", f"the monthly split asks for ${split:,} against income of "
                             f"${ft['income']:,}; the ${split - ft['income']:,} gap comes from savings")
+
+        # Funds (2026-11-03): the owner's own, each a label on money already in one account. A
+        # fund that names no account, or a set-aside figure larger than the account holds, would
+        # show money that is not there; a saving flow sent to a name nothing knows is money that
+        # leaves the plan for nowhere.
+        aj_ = json.load(open(load(root, "accounts.json"), encoding="utf-8")) if load(root, "accounts.json") else {}
+        accts = {a.get("key"): a for a in aj_.get("accounts") or []}
+        funds = fj.get("funds") or []
+        keys = [f_.get("key") for f_ in funds]
+        for k in {k for k in keys if keys.count(k) > 1}:
+            err("D13", f"funds.json: two funds share the key {k!r}")
+        claimed = {}
+        for f_ in funds:
+            nm = f_.get("name") or f_.get("key")
+            if not f_.get("key") or not f_.get("name"):
+                err("D13", f"funds.json fund {nm!r}: a fund needs a key and a name")
+            a = accts.get(f_.get("account"))
+            if not a:
+                err("D13", f"funds.json fund {nm!r}: account {f_.get('account')!r} is not in accounts.json")
+            elif a.get("side") != "asset":
+                err("D13", f"funds.json fund {nm!r}: {f_.get('account')!r} is a liability; a fund sits on money you hold")
+            for fld in ("goal",):
+                if fld in f_ and (not isinstance(f_[fld], (int, float)) or f_[fld] <= 0):
+                    err("D13", f"funds.json fund {nm!r}: {fld} must be a number above 0")
+            if f_.get("by") and not re.fullmatch(r"\d{4}-\d{2}", str(f_["by"])):
+                err("D13", f"funds.json fund {nm!r}: by must be YYYY-MM, not {f_['by']!r}")
+            sv = f_.get("saved") or {}
+            if sv:
+                if not isinstance(sv.get("amount"), (int, float)) or sv["amount"] < 0 or not sv.get("asof"):
+                    err("D13", f"funds.json fund {nm!r}: saved needs an amount of 0 or more and an asof date")
+                elif a:
+                    claimed[a["key"]] = claimed.get(a["key"], 0) + sv["amount"]
+        for k, amt in claimed.items():
+            bal = accts[k].get("balance")
+            if isinstance(bal, (int, float)) and amt > bal + 0.005:
+                warn("D13", f"funds set aside ${amt:,.2f} on {accts[k].get('name') or k}, which holds ${bal:,.2f}")
+        for f_ in plan.get("flows") or []:
+            to = f_.get("to")
+            if f_.get("kind") == "saving" and to and to != "broker" and to not in keys and to not in accts:
+                err("D13", f"funds.json flow {f_.get('name') or f_.get('key')!r} saves to {to!r}, "
+                           f"which is no fund and no account")
     # -- D14 accounts.json is a registry, not a second set of books ---------
     # Added 2026-09-07 with the Accounts page. The registry repeats balances that live in three
     # other files, and a repeated number is a number that drifts. Re-derive every one from its

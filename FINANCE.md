@@ -269,7 +269,7 @@ order.
 | `until` | a date, or open | the FIRE projection drops a flow after its end — a loan paid off |
 | `afterFire` | keep · drop | rent keeps, a mortgage payment drops, property tax keeps |
 | `pays` | the liability it repays | the principal part is saving, not spending |
-| `to` | `broker` (the default) or another destination | pay-yourself-first counts only the broker |
+| `to` | `broker` (the default), a fund's key, or an account's key | pay-yourself-first counts only the broker |
 
 - **A number never given is `null`, not 0** — take-home, the investing transfer, the everyday amount,
   `plan.json` `planBase` and `profile.json` `born`. The page says *Not set* where it would show
@@ -286,6 +286,16 @@ order.
 - **The calibration is an average, not a median.** It covers up to the last twelve usable months, so
   the big months count, which a lifetime of spending also has to pay for. It needs three months,
   and the drift warning reads it. It sets nothing.
+- **A fund is the owner's own** (2026-11-03). `funds.json` `funds` is a list, empty or absent
+  when there are none. Each has a `key`, a `name`, the `account` (a register key, an asset) whose
+  money it is a label on, and optionally a `goal`, a `by` month, a `why`, and `saved` — an amount
+  and its `asof`, as the owner says it. What the plan adds is a `saving` flow with `to` naming the
+  fund, so it is a line of the split like any other. Nothing is moved into a fund and no
+  statement can say what is in one, so `saved` is never advanced by the page: *At this pace* is
+  `saved` plus that flow from `asof`, and the owner restates `saved` when it changes. A month's
+  leftover goes to no fund by itself. D13 fails a fund on an account the register does not have
+  or on a liability, and a saving flow whose `to` is no fund and no account, and warns when what
+  is set aside on one account is more than it holds.
 - **A committed flow is declared, not observed.** D21 matches each one paid today against the
   ledgers the way the investing transfers are matched against the broker's activities — a
   payment of that size in the two whole months before the newest ledger date — and reports an
