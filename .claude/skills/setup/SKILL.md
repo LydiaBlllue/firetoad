@@ -85,6 +85,13 @@ often pay arrives, whether last month's transfers are the standing rule, the eve
 payments and rent after FIRE, the planning spend, the investing buckets, a counterparty
 who repays a loan, and anything held abroad.
 
+**A bank's OFX or QFX download** (2026-11-04) is the way in for a bank with no PDF parser:
+one standard for every bank, the bank's own balance in it, so it reconciles without asking. The
+draft reads every account in the file, its type, currency and balance, and keeps the bank's id for
+each as `ofxId`; its `_open` question asks which bank it is and which of the owner's accounts each
+id is. One file is one document, covering all its accounts. Prefer it to a CSV wherever the bank
+offers it (the *Money* or *Quicken* choice).
+
 **A bank's own download (CSV).** A bank with no PDF parser here is read from its transaction
 download: TD, Scotiabank, CIBC, Tangerine and Simplii have starting maps; any other bank, EQ among them, is mapped from its first lines (2026-11-03). The draft recognises a
 known layout and writes a `csv` map on the document (which column is the date, the description,

@@ -34,6 +34,12 @@ rows. **Read the summary, not the statements.** What it hands back is the whole 
   parser can place stops the run.) A statement that does not follow its
   ledger (the opening balance is not the ledger's closing): a statement in between is missing —
   ask for it, do not bridge the gap by hand.
+- **An OFX or QFX download** is named by the account ids inside it (the register's `ofxId`), never
+  by its name: every bank's arrives as `statement.ofx`. It carries the bank's balance, so it is
+  held to it on its own: a ledger's rows have to join its last balance, a card or balance-only
+  account has to land on the bank's figure. A file whose ids the register does not know yet stops
+  the run: setup (or `ofxId` on the account) adds them. Ask the owner to download a **date range**,
+  not "since last download": the bank moves that mark with every download, a CSV included.
 - **A bank's own download (CSV) with no running balance** (`--balance` in a STOP line): ask the
   owner for the balance their banking app shows for that account today, then run again with
   `--balance "<account key>=<amount>"` (a card's balance as the app shows it, a positive number).

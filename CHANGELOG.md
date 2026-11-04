@@ -2,6 +2,18 @@
 
 ## 1.0.1 — unreleased
 
+- **A bank's OFX or QFX download, for any bank** (2026-11-04, user 001). One reader
+  (`parsers/ofx.py`) for the standard most Canadian banks offer as *Money* or *Quicken*: every
+  account in the file with the bank's id for it (kept as `ofxId`), its type and currency, a unique id
+  per transaction and the bank's own balance. Each row's balance is worked back from the bank's, so
+  a download has to join the ledger's last balance, and a card or balance-only account has to land
+  on the bank's figure: nothing is asked. A file is named by the ids inside it, not its name. BMO's
+  two-letter codes ("[DN]") are spelled the way its PDF spells them, so rows type as before. On a
+  real BMO download, two months of chequing matched the PDF ledger row for row and the books ended
+  on the bank's balance to the cent. Setup drafts accounts from it and asks which bank and which
+  account each id is. A debit purchase's merchant no longer keeps "Debit Card Purchase," in its name
+  (it made every BMO debit merchant look new, PDFs included).
+
 - **A bank's own CSV download** (2026-11-03, user 001: lower the barrier for banks with no PDF
   parser). One reader, `parsers/csv_bank.py`, follows a `csv` map kept on the register's
   document — which column is the date, the description, the money out and in, the balance — that

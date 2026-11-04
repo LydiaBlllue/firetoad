@@ -239,6 +239,8 @@ def build(a, today):
             rec["statedBalance"] = acc["balance"]
         if acc.get("limit"):
             rec["limit"] = acc["limit"]
+        if acc.get("ofxId"):                  # the bank's own id for it, as its OFX download names it
+            rec["ofxId"] = acc["ofxId"]
         if acc.get("gap"):
             rec["gap"] = acc["gap"]
         accounts.append(rec)
