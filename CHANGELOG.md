@@ -7,7 +7,8 @@
   is dated by its own newest data on the page as it already was in the checkers (`clock.py`, one
   module for both), so the live demo no longer shows every balance as old.
 - **CONTRIBUTING.md and SECURITY.md**: how to report a problem without sharing a statement, and
-  a privacy problem privately.
+  a privacy problem privately (GitHub's private reporting is on). Pull requests are not taken for
+  now; ideas come as issues.
 
 - **One rule for version numbers** (2026-11-03, user 001), at the top of ROADMAP.md: a version a
   workspace takes with a sync is a patch, one that also needs a migration is a minor, a change of
