@@ -19,6 +19,12 @@ third (a first user's statements, 2026-10):
     SOMEONE WITH A LONG NAME                              <- more description
     CA2Kx7Q 1,215.05 4,000.00                             <- the rest, then movement and balance
 
+and the amounts can have that last line to themselves (2026-11):
+
+    Oct 14 Pre-Authorized Payment, EXAMPLE HOME           <- dated, no amounts yet
+    SERVICES PLAN                                         <- more description
+    48.20 1,320.75                                        <- movement and balance, no words
+
 Every row prints its balance, so the sign of a movement is the balance's own difference.
 Reconciled per account: the chain closes on the printed closing balance, and the deducted and
 added totals match the summary.
@@ -34,7 +40,7 @@ RULE = "balance chain closes; deducted and added match the printed totals"
 GLYPH = re.compile(r"/([0-9a-f]{2})|/(\d)")
 PUNCT = {"2c", "2e", "2d", "28", "29", "3a", "3b", "2f", "26", "27", "23", "24", "2a", "2b", "3d", "40", "25"}
 DATE = re.compile(r"^([A-Z][a-z]{2}) (\d{2}) (.*)$")
-ROW = re.compile(r"^(.*?)\s+(" + AMOUNT + r")\s+(" + AMOUNT + r")\s*$")
+ROW = re.compile(r"^(.*?)(?:^|\s+)(" + AMOUNT + r")\s+(" + AMOUNT + r")\s*$")
 SECTION = re.compile(r"^(.+?) Account # (\d{4}) (\d{4}-\d{3})\s*(.*)$")
 # What a page break repeats inside a section; never part of a description that wraps across it.
 FURNITURE = re.compile(r"\(\$\)|^Page \d+ of \d+|^Amounts (?:deducted|added)|^Here's what happened")

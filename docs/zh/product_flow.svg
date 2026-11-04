@@ -1,19 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 1188" width="1180" height="1188" font-family="system-ui, -apple-system, Segoe UI, PingFang SC, Noto Sans CJK SC, sans-serif" font-size="12.5">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 1204" width="1180" height="1204" font-family="system-ui, -apple-system, Segoe UI, PingFang SC, Noto Sans CJK SC, sans-serif" font-size="12.5">
 <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6b6f6c"/></marker></defs>
-<rect width="1180" height="1188" fill="white"/>
+<rect width="1180" height="1204" fill="white"/>
 <rect x="20" y="68" width="1140" height="92" rx="8" fill="#f9f9f7" stroke="#d8dcd9"/>
 <text x="34" y="98" fill="#1c1c1a" font-weight="700" font-size="15">试用</text>
 <text x="34" y="118" fill="#6b6f6c" font-size="10.5">1 分钟,不装任何东西</text>
 <rect x="20" y="188" width="1140" height="404" rx="8" fill="#f9f9f7" stroke="#d8dcd9"/>
 <text x="34" y="218" fill="#1c1c1a" font-weight="700" font-size="15">建立</text>
 <text x="34" y="238" fill="#6b6f6c" font-size="10.5">约 20 分钟,只做一次</text>
-<rect x="20" y="620" width="1140" height="358" rx="8" fill="#f9f9f7" stroke="#d8dcd9"/>
+<rect x="20" y="620" width="1140" height="374" rx="8" fill="#f9f9f7" stroke="#d8dcd9"/>
 <text x="34" y="650" fill="#1c1c1a" font-weight="700" font-size="15">每月</text>
-<text x="34" y="670" fill="#6b6f6c" font-size="10.5">导入日,默认 26 号</text>
-<rect x="20" y="1006" width="1140" height="170" rx="8" fill="#f9f9f7" stroke="#d8dcd9"/>
-<text x="34" y="1036" fill="#1c1c1a" font-weight="700" font-size="15">随时</text>
-<text x="34" y="1056" fill="#6b6f6c" font-size="10.5">每周、每季、工具更新</text>
-<text x="34" y="1071" fill="#6b6f6c" font-size="10.5">时</text>
+<text x="34" y="670" fill="#6b6f6c" font-size="10.5">导入日,默认 1 号</text>
+<rect x="20" y="1022" width="1140" height="170" rx="8" fill="#f9f9f7" stroke="#d8dcd9"/>
+<text x="34" y="1052" fill="#1c1c1a" font-weight="700" font-size="15">随时</text>
+<text x="34" y="1072" fill="#6b6f6c" font-size="10.5">每周、每季、工具更新</text>
+<text x="34" y="1087" fill="#6b6f6c" font-size="10.5">时</text>
 <text x="320.0" y="44" text-anchor="middle" fill="#1c1c1a" font-weight="700" font-size="11" letter-spacing=".08em">你</text>
 <text x="650.0" y="44" text-anchor="middle" fill="#4a3aa7" font-weight="700" font-size="11" letter-spacing=".08em">JADE TOAD</text>
 <text x="980.0" y="44" text-anchor="middle" fill="#2a78d6" font-weight="700" font-size="11" letter-spacing=".08em">页面</text>
@@ -34,16 +34,16 @@
 <path d="M500,666 L470,666" fill="none" stroke="#6b6f6c" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="5,4"/>
 <path d="M320,686 L320,732" fill="none" stroke="#6b6f6c" stroke-width="1.5" marker-end="url(#arr)"/>
 <path d="M470,752 L500,752" fill="none" stroke="#6b6f6c" stroke-width="1.5" marker-end="url(#arr)"/>
-<path d="M650,788 L650,846 L830,846" fill="none" stroke="#6b6f6c" stroke-width="1.5" marker-end="url(#arr)"/>
-<path d="M830,846 L470,846" fill="none" stroke="#6b6f6c" stroke-width="1.5" marker-end="url(#arr)"/>
-<path d="M320,874 L320,932 L500,932" fill="none" stroke="#6b6f6c" stroke-width="1.5" marker-end="url(#arr)"/>
-<rect x="388" y="924" width="43" height="16" rx="3" fill="white"/>
-<text x="410" y="936" text-anchor="middle" fill="#6b6f6c" font-size="10.5">一句话</text>
-<path d="M650,960 L650,974 L154,974 L154,666 L170,666" fill="none" stroke="#6b6f6c" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="5,4"/>
-<rect x="380" y="966" width="43" height="16" rx="3" fill="white"/>
-<text x="402" y="978" text-anchor="middle" fill="#6b6f6c" font-size="10.5">下个月</text>
-<path d="M980,882 L980,1024" fill="none" stroke="#6b6f6c" stroke-width="1.5" marker-end="url(#arr)"/>
-<path d="M830,1052 L470,1052" fill="none" stroke="#6b6f6c" stroke-width="1.5" marker-end="url(#arr)"/>
+<path d="M650,788 L650,854 L830,854" fill="none" stroke="#6b6f6c" stroke-width="1.5" marker-end="url(#arr)"/>
+<path d="M830,854 L470,854" fill="none" stroke="#6b6f6c" stroke-width="1.5" marker-end="url(#arr)"/>
+<path d="M320,882 L320,948 L500,948" fill="none" stroke="#6b6f6c" stroke-width="1.5" marker-end="url(#arr)"/>
+<rect x="388" y="940" width="43" height="16" rx="3" fill="white"/>
+<text x="410" y="952" text-anchor="middle" fill="#6b6f6c" font-size="10.5">一句话</text>
+<path d="M650,976 L650,990 L154,990 L154,666 L170,666" fill="none" stroke="#6b6f6c" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="5,4"/>
+<rect x="380" y="982" width="43" height="16" rx="3" fill="white"/>
+<text x="402" y="994" text-anchor="middle" fill="#6b6f6c" font-size="10.5">下个月</text>
+<path d="M980,898 L980,1040" fill="none" stroke="#6b6f6c" stroke-width="1.5" marker-end="url(#arr)"/>
+<path d="M830,1068 L470,1068" fill="none" stroke="#6b6f6c" stroke-width="1.5" marker-end="url(#arr)"/>
 <rect x="170" y="86" width="300" height="56" rx="9" fill="#fcfcfb" stroke="#1c1c1a" stroke-width="2"/>
 <text x="184" y="110" fill="#1c1c1a">克隆仓库,双击打开</text>
 <text x="184" y="126" fill="#1c1c1a">dashboards/finance_dashboard.html。</text>
@@ -78,23 +78,24 @@
 <text x="514" y="740" fill="#1c1c1a">一条本地命令做完:认出每份文件、按内容查重 →</text>
 <text x="514" y="756" fill="#1c1c1a">解析器逐份读,对平了才写 → 商户分类 → 写数据</text>
 <text x="514" y="772" fill="#1c1c1a">→ 重建页面 → 归档原件。模型只看摘要。</text>
-<rect x="830" y="810" width="300" height="72" rx="9" fill="#fcfcfb" stroke="#2a78d6" stroke-width="2"/>
-<text x="844" y="834" fill="#1c1c1a">Records → Updates 就是报告:变了什么 · 问你什</text>
-<text x="844" y="850" fill="#1c1c1a">么 · 注意到什么 · 替你决定了什么 · 收到哪些</text>
-<text x="844" y="866" fill="#1c1c1a">文件。页头一句话:数据到哪、缺什么、几项待答。</text>
-<rect x="170" y="818" width="300" height="56" rx="9" fill="#fcfcfb" stroke="#1c1c1a" stroke-width="2"/>
-<text x="184" y="842" fill="#1c1c1a">读报告;回答待确认项:新商户、没有署名的</text>
-<text x="184" y="858" fill="#1c1c1a">e-Transfer、解析器读不了的文件。</text>
-<rect x="500" y="904" width="300" height="56" rx="9" fill="#fcfcfb" stroke="#4a3aa7" stroke-width="2"/>
-<text x="514" y="928" fill="#1c1c1a">一句话即归档:答案写回商户表和账本的类型列,页</text>
-<text x="514" y="944" fill="#1c1c1a">面重建。</text>
-<rect x="170" y="1024" width="300" height="56" rx="9" fill="#fcfcfb" stroke="#1c1c1a" stroke-width="2"/>
-<text x="184" y="1048" fill="#1c1c1a">每周看 This month:额度还剩多少。每季过一遍</text>
-<text x="184" y="1064" fill="#1c1c1a">Investing → Rules 和 Checkpoints。</text>
-<rect x="830" y="1024" width="300" height="56" rx="9" fill="#fcfcfb" stroke="#2a78d6" stroke-width="2"/>
-<text x="844" y="1048" fill="#1c1c1a">侧边栏圆点:琥珀 = 看一眼,红 = 规则被破。四个</text>
-<text x="844" y="1064" fill="#1c1c1a">检查器过不去,页面根本建不出来。</text>
-<rect x="500" y="1102" width="300" height="56" rx="9" fill="#fcfcfb" stroke="#4a3aa7" stroke-width="2" stroke-dasharray="6,4"/>
-<text x="514" y="1126" fill="#1c1c1a">工具更新时:sync.py 推入技能和模板,migrate.py</text>
-<text x="514" y="1142" fill="#1c1c1a">把数据形状逐步升级;你的数据一个字节不碰。</text>
+<rect x="830" y="810" width="300" height="88" rx="9" fill="#fcfcfb" stroke="#2a78d6" stroke-width="2"/>
+<text x="844" y="834" fill="#1c1c1a">Monthly import → Updates 就是报告:变了什么</text>
+<text x="844" y="850" fill="#1c1c1a">· 问你什么 · 注意到什么 · 替你决定了什么 ·</text>
+<text x="844" y="866" fill="#1c1c1a">收到哪些文件。页头一句话:数据到哪、缺什么、</text>
+<text x="844" y="882" fill="#1c1c1a">几项待答。</text>
+<rect x="170" y="826" width="300" height="56" rx="9" fill="#fcfcfb" stroke="#1c1c1a" stroke-width="2"/>
+<text x="184" y="850" fill="#1c1c1a">读报告;回答待确认项:新商户、没有署名的</text>
+<text x="184" y="866" fill="#1c1c1a">e-Transfer、解析器读不了的文件。</text>
+<rect x="500" y="920" width="300" height="56" rx="9" fill="#fcfcfb" stroke="#4a3aa7" stroke-width="2"/>
+<text x="514" y="944" fill="#1c1c1a">一句话即归档:答案写回商户表和账本的类型列,页</text>
+<text x="514" y="960" fill="#1c1c1a">面重建。</text>
+<rect x="170" y="1040" width="300" height="56" rx="9" fill="#fcfcfb" stroke="#1c1c1a" stroke-width="2"/>
+<text x="184" y="1064" fill="#1c1c1a">每周看 This month:额度还剩多少。每季过一遍</text>
+<text x="184" y="1080" fill="#1c1c1a">Investing → Rules 和 Checkpoints。</text>
+<rect x="830" y="1040" width="300" height="56" rx="9" fill="#fcfcfb" stroke="#2a78d6" stroke-width="2"/>
+<text x="844" y="1064" fill="#1c1c1a">侧边栏圆点:琥珀 = 看一眼,红 = 规则被破。四个</text>
+<text x="844" y="1080" fill="#1c1c1a">检查器过不去,页面根本建不出来。</text>
+<rect x="500" y="1118" width="300" height="56" rx="9" fill="#fcfcfb" stroke="#4a3aa7" stroke-width="2" stroke-dasharray="6,4"/>
+<text x="514" y="1142" fill="#1c1c1a">工具更新时:sync.py 推入技能和模板,migrate.py</text>
+<text x="514" y="1158" fill="#1c1c1a">把数据形状逐步升级;你的数据一个字节不碰。</text>
 </svg>

@@ -33,7 +33,7 @@ python3 .claude/skills/workspace-checks/scripts/check_design.py \
 # whether it is true — findata/ ledgers, categories, rates, cross-file agreement
 python3 .claude/skills/workspace-checks/scripts/check_data.py .
 
-# whether it actually draws — headless Chromium at 1120 / 1440 / 1760 px (~11s)
+# whether it actually draws — headless Chromium at 800 / 1120 / 1440 / 1760 px (~11s)
 python3 .claude/skills/workspace-checks/scripts/check_render.py \
   dashboards/finance_dashboard.html
 ```
@@ -53,8 +53,8 @@ before calling a dashboard change done.
 python3 .claude/skills/workspace-checks/scripts/selftest.py .
 ```
 
-<!-- LINT:FAULTS n=59 -->
-Plants 59 specific faults in a **copy** of the workspace and asserts that a named rule fires
+<!-- LINT:FAULTS n=61 -->
+Plants 61 specific faults in a **copy** of the workspace and asserts that a named rule fires
 for each. Run it after changing a linter, and after moving anything the linters read.
 
 It exists because on 2026-09-08 two linter bugs shipped in one afternoon and both were silent: S4
@@ -106,8 +106,8 @@ rule to DESIGN.md too, or the next session relearns it.
 
 | ID | Checks | §
 |---|---|---|
-| L1 | `body` has `min-width:1120px` and a max-width ≥1600px | 4 |
-| L2 | no `@media` blocks — the mobile view was dropped | 4 |
+| L1 | `body` has `min-width:800px` and a max-width ≥1600px | 4 |
+| L2 | one width `@media`, `(max-width:1119px)`, the collapse below 1120px; no other | 4 |
 | L3 | no `col-hide-sm` leftovers | 4 |
 | C1 | no `<svg viewBox>` pinned to a fixed pixel height, inline or via its class | 4 |
 | T1 | `.meta` / `.say` / `.note-box` / `.pgsub` carry a max-width | 5d |

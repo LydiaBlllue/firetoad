@@ -2,12 +2,14 @@
 
 Spending is money that leaves and buys nothing you still own, whatever paid it: a card, a debit
 purchase, or chequing (rent, a bill, cash taken out, a bank fee, money sent to family). Every
-category sits in one of three groups, and the group is what decides what it counts for:
+category sits in one of two groups, and the group is what decides what it counts for:
 
-- `fixed`    — paid before anything is chosen. Not measured against the allowance; in the
+- `bills`    — paid before anything is chosen. Not measured against the everyday amount; in the
                spending the FIRE target is calibrated on.
-- `everyday` — what the allowance is for, and in the calibration.
-- `time`     — spending with an end (tuition). In the year's total, never in the FIRE target.
+- `everyday` — what the everyday amount is for, and in the calibration.
+
+Separately, a category can be spending that ends before FIRE (`NOT_IN_FIRE`, tuition by default):
+it is counted like any other today and left out of the FIRE target.
 
 The owner may move a category to another group in `plan.json` `categoryGroups`; the page, the
 import, the checkers and the setup all read the list from here. A subscription is not a category:
@@ -15,9 +17,11 @@ a charge that repeats is marked as such, whatever it bought (`recurring` below).
 
 Every category has its own colour (DESIGN.md §3); Other is grey.
 """
-import collections, re
+import collections
+import datetime, re
 
-GROUPS = ("fixed", "everyday", "time")
+GROUPS = ("bills", "everyday")
+NOT_IN_FIRE = ("Education",)
 
 # key, label shown on the page, default group, colour token. The order is the stack's, bottom up,
 # and it is the colour order: the first eight are the validated slots in their validated order
@@ -27,18 +31,18 @@ GROUPS = ("fixed", "everyday", "time")
 TABLE = [
     ("Grocery",       "Groceries",        "everyday", "--c-grocery"),
     ("Dining",        "Dining",           "everyday", "--c-dining"),
-    ("Housing",       "Housing",          "fixed",    "--c-housing"),
+    ("Housing",       "Housing",          "bills",    "--c-housing"),
     ("Shopping",      "Shopping",         "everyday", "--c-shopping"),
     ("Transport",     "Transport",        "everyday", "--c-transport"),
     ("Software",      "Software & tools", "everyday", "--c-software"),
-    ("Bills",         "Bills",            "fixed",    "--c-bills"),
+    ("Bills",         "Bills",            "bills",    "--c-bills"),
     ("Travel",        "Travel",           "everyday", "--c-travel"),
     ("Entertainment", "Entertainment",    "everyday", "--c-entertainment"),
     ("Health",        "Health",           "everyday", "--c-health"),
     ("Family",        "Family & gifts",   "everyday", "--c-family"),
     ("Cash",          "Cash",             "everyday", "--c-cash"),
     ("Fees",          "Fees & interest",  "everyday", "--c-fees"),
-    ("Education",     "Education",        "time",     "--c-education"),
+    ("Education",     "Education",        "everyday", "--c-education"),
     ("Other",         "Other",            "everyday", "--c-rest"),
 ]
 CATEGORIES = [k for k, *_ in TABLE]
@@ -56,10 +60,16 @@ def groups(plan):
     return {k: (own.get(k) if own.get(k) in GROUPS else g) for k, _, g, _ in TABLE}
 
 
+def not_in_fire(plan):
+    """The categories that end before FIRE: the owner's list in `plan.json`, or the default."""
+    own = (plan or {}).get("notInFire")
+    return list(NOT_IN_FIRE if own is None else own)
+
+
 def page_table(plan):
     """What the page draws from: one entry per category, in this order."""
-    g = groups(plan)
-    return [{"k": k, "n": n, "g": g[k], "c": f"var({c})"} for k, n, _, c in TABLE]
+    g, off = groups(plan), not_in_fire(plan)
+    return [{"k": k, "n": n, "g": g[k], "c": f"var({c})", **({"noFire": True} if k in off else {})} for k, n, _, c in TABLE]
 
 
 # ---------------------------------------------------------------- a charge that repeats
@@ -92,6 +102,29 @@ def _monthly(ms, months):
     y0, m0 = map(int, ms[0].split("-")); y1, m1 = map(int, ms[-1].split("-"))
     span = (y1 - y0) * 12 + (m1 - m0) + 1
     return span - len(ms) <= max(1, span // 6)
+
+
+def yearly(rows, brands=None, declared=()):
+    """The merchants paid once a year: the ones the owner said so of (merchants.json
+    `every: "year"`, as `declared` brand names), and the ones whose charges come back eleven to
+    thirteen months apart within a tenth of the amount, with nothing in between. A year's
+    insurance or a card's annual fee is one large row in one month, which makes that month look
+    unusual and the others cheap; months are compared with it spread over twelve (FINANCE.md §3a).
+    Housing and cash are never one."""
+    brands = brands or {}
+    by = collections.defaultdict(list)
+    for r in rows:
+        a = float(r["amount"])
+        if a > 0 and r.get("category") not in ("Housing", "Cash"):
+            b = _brand(r["note"])
+            by[brands.get(b, b)].append((datetime.date.fromisoformat(r["date"]), a))
+    out = {b for b in declared if b in by}
+    for b, xs in by.items():
+        xs.sort()
+        if len(xs) >= 2 and all(330 <= (q[0] - p[0]).days <= 400 and abs(q[1] - p[1]) <= 0.1 * p[1]
+                                for p, q in zip(xs, xs[1:])):
+            out.add(b)
+    return out
 
 
 def recurring(rows, brands=None, tolerance=0.03, months=3):

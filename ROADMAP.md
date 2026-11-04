@@ -6,7 +6,20 @@ shipped is in [`CHANGELOG.md`](CHANGELOG.md).
 Every release goes out the same way: a privacy scan of every changed file and commit message, a
 fresh clone that must rebuild to the committed page with every checker clean and every planted
 fault caught, then a pull request from the release branch, merged as one squashed commit on
-`main` (since 2026-10-29), and the live demo redeploys with it.
+`main` (since 2026-10-29), tagged with its version, and the live demo redeploys with it.
+
+How work reaches a release (since 2026-10-30):
+
+- **`main` is the released tool**, and only a release or a hotfix changes it, so what users get
+  and what the demo shows are always a finished version.
+- **One branch per coming version**, named for it (`v1.3`). Everything for that version is
+  committed there, without a pull request; work done side by side starts a short branch from it
+  and is merged back locally.
+- **A hotfix** — a bug in the released tool that users would hit — is a small pull request
+  straight to `main`, which is then merged back into the version branch.
+- **After a release**, the next version's branch starts from the new `main`.
+- The first owner's workspace is synced from the version branch, so a change runs on real data
+  for a month before anyone else gets it.
 
 Items marked *(first user)* came from the first person other than the owner to set the tool up
 from scratch: one credit card, nine statements, a cloud session.
@@ -47,12 +60,13 @@ Merged into `main`; what it carries is in CHANGELOG, 1.1.
 ## v1.2 — 2026-11-24 — a first setup that works for someone else
 
 **Released 2026-10-29** — what each item became is in CHANGELOG, 1.2. Still open, and carried
-into v1.3: the screenshots a step in *Start here* (the words are done), and spreading a bill paid
-once a year over twelve months when months are compared. Setup was run end to end for a card-only owner, and
+into v1.3: spreading a bill paid once a year over twelve months when months are compared. The
+screenshots a step in *Start here* were dropped on 2026-10-30: the words say it, and the app's
+screens change. Setup was run end to end for a card-only owner, and
 the selftest now does that every time; the migration was run on a copy of user 001's workspace.
 
 - **The demo on a phone.** A link shared on social media is opened on a phone, and the page is
-  built for 1120px and wider. First step: the live demo's front door shows a phone the
+  built for 800px and wider. First step: the live demo's front door shows a phone the
   screenshots, in Chinese or English by the phone's language, with a button to send the link to
   a computer; a wide screen goes straight to the page. Next: a simplified view of Home that
   reads at phone width.
@@ -92,7 +106,7 @@ the selftest now does that every time; the migration was run on a copy of user 0
     Other. *For a time* (it ends) — Education: tuition, books, exams and credential
     assessments. Each category has a default group the owner can change.
   - **What each group counts for.** Only Everyday is measured against the guilt-free
-    allowance. Fixed and Everyday make the measured spending the FIRE target is calibrated on;
+    everyday. Fixed and Everyday make the measured spending the FIRE target is calibrated on;
     For a time is in the year's total and never in the target. A bill paid once a year is
     spread over twelve months when months are compared.
   - **A subscription is a mark, not a category.** A charge that repeats — one merchant, one
@@ -108,28 +122,102 @@ the selftest now does that every time; the migration was run on a copy of user 0
 - **Setup, tested end to end.** A fresh workspace set up the way a new owner would, then
   compared with a real one: what the interview misses becomes the next list.
 
-## v1.3 — 2026-12-15
+## v1.3 — shipped 2026-11-03
 
-- **The monthly import as a panel.** Everything to bring this month (statements, broker
-  exports, phone screenshots, balances no file carries, open questions), each with the one
-  button that moves it forward. In the tool since 2026-10-30, so a sync no longer removes it;
-  still to run through one real import before it is announced.
-- **A renamed file is still recognised.** *(first user)* A statement whose spaces and commas
-  were turned into underscores on the way in is named the same as the original.
-- **An account seen only in payments is offered.** *(first user)* When the statements show money
-  moving to or from an account nobody registered, setup asks whether to add it, so a card-only
-  owner's net worth is not just the card's debt.
-- **A regular e-Transfer may be pay.** *(first user)* When the same amount arrives every month
-  from no named sender, the question offers it as income first.
-- **Which file is which.** *(first user)* Two statements that share a filename pattern, a card
-  and a chequing account, are named for the account the statement prints, so the owner can tell
-  them apart in `inbox/` and `archive/`.
-- **Cashback has a home.** *(first user)* A redemption is filed as a reward, not left as a credit
-  nobody claimed.
-- **The selftest passes on a fresh machine.** *(first user)* One case failed in a cloud session
-  and passes locally; reproduce it there and fix it.
+Merged into `main`; what it carries is in CHANGELOG, 1.3. The monthly import panel is in it but
+not yet announced: it still has to run through one real import.
 
 ## v1.4 — January 2027
+
+**One page for both kinds of user** comes first (decided 2026-11-02, user 001; PRODUCT.md §2).
+It is built after v1.3 ships, on the v1.4 branch. DESIGN.md §4 stays the page's rule until then:
+S4 checks that table against `NAV`, so the table changes in the same commit as the navigation.
+This is the product's structure, so it is a minor version; v2.0 is the change of technology.
+Before any of it, the first page has to be
+believable: a chequing statement must not be refused, and most purchases must arrive with a
+category.
+
+- **The navigation**, 18 pages in 4 sections, ordered the way someone starting out needs them.
+  Page keys do not change, so old links and saved state still land:
+
+  | Section | Pages |
+  |---|---|
+  | — | Home |
+  | Money in & out | This month · Year · Income · Subscriptions · Spending baseline |
+  | Plan | Budget · Safety net · FIRE · Drawdown & care |
+  | Investing | Portfolio · Performance · Holdings · Investment income |
+  | — | Accounts |
+  | Monthly import | Updates · Statements |
+  | — | Waiting for data (the fold) · Glossary |
+
+- **What each page waits for** (`WAITS`), the two signals in PRODUCT.md §2:
+
+  | page | waits for |
+  |---|---|
+  | Income, Safety net | a chequing statement |
+  | Portfolio, Performance, Holdings | a broker's holdings |
+  | Investment income | a broker's activity |
+  | FIRE | a FIRE goal |
+  | Drawdown & care | a FIRE goal and something invested, so nobody with nothing invested reads that the money runs out |
+
+- **The FIRE goal is a declaration**: `plan.json` `fire` `{goal, asked}`, baked in as a new
+  constant. Setup asks once, in plain words, whether they have thought about retiring early;
+  skipped leaves it out, and the page reads that as no. It changes by saying so to Claude. The
+  migration keeps what a workspace has: money invested means goal yes, so no page disappears;
+  otherwise it stays unanswered and the next import asks once.
+- **Safety net**, a new page answering how long the money would last without a paycheque:
+
+  > **months covered = (Spendable today − unsecured debt) ÷ what a month costs**
+
+  - The top is the figures Home already shows: the `today` reach row, less what is owed that sits
+    on no asset. So the two pages cannot disagree.
+  - **What a month costs** = the spending baseline's average + repayments paid today (active
+    committed flows with `pays`). Rent and bills paid today are in `spending.csv` already, so
+    they are not added; `COMMITTED_KEEP` is not used, because it holds rent that starts only at
+    FIRE. `flows.py` gives the sum.
+  - Three stat cards (months covered, the money, what a month costs), each opening its sum, then
+    the accounts behind the money. Money abroad is one line of its own, "with money abroad, N
+    months", never mixed into the headline. Investments are left out.
+  - With no usable whole month, the page says it needs one rather than showing a figure.
+    Below zero it shows 0.
+  - It judges nothing: no band, colour, dot or target. The usual three to six months is a
+    Glossary entry, and "Safety net" and "Months covered" are coined words with entries of their
+    own.
+- **Home's four cards**: the signals choose the first ones, and the rest fill from one list, in
+  order, taking only a card that has a number. So a card-only owner and an owner with no plan
+  never see an empty card:
+
+  | | first cards |
+  |---|---|
+  | nothing invested, no goal | — |
+  | nothing invested, goal | FIRE progress |
+  | invested, no goal | Portfolio · Invested |
+  | invested, goal | Portfolio · FIRE progress · Invested · Everyday, exactly today's four |
+
+  The list: Card interest (only when there is some) · Spent a month · Months covered · Kept this year · Everyday · A year of subscriptions ·
+  Biggest category.
+- **Proof.** `check_render` draws all four states and a card-only owner: every page draws, four
+  cards with a number, no `undefined`. The selftest plants rent added twice to what a month
+  costs, money abroad in the headline, and a page shown against its signals. The written rule goes
+  into FINANCE.md and DESIGN.md §4 with the code, along with README's page lists and the constant
+  count.
+- **Card interest**, what the owner's cards have charged them, as a fact and never a verdict:
+  - **Where it comes from**: the Interest total each card statement prints, which the parsers
+    already read to reconcile and then drop. It becomes a fact the import keeps, one row per
+    statement: card, statement tag, interest. Never from a merchant name. The migration fills
+    the past by running the parsers over `archive/`. The interest's own row in `spending.csv` is
+    filed under Fees & interest (to confirm while building), and stays spending, counted once.
+  - **Shown only when there is some.** A card paid in full each month never mentions it.
+  - **Home**: a card, "Card interest", the total of the last 12 months, its one fact the amount on
+    the newest statement, its number opening the split by card. It leads the fill list, so an owner
+    with money invested and a FIRE goal keeps today's four cards and sees the next two instead.
+  - **Year**: one line in What stands out, and an amber dot in the sidebar while the newest
+    statement of any card charged interest. Paying it off clears the dot by itself.
+  - **Glossary**: what card interest is and how it starts, in the same words for anyone: paying
+    the whole statement balance by the due date means no interest on purchases. No "you should",
+    and no rate, since rates change. The rate is not read from statements in this release.
+
+The rest of this release:
 
 - **Government pensions in the drawdown.** CPP and OAS, from the owner's own statement, so the
   plan stops overstating what has to be saved.
@@ -184,6 +272,16 @@ data layer is rewritten once with the page rather than twice:
   by a sync in the middle of a write, so the workspace leaves iCloud and gets a backup of its
   own; which, and how it reaches a second computer, is settled before any code.
 
+### Customisation, in 2.0 (decided 2026-11-03, user 001)
+
+1.3 is the basics with nothing to set up beyond the plan. Everything that lets an owner shape
+the tool to themselves arrives with 2.0:
+
+- **Custom funds.** Name what you save for, a goal and a month, on money already in an account.
+  The code shipped quietly in 1.3 (Budget's Funds card, `funds.json` `funds`, D13); 2.0 gives it
+  a way in from setup and the import, and a place in the guides and the demo.
+- **Big buys**, as something an owner can opt into.
+
 ## Later
 
 - **Without the desktop app.** *(first user)* Today setup and the import need Claude Code on a
@@ -199,4 +297,4 @@ data layer is rewritten once with the page rather than twice:
   and SnapTrade Personal for brokers (Wealthsimple listed). First step: confirm the owner's banks
   are on the Trial list, then a local experiment. The key stays out of `findata/` and out of the
   repository, and statements stay the way in for anyone who does not connect. See
-  [`docs/competitors.md`](docs/competitors.md) and PRODUCT.md §9.
+  `docs/competitors.md` (in the repository only) and PRODUCT.md §9.

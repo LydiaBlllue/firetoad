@@ -194,12 +194,12 @@ def build(a, today):
     out[layout.rel("profile.json")] = json.dumps({
         "note": "Who this workspace belongs to. The FIRST thing to change when you make it yours: "
                 "the name appears in the browser tab and under the Jade Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. Jade Toad itself is the product, not a setting.",
-        "schema": 12,
+        "schema": 18,
         "owner": a["owner"],
         # A question skipped is null, never a default that reads as a fact (2026-10-28, first
         # user: 1990 and $0 went onto the page). The page says Not set where one is needed.
         "born": a.get("born"),
-        "importDay": int(a.get("importDay", 26)),
+        "importDay": int(a.get("importDay", 1)),
     }, ensure_ascii=False, indent=2) + "\n"
 
     # --- the register: accounts, and the documents that arrive for them ------------------
@@ -231,7 +231,9 @@ def build(a, today):
         if acc.get("ledger"):
             rec["stmtTag"] = tag
             rec["stmtLabel"] = acc["name"]
-        if "Spending" in (acc.get("feeds") or ""):
+        # Chequing always: a bill or cash taken out is spending, whether or not the first statements
+        # showed one (FINANCE.md §3a), and without the tag the import has nowhere to file it.
+        if "Spending" in (acc.get("feeds") or "") or (acc.get("ledger") and acc["kind"] == "Chequing"):
             rec["spendTag"] = tag
         if investment and acc.get("balance") is not None:
             rec["statedBalance"] = acc["balance"]
@@ -333,7 +335,7 @@ def build(a, today):
     # --- the monthly plan ----------------------------------------------------------------
     plan = a.get("plan") or {}
     out[layout.rel("funds.json")] = json.dumps({
-        "asof_note": "The guilt-free budget: one allowance, no category caps.",
+        "asof_note": "The guilt-free budget: one everyday amount, no category caps.",
         "plan": {
             "start": today[:7],
             # Schema 5: the plan is flows (FINANCE.md §8b). Take-home, the fixed payments made
@@ -350,6 +352,7 @@ def build(a, today):
                  **({"until": c["until"]} if c.get("until") else {}),
                  **({"afterFire": c["afterFire"]} if c.get("afterFire") else {}),
                  **({"pays": c["pays"]} if c.get("pays") else {}),
+                 **({"estimate": True} if c.get("estimate") else {}),
                  **({"note": c["note"]} if c.get("note") else {})}
                 for c in (plan.get("committed") or [])
             ] + ([
@@ -359,24 +362,10 @@ def build(a, today):
             ] if int(plan.get("imputedRent", 0) or 0) else []) + [
                 {"key": "invest", "kind": "saving", "name": "Invest", "amount": plan.get("invest"),
                  "to": "broker", "note": "Off the top, before anything else — pay-yourself-first."},
-                {"key": "everyday", "kind": "allowance", "name": "Everyday allowance",
+                {"key": "everyday", "kind": "everyday", "name": "Everyday",
                  "amount": plan.get("everyday"),
                  "note": "The guilt-free line. No categories and no caps below it."},
-            ] + [
-                # Schema 8: a fund's standing contribution is a saving flow that names the fund.
-                {"key": f"{f['key']}-in", "kind": "saving", "name": f.get("name") or f["key"],
-                 "amount": f["monthly"], "to": f["key"],
-                 **({"note": f["monthlyNote"]} if f.get("monthlyNote") else {})}
-                for f in (a.get("funds") or []) if f.get("monthly")
             ],
-            "bigThreshold": plan.get("bigThreshold", 300),
-            "leftover": plan.get("leftover", "Whatever the allowance does not use tops up the funds below."),
-        },
-        "funds": [{k: v for k, v in f.items() if k not in ("monthly", "monthlyNote")} for f in (a.get("funds") or [])],
-        "claimsAgainst": {
-            "source": "Each fund names the account it is claimed against, and the claims have to "
-                      "fit inside that account.",
-            "note": "A fund is a label on an account you already have, not an account of its own.",
         },
     }, ensure_ascii=False, indent=2) + "\n"
 

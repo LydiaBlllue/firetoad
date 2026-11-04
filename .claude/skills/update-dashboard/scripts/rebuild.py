@@ -78,13 +78,14 @@ REACH_ROWS = (("today", "Spendable today", "#1baf7a"), ("costs", "Taxed to take 
 # 2 = page constants moved into findata (2026-09-09); 3 = alerts.json replaced by imports.json
 # and decisions.json (2026-09-10); 4 = every account row carries the five axes side / role /
 # reach / value / against, and feeds keeps only the flow words (2026-09-10, FINANCE.md §8a);
-# 5 = the monthly plan is flows (income / committed / saving / allowance) and plan.json's
+# 5 = the monthly plan is flows (income / committed / saving / everyday) and plan.json's
 # imputedRent is a committed flow that starts after FIRE (2026-09-10, FINANCE.md §8b); 6 =
 # findata/ is three folders, register / ledgers / history, one per layer (2026-09-10, layout.py);
 # 11 = spending is what it is, not how it was paid: fifteen categories in three groups, no
 # Subscription category, and chequing rent, bills, cash and fees in spending.csv (2026-10-29);
-# 12 = every merchant held against the fifteen categories, a better fit asked (2026-10-30).
-SCHEMA = 12
+# 12 = every merchant held against the fifteen categories, a better fit asked (2026-10-30);
+# 13 = a card's cash back is income in rewards.csv, filed again from the archive (2026-10-30).
+SCHEMA = 18
 
 
 def same(a, b):
@@ -123,7 +124,7 @@ def load(root):
             raise SystemExit(f"{layout.rel(n)} is missing — the setup skill writes it")
         return default
     accounts = jd("accounts.json")
-    d = {"spending": rd("spending.csv"), "acts": rd("ws_activities.csv"),
+    d = {"spending": rd("spending.csv"), "rewards": rd("rewards.csv"), "acts": rd("ws_activities.csv"),
          "hold": rd("holdings_latest.csv"),
          "banks": jd("banks.json"), "foreign": jd("foreign.json"), "profile": jd("profile.json"),
          "rules": jd("rules.json"), "accounts": accounts, "funds": jd("funds.json"),
@@ -162,13 +163,13 @@ def load(root):
 def cashflow_rows(d, accs, rate, half, wsinc):
     """The monthly cash-flow rows, from the typed ledgers (schema 9; they used to be copied into
     cashflow.json by the import, and nothing checked the copy). One row per month from the first
-    ledger row to the newest: what payroll delivered, what came in typed Rent / Gift / Other /
-    Repayment, what moved to the broker and back (a Transfer whose label names the broker), how
+    ledger row to the newest: what payroll delivered, what came in typed Gift / Other /
+    Repayment, the cash back a card paid (rewards.csv), what moved to the broker and back (a Transfer whose label names the broker), how
     many of the outgoing ones were exactly half the monthly investing amount, and the broker's
     own income for the month. Only ledgers whose `feeds` include "Cash flow" count."""
     broker = (next((a["inst"] for a in accs if a.get("role") == "grow" and a.get("value") == "export"), "") or "").lower()
-    rows = collections.defaultdict(lambda: {"payroll": 0.0, "wsOut": 0.0, "wsIn": 0.0, "rent": 0.0, "gift": 0.0,
-                                            "other": 0.0, "repaid": 0.0, "inv": 0.0, "nRule": 0})
+    rows = collections.defaultdict(lambda: {"payroll": 0.0, "wsOut": 0.0, "wsIn": 0.0, "gift": 0.0,
+                                            "other": 0.0, "repaid": 0.0, "inv": 0.0, "rewards": 0.0, "nRule": 0})
     for a in accs:
         if not a.get("ledger") or "Cash flow" not in (a.get("feeds") or ""):
             continue
@@ -176,9 +177,8 @@ def cashflow_rows(d, accs, rate, half, wsinc):
             t, amt, lab = r.get("type") or "", float(r["amount"] or 0), (r.get("label") or "").lower()
             m = rows[r["date"][:7]]
             if t == "Payroll" and amt > 0: m["payroll"] += amt
-            elif t == "Rent" and amt > 0: m["rent"] += amt
             elif t == "Gift" and amt > 0: m["gift"] += amt
-            elif t in ("Other", "Government") and amt > 0: m["other"] += amt   # a refund or benefit is shown with Other
+            elif t in ("Other", "Government", "Rent") and amt > 0: m["other"] += amt   # a refund, a benefit, or rent received, shown with Other
             elif t == "Repayment" and amt > 0: m["repaid"] += amt
             elif t == "Transfer" and broker and broker in lab:
                 if amt < 0:
@@ -188,6 +188,14 @@ def cashflow_rows(d, accs, rate, half, wsinc):
                     m["wsIn"] += amt
     for w in wsinc:
         rows[w["ym"]]["inv"] += w["div"] + w["int"] + w["lend"] + w["tax"]
+    # a deposit straight into the broker that the owner says was a gift (plan.json `brokerGifts`):
+    # no ledger ever shows it, and the export cannot say where it came from. D29 holds each to it.
+    for g in (d.get("plan") or {}).get("brokerGifts", []):
+        rows[g["date"][:7]]["gift"] += float(g.get("counted", g["amount"])) * (rate if g.get("currency") == "USD" else 1)
+    # a card's cash back (rewards.csv): income, on its own line, never pay -- like the broker's
+    # income, it never reaches chequing
+    for r in d.get("rewards", []):
+        rows[r["date"][:7]]["rewards"] += float(r["amount"]) * (rate if r.get("currency") == "USD" else 1)
     return [dict(ym=ym, **{k: (round(v, 2) if isinstance(v, float) else v) for k, v in m.items()})
             for ym, m in sorted(rows.items())]
 
@@ -358,7 +366,7 @@ def derive(d):
     # --- SUB_KEYS: the charges that repeat, measured from the rows (categories.recurring) --
     # until 2026-10-29 a list of brands filed as Subscription in merchants.json. Each spending row
     # of one is marked `sub` with its name, which is what the subscriptions list and "a
-    # subscription is never a big buy" read.
+    # subscription" page reads.
     # several spellings of one service, named once by the owner (merchants.json `brand`)
     brands = {categories.brand_of(m["match"]): m["brand"] for m in d["merchants"]["merchants"] if m.get("brand")}
     rec = categories.recurring(d["spending"], brands)
@@ -370,12 +378,21 @@ def derive(d):
             e["sub"] = names.setdefault(b, b if b in brands.values() else b.title())
     out["SUB_KEYS"] = [{"name": names[b], "amount": v["amount"], "months": v["months"]}
                        for b, v in sorted(rec.items()) if b in names]
+    # a charge paid once a year (said so in merchants.json, or seen a year apart) is marked `yr`:
+    # months are compared with it spread over the twelve it pays for (FINANCE.md §3a)
+    said = {brands.get(categories.brand_of(m["match"]), categories.brand_of(m["match"]))
+            for m in d["merchants"]["merchants"] if m.get("every") == "year"}
+    yr = categories.yearly(d["spending"], brands, said)
+    for r, e in zip(d["spending"], spend_unsorted):
+        b = categories.brand_of(r["note"])
+        if brands.get(b, b) in yr and float(r["amount"]) > 0:
+            e["yr"] = 1
 
     today = datetime.date.today().isoformat()
     out["TODAY"] = today
     out["PROFILE"] = clean(prof)
     out["RULES"] = clean(d["rules"])
-    out["IMPORT_DAY"] = prof.get("importDay", 26)
+    out["IMPORT_DAY"] = prof.get("importDay", 1)
     # The institution that holds the portfolio. Its name was written into a dozen strings on
     # both pages; now every one of them reads this.
     broker = next((a["inst"] for a in accs if a.get("role") == "grow" and a.get("value") == "export"), None) or "your broker"
@@ -389,7 +406,7 @@ def derive(d):
     out["PLAN_BASE_DEFAULT"] = plan["planBase"]
     # The fixed part of the planning figure: every committed flow still paid after FIRE, paid
     # today or not (an owner who does not pay rent yet has one that starts at FIRE). Added to the
-    # measured everyday median on the Baseline page so the two can be compared.
+    # measured everyday average on the Baseline page so the two can be compared.
     out["COMMITTED_KEEP"] = flow_totals(d["funds"]["plan"])["committedKeep"]
     out["MONTH_SKIP"] = plan.get("skipMonths", {})
     ret = plan.get("retirement", {})
@@ -659,6 +676,22 @@ def derive(d):
             big = max(t, key=lambda r: t[r])
             t[big] += total - sum(t.values())
         return [[reach_lab[r][0], v, reach_lab[r][1], r] for r, v in t.items() if v]
+    def one_account(a, v):
+        cur = a.get("cur", "CAD")
+        return {"n": a.get("label") or a["name"], "i": "" if a.get("role") == "owed" else a.get("inst", ""),
+                "v": round(v), "asof": a.get("asof") or "", "cur": cur if cur != "CAD" else ""}
+    def part_accounts(role, where, total):
+        """The accounts behind a row, largest first. Rounded per account, the dollar that can
+        drift settled on the largest, so the list sums to the row it opens under."""
+        rows = [one_account(a, v) for a, v in assets if a.get("role") == role and round(v)
+                and (where == "all" or (a.get("reach") == "abroad") == (where == "abroad"))]
+        rows.sort(key=lambda x: -x["v"])
+        if rows:
+            rows[0]["v"] += total - sum(x["v"] for x in rows)
+        return rows
+    out["DEBT_ACCTS"] = sorted((one_account(a, v) for a, v in liabs if round(v)), key=lambda x: -x["v"])
+    if out["DEBT_ACCTS"]:
+        out["DEBT_ACCTS"][0]["v"] += R_debt - sum(x["v"] for x in out["DEBT_ACCTS"])
     out["NWPARTS"] = []
     for role, where, lab, c, q in PART_ROWS:
         names = accounts_in(role, where)
@@ -667,7 +700,8 @@ def derive(d):
         lab = lab.replace("{abroad}", fgn_label)
         out["NWPARTS"].append({"k": lab, "role": role, "v": part_value(role, where), "c": c, "q": q,
                                "d": desc.get("nwparts", {}).get(lab, names),
-                               "by": part_by_reach(role, where, part_value(role, where))})
+                               "by": part_by_reach(role, where, part_value(role, where)),
+                               "accts": part_accounts(role, where, part_value(role, where))})
     out["REACH"] = [{"k": lab, "r": r, "v": by_reach[r], "c": c, "d": desc.get("reach", {}).get(lab, generic_reach[lab])}
                     for r, lab, c in REACH_ROWS if r in reach_present]
     got_parts = sum(r["v"] for r in out["NWPARTS"]) - R_debt
@@ -873,21 +907,18 @@ def sync_figures(root, out):
     val = {"plan_base": f"${pb:,} /mo", "fire_target": f"${tgt:,}", "net_worth": f"${nw:,}",
            "portfolio": f"${port:,}",
            "progress": f"{round(port / tgt * 100, 1) if tgt else 0}%", "gap": f"${tgt - port:,}",
-           "invest_monthly": f"${flow_totals(plan)['invest']:,}", "everyday": f"${flow_totals(plan)['allowance']:,}",
-           "big_threshold": f"${plan['bigThreshold']:,}", "dry_powder": f"{inv['dryPct']}%"} if pb is not None else None
+           "invest_monthly": f"${flow_totals(plan)['invest']:,}", "everyday": f"${flow_totals(plan)['everyday']:,}",
+           "dry_powder": f"{inv['dryPct']}%"} if pb is not None else None
     if val is None:
         # No planning figure: nothing that is a share of the target is a number yet.
         val = {"plan_base": NOT_SET, "fire_target": NOT_SET, "progress": NOT_SET, "gap": NOT_SET,
                "net_worth": f"${nw:,}", "portfolio": f"${port:,}",
-               "invest_monthly": f"${flow_totals(plan)['invest']:,}", "everyday": f"${flow_totals(plan)['allowance']:,}",
-               "big_threshold": f"${plan['bigThreshold']:,}", "dry_powder": f"{inv['dryPct']}%"}
+               "invest_monthly": f"${flow_totals(plan)['invest']:,}", "everyday": f"${flow_totals(plan)['everyday']:,}",
+               "dry_powder": f"{inv['dryPct']}%"}
     if "invest" in miss:
         val["invest_monthly"] = NOT_SET
     if "everyday" in miss:
         val["everyday"] = NOT_SET
-    topup = next((f for f in out["FUNDS"]["funds"] if f.get("role") == "topup"), None)
-    if topup and topup.get("goal"):
-        val["travel_goal"] = f"${topup['goal']:,}"
     text, hits = open(fin, encoding="utf-8").read(), []
     for key, v in val.items():
         pat = re.compile(r'^(\| *' + key + r' *\|[^|]*\| *)([^|]*?)( *\|)', re.M)
@@ -895,8 +926,6 @@ def sync_figures(root, out):
             new_text = pat.sub(lambda m: m.group(1) + v + m.group(3), text, count=1)
             if new_text != text:
                 hits.append(key); text = new_text
-    if not topup:
-        text = re.sub(r'^\| *travel_goal *\|.*\n', "", text, flags=re.M)
     open(fin, "w", encoding="utf-8").write(text)
     return hits
 

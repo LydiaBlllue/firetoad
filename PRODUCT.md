@@ -17,27 +17,53 @@ anywhere and no app: a folder of plain CSV and JSON, and one self-contained HTML
 
 ## 2. Who it is for
 
-**The positioning** (decided 2026-10-29): *for Chinese newcomers working in Canada who want to
-retire early — their money spread across a few banks, a broker and accounts back in China —
-Jade Toad reads their own statements once a month and makes one page that says whether the plan
-still holds. Every number reconciles; no bank connection, nothing typed by hand.* This is where
-it starts, not where it stops: the first users come from the owner's friends and from Chinese-
-language social media, and the money abroad in one figure is what no nearby tool does
-([`docs/competitors.md`](docs/competitors.md)). The wider audience below is the long run.
+**The positioning** (decided 2026-11-02, replacing 2026-10-29): *for Chinese newcomers working
+in Canada, from the first time they ask where their money goes to the year they retire early.
+Their money is spread across a few banks, often a broker, and accounts back in China. Jade Toad
+reads their own statements once a month and makes one page: where they stand today, and whether
+the plan still holds. Every number reconciles; no bank connection, nothing typed by hand.* This
+is where it starts, not where it stops: the first users come from the owner's friends and from
+Chinese-language social media, and the money abroad in one figure is what no nearby tool does
+(`docs/competitors.md`, in the repository only).
 
-**The target user** (decided 2026-10-28): someone in Canada working toward financial
-independence (FIRE — enough invested to live off it), with a paycheque, accounts at a bank the
-parsers read, and a broker, who wants to know each month whether the plan still holds. Not
-someone who only wants to see where their spending went; tools with a lower entry cost already
-do that well, and this one's reason to exist is the plan, the portfolio and numbers that
-reconcile.
+**Two kinds of user, one product** (decided 2026-11-02):
+
+- **Someone starting out**, with a paycheque and a bank the parsers read, who wants to know what
+  a month costs, what they keep and how long their money would last without a paycheque. They
+  may have nothing invested and no plan to retire early. The working belief is that they are the
+  larger group; it is not yet measured. They set the defaults.
+- **Someone working toward financial independence** (FIRE — enough invested to live off it),
+  with a broker, who wants to know each month whether the plan still holds.
+
+The first becomes the second if they choose to, on the same page. When the two pull apart, what
+the second already has is not cut for the first: the page simplifies by folding and by choosing
+what to show, never by removing a page or a figure. Tools with a lower entry cost already show
+where spending went, so someone starting out stays for numbers that reconcile, no bookkeeping,
+and a page that is still useful once they invest.
+
+**The kind of user is never a label.** Nothing stores it and nobody picks it. Two signals decide
+what each page shows:
+
+| signal | how it is known | what it decides |
+|---|---|---|
+| Has money invested | read from the data: a `grow` account holds money | Portfolio, Performance, Holdings, Investment income, and Home's investing cards |
+| Wants to retire early | asked once in setup, can be skipped and changed later; **skipped means no** | the FIRE page and Home's FIRE card; Drawdown & care needs this and money invested |
+
+| | no FIRE goal | FIRE goal |
+|---|---|---|
+| **nothing invested** | spending, what was kept, the safety net | as on the left, plus how far there is to go; no drawdown yet |
+| **invested** | the investing pages, no FIRE figures | everything |
+
+The second signal is needed because money invested does not mean a goal: a workplace RRSP would
+otherwise show a FIRE page and a tiny progress bar to someone who never asked for one, and hide
+that page from someone who wants FIRE and has only started saving.
 
 Open: the page is in English (DESIGN.md); whether this audience needs it in Chinese is not
 decided.
 
 - **One owner, one workspace.** Not a household ledger and not a service: a workspace is one
   person's folder, and the tool is the repository that folder is an instance of.
-- **Several banks, a broker and often money in more than one country**, so no single app shows
+- **Several banks, often a broker and money in more than one country**, so no single app shows
   the whole picture.
 - **A desktop reader** on a wide screen, once a month and on the days in between when a
   question comes up.
@@ -63,7 +89,7 @@ way in is a cost to remove, not a requirement.
 |---|---|
 | From the first statement dropped in to a page worth reading | under 20 minutes |
 | Purchases with a category after the first import | most of them, before anyone confirms anything |
-| Owners who come back for a second month's import | the one that matters: the tool is monthly, and one use proves nothing |
+| Owners who come back for a second month's import | the one that matters: the tool is monthly, and one use proves nothing. Counted separately for the two kinds of user, so one cannot hide the other leaving |
 
 ## 3. The questions it answers
 
@@ -77,7 +103,8 @@ list is README's *Every page*).
 | Income | What came in, and how much of it did I keep? |
 | Investing | What do I hold, and how did it do? |
 | Plan | Does the plan hold — each paycheque, the FIRE target, and the years after it? |
-| Records | What changed, and is everything filed? |
+| Accounts | Where is every dollar, and how current is each balance? |
+| Monthly import | What changed, and is everything filed? |
 
 A page that answers no question a person would ask is not added; a page whose question another
 page already answers is merged into it.
@@ -92,12 +119,13 @@ What ships today. What is planned is in [`ROADMAP.md`](ROADMAP.md); when each ar
 | group | features |
 |---|---|
 | Header | Net worth across every currency, visible from any page; under it two dates — the day every account is complete to, and the last update |
-| Home | Net worth in one card, a row per purpose, each bar coloured by how easily the money can be reached · four cards: Portfolio, FIRE progress, this month's investing transfer, Free to spend |
-| Spending | Free to spend today, and for how many days · this month by category, each opening its purchases · big buys apart from everyday spending · the year month by month, by category and against the allowance · subscriptions: what repeats, a year's cost, what is due in the next 30 days |
+| Home | Net worth in one card, a row per purpose, each bar coloured by how easily the money can be reached · four cards: Portfolio, FIRE progress, this month's investing transfer, Everyday |
+| Spending | What is left of Everyday today, and for how many days · this month by category, each opening its purchases · the year month by month, by category and against the everyday amount · subscriptions: what repeats, a year's cost, what is due in the next 30 days |
 | Income | Income by source and how much of it was kept · investment income — dividends, interest, lending, withholding tax — on its own page |
 | Investing | The portfolio by currency, kind of asset and bucket · performance against one benchmark fund bought on the same days · every holding, by role or by account |
-| Plan | What each paycheque is for, and what each fund holds · the FIRE target, progress, the year it is reached and coast to FIRE · whether the money lasts, late-life care included, replayed through every stretch of real years since 1928 · the planning figure against what is really spent |
-| Records | Updates: what each import changed, noticed and decided · Accounts: every place money sits, with its balance and date · Statements: which file arrived which month, and what is missing |
+| Plan | What each paycheque is for · the FIRE target, progress, the year it is reached and coast to FIRE · whether the money lasts, late-life care included, replayed through every stretch of real years since 1928 · the planning figure against what is really spent |
+| Accounts | Every place money sits, with its balance and date, beside Home |
+| Monthly import | Updates: what each import changed, noticed and decided · Statements: which file arrived which month, and what is missing |
 | Glossary | Every finance term and every coined word, at the foot of the sidebar in no group; a coined word's entry looks different from a dictionary entry |
 | Everywhere | Terms with a dotted underline open their dictionary entry · numbers that need it open their sum · the planning figure and the toggles are tried out in the browser and never written back |
 
@@ -183,7 +211,7 @@ Two ideas carry everything, so a new kind of thing needs a row, not new code.
   known, and what a debt is secured against. Each total on the page reads exactly one axis, so
   the two views of net worth — by purpose and by reach — agree by construction. A home, a
   mortgage or money lent to a friend is an ordinary row. (FINANCE.md §8a.)
-- **A flow** is every monthly line of the plan: income, committed costs, saving, the allowance,
+- **A flow** is every monthly line of the plan: income, committed costs, saving, the everyday amount,
   each with an amount and, where it applies, an end date and what happens to it after FIRE.
   (FINANCE.md §8b.)
 
@@ -215,15 +243,15 @@ The full rules are DESIGN.md §5b and §5b′.
   banks was available when the tool was built. A connection the owner authorises themselves is
   welcome once one exists.
 - **Not real-time.** It is monthly by design. A number is as of a stated day.
-- **Not a budget with category caps.** One allowance, and everything under it is guilt-free.
-- **Not mobile, not dark.** Desktop at 1120px and wider, light theme only.
+- **Not a budget with category caps.** One everyday amount, and everything under it is guilt-free.
+- **Not mobile, not dark.** Desktop at 800px and wider (below 1120px secondary columns collapse), light theme only.
 - **Not a mixer of currencies.** Amounts stay per currency; the two converted totals carry
   their rate.
 - **Not multi-user.** One owner per workspace; money in the owner's login that is not theirs is
   kept out of every figure.
 
 How this sits beside the open-source tools nearby (Actual, Firefly III, Beancount and others) is
-[`docs/competitors.md`](docs/competitors.md), a dated survey.
+`docs/competitors.md` (in the repository only), a dated survey.
 
 ## 10. Known gaps between this file and the pages
 
@@ -239,3 +267,6 @@ What the principles ask and the page does not do yet. Each is on the roadmap.
   1 says it should not. v1.1.
 - The monthly import panel ships with the tool but has not yet run through a real import, so it
   is not announced. v1.3.
+- The page does not yet follow §2's two signals: there is no FIRE question, FIRE waits only on
+  money invested, Home's cards do not change, and nothing says how long the money would last.
+  The navigation in §3, §4 and DESIGN.md is still the old one. ROADMAP, v1.4.

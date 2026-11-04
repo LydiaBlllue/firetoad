@@ -46,9 +46,7 @@ SYNCED = [
     "PRODUCT.md",         # the product and its features, readable in the workspace
     "ROADMAP.md",
     "CHANGELOG.md",       # PRODUCT.md links both
-    "docs/pipeline.py",
     "docs/pipeline.svg",
-    "docs/pipeline.drawio",
     "docs/hero.png",
     "docs/logo.svg",
     "docs/zh",            # the Chinese guide is the tool's, like README; screens/ stays the demo's

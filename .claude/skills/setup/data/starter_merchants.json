@@ -697,6 +697,2230 @@
     {
       "match": "UBER CANADA UBEREATS",
       "category": "Dining"
+    },
+    {
+      "match": "FORTINOS",
+      "category": "Grocery"
+    },
+    {
+      "match": "LOBLAW",
+      "category": "Grocery"
+    },
+    {
+      "match": "T&T",
+      "category": "Grocery"
+    },
+    {
+      "match": "H MART",
+      "category": "Grocery"
+    },
+    {
+      "match": "GALLERIA",
+      "category": "Grocery"
+    },
+    {
+      "match": "NATIONS FRESH",
+      "category": "Grocery"
+    },
+    {
+      "match": "ADONIS",
+      "category": "Grocery"
+    },
+    {
+      "match": "WHOLESALE CLUB",
+      "category": "Grocery"
+    },
+    {
+      "match": "PRICE CHOPPER",
+      "category": "Grocery"
+    },
+    {
+      "match": "RABBA",
+      "category": "Grocery"
+    },
+    {
+      "match": "BULK BARN",
+      "category": "Grocery"
+    },
+    {
+      "match": "SUPERMARKET",
+      "category": "Grocery"
+    },
+    {
+      "match": "GROCERY",
+      "category": "Grocery"
+    },
+    {
+      "match": "MCDONALD",
+      "category": "Dining"
+    },
+    {
+      "match": "SWISS CHALET",
+      "category": "Dining"
+    },
+    {
+      "match": "BOSTON PIZZA",
+      "category": "Dining"
+    },
+    {
+      "match": "MONTANAS",
+      "category": "Dining"
+    },
+    {
+      "match": "EAST SIDE MARIOS",
+      "category": "Dining"
+    },
+    {
+      "match": "THE KEG",
+      "category": "Dining"
+    },
+    {
+      "match": "PANERA",
+      "category": "Dining"
+    },
+    {
+      "match": "DAVIDS TEA",
+      "category": "Dining"
+    },
+    {
+      "match": "FIVE GUYS",
+      "category": "Dining"
+    },
+    {
+      "match": "NANDOS",
+      "category": "Dining"
+    },
+    {
+      "match": "RESTAURANT",
+      "category": "Dining"
+    },
+    {
+      "match": "PIZZA",
+      "category": "Dining"
+    },
+    {
+      "match": "SUSHI",
+      "category": "Dining"
+    },
+    {
+      "match": "SHAWARMA",
+      "category": "Dining"
+    },
+    {
+      "match": "HOTPOT",
+      "category": "Dining"
+    },
+    {
+      "match": "BAKERY",
+      "category": "Dining"
+    },
+    {
+      "match": "CAFE",
+      "category": "Dining"
+    },
+    {
+      "match": "COFFEE",
+      "category": "Dining"
+    },
+    {
+      "match": "HONK",
+      "category": "Transport"
+    },
+    {
+      "match": "IMPARK",
+      "category": "Transport"
+    },
+    {
+      "match": "GREEN P",
+      "category": "Transport"
+    },
+    {
+      "match": "PRECISE PARKING",
+      "category": "Transport"
+    },
+    {
+      "match": "PARKING",
+      "category": "Transport"
+    },
+    {
+      "match": "CANADIAN TIRE GAS",
+      "category": "Transport"
+    },
+    {
+      "match": "AMAZON",
+      "category": "Shopping"
+    },
+    {
+      "match": "BEST BUY",
+      "category": "Shopping"
+    },
+    {
+      "match": "SEPHORA",
+      "category": "Shopping"
+    },
+    {
+      "match": "WINNERS",
+      "category": "Shopping"
+    },
+    {
+      "match": "MARSHALLS",
+      "category": "Shopping"
+    },
+    {
+      "match": "HOMESENSE",
+      "category": "Shopping"
+    },
+    {
+      "match": "CANADIAN TIRE",
+      "category": "Shopping"
+    },
+    {
+      "match": "HOME DEPOT",
+      "category": "Shopping"
+    },
+    {
+      "match": "RONA",
+      "category": "Shopping"
+    },
+    {
+      "match": "LOWES",
+      "category": "Shopping"
+    },
+    {
+      "match": "IKEA",
+      "category": "Shopping"
+    },
+    {
+      "match": "DOLLARAMA",
+      "category": "Shopping"
+    },
+    {
+      "match": "GIANT TIGER",
+      "category": "Shopping"
+    },
+    {
+      "match": "HUDSONS BAY",
+      "category": "Shopping"
+    },
+    {
+      "match": "SPORT CHEK",
+      "category": "Shopping"
+    },
+    {
+      "match": "OLD NAVY",
+      "category": "Shopping"
+    },
+    {
+      "match": "LULULEMON",
+      "category": "Shopping"
+    },
+    {
+      "match": "UNIQLO",
+      "category": "Shopping"
+    },
+    {
+      "match": "ZARA",
+      "category": "Shopping"
+    },
+    {
+      "match": "INDIGO",
+      "category": "Shopping"
+    },
+    {
+      "match": "STAPLES",
+      "category": "Shopping"
+    },
+    {
+      "match": "PET VALU",
+      "category": "Shopping"
+    },
+    {
+      "match": "MOORES",
+      "category": "Shopping"
+    },
+    {
+      "match": "LONG MCQUADE",
+      "category": "Shopping"
+    },
+    {
+      "match": "LONG & MCQUADE",
+      "category": "Shopping"
+    },
+    {
+      "match": "APPLE STORE",
+      "category": "Shopping"
+    },
+    {
+      "match": "SUPERMARCHE",
+      "category": "Grocery"
+    },
+    {
+      "match": "GROCERS",
+      "category": "Grocery"
+    },
+    {
+      "match": "EPICERIE",
+      "category": "Grocery"
+    },
+    {
+      "match": "FARMERS MARKET",
+      "category": "Grocery"
+    },
+    {
+      "match": "FRUITICANA",
+      "category": "Grocery"
+    },
+    {
+      "match": "SUNNY FOODMART",
+      "category": "Grocery"
+    },
+    {
+      "match": "SUNNY SUPERMARKET",
+      "category": "Grocery"
+    },
+    {
+      "match": "BESTCO",
+      "category": "Grocery"
+    },
+    {
+      "match": "FOODY MART",
+      "category": "Grocery"
+    },
+    {
+      "match": "PA SUPERMARKET",
+      "category": "Grocery"
+    },
+    {
+      "match": "ASIAN FOOD CENTRE",
+      "category": "Grocery"
+    },
+    {
+      "match": "OCEANS FRESH",
+      "category": "Grocery"
+    },
+    {
+      "match": "FIESTA FARMS",
+      "category": "Grocery"
+    },
+    {
+      "match": "HOUSE OF SPICE",
+      "category": "Grocery"
+    },
+    {
+      "match": "SOBEYS EXTRA",
+      "category": "Grocery"
+    },
+    {
+      "match": "THRIFTY FOODS",
+      "category": "Grocery"
+    },
+    {
+      "match": "CO OP FOOD",
+      "category": "Grocery"
+    },
+    {
+      "match": "CO OP",
+      "category": "Grocery"
+    },
+    {
+      "match": "CALGARY CO OP",
+      "category": "Grocery"
+    },
+    {
+      "match": "ATLANTIC SUPERSTORE",
+      "category": "Grocery"
+    },
+    {
+      "match": "INSTACART",
+      "category": "Grocery"
+    },
+    {
+      "match": "CORNER STORE",
+      "category": "Grocery"
+    },
+    {
+      "match": "CONVENIENCE",
+      "category": "Grocery"
+    },
+    {
+      "match": "MAC S",
+      "category": "Grocery"
+    },
+    {
+      "match": "7 ELEVEN",
+      "category": "Grocery"
+    },
+    {
+      "match": "SEVEN ELEVEN",
+      "category": "Grocery"
+    },
+    {
+      "match": "HASTY MARKET",
+      "category": "Grocery"
+    },
+    {
+      "match": "BUTCHER",
+      "category": "Grocery"
+    },
+    {
+      "match": "SEAFOOD",
+      "category": "Grocery"
+    },
+    {
+      "match": "WHOLE FOOD",
+      "category": "Grocery"
+    },
+    {
+      "match": "NATURES EMPORIUM",
+      "category": "Grocery"
+    },
+    {
+      "match": "PUSATERIS",
+      "category": "Grocery"
+    },
+    {
+      "match": "MCEWAN",
+      "category": "Grocery"
+    },
+    {
+      "match": "SUMMERHILL MARKET",
+      "category": "Grocery"
+    },
+    {
+      "match": "METRO PLUS",
+      "category": "Grocery"
+    },
+    {
+      "match": "MARCHE",
+      "category": "Grocery"
+    },
+    {
+      "match": "SUPER MARCHE",
+      "category": "Grocery"
+    },
+    {
+      "match": "DOLLAR TREE GROCERY",
+      "category": "Grocery"
+    },
+    {
+      "match": "RESTAURANTS",
+      "category": "Dining"
+    },
+    {
+      "match": "RESTO",
+      "category": "Dining"
+    },
+    {
+      "match": "BISTRO",
+      "category": "Dining"
+    },
+    {
+      "match": "BRASSERIE",
+      "category": "Dining"
+    },
+    {
+      "match": "TAVERN",
+      "category": "Dining"
+    },
+    {
+      "match": "PUB",
+      "category": "Dining"
+    },
+    {
+      "match": "GRILL",
+      "category": "Dining"
+    },
+    {
+      "match": "STEAKHOUSE",
+      "category": "Dining"
+    },
+    {
+      "match": "STEAK",
+      "category": "Dining"
+    },
+    {
+      "match": "STEAKS",
+      "category": "Dining"
+    },
+    {
+      "match": "KITCHEN",
+      "category": "Dining"
+    },
+    {
+      "match": "EATERY",
+      "category": "Dining"
+    },
+    {
+      "match": "DINER",
+      "category": "Dining"
+    },
+    {
+      "match": "DELI",
+      "category": "Dining"
+    },
+    {
+      "match": "BBQ",
+      "category": "Dining"
+    },
+    {
+      "match": "BARBECUE",
+      "category": "Dining"
+    },
+    {
+      "match": "NOODLE",
+      "category": "Dining"
+    },
+    {
+      "match": "NOODLES",
+      "category": "Dining"
+    },
+    {
+      "match": "RAMEN",
+      "category": "Dining"
+    },
+    {
+      "match": "UDON",
+      "category": "Dining"
+    },
+    {
+      "match": "PHO",
+      "category": "Dining"
+    },
+    {
+      "match": "IZAKAYA",
+      "category": "Dining"
+    },
+    {
+      "match": "BENTO",
+      "category": "Dining"
+    },
+    {
+      "match": "SHOKUDO",
+      "category": "Dining"
+    },
+    {
+      "match": "TERIYAKI",
+      "category": "Dining"
+    },
+    {
+      "match": "DUMPLING",
+      "category": "Dining"
+    },
+    {
+      "match": "DIM SUM",
+      "category": "Dining"
+    },
+    {
+      "match": "HOT POT",
+      "category": "Dining"
+    },
+    {
+      "match": "KEBAB",
+      "category": "Dining"
+    },
+    {
+      "match": "GYRO",
+      "category": "Dining"
+    },
+    {
+      "match": "TACO",
+      "category": "Dining"
+    },
+    {
+      "match": "TAQUERIA",
+      "category": "Dining"
+    },
+    {
+      "match": "BURRITO",
+      "category": "Dining"
+    },
+    {
+      "match": "BURGER",
+      "category": "Dining"
+    },
+    {
+      "match": "BURGERS",
+      "category": "Dining"
+    },
+    {
+      "match": "WINGS",
+      "category": "Dining"
+    },
+    {
+      "match": "PIZZERIA",
+      "category": "Dining"
+    },
+    {
+      "match": "TRATTORIA",
+      "category": "Dining"
+    },
+    {
+      "match": "OSTERIA",
+      "category": "Dining"
+    },
+    {
+      "match": "CAFFE",
+      "category": "Dining"
+    },
+    {
+      "match": "ESPRESSO",
+      "category": "Dining"
+    },
+    {
+      "match": "ROASTERS",
+      "category": "Dining"
+    },
+    {
+      "match": "BUBBLE TEA",
+      "category": "Dining"
+    },
+    {
+      "match": "TEA HOUSE",
+      "category": "Dining"
+    },
+    {
+      "match": "BOULANGERIE",
+      "category": "Dining"
+    },
+    {
+      "match": "PATISSERIE",
+      "category": "Dining"
+    },
+    {
+      "match": "DONUT",
+      "category": "Dining"
+    },
+    {
+      "match": "DONUTS",
+      "category": "Dining"
+    },
+    {
+      "match": "ICE CREAM",
+      "category": "Dining"
+    },
+    {
+      "match": "GELATO",
+      "category": "Dining"
+    },
+    {
+      "match": "DESSERT",
+      "category": "Dining"
+    },
+    {
+      "match": "ST HUBERT",
+      "category": "Dining"
+    },
+    {
+      "match": "KELSEYS",
+      "category": "Dining"
+    },
+    {
+      "match": "JACK ASTORS",
+      "category": "Dining"
+    },
+    {
+      "match": "MILESTONES",
+      "category": "Dining"
+    },
+    {
+      "match": "EARLS",
+      "category": "Dining"
+    },
+    {
+      "match": "CACTUS CLUB",
+      "category": "Dining"
+    },
+    {
+      "match": "MOXIES",
+      "category": "Dining"
+    },
+    {
+      "match": "JOEY",
+      "category": "Dining"
+    },
+    {
+      "match": "STATE & MAIN",
+      "category": "Dining"
+    },
+    {
+      "match": "THE WORKS",
+      "category": "Dining"
+    },
+    {
+      "match": "LONE STAR",
+      "category": "Dining"
+    },
+    {
+      "match": "RED LOBSTER",
+      "category": "Dining"
+    },
+    {
+      "match": "OLIVE GARDEN",
+      "category": "Dining"
+    },
+    {
+      "match": "APPLEBEES",
+      "category": "Dining"
+    },
+    {
+      "match": "DENNYS",
+      "category": "Dining"
+    },
+    {
+      "match": "IHOP",
+      "category": "Dining"
+    },
+    {
+      "match": "CORA",
+      "category": "Dining"
+    },
+    {
+      "match": "SMITTYS",
+      "category": "Dining"
+    },
+    {
+      "match": "SHAKE SHACK",
+      "category": "Dining"
+    },
+    {
+      "match": "PANERA BREAD",
+      "category": "Dining"
+    },
+    {
+      "match": "PITA PIT",
+      "category": "Dining"
+    },
+    {
+      "match": "PITA LAND",
+      "category": "Dining"
+    },
+    {
+      "match": "EXTREME PITA",
+      "category": "Dining"
+    },
+    {
+      "match": "MUCHO BURRITO",
+      "category": "Dining"
+    },
+    {
+      "match": "BARBURRITO",
+      "category": "Dining"
+    },
+    {
+      "match": "BAR BURRITO",
+      "category": "Dining"
+    },
+    {
+      "match": "WENDY S",
+      "category": "Dining"
+    },
+    {
+      "match": "TIM HORTON",
+      "category": "Dining"
+    },
+    {
+      "match": "COUNTRY STYLE",
+      "category": "Dining"
+    },
+    {
+      "match": "COBS BREAD",
+      "category": "Dining"
+    },
+    {
+      "match": "PAPA JOHNS",
+      "category": "Dining"
+    },
+    {
+      "match": "PANAGO",
+      "category": "Dining"
+    },
+    {
+      "match": "GIORGIOS",
+      "category": "Dining"
+    },
+    {
+      "match": "NEW YORK FRIES",
+      "category": "Dining"
+    },
+    {
+      "match": "MANCHU WOK",
+      "category": "Dining"
+    },
+    {
+      "match": "THAI EXPRESS",
+      "category": "Dining"
+    },
+    {
+      "match": "SPRING ROLLS",
+      "category": "Dining"
+    },
+    {
+      "match": "PAD THAI",
+      "category": "Dining"
+    },
+    {
+      "match": "JOLLIBEE",
+      "category": "Dining"
+    },
+    {
+      "match": "CHATIME",
+      "category": "Dining"
+    },
+    {
+      "match": "GONG CHA",
+      "category": "Dining"
+    },
+    {
+      "match": "KUNG FU TEA",
+      "category": "Dining"
+    },
+    {
+      "match": "TEN REN",
+      "category": "Dining"
+    },
+    {
+      "match": "SHARETEA",
+      "category": "Dining"
+    },
+    {
+      "match": "TEAOPIA",
+      "category": "Dining"
+    },
+    {
+      "match": "DAVIDSTEA",
+      "category": "Dining"
+    },
+    {
+      "match": "BALZACS",
+      "category": "Dining"
+    },
+    {
+      "match": "PILOT COFFEE",
+      "category": "Dining"
+    },
+    {
+      "match": "TIMOTHYS",
+      "category": "Dining"
+    },
+    {
+      "match": "VAN HOUTTE",
+      "category": "Dining"
+    },
+    {
+      "match": "BLENZ",
+      "category": "Dining"
+    },
+    {
+      "match": "WAVES COFFEE",
+      "category": "Dining"
+    },
+    {
+      "match": "JJ BEAN",
+      "category": "Dining"
+    },
+    {
+      "match": "CRAFT BEER",
+      "category": "Dining"
+    },
+    {
+      "match": "BREWERY",
+      "category": "Dining"
+    },
+    {
+      "match": "BREWING",
+      "category": "Dining"
+    },
+    {
+      "match": "FANTUAN",
+      "category": "Dining"
+    },
+    {
+      "match": "FOODORA",
+      "category": "Dining"
+    },
+    {
+      "match": "GRUBHUB",
+      "category": "Dining"
+    },
+    {
+      "match": "PARKADE",
+      "category": "Transport"
+    },
+    {
+      "match": "STATIONNEMENT",
+      "category": "Transport"
+    },
+    {
+      "match": "INDIGO PARK",
+      "category": "Transport"
+    },
+    {
+      "match": "PAYBYPHONE",
+      "category": "Transport"
+    },
+    {
+      "match": "SPOTHERO",
+      "category": "Transport"
+    },
+    {
+      "match": "EASYPARK",
+      "category": "Transport"
+    },
+    {
+      "match": "ICEPARK",
+      "category": "Transport"
+    },
+    {
+      "match": "DIAMOND PARKING",
+      "category": "Transport"
+    },
+    {
+      "match": "SERVICEONTARIO",
+      "category": "Transport"
+    },
+    {
+      "match": "SERVICE ONTARIO",
+      "category": "Transport"
+    },
+    {
+      "match": "SAAQ",
+      "category": "Transport"
+    },
+    {
+      "match": "DRIVE TEST",
+      "category": "Transport"
+    },
+    {
+      "match": "DRIVETEST",
+      "category": "Transport"
+    },
+    {
+      "match": "GAS BAR",
+      "category": "Transport"
+    },
+    {
+      "match": "FUEL",
+      "category": "Transport"
+    },
+    {
+      "match": "SUNOCO",
+      "category": "Transport"
+    },
+    {
+      "match": "IRVING",
+      "category": "Transport"
+    },
+    {
+      "match": "ON THE RUN",
+      "category": "Transport"
+    },
+    {
+      "match": "FAS GAS",
+      "category": "Transport"
+    },
+    {
+      "match": "CENTEX",
+      "category": "Transport"
+    },
+    {
+      "match": "CANCO",
+      "category": "Transport"
+    },
+    {
+      "match": "GAS STATION",
+      "category": "Transport"
+    },
+    {
+      "match": "AUTO REPAIR",
+      "category": "Transport"
+    },
+    {
+      "match": "AUTO SERVICE",
+      "category": "Transport"
+    },
+    {
+      "match": "MECHANIC",
+      "category": "Transport"
+    },
+    {
+      "match": "MIDAS",
+      "category": "Transport"
+    },
+    {
+      "match": "MR LUBE",
+      "category": "Transport"
+    },
+    {
+      "match": "JIFFY LUBE",
+      "category": "Transport"
+    },
+    {
+      "match": "MIDAS AUTO",
+      "category": "Transport"
+    },
+    {
+      "match": "KAL TIRE",
+      "category": "Transport"
+    },
+    {
+      "match": "OK TIRE",
+      "category": "Transport"
+    },
+    {
+      "match": "CAR WASH",
+      "category": "Transport"
+    },
+    {
+      "match": "TOYOTA",
+      "category": "Transport"
+    },
+    {
+      "match": "HONDA",
+      "category": "Transport"
+    },
+    {
+      "match": "HYUNDAI",
+      "category": "Transport"
+    },
+    {
+      "match": "NISSAN",
+      "category": "Transport"
+    },
+    {
+      "match": "MAZDA",
+      "category": "Transport"
+    },
+    {
+      "match": "SUBARU",
+      "category": "Transport"
+    },
+    {
+      "match": "VOLKSWAGEN",
+      "category": "Transport"
+    },
+    {
+      "match": "BMW",
+      "category": "Transport"
+    },
+    {
+      "match": "MERCEDES",
+      "category": "Transport"
+    },
+    {
+      "match": "TESLA",
+      "category": "Transport"
+    },
+    {
+      "match": "TOWING",
+      "category": "Transport"
+    },
+    {
+      "match": "HERTZ",
+      "category": "Transport"
+    },
+    {
+      "match": "ENTERPRISE RENT",
+      "category": "Transport"
+    },
+    {
+      "match": "AVIS",
+      "category": "Transport"
+    },
+    {
+      "match": "BUDGET RENT",
+      "category": "Transport"
+    },
+    {
+      "match": "NATIONAL CAR",
+      "category": "Transport"
+    },
+    {
+      "match": "COMMUNAUTO",
+      "category": "Transport"
+    },
+    {
+      "match": "ZIPCAR",
+      "category": "Transport"
+    },
+    {
+      "match": "TURO",
+      "category": "Transport"
+    },
+    {
+      "match": "TAXI",
+      "category": "Transport"
+    },
+    {
+      "match": "BECK TAXI",
+      "category": "Transport"
+    },
+    {
+      "match": "BLUE LINE",
+      "category": "Transport"
+    },
+    {
+      "match": "METROLINX",
+      "category": "Transport"
+    },
+    {
+      "match": "UP EXPRESS",
+      "category": "Transport"
+    },
+    {
+      "match": "MIWAY",
+      "category": "Transport"
+    },
+    {
+      "match": "BRAMPTON TRANSIT",
+      "category": "Transport"
+    },
+    {
+      "match": "CALGARY TRANSIT",
+      "category": "Transport"
+    },
+    {
+      "match": "BIXI",
+      "category": "Transport"
+    },
+    {
+      "match": "BIKE SHARE",
+      "category": "Transport"
+    },
+    {
+      "match": "CLINIC",
+      "category": "Health"
+    },
+    {
+      "match": "CLINIQUE",
+      "category": "Health"
+    },
+    {
+      "match": "MEDICAL",
+      "category": "Health"
+    },
+    {
+      "match": "MEDICENTRE",
+      "category": "Health"
+    },
+    {
+      "match": "WALK IN",
+      "category": "Health"
+    },
+    {
+      "match": "DOCTOR",
+      "category": "Health"
+    },
+    {
+      "match": "HOSPITAL",
+      "category": "Health"
+    },
+    {
+      "match": "PHARMA",
+      "category": "Health"
+    },
+    {
+      "match": "PHARMACIE",
+      "category": "Health"
+    },
+    {
+      "match": "DRUG MART",
+      "category": "Health"
+    },
+    {
+      "match": "IDA PHARMACY",
+      "category": "Health"
+    },
+    {
+      "match": "LOBLAW PHARMACY",
+      "category": "Health"
+    },
+    {
+      "match": "WELL CA",
+      "category": "Health"
+    },
+    {
+      "match": "OPTICAL",
+      "category": "Health"
+    },
+    {
+      "match": "OPTICIAN",
+      "category": "Health"
+    },
+    {
+      "match": "EYE CARE",
+      "category": "Health"
+    },
+    {
+      "match": "EYEWEAR",
+      "category": "Health"
+    },
+    {
+      "match": "LENSCRAFTERS",
+      "category": "Health"
+    },
+    {
+      "match": "HAKIM",
+      "category": "Health"
+    },
+    {
+      "match": "WARBY PARKER",
+      "category": "Health"
+    },
+    {
+      "match": "BON LOOK",
+      "category": "Health"
+    },
+    {
+      "match": "BONLOOK",
+      "category": "Health"
+    },
+    {
+      "match": "CLEARLY",
+      "category": "Health"
+    },
+    {
+      "match": "SPECSAVERS",
+      "category": "Health"
+    },
+    {
+      "match": "DENTIST",
+      "category": "Health"
+    },
+    {
+      "match": "ORTHODONTICS",
+      "category": "Health"
+    },
+    {
+      "match": "DENTAL CARE",
+      "category": "Health"
+    },
+    {
+      "match": "DENTAIRE",
+      "category": "Health"
+    },
+    {
+      "match": "CHIROPRACTOR",
+      "category": "Health"
+    },
+    {
+      "match": "OSTEOPATH",
+      "category": "Health"
+    },
+    {
+      "match": "ACUPUNCTURE",
+      "category": "Health"
+    },
+    {
+      "match": "REGISTERED MASSAGE",
+      "category": "Health"
+    },
+    {
+      "match": "RMT",
+      "category": "Health"
+    },
+    {
+      "match": "NATUROPATH",
+      "category": "Health"
+    },
+    {
+      "match": "PSYCHOLOGY",
+      "category": "Health"
+    },
+    {
+      "match": "THERAPY",
+      "category": "Health"
+    },
+    {
+      "match": "COUNSELLING",
+      "category": "Health"
+    },
+    {
+      "match": "VETERINARY",
+      "category": "Health"
+    },
+    {
+      "match": "ANIMAL HOSPITAL",
+      "category": "Health"
+    },
+    {
+      "match": "GOODLIFE",
+      "category": "Health"
+    },
+    {
+      "match": "GOOD LIFE",
+      "category": "Health"
+    },
+    {
+      "match": "FIT4LESS",
+      "category": "Health"
+    },
+    {
+      "match": "PLANET FITNESS",
+      "category": "Health"
+    },
+    {
+      "match": "ANYTIME FITNESS",
+      "category": "Health"
+    },
+    {
+      "match": "LA FITNESS",
+      "category": "Health"
+    },
+    {
+      "match": "YMCA",
+      "category": "Health"
+    },
+    {
+      "match": "YWCA",
+      "category": "Health"
+    },
+    {
+      "match": "ORANGETHEORY",
+      "category": "Health"
+    },
+    {
+      "match": "BARRYS",
+      "category": "Health"
+    },
+    {
+      "match": "F45",
+      "category": "Health"
+    },
+    {
+      "match": "YOGA",
+      "category": "Health"
+    },
+    {
+      "match": "PILATES",
+      "category": "Health"
+    },
+    {
+      "match": "FITNESS",
+      "category": "Health"
+    },
+    {
+      "match": "GYM",
+      "category": "Health"
+    },
+    {
+      "match": "AMZN",
+      "category": "Shopping"
+    },
+    {
+      "match": "BESTBUY",
+      "category": "Shopping"
+    },
+    {
+      "match": "SPORTSNET",
+      "category": "Shopping"
+    },
+    {
+      "match": "HOMEDEPOT",
+      "category": "Shopping"
+    },
+    {
+      "match": "HOME HARDWARE",
+      "category": "Shopping"
+    },
+    {
+      "match": "STRUCTUBE",
+      "category": "Shopping"
+    },
+    {
+      "match": "LEONS",
+      "category": "Shopping"
+    },
+    {
+      "match": "THE BRICK",
+      "category": "Shopping"
+    },
+    {
+      "match": "WAYFAIR",
+      "category": "Shopping"
+    },
+    {
+      "match": "BED BATH",
+      "category": "Shopping"
+    },
+    {
+      "match": "KITCHEN STUFF",
+      "category": "Shopping"
+    },
+    {
+      "match": "CANADIAN DOLLAR",
+      "category": "Shopping"
+    },
+    {
+      "match": "DOLLAR TREE",
+      "category": "Shopping"
+    },
+    {
+      "match": "THE BAY",
+      "category": "Shopping"
+    },
+    {
+      "match": "SIMONS",
+      "category": "Shopping"
+    },
+    {
+      "match": "HOLT RENFREW",
+      "category": "Shopping"
+    },
+    {
+      "match": "NORDSTROM",
+      "category": "Shopping"
+    },
+    {
+      "match": "DECATHLON",
+      "category": "Shopping"
+    },
+    {
+      "match": "FOOTLOCKER",
+      "category": "Shopping"
+    },
+    {
+      "match": "FOOT LOCKER",
+      "category": "Shopping"
+    },
+    {
+      "match": "SPORTING LIFE",
+      "category": "Shopping"
+    },
+    {
+      "match": "GOLF TOWN",
+      "category": "Shopping"
+    },
+    {
+      "match": "BANANA REPUBLIC",
+      "category": "Shopping"
+    },
+    {
+      "match": "ROOTS",
+      "category": "Shopping"
+    },
+    {
+      "match": "ARITZIA",
+      "category": "Shopping"
+    },
+    {
+      "match": "H&M",
+      "category": "Shopping"
+    },
+    {
+      "match": "FOREVER 21",
+      "category": "Shopping"
+    },
+    {
+      "match": "AMERICAN EAGLE",
+      "category": "Shopping"
+    },
+    {
+      "match": "ABERCROMBIE",
+      "category": "Shopping"
+    },
+    {
+      "match": "HOLLISTER",
+      "category": "Shopping"
+    },
+    {
+      "match": "DYNAMITE",
+      "category": "Shopping"
+    },
+    {
+      "match": "REITMANS",
+      "category": "Shopping"
+    },
+    {
+      "match": "RW&CO",
+      "category": "Shopping"
+    },
+    {
+      "match": "LEVIS",
+      "category": "Shopping"
+    },
+    {
+      "match": "HARRY ROSEN",
+      "category": "Shopping"
+    },
+    {
+      "match": "TIP TOP",
+      "category": "Shopping"
+    },
+    {
+      "match": "SPORT MASKA",
+      "category": "Shopping"
+    },
+    {
+      "match": "LE CHATEAU",
+      "category": "Shopping"
+    },
+    {
+      "match": "ARDENE",
+      "category": "Shopping"
+    },
+    {
+      "match": "CLAIRES",
+      "category": "Shopping"
+    },
+    {
+      "match": "PANDORA",
+      "category": "Shopping"
+    },
+    {
+      "match": "PEOPLES JEWELLERS",
+      "category": "Shopping"
+    },
+    {
+      "match": "MICHAEL HILL",
+      "category": "Shopping"
+    },
+    {
+      "match": "ALDO",
+      "category": "Shopping"
+    },
+    {
+      "match": "SKECHERS",
+      "category": "Shopping"
+    },
+    {
+      "match": "NIKE",
+      "category": "Shopping"
+    },
+    {
+      "match": "ADIDAS",
+      "category": "Shopping"
+    },
+    {
+      "match": "NEW BALANCE",
+      "category": "Shopping"
+    },
+    {
+      "match": "BIRKS",
+      "category": "Shopping"
+    },
+    {
+      "match": "CHAPTERS",
+      "category": "Shopping"
+    },
+    {
+      "match": "COLES",
+      "category": "Shopping"
+    },
+    {
+      "match": "BUREAU EN GROS",
+      "category": "Shopping"
+    },
+    {
+      "match": "PETSMART",
+      "category": "Shopping"
+    },
+    {
+      "match": "PET SMART",
+      "category": "Shopping"
+    },
+    {
+      "match": "GLOBAL PET",
+      "category": "Shopping"
+    },
+    {
+      "match": "RENS PETS",
+      "category": "Shopping"
+    },
+    {
+      "match": "MICHAELS",
+      "category": "Shopping"
+    },
+    {
+      "match": "DESERRES",
+      "category": "Shopping"
+    },
+    {
+      "match": "TOYS R US",
+      "category": "Shopping"
+    },
+    {
+      "match": "LEGO",
+      "category": "Shopping"
+    },
+    {
+      "match": "APPLE COM",
+      "category": "Shopping"
+    },
+    {
+      "match": "MICROSOFT STORE",
+      "category": "Shopping"
+    },
+    {
+      "match": "SAMSUNG",
+      "category": "Shopping"
+    },
+    {
+      "match": "THE SOURCE",
+      "category": "Shopping"
+    },
+    {
+      "match": "MEMORY EXPRESS",
+      "category": "Shopping"
+    },
+    {
+      "match": "CANADA COMPUTERS",
+      "category": "Shopping"
+    },
+    {
+      "match": "NEWEGG",
+      "category": "Shopping"
+    },
+    {
+      "match": "EBAY",
+      "category": "Shopping"
+    },
+    {
+      "match": "ETSY",
+      "category": "Shopping"
+    },
+    {
+      "match": "ALIEXPRESS",
+      "category": "Shopping"
+    },
+    {
+      "match": "TEMU",
+      "category": "Shopping"
+    },
+    {
+      "match": "SHEIN",
+      "category": "Shopping"
+    },
+    {
+      "match": "SHOPIFY",
+      "category": "Shopping"
+    },
+    {
+      "match": "THE BODY SHOP",
+      "category": "Shopping"
+    },
+    {
+      "match": "BATH & BODY",
+      "category": "Shopping"
+    },
+    {
+      "match": "LUSH",
+      "category": "Shopping"
+    },
+    {
+      "match": "MAC COSMETICS",
+      "category": "Shopping"
+    },
+    {
+      "match": "NYX",
+      "category": "Shopping"
+    },
+    {
+      "match": "SALON",
+      "category": "Shopping"
+    },
+    {
+      "match": "BARBER",
+      "category": "Shopping"
+    },
+    {
+      "match": "BARBERSHOP",
+      "category": "Shopping"
+    },
+    {
+      "match": "NAILS",
+      "category": "Shopping"
+    },
+    {
+      "match": "DRY CLEANERS",
+      "category": "Shopping"
+    },
+    {
+      "match": "CLEANERS",
+      "category": "Shopping"
+    },
+    {
+      "match": "FLOWERS",
+      "category": "Shopping"
+    },
+    {
+      "match": "FLORIST",
+      "category": "Shopping"
+    },
+    {
+      "match": "CANNABIS",
+      "category": "Shopping"
+    },
+    {
+      "match": "LCBO",
+      "category": "Shopping"
+    },
+    {
+      "match": "BEER STORE",
+      "category": "Shopping"
+    },
+    {
+      "match": "SAQ",
+      "category": "Shopping"
+    },
+    {
+      "match": "BC LIQUOR",
+      "category": "Shopping"
+    },
+    {
+      "match": "LIQUOR",
+      "category": "Shopping"
+    },
+    {
+      "match": "WINE RACK",
+      "category": "Shopping"
+    },
+    {
+      "match": "CRAVE",
+      "category": "Entertainment"
+    },
+    {
+      "match": "APPLE MUSIC",
+      "category": "Entertainment"
+    },
+    {
+      "match": "AUDIBLE",
+      "category": "Entertainment"
+    },
+    {
+      "match": "KINDLE",
+      "category": "Entertainment"
+    },
+    {
+      "match": "PLAYSTATION",
+      "category": "Entertainment"
+    },
+    {
+      "match": "XBOX",
+      "category": "Entertainment"
+    },
+    {
+      "match": "NINTENDO",
+      "category": "Entertainment"
+    },
+    {
+      "match": "STEAMGAMES",
+      "category": "Entertainment"
+    },
+    {
+      "match": "TICKETMASTER",
+      "category": "Entertainment"
+    },
+    {
+      "match": "STUBHUB",
+      "category": "Entertainment"
+    },
+    {
+      "match": "LANDMARK CINEMAS",
+      "category": "Entertainment"
+    },
+    {
+      "match": "IMAX",
+      "category": "Entertainment"
+    },
+    {
+      "match": "MUSEUM",
+      "category": "Entertainment"
+    },
+    {
+      "match": "ART GALLERY",
+      "category": "Entertainment"
+    },
+    {
+      "match": "ZOO",
+      "category": "Entertainment"
+    },
+    {
+      "match": "AQUARIUM",
+      "category": "Entertainment"
+    },
+    {
+      "match": "RIPLEYS",
+      "category": "Entertainment"
+    },
+    {
+      "match": "CANADAS WONDERLAND",
+      "category": "Entertainment"
+    },
+    {
+      "match": "WONDERLAND",
+      "category": "Entertainment"
+    },
+    {
+      "match": "BOWLING",
+      "category": "Entertainment"
+    },
+    {
+      "match": "ARCADE",
+      "category": "Entertainment"
+    },
+    {
+      "match": "THEATRE",
+      "category": "Entertainment"
+    },
+    {
+      "match": "THEATER",
+      "category": "Entertainment"
+    },
+    {
+      "match": "BLUE MOUNTAIN",
+      "category": "Entertainment"
+    },
+    {
+      "match": "PARKS CANADA",
+      "category": "Entertainment"
+    },
+    {
+      "match": "UTILITIES",
+      "category": "Bills"
+    },
+    {
+      "match": "ENERCARE",
+      "category": "Bills"
+    },
+    {
+      "match": "HYDRO",
+      "category": "Bills"
+    },
+    {
+      "match": "NOVA SCOTIA POWER",
+      "category": "Bills"
+    },
+    {
+      "match": "NB POWER",
+      "category": "Bills"
+    },
+    {
+      "match": "MANITOBA HYDRO",
+      "category": "Bills"
+    },
+    {
+      "match": "ATCO",
+      "category": "Bills"
+    },
+    {
+      "match": "ENMAX",
+      "category": "Bills"
+    },
+    {
+      "match": "DIRECT ENERGY",
+      "category": "Bills"
+    },
+    {
+      "match": "SASKPOWER",
+      "category": "Bills"
+    },
+    {
+      "match": "NEWFOUNDLAND POWER",
+      "category": "Bills"
+    },
+    {
+      "match": "ENWIN",
+      "category": "Bills"
+    },
+    {
+      "match": "INSURANCE",
+      "category": "Bills"
+    },
+    {
+      "match": "ASSURANCE",
+      "category": "Bills"
+    },
+    {
+      "match": "AVIVA",
+      "category": "Bills"
+    },
+    {
+      "match": "DESJARDINS INSURANCE",
+      "category": "Bills"
+    },
+    {
+      "match": "TD INSURANCE",
+      "category": "Bills"
+    },
+    {
+      "match": "BELAIRDIRECT",
+      "category": "Bills"
+    },
+    {
+      "match": "WAWANESA",
+      "category": "Bills"
+    },
+    {
+      "match": "DEFINITY",
+      "category": "Bills"
+    },
+    {
+      "match": "COOPERATORS",
+      "category": "Bills"
+    },
+    {
+      "match": "MANULIFE",
+      "category": "Bills"
+    },
+    {
+      "match": "SUN LIFE",
+      "category": "Bills"
+    },
+    {
+      "match": "CANADA LIFE",
+      "category": "Bills"
+    },
+    {
+      "match": "STARLINK",
+      "category": "Bills"
+    },
+    {
+      "match": "TEKSAVVY",
+      "category": "Bills"
+    },
+    {
+      "match": "START CA",
+      "category": "Bills"
+    },
+    {
+      "match": "DISTRIBUTEL",
+      "category": "Bills"
+    },
+    {
+      "match": "ROGERS WIRELESS",
+      "category": "Bills"
+    },
+    {
+      "match": "HELLO MOBILE",
+      "category": "Bills"
+    },
+    {
+      "match": "CONDO FEES",
+      "category": "Housing"
+    },
+    {
+      "match": "HOME INSURANCE",
+      "category": "Housing"
+    },
+    {
+      "match": "MUNICIPAL TAX",
+      "category": "Housing"
+    },
+    {
+      "match": "TAXES",
+      "category": "Housing"
+    },
+    {
+      "match": "AIR TRANSAT",
+      "category": "Travel"
+    },
+    {
+      "match": "SUNWING",
+      "category": "Travel"
+    },
+    {
+      "match": "SWOOP",
+      "category": "Travel"
+    },
+    {
+      "match": "LYNX AIR",
+      "category": "Travel"
+    },
+    {
+      "match": "PASCAN",
+      "category": "Travel"
+    },
+    {
+      "match": "UNITED AIRLINES",
+      "category": "Travel"
+    },
+    {
+      "match": "DELTA AIR",
+      "category": "Travel"
+    },
+    {
+      "match": "AMERICAN AIRLINES",
+      "category": "Travel"
+    },
+    {
+      "match": "BRITISH AIRWAYS",
+      "category": "Travel"
+    },
+    {
+      "match": "LUFTHANSA",
+      "category": "Travel"
+    },
+    {
+      "match": "KLM",
+      "category": "Travel"
+    },
+    {
+      "match": "CATHAY PACIFIC",
+      "category": "Travel"
+    },
+    {
+      "match": "HOTEL",
+      "category": "Travel"
+    },
+    {
+      "match": "HOTELS",
+      "category": "Travel"
+    },
+    {
+      "match": "MOTEL",
+      "category": "Travel"
+    },
+    {
+      "match": "RESORT",
+      "category": "Travel"
+    },
+    {
+      "match": "MARRIOTT",
+      "category": "Travel"
+    },
+    {
+      "match": "HILTON",
+      "category": "Travel"
+    },
+    {
+      "match": "HYATT",
+      "category": "Travel"
+    },
+    {
+      "match": "BEST WESTERN",
+      "category": "Travel"
+    },
+    {
+      "match": "HOLIDAY INN",
+      "category": "Travel"
+    },
+    {
+      "match": "FAIRMONT",
+      "category": "Travel"
+    },
+    {
+      "match": "SHERATON",
+      "category": "Travel"
+    },
+    {
+      "match": "WESTIN",
+      "category": "Travel"
+    },
+    {
+      "match": "VRBO",
+      "category": "Travel"
+    },
+    {
+      "match": "AGODA",
+      "category": "Travel"
+    },
+    {
+      "match": "TRIVAGO",
+      "category": "Travel"
+    },
+    {
+      "match": "KAYAK",
+      "category": "Travel"
+    },
+    {
+      "match": "FLIGHT CENTRE",
+      "category": "Travel"
+    },
+    {
+      "match": "FLAIR",
+      "category": "Travel"
+    },
+    {
+      "match": "GREYHOUND",
+      "category": "Travel"
+    },
+    {
+      "match": "MEGABUS",
+      "category": "Travel"
+    },
+    {
+      "match": "FLIXBUS",
+      "category": "Travel"
+    },
+    {
+      "match": "ROCKY MOUNTAINEER",
+      "category": "Travel"
+    },
+    {
+      "match": "BC FERRIES",
+      "category": "Travel"
+    },
+    {
+      "match": "MARINE ATLANTIC",
+      "category": "Travel"
+    },
+    {
+      "match": "NEXUS",
+      "category": "Travel"
+    },
+    {
+      "match": "DUTY FREE",
+      "category": "Travel"
+    },
+    {
+      "match": "TUITION",
+      "category": "Education"
+    },
+    {
+      "match": "SCHOOL",
+      "category": "Education"
+    },
+    {
+      "match": "KUMON",
+      "category": "Education"
+    },
+    {
+      "match": "BOOKSTORE",
+      "category": "Education"
+    },
+    {
+      "match": "LINKEDIN LEARNING",
+      "category": "Education"
+    },
+    {
+      "match": "MASTERCLASS",
+      "category": "Education"
+    },
+    {
+      "match": "ICLOUD",
+      "category": "Software"
+    },
+    {
+      "match": "APPLE ONE",
+      "category": "Software"
+    },
+    {
+      "match": "CHATGPT PLUS",
+      "category": "Software"
+    },
+    {
+      "match": "SQUARESPACE",
+      "category": "Software"
+    },
+    {
+      "match": "SQSP",
+      "category": "Software"
+    },
+    {
+      "match": "WIX",
+      "category": "Software"
+    },
+    {
+      "match": "GODADDY",
+      "category": "Software"
+    },
+    {
+      "match": "NAMECHEAP",
+      "category": "Software"
+    },
+    {
+      "match": "CLOUDFLARE",
+      "category": "Software"
+    },
+    {
+      "match": "DIGITALOCEAN",
+      "category": "Software"
+    },
+    {
+      "match": "AWS",
+      "category": "Software"
+    },
+    {
+      "match": "SHOPIFY PLAN",
+      "category": "Software"
+    },
+    {
+      "match": "NORDVPN",
+      "category": "Software"
+    },
+    {
+      "match": "EXPRESSVPN",
+      "category": "Software"
+    },
+    {
+      "match": "SERVICE CHARGE",
+      "category": "Fees"
+    },
+    {
+      "match": "PLAN FEE",
+      "category": "Fees"
+    },
+    {
+      "match": "OVERDRAFT",
+      "category": "Fees"
+    },
+    {
+      "match": "NSF",
+      "category": "Fees"
+    },
+    {
+      "match": "MONTHLY FEE",
+      "category": "Fees"
+    },
+    {
+      "match": "FOREIGN TRANSACTION",
+      "category": "Fees"
+    },
+    {
+      "match": "CIRCLE K",
+      "category": "Transport"
+    },
+    {
+      "match": "COUCHE TARD",
+      "category": "Transport"
+    },
+    {
+      "match": "407ETR",
+      "category": "Transport"
+    },
+    {
+      "match": "MTO",
+      "category": "Transport"
+    },
+    {
+      "match": "AUTO CARE",
+      "category": "Transport"
+    },
+    {
+      "match": "CAR SERVICE",
+      "category": "Transport"
+    },
+    {
+      "match": "UTILITY",
+      "category": "Bills"
+    },
+    {
+      "match": "UPS STORE",
+      "category": "Shopping"
+    },
+    {
+      "match": "PUROLATOR",
+      "category": "Shopping"
+    },
+    {
+      "match": "FEDEX",
+      "category": "Shopping"
+    },
+    {
+      "match": "DHL",
+      "category": "Shopping"
+    },
+    {
+      "match": "CANADA POST",
+      "category": "Shopping"
+    },
+    {
+      "match": "POSTES CANADA",
+      "category": "Shopping"
+    },
+    {
+      "match": "HEYTEA",
+      "category": "Dining"
     }
   ]
 }

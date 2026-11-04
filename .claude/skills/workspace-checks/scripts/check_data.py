@@ -142,6 +142,10 @@ def clock(root):
     dates = [d for d in dates if re.fullmatch(r"\d{4}-\d{2}-\d{2}", d)]
     return (datetime.date.fromisoformat(max(dates)), "the demo's newest data") if dates else (today, None)
 
+# The ledger types the import also writes to spending.csv (update.py SPENT).
+SPENDING_TYPES = ("Debit purchase", "Bill", "Payment", "Rent", "Cash", "Fee", "Interest")
+
+
 def check(root):
     # Each rule has a home category; a call may override it, because several rules produce more
     # than one kind of finding. D14 is the clearest case: "this document covers an account that
@@ -150,7 +154,7 @@ def check(root):
             "D3":"rules", "D6":"rules", "D10":"rules", "D13":"rules", "D14":"rules",
             "D11":"build", "D12":"build", "D17":"build", "T1":"build", "T2":"hygiene", "D15":"build", "D16":"conform",
             "D2":"hygiene", "D4":"hygiene", "D9":"hygiene", "D18":"hygiene",
-            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D25":"hygiene", "D26":"rules", "D27":"hygiene", "D28":"hygiene"}
+            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D29":"rules", "D30":"reconcile", "D25":"hygiene", "D26":"rules", "D27":"hygiene", "D28":"hygiene"}
     F = []          # (severity, rule, message, category)
     def err(r, m, cat=None):  F.append(("ERROR", r, m, cat or HOME.get(r, "rules")))
     def warn(r, m, cat=None): F.append(("WARN",  r, m, cat or HOME.get(r, "rules")))
@@ -181,6 +185,58 @@ def check(root):
             note("D1", f"{fn}: no rows yet — nothing imported into this ledger")
         elif not breaks:
             note("D1", f"{fn}: {len(rows)} rows, balance chain closes at {prev:,.2f}")
+
+    # -- rewards.csv: a card's cash back, income (FINANCE.md §2) -----------------
+    p = load(root, "rewards.csv")
+    for r in (list(csv.DictReader(open(p, encoding="utf-8-sig"))) if p else []):
+        m = re.search(r'\[([A-Z0-9]+)/(\d{8})\]\s*$', r.get("note") or "")
+        if not m or m.group(1) not in SOURCES:
+            err("D2", f"rewards.csv {r.get('date')} {(r.get('note') or '')[:40]}: no known [SOURCE/YYYYMMDD] tag")
+        elif float(r.get("amount") or 0) <= 0:
+            err("D2", f"rewards.csv {r.get('date')}: a reward is money in, but this one is {r.get('amount')}")
+
+    # -- D30 a ledger row typed as spending has to be in spending.csv ----------------------
+    # A first owner's bills and cash went missing with every other check clean (2026-11).
+    p = load(root, "accounts.json")
+    sp = load(root, "spending.csv")
+    if p and sp:
+        filed = collections.Counter()
+        for r in csv.DictReader(open(sp, encoding="utf-8")):
+            m = re.search(r"\[([^/\]]+)/", r.get("note", ""))
+            filed[(m.group(1) if m else "", r["date"], f"{float(r['amount']):.2f}")] += 1
+        for a in json.load(open(p, encoding="utf-8")).get("accounts", []):
+            lp = load(root, a["ledger"]) if a.get("ledger") else None
+            if not lp:
+                continue
+            miss, total = 0, 0.0
+            for r in csv.DictReader(open(lp, encoding="utf-8")):
+                amt = float(r.get("amount") or 0)
+                if r.get("type") in SPENDING_TYPES and amt < 0:
+                    k = (a.get("spendTag") or "", r["date"], f"{-amt:.2f}")
+                    if filed[k] > 0:
+                        filed[k] -= 1
+                    else:
+                        miss += 1; total += -amt
+            if miss:
+                err("D30", f"{a['name']}: {miss} row(s) typed as spending, ${total:,.2f}, are not in spending.csv"
+                           + ("" if a.get("spendTag") else " (the account has no spendTag; run tools/migrate.py)"))
+
+    # -- D29 a gift declared in the broker: the deposit has to be in the export ----
+    p = load(root, "plan.json")
+    gifts = (json.load(open(p, encoding="utf-8")).get("brokerGifts") or []) if p else []
+    if gifts:
+        p = load(root, "ws_activities.csv")
+        deposits = {(r["effective_date"], f"{float(r['net_cash_amount'] or 0):.2f}", r["currency"])
+                    for r in (csv.DictReader(open(p, encoding="utf-8-sig")) if p else [])
+                    if r.get("activity_type") == "MoneyMovement" and float(r.get("net_cash_amount") or 0) > 0}
+        for g in gifts:
+            if (g.get("date"), f"{float(g.get('amount') or 0):.2f}", g.get("currency", "CAD")) not in deposits:
+                err("D29", f"plan.json brokerGifts {g.get('date')} {g.get('amount')} {g.get('currency', 'CAD')}: "
+                           f"no deposit like it in ws_activities.csv")
+            if not 0 < float(g.get("counted", g.get("amount") or 0)) <= float(g.get("amount") or 0):
+                err("D29", f"plan.json brokerGifts {g.get('date')}: counted {g.get('counted')} is not part of the deposit")
+            if not g.get("why"):
+                err("D29", f"plan.json brokerGifts {g.get('date')}: no reason beside the value")
 
     # -- spending.csv ---------------------------------------------------------
     p = load(root, "spending.csv")
@@ -570,60 +626,62 @@ def check(root):
                            f"{', '.join(FLOW_KINDS)}, not {f_.get('kind')!r}")
             # null is a number the owner has not given yet (flows.unset) -- the page says Not set.
             # Anything else that is not a number, or a negative one, is a broken row.
-            if f_.get("amount") is None and f_.get("kind") in ("income", "saving", "allowance"):
+            if f_.get("amount") is None and f_.get("kind") in ("income", "saving", "everyday"):
                 continue
             if not isinstance(f_.get("amount"), (int, float)) or f_["amount"] < 0:
                 err("D13", f"funds.json flow {f_.get('name') or f_.get('key')!r} has no amount")
-        # Schema 8: a fund's standing contribution is a saving flow that names the fund. A `monthly`
-        # left on the fund is the same number said twice, and the page no longer reads it.
-        fund_keys = {f.get("key") for f in fj["funds"]}
-        for f in fj["funds"]:
-            if "monthly" in f or "monthlyNote" in f:
-                err("D13", f"funds.json fund {f.get('name') or f.get('key')!r} still carries `monthly` -- a standing "
-                           "contribution is a saving flow with `to` (schema 8). Run tools/migrate.py")
+        # A plan larger than pay is not broken in itself: an owner between jobs, on leave or
+        # retired lives off savings, and the page says the gap comes from savings. With no pay at
+        # all that is simply the plan; with some pay it may be a typo, so it is worth a look.
+        ft = flow_totals(plan)
+        split = ft["committed"] + ft["saving"] + ft["everyday"]
+        if "takeHome" not in flow_unset(plan) and split > ft["income"]:
+            if ft["income"] == 0:
+                note("D13", f"no pay in the plan: ${split:,} a month comes from savings")
+            else:
+                warn("D13", f"the monthly split asks for ${split:,} against income of "
+                            f"${ft['income']:,}; the ${split - ft['income']:,} gap comes from savings")
+
+        # Funds (2026-11-03): the owner's own, each a label on money already in one account. A
+        # fund that names no account, or a set-aside figure larger than the account holds, would
+        # show money that is not there; a saving flow sent to a name nothing knows is money that
+        # leaves the plan for nowhere.
+        aj_ = json.load(open(load(root, "accounts.json"), encoding="utf-8")) if load(root, "accounts.json") else {}
+        accts = {a.get("key"): a for a in aj_.get("accounts") or []}
+        funds = fj.get("funds") or []
+        keys = [f_.get("key") for f_ in funds]
+        for k in {k for k in keys if keys.count(k) > 1}:
+            err("D13", f"funds.json: two funds share the key {k!r}")
+        claimed = {}
+        for f_ in funds:
+            nm = f_.get("name") or f_.get("key")
+            if not f_.get("key") or not f_.get("name"):
+                err("D13", f"funds.json fund {nm!r}: a fund needs a key and a name")
+            a = accts.get(f_.get("account"))
+            if not a:
+                err("D13", f"funds.json fund {nm!r}: account {f_.get('account')!r} is not in accounts.json")
+            elif a.get("side") != "asset":
+                err("D13", f"funds.json fund {nm!r}: {f_.get('account')!r} is a liability; a fund sits on money you hold")
+            for fld in ("goal",):
+                if fld in f_ and (not isinstance(f_[fld], (int, float)) or f_[fld] <= 0):
+                    err("D13", f"funds.json fund {nm!r}: {fld} must be a number above 0")
+            if f_.get("by") and not re.fullmatch(r"\d{4}-\d{2}", str(f_["by"])):
+                err("D13", f"funds.json fund {nm!r}: by must be YYYY-MM, not {f_['by']!r}")
+            sv = f_.get("saved") or {}
+            if sv:
+                if not isinstance(sv.get("amount"), (int, float)) or sv["amount"] < 0 or not sv.get("asof"):
+                    err("D13", f"funds.json fund {nm!r}: saved needs an amount of 0 or more and an asof date")
+                elif a:
+                    claimed[a["key"]] = claimed.get(a["key"], 0) + sv["amount"]
+        for k, amt in claimed.items():
+            bal = accts[k].get("balance")
+            if isinstance(bal, (int, float)) and amt > bal + 0.005:
+                warn("D13", f"funds set aside ${amt:,.2f} on {accts[k].get('name') or k}, which holds ${bal:,.2f}")
         for f_ in plan.get("flows") or []:
             to = f_.get("to")
-            if f_.get("kind") == "saving" and to not in (None, "broker") and to not in fund_keys:
-                err("D13", f"funds.json flow {f_.get('name') or f_.get('key')!r} goes to {to!r}, which is neither "
-                           "the broker nor a fund in this file")
-        ft = flow_totals(plan)
-        split = ft["committed"] + ft["saving"] + ft["allowance"]
-        if split > ft["income"] and "takeHome" not in flow_unset(plan):
-            err("D13", f"the monthly split asks for ${split:,} against income of ${ft['income']:,}")
-        # 2026-09-07: the funds moved off bank cash onto a named Wealthsimple account, so the claim
-        # has to be checked against THAT account. A stale backing.balance is the failure that
-        # matters -- the page would keep reporting a goal as funded out of money that is not there.
-        hp2 = load(root, "holdings_latest.csv")
-        acct = {}
-        if hp2:
-            fxp = load(root, "fx.json")
-            fx = json.load(open(fxp, encoding="utf-8"))["usd_cad"] if fxp else None
-            with open(hp2, encoding="utf-8") as fh:
-                for r in csv.DictReader(fh):
-                    n, mv, cur = r.get("Account Number"), r.get("Market Value"), r.get("Market Value Currency")
-                    if not n or not mv:
-                        continue
-                    v = float(mv)
-                    if cur == "USD":
-                        if fx is None:
-                            continue
-                        v *= fx
-                    acct[n] = acct.get(n, 0) + v
-        claims = collections.defaultdict(float)
-        for f in fj["funds"]:
-            claims[f["backing"]["account"]] += f["opening"]["amount"]
-        for a, c in claims.items():
-            stated = next(f["backing"]["balance"] for f in fj["funds"] if f["backing"]["account"] == a)
-            real = acct.get(a)
-            if real is not None and abs(real - stated) > max(50, real * 0.01):
-                err("D13", f"funds.json says {a} holds ${stated:,.0f} but holdings_latest.csv "
-                           f"totals ${real:,.0f}", "reconcile")
-            if c > stated:
-                err("D13", f"the funds claim ${c:,.0f} against {a}, which holds ${stated:,.0f}")
-            else:
-                note("D13", f"funds claim ${c:,.0f} of ${stated:,.0f} in {a}, "
-                            f"${stated - c:,.0f} unclaimed")
-
+            if f_.get("kind") == "saving" and to and to != "broker" and to not in keys and to not in accts:
+                err("D13", f"funds.json flow {f_.get('name') or f_.get('key')!r} saves to {to!r}, "
+                           f"which is no fund and no account")
     # -- D14 accounts.json is a registry, not a second set of books ---------
     # Added 2026-09-07 with the Accounts page. The registry repeats balances that live in three
     # other files, and a repeated number is a number that drifts. Re-derive every one from its
@@ -887,19 +945,44 @@ def check(root):
             lp = load(root, a["ledger"]) if a.get("ledger") else None
             if lp:
                 with open(lp, encoding="utf-8") as fh:
-                    rows_all += [(r["date"], float(r["amount"] or 0)) for r in csv.DictReader(fh) if r.get("date")]
+                    rows_all += [(r["date"], float(r["amount"] or 0), r.get("description") or "")
+                                 for r in csv.DictReader(fh) if r.get("date")]
         if ft3["committedNow"] and rows_all:
-            newest = max(dt for dt, _ in rows_all)
+            newest = max(r[0] for r in rows_all)
             y, m = int(newest[:4]), int(newest[5:7])
             lo = f"{y - (1 if m <= 2 else 0):04d}-{((m - 3) % 12) + 1:02d}-01"
             hi = newest[:7] + "-01"
             unseen = 0
+            # A bill can leave in parts: one insurer, two debits on the same day (2026-11, user 002).
+            # So a payee's debits in one month are added up, and a plan figure is seen when one
+            # payment or one payee's month matches it. When nothing does, the nearest payee-month
+            # is named, so the owner can restate the amount instead of hunting for it.
+            payee = lambda d: merchant_key(d.rsplit(", ", 1)[-1])   # "Pre-Authorized Payment, X" is X
+            win = [(dt, -v, payee(d)) for dt, v, d in rows_all if lo <= dt < hi and v < 0]
+            month_sum, month_n = collections.defaultdict(float), collections.Counter()
+            for dt, v, pk in win:
+                month_sum[(pk, dt[:7])] += v; month_n[(pk, dt[:7])] += 1
             for f_ in ft3["committedNow"]:
                 amt = float(f_["amount"])
-                hits = [dt for dt, v in rows_all if lo <= dt < hi and v < 0 and abs(-v - amt) <= max(1, amt * 0.01)]
-                if not hits:
-                    unseen += 1
-                    warn("D21", f"the plan says {f_.get('name') or f_.get('key')} costs ${amt:,.0f} a month, but no ledger "
+                # One figure for several bills (`estimate: true`) can never match one payment, so
+                # it is said once and not warned about every run (2026-11, user 002: "$500 for
+                # utilities and subscriptions").
+                if f_.get("estimate"):
+                    note("D21", f"{f_.get('name') or f_.get('key')}: ${amt:,.0f} is an estimate across several bills; not matched")
+                    continue
+                tol = max(1, amt * 0.01)
+                if any(abs(v - amt) <= tol for _, v, _ in win) or any(abs(v - amt) <= tol for v in month_sum.values()):
+                    continue
+                unseen += 1
+                near = sorted((abs(v - amt), -int(k[1].replace("-", "")), k, v) for k, v in month_sum.items() if abs(v - amt) <= amt * 0.10)
+                nm = f_.get('name') or f_.get('key')
+                if near:
+                    _, _, (pk, ym), v = near[0]
+                    parts = f" in {month_n[(pk, ym)]} payments" if month_n[(pk, ym)] > 1 else ""
+                    warn("D21", f"the plan says {nm} costs ${amt:,.0f} a month; the nearest in the ledgers is "
+                               f"{pk.title()} at ${v:,.2f}{parts} in {ym} — if that is it, restate the amount")
+                else:
+                    warn("D21", f"the plan says {nm} costs ${amt:,.0f} a month, but no ledger "
                                f"shows a payment of that size between {lo[:7]} and {hi[:7]} — declared, not observed")
             if not unseen:
                 note("D21", f"{len(ft3['committedNow'])} committed flow(s) seen in the ledgers")
@@ -948,19 +1031,12 @@ def check(root):
             pb = None if pbm == "null" else int(pbm)
             tgt = (pb or 0) * 300
             fj2 = json.load(open(load(root, "funds.json"), encoding="utf-8"))
-            # The fund is found by the role it plays, not by a name: this looked for the literal
-            # key "travel", so a workspace whose funds are called anything else crashed the
-            # checker outright (2026-09-09, found by the setup acceptance test).
-            trav = next((f for f in fj2["funds"] if f.get("role") == "topup"), None)
             port = inv["portfolio"]
             want = {"plan_base": pb, "fire_target": tgt, "net_worth": nw, "portfolio": port,
                     "progress": round(port / tgt * 100, 1) if tgt else 0, "gap": tgt - port,
                     "invest_monthly": flow_totals(fj2["plan"])["invest"],
-                    "everyday": flow_totals(fj2["plan"])["allowance"],
-                    "big_threshold": fj2["plan"]["bigThreshold"],
+                    "everyday": flow_totals(fj2["plan"])["everyday"],
                     "dry_powder": inv["dryPct"]}
-            if trav:
-                want["travel_goal"] = trav["goal"]
             # A number never given is Not set in the table, and only then (flows.unset).
             miss = flow_unset(fj2["plan"])
             gone = ({"plan_base", "fire_target", "progress", "gap"} if pb is None else set()) \

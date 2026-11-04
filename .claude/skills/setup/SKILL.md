@@ -70,7 +70,7 @@ recognises the broker exports by their columns, and drafts the answers file with
 - **the monthly files** — the filename pattern (the dropped name with its date taken out), the
   closing day, the parser, where it lands;
 - **the plan** — take-home from the payroll deposits, the investing amount from what reached the
-  broker last month, an allowance from one month of card spending;
+  broker last month, an everyday amount from one month of card spending;
 - **`_proposed`** — where every drafted value came from;
 - **`_open`** — the questions the files cannot answer.
 
@@ -81,8 +81,8 @@ refuses to run while `_open` has anything in it** — a draft is not an answer.
 What the files typically cannot say, and so `_open` asks: the name to show (the statements carry
 the legal name, which may not be the one the owner uses), the birth year, whether the table is
 right, accounts that sent no file this month, balances the broker's exports do not carry, how
-often pay arrives, whether last month's transfers are the standing rule, the allowance, fixed
-payments and rent after FIRE, the planning spend, funds, the investing buckets, a counterparty
+often pay arrives, whether last month's transfers are the standing rule, the everyday amount, fixed
+payments and rent after FIRE, the planning spend, the investing buckets, a counterparty
 who repays a loan, and anything held abroad.
 
 ## Before you write anything
@@ -118,10 +118,18 @@ at once**. Repeat back what you
 heard before writing anything. Everything here ends up in `setup-answers.json`; nothing is typed
 into HTML.
 
+**How to ask** (2026-11, user 002: the question form broke down halfway and the session moved to
+chat). A question with two to four answers to pick from — which account a file is, is this
+account set aside — goes in the question form, several at once. A question whose answer is a
+number or a name — take-home pay, the everyday amount, the year of birth — is asked in chat, a few
+at a time, because a form cannot take a typed amount. A question with one possible answer is not a
+question: say what was assumed instead. If the owner interrupts the form, ask what is left in chat
+and do not open the form again in that session.
+
 **A question they skip stays unanswered.** Leave the key out of `setup-answers.json` — never
 fill in $0, a typical figure or a birth year to get past it. The scaffold writes it as `null`
 and the page says *Not set* wherever it would be shown, so the owner sees what is missing
-instead of a number that looks like theirs. A value the files suggest (the allowance from what
+instead of a number that looks like theirs. A value the files suggest (the everyday amount from what
 the cards spend) is a draft to confirm, and stays only if they confirm it or say go ahead with
 the drafts. When you hand over, name what is still Not set and that saying the number sets it.
 
@@ -164,6 +172,10 @@ whose charges go to spending.csv), `Cash flow`, `Repayments` (a counterparty's l
 
 Ask for **every** account, including the ones they think are boring. "Where is the money" is one
 of the two questions this tool exists to answer, and an account nobody listed is invisible.
+When the statements move money to or from an account none of them is for, the `missing`
+question names it by number (`seen` lists them): a card-only owner's chequing account, a USD
+account a transfer went to. Each one they say is theirs is an account row like any other, with
+the balance they read off the app as its stated balance; one that is not theirs is left out.
 
 ### 3 · What arrives each month
 
@@ -173,7 +185,7 @@ For each account that produces a statement: **what the file is called** (a patte
 can cover several accounts (a broker's holdings file usually does): put the document on one of
 them and list the others in `alsoCovers`, by name.
 
-Then: **which day of the month they will sit down and import** (the default is the 26th).
+Then: **which day of the month they will sit down and import** (the default is the 1st; any day works, and the one that suits them is the right one).
 
 ### 4 · The monthly plan
 
@@ -187,15 +199,11 @@ the page shows is a sum of them.
   a loan **which liability it repays** (an account from step 2). These go into the interview
   answers as `plan.committed`. An owner who pays no rent today but will after FIRE gives the
   figure as `imputedRent`; it becomes a flow that starts at FIRE. D21 looks for each committed
-  payment in the ledgers afterwards, so a number nobody actually pays is caught.
+  payment in the ledgers afterwards, so a number nobody actually pays is caught. **One figure
+  for several bills** ("about $500 for utilities and subscriptions") is written with
+  `estimate: true`: no single payment can match it, so D21 notes it instead of warning every run.
 - How much they invest per month — the transfer to the broker.
-- Their everyday allowance — the guilt-free line. **No category caps**; that is the point of it.
-- What counts as a big buy (the default is a single purchase of $300 or more).
-- Any funds they are saving into: a name, a goal, a date. A fund is a **label on an account they
-  already have** — nothing is transferred and no new account is opened. At most one fund can be
-  `role: "topup"` (leftover allowance flows into it) and one `role: "big"` (big buys come out of
-  it). Having neither is fine. **A standing contribution to a fund is a `saving` flow with
-  `to: <fund key>`** — a row of the plan, not a number on the fund.
+- Their everyday amount — the guilt-free line. **No category caps**; that is the point of it.
 
 ### 5 · The one investing question
 
@@ -278,6 +286,10 @@ python3 .claude/skills/workspace-checks/scripts/check_render.py \
   dashboards/finance_dashboard.html
 ```
 
+`check_render.py` needs playwright and a browser, a large download nothing else uses. Without
+them it says so: tell the owner that one check was not run, and do not offer the download unless
+they ask. Setup is not incomplete for it.
+
 `⚠ page does not fill a screen` is expected while the workspace is empty — there genuinely is
 little to show yet. Anything else, fix before handing it over.
 
@@ -288,8 +300,9 @@ Three things, in this order:
 1. **Next month, say "update dashboards".** The first import is done. (Set up without files?
    Then drop last month's statements into `inbox/` with the bank's own filenames and say it
    now.) Name anything still *Not set*, and that saying the number sets it.
-2. **Open the dashboard.** `dashboards/finance_dashboard.html`, in a browser, at least 1120px
-   wide.
+2. **Open the dashboard.** `dashboards/finance_dashboard.html`, in a browser, at least 800px
+   wide. Say what their last full month looks like, in the one sentence
+   `python3 .claude/skills/setup/scripts/month_sentence.py .` prints, and teach no definition.
 3. **Fill in `OWNER.md`.** The scaffold left an empty one. The three governing documents are the tool's and say nothing about
    anyone; everything that is theirs — which bank does what, the traps their statements have,
    the decisions they make out loud — goes in `OWNER.md`, which `CLAUDE.md` loads (and, once a
@@ -305,7 +318,7 @@ Three things, in this order:
   "owner": "Alex Chen",
   "born": 1993,
   "currency": "CAD",
-  "importDay": 26,
+  "importDay": 1,
   "accounts": [
     {"inst":"TD","name":"Everyday Chequing","kind":"Chequing","id":"…4021",
      "balance":4210.55,"asof":"2026-08-31","ledger":"chequing.csv",
@@ -315,8 +328,7 @@ Three things, in this order:
      "balance":38400,"asof":"2026-09-06","feeds":"Portfolio",
      "doc":{"file":"holdings-<date>.csv"}}
   ],
-  "plan": {"takeHome":4200,"invest":900,"everyday":1800,"bigThreshold":300},
-  "funds": [],
+  "plan": {"takeHome":4200,"invest":900,"everyday":1800},
   "rules": {
     "buckets": [{"key":"rest","name":"Holdings","catchAll":true}],
     "maxHoldings": 8

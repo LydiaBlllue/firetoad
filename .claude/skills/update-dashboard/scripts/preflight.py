@@ -81,8 +81,14 @@ def load_docs(root):
                         acct=by_key.get((d.get("covers") or [None])[0]) or {}))
     return out
 
+def canonical(name):
+    """The name a bank gave the file, back from what an upload made of it: spaces and commas
+    turned into underscores (`April_16_2026.pdf` for `April 16, 2026.pdf`, 2026-10-28)."""
+    n = re.sub(r"_+", " ", name.strip())
+    return re.sub(r"^([A-Z][a-z]+) (\d{1,2}) (\d{4})", r"\1 \2, \3", n)
+
 def classify(name):
-    n = name.strip()
+    n = canonical(name)
     low = n.lower()
     def hit(x, extra=""):
         d, a = x["doc"], x["acct"]
@@ -98,19 +104,21 @@ def classify(name):
 
     # Some banks ship several accounts under the same "<Month D, YYYY>.pdf" name. The close DAY
     # separates them (documents[].closes); a -2 suffix is the second account in the same batch.
-    m = re.match(r"^([A-Z][a-z]+) (\d{1,2}), (\d{4})(-2| \(2\))?\.pdf$", n)
+    # A browser numbers a second download of the same name, "(1)" in one and "(2)" in another
+    # (2026-11, user 002: a "(1)" stopped the run). Where the register has a second account in
+    # the batch, that is what it is; otherwise it is the same document again -- a byte-identical
+    # copy is found below, and a statement already in the books is never written twice.
+    m = re.match(r"^([A-Z][a-z]+) (\d{1,2}), (\d{4})(-2| \(\d+\))?\.pdf$", n)
     if m and m.group(1) in MONTHS:
         day, dup = int(m.group(2)), m.group(4)
         cands = [x for x in DOCS if x["prefix"] == "" and x["suffix"].endswith(".pdf")]
-        if dup:
-            c = [x for x in cands if x["suffix"].startswith("-2")]
-            if c:
-                return hit(c[0], " *** The '-2' file is a second ACCOUNT, not a duplicate. ***")
-        else:
-            c = sorted([x for x in cands if not x["suffix"].startswith("-2") and x["close_day"]],
-                       key=lambda x: abs(x["close_day"] - day))
-            if c and abs(c[0]["close_day"] - day) <= 7:
-                return hit(c[0])
+        c = [x for x in cands if x["suffix"].startswith("-2")] if dup else []
+        if c:
+            return hit(c[0], " *** The '-2' file is a second ACCOUNT, not a duplicate. ***")
+        c = sorted([x for x in cands if not x["suffix"].startswith("-2") and x["close_day"]],
+                   key=lambda x: abs(x["close_day"] - day))
+        if c and abs(c[0]["close_day"] - day) <= 7:
+            return hit(c[0], " A browser's copy number; named as the statement it copies." if dup and dup != "-2" else "")
         return (None, None, None,
                 f"A bank statement dated the {day}th -- no document in accounts.json closes near "
                 f"that day. Ask which account it is.")

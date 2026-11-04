@@ -189,8 +189,7 @@ The owner's own banks, and what each one does, are in `OWNER.md`.
 1. **Look up `merchants.json` first.** A hit is reused, not re-judged.
 2. A miss is a **new merchant** — it must appear in the report for the owner to confirm.
 3. **Subscription is not a category** (2026-10-29). File a merchant by what it sells; whether
-   its charge repeats is measured by the build (FINANCE.md §3a), and a subscription is never a
-   big buy. A chequing row that is spending (rent, a bill, a payment, cash, a fee) is written to
+   its charge repeats is measured by the build (FINANCE.md §3a). A chequing row that is spending (rent, a bill, a payment, cash, a fee) is written to
    spending.csv by the import itself.
 4. Merchant strings are truncated and abbreviated. They are not sentences and cannot be read as
    ones.
@@ -199,12 +198,11 @@ The owner's own banks, and what each one does, are in `OWNER.md`.
 
 ## Step 3 — Write `findata/`, including the copies
 
-`--verify` first. Then ledgers and JSON, then the two files that hold **copies** of numbers
+`--verify` first. Then ledgers and JSON, then the file that holds **copies** of numbers
 owned elsewhere:
 
 - `accounts.json` — every `balance` / `asof`. Lint **D14** re-derives all of them from
   `banks.json`, `holdings_latest.csv` and `foreign.json` and fails on drift.
-- `funds.json` — `backing.balance` for the fund accounts. Lint **D13** does the same.
 
 A new account or a new statement means **one** edit now, not three: add a row to `accounts`, and
 a row to `documents` if it produces a file. `SOURCES` is derived from it, and `SUBMITTED` has to
@@ -269,8 +267,8 @@ python3 .claude/skills/workspace-checks/scripts/check_render.py \
   dashboards/finance_dashboard.html
 ```
 
-It drives headless Chromium (Playwright, installed 2026-09-08), loads each page at 1120 / 1440 /
-1760 px, clicks every sidebar entry and measures what was drawn. About 11 seconds, and it replaces
+It drives headless Chromium (Playwright, installed 2026-09-08), loads each page at 800 / 1120 /
+1440 / 1760 px, clicks every sidebar entry and measures what was drawn. About 11 seconds, and it replaces
 roughly 28 hand-driven browser calls a run.
 
 One thing worth knowing before trusting it: **it measures the chart's painted width, not its
@@ -304,15 +302,20 @@ and asked; you add what you settled by hand — and the message to the owner is 
 out. Five parts, in this order — the same five keys of the record:
 
 1. **`changed`** — net worth, FIRE progress, spending, dry powder: label, from, to.
-2. **`asked`** — new merchants and anything else that needs the owner's word. Each one is ALSO a
+2. **`asked`** — new merchants and anything else that needs the owner's word. With a fund in
+   `funds.json` `funds`, ask once whether what is set aside in it changed; an answer restates
+   `saved` (amount and `asof`), and no answer leaves it as it was. Each one is ALSO a
    row in `findata/history/decisions.json` (`status: open`, the `default` applied meanwhile, the `source`
    statement and line it came from); the page header counts them until the owner answers.
 3. **`noticed`** — rules kept or broken (pay-yourself-first, the band, the holding count, the
-   allowance, fund claims) and what is still missing (from `GAPS` and the tracker grid), each
+   everyday, fund claims) and what is still missing (from `GAPS` and the tracker grid), each
    with `sev` ok / warn / bad. This is the story of the update; the Investing page computes
    today's status itself and never shows these sentences.
 4. **`judged`** — every default applied and every ambiguity resolved without asking.
-5. **`files`** — what came in, named the way the owner knows them ("MasterCard statement to
+5. **`seconds`** — written by the run itself: how long reading, writing, prices and the history
+   took, so one import can be compared with another. The summary also prints rebuild and the
+   checks. Tokens are not the script's to count; the app's usage view has them.
+6. **`files`** — what came in, named the way the owner knows them ("MasterCard statement to
    Aug 20"), not by filename.
 
 **Every sentence in the record reaches the page.** Write it the way DESIGN.md §5b says: about the

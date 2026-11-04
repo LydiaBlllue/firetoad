@@ -30,7 +30,8 @@ from ._pdf import (AMOUNT, ParseError, assign_signs, clean_product, date_in_peri
 NAME = "rbc_banking"
 RULE = "balance chain closes; deposits and withdrawals match the printed totals"
 DATE = re.compile(r"^(\d{1,2}) ([A-Z][a-z]{2})\b\s*(.*)$")
-TAIL = re.compile(r"^(.*?)\s+(" + AMOUNT + r")(?:\s+(" + AMOUNT + r"))?\s*$")
+# A wrapped description's amounts can have the last line to themselves, so the words are optional.
+TAIL = re.compile(r"^(.*?)(?:^|\s+)(" + AMOUNT + r")(?:\s+(" + AMOUNT + r"))?\s*$")
 
 
 def parse(path):
