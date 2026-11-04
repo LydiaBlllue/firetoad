@@ -352,6 +352,7 @@ def build(a, today):
                  **({"until": c["until"]} if c.get("until") else {}),
                  **({"afterFire": c["afterFire"]} if c.get("afterFire") else {}),
                  **({"pays": c["pays"]} if c.get("pays") else {}),
+                 **({"estimate": True} if c.get("estimate") else {}),
                  **({"note": c["note"]} if c.get("note") else {})}
                 for c in (plan.get("committed") or [])
             ] + ([

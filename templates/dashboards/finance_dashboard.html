@@ -78,7 +78,9 @@ h1{font-size:21px;font-weight:700;letter-spacing:-.2px}
 .card.tight{max-width:780px}
 /* --- Motion (2026-09-06). Two rules only: a page change should be felt, and anyone who has
    asked their system for less motion gets none. Nothing loops, nothing runs past 120ms. --- */
-@keyframes pageIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+/* A page slides in; it never fades. A fade from opacity 0 is held when the browser throttles a
+   background tab or a screenshot tool, and the page read as blank for a second (user 002, #32). */
+@keyframes pageIn{from{transform:translateY(4px)}to{transform:none}}
 section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;
@@ -426,7 +428,8 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
     <div id="subsNext"></div>
   </div>
 <div class="card subs">
-  <div class="lab">Every subscription</div>
+  <div class="lab" id="subsLab">Every subscription</div>
+  <div class="cap" style="margin:-2px 0 8px">Anything charged again and again is here, whatever it buys: a phone plan or a parking app as well as a streaming service. Something bought once never is.</div>
   <div id="subs"></div>
 </div>
 </section>
@@ -2085,6 +2088,7 @@ function renderSubs(){
         + '<td class="num">'+fmt2(x.amt)+'</td></tr>').join("")
       + '<tr class="tot"><td colspan="2" style="text-align:left">In all</td><td class="num">'+fmt2(sum)+'</td></tr></table>'
     : '<div class="empty">Nothing due.</div>';
+  $("subsLab").innerHTML = "Every " + term("subscription");
   $("subs").innerHTML = rows.length ? rows.map(s =>
     '<div class="leg-row'+(s.active?"":" off")+'"><span class="nm">'+s.name+(s.active?' <span class="sub-badge">● Active</span>':"")+'</span><span class="meta num">'+s.n+' charge'+(s.n === 1 ? "" : "s")+', last '+dLong(s.last.date)+'</span><span class="v num">'+fmt2(s.last.amount)+'</span></div>').join("")
     : '<div class="empty">No subscriptions detected.</div>';

@@ -964,6 +964,12 @@ def check(root):
                 month_sum[(pk, dt[:7])] += v; month_n[(pk, dt[:7])] += 1
             for f_ in ft3["committedNow"]:
                 amt = float(f_["amount"])
+                # One figure for several bills (`estimate: true`) can never match one payment, so
+                # it is said once and not warned about every run (2026-11, user 002: "$500 for
+                # utilities and subscriptions").
+                if f_.get("estimate"):
+                    note("D21", f"{f_.get('name') or f_.get('key')}: ${amt:,.0f} is an estimate across several bills; not matched")
+                    continue
                 tol = max(1, amt * 0.01)
                 if any(abs(v - amt) <= tol for _, v, _ in win) or any(abs(v - amt) <= tol for v in month_sum.values()):
                     continue

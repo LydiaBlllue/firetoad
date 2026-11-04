@@ -312,7 +312,10 @@ out. Five parts, in this order — the same five keys of the record:
    with `sev` ok / warn / bad. This is the story of the update; the Investing page computes
    today's status itself and never shows these sentences.
 4. **`judged`** — every default applied and every ambiguity resolved without asking.
-5. **`files`** — what came in, named the way the owner knows them ("MasterCard statement to
+5. **`seconds`** — written by the run itself: how long reading, writing, prices and the history
+   took, so one import can be compared with another. The summary also prints rebuild and the
+   checks. Tokens are not the script's to count; the app's usage view has them.
+6. **`files`** — what came in, named the way the owner knows them ("MasterCard statement to
    Aug 20"), not by filename.
 
 **Every sentence in the record reaches the page.** Write it the way DESIGN.md §5b says: about the

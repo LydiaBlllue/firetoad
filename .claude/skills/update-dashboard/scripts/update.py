@@ -45,6 +45,7 @@ or the write failed and was rolled back. 2: written, but a checker found somethi
 is missing; nothing can be parsed.
 """
 import argparse
+import time
 import collections
 import csv
 import datetime
@@ -1088,7 +1089,7 @@ def noticed_lines(ws, out, plan):
     return lines
 
 
-def record(ws, plan, changed, noticed):
+def record(ws, plan, changed, noticed, seconds=None):
     asked = [d["what"] + f" Filed as {d['default']} meanwhile." for d in plan.decisions]
     for name, why in plan.by_hand:
         asked.append(f"{name} needs a pair of eyes: {why}.")
@@ -1096,6 +1097,8 @@ def record(ws, plan, changed, noticed):
         asked.append(f"What the {money(abs(amt))} on {short(iso_to_date(d))} ({desc[:40]}) was.")
     rec = {"date": ws.today.isoformat(), "files": plan.files, "changed": changed, "noticed": noticed,
            "judged": plan.judged, "asked": asked}
+    if seconds:
+        rec["seconds"] = seconds   # how long each stage took, so one import can be compared with another
     ws.imports.setdefault("imports", []).append(rec)
     jsave(ws.fd("imports.json"), ws.imports)
     return rec
@@ -1198,6 +1201,12 @@ def main(argv):
         except (ValueError, KeyError, TypeError, OSError) as e:
             print(f"  ✗ --hand {a.hand}: not a list of transcriptions ({e})"); return 1
     summary = {"date": ws.today.isoformat(), "written": False}
+    # Seconds per stage (2026-11, user 002: nothing said how long an import took, so two could not
+    # be compared). Tokens are the session's, not this script's: the app's usage view has them.
+    t0 = time.monotonic(); secs = {}
+    def lap(name):
+        nonlocal t0
+        now = time.monotonic(); secs[name] = round(now - t0, 1); t0 = now
 
     named = sorted(classify_inbox(ws, plan), key=lambda pd: name_date(pd[0]))
     try:
@@ -1211,6 +1220,7 @@ def main(argv):
     except ParserUnavailable as e:
         print(f"  ✗ {e}. Nothing can be parsed until it is installed; then run again.")
         return 3
+    lap("read")
 
     say = print if not a.json else (lambda *x, **k: None)
     say(f"=== update — {len(named)} file(s) named in inbox/, {len(plan.unknown)} unnamed ===\n")
@@ -1265,16 +1275,19 @@ def main(argv):
     try:
         before, sp_before = derive(root), spending_by_month(root)
         write_plan(ws, plan)
+        lap("write")
         # The benchmark's prices, for the Performance page: the one step that goes online, so a
         # failure is said and the import goes on — the last prices stay, and D27 says how old.
         prc, pout = run(os.path.join(HERE, "prices.py"), [".", "--write", "--if-needed"], root)
         say("  prices: " + (pout.strip().splitlines()[-1].strip() if pout.strip() else f"exit {prc}"))
+        lap("prices")
         after, sp_after = derive(root), spending_by_month(root)
         write_history(ws, after)
         after = derive(root)
         changed = changed_lines(before, after, sp_before, sp_after)
         noticed = noticed_lines(ws, after, plan)
-        rec = record(ws, plan, changed, noticed)
+        lap("history")
+        rec = record(ws, plan, changed, noticed, dict(secs))
     except BaseException as e:            # a crash, a SystemExit, Ctrl-C: none of it may leave the books torn
         restore(root, snap)
         shutil.rmtree(snap, ignore_errors=True)
@@ -1284,12 +1297,15 @@ def main(argv):
     summary.update(written=True, changed=changed, noticed=noticed, record=rec)
 
     rc, out = run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
+    lap("rebuild")
     say("\n  rebuild: " + (out.strip().splitlines()[-1].strip() if out.strip() else f"exit {rc}"))
     findings = []
     for script, args in (("check_data.py", ["."]), ("check_design.py", [rebuild_page(root)])):
         rc2, out2 = run(os.path.join(CHECKS, script), args, root)
         findings += [l.strip() for l in out2.splitlines() if l.strip().startswith(("✗", "⚠"))]
     summary["findings"] = findings
+    lap("checks")
+    summary["seconds"] = secs
     run(os.path.join(HERE, "preflight.py"), [".", "--reseed"], root)
     # findata/ as this run left it: --undo puts the copy back only while this is still what is there
     m = jload(os.path.join(snap, "undo.json")); m["after"] = findata_hashes(root)
@@ -1299,6 +1315,7 @@ def main(argv):
         say(f"  {c['label']}: {c['from']} → {c['to']}")
     for n in noticed:
         say(f"  {'✓' if n['sev'] == 'ok' else '!'} {n['text']}")
+    say("  time: " + ", ".join(f"{k} {v}s" for k, v in secs.items()) + f" — {round(sum(secs.values()), 1)}s in all")
     if findings:
         say("\n  the checkers found:")
         for f in findings:

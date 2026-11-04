@@ -199,7 +199,9 @@ the page shows is a sum of them.
   a loan **which liability it repays** (an account from step 2). These go into the interview
   answers as `plan.committed`. An owner who pays no rent today but will after FIRE gives the
   figure as `imputedRent`; it becomes a flow that starts at FIRE. D21 looks for each committed
-  payment in the ledgers afterwards, so a number nobody actually pays is caught.
+  payment in the ledgers afterwards, so a number nobody actually pays is caught. **One figure
+  for several bills** ("about $500 for utilities and subscriptions") is written with
+  `estimate: true`: no single payment can match it, so D21 notes it instead of warning every run.
 - How much they invest per month — the transfer to the broker.
 - Their everyday amount — the guilt-free line. **No category caps**; that is the point of it.
 

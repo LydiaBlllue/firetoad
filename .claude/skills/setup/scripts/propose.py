@@ -437,4 +437,10 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    # How long the draft took, so one setup can be compared with another (2026-11, user 002).
+    import time
+    _t = time.monotonic()
+    _rc = main(sys.argv)
+    if "--json" not in sys.argv:
+        print(f"  time: {time.monotonic() - _t:.1f}s to read the files and draft")
+    sys.exit(_rc)

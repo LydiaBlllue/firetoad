@@ -269,6 +269,7 @@ order.
 | `until` | a date, or open | the FIRE projection drops a flow after its end — a loan paid off |
 | `afterFire` | keep · drop | rent keeps, a mortgage payment drops, property tax keeps |
 | `pays` | the liability it repays | the principal part is saving, not spending |
+| `estimate` | absent, or `true` | one figure for several bills; D21 notes it and does not look for one payment of that size |
 | `to` | `broker` (the default), a fund's key, or an account's key | pay-yourself-first counts only the broker |
 
 - **A number never given is `null`, not 0** — take-home, the investing transfer, the everyday amount,

@@ -2,6 +2,15 @@
 
 ## 1.3 — unreleased
 
+- **The four smaller things a first owner noticed** (2026-11-03, user 002).
+  - A page slides in and never fades: a fade held by a throttled browser read as a blank page.
+  - Subscriptions says what one is — anything charged again and again, a parking app as well as
+    a streaming service.
+  - A committed flow can be `estimate: true`, one figure for several bills; D21 notes it instead of
+    warning every run, and setup writes it when the owner gives one figure for several.
+  - An import records how long each stage took (`seconds` in its record; the summary adds rebuild
+    and the checks), and the setup draft says how long it took. Tokens are the app's to count.
+
 - **Accounts lists accounts, in dollars** (2026-11-03, user 001). A home, a car or anything else
   that is not money is no longer a row: it is on Home under Other assets, and the last row says
   what it adds to make net worth. Every balance is in dollars — an institution is one figure, an
