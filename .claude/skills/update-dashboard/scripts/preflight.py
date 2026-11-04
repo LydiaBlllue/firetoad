@@ -59,6 +59,8 @@ NOTES = {   # what to do with each target file: tool knowledge, keyed by file, n
     "foreign.json": "Read the balances off the image; each account carries its own as-of.",
 }
 DOCS = []           # set by main() from accounts.json; classify() reads it
+ROOT = None         # the workspace load_docs() last read: where an OFX file is looked for by name
+OFX_IDS = {}        # the bank's id of each account (accounts[].ofxId) -> its register key
 
 def load_docs(root):
     try:
@@ -66,6 +68,10 @@ def load_docs(root):
     except Exception:
         return []
     by_key = {a["key"]: a for a in aj.get("accounts", [])}
+    global ROOT
+    ROOT = root
+    OFX_IDS.clear()
+    OFX_IDS.update({a["ofxId"]: a["key"] for a in aj.get("accounts", []) if a.get("ofxId")})
     out = []
     for d in aj.get("documents", []):
         pat = d.get("file", "") or ""
@@ -94,6 +100,26 @@ def classify(name):
         d, a = x["doc"], x["acct"]
         note = ((d.get("reconcile") or "") + " " + NOTES.get(d.get("into"), "") + extra).strip()
         return (f"{d['ep']} {d['key']}", a.get("id") or "all covered accounts", d.get("into"), note)
+
+    # An OFX or QFX download is named by the accounts inside it, never by its name: every bank's
+    # arrives as statement.ofx, statement (1).ofx (2026-11-04). The bank's id for each account is
+    # the register's `ofxId`; setup writes it the first time.
+    if low.endswith((".ofx", ".qfx")):
+        path = os.path.join(ROOT, "inbox", name) if ROOT else None
+        try:
+            sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from parsers import ofx
+            ids = ofx.accounts_in(path) if path and os.path.exists(path) else []
+        except Exception:
+            ids = []
+        keys = {OFX_IDS[i] for i in ids if i in OFX_IDS}
+        docs = [x for x in DOCS if x["doc"].get("parser") == "ofx" and keys & set(x["doc"].get("covers") or [])]
+        if len({id(x["doc"]) for x in docs}) == 1 and len(keys) == len(set(ids)):
+            return hit(docs[0])
+        new = [i for i in ids if i not in OFX_IDS]
+        return (None, None, None,
+                f"an OFX download for account(s) {', '.join('…' + i[-4:] for i in new)} the register does not know yet: "
+                f"setup adds them" if new else "an OFX download whose accounts belong to more than one document")
 
     if low.endswith((".png", ".jpg", ".jpeg", ".heic", ".webp")):
         shots = [x for x in DOCS if x["doc"].get("into") == "foreign.json"]

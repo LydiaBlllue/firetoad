@@ -1146,6 +1146,87 @@ def csv_layouts_check(root, base):
                    "a download cut at 100 rows refused; an unknown layout left alone"]
 
 
+def write_ofx(path, accounts):
+    """An OFX 1.x (SGML) download the way a bank writes one, from (id, type, cur, balance, rows)."""
+    def stm(acct, kind, cur, bal, rows, card):
+        trs = "".join(f"<STMTTRN>\n<TRNTYPE>{'CREDIT' if a > 0 else 'DEBIT'}\n<DTPOSTED>{d.replace('-', '')}000000.000[-5:EDT]\n"
+                      f"<TRNAMT>{a}\n<FITID>{d.replace('-', '')}{i:04d}\n<NAME>{n}\n</STMTTRN>\n" for i, (d, a, n) in enumerate(rows))
+        frm = f"<CCACCTFROM>\n<ACCTID>{acct}\n</CCACCTFROM>" if card else \
+              f"<BANKACCTFROM>\n<BANKID>000000000\n<ACCTID>{acct}\n<ACCTTYPE>{kind}\n</BANKACCTFROM>"
+        tag = "CCSTMTRS" if card else "STMTRS"
+        return (f"<{tag}>\n<CURDEF>{cur}\n{frm}\n<BANKTRANLIST>\n{trs}</BANKTRANLIST>\n"
+                f"<LEDGERBAL>\n<BALAMT>{bal}\n<DTASOF>20260908000000.000[-5:EDT]\n</LEDGERBAL>\n</{tag}>\n")
+    bank = "".join(stm(*a, False) for a in accounts if a[1] != "CARD")
+    cards = "".join(stm(*a, True) for a in accounts if a[1] == "CARD")
+    open(path, "w", encoding="cp1252").write(
+        "OFXHEADER:100\nDATA:OFXSGML\nVERSION:102\n\n<OFX>\n"
+        + (f"<BANKMSGSRSV1>\n<STMTTRNRS>\n{bank}</STMTTRNRS>\n</BANKMSGSRSV1>\n" if bank else "")
+        + (f"<CREDITCARDMSGSRSV1>\n<CCSTMTTRNRS>\n{cards}</CCSTMTTRNRS>\n</CREDITCARDMSGSRSV1>\n" if cards else "")
+        + "</OFX>\n")
+
+
+def ofx_download_check(root, base):
+    """An OFX download end to end (2026-11-04: one standard for every bank, with the bank's own
+    balance). The demo's newest chequing month goes back in as OFX with the month before repeated,
+    named by the account id inside, not the filename; the ledger has to come back exactly. A card
+    in the same file takes new purchases with no balance asked, because the bank's is there. Then
+    the same file with one chequing row taken out has to be refused: its balances no longer join."""
+    if not demo_like(root):
+        return []
+    def setup(tag):
+        ws = os.path.join(base, tag); os.makedirs(ws); stage(root, ws)
+        ap_ = layout.path(ws, "accounts.json"); reg = json.load(open(ap_, encoding="utf-8"))
+        chq = next(a for a in reg["accounts"] if a.get("ledger") == "chequing.csv")
+        card = next(a for a in reg["accounts"] if a.get("side") == "liability" and a.get("spendTag"))
+        chq["ofxId"], card["ofxId"] = "900000001", "900000009"
+        for d in reg["documents"]:
+            if {chq["key"], card["key"]} & set(d.get("covers") or []):
+                d["optional"] = True
+        reg["documents"].append({"key": "OFX download", "ep": chq["inst"], "file": "statement.ofx", "closes": "any time",
+                                 "feeds": "Cash flow", "covers": [chq["key"], card["key"]], "tags": ["OFX"],
+                                 "into": "chequing.csv", "reconcile": "the bank's balance", "parser": "ofx"})
+        json.dump(reg, open(ap_, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+        lp = layout.path(ws, "chequing.csv")
+        rows = list(csv.DictReader(open(lp, encoding="utf-8"))); cols = list(rows[0].keys())
+        newest = rows[-1]["statement"]; first = next(i for i, r in enumerate(rows) if r["statement"] == newest)
+        keep, back = rows[:first], rows[first:]
+        with open(lp, "w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=cols, lineterminator="\n"); w.writeheader(); w.writerows(keep)
+        sp = layout.path(ws, "spending.csv")
+        srows = list(csv.DictReader(open(sp, encoding="utf-8"))); scols = list(srows[0].keys())
+        stamp_ = newest.split("/")[1]
+        srows = [r for r in srows if not (r["note"].rstrip().endswith(f"/{stamp_}]") and ("(chequing)" in r["note"] or "(debit)" in r["note"]))]
+        with open(sp, "w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=scols, lineterminator="\n"); w.writeheader(); w.writerows(srows)
+        return ws, keep, back, card
+    upd = lambda ws: subprocess.run([sys.executable, os.path.join(ws, ".claude", "skills", "update-dashboard", "scripts", "update.py"),
+                                     ".", "--write"], cwd=ws, capture_output=True, text=True, timeout=300)
+    buys = [("2026-09-02", -23.40, "CORNER GROCER OTTAWA ON"), ("2026-09-03", -18.00, "BOOKSHOP OTTAWA ON")]
+    ws, keep, back, card = setup("ofxdl")
+    tx = [(r["date"], float(r["amount"]), r["description"]) for r in keep[-3:] + back]
+    owed = round(float(card["balance"]) + sum(a for _, a, _ in buys), 2)
+    write_ofx(os.path.join(ws, "inbox", "statement (1).ofx"),
+              [("900000001", "CHECKING", "CAD", back[-1]["balance"], tx), ("900000009", "CARD", "CAD", owed, buys)])
+    sp = layout.path(ws, "spending.csv"); n0 = len(list(csv.DictReader(open(sp, encoding="utf-8"))))
+    r = upd(ws)
+    got = list(csv.DictReader(open(layout.path(ws, "chequing.csv"), encoding="utf-8")))
+    sig = lambda xs: [(x["date"], x["amount"], x["balance"], x["type"]) for x in xs]
+    added = len(list(csv.DictReader(open(sp, encoding="utf-8")))) - n0
+    chq_spend = sum(1 for x in back if x["type"] in ("Rent", "Bill", "Fee", "Cash", "Payment", "Debit purchase", "Interest") and float(x["amount"]) < 0)
+    if r.returncode not in (0, 2) or sig(got) != sig(keep + back) or added != len(buys) + chq_spend:
+        return [f"  ✗ ofx download: did not come back as it was (exit {r.returncode}, {len(got)} of {len(keep) + len(back)} ledger rows, "
+                f"{added} spending rows, expected {len(buys) + chq_spend}): " + " | ".join((r.stdout + r.stderr).strip().splitlines()[-3:])]
+    ws2, keep2, back2, card2 = setup("ofxbad")
+    tx2 = [(x["date"], float(x["amount"]), x["description"]) for x in keep2[-3:] + back2]
+    del tx2[len(tx2) // 2]                       # one row the bank lists is missing from the file
+    write_ofx(os.path.join(ws2, "inbox", "statement.ofx"), [("900000001", "CHECKING", "CAD", back2[-1]["balance"], tx2)])
+    r2 = upd(ws2)
+    if r2.returncode == 0 and "Nothing written" not in r2.stdout and "by hand" not in r2.stdout:
+        return ["  ✗ ofx download: a file with a row missing was taken in"]
+    return ["  ✓ ofx download: a chequing month and a card, named by the account ids inside, came back exactly with no balance "
+            "asked; a file with a row missing was refused"]
+
+
 def month_parts_check(root, base):
     """The sentence setup ends with: its parts have to add up to the month's total in spending.csv."""
     r = subprocess.run([sys.executable, os.path.join(root, ".claude", "skills", "setup", "scripts", "month_sentence.py"), root],
@@ -2200,7 +2281,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
-                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, browser_copy_check, csv_download_check, csv_layouts_check, month_parts_check, starter_check,
+                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, browser_copy_check, csv_download_check, csv_layouts_check, ofx_download_check, month_parts_check, starter_check,
                     demo_clear_check):
             try:
                 runs += chk(root, base)

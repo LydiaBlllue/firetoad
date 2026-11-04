@@ -194,6 +194,12 @@ class Workspace:
         same institution (one BMO PDF can carry two accounts)."""
         cands = [self.by_key[k] for k in doc.get("covers", []) if k in self.by_key]
         cands += [a for a in self.accounts if a.get("inst") == doc.get("ep") and a not in cands]
+        # an OFX download names each account by the bank's own id, which setup keeps as ofxId
+        exact = [a for a in cands if parsed_digits and a.get("ofxId") == parsed_digits]
+        if exact:
+            return exact[0]
+        if doc.get("parser") == "ofx":
+            return None
         if parsed_digits:
             for a in cands:
                 if digits(a.get("id")) and digits(a.get("id")).endswith(parsed_digits[-4:]):
@@ -209,8 +215,11 @@ class Workspace:
 
 # ---------------------------------------------------------------- what a ledger row is
 def merchant_of_debit(desc):
-    """'Contactless Interac purchase - 7740 FARM BOY #17 OTTAWA ON' -> 'FARM BOY #17 OTTAWA ON'."""
-    m = re.search(r"interac\s+purchase[\s,\-]*(?:\d{3,}\s*)?(.*)$", desc, re.I)
+    """'Contactless Interac purchase - 7740 FARM BOY #17 OTTAWA ON' -> 'FARM BOY #17 OTTAWA ON';
+    'Debit Card Purchase, FORTINOS' -> 'FORTINOS' (BMO's wording, in its PDF and its OFX alike:
+    until 2026-11-04 the words stayed on the merchant, so every BMO debit merchant read as new)."""
+    m = re.search(r"interac\s+purchase[\s,\-]*(?:\d{3,}\s*)?(.*)$", desc, re.I) \
+        or re.search(r"(?:debit\s*card|point\s+of\s+sale|pos)\s*purchase[\s,\-]*(?:\d{3,}\s*)?(.*)$", desc, re.I)
     return (m.group(1) if m else desc).strip(" ,-")
 
 
@@ -447,7 +456,7 @@ def name_by_contents(ws, plan, path, quiet=False):
         return None
     hits = []
     for name in PARSERS:
-        if name == "csv":
+        if name in ("csv", "ofx"):
             continue                          # a download is named by its register entry, not read blind
         try:
             res = parse_file(path, name)
@@ -483,7 +492,7 @@ def plan_statement(ws, plan, path, doc):
             if name not in plan.hand:
                 plan.by_hand.append((name, f"{doc['parser']}: {e}"))
                 return
-        if res is not None and doc["parser"] == "csv":
+        if res is not None and doc["parser"] in ("csv", "ofx"):
             res = csv_fit(ws, plan, doc, res, name)
             if res is None:
                 return
@@ -516,7 +525,7 @@ def plan_statement(ws, plan, path, doc):
             continue
         pdoc = ws.doc_for_account(acc["key"]) or doc
         into = pdoc.get("into")
-        if doc.get("parser") == "csv":
+        if doc.get("parser") in ("csv", "ofx"):
             # A download is filed under itself, and each account in it goes where that account's
             # money goes: a card to spending, a ledger to its ledger, a balance-only one to banks.
             pdoc = doc
@@ -601,6 +610,18 @@ def csv_fit_part(ws, plan, doc, acc, res):
         res["period"] = {"from": keep[0]["date"], "to": keep[-1]["date"]}
     since = acc.get("asof") or ""
     moving = [r for r in keep if r["date"] > since]
+    if res["reconcile"].get("bank_balance") and not acc.get("ledger"):
+        # OFX: the bank says what the account holds now. What the books held as of their date,
+        # plus every row since, has to be that, or a row is missing (a ledger is held to it by the
+        # opening balance instead, in plan_ledger).
+        before = float(acc.get("balance") or 0.0)
+        expect = round(before + sum(r["amount"] for r in moving), 2)
+        ok = abs(expect - res["closing"]) < 0.01
+        res["reconcile"] = dict(res["reconcile"], ok=ok,
+                                detail=f"{before:,.2f} as of {since} and {len(moving)} row(s) since make {expect:,.2f}; "
+                                       f"the bank says {res['closing']:,.2f}" + ("" if ok else " — a row is missing or counted twice"))
+    if res["reconcile"].get("bank_balance") and acc.get("side") == "liability":
+        res["closing"] = -res["closing"]       # a card's balance as a statement prints it: owed is positive
     if res["reconcile"].get("needs_balance") and not moving:
         # nothing after the balance on hand: it stands, and there is nothing to ask
         res["closing"] = None

@@ -21,14 +21,15 @@ Every parser returns the same shape:
 
 Amounts are signed the ledger's way: money out is negative. Row order is the statement's.
 
-`csv` reads a bank's own transaction download by the `csv` map the register keeps on the
+`ofx` reads a bank's OFX or QFX download, one standard for every bank, with its own balances
+(ofx.py). `csv` reads a bank's own transaction download by the `csv` map the register keeps on the
 document (csv_bank.py); it needs nothing installed. The PDF parsers depend on pypdf for the text (`pip3 install --user pypdf cryptography`). Without it every parser raises
 ParserUnavailable, and the skill reads the file itself — the tool degrades to what it was, it
 does not guess.
 """
 import importlib
 
-NAMES = ("rbc_banking", "rbc_visa", "bmo_banking", "bmo_mastercard", "csv")
+NAMES = ("rbc_banking", "rbc_visa", "bmo_banking", "bmo_mastercard", "csv", "ofx")
 
 
 class ParserUnavailable(Exception):

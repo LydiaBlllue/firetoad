@@ -27,8 +27,12 @@ page: what you spent, what you own, how far you are from FIRE. No bank login, no
 | **Your statements** | Last month's PDFs. A single credit card is enough to start |
 | **A screen** | The page needs a window at least 800px wide; a phone shows screenshots only |
 
-**Banks.** RBC and BMO statements and Wealthsimple exports are read by a local parser. Any other
-bank works too, but Claude reads those statements by hand: slower, and it means Claude sees them.
+**Banks.** RBC and BMO statements and Wealthsimple exports are read by a local parser. For any
+other bank, download your transactions as **OFX or QFX** (the *Money* or *Quicken* choice in
+online banking): they carry the bank's own balance, so every download checks itself. Read the same
+way for any bank, and confirmed on a real BMO one. A bank that offers only a spreadsheet (CSV)
+works too, with its balance read off the app once a month. Anything else, Claude reads by hand:
+slower, and it means Claude sees it.
 
 **Built for Canada.** Canadian dollars, TFSA / RRSP / FHSA, CPP and OAS. Accounts abroad count in
 net worth.
