@@ -198,12 +198,11 @@ The owner's own banks, and what each one does, are in `OWNER.md`.
 
 ## Step 3 — Write `findata/`, including the copies
 
-`--verify` first. Then ledgers and JSON, then the two files that hold **copies** of numbers
+`--verify` first. Then ledgers and JSON, then the file that holds **copies** of numbers
 owned elsewhere:
 
 - `accounts.json` — every `balance` / `asof`. Lint **D14** re-derives all of them from
   `banks.json`, `holdings_latest.csv` and `foreign.json` and fails on drift.
-- `funds.json` — `backing.balance` for the fund accounts. Lint **D13** does the same.
 
 A new account or a new statement means **one** edit now, not three: add a row to `accounts`, and
 a row to `documents` if it produces a file. `SOURCES` is derived from it, and `SUBMITTED` has to

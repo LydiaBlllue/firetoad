@@ -1404,8 +1404,11 @@ function renderSplit(){
   const edited = [EVERYDAY !== PLAN.everyday, INVM !== PLAN.invest].filter(Boolean).length;
   $("splitNote").innerHTML =
     (used > PLAN.takeHome && !unset("takeHome")
-      ? noteBox("This split asks for <b>" + fmt(used) + "</b> a month against take-home pay of <b>"
-          + fmt(PLAN.takeHome) + "</b>. Lower Everyday or the investing transfer.")
+      ? noteBox(PLAN.takeHome === 0
+          ? "No pay comes in on this plan, so the <b>" + fmt(used) + "</b> a month comes from savings."
+          : "This split asks for <b>" + fmt(used) + "</b> a month against take-home pay of <b>"
+            + fmt(PLAN.takeHome) + "</b>. The <b>" + fmt(used - PLAN.takeHome)
+            + "</b> gap comes from savings; lower Everyday or the investing transfer to close it.")
       : "")
     + (edited ? noteBox(edited + (edited > 1 ? " numbers were" : " number was") + " changed on this page and will "
           + "reset at the next update. Say the new number to keep it.") : "");

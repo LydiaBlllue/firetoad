@@ -905,6 +905,35 @@ def chequing_setup_check(root, base):
     return ["  ✓ chequing setup, end to end: a bill and a cash withdrawal are spending, and money in is not"]
 
 
+def no_pay_check(root, base):
+    """An owner with no pay: income $0 and a plan above it is living off savings, not a broken
+    plan. A first owner between jobs failed D13 on every import (2026-11), so every run exited 2
+    and the selftest counted it nine more times."""
+    ws = os.path.join(base, "nopay")
+    os.makedirs(ws); stage(root, ws)
+    fp = layout.path(ws, "funds.json")
+    if not os.path.exists(fp):
+        return []
+    fj = json.load(open(fp, encoding="utf-8"))
+    pay = [f for f in fj["plan"].get("flows") or [] if f.get("kind") == "income"]
+    if not pay:
+        return []
+    for f in pay:
+        f["amount"] = 0
+    json.dump(fj, open(fp, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    sk = os.path.join(ws, ".claude", "skills")
+    r = subprocess.run([sys.executable, os.path.join(sk, "update-dashboard", "scripts", "rebuild.py"), ".", "--write"],
+                       cwd=ws, capture_output=True, text=True, timeout=300)
+    if r.returncode:
+        return [f"  ✗ no pay: rebuild exit {r.returncode}"]
+    r = subprocess.run([sys.executable, os.path.join(sk, "workspace-checks", "scripts", "check_data.py"), "."],
+                       cwd=ws, capture_output=True, text=True, timeout=300)
+    bad = [l.strip() for l in r.stdout.splitlines() if "[D13]" in l]
+    if r.returncode or bad:
+        return [f"  ✗ no pay: a plan with no pay should check clean; got exit {r.returncode} {bad[:1]}"]
+    return ["  ✓ no pay: a plan drawn from savings checks clean"]
+
+
 def month_parts_check(root, base):
     """The sentence setup ends with: its parts have to add up to the month's total in spending.csv."""
     r = subprocess.run([sys.executable, os.path.join(root, ".claude", "skills", "setup", "scripts", "month_sentence.py"), root],
@@ -1958,7 +1987,7 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
-                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, month_parts_check, starter_check,
+                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, month_parts_check, starter_check,
                     demo_clear_check):
             try:
                 runs += chk(root, base)
