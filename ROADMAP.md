@@ -3,6 +3,24 @@
 What is planned for the next releases, and roughly when. Dates are targets, not promises; what
 shipped is in [`CHANGELOG.md`](CHANGELOG.md).
 
+## Version numbers
+
+Three digits, `MAJOR.MINOR.PATCH` (2026-11-03, user 001). One question decides which moves:
+**what does a workspace need to take the new version?**
+
+| it needs | the version moves | example |
+|---|---|---|
+| `sync.py` only — fixes, wording, the page, a check | **patch**: 1.0.1 → 1.0.2 | a parser reads a new line shape |
+| `migrate.py` too — `findata/` changes shape (a new schema) | **minor**: 1.0.x → 1.1.0 | a field added to the register |
+| a new technology — the page's framework, the data's store | **major**: 1.x → 2.0.0 | the move to a database |
+
+- The version branch, the tag, the page's `VERSION` and the CHANGELOG heading all carry the same
+  three digits: branch `v1.0.1`, tag `v1.0.1`, `## 1.0.1 — <date>`. A test version is
+  `v1.0.1-beta.1`, a pre-release.
+- A branch whose work turns out to need a migration is renamed to the next minor before it ships.
+- What was built as 1.1, 1.2 and 1.3 was released as **1.0.0** on 2026-11-03; the planning
+  history below keeps the names it was written under.
+
 Every release goes out the same way: a privacy scan of every changed file and commit message, a
 fresh clone that must rebuild to the committed page with every checker clean and every planted
 fault caught, then a pull request from the release branch, merged as one squashed commit on
@@ -24,10 +42,6 @@ How work reaches a release (since 2026-10-30):
 Items marked *(first user)* came from the first person other than the owner to set the tool up
 from scratch: one credit card, nine statements, a cloud session.
 
-
-> **Version numbers** (2026-11-03, user 001): three digits. What was built as 1.1, 1.2 and 1.3 is
-> **1.0.0**, released 2026-11-03; the next is **1.0.1**; the change of technology is **2.0.0**.
-> The planning history below keeps the names it was written under.
 
 ## The first release — by 2026-11-29
 

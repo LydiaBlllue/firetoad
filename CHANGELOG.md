@@ -2,6 +2,10 @@
 
 ## 1.0.1 — unreleased
 
+- **One rule for version numbers** (2026-11-03, user 001), at the top of ROADMAP.md: a version a
+  workspace takes with a sync is a patch, one that also needs a migration is a minor, a change of
+  technology is a major.
+
 - **The demo owner is an ordinary saver** (2026-11-03, user 001: less complex, more general).
   Emma Roy, 32, banks at one bank (chequing, savings, a MasterCard) and invests in a TFSA and an
   RRSP, three index funds and a bond band of 15–25%. No single stocks, crypto, FHSA, US dollars,
