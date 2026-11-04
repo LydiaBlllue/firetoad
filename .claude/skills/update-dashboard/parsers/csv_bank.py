@@ -30,6 +30,7 @@ import io
 import re
 
 from . import ParseError
+from .ofx import spell
 
 DATE_FORMATS = ("%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%Y/%m/%d", "%b %d, %Y", "%d %b %Y", "%m/%d/%y")
 
@@ -77,12 +78,36 @@ PROFILES = {
             "description": ["Description 1", "Description 2"], "amount": "CAD$", "account": "Account Number",
             "kindCol": "Account Type", "match": {"Account Type", "Account Number", "Transaction Date", "Description 1", "CAD$"},
             "verified": True},
+    # BMO banking: a line saying when the data is valid, then a header and one section per account
+    # the owner banks with, each under its own copy of the header, with nothing in a row saying which
+    # account it is (the first column is the bank card's number). Read only when one account was
+    # downloaded, so exactly one section has rows; its description codes are spelled the way the PDF
+    # statement spells them. Confirmed on a real chequing download (2026-11-04, user 001).
+    "bmo": {"label": "BMO", "header": True, "date": "Date Posted", "dateFormat": "%Y%m%d", "description": "Description",
+            "amount": "Transaction Amount", "codes": "bmo", "oneAccount": True,
+            "match": {"First Bank Card", "Transaction Type", "Date Posted", "Transaction Amount", "Description"},
+            "verified": True},
+    # BMO Mastercard: its own download from the card's page; a purchase is a positive amount, a
+    # payment negative; no balance. Dated by the transaction, the way the PDF statement is read.
+    "bmo_card": {"label": "BMO", "header": True, "date": "Transaction Date", "dateFormat": "%Y%m%d",
+                 "description": "Description", "amount": "Transaction Amount", "sign": -1,
+                 "match": {"Item #", "Card #", "Transaction Date", "Posting Date", "Transaction Amount", "Description"},
+                 "verified": True},
     # Scotiabank's older download: no header; date, signed amount, "-", type, description.
     "scotia_old": {"label": "Scotiabank", "header": False, "date": 0, "dateFormat": "%m/%d/%Y", "amount": 1,
                    "description": [3, 4], "columns": (5,), "verified": False},
 }
 MAP_KEYS = ("header", "date", "dateFormat", "description", "amount", "out", "in", "balance", "sign", "cap",
-            "account", "kindCol")
+            "account", "kindCol", "codes", "oneAccount")
+
+
+def header_at(lines, wanted):
+    """Where the header is: the first line holding every column named. Some banks put a line or
+    two before it (BMO: when the data is valid)."""
+    for i, r in enumerate(lines[:6]):
+        if wanted <= {c.strip() for c in r}:
+            return i
+    return None
 
 
 def spec_of(key):
@@ -136,9 +161,8 @@ def detect(path):
     lines = read_lines(path)
     if not lines:
         return None
-    head = {c.strip() for c in lines[0]}
     for key, p in PROFILES.items():
-        if p.get("header") and p["match"] <= head:
+        if p.get("header") and header_at(lines, p["match"]) is not None:
             return key
     for key, p in PROFILES.items():
         if p.get("header") or not all(len(r) in p["columns"] for r in lines):
@@ -157,8 +181,32 @@ def parse(path, spec):
     lines = read_lines(path)
     if not lines:
         raise ParseError("the file is empty")
-    names = [c.strip() for c in lines[0]] if spec.get("header") else None
-    body = lines[1:] if names else lines
+    names, body = None, lines
+    if spec.get("header"):
+        wanted = {c for c in ([spec["date"]] + (spec["description"] if isinstance(spec["description"], list) else [spec["description"]])
+                              + [spec.get(k) for k in ("amount", "out", "in", "balance")]) if isinstance(c, str)}
+        at = header_at(lines, wanted)
+        if at is None:
+            raise ParseError(f"no line names the columns {', '.join(sorted(wanted))} — the bank changed its layout?")
+        names, body = [c.strip() for c in lines[at]], lines[at + 1:]
+    # One section per account under a copy of the header (BMO): which section a row is in is all
+    # that says which account it belongs to, so a file with rows in more than one is not read.
+    if names and spec.get("oneAccount"):
+        sections, cur = [], None
+        for r in body:
+            if [c.strip() for c in r] == names:
+                cur = None
+                continue
+            if cur is None:
+                cur = []
+                sections.append(cur)
+            cur.append(r)
+        if len(sections) > 1:
+            raise ParseError(f"rows for {len(sections)} accounts in one download, and nothing says which is which — "
+                             f"download one account at a time")
+        body = sections[0] if sections else []
+    else:
+        body = [r for r in body if not names or [c.strip() for c in r] != names]
 
     def col(r, ref):
         if ref is None:
@@ -177,6 +225,8 @@ def parse(path, spec):
             continue
         refs = spec["description"] if isinstance(spec["description"], list) else [spec["description"]]
         desc = " ".join(x.strip() for x in (col(r, c) for c in refs) if x and x.strip())
+        if spec.get("codes") == "bmo":
+            desc = spell(re.sub(r"\s{2,}", " ", desc))
         if "amount" in spec:
             amt = number(col(r, spec["amount"]))
             if amt is None:

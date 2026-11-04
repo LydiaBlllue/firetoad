@@ -15,7 +15,7 @@ Which files Jade Toad reads, institution by institution. Every file has to recon
 | Bank | PDF statement | OFX / QFX | CSV |
 |---|:---:|:---:|:---:|
 | [RBC](#rbc) | ✓ | ✓ | ✓ |
-| [BMO](#bmo) | ✓ | ✓ Chequing, savings, US-dollar accounts · ○ Mastercard | ✗ |
+| [BMO](#bmo) | ✓ | ✓ Chequing, savings, US-dollar accounts · ○ Mastercard | ✓ |
 | [TD](#td) | — | ○ | ○ |
 | [Scotiabank](#scotiabank) | — | ○ | ○ |
 | [CIBC](#cibc) | — | ○ | ○ |
@@ -54,12 +54,13 @@ Which files Jade Toad reads, institution by institution. Every file has to recon
 
 ### BMO
 
-**Recommended**: **OFX** for chequing, savings and US-dollar accounts, in one download. The **PDF statement** for the Mastercard until its OFX has been confirmed.
+**Recommended**: **OFX** for chequing, savings and US-dollar accounts, in one download. The Mastercard is a separate download from the card's own page: the **CSV** (it asks the balance your app shows) or the **PDF statement** (it asks nothing).
 
 - ✓ PDF statement · Chequing, savings, Mastercard: Online Banking → Statements — From October 2026 chequing and savings come as one statement.
 - ✓ OFX / QFX download · Chequing, savings, US-dollar accounts: Account → Transactions → Download → .ofx format, between two dates (two months at most) — Checks itself against the bank's balance. The first time, setup asks which account each id in the file is.
-- ○ OFX / QFX download · Mastercard: The card's page → Download → .ofx format
-- ✗ CSV download · Chequing, savings: Several accounts in one file with nothing saying which is which. Use OFX.
+- ○ OFX / QFX download · Mastercard: A separate download, from the card's own page → Download → .ofx format
+- ✓ CSV download · Chequing, savings, US-dollar accounts: Account → Transactions → Download → .csv format, one account at a time — The file has a section for every account and nothing saying which is which, so a file with rows for more than one is refused. No balance in it: the balance your app shows is asked. Prefer OFX.
+- ✓ CSV download · Mastercard: A separate download, from the card's own page → Download → .csv format — No balance in it: the balance your app shows is asked.
 
 ### TD
 

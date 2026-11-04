@@ -15,7 +15,7 @@ Jade Toad 能读哪些银行、券商的哪些文件。每个文件都要先核�
 | 银行 | PDF 对账单 | OFX / QFX | CSV |
 |---|:---:|:---:|:---:|
 | [RBC](#rbc) | ✓ | ✓ | ✓ |
-| [BMO](#bmo) | ✓ | ✓ 支票、储蓄、美元账户 · ○ Mastercard | ✗ |
+| [BMO](#bmo) | ✓ | ✓ 支票、储蓄、美元账户 · ○ Mastercard | ✓ |
 | [TD](#td) | — | ○ | ○ |
 | [Scotiabank](#scotiabank) | — | ○ | ○ |
 | [CIBC](#cibc) | — | ○ | ○ |
@@ -54,12 +54,13 @@ Jade Toad 能读哪些银行、券商的哪些文件。每个文件都要先核�
 
 ### BMO
 
-**推荐**：支票、储蓄、美元账户用 **OFX**，一次下完。Mastercard 先用 **PDF 对账单**，等它的 OFX 确认了再换。
+**推荐**：支票、储蓄、美元账户用 **OFX**，一次下完。Mastercard 要在信用卡自己的页面单独下载：用 **CSV**（要报一次 app 上的余额）或 **PDF 对账单**（什么都不用报）。
 
 - ✓ PDF 对账单 · 支票、储蓄、Mastercard：网银 → Statements — 2026 年 10 月起支票和储蓄合成一份对账单。
 - ✓ OFX / QFX 下载 · 支票、储蓄、美元账户：账户 → Transactions → Download → .ofx 格式，选两个日期之间（最多两个月） — 按银行给的余额自己核对。第一次 setup 会问文件里每个编号对应哪个账户。
-- ○ OFX / QFX 下载 · Mastercard：信用卡页面 → Download → .ofx 格式
-- ✗ CSV 下载 · 支票、储蓄：一个文件里有几个账户，却没写哪段是哪个账户。请用 OFX。
+- ○ OFX / QFX 下载 · Mastercard：单独下载：信用卡自己的页面 → Download → .ofx 格式
+- ✓ CSV 下载 · 支票、储蓄、美元账户：账户 → Transactions → Download → .csv 格式，一次只下一个账户 — 文件里每个账户占一段，却没写哪段是哪个账户，所以有几个账户的文件会被拒。文件里也没有余额，要报一次 app 上的余额。优先用 OFX。
+- ✓ CSV 下载 · Mastercard：单独下载：信用卡自己的页面 → Download → .csv 格式 — 文件里没有余额，要报一次 app 上的余额。
 
 ### TD
 
