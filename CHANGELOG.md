@@ -2,6 +2,11 @@
 
 ## 1.3 — unreleased
 
+- **A table taller than the window folds** (2026-11-03, user 001). Accounts by institution and
+  Holdings by group show only their group rows, each with how many accounts or holdings it holds,
+  when the table would run past the bottom of the window; a click opens one. A short table stays
+  open. On user 001's pages both fold; on user 002's four accounts nothing does.
+
 - **A narrow window collapses instead of cutting off** (2026-11-03, user 001). The page works
   from 800px (it needed 1120). Below 1120px cards that sit side by side stack, a table drops its
   secondary `.opt` columns (Accounts' *For*, Holdings' *Accounts* and *Qty*), and a long value

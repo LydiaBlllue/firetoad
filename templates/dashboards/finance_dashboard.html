@@ -303,6 +303,12 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 #acctTable tr.tot td.sub{font-weight:400;color:var(--muted);font-size:12px}
 .alert-row .tag{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--pill);border-radius:4px;padding:1px 5px;vertical-align:1px;margin-right:2px}
 .unset{color:var(--muted);font-weight:500}
+/* A grouped table taller than the window folds to its group rows; a click opens one (2026-11-03). */
+tr.folded{display:none}
+tr.grp.foldable{cursor:pointer}
+tr.grp.foldable:hover td{filter:brightness(.97)}
+.fold-c{display:inline-block;width:14px;color:var(--muted);font-weight:400}
+.fold-n{color:var(--muted);font-weight:400;font-size:11.5px;margin-left:6px}
 /* Narrower than 1120px (2026-11-03, the owner: "if a card runs past the page, collapse part of
    it"): side-by-side cards stack, and a table drops its .opt columns -- secondary detail that the
    row's hover or another page still carries. Below 800px the page scrolls. */
@@ -866,7 +872,48 @@ function setPage(p){
   $("partNote").style.display = PILL_PAGES.includes(p) ? "block" : "none";
   drawNav();
   saveState();
+  fitFolds();
   window.scrollTo(0,0);
+}
+
+// A grouped table (Accounts by institution, Holdings by role or account) that is taller than the
+// window folds to its group rows, each with how many rows it holds; a click opens or closes one
+// (the owner, 2026-11-03: "if a card runs past the page, collapse part of it"). Decided once,
+// the first time the table is seen, because a hidden page has no height to measure.
+function foldGroups(tbl, noun){
+  if(!tbl) return;
+  const groups = []; let cur = null;
+  [...tbl.querySelectorAll("tr")].forEach(r => {
+    if(r.classList.contains("grp")){ cur = {head:r, members:[]}; groups.push(cur); }
+    else if(r.classList.contains("gap") || r.classList.contains("tot") || r.querySelector("th")) cur = null;
+    else if(cur) cur.members.push(r);
+  });
+  groups.filter(g => g.members.length).forEach(g => {
+    const c = g.head.cells[0];
+    c.insertAdjacentHTML("afterbegin", '<span class="fold-c">\u25be</span>');
+    const k = g.members.length, n = '<span class="fold-n">' + k + " " + noun + (k === 1 ? "" : "s") + '</span>', gp = c.querySelector(".gp");
+    if(gp) gp.insertAdjacentHTML("beforebegin", n); else c.insertAdjacentHTML("beforeend", n);
+    g.head.classList.add("foldable");
+    g.head.onclick = () => setFold(g, !g.head.classList.contains("shut"));
+  });
+  tbl._groups = groups.filter(g => g.members.length);
+  tbl.dataset.fold = "1";
+  delete tbl.dataset.decided;
+  fitFolds();
+}
+function setFold(g, shut){
+  g.head.classList.toggle("shut", shut);
+  g.members.forEach(m => m.classList.toggle("folded", shut));
+  g.head.querySelector(".fold-c").textContent = shut ? "\u25b8" : "\u25be";
+}
+function fitFolds(){
+  document.querySelectorAll('section[data-pg]:not([hidden]) table[data-fold]:not([data-decided])').forEach(t => {
+    const h = t.getBoundingClientRect().height;
+    if(!h) return;
+    const tall = h > innerHeight * 0.75;
+    (t._groups || []).forEach(g => setFold(g, tall));
+    t.dataset.decided = "1";
+  });
 }
 
 
@@ -2866,6 +2913,7 @@ function renderAccounts(){
        + '</td><td class="num">' + numx(fmt(totCad), byCurAll.map(([c,v]) => [money2(v,c), money2(v*RATE[c], "CAD")]),
            (rateNote ? rateNote + ". " : "") + (missing ? missing + " account" + (missing>1?"s":"") + " with no balance left out." : ""), true) + '</td></tr>';
   $("acctTable").innerHTML = out;
+  foldGroups($("acctTable"), "account");
   $("acctCap").innerHTML = "";
 
   const SYM = {bad:['\u2717','#d03b3b'], warn:['\u26a0','#c98500']};
@@ -3332,6 +3380,7 @@ const IV = (function(){
   function drawHoldings(){
     $("holdTable").innerHTML = positions.length ? (view==="role" ? roleView() : accountView())
       : '<div class="empty">No positions yet. Your first broker report fills this table.</div>';
+    foldGroups($("holdTable").querySelector("table"), "holding");
     $("tblFoot").textContent = positions.some(p => p.usd) && FX.asof ? "US dollars at " + FX.rate + "." : "";
   }
   function wire(){
