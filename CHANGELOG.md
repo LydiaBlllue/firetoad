@@ -2,6 +2,14 @@
 
 ## 1.3 — unreleased
 
+- **No pay and nothing invested read as a plan, not a failure** (2026-11-03, user 002). D13 no
+  longer fails a plan with no pay: it is living off savings, a note; a plan above some pay is a
+  warning naming the gap. Budget says how each month is planned, not how a paycheque is split.
+  With an empty pot, Drawdown says there is nothing to draw from yet instead of "runs out at" the
+  owner's own age, FIRE says the target is not getting closer, and the US dollars card and the
+  Holdings rate line appear only when something is held in US dollars. A selftest check sets the
+  demo's pay to $0 and expects a clean run.
+
 - **The preset funds are gone** (2026-11-02, user 001; findata schema 18, `tools/migrate_17to18.py`).
   Their roles were too rigid, and an overspent month took money from a trip on the page. Leftover
   everyday money now stays where it is. The migration keeps each fund in `decisions/`. Custom funds

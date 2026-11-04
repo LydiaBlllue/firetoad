@@ -404,7 +404,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 
 <section data-pg="budget" hidden>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab">How each paycheque is split</div>
+    <div class="lab" id="splitLab">How each paycheque is split</div>
     <div class="split" id="splitBar"></div>
     <div id="splitRows"></div>
     <div id="splitNote"></div>
@@ -418,7 +418,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
     <div class="lab">How the portfolio splits</div>
     <div id="barbell"></div>
   </div>
-  <div class="card" style="margin-bottom:10px">
+  <div class="card" style="margin-bottom:10px" id="usdCard">
     <div class="lab">US dollars</div>
     <div id="invMeta"></div>
   </div>
@@ -1388,6 +1388,7 @@ function renderSplit(){
   const rest = PLAN.takeHome - used;
   const segs = alloc.filter(a => a.v > 0).concat(rest > 0 ? [UNALLOC(rest)] : []);
   const denom = Math.max(used, PLAN.takeHome);
+  $("splitLab").textContent = PLAN.takeHome > 0 || unset("takeHome") ? "How each paycheque is split" : "How each month is planned";
   $("splitBar").innerHTML = segs.map(a =>
     '<div style="width:' + pc(a.v, denom) + '%;background:' + a.c + '" data-k="' + a.k + '"></div>').join("");
   $("splitBar").querySelectorAll("div[data-k]").forEach(el => {
@@ -2262,7 +2263,10 @@ function renderTrajectory(target){
     +'<span class="nm">'+p.n+'</span><span class="v num" style="width:auto;padding-left:6px">'+yrTxt(p.cross)+' · '+dateTxt(p.cross)+'</span></div>').join("");
   const base = paths[1];
   const rs = SCENARIOS.map(sc => Math.round(sc.r*100)+"%");
-  $("trajCap").innerHTML = '<div class="say">' + (base.cross === null
+  const nothing = PORTFOLIO <= 0 && MONTHLY_CONTRIB <= 0;
+  $("trajCap").innerHTML = '<div class="say">' + (nothing
+      ? "Nothing is invested and nothing is added each month, so the target is not getting closer."
+      : base.cross === null
       ? "On the middle return the target is more than " + HORIZON + " years away."
       : 'On the middle return you reach the target around <b>' + dateTxt(base.cross) + '</b>.') + '</div>'
     + metaList([
@@ -2430,10 +2434,15 @@ function renderCoast(target, annualSpend){
     if(r > peakR){ peakR = r; peakA = a; }
   }
   const lasts = run.dead === null;
+  // An empty pot is not a plan that fails: there is nothing to draw from yet, and "runs out at
+  // <today's age>" reads as a contradiction beside a drawdown age decades away (2026-11, user 002).
+  const empty = atDraw <= 0;
 
   // Coast is a FIRE question (when do you get there), so it is answered on the FIRE page.
   const rPct = (COAST_R*100).toFixed(0)+"%";
-  $("coastSay").innerHTML = reach === null
+  $("coastSay").innerHTML = PORTFOLIO <= 0
+    ? "Nothing is invested yet, so nothing grows toward the target on its own."
+    : reach === null
     ? "Left alone at "+rPct+" a year, today\u2019s <b>"+fmt(PORTFOLIO)+"</b> does not reach the "+fmt(target)+" target within your lifetime."
     : "If you never added another dollar, today\u2019s <b>"+fmt(PORTFOLIO)+"</b> would grow into the <b>"+fmt(target)+"</b> target on its own by about <b>age "+Math.ceil(reach)+"</b>.";
   $("coastFire").innerHTML = metaList([
@@ -2445,11 +2454,11 @@ function renderCoast(target, annualSpend){
     [stopAge > AGE_NOW ? "Pot at "+stopAge+", when you stop adding" : "Pot today", fmt(atStop)],
     ["Pot at "+drawAge+", when you start taking", fmt(atDraw)],
     ["Taken each year", fmt(annualSpend)],
-    [term("withdrawal_rate", "Withdrawal rate")+" at "+drawAge, numx(safeRate.toFixed(1)+"%", [["Taken each year", fmt(annualSpend)], ["Pot", fmt(atDraw)]], "")],
-    ["Highest rate", atDraw >= annualSpend
+    [term("withdrawal_rate", "Withdrawal rate")+" at "+drawAge, empty ? "\u2014" : numx(safeRate.toFixed(1)+"%", [["Taken each year", fmt(annualSpend)], ["Pot", fmt(atDraw)]], "")],
+    ["Highest rate", empty ? "\u2014" : atDraw >= annualSpend
       ? numx(peakR.toFixed(1)+"% at "+Math.floor(peakA), [], "Recomputed every month up to age "+(LIFE_TO-HORIZON)+"; the last "+HORIZON+" years are left out, when a high rate only means the pot is being spent as planned.")
       : "Never a year of spending", atDraw >= annualSpend && peakR > 4 && lasts ? "hi" : ""],
-    ["Lasts to "+LIFE_TO, lasts ? "Yes" : "No, runs out at "+Math.floor(run.dead), lasts ? "" : "hi"]
+    ["Lasts to "+LIFE_TO, empty ? "Nothing to draw from yet" : lasts ? "Yes" : "No, runs out at "+Math.floor(run.dead), lasts || empty ? "" : "hi"]
   ]);
 
   // What the care assumption actually costs, in today's money.
@@ -2469,12 +2478,14 @@ function renderCoast(target, annualSpend){
             ltc.d+". Rising "+(ltc.esc*100).toFixed(1)+"% a year above inflation.")],
       ["Whole care bill, "+careAge+" to "+LIFE_TO, fmt(bill)],
       ["Extra needed at "+careAge, extra === null ? "\u2014" : extra === 0 ? "None" : numx(fmt(extra), [], "The smallest lump at "+careAge+" that keeps the pot alive to "+LIFE_TO+"."), extra ? "hi" : ""],
-      ["Staying home throughout", stayEnd === null ? "Lasts past "+LIFE_TO : "Runs out at "+stayEnd],
-      ["With no paid care", noCareEnd === null ? "Lasts past "+LIFE_TO : "Runs out at "+noCareEnd, "mut"]
+      ["Staying home throughout", empty ? "\u2014" : stayEnd === null ? "Lasts past "+LIFE_TO : "Runs out at "+stayEnd],
+      ["With no paid care", empty ? "\u2014" : noCareEnd === null ? "Lasts past "+LIFE_TO : "Runs out at "+noCareEnd, "mut"]
     ]) + (ltcA === null ? "" : '<div class="cap" style="margin-top:8px">From '+ltcAge+' the care-home fee is charged on top of the whole planning figure, so the plan has more room after '+ltcAge+' than the chart shows.</div>');
   }
 
-  const line = !lasts
+  const line = empty
+    ? "Nothing is invested yet, so there is no pot to draw from. Money added each month, or a first broker report, fills this page."
+    : !lasts
     ? "The pot does not reach "+LIFE_TO+"."+(atDraw >= annualSpend ? " It peaks at "+peakR.toFixed(1)+"% around age "+Math.floor(peakA) : " On the day you start taking money out it holds less than a year of spending")
       +" and runs out at "+Math.floor(run.dead)+"."
     : peakR <= 4
@@ -2485,7 +2496,9 @@ function renderCoast(target, annualSpend){
     + '<div class="cap" style="margin-top:6px">Every figure is in today\u2019s money, so the '+fmt(MONTHLY_CONTRIB)+' a month has to rise with inflation each year to stay on this line.</div>';
 
   const bt = backtest(atDraw, drawM, drawAge, careAge, ltcA, ltc);
-  $("drawSay").innerHTML = !lasts
+  $("drawSay").innerHTML = empty
+    ? "Nothing is invested yet, so at <b>"+drawAge+"</b> there is no pot to take "+fmt(annualSpend/12)+" a month from."
+    : !lasts
     ? "Start taking "+fmt(annualSpend/12)+" a month at <b>"+drawAge+"</b> and, at a steady "+rPct+", the money runs out at <b>"+Math.floor(run.dead)+"</b>."
     : "Start taking "+fmt(annualSpend/12)+" a month at <b>"+drawAge+"</b> and, at a steady "+rPct+", the money lasts to "+LIFE_TO+"."
       + (bt ? " Through real history it would have lasted in <b>"+bt.ok+" of "+bt.n+"</b> stretches since "+bt.from+"." : "");
@@ -3181,7 +3194,9 @@ const IV = (function(){
   function renderMeta(){
     // No exchange rate is the supported way to say nothing is held in another currency (a
     // workspace with no broker has none): there is no rate line to show (2026-10-29).
-    if(!FX.asof){ $("invMeta").innerHTML = ""; return; }
+    // Nothing held in US dollars: the card has nothing to say, so it is not drawn (2026-11-03).
+    $("usdCard").hidden = !FX.asof || usdExp <= 0;
+    if(!FX.asof || usdExp <= 0){ $("invMeta").innerHTML = ""; return; }
     $("invMeta").innerHTML = metaList([
       [term("exchange_rate", "Rate"), FX.rate + " on " + dLong(FX.asof) + (fxAge > 30 ? ", older than a month" : ""), fxAge > 30 ? "hi" : ""],
       ["Held in US dollars", numx(fmt(usdExp), [], pctS(pc(usdExp, cadInv)) + " of what is held at " + DATA.broker + ".")],
@@ -3288,7 +3303,7 @@ const IV = (function(){
   function drawHoldings(){
     $("holdTable").innerHTML = positions.length ? (view==="role" ? roleView() : accountView())
       : '<div class="empty">No positions yet. Your first broker report fills this table.</div>';
-    $("tblFoot").textContent = "US dollars at " + FX.rate + ".";
+    $("tblFoot").textContent = positions.some(p => p.usd) && FX.asof ? "US dollars at " + FX.rate + "." : "";
   }
   function wire(){
     document.querySelectorAll(".tab[data-v]").forEach(t=>t.addEventListener("click",()=>{
