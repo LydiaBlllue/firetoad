@@ -630,10 +630,17 @@ def check(root):
                 continue
             if not isinstance(f_.get("amount"), (int, float)) or f_["amount"] < 0:
                 err("D13", f"funds.json flow {f_.get('name') or f_.get('key')!r} has no amount")
+        # A plan larger than pay is not broken in itself: an owner between jobs, on leave or
+        # retired lives off savings, and the page says the gap comes from savings. With no pay at
+        # all that is simply the plan; with some pay it may be a typo, so it is worth a look.
         ft = flow_totals(plan)
         split = ft["committed"] + ft["saving"] + ft["everyday"]
-        if split > ft["income"] and "takeHome" not in flow_unset(plan):
-            err("D13", f"the monthly split asks for ${split:,} against income of ${ft['income']:,}")
+        if "takeHome" not in flow_unset(plan) and split > ft["income"]:
+            if ft["income"] == 0:
+                note("D13", f"no pay in the plan: ${split:,} a month comes from savings")
+            else:
+                warn("D13", f"the monthly split asks for ${split:,} against income of "
+                            f"${ft['income']:,}; the ${split - ft['income']:,} gap comes from savings")
     # -- D14 accounts.json is a registry, not a second set of books ---------
     # Added 2026-09-07 with the Accounts page. The registry repeats balances that live in three
     # other files, and a repeated number is a number that drifts. Re-derive every one from its
