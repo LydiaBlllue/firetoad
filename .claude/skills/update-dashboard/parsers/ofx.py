@@ -21,6 +21,7 @@ Every account comes back as a part, with the shape the other parsers use:
 Amounts are the ledger's way (money out negative). A card's balance is what OFX says: negative
 when money is owed, the way the register keeps it.
 """
+import html
 import re
 
 from . import ParseError
@@ -103,7 +104,7 @@ def parse(path):
             name = re.search(r"<NAME>([^\r\n<]*)", tr)
             memo = re.search(r"<MEMO>([^\r\n<]*)", tr)
             desc = ((name.group(1) if name else "") + (memo.group(1) if memo else "")).strip()
-            raw = re.sub(r"\s{2,}", " ", desc)
+            raw = re.sub(r"\s{2,}", " ", html.unescape(desc))      # RBC writes & as &amp;
             rows.append({"date": _date(_val(tr, "DTPOSTED")), "description": spell(raw), "raw": raw,
                          "amount": round(float(amt), 2), "fitid": _val(tr, "FITID")})
         rows.sort(key=lambda r: r["date"])           # stable: a day's rows keep the bank's order

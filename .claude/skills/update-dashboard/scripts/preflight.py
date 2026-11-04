@@ -61,6 +61,7 @@ NOTES = {   # what to do with each target file: tool knowledge, keyed by file, n
 DOCS = []           # set by main() from accounts.json; classify() reads it
 ROOT = None         # the workspace load_docs() last read: where an OFX file is looked for by name
 OFX_IDS = {}        # the bank's id of each account (accounts[].ofxId) -> its register key
+OFX_TAILS = {}      # the last digits of each account number -> register keys, for an id that ends in it
 
 def load_docs(root):
     try:
@@ -72,6 +73,11 @@ def load_docs(root):
     ROOT = root
     OFX_IDS.clear()
     OFX_IDS.update({a["ofxId"]: a["key"] for a in aj.get("accounts", []) if a.get("ofxId")})
+    OFX_TAILS.clear()
+    for a in aj.get("accounts", []):
+        d = re.sub(r"\D", "", a.get("id") or "")
+        if len(d) >= 3:
+            OFX_TAILS.setdefault(d[-4:], []).append(a["key"])
     out = []
     for d in aj.get("documents", []):
         pat = d.get("file", "") or ""
@@ -112,11 +118,16 @@ def classify(name):
             ids = ofx.accounts_in(path) if path and os.path.exists(path) else []
         except Exception:
             ids = []
-        keys = {OFX_IDS[i] for i in ids if i in OFX_IDS}
+        def key_of(i):
+            if i in OFX_IDS:
+                return OFX_IDS[i]
+            hits = [k for t, ks in OFX_TAILS.items() if i.endswith(t) for k in ks]
+            return hits[0] if len(hits) == 1 else None
+        keys = {key_of(i) for i in ids} - {None}
+        new = [i for i in ids if key_of(i) is None]
         docs = [x for x in DOCS if x["doc"].get("parser") == "ofx" and keys & set(x["doc"].get("covers") or [])]
-        if len({id(x["doc"]) for x in docs}) == 1 and len(keys) == len(set(ids)):
+        if len({id(x["doc"]) for x in docs}) == 1 and not new:
             return hit(docs[0])
-        new = [i for i in ids if i not in OFX_IDS]
         return (None, None, None,
                 f"an OFX download for account(s) {', '.join('…' + i[-4:] for i in new)} the register does not know yet: "
                 f"setup adds them" if new else "an OFX download whose accounts belong to more than one document")

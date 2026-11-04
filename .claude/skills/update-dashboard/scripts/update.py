@@ -199,7 +199,10 @@ class Workspace:
         if exact:
             return exact[0]
         if doc.get("parser") == "ofx":
-            return None
+            # RBC's id ends in the account number the register already has; BMO's is its own and
+            # needs ofxId. One account whose number the id ends with is that account, never more.
+            tail = [a for a in cands if digits(a.get("id")) and parsed_digits.endswith(digits(a.get("id"))[-4:])]
+            return tail[0] if len(tail) == 1 else None
         if parsed_digits:
             for a in cands:
                 if digits(a.get("id")) and digits(a.get("id")).endswith(parsed_digits[-4:]):
