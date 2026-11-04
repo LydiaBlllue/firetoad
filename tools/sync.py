@@ -43,9 +43,8 @@ SYNCED = [
     "CLAUDE.md",
     "FINANCE.md",
     "DESIGN.md",
-    "PRODUCT.md",         # the product and its features, readable in the workspace
-    "ROADMAP.md",
-    "CHANGELOG.md",       # PRODUCT.md links both
+    "ROADMAP.md",         # what is coming, and the version rule
+    "CHANGELOG.md",
     "docs/pipeline.svg",
     "docs/hero.png",
     "docs/logo.svg",
@@ -53,7 +52,7 @@ SYNCED = [
     ".gitignore",         # not for git: check_design's S4 reads it to skip files an owner writes
                           # (setup-answers.json), and without it a workspace failed on them
 ]
-NEVER = ("findata", "inbox", "archive", "dashboards", "OWNER.md", "decisions", ".private", "feedback")
+NEVER = ("findata", "inbox", "archive", "dashboards", "OWNER.md", "decisions", ".private", "feedback", "product")
 
 # The empty OWNER.md a new owner starts from; setup writes the same file over the demo's.
 OWNER_STUB = os.path.join(TOOL, ".claude", "skills", "setup", "data", "owner_stub.md")

@@ -49,12 +49,33 @@ About twenty minutes.
 Download the month's statements into `inbox/` and say **"update dashboards"**. You get a short
 report and any questions a program cannot answer, like a merchant it has not seen.
 
-## Your data
+## Why you can trust it
 
-- **It stays in the folder on your computer**: plain CSV and JSON, and one HTML page. Back the folder up; there is no other copy.
+**Your data**
+
+- **It stays in the folder on your computer**: plain CSV and JSON, and one HTML page. No server,
+  no bank login. Back the folder up; there is no other copy.
 - **A statement a parser reads never goes to Anthropic.** What Claude does read is the import's
   summary, a merchant it has not seen, and your answers, the way anything you say in Claude Code does.
 - **It stays out of git**: setup keeps your data out of commits, and a guard refuses one that would carry it.
+
+**Your numbers**
+
+- **Every statement has to add up before it is let in**: the rows against the statement's own
+  totals, every balance against the one before it. One that does not is refused, and you are
+  told why.
+- **A number that does not reconcile is not shown.** The page says what is missing instead of
+  guessing, and a question you skipped reads *Not set*, never a made-up figure.
+- **The checks are tested too**: a selftest breaks a copy of the data on purpose, in every way
+  listed below, and fails if any check stays quiet.
+
+**The people behind it**
+
+- **Made by one person, for their own money in Canada and back home**, used on their own
+  statements every month. Every change runs on that real data before it is released.
+- **Open source** (MIT): every line that touches your money can be read.
+- **A problem** goes in an issue, without your statements or numbers ([CONTRIBUTING.md](CONTRIBUTING.md));
+  **a privacy problem** goes privately ([SECURITY.md](SECURITY.md)).
 
 ## More
 
@@ -63,7 +84,6 @@ report and any questions a program cannot answer, like a merchant it has not see
 <!-- LINT:FAULTS n=61 -->
   Four checkers hold every figure to its source; a selftest plants 61 faults to prove they still catch them.
 - **[Roadmap](ROADMAP.md)** and **[Changelog](CHANGELOG.md)**.
-- **[What the product is for](PRODUCT.md)**.
 
 <!-- LINT:NAV main=17/5 minwidth=800 -->
 The page is 17 pages in 5 sidebar groups —

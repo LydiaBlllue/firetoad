@@ -2,6 +2,11 @@
 
 ## 1.0.1 — unreleased
 
+- **The repository says what a user can rely on, and no more** (2026-11-03, user 001). The
+  product notes, the competitor survey and the internal plan left the repository; ROADMAP.md is
+  what you will be able to do next and the version rule. The README's data section became *Why
+  you can trust it*: your data, your numbers, and the people behind it.
+
 - **One mark, one meaning, and a demo that is not stale** (2026-11-03, user 001). On Accounts an
   old balance is its date in amber with its age on hover; ⚠ means only "unaccounted for". The demo
   is dated by its own newest data on the page as it already was in the checkers (`clock.py`, one

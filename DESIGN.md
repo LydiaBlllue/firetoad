@@ -3,8 +3,7 @@
 > This file owns **how the page looks and talks**. It states the rules that hold today; where an
 > old habit conflicts with it, this file wins. A rule changes only once the owner has confirmed
 > it, and the story of how each one came about — the dates, the measurements, what was there
-> before — is in [`CHANGELOG.md`](CHANGELOG.md). The product the rules serve is
-> [`PRODUCT.md`](PRODUCT.md).
+> before — is in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## 1. Brand and language
 
@@ -89,7 +88,7 @@
     A new rule is wired into it.
   - The month pills appear only on `PILL_PAGES`, the year pills only on `YEAR_PAGES`.
   - The foot of the sidebar carries the tool version (`VERSION`) in muted 10.5px. MAJOR.MINOR.PATCH,
-    by the rule at the top of ROADMAP.md: a patch needs only a sync, a minor also a migration, a
+    by the rule in ROADMAP.md, Version numbers: a patch needs only a sync, a minor also a migration, a
     major a change of technology.
 - **One page, one question, one kind of time**: a page follows the month cursor, the year cursor
   or no time at all, never half of each; a thing is judged in one place, and Home only
