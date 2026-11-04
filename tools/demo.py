@@ -520,19 +520,10 @@ def build(out):
                             note="Pre-authorized on the 1st, from chequing. Still there after FIRE."),
                 OrderedDict(key="invest", kind="saving", name="Invest", amount=P["invest"], to="broker",
                             note="Off the top, before anything else — pay-yourself-first."),
-                # A fund is the owner's own: a name on money already in an account, and a saving
-                # flow that adds to it each month (2026-11-03).
-                OrderedDict(key="trip-monthly", kind="saving", name="Trip", amount=200, to="trip",
-                            note="Set aside each month for the trip."),
                 OrderedDict(key="everyday", kind="everyday", name="Everyday", amount=P["everyday"],
                             note="The guilt-free line. No categories and no caps below it."),
             ],
         )),
-        ("funds", [
-            OrderedDict(key="trip", name="Trip", goal=3000, by="2027-06", account="ws-hys",
-                        saved=OrderedDict(amount=1200, asof="2026-09-26"),
-                        why="Two weeks away next summer"),
-        ]),
     ]))
 
     J("profile.json", OrderedDict([

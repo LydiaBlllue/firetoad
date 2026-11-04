@@ -274,9 +274,17 @@ data layer is rewritten once with the page rather than twice:
   by a sync in the middle of a write, so the workspace leaves iCloud and gets a backup of its
   own; which, and how it reaches a second computer, is settled before any code.
 
-## Later
+### Customisation, in 2.0 (decided 2026-11-03, user 001)
 
-- **Big buys, back**, as something an owner can opt into, once the basics are done.
+1.3 is the basics with nothing to set up beyond the plan. Everything that lets an owner shape
+the tool to themselves arrives with 2.0:
+
+- **Custom funds.** Name what you save for, a goal and a month, on money already in an account.
+  The code shipped quietly in 1.3 (Budget's Funds card, `funds.json` `funds`, D13); 2.0 gives it
+  a way in from setup and the import, and a place in the guides and the demo.
+- **Big buys**, as something an owner can opt into.
+
+## Later
 
 - **Without the desktop app.** *(first user)* Today setup and the import need Claude Code on a
   computer. A path for someone on the web or a phone only — statements uploaded, the page built

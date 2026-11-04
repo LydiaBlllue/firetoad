@@ -123,7 +123,7 @@ What ships today. What is planned is in [`ROADMAP.md`](ROADMAP.md); when each ar
 | Spending | What is left of Everyday today, and for how many days · this month by category, each opening its purchases · the year month by month, by category and against the everyday amount · subscriptions: what repeats, a year's cost, what is due in the next 30 days |
 | Income | Income by source and how much of it was kept · investment income — dividends, interest, lending, withholding tax — on its own page |
 | Investing | The portfolio by currency, kind of asset and bucket · performance against one benchmark fund bought on the same days · every holding, by role or by account |
-| Plan | What each paycheque is for, and what each fund holds · the FIRE target, progress, the year it is reached and coast to FIRE · whether the money lasts, late-life care included, replayed through every stretch of real years since 1928 · the planning figure against what is really spent |
+| Plan | What each paycheque is for · the FIRE target, progress, the year it is reached and coast to FIRE · whether the money lasts, late-life care included, replayed through every stretch of real years since 1928 · the planning figure against what is really spent |
 | Accounts | Every place money sits, with its balance and date, beside Home |
 | Monthly import | Updates: what each import changed, noticed and decided · Statements: which file arrived which month, and what is missing |
 | Glossary | Every finance term and every coined word, at the foot of the sidebar in no group; a coined word's entry looks different from a dictionary entry |

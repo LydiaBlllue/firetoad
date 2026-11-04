@@ -27,14 +27,6 @@
         "note": "Off the top, before anything else — pay-yourself-first."
       },
       {
-        "key": "trip-monthly",
-        "kind": "saving",
-        "name": "Trip",
-        "amount": 200,
-        "to": "trip",
-        "note": "Set aside each month for the trip."
-      },
-      {
         "key": "everyday",
         "kind": "everyday",
         "name": "Everyday",
@@ -42,19 +34,5 @@
         "note": "The guilt-free line. No categories and no caps below it."
       }
     ]
-  },
-  "funds": [
-    {
-      "key": "trip",
-      "name": "Trip",
-      "goal": 3000,
-      "by": "2027-06",
-      "account": "ws-hys",
-      "saved": {
-        "amount": 1200,
-        "asof": "2026-09-26"
-      },
-      "why": "Two weeks away next summer"
-    }
-  ]
+  }
 }

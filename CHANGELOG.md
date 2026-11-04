@@ -63,13 +63,10 @@
   - Setup asks a pick-one question in the form and a typed amount in chat, and after an
     interrupted form goes on in chat.
 
-- **Custom funds** (2026-11-03, user 001). A fund is whatever the owner names: a label on money
-  already in one of their accounts, with an optional goal, month and reason, and a saving flow that
-  adds to it. Budget shows each one's set-aside amount, what the plan adds and when that pace
-  reaches the goal; the split shows the flow as a line. No preset names, no roles, and a month's
-  leftover goes nowhere by itself. D13 checks the account and the flow's destination; two selftest
-  faults (61). The demo has one fund. No schema change: a workspace without `funds` has none.
-
+- **Funds an owner names, built but not announced** (2026-11-03, user 001). The code is in —
+  `funds.json` `funds`, a Funds card on Budget when one exists, D13's checks and two selftest
+  faults (61) — and nothing in setup, the demo or the guides offers it: customisation arrives
+  with 2.0.
 - **A download holds only what a user runs** (2026-11-03, user 001). `.gitattributes` leaves the
   demo site, its deploy workflow, the diagram sources, the demo generator and the competitor survey
   out of a release's zip; they stay in the repository, and the documents link there. The zip passes
