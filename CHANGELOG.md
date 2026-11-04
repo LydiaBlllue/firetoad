@@ -2,6 +2,16 @@
 
 ## 1.0.1 — unreleased
 
+- **A bank's own CSV download** (2026-11-03, user 001: lower the barrier for banks with no PDF
+  parser). One reader, `parsers/csv_bank.py`, follows a `csv` map kept on the register's
+  document — which column is the date, the description, the money out and in, the balance — that
+  setup drafts from the file itself, with starting points for TD, Scotiabank, CIBC, Tangerine,
+  Simplii and EQ (each marked unconfirmed until a real file has been read). A download overlapping
+  the last one has its repeated rows left out; one with a running balance reconciles by it, and
+  one without stops for the balance the banking app shows (`update.py --balance`). The selftest
+  puts the demo's newest chequing month back in as a download and expects it back exactly, and
+  a card download has to be refused with a wrong balance and taken with the right one.
+
 - **The repository says what a user can rely on, and no more** (2026-11-03, user 001). The
   product notes, the competitor survey and the internal plan left the repository; ROADMAP.md is
   what you will be able to do next and the version rule. The README's data section became *Why

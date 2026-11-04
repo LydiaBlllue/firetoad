@@ -41,6 +41,7 @@ import layout  # noqa: E402
 import scaffold  # noqa: E402  default_axes and the kinds the tool understands
 import seen_accounts  # noqa: E402
 from parsers import NAMES, ParseError, ParserUnavailable, parse  # noqa: E402
+from parsers import csv_bank  # noqa: E402
 
 IGNORE = {"README.txt", ".gitkeep", ".DS_Store"}
 IMAGES = (".png", ".jpg", ".jpeg", ".heic", ".webp")
@@ -149,8 +150,33 @@ def propose(root, inbox):
                 activities = (f, list(csv.DictReader(open(p, encoding="utf-8-sig"))))
                 seen.append((f, "broker activities export", f"{len(activities[1])} rows"))
             else:
-                unknown.append(f)
-                seen.append((f, "a CSV", "columns match no export the tool reads"))
+                # A bank's own transaction download (2026-11-03): its layout is recognised, never
+                # guessed, and the map that reads it goes into the register for the owner to check.
+                prof = csv_bank.detect(p)
+                spec = {k: v for k, v in csv_bank.PROFILES[prof].items() if k not in ("label", "match", "columns", "verified")} if prof else None
+                try:
+                    res = csv_bank.parse(p, spec) if spec else None
+                except ParseError as e:
+                    res, why = None, str(e)
+                if not res:
+                    unknown.append(f)
+                    seen.append((f, "a CSV", "a layout no map reads yet: show the first lines and draft its `csv` map"))
+                    continue
+                inst = csv_bank.PROFILES[prof]["label"]
+                named = re.findall(r"\d{3,}", f)
+                digits = named[-1][-4:] if named else f"{prof}{len(stmts) + 1}"
+                has_bal = res["closing"] is not None
+                part = dict(res, parser="csv", account=digits, kind="Chequing" if has_bal else "Credit card",
+                            _file=f, _inst=inst, _csv=spec, _verified=csv_bank.PROFILES[prof]["verified"],
+                            _nodigits=not named)
+                k = (inst, digits)
+                moves += part["rows"]
+                if k not in stmts or part["period"]["to"] > stmts[k]["period"]["to"]:
+                    stmts[k] = part
+                first[k] = min(first.get(k, part["period"]["to"][:7]), part["period"]["to"][:7])
+                seen.append((f, f"a {inst} download", f"{len(res['rows'])} rows to {res['period']['to']}, "
+                             + ("balances follow" if res["reconcile"]["ok"] else "no running balance")
+                             + ("" if csv_bank.PROFILES[prof]["verified"] else " — layout not yet confirmed on a real file")))
         elif low.endswith(IMAGES):
             images.append(f)
             seen.append((f, "a screenshot", "read with you — balances abroad, usually"))
@@ -181,7 +207,7 @@ def propose(root, inbox):
     KORDER = {"Chequing": 0, "Savings": 1, "Credit card": 2}
     for (inst, digits), s in sorted(stmts.items(), key=lambda kv: (kv[0][0], KORDER.get(kv[1].get("kind"), 3), kv[0][1])):
         kind = s.get("kind") or "Chequing"
-        name = s.get("product") or f"{kind} {digits}"
+        name = s.get("product") or (kind if s.get("_nodigits") else f"{kind} {digits}")
         card = kind in scaffold.DEBT_KINDS
         rows = s["rows"]
         pays = [r["amount"] for r in rows if r["amount"] > 0 and PAY.search(r["description"].upper())]
@@ -189,15 +215,17 @@ def propose(root, inbox):
         ledger = None if card or kind != "Chequing" else re.sub(r"\W+", "_", f"{inst}_{kind}_{digits}").lower() + ".csv"
         if s.get("holder"):
             holders[s["holder"]] += 1
-        acc = {"inst": inst, "name": name, "kind": kind, "id": "…" + digits, "cur": "CAD",
+        acc = {"inst": inst, "name": name, "kind": kind, "id": "—" if s.get("_nodigits") else "…" + digits, "cur": "CAD",
                "balance": -s["closing"] if card and s["closing"] is not None else s["closing"],
                "asof": s["period"]["to"], "feeds": "Spending" if card else ("Cash flow" if ledger else "")}
         if ledger:
             acc["ledger"] = ledger
             if debit:
                 acc["feeds"] += ", Spending"
-        acc["doc"] = {"file": pattern_of(s["_file"]), "closes": int(s["period"]["to"][8:]),
+        acc["doc"] = {"file": s["_file"] if s.get("_csv") else pattern_of(s["_file"]),
+                      "closes": "any time" if s.get("_csv") else int(s["period"]["to"][8:]),
                       "from": first[(inst, digits)], "parser": s["parser"],
+                      **({"csv": s["_csv"]} if s.get("_csv") else {}),
                       "into": "spending.csv" if card else (ledger or "banks.json"),
                       "reconcile": s["reconcile"]["rule"] if (card or ledger) else "balance and as-of only"}
         acc.update({k: v for k, v in scaffold.default_axes({**acc, "src": "banks.json"}).items() if k in ("role", "reach")})
@@ -367,6 +395,11 @@ def propose(root, inbox):
                           + "). Is anyone paying you back a loan? Their payments are never counted as income."})
     questions.append({"id": "foreign", "q": (f"You dropped {len(images)} screenshot(s). " if images else "") +
                                             "Anything held in another currency? The bank, the balance, the currency and today's rate."})
+    # A download's kind and balance are not in the file the way a statement prints them.
+    for a in accounts:
+        if a.get("doc", {}).get("csv"):
+            questions.append({"id": f"csv:{a['name']}", "q": f"{a['inst']} download {a['doc']['file']}: is it a chequing account, a savings "
+                              f"account or a credit card (drafted as {a['kind']}), and what balance does your banking app show for it today?"})
     if unknown or by_hand:
         questions.append({"id": "files", "q": "These files were not recognised: " + ", ".join(unknown + by_hand) +
                                               ". What are they?"})
