@@ -1274,6 +1274,12 @@ function renderNwChart(){
   $("nwCap").textContent = (d >= 0 ? "Up " : "Down ") + fmt(Math.abs(d)) + " since " + ymFull(pts[0].ym) + "."
     + (pts.some(p => p.cadOnly) ? " The hollow point counts the Canadian side only." : "");
 }
+// The share the owner holds a band on is named after their bucket: "Dry powder" is one owner's
+// word for her safe end, and an owner with a bond band reads "Bonds" (2026-11-03).
+function bandLab(){
+  const b = (RULES.buckets || []).find(x => x.target);
+  return !b || b.key === "dry" ? term("dry_powder", "Dry powder") : b.name;
+}
 function renderHome(){
   renderNwChart();
   const yr = TODAY.slice(0,4);
@@ -1295,7 +1301,7 @@ function renderHome(){
   $("homeStats").innerHTML =
     card(term("portfolio", "Portfolio"),
       numx(fmt(PORTFOLIO), split(grow.by), "Every account you hold to grow. Set-aside accounts and bank cash are not in it.", true),
-      !INVEST.investable ? "Nothing invested yet" : term("dry_powder", "Dry powder")+" "+INVEST.dryPct+"%") +
+      !INVEST.investable ? "Nothing invested yet" : bandLab()+" "+INVEST.dryPct+"%") +
     card(term("fire", "FIRE")+" progress",
       unset("planBase") ? notSet("planBase")
         : numx(pctP+"%", [["Portfolio", fmt(PORTFOLIO)], ["Target", fmt(target)]], "The target is your planning figure × 12 × 25."),
@@ -3273,7 +3279,7 @@ const IV = (function(){
            numx(fmt(portfolio), FGN.rows.length ? [["At "+DATA.broker, fmt(cadInv)], ["Funds abroad", fmt(fgn)]] : [], "Bank cash and set-aside accounts are left out.", true),
            prev ? deltaLine(cadInv, prev.cadInv) : "")
     + stat(term("set_aside", "Set aside"), numx(fmt(earm), EARMARK.map(a => [a, fmt(accVal(a))]), "", true))
-    + stat(term("dry_powder", "Dry powder"),
+    + stat(bandLab(),
            cadInv ? numx(pctS(dryPct), [...DRY.map(y => [y, fmt(positions.filter(p => p.sym === y && !EARMARK.includes(p.account)).reduce((s,p) => s + p.mv, 0))]), ["Out of", fmt(cadInv)]],
                          "Measured at "+DATA.broker+", set-aside accounts left out."+dryWas) : "\u2014",
            cap(cadInv ? "" : "Nothing invested yet"))

@@ -216,9 +216,20 @@ def m_stated_no_asof(r):
                               "side": "asset", "role": "none", "reach": "locked", "value": "stated",
                               "ledger": None, "feeds": "", "key": "home"})
     edit_json(r, layout.rel("accounts.json"), f)
+def with_loan(d):
+    """The money-lent faults need a loan to break. A workspace with none (the demo owner lends
+    nobody anything since 2026-11-03) gets one that checks clean first: agreed $500 on a date,
+    nothing back since, so what is owed is $500."""
+    if not any(a.get("role") == "owed" for a in d["accounts"]):
+        d["accounts"].append({"inst": "Owed to you", "id": "—", "name": "Alex", "kind": "Lent", "cur": "CAD",
+                              "balance": 500.0, "asof": "2026-03-01", "src": None, "side": "asset", "role": "owed",
+                              "reach": "lent", "value": "stated", "ledger": None, "feeds": "", "key": "loan-alex",
+                              "agreed": {"amount": 500.0, "asof": "2026-03-01"}, "names": ["ALEX EXAMPLE"]})
+    return d
 def m_loan_axes(r):
     # Money lent left on the "today" row: it would be counted as cash you can spend.
     def f(d):
+        with_loan(d)
         for a in d["accounts"]:
             if a.get("role") == "owed":
                 a["reach"] = "today"
@@ -226,6 +237,7 @@ def m_loan_axes(r):
 def m_loan_copy(r):
     # A loan's balance typed over by hand: the register says one thing, agreed less repaid another.
     def f(d):
+        with_loan(d)
         for a in d["accounts"]:
             if a.get("role") == "owed":
                 a["balance"] = round(float(a["balance"]) + 250, 2)
@@ -233,6 +245,7 @@ def m_loan_copy(r):
 def m_loan_overpaid(r):
     # An agreed amount set too low: more has come back than was ever owed.
     def f(d):
+        with_loan(d)
         for a in d["accounts"]:
             if a.get("role") == "owed":
                 a["agreed"]["amount"] = -1000.0
@@ -252,6 +265,13 @@ def m_fx_stale(r):
     # A rate months older than the statements around it. The demo is judged against its own
     # newest data rather than the calendar (so a clone checks clean), and that clock must still
     # see a rate that rotted inside it.
+    # An owner with no US dollars has no fx.json (the demo since 2026-11-03): the stale rate is
+    # written whole, the way an export once left one behind.
+    p = layout.path(r, "fx.json")
+    if not os.path.exists(p):
+        json.dump({"usd_cad": 1.37, "asof": "2026-06-01", "quality": "broker-rate", "history": []},
+                  open(p, "w", encoding="utf-8"), indent=2)
+        return
     edit_json(r, layout.rel("fx.json"), lambda d: d.__setitem__("asof", "2026-06-01"))
 # The setup's data guard (setup/scripts/guard.py). Runner kind "guard": the mutation makes the
 # staged copy a git checkout with a remote, the way a clone of the public repository is, lets the
@@ -285,7 +305,7 @@ def m_guard_data(r):
 # "reconciled". Runner kind "parse": it generates the fixtures into the staged copy and runs
 # parse.py on the tampered one.
 def m_parse_tampered(r):
-    return "rbc_visa"       # which fixture to tamper; the runner does the rest
+    return ("rbc_visa", "bmo_mastercard")   # whichever card the demo has; the runner does the rest
 def m_class_missing(r):
     # An ETF bought since anyone said what it holds: the asset-type split would file it nowhere.
     edit_json(r, layout.rel("rules.json"), lambda d: d["assetClass"].pop(next(iter(d["assetClass"]))))
@@ -566,9 +586,12 @@ def parse_fault(ws, parser, rule):
     man = fixtures_for(ws)
     if man is None:
         return None
-    pick = next((m for m in man if m["parser"] == parser), None)
-    if not pick:
-        return f"✗ [{rule}] no {parser} fixture to tamper"
+    parsers = parser if isinstance(parser, tuple) else (parser,)
+    pick = next((m for m in man if m["parser"] in parsers), None)
+    # Nothing to tamper is a fault that was never planted, not one that was caught: said as
+    # "✗ no fixture", it used to read as the rule firing (2026-11-03, when the demo lost its Visa).
+    assert pick, f"no {' or '.join(parsers)} fixture to tamper"
+    parser = pick["parser"]
     sys.path.insert(0, os.path.join(ws, "tools"))
     from pypdf import PdfReader
     import pdfgen
@@ -581,11 +604,57 @@ def parse_fault(ws, parser, rule):
             if l.startswith("Purchases & debits $"):
                 v = float(l.split("$")[1].replace(",", "")) + 10
                 pg[i] = f"Purchases & debits ${v:,.2f}"; hit = True
-    if not hit:
-        return f"✗ [{rule}] fixture has no total line to tamper"
+            elif l.startswith("Purchases and other charges +"):
+                v = float(l.split("+")[1].replace(",", "")) + 10
+                pg[i] = f"Purchases and other charges +{v:,.2f}"; hit = True
+    assert hit, f"the {parser} fixture has no total line to tamper"
     pdfgen.write_pdf(pick["file"], lines)
     ok, n, detail = parse_one(ws, pick["file"], parser)
     return f"{'·' if ok else '✗'} [{rule}] {detail}"
+
+
+def every_parser_check(ws, man):
+    """Every parser reads an ordinary month, whatever banks the demo owner happens to use. The
+    round trip above covers the demo's own documents; since 2026-11-03 she banks at one bank, so
+    a parser her register does not name is held here to a month rendered from rows written below."""
+    if not os.path.exists(os.path.join(ws, "tools", "fixtures.py")):
+        return []
+    sys.path.insert(0, os.path.join(ws, "tools"))
+    import fixtures
+    from pdfgen import write_pdf
+    have = {m["parser"] for m in (man or [])}
+    s, e = datetime.date(2026, 9, 26), datetime.date(2026, 10, 25)
+    bank, bal = [], 1200.0
+    for ds, desc, amt in (("2026-09-30", "Payroll Deposit EXAMPLE CO", 1850.0), ("2026-10-01", "Bill Payment HYDRO", -84.20),
+                          ("2026-10-01", "Contactless Interac purchase - 1234 GROCER", -42.15), ("2026-10-15", "Payroll Deposit EXAMPLE CO", 1850.0),
+                          ("2026-10-20", "Online Banking transfer - 1111", -500.0)):
+        bal = round(bal + amt, 2); bank.append({"date": ds, "description": desc, "amount": amt, "balance": bal})
+    card = [{"date": "2026-09-28", "description": "GROCER TORONTO ON", "amount": 64.10},
+            {"date": "2026-10-03", "description": "PHARMACY TORONTO ON", "amount": 18.75},
+            {"date": "2026-10-09", "description": "PAYMENT - THANK YOU", "amount": -300.0},
+            {"date": "2026-10-14", "description": "CAFE TORONTO ON", "amount": 7.40}]
+    cases = {"rbc_banking": lambda: fixtures.rbc_banking("1234", s, e, 1200.0, bank, "Alex Example"),
+             "bmo_banking": lambda: fixtures.bmo_banking("Primary Chequing", "1234", s, e, 1200.0, bank, "Alex Example"),
+             "rbc_visa": lambda: fixtures.rbc_visa("1234", s, e, 300.0, card, "Alex Example"),
+             "bmo_mastercard": lambda: fixtures.bmo_mastercard("1234", s, e, 300.0, card, "Alex Example")}
+    out, done = [], []
+    for parser, render in cases.items():
+        if parser in have:
+            continue
+        path = os.path.join(ws, "_fixtures", f"ordinary_{parser}.pdf")
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        write_pdf(path, render())
+        ok, n, detail = parse_one(ws, path, parser)
+        # A card template also prints the payment of the previous balance, so a card month has
+        # every row written here and that one more.
+        want = len(bank) if parser.endswith("banking") else len(card)
+        if ok and want <= n <= want + 1:
+            done.append(parser)
+        else:
+            out.append(f"  ✗ parsers: an ordinary {parser} month: {detail} — expected {want} rows")
+    if done:
+        out.append(f"  ✓ parsers the demo owner does not use ({', '.join(done)}): an ordinary month each, read and reconciled")
+    return out
 
 
 def credit_balance_check(ws):
@@ -1181,6 +1250,7 @@ def parser_checks(root, base):
             else:
                 lines.append(f"  ✗ fixture {os.path.basename(m['file'])} ({m['parser']}): {detail} — expected {m['rows']} rows")
         lines.append(f"\n  {'✓' if good == len(man) else '✗'} parsers: {good} of {len(man)} synthetic statements read and reconciled")
+        lines += every_parser_check(ws, man)
         lines += credit_balance_check(ws)
         lines += wrap_check(ws)
         lines += propose_check(ws, man)

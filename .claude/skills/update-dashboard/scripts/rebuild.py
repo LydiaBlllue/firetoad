@@ -451,11 +451,14 @@ def derive(d):
 
     # --- WSDEP: only EFT landing in the broker's chequing doorway account. Money paid straight
     # into a registered account is a contribution, not the pay-yourself-first cadence.
+    # An owner with no doorway account (most people: the deposit goes straight into the TFSA)
+    # has every EFT counted, wherever it lands (2026-11-03, a general demo owner).
     half = round(flow_totals(d["funds"]["plan"])["invest"] / 2, 2)
     dep = collections.defaultdict(lambda: {"amt": 0.0, "nRule": 0})
+    doorway = any(r["account_type"] == "Chequing" for r in d["acts"])
     for r in d["acts"]:
         if (r["activity_type"] == "MoneyMovement" and r["activity_sub_type"] == "EFT"
-                and r["account_type"] == "Chequing" and r["currency"] == "CAD"):
+                and (r["account_type"] == "Chequing" or not doorway) and r["currency"] == "CAD"):
             a = float(r["net_cash_amount"] or 0)
             if a > 0:
                 ym = r["effective_date"][:7]

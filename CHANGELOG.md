@@ -2,6 +2,18 @@
 
 ## 1.4 — unreleased
 
+- **The demo owner is an ordinary saver** (2026-11-03, user 001: less complex, more general).
+  Emma Roy, 32, banks at one bank (chequing, savings, a MasterCard) and invests in a TFSA and an
+  RRSP, three index funds and a bond band of 15–25%. No single stocks, crypto, FHSA, US dollars,
+  foreign money or loan; 5 accounts where there were 14. `tools/demo.py` writes all of it again,
+  benchmark included. Two tool changes came with her: "Invested this month" counts deposits
+  straight into an investment account when there is no doorway account, and the band on Home
+  and Portfolio is named after its bucket ("Bonds") unless it is the dry-powder one.
+- **The selftest no longer leans on the demo's accounts.** The money-lent and exchange-rate
+  faults plant their own loan and rate; a parser the demo owner does not use is held to an
+  ordinary month rendered on the spot. And a tamper fault with nothing to tamper is now a fault
+  not planted, not a fault caught: it had been passing without testing anything.
+
 - **What is still unaccounted for sits on its row** (2026-11-03, user 001). The card at the foot of
   Accounts is gone: a ⚠ beside the balance of the account a gap belongs to, its story on hover; a
   gap that belongs to no account is one line above the table; with none, nothing is shown.
