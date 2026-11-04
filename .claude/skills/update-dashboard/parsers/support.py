@@ -53,11 +53,19 @@ SUPPORT = [
      "note": ("Checks itself against the bank's balance. The first time, setup asks which account each id in the file is.",
               "按银行给的余额自己核对。第一次 setup 会问文件里每个编号对应哪个账户。")},
     {"bank": "BMO", "accounts": ("Mastercard", "Mastercard"), "format": "ofx", "status": "expected",
-     "how": ("The card's page → Download → .ofx format", "信用卡页面 → Download → .ofx 格式"), "note": ("", "")},
-    {"bank": "BMO", "accounts": ("Chequing, savings", "支票、储蓄"), "format": "csv", "status": "no",
-     "how": ("", ""),
-     "note": ("Several accounts in one file with nothing saying which is which. Use OFX.",
-              "一个文件里有几个账户，却没写哪段是哪个账户。请用 OFX。")},
+     "how": ("A separate download, from the card's own page → Download → .ofx format",
+             "单独下载：信用卡自己的页面 → Download → .ofx 格式"), "note": ("", "")},
+    {"bank": "BMO", "accounts": ("Chequing, savings, US-dollar accounts", "支票、储蓄、美元账户"), "format": "csv", "status": "confirmed",
+     "profile": "bmo",
+     "how": ("Account → Transactions → Download → .csv format, one account at a time", "账户 → Transactions → Download → .csv 格式，一次只下一个账户"),
+     "note": ("The file has a section for every account and nothing saying which is which, so a file with rows for "
+              "more than one is refused. No balance in it: the balance your app shows is asked. Prefer OFX.",
+              "文件里每个账户占一段，却没写哪段是哪个账户，所以有几个账户的文件会被拒。文件里也没有余额，"
+              "要报一次 app 上的余额。优先用 OFX。")},
+    {"bank": "BMO", "accounts": ("Mastercard", "Mastercard"), "format": "csv", "status": "confirmed", "profile": "bmo_card",
+     "how": ("A separate download, from the card's own page → Download → .csv format",
+             "单独下载：信用卡自己的页面 → Download → .csv 格式"),
+     "note": ("No balance in it: the balance your app shows is asked.", "文件里没有余额，要报一次 app 上的余额。")},
     {"bank": "TD", "accounts": ("Chequing, savings, Visa", "支票、储蓄、Visa"), "format": "ofx", "status": "expected",
      "how": ("EasyWeb → Download transactions → Quicken or Money", "EasyWeb → Download transactions → Quicken 或 Money"), "note": ("", "")},
     {"bank": "TD", "accounts": ("Chequing, savings, Visa", "支票、储蓄、Visa"), "format": "csv", "status": "unconfirmed", "profile": "td",
@@ -103,9 +111,11 @@ INSTITUTIONS = [
                      "for chequing instead: it names who sent each one, so nothing has to be asked.",
                      "**OFX**：一次下载包含所有账户。如果你常收 e-Transfer，支票账户改用 PDF 对账单："
                      "它写着每笔是谁转的，就不用一笔笔回答。")),
-    ("BMO", "bank", ("**OFX** for chequing, savings and US-dollar accounts, in one download. The **PDF statement** for "
-                     "the Mastercard until its OFX has been confirmed.",
-                     "支票、储蓄、美元账户用 **OFX**，一次下完。Mastercard 先用 **PDF 对账单**，等它的 OFX 确认了再换。")),
+    ("BMO", "bank", ("**OFX** for chequing, savings and US-dollar accounts, in one download. The Mastercard is a separate "
+                     "download from the card's own page: the **CSV** (it asks the balance your app shows) or the **PDF "
+                     "statement** (it asks nothing).",
+                     "支票、储蓄、美元账户用 **OFX**，一次下完。Mastercard 要在信用卡自己的页面单独下载："
+                     "用 **CSV**（要报一次 app 上的余额）或 **PDF 对账单**（什么都不用报）。")),
     ("TD", "bank", ("**OFX** first; the CSV if the OFX will not read.", "先用 **OFX**；读不了再用 CSV。")),
     ("Scotiabank", "bank", ("**OFX** first; the CSV if the OFX will not read.", "先用 **OFX**；读不了再用 CSV。")),
     ("CIBC", "bank", ("**OFX** first; the CSV if the OFX will not read.", "先用 **OFX**；读不了再用 CSV。")),

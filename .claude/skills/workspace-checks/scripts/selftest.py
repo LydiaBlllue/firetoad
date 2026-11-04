@@ -1128,6 +1128,17 @@ def csv_layouts_check(root, base):
         ("tangerine.csv", "Date,Transaction,Name,Memo,Amount\n10/2/2026,DEBIT,CAFE,Interac purchase,-4.50\n", "tangerine", [-4.5]),
         ("simplii.csv", "Date, Transaction Details, Funds Out, Funds In\n10/01/2026, PAYROLL CO,, 2100.00\n10/02/2026, CAFE, 4.50,\n",
          "simplii", [2100.0, -4.5]),
+        # BMO: a line before the header, a section per account under its own header, codes spelled
+        # out; one account downloaded, so one section has rows (the shape of a real file, 2026-11-04).
+        ("bmo.csv", "Following data is valid as of 20261104000000 (Year/Month/Day/Hour/Minute/Second)\n\n\n"
+                    "First Bank Card,Transaction Type,Date Posted, Transaction Amount,Description\n\n\n"
+                    "'0000000000000000',CREDIT,20261002,2100.0,[DN]PAYROLL CO   PAY/PAY\n"
+                    "'0000000000000000',DEBIT,20261005,-4.5,[PR]CAFE   TORONTO ON\n\n"
+                    "First Bank Card,Transaction Type,Date Posted, Transaction Amount,Description\n\n\n", "bmo", [2100.0, -4.5]),
+        ("bmo_card.csv", "Following data is valid as of 20261104000000:\n\n"
+                         "Item #,Card #,Transaction Date,Posting Date,Transaction Amount,Description\n"
+                         "1,'0000000000000000',20261002,20261003,4.5,CAFE TORONTO ON\n"
+                         "2,'0000000000000000',20261005,20261005,-200.0,TRSF FROM/DE ACCT/CPT 0000-XXXX-000\n", "bmo_card", [-4.5, 200.0]),
     ]
     out = []
     for name, text, want, amts in cases:
@@ -1141,6 +1152,15 @@ def csv_layouts_check(root, base):
                        + "".join(f",2026-10-01,POS purchase,SHOP{i},Debit,-1.00,{999 - i:.2f}\n" for i in range(100)))
     try:
         csv_bank.parse(p, csv_bank.spec_of("scotia")); out.append("  ✗ csv layouts: a Scotiabank download of exactly 100 rows was read")
+    except PE:
+        pass
+    p = os.path.join(d, "bmo_two.csv")
+    open(p, "w").write("First Bank Card,Transaction Type,Date Posted, Transaction Amount,Description\n"
+                       "'0',CREDIT,20261002,2100.0,[DN]PAYROLL CO\n\n"
+                       "First Bank Card,Transaction Type,Date Posted, Transaction Amount,Description\n"
+                       "'0',CREDIT,20261031,0.3,[IN]\n")
+    try:
+        csv_bank.parse(p, csv_bank.spec_of("bmo")); out.append("  ✗ csv layouts: a BMO download with two accounts' rows was read")
     except PE:
         pass
     p = os.path.join(d, "odd.csv"); open(p, "w").write("Posted,What,Value\n2026-10-01,CAFE,-4.50\n")
