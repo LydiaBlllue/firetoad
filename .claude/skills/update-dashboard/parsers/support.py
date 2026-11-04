@@ -104,13 +104,56 @@ NOTE = ("This page is written from the tool's own table (`parsers/support.py`); 
         "这一页由工具自己的表（`parsers/support.py`）生成；只有读过真实文件，状态才会改。")
 
 
+MARK = {"confirmed": "✓", "expected": "○", "unconfirmed": "○", "no": "✗"}
+LEGEND = ("✓ read here from a real file and reconciled · ○ should work, not yet confirmed on a real "
+          "file · ✗ not read · — no reader here (a PDF statement can still be read by Claude, by hand)",
+          "✓ 已用真实文件读过并核对通过 · ○ 应该可用，还没用真实文件确认 · ✗ 不读取 · "
+          "— 没有现成的读取方式（PDF 对账单仍可由 Claude 手读）")
+BANK_ZH = {"Any other bank": "其他银行"}
+COLS = ("pdf", "ofx", "csv")
+HEAD = (("Bank", "PDF statement", "OFX / QFX", "CSV"), ("银行", "PDF 对账单", "OFX / QFX", "CSV"))
+DETAILS = ("How to download each, and what to know", "每种怎么下载、要注意什么")
+
+
 def render(lang):
+    """The grid first — one row per bank, a mark per kind of file — then each file's how and why."""
     i = 0 if lang == "en" else 1
-    head = ("| Bank | Accounts | File | Status | How to get it | Note |" if i == 0 else
-            "| 银行 | 账户 | 文件 | 状态 | 怎么下载 | 说明 |")
-    lines = [f"# {TITLE[i]}", "", INTRO[i], "", head, "|---|---|---|---|---|---|"]
+    banks = []
     for r in SUPPORT:
-        lines.append(f"| {r['bank']} | {r['accounts'][i]} | {FORMATS[r['format']][i]} | {STATUS[r['status']][i]} | "
-                     f"{r['how'][i] or '—'} | {r['note'][i] or '—'} |")
-    lines += ["", f"*{NOTE[i]}*", ""]
+        if r["bank"] not in banks:
+            banks.append(r["bank"])
+
+    def cell(rows):
+        if not rows:
+            return "—"
+        if len({r["status"] for r in rows}) == 1:
+            return MARK[rows[0]["status"]]
+        # one bank, one kind of file, a different answer per account (BMO's card has not been seen)
+        return " · ".join(f"{MARK[r['status']]} {r['accounts'][i]}" for r in rows)
+
+    lines = [f"# {TITLE[i]}", "", INTRO[i], "", "| " + " | ".join(HEAD[i]) + " |", "|---|:---:|:---:|:---:|"]
+    others = []
+    for b in banks:
+        rows = [r for r in SUPPORT if r["bank"] == b]
+        if all(r["format"] not in COLS for r in rows):
+            others.append(rows)
+            continue
+        name = BANK_ZH.get(b, b) if i else b
+        lines.append(f"| **{name}** | " + " | ".join(cell([r for r in rows if r["format"] == c]) for c in COLS) + " |")
+    lines += ["", LEGEND[i], ""]
+    for rows in others:
+        colon, op, cl = ("：", "（", "）") if i else (": ", " (", ")")
+        lines.append(f"**{rows[0]['bank']}**{colon}" + "; ".join(f"{MARK[r['status']]} {FORMATS[r['format']][i]}{op}{r['accounts'][i]}{cl}"
+                                                       for r in rows))
+        lines.append("")
+    lines += [f"## {DETAILS[i]}", ""]
+    colon = "：" if i else ": "
+    for b in banks:
+        lines.append(f"**{BANK_ZH.get(b, b) if i else b}**")
+        lines.append("")
+        for r in (x for x in SUPPORT if x["bank"] == b):
+            what = " — ".join(t for t in (r["how"][i], r["note"][i]) if t)
+            lines.append(f"- {MARK[r['status']]} {FORMATS[r['format']][i]} · {r['accounts'][i]}" + (f"{colon}{what}" if what else ""))
+        lines.append("")
+    lines += [f"*{NOTE[i]}*", ""]
     return "\n".join(lines)
