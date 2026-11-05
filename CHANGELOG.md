@@ -26,6 +26,19 @@
   what is taken out from the age each starts. Not given, the page says they are not counted.
 - **Every row in chequing** on the Income page: transfers, fees and e-Transfers one by one, with a
   search and a pill per account.
+- **Card by card** (2026-11-05, user 001). Accounts sits right under Home; Income is *Income &
+  chequing*; Spending baseline is *Monthly spending*. **A usual month** is the one name and the
+  one sum for a month's spending — everything spent, averaged over up to twelve full months — on
+  This month, Monthly spending, Safety net and Investment income. Accounts' cards show the money
+  (net worth, cash, invested, what you owe) and Updates shows the next update; cards that repeated
+  another page are gone. Portfolio no longer shows a dollar more than Home.
+- **Cards and tables are drawn by two components**, `StatCard` and `DataTable`, where nine copies
+  of one helper and hand-aligned headings used to be; check_design's S10 fails one written by hand.
+- **Checks in three levels**: whether the money is right runs by itself after an edit and at the
+  end of an import; *check the page* and *check before a release* (`checks.py --level page |
+  release`) run when asked. The browser check now reaches every sidebar entry in a short window
+  (R6) and draws the page for every kind of owner (R7). Sync keeps the page and fault counts an
+  owner's README states in step with the tool. 65 selftest faults.
 
 - **A page of the banks and files the tool reads** (2026-11-04, user 001): `docs/banks.md` and
   `docs/zh/banks.md`, bank by bank — which file, whether it has been confirmed on a real one, how to
