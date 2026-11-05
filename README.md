@@ -91,9 +91,9 @@ report and any questions a program cannot answer, like a merchant it has not see
   one, and how to download each.
 - **[Roadmap](ROADMAP.md)** and **[Changelog](CHANGELOG.md)**.
 
-<!-- LINT:NAV main=17/5 minwidth=800 -->
-The page is 17 pages in 5 sidebar groups —
-Home · Accounts · Spending · Income · Investing · Plan · Monthly import · Glossary
+<!-- LINT:NAV main=18/4 minwidth=800 -->
+The page is 18 pages in 4 sidebar groups —
+Home · Money in & out · Plan · Investing · Accounts · Monthly import · Glossary
 — desktop only, at least 800px wide.
 
 MIT licence: see [`LICENSE`](LICENSE).

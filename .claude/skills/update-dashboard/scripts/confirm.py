@@ -91,6 +91,14 @@ def main(argv):
         who, said = (x.strip() for x in s.rsplit("=", 1))
         cat = next((k for k, n, *_ in categories.TABLE if said.lower() in (k.lower(), n.lower())), None)
         idx = int(who) - 1 if who.isdigit() else next((i for i, d in enumerate(items) if merchant_of(d) == who.upper()), None)
+        if idx is not None and 0 <= idx < len(items) and items[idx].get("kind") == "fire":
+            # the FIRE goal is answered yes or no, and lands in plan.json
+            yn = {"yes": "Yes", "y": "Yes", "no": "No", "n": "No"}.get(said.lower())
+            if yn is None:
+                bad.append(f"--set {s!r}: #{idx + 1} is the FIRE goal; say yes or no")
+            else:
+                want[idx] = yn
+            continue
         if idx is not None and 0 <= idx < len(items) and items[idx].get("credit"):
             # money coming in is answered with what it was, not a category
             t = next((x for x in INCOMING if said.lower() in (x.lower(), INCOMING[x].lower())), None)
@@ -159,6 +167,11 @@ def main(argv):
                         break
                 with open(lp, "w", encoding="utf-8", newline="") as fh:
                     w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
+        if d.get("kind") == "fire":
+            pj = jload(fd("plan.json"), {})
+            pj["fire"] = {"goal": ans == "Yes", "asked": today}
+            jsave(fd("plan.json"), pj)
+            changed += 1
         d["answer"], d["resolved"], d["status"] = ans, today, "confirmed"
         closed += 1
     jsave(fd("merchants.json"), merchants)

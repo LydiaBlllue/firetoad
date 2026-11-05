@@ -226,6 +226,9 @@ the page shows is a sum of them.
   `estimate: true`: no single payment can match it, so D21 notes it instead of warning every run.
 - How much they invest per month — the transfer to the broker.
 - Their everyday amount — the guilt-free line. **No category caps**; that is the point of it.
+- **Whether retiring early is something they are working toward** — asked once, in plain words.
+  Yes or no goes in as `plan.fire` `{"goal": true|false, "asked": "<today>"}`; skipped is left
+  out. The FIRE pages show only for yes (for an owner already investing, unanswered reads as yes).
 
 ### 5 · The one investing question
 
@@ -350,7 +353,7 @@ Three things, in this order:
      "balance":38400,"asof":"2026-09-06","feeds":"Portfolio",
      "doc":{"file":"holdings-<date>.csv"}}
   ],
-  "plan": {"takeHome":4200,"invest":900,"everyday":1800},
+  "plan": {"takeHome":4200,"invest":900,"everyday":1800,"fire":{"goal":true,"asked":"2026-09-06"}},
   "rules": {
     "buckets": [{"key":"rest","name":"Holdings","catchAll":true}],
     "maxHoldings": 8

@@ -407,6 +407,9 @@ def derive(d):
     # --- the owner's plan: the figure the FIRE target is built on, the months excluded from
     # every comparison, and the projection / late-life care assumptions
     out["PLAN_BASE_DEFAULT"] = plan["planBase"]
+    # The FIRE goal is a declaration (1.0.1): true, false, or None when never asked. The page
+    # reads None as yes only for someone already investing.
+    out["FIRE_GOAL"] = (plan.get("fire") or {}).get("goal")
     # The fixed part of the planning figure: every committed flow still paid after FIRE, paid
     # today or not (an owner who does not pay rent yet has one that starts at FIRE). Added to the
     # measured everyday average on the Baseline page so the two can be compared.
@@ -710,6 +713,27 @@ def derive(d):
                                "accts": part_accounts(role, where, part_value(role, where))})
     out["REACH"] = [{"k": lab, "r": r, "v": by_reach[r], "c": c, "d": desc.get("reach", {}).get(lab, generic_reach[lab])}
                     for r, lab, c in REACH_ROWS if r in reach_present]
+    # The Safety net (FINANCE.md §8d): the money it counts is Home's own "Spendable today" row,
+    # less what is owed on no asset, so the two pages cannot disagree. Money abroad is a line of
+    # its own and investments are never in it. What a month costs is the page's: the spending
+    # baseline, measured there, plus the repayments the plan pays today.
+    def listed(rows, total):
+        rows = sorted((one_account(a, v) for a, v in rows if round(v)), key=lambda x: -x["v"])
+        if rows:
+            rows[0]["v"] += total - sum(x["v"] for x in rows)
+        return rows
+    # A TFSA is spendable today, but it is invested: Spendable today less what in it is held to
+    # grow, so the step from Home's row to this one is on the page.
+    unsecured = R_debt - secured
+    ft = flow_totals(d["funds"]["plan"])
+    inv_today = round(sum(v for a, v in ca if a.get("reach") == "today" and a.get("role") == "grow"))
+    out["SAFETY"] = {"today": by_reach["today"], "invested": inv_today, "abroad": by_reach["abroad"], "unsecured": unsecured,
+                     "accts": listed([(a, v) for a, v in ca if a.get("reach") == "today" and a.get("role") != "grow"],
+                                     by_reach["today"] - inv_today),
+                     "debts": listed([(a, v) for a, v in liabs if by_key.get(a.get("against") or "") is None], unsecured),
+                     "repay": ft["repayNow"],
+                     "repayRows": [{"n": f.get("name") or f.get("pays"), "v": f.get("amount") or 0}
+                                   for f in ft["committedNow"] if f.get("pays")]}
     got_parts = sum(r["v"] for r in out["NWPARTS"]) - R_debt
     got_reach = sum(r["v"] for r in out["REACH"]) - (R_debt - secured)
     if not (got_parts == got_reach == net_worth + fgn_cad):

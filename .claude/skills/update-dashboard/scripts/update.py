@@ -1351,6 +1351,15 @@ def main(argv):
         print(f"  ✗ {e}. Nothing can be parsed until it is installed; then run again.")
         return 3
     lap("read")
+    # The FIRE goal is asked once (1.0.1): a workspace that never answered, with nothing invested,
+    # gets one question. Someone already investing reads as yes until they say otherwise.
+    pj = jload(ws.fd("plan.json"), {})
+    investing = any(x.get("role") == "grow" and (x.get("balance") or 0) > 0 for x in ws.reg.get("accounts", []))
+    if "fire" not in pj and not investing and not any(d.get("kind") == "fire" and d.get("status") == "open"
+                                                       for d in ws.decisions.get("decisions", [])):
+        plan.decisions.append({"kind": "fire", "default": "No",
+                               "what": "Is retiring early (FIRE) something you are working toward? Yes or no; "
+                                       "the FIRE pages show only for yes."})
 
     say = print if not a.json else (lambda *x, **k: None)
     say(f"=== update — {len(named)} file(s) named in inbox/, {len(plan.unknown)} unnamed ===\n")

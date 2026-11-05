@@ -77,9 +77,9 @@
 - **[支持的银行和券商](docs/zh/banks.md)**：能读哪些银行、券商的哪些文件、该用哪种、哪些已用真实文件确认、每种怎么下载。
 - **[路线图](ROADMAP.md)** 和 **[更新记录](CHANGELOG.md)**。
 
-<!-- LINT:NAV main=17/5 minwidth=800 -->
-页面共 17 页、5 个侧栏分组 ——
-Home · Accounts · Spending · Income · Investing · Plan · Monthly import · Glossary
+<!-- LINT:NAV main=18/4 minwidth=800 -->
+页面共 18 页、4 个侧栏分组 ——
+Home · Money in & out · Plan · Investing · Accounts · Monthly import · Glossary
 —— 仅桌面端，至少 800px 宽。
 
 MIT 许可：见 [`LICENSE`](LICENSE)。

@@ -46,6 +46,10 @@ def totals(plan):
         # destination (a fund, a child's plan) is saving but not that rule.
         "invest": s("saving", now, lambda f: (f.get("to") or "broker") == "broker"),
         "everyday": s("everyday"),
+        # What a month of repayments costs today: a committed flow that pays a liability. Its
+        # principal is saving, so it is not in spending.csv; the Safety net adds it to the
+        # spending baseline for what a month costs. Rent and bills paid today are already spending.
+        "repayNow": s("committed", now, lambda f: bool(f.get("pays"))),
         "committedNow": [f for f in now if f.get("kind") == "committed"],
         "incomeNote": next((f.get("note") or "" for f in flows if f.get("kind") == "income"), ""),
     }
