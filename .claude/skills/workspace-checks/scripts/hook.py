@@ -46,13 +46,11 @@ def main():
     path = path.replace("\\", "/")
 
     jobs = []
-    # S4 compares the dashboards against DESIGN.md and README.md, so drift can be introduced
-    # from either side: editing the dashboard, or editing the document that describes it.
-    # Both entrances run the same linter.
-    if re.search(r"/dashboards/[^/]+\.html$", path) or re.search(r"/(DESIGN|README)\.md$", path):
-        jobs.append(("DESIGN.md", "check_design.py", DASH))
+    # Only whether the money is right runs by itself (2026-11-05, the owner: most checks are
+    # run when asked, not after every edit). The page, its documents and the data's tidiness are
+    # checked by "check the page" (checks.py --level page); see the workspace-checks skill.
     if "/findata/" in path:
-        jobs.append(("findata", "check_data.py", ["."]))
+        jobs.append(("findata", "check_data.py", [".", "--money"]))
     if not jobs:
         return 0
 

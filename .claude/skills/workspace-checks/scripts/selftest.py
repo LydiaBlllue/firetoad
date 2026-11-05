@@ -477,6 +477,13 @@ def m_render_nan(r):
     # looking at "undefined".
     edit(r, main_dash(r),
          lambda s: re.sub(r'"netWorth":\s*-?[\d.]+,\s*', '', s, count=1))
+def m_render_sidebar_stuck(r):
+    # the sidebar loses its own scroll: in a short window its foot is out of reach (2026-11-05)
+    edit(r, main_dash(r), lambda s: s.replace(";max-height:calc(100vh - 38px);overflow-y:auto", "", 1))
+def m_render_empty_card(r):
+    # Home fills a card even when it has no number for it
+    edit(r, main_dash(r), lambda s: s.replace("    const html = C[k]();\n    if(html) shown.push({k, html});",
+                                              '    const html = C[k]() || StatCard("Empty", null);\n    shown.push({k, html});', 1))
 def m_render_chart_capped(r):
     edit(r, main_dash(r),
          lambda s: s.replace("year-svg{width:100%;height:auto", "year-svg{width:100%;height:190px", 1))
@@ -559,6 +566,8 @@ CASES = [
     ("D29", "a gift declared in the broker with no such deposit", m_broker_gift_no_deposit, "find"),
     ("D30", "a chequing bill that never reached spending",  m_chequing_no_spend_tag, "find"),
     ("R3", "a chart pinned to a fixed height",              m_render_chart_capped,"render"),
+    ("R6", "the sidebar cannot scroll in a short window",   m_render_sidebar_stuck,"render"),
+    ("R7", "Home shows a card with no number",              m_render_empty_card,  "render"),
 ]
 
 

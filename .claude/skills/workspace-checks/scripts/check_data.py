@@ -1259,10 +1259,19 @@ def check(root):
             note("D16", "docs/zh/guide.md restates no figure", "conform")
     return F
 
+MONEY = ("reconcile", "rules")
+
+
 def main(argv):
+    """--money: only whether the money is right (reconcile, rules) — what runs by itself after
+    every edit to findata/ and at the end of an import. Whether the page is current and whether
+    the data is tidy wait for "check the page" (checks.py --level page), 2026-11-05."""
     v = "-v" in argv or "--verbose" in argv
     root = next((a for a in argv if not a.startswith("-")), ".")
-    return 1 if render("data — is the money true", check(root), v) else 0
+    F = check(root)
+    if "--money" in argv:
+        F = [f for f in F if f[3] in MONEY]
+    return 1 if render("data — is the money true", F, v) else 0
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

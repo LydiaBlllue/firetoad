@@ -1505,7 +1505,8 @@ def main(argv):
     lap("rebuild")
     say("\n  rebuild: " + (out.strip().splitlines()[-1].strip() if out.strip() else f"exit {rc}"))
     findings = []
-    for script, args in (("check_data.py", ["."]), ("check_design.py", [rebuild_page(root)])):
+    # The import ends with the money checks only; the page is checked when asked (checks.py).
+    for script, args in (("check_data.py", [".", "--money"]),):
         rc2, out2 = run(os.path.join(CHECKS, script), args, root)
         findings += [l.strip() for l in out2.splitlines() if l.strip().startswith(("✗", "⚠"))]
     summary["findings"] = findings
