@@ -27,6 +27,7 @@ NOT_SET = "Not set"                       # what the figures table says for one 
 import layout                              # where each findata file lives (schema 6)
 import loans                               # what a borrower still owes, read from the ledgers -- one place
 import categories                          # the spending categories and their groups -- one place
+import verbs                               # the shape run() returns, shared by every script a month goes through
 
 MAIN_NAMES = ("ly_finance_dashboard.html", "finance_dashboard.html")   # an owner's copy, or the template's
 INV_NAME = "investment_dashboard.html"
@@ -974,11 +975,15 @@ def sync_figures(root, out):
     return hits
 
 
-def main(argv):
-    root = os.path.abspath(argv[1]) if len(argv) > 1 and not argv[1].startswith("--") else os.getcwd()
-    write = "--write" in argv
-    template = argv[argv.index("--template") + 1] if "--template" in argv else None
+def run(root, write=False, template=None, say=None):
+    """Derive every constant and fill the page (verbs.py). Returns rc, lines, `constants` (how
+    many), `changes` (how many constants or page-code differences the build found), `written`
+    (the pages written) and `skipped` (the warnings)."""
+    emit, lines = verbs.speaker(say)
+    root = os.path.abspath(root)
+    res = {"constants": 0, "changes": 0, "written": [], "skipped": []}
     out = derive(load(root))
+    res["constants"] = len(out)
 
     files = []
     tdir = os.path.join(root, "templates", "dashboards")
@@ -997,14 +1002,14 @@ def main(argv):
         # it, so it is also the one that removes what no longer builds.
         if write:
             os.remove(os.path.join(root, "dashboards", INV_NAME))
-            print(f"  − dashboards/{INV_NAME}: removed, its pages are in the main dashboard now")
+            emit(f"  − dashboards/{INV_NAME}: removed, its pages are in the main dashboard now")
         else:
-            print(f"  · dashboards/{INV_NAME} has no template any more; --write removes it")
+            emit(f"  · dashboards/{INV_NAME} has no template any more; --write removes it")
     if not files:
         raise SystemExit("no dashboard found under dashboards/ and no template under templates/dashboards/")
     os.makedirs(os.path.join(root, "dashboards"), exist_ok=True)
 
-    print(f"=== rebuild — {len(out)} constants derived from findata/ ===")
+    emit(f"=== rebuild — {len(out)} constants derived from findata/ ===")
     total_changes = 0
     for which, fn in files:
         path = os.path.join(root, "dashboards", fn)
@@ -1057,29 +1062,39 @@ def main(argv):
             orphan = [k for k in json.loads(src[ia:ib]) if k not in want["INVEST"] and f"INVEST.{k}" not in src]
             if orphan:
                 skipped.append("INVEST has fields nobody reads and rebuild does not maintain: " + ", ".join(orphan))
-        print(f"\n  {fn}" + ("  (from templates/dashboards/" + tname + ")" if tsrc is not None else ""))
+        emit(f"\n  {fn}" + ("  (from templates/dashboards/" + tname + ")" if tsrc is not None else ""))
         if insync:
-            print(f"    ✓ in sync ({len(insync)}): " + ", ".join(sorted(insync)))
-        for m in changes: print(f"    → {m}")
-        for m in skipped: print(f"    ⚠ {m}")
+            emit(f"    ✓ in sync ({len(insync)}): " + ", ".join(sorted(insync)))
+        for m in changes: emit(f"    → {m}")
+        for m in skipped: emit(f"    ⚠ {m}")
         total_changes += len(changes)
+        res["skipped"] += skipped
         if template:
             os.makedirs(template, exist_ok=True)
             tname = "finance_dashboard.html" if which == "main" else fn
             open(os.path.join(template, tname), "w", encoding="utf-8").write(emptied(src, want))
-            print(f"    template → {os.path.join(template, tname)}")
+            emit(f"    template → {os.path.join(template, tname)}")
         elif write and changes:
             open(path, "w", encoding="utf-8").write(src)
-            print(f"    written. Run the checkers.")
+            emit(f"    written. Run the checkers.")
+            res["written"].append(os.path.join("dashboards", fn))
     if write:
         hits = sync_figures(root, out)
         if hits:
-            print(f"\n  FINANCE.md: figures updated — " + ", ".join(hits))
+            emit(f"\n  FINANCE.md: figures updated — " + ", ".join(hits))
     if not write and not template and total_changes:
-        print(f"\n  {total_changes} change(s) NOT written. Re-run with --write to apply.")
+        emit(f"\n  {total_changes} change(s) NOT written. Re-run with --write to apply.")
     elif not total_changes and not template:
-        print("\n  nothing to do.")
-    return 0
+        emit("\n  nothing to do.")
+    res["changes"] = total_changes
+    return verbs.result(res, 0, lines)
+
+
+def main(argv):
+    root = argv[1] if len(argv) > 1 and not argv[1].startswith("--") else os.getcwd()
+    write = "--write" in argv
+    template = argv[argv.index("--template") + 1] if "--template" in argv else None
+    return run(root, write=write, template=template, say=print)["rc"]
 
 
 if __name__ == "__main__":

@@ -2259,6 +2259,47 @@ def money_s(v):
     return f"${v:,.2f}"
 
 
+def two_doors_check(root, base):
+    """Every script a month goes through has a run() beside its main() (verbs.py, 2026-11-05),
+    so a second front door — a local server drawing a panel — can call the same code the CLI
+    runs. The proof that the two cannot drift: on a staged copy, run() called from Python returns
+    exactly the lines the CLI prints and the exit code it returns, for status, rebuild, the
+    import's dry run, the confirm table and the setup draft."""
+    import importlib.util
+    ws = os.path.join(base, "doors"); os.makedirs(ws); stage(root, ws)
+    sk = os.path.join(ws, ".claude", "skills")
+    scripts = {"status": ("monthly-import", ["--root", "."]), "rebuild": ("update-dashboard", ["."]),
+               "update": ("update-dashboard", ["."]), "confirm": ("update-dashboard", ["."]),
+               "propose": ("setup", [".", "--inbox", os.path.join(ws, "_doors_inbox")])}
+    if not all(os.path.exists(os.path.join(sk, d, "scripts", n + ".py")) for n, (d, _) in scripts.items()):
+        return []
+    man = fixtures_for(ws) or []
+    inbox = os.path.join(ws, "_doors_inbox"); os.makedirs(inbox)
+    for m in man:
+        shutil.copy(m["file"], inbox)
+    kw = {"propose": {"inbox": inbox}}
+    bad = []
+    for name, (skill, args) in scripts.items():
+        path = os.path.join(sk, skill, "scripts", name + ".py")
+        for d in ("update-dashboard", "monthly-import", "setup", "fetch-statements"):
+            sys.path.insert(0, os.path.join(sk, d, "scripts"))
+        spec = importlib.util.spec_from_file_location("doors_" + name, path)
+        mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+        if not hasattr(mod, "run"):
+            bad.append(f"{name}.py has no run()"); continue
+        r = mod.run(ws, **kw.get(name, {}))
+        p = subprocess.run([sys.executable, path] + args, cwd=ws, capture_output=True, text=True, timeout=300)
+        lines = "\n".join(r.get("lines", [])) + "\n"
+        # propose's __main__ adds a timing line after main() returns; it is the terminal's, not run()'s
+        got = re.sub(r"  time: [0-9.]+s to read the files and draft\n$", "", p.stdout)
+        if r.get("rc") != p.returncode or lines != got:
+            bad.append(f"{name}: run() rc {r.get('rc')} / {len(r.get('lines', []))} lines, CLI exit {p.returncode} / "
+                       f"{len(p.stdout.splitlines())} lines" + ("" if lines == p.stdout else " — the text differs"))
+    if bad:
+        return ["  ✗ two doors: " + b for b in bad]
+    return [f"  ✓ two doors: run() returns what the CLI prints and exits with, for {', '.join(scripts)}"]
+
+
 def csv_rows_of(p):
     return list(csv.DictReader(open(p, encoding="utf-8"))) if os.path.exists(p) else []
 
@@ -2336,7 +2377,7 @@ def main(argv):
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
                     own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, browser_copy_check, csv_download_check, csv_layouts_check, ofx_download_check, month_parts_check, starter_check,
-                    demo_clear_check):
+                    demo_clear_check, two_doors_check):
             try:
                 runs += chk(root, base)
             except Exception as e:                 # a check with nothing to run on, as above

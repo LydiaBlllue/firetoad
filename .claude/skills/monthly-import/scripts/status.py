@@ -31,6 +31,7 @@ sys.path.insert(0, os.path.join(SKILLS, "update-dashboard", "scripts"))
 sys.path.insert(0, os.path.join(SKILLS, "fetch-statements", "scripts"))
 import layout  # noqa: E402
 import preflight  # noqa: E402
+import verbs  # noqa: E402
 import fetch  # noqa: E402
 
 # A source is "due" when its newest data is older than one import cycle. The cycle is a month;
@@ -178,6 +179,31 @@ def status(root, today):
     return out
 
 
+def run(root, today=None, say=None):
+    """The panel's rows (status()) plus `rc` and the readable summary as `lines` (verbs.py)."""
+    emit, lines = verbs.speaker(say)
+    s = status(root, today or dt.date.today())
+    mark = {"todo": "✗", "inbox": "→", "ok": "✓", "optional": "·"}
+    emit(f"=== monthly import — {s['today']} · {s['inbox']} file(s) in inbox/ ===")
+    for b in s["statements"]:
+        gaps = "; ".join(f"{r['key']} {', '.join(r['missing'])}" for r in b["docs"] if r["missing"])
+        emit(f"  {mark[b['state']]} statements  {b['bank']:<14} {gaps or 'up to date'}")
+    for e in s["exports"]:
+        emit(f"  {mark[e['state']]} export      {e['from']:<14} {e['key']} (newest {e['asof']})")
+    for c in s["screenshots"]:
+        emit(f"  {mark[c['state']]} screenshot  {c['inst']:<14} {c['capture']} (as of {c['asof']})")
+    for b in s["balances"]:
+        emit(f"  {mark[b['state']]} balance     {b['inst']:<14} {b['name']} (as of {b['asof']})")
+    for p in s["people"]:
+        emit(f"  · ledger      {p['who']:<14} only if something changed (last {p['last']})")
+    for q in s["questions"]:
+        emit(f"  ? question    {q['what']}  [now: {q['default']}"
+             + (f", suggested: {q['suggest']}]" if q.get("suggest") else "]"))
+    for n in s["unnamed"]:
+        emit(f"  ✗ unnamed     {n} — preflight cannot name it; ask before anything else")
+    return verbs.result(s, 0, lines)
+
+
 def main(argv):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--root", default=".")
@@ -187,29 +213,10 @@ def main(argv):
     if not root:
         print("✗ no workspace here (looked upward for findata/ and dashboards/)")
         return 2
-    s = status(root, dt.date.today())
+    r = run(root, say=None if a.json else print)
     if a.json:
-        print(json.dumps(s, ensure_ascii=False, indent=1))
-        return 0
-    mark = {"todo": "✗", "inbox": "→", "ok": "✓", "optional": "·"}
-    print(f"=== monthly import — {s['today']} · {s['inbox']} file(s) in inbox/ ===")
-    for b in s["statements"]:
-        gaps = "; ".join(f"{r['key']} {', '.join(r['missing'])}" for r in b["docs"] if r["missing"])
-        print(f"  {mark[b['state']]} statements  {b['bank']:<14} {gaps or 'up to date'}")
-    for e in s["exports"]:
-        print(f"  {mark[e['state']]} export      {e['from']:<14} {e['key']} (newest {e['asof']})")
-    for c in s["screenshots"]:
-        print(f"  {mark[c['state']]} screenshot  {c['inst']:<14} {c['capture']} (as of {c['asof']})")
-    for b in s["balances"]:
-        print(f"  {mark[b['state']]} balance     {b['inst']:<14} {b['name']} (as of {b['asof']})")
-    for p in s["people"]:
-        print(f"  · ledger      {p['who']:<14} only if something changed (last {p['last']})")
-    for q in s["questions"]:
-        print(f"  ? question    {q['what']}  [now: {q['default']}"
-              + (f", suggested: {q['suggest']}]" if q.get("suggest") else "]"))
-    for n in s["unnamed"]:
-        print(f"  ✗ unnamed     {n} — preflight cannot name it; ask before anything else")
-    return 0
+        print(json.dumps(verbs.public(r), ensure_ascii=False, indent=1))
+    return r["rc"]
 
 
 if __name__ == "__main__":
