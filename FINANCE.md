@@ -318,7 +318,7 @@ Mapping today's `feeds` onto the axes: Portfolio → asset · grow · today (reg
 accounts: costs); Earmarked → asset · set-aside · spoken; Bank cash → asset · buffer · today;
 Debts → liability; a foreign-currency account → asset · abroad, role per account.
 
-### 8d. The FIRE goal and the Safety net (1.0.1)
+### 8d. The FIRE goal, the Safety net and card interest (1.0.1)
 
 - **The FIRE goal is a declaration**: `plan.json` `fire` `{goal, asked}`. Setup asks once, in plain
   words, whether retiring early is something they are working toward; skipped leaves it out. It
@@ -336,3 +336,11 @@ Debts → liability; a foreign-currency account → asset · abroad, role per ac
   rent that starts only at FIRE. Money abroad is its own line, never in the headline. Below zero
   is 0; without three closed months the page says so instead of a figure. It judges nothing: no
   band, colour or target. The usual three to six months is the Glossary's *emergency fund*.
+- **Card interest** is a fact, never a verdict: the Interest total each card statement prints,
+  which the card parsers already read to reconcile, kept one row per statement in
+  `card_interest.csv` (0.00 included). Never read off a merchant name. The first import after
+  1.0.1 reads it out of every card statement already in `archive/`. It stays spending where the
+  statement lists it as a row; the file only says how much was interest. Shown only when there is
+  some: Home's first fill card (the last 12 months, split by card), a line in the Year's *What
+  stands out*, and an amber dot on Year while the newest statement of any card charged interest.
+  No rate is read, and the page never says what to do.
