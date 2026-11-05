@@ -526,12 +526,6 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 <section data-pg="fire" hidden>
   <div class="grid-stats" id="fireStats"></div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab" id="fireProgLab">FIRE progress</div>
-    <div class="baseline-hero num" id="fireHero"></div>
-    <div class="fire-track"><div class="fire-fill" id="fireFill"></div></div>
-    <div class="cap num" id="fireCap"></div>
-  </div>
-  <div class="card" style="margin-bottom:10px">
     <div class="lab">Trajectory to FIRE</div>
     <div class="pills" id="trajPills" style="margin:6px 0 8px"></div>
     <svg class="year-svg" id="fireTraj" viewBox="0 0 940 300" preserveAspectRatio="xMidYMid meet"></svg>
@@ -572,6 +566,7 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 </section>
 
 <section data-pg="base" hidden>
+  <div class="grid-stats" id="baseStats"></div>
   <div class="card" style="margin-bottom:10px">
     <div class="lab">Every month, and which ones the average came from</div>
     <svg class="year-svg" id="baseChart" viewBox="0 0 940 250" preserveAspectRatio="xMidYMid meet"></svg>
@@ -826,12 +821,14 @@ const NAV = [
   // Ordered the way someone starting out reads it (1.0.1, decided 2026-11-02): what came in and
   // went out, then the plan, then investing, which only someone who invests sees. Page keys never
   // change, so an old link or a saved state still lands.
-  {sec:"",          items:[{k:"home",  n:"Home",             t:"Home",                 d:""}]},
+  // Accounts sits with Home: both answer "what do I have, and where is it" (1.0.1, 2026-11-05).
+  {sec:"",          items:[{k:"home",  n:"Home",             t:"Home",                 d:""},
+                           {k:"acct",  n:"Accounts",         t:"Accounts",             d:""}]},
   {sec:"Money in & out", items:[{k:"cat", n:"This month",    t:"This month",           d:""},
                            {k:"trends",n:"Year",             t:"The year",             d:""},
-                           {k:"income",n:"Income",           t:"Income",               d:""},
+                           {k:"income",n:"Income & chequing",t:"Income and chequing", d:""},
                            {k:"subs",  n:"Subscriptions",    t:"Subscriptions",        d:""},
-                           {k:"base",  n:"Spending baseline", t:"Spending baseline",   d:""}]},
+                           {k:"base",  n:"Monthly spending", t:"Monthly spending",     d:""}]},
   {sec:"Plan",      items:[{k:"budget",n:"Budget",           t:"Budget",               d:""},
                            {k:"safe",  n:"Safety net",       t:"Safety net",           d:""},
                            {k:"fire",  n:"FIRE",             t:"FIRE",                 d:""},
@@ -840,8 +837,6 @@ const NAV = [
                            {k:"perf",  n:"Performance",      t:"Performance",          d:""},
                            {k:"hold",  n:"Holdings",         t:"Holdings",             d:""},
                            {k:"wsinc", n:"Investment income",t:"Investment income",    d:""}]},
-  // Accounts is net worth opened up, a question about the money, not about the import.
-  {sec:"",          items:[{k:"acct",  n:"Accounts",         t:"Accounts",             d:""}]},
   // The monthly import's two pages: what each update changed, and which statements are in.
   {sec:"Monthly import", items:[{k:"upd", n:"Updates",       t:"Updates",              d:""},
                            {k:"src",   n:"Statements",       t:"Statements",           d:""}]},
@@ -1063,7 +1058,8 @@ const GLOSSARY = {
   fund:           {own:1, w:"fund", pos:"on this page", def:"A name you put on part of the money in one of your accounts, for something you are saving toward. Nothing is moved: the money stays where it is, and the plan can add to it each month.", also:["unallocated"]},
   unallocated:    {own:1, w:"Unallocated", pos:"on this page", def:"What is left of take-home pay once every line of the plan is paid. It stays where the paycheque landed.", also:["everyday"]},
   safety_net:     {own:1, w:"Safety net", pos:"on this page", def:"The money you could live on today without a paycheque, and how many months it would last.", also:["months_covered","emergency_fund"]},
-  months_covered: {own:1, w:"Months covered", pos:"on this page", def:"How many months of your usual spending the money you can reach today would pay for, after what you owe on no asset.", f:"(spendable today − what you owe on no asset) ÷ what a month costs", also:["safety_net","spendable_today"]},
+  usual_month:    {own:1, w:"A usual month", pos:"on this page", def:"What a month usually costs you: the average of your last full months of spending, up to twelve, leaving out months you marked as unusual.", also:["months_covered","planning_figure"]},
+  months_covered: {own:1, w:"Months covered", pos:"on this page", def:"How many months of your usual spending the money you can reach today would pay for, after what you owe on no asset.", f:"(spendable today − what you owe on no asset) ÷ a usual month", also:["safety_net","spendable_today"]},
   complete_to:    {own:1, w:"Complete to", pos:"on this page", def:"The day every account’s numbers are in up to. After it, some accounts are still waiting for their next statement."},
 };
 // The register's axes in the page's own words (Home's net-worth card, the Accounts table).
@@ -1212,10 +1208,10 @@ function render(){
     : "";
 
 
+  renderBaseline();                     // first: a usual month (baselineAvg) is read by the pages below
   renderYr();
   renderIncChart();
   renderCatPage();
-  renderBaseline();
   renderSafety();
   renderSubs();
   renderYear();
@@ -1411,7 +1407,7 @@ function renderHome(){
       if(waitsFor("safe")) return null;
       const s = safetyCalc();
       return s.months === null ? null : card(term("months_covered", "Months covered"),
-        numx(monthsTxt(s.months), [["The money", fmt(s.money)], ["What a month costs", fmt(s.cost)]], "From the Safety net page."), "Without a paycheque");
+        numx(monthsTxt(s.months), [["The money", fmt(s.money)], ["A usual month", fmt(s.cost)]], "From the Safety net page."), "Without a paycheque");
     },
     kept: () => {
       const cfy = (INVEST.cashflow || []).filter(m => m.ym.startsWith(yr));
@@ -2058,8 +2054,9 @@ function renderYr(){
   renderYearInsights();
   $("yrStats").innerHTML =
     StatCard("Spent in "+viewYear, numx(fmt(spent), [], "After refunds.")) +
-    StatCard("A month on average", spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], "Months with spending on record.") : null) +
-    StatCard("Purchases", es.length);
+    StatCard("Spent a month in "+viewYear, spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], "This year only, open months included. "+(baselineAvg > 0 ? "A usual month, from your last full months, is "+fmt(baselineAvg)+"." : "")) : null) +
+    (() => { const mt = spendMonths.map(m => ({m, v: monthTotal(m)})).sort((a,b) => b.v - a.v)[0];
+             return StatCard("Biggest month", mt ? ymFull(mt.m) : null, mt ? fmt(mt.v) : "", {text: true}); })();
 
   const byCat = {};
   es.forEach(e => byCat[e.category] = (byCat[e.category]||0) + e.amount);
@@ -2073,7 +2070,6 @@ function renderYr(){
   const icard = StatCard;
   $("incStats").innerHTML =
     icard("Income in "+viewYear, hasIncome ? numx(fmt(income), inc.map(x => [x[0], fmt(x[1])]), cfy.length+" month"+(cfy.length === 1 ? "" : "s")+" on record.", true) : "\u2014")
-    + icard("Spent in "+viewYear, numx(fmt(spent), [], "After refunds."))
     + icard(term("kept", "Kept"), net === null ? "\u2014" : numx((net >= 0 ? "+" : "\u2212") + fmt(Math.abs(net)), [["Income", fmt(income)], ["Spent", "\u2212"+fmt(spent)]], "", true),
             net !== null && income > 0 ? Math.round(pc(net, income))+"% of income" : "");
   const imx = Math.max(...inc.map(x => x[1]), 1);
@@ -2191,10 +2187,12 @@ function renderBaseline(){
   const vals = usableMonths().filter(m => m < closed).map(m => ({m, v:monthTarget(m)})).filter(x => x.v > 0).slice(-12);
   if(vals.length >= 3){
     baselineAvg = vals.reduce((s,x) => s + x.v, 0) / vals.length;
+    $("baseStats").innerHTML = StatCard(term("usual_month", "A usual month"), numx(fmt(baselineAvg), [["Months", vals.length]], "The average of your last full months, unusual ones left out."), "From "+vals.length+" full months");
     $("baseMonths").innerHTML = vals.map(x =>
       '<div class="bm-row"><span>'+ymLabel(x.m)+' '+x.m.slice(0,4)+'</span><span class="num">'+fmt(x.v)+'</span></div>').join("");
   }else{
     $("baseHero").textContent = "—";
+    $("baseStats").innerHTML = StatCard(term("usual_month", "A usual month"), null, "Needs 3 full months of spending");
     $("baseMonths").innerHTML = '<div class="empty">Needs 3 closed months with records ('+vals.length+' so far).</div>';
   }
 }
@@ -2215,9 +2213,9 @@ function cardInterest(){
 }
 
 // ===== Safety net (1.0.1): how long the money would last without a paycheque =====
-// months covered = (Spendable today − what is owed on no asset) ÷ what a month costs. The money is
+// months covered = (Spendable today − what is owed on no asset) ÷ a usual month. The money is
 // Home's own "Spendable today" row, so the two pages cannot disagree; investments are never in
-// it, and money abroad is a line of its own. What a month costs is the spending baseline plus the
+// it, and money abroad is a line of its own. A usual month is the monthly spending average plus the
 // repayments the plan pays today: rent and bills paid today are in the spending already. It
 // judges nothing: no band, no colour, no target (FINANCE.md §8d).
 const SAFETY = {"today": 54466, "invested": 39110, "abroad": 0, "unsecured": 991, "accts": [{"n": "Primary Chequing", "i": "BMO", "v": 8445, "asof": "2026-09-05", "cur": ""}, {"n": "Savings Amplifier", "i": "BMO", "v": 6911, "asof": "2026-09-05", "cur": ""}], "debts": [{"n": "MasterCard", "i": "BMO", "v": 991, "asof": "2026-08-20", "cur": ""}], "repay": 0, "repayRows": []};
@@ -2231,11 +2229,11 @@ const monthsTxt = m => (Math.round(m * 10) / 10).toFixed(1);
 function renderSafety(){
   const S = SAFETY, c = safetyCalc();
   const card = StatCard;
-  const costRows = [["Spending baseline", baselineAvg > 0 ? fmt(baselineAvg) : "\u2014"]].concat((S.repayRows || []).map(r => [r.n, fmt(r.v)]));
+  const costRows = [["Spending", baselineAvg > 0 ? fmt(baselineAvg) : "\u2014"]].concat((S.repayRows || []).map(r => [r.n, fmt(r.v)]));
   $("safeStats").innerHTML =
     card(term("months_covered", "Months covered"),
-      c.months === null ? "\u2014" : numx(monthsTxt(c.months), [["The money", fmt(c.money)], ["What a month costs", fmt(c.cost)]], "The money \u00f7 what a month costs.", false),
-      c.months === null ? "Needs three closed months of spending to know what a month costs."
+      c.months === null ? "\u2014" : numx(monthsTxt(c.months), [["The money", fmt(c.money)], ["A usual month", fmt(c.cost)]], "The money \u00f7 a usual month.", false),
+      c.months === null ? "Needs three full months of spending to know a usual month."
         : c.abroadMonths !== null ? "With money abroad, " + monthsTxt(c.abroadMonths) + " months" : "") +
     card("The money",
       numx(fmt(c.money), [[term("spendable_today", "Spendable today"), fmt(S.today || 0)]]
@@ -2243,8 +2241,8 @@ function renderSafety(){
           .concat(S.unsecured ? [["Less what you owe", "\u2212"+fmt(S.unsecured)]] : []),
         "What you could spend today, less what you owe that sits on no asset. Investments are not in it.", true),
       S.abroad > 0 ? "Not counting " + fmt(S.abroad) + " " + term("held_abroad", "held abroad") : "") +
-    card("What a month costs",
-      c.cost === null ? "\u2014" : numx(fmt(c.cost), costRows, "The spending baseline, plus the repayments your plan pays today. Rent and bills are already in the spending.", true),
+    card(term("usual_month", "A usual month"),
+      c.cost === null ? "\u2014" : numx(fmt(c.cost), costRows, "What you usually spend, plus the repayments your plan pays today. Rent and bills are already in the spending.", true),
       "");
   const row = a => '<div class="both-acct"><span>'+(a.i ? '<span class="i">'+a.i+'</span>' : "")+a.n+(a.cur ? '<span class="a">'+a.cur+'</span>' : "")+'</span><span class="v num">'+fmt(a.v)+'</span></div>';
   $("safeAccts").innerHTML = '<div class="lab">Where the money is</div>'
@@ -2344,8 +2342,6 @@ function renderFire(){
   if(unset("planBase")){
     // No planning figure, no target: every number on these pages is a share of it.
     $("fireStats").innerHTML = StatCard(term("fire_target", "Target"), notSet("planBase"));
-    $("fireProgLab").textContent = "Progress"; $("fireHero").innerHTML = notSet("planBase");
-    $("fireFill").style.width = "0%"; $("fireCap").textContent = "";
   }
   const I = INVEST;
   const adjBase = PLAN_BASE;
@@ -2355,13 +2351,10 @@ function renderFire(){
   const fcard = StatCard;
   if(!unset("planBase")){
   $("fireStats").innerHTML =
-      fcard(term("fire", "FIRE")+" progress", numx(pct+"%", [["Portfolio", fmt(PORTFOLIO)], ["Target", fmt(target)]], "The portfolio as a share of the target."))
+      fcard(term("fire", "FIRE")+" progress", numx(pct+"%", [["Portfolio", fmt(PORTFOLIO)], ["Target", fmt(target)]], "The portfolio as a share of the target."),
+            '<div class="fire-track" style="margin-top:8px"><div class="fire-fill" style="width:'+Math.min(pct, 100)+'%"></div></div>', {raw: true})
     + fcard("Still to go", numx(fmt(gap), [["Target", fmt(target)], ["Portfolio", "\u2212"+fmt(PORTFOLIO)]], "", true))
     + fcard(term("fire_target", "Target"), numx(fmt(target), [[term("planning_figure", "Planning figure"), fmt(adjBase)+" a month"], ["A year of it", fmt(adjBase*12)], ["Times 25", fmt(target)]], "25 years of spending, from the 4% rule."));
-  $("fireProgLab").textContent = "Progress toward " + fmt(target);
-  $("fireHero").textContent = fmt(PORTFOLIO) + " / " + fmt(target);
-  $("fireFill").style.width = Math.min(pct, 100) + "%";
-  $("fireCap").textContent = "";
   }
   $("baseHero").innerHTML = '<span class="plan-edit num" id="planEdit" title="Click to change">'
     + (unset("planBase") ? '<span class="unset">Not set</span>' : fmt(PLAN_BASE)) + '</span> / mo';
@@ -3031,7 +3024,6 @@ function renderSubStats(){
   const card = StatCard;
   $("subStats").innerHTML =
     card(term("subscription", "Subscriptions")+" in "+yr, numx(fmt(ytd), [], "Every charge that repeats, this year."), "") +
-    card("Per month", numx(fmt(perMo), [["This year", fmt(ytd)], ["Closed months", closed]], ""), "") +
     card("A full year", numx(fmt(perMo*12), [["Per month", fmt(perMo)], ["Months", "12"]], "Subscriptions renew whether or not you use them."),
       base ? Math.round(pc(perMo, base))+"% of your "+term("planning_figure") : "") +
     StatCard("Biggest one", byBrand && byBrand.v ? byBrand.name : null,
@@ -3066,10 +3058,12 @@ function renderAccounts(){
   const stale = known.filter(a => acctAge(a) > 30);
   const bad = G.filter(g => g.sev === "bad").length;
   $("acctStats").innerHTML =
-    StatCard("Accounts tracked", A.length, "Across " + insts.length + " institutions")
-    + StatCard("Balances known", known.length + " of " + A.length, known.length === A.length ? "Nothing missing" : (A.length - known.length) + " with no figure at all")
-    + StatCard("Older than 30 days", stale.length, stale.length ? "Oldest is " + Math.max(...stale.map(acctAge)) + " days" : "Everything is current")
-    + StatCard("Open gaps", G.length, bad ? bad + " affects net worth" : "None affect net worth");
+    // The money, cut the way Home cuts it (1.0.1): the four numbers this table opens up. How
+    // many accounts and how old a balance is are in the table itself, not in a card.
+    StatCard(term("net_worth", "Net worth"), fmt(NW_GLOBAL), A.length + " accounts at " + insts.length + " institutions")
+    + StatCard(term("cash", "Cash"), fmt(NWPARTS.filter(r => r.role === "buffer").reduce((s, r) => s + r.v, 0)))
+    + StatCard(term("portfolio", "Invested"), fmt(PORTFOLIO))
+    + StatCard("You owe", fmt(NW_DEBT), bad ? bad + " gap" + (bad === 1 ? "" : "s") + " affect net worth" : "");
 
   // Grouped by institution, biggest first, and inside each the biggest account first (2026-11-03,
   // the owner asked for a table that reads at a glance). Four columns: the account, with its type
@@ -3250,13 +3244,13 @@ function renderWsInc(){
   const net = tot("div")+tot("int")+tot("lend")+tot("tax");
   const closed = WSINC.filter(m => m.ym < TODAY.slice(0,7));
   const perMo = closed.length ? closed.reduce((a,m)=>a+m.div+m.int+m.lend+m.tax,0)/closed.length : 0;
-  const base = PLAN_BASE;
+  const base = baselineAvg > 0 ? baselineAvg : null;
   const wcard = StatCard;
   $("wsIncStats").innerHTML =
     wcard("Paid to you in "+TODAY.slice(0,4), numx(fmt(net), [["Dividends", fmt(tot("div"))], ["Interest", fmt(tot("int"))], ["Lending", fmt(tot("lend"))], ["Tax withheld", fmt(tot("tax"))]],
             "US dollars converted at "+INVEST.fx+".", true))
     + wcard("A month on average", numx(fmt(perMo), [], closed.length+" closed month"+(closed.length === 1 ? "" : "s")+"."))
-    + wcard("Share of spending", base ? numx(Math.round(pc(perMo, base))+"%", [["A month on average", fmt(perMo)], ["Planning figure", fmt(base)]], "") : "\u2014")
+    + wcard("Share of spending", base ? numx(Math.round(pc(perMo, base))+"%", [["A month on average", fmt(perMo)], [term("usual_month", "A usual month"), fmt(base)]], "") : "\u2014")
     + wcard(term("withholding_tax", "Tax withheld"), fmt(-tot("tax")));
   const dash = v => v ? fmt2(v) : '<span style="color:var(--muted)">\u2014</span>';
   $("wsIncTable").innerHTML =
@@ -3354,8 +3348,13 @@ function renderUpdates(){
   const nFiles = r => r.files.length ? r.files.length + " file" + (r.files.length === 1 ? "" : "s") : "";
   $("updStats").innerHTML =
     StatCard("Last update", last ? dLong(last.date) : null, last ? (age(last.date) === 0 ? "Today" : age(last.date)+" days ago") : "Nothing filed yet") +
-    StatCard("Files on record", IMPORTS.reduce((a,r) => a + r.files.length, 0)) +
-    StatCard("Updates on file", IMPORTS.length, IMPORTS.length ? "Since "+dLong(IMPORTS[IMPORTS.length-1].date) : "The first one comes with your first statements");
+    (() => {
+      const [y, m, d] = TODAY.split("-").map(Number);
+      const next = d < IMPORT_DAY ? new Date(y, m - 1, IMPORT_DAY) : new Date(y, m, IMPORT_DAY);
+      const iso = next.getFullYear()+"-"+String(next.getMonth()+1).padStart(2,"0")+"-"+String(next.getDate()).padStart(2,"0");
+      const owe = overdueSources().length;
+      return StatCard("Next update", dLong(iso), owe ? owe+" statement"+(owe === 1 ? "" : "s")+" still to bring" : "Everything due is in");
+    })();
   const SYM = {bad:["\u2717","bad"], warn:["\u26a0","warn"], ok:["\u2713","ok"]};
   $("updList").innerHTML = IMPORTS.length ? IMPORTS.map(r =>
     '<div class="card" style="margin-bottom:10px"><div class="lab">'+dLong(r.date)+'</div>'
@@ -3485,15 +3484,15 @@ const IV = (function(){
     const dryWas = prev && prev.dryPct != null ? " "+(dryPct - prev.dryPct >= 0 ? "Up " : "Down ")+Math.abs(dryPct - prev.dryPct).toFixed(1)+" pts since "+dLong(prev.date)+"." : "";
     $("invStats").innerHTML =
       stat(term("portfolio", "Portfolio"),
-           numx(fmt(portfolio), FGN.rows.length ? [["At "+DATA.broker, fmt(cadInv)], ["Funds abroad", fmt(fgn)]] : [], "Bank cash and set-aside accounts are left out.", true),
+           // PORTFOLIO, rounded once at build time, is the figure Home shows: summing unrounded
+           // positions here showed a dollar more (2026-11-05).
+           numx(fmt(PORTFOLIO), FGN.rows.length ? [["At "+DATA.broker, fmt(cadInv)], ["Funds abroad", fmt(fgn)]] : [], "Bank cash and set-aside accounts are left out.", true),
            prev ? deltaLine(cadInv, prev.cadInv) : "")
     + stat(term("set_aside", "Set aside"), numx(fmt(earm), EARMARK.map(a => [a, fmt(accVal(a))]), "", true))
     + stat(bandLab(),
            cadInv ? numx(pctS(dryPct), [...DRY.map(y => [y, fmt(positions.filter(p => p.sym === y && !EARMARK.includes(p.account)).reduce((s,p) => s + p.mv, 0))]), ["Out of", fmt(cadInv)]],
                          "Measured at "+DATA.broker+", set-aside accounts left out."+dryWas) : "\u2014",
-           cap(cadInv ? "" : "Nothing invested yet"))
-    + stat("Holdings",
-           numx(String(nTick), [["At "+DATA.broker, String(freeSyms.size)], ...(FGN.rows.length ? [["Funds abroad", String(FGN.rows.length)]] : [])], "Cash is not counted.", true));
+           cap(cadInv ? "" : "Nothing invested yet"));
   }
   function renderMeta(){
     // No exchange rate is the supported way to say nothing is held in another currency (a

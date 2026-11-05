@@ -93,7 +93,7 @@ report and any questions a program cannot answer, like a merchant it has not see
 
 <!-- LINT:NAV main=18/4 minwidth=800 -->
 The page is 18 pages in 4 sidebar groups —
-Home · Money in & out · Plan · Investing · Accounts · Monthly import · Glossary
+Home · Accounts · Money in & out · Plan · Investing · Monthly import · Glossary
 — desktop only, at least 800px wide.
 
 MIT licence: see [`LICENSE`](LICENSE).

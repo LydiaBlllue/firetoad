@@ -7,11 +7,12 @@ The detail behind the [README](../README.md).
 | Section | Page | What it answers |
 |---|---|---|
 | — | Home | Where you stand, and what you are worth |
+| — | Accounts | Every place the money sits |
 | Money in & out | This month | How much is still free to spend, and where the money went |
 | | Year | How the year went, by category and month by month |
-| | Income | What came in, by source, how much of it you kept, and every row in chequing |
+| | Income & chequing | What came in, by source, how much of it you kept, and every row in chequing |
 | | Subscriptions | What repeats, what it costs a year, what is due next |
-| | Spending baseline | What a month really costs, and the figure your plan is built on |
+| | Monthly spending | A usual month, and the figure your plan is built on |
 | Plan | Budget | What each paycheque is for, and what the funds hold |
 | | Safety net | How many months the money you can reach today would last without a paycheque |
 | | FIRE | How far the portfolio is from the target, and when it gets there |
@@ -20,7 +21,6 @@ The detail behind the [README](../README.md).
 | | Performance | How it did against one benchmark fund bought on the same days |
 | | Holdings | Every position, by role or by account |
 | | Investment income | What the portfolio paid you before you sold anything, and which holding pays when |
-| — | Accounts | Every place the money sits |
 | Monthly import | Updates | What each update changed |
 | | Statements | Which statement arrived which month, and what is missing |
 | — | Glossary | Every finance term, and every word the page coined |

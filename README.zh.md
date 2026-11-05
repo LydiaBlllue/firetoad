@@ -79,7 +79,7 @@
 
 <!-- LINT:NAV main=18/4 minwidth=800 -->
 页面共 18 页、4 个侧栏分组 ——
-Home · Money in & out · Plan · Investing · Accounts · Monthly import · Glossary
+Home · Accounts · Money in & out · Plan · Investing · Monthly import · Glossary
 —— 仅桌面端，至少 800px 宽。
 
 MIT 许可：见 [`LICENSE`](LICENSE)。
