@@ -38,6 +38,7 @@ TOOL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SYNCED = [
     ".claude/skills",
+    "tests",              # the unit tests; checks.py --level release runs them where they exist
     ".claude/settings.json",
     "templates/dashboards",
     "CLAUDE.md",

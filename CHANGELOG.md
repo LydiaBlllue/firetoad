@@ -2,6 +2,12 @@
 
 ## 1.0.1 — unreleased
 
+- **Unit tests** (2026-11-05): `tests/` holds one test per rule for the pure modules — `flows.py`
+  (the plan's sums) and `loans.py` (what is still owed) — with their edges pinned (a repayment on
+  the agreed day, a null amount against a zero) and one known gap written down as an expected
+  failure. Standard-library `unittest`; `checks.py --level release` runs them first and skips
+  them in a workspace that has none. The parsers stay under fixtures, the checkers under the
+  selftest.
 - **One page for both kinds of user** (2026-11-05, user 001). The sidebar is 18 pages in four
   sections — Money in & out, Plan, Investing, then Accounts and the monthly import — in the order
   someone starting out reads them; page keys are unchanged. The FIRE goal is said once (setup asks;
