@@ -80,6 +80,10 @@ def m_readme_path(r):
 def m_design_pages(r):
     # The Monthly import row's first page swapped for one that does not exist, whatever the row lists.
     edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Monthly import \| )[^·|]+·", r"\1Insights ·", s, count=1))
+def m_hand_card(r):
+    # a stat card written by hand beside StatCard: the copy that drifts
+    edit(r, main_dash(r), lambda s: s.replace('StatCard("Purchases", es.length)',
+         "'<div class=\"card\"><div class=\"lab\">Purchases</div><div class=\"big num\">'+es.length+'</div></div>'", 1))
 def m_nav_orphan(r):
     edit(r, main_dash(r),
          lambda s: s.replace('<section data-pg="acct" hidden>', '<section data-pg="acctX" hidden>'))
@@ -495,6 +499,7 @@ CASES = [
     ("S4", "README points at a file that moved",            m_readme_path,     "dash"),
     ("S4", "DESIGN.md page table drifts from NAV",          m_design_pages,    "dash"),
     ("S1", "a NAV entry with no matching section",          m_nav_orphan,      "dash"),
+    ("S10", "a stat card written by hand",                  m_hand_card,       "dash"),
     ("D12", "a spending.csv row missing from the page",     m_spending_row,    "find"),
     ("D13", "funds.json changed but the page did not",      m_funds_drift,     "find"),
     ("D13", "a fund on an account the register lacks",      m_fund_no_account, "find"),

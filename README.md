@@ -85,8 +85,8 @@ report and any questions a program cannot answer, like a merchant it has not see
 
 - **[How it works](docs/how-it-works.md)**: every page, the monthly run, the folder, and the
   checkers that keep the numbers honest.
-<!-- LINT:FAULTS n=62 -->
-  Four checkers hold every figure to its source; a selftest plants 62 faults to prove they still catch them.
+<!-- LINT:FAULTS n=63 -->
+  Four checkers hold every figure to its source; a selftest plants 63 faults to prove they still catch them.
 - **[Supported banks and brokers](docs/banks.md)**: which to use, which banks' files are read, which are confirmed on a real
   one, and how to download each.
 - **[Roadmap](ROADMAP.md)** and **[Changelog](CHANGELOG.md)**.

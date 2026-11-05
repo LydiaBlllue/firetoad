@@ -91,6 +91,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 }
 .lab{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .big{font-size:23px;font-weight:700;letter-spacing:-.4px}
+.big.txt{font-size:20px}
 .cap{font-size:11.5px;color:var(--muted);margin-top:3px}
 /* --- Bank-app text primitives (2026-09-06). One fact per line; never chain facts with "·". --- */
 .meta{margin-top:9px;border-top:1px solid var(--border);max-width:720px}
@@ -254,6 +255,8 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .side .grp.solo{margin-top:14px}
 .side [hidden]{display:none!important}
 .dt{width:100%;border-collapse:collapse;font-size:13px}
+.dt th.l,.dt td.l{text-align:left}.dt th.l:not(:first-child),.dt td.l:not(:first-child){padding-left:12px}
+.dt th.r,.dt td.r{text-align:right}.dt td.m{color:var(--muted)}.dt td.nw{white-space:nowrap}
 .chq-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 6px}
 .chq-ctl input{flex:1 1 200px;min-width:0;font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--ink)}
 .chq-ctl .pills{margin:0}
@@ -712,6 +715,36 @@ function saveState(){
 }
 // A negative amount reads "−$61", never "$-61". The +0 turns -0 into 0.
 const fmt = n => { const r = Math.round(n) + 0; return (r < 0 ? "\u2212" : "") + "$" + Math.abs(r).toLocaleString("en-CA"); };
+// ===== Components (1.0.1): every stat card and table is drawn by one of these, never by hand =====
+// A card was nine slightly different helpers and two dozen pieces of hand-written markup, and a
+// table set its own alignment column by column, so each new page was written from scratch and
+// each one could get it wrong (2026-11-05, the owner: "why does every UI change break
+// something?"). check_design's S10 fails markup for a card or a table written outside them.
+// StatCard: a label, one number (or "\u2014" when there is none), at most one line under it.
+//   o.color  the number's colour · o.text  a word, not a number (smaller) · o.capCls  the line's
+//   class · o.raw  the line is already markup (a delta line)
+function StatCard(lab, val, cap, o){
+  o = o || {};
+  const v = val === null || val === undefined || val === "" ? "\u2014" : val;
+  return '<div class="card"><div class="lab">'+lab+'</div><div class="big num'+(o.text ? " txt" : "")+'"'
+    + (o.color ? ' style="color:'+o.color+'"' : '')+'>'+v+'</div>'
+    + (o.raw ? (cap || "") : cap ? '<div class="cap'+(o.capCls ? " "+o.capCls : "")+'">'+cap+'</div>' : "") + '</div>';
+}
+// DataTable: one column spec decides a column's heading and its cells together, so the two can
+// never be aligned differently. cols: [{h, c: row => html, a: "l" | "r", m: muted, nw: no wrap}];
+// the first column is left-aligned unless it says otherwise, every other one right-aligned.
+//   o.empty  shown when there are no rows · o.foot  one cell of html per column, a total row
+//   o.inner  rows only, for a <table> already on the page · o.style  the table's own style
+function DataTable(cols, rows, o){
+  o = o || {};
+  const cls = (col, i) => [col.a || (i ? "r" : "l"), col.m ? "m" : "", col.nw ? "nw" : "", col.num === false ? "" : "num"].filter(Boolean).join(" ");
+  const head = '<tr>' + cols.map((col, i) => '<th class="'+(col.a || (i ? "r" : "l"))+'">'+col.h+'</th>').join("") + '</tr>';
+  const body = rows.length ? rows.map(r => '<tr>' + cols.map((col, i) => '<td class="'+cls(col, i)+'">'+col.c(r)+'</td>').join("") + '</tr>').join("")
+    : '<tr><td class="empty" colspan="'+cols.length+'">'+(o.empty || "Nothing yet.")+'</td></tr>';
+  const foot = o.foot && rows.length ? '<tr class="tot">' + o.foot.map((h, i) => '<td class="'+cls(cols[i], i)+'">'+h+'</td>').join("") + '</tr>' : "";
+  const inner = head + body + foot;
+  return o.inner ? inner : '<table class="dt"'+(o.style ? ' style="'+o.style+'"' : '')+'>' + inner + '</table>';
+}
 const fmt2 = n => (n <= -0.005 ? "\u2212" : "") + "$" + Math.abs(n).toLocaleString("en-CA",{minimumFractionDigits:2,maximumFractionDigits:2});
 const monthOf = ym => SPENDING.filter(e => e.date.startsWith(ym) && e.currency === "CAD");
 const monthTotal = ym => monthOf(ym).reduce((s,e) => s + e.amount, 0);
@@ -1231,7 +1264,7 @@ function renderPerf(){
   const P = PERF, diff = P.end - P.shadow, days = Math.round((new Date(P.to) - new Date(P.from)) / 864e5);
   const span = days < 120 ? Math.round(days/7) + " weeks" : days < 730 ? Math.round(days/30.4) + " months" : (days/365.25).toFixed(1) + " years";
   $("perfLab").textContent = "Against " + P.symbol + ", " + ymFull(P.from.slice(0,7)) + " to " + ymFull(P.to.slice(0,7));
-  const stat = (lab, val, note, col) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num"'+(col ? ' style="color:'+col+'"' : '')+'>'+val+'</div>'+(note ? '<div class="cap">'+note+'</div>' : "")+'</div>';
+  const stat = (lab, val, note, col) => StatCard(lab, val, note, {color: col});
   $("perfStats").innerHTML =
       stat("Growth accounts", numx(fmt(P.end), [], "The " + BROKER + " accounts held to grow, on " + dLong(P.to) + ". Funds abroad are left out on both sides."), "")
     + stat("Same money in " + term("benchmark", P.symbol), numx(fmt(P.shadow), [], P.name + ". " + P.why + " Every dollar bought it the day it went in."), "")
@@ -1338,7 +1371,7 @@ function renderHome(){
   const split = by => by.map(b => [b[0], fmt(b[1])]);
   // Four cards, each a label, a number and at most one fact (DESIGN.md §5b′). How a number is
   // made opens from the number; what a word means opens from the word.
-  const card = (lab, val, status) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status ? '<div class="cap">'+status+'</div>' : "")+'</div>';
+  const card = StatCard;
   // The cards, each null when it has no number to show. The signals (something invested, a FIRE
   // goal) choose the first ones; the rest fill from one list, in order, so a card-only owner and
   // an owner with no plan never see an empty card (1.0.1). Invested with a goal is the four an
@@ -1401,7 +1434,7 @@ function renderHome(){
       const top = Object.entries(by).sort((a,b) => b[1] - a[1])[0];
       if(!top || !(top[1] > 0)) return null;
       const all = Object.values(by).reduce((s,v) => s + v, 0);
-      return card("Biggest category in "+yr, '<span style="font-size:20px">'+catName(top[0])+'</span>', fmt(top[1])+", "+Math.round(pc(top[1], all))+"% of spending");
+      return card("Biggest category in "+yr, catName(top[0]), fmt(top[1])+", "+Math.round(pc(top[1], all))+"% of spending", {text: true});
     },
   };
   const first = INVESTED() ? (GOAL() ? ["port", "fire", "inv", "spent"] : ["port", "inv"]) : (GOAL() ? ["fire"] : []);
@@ -1930,16 +1963,11 @@ function monthMedian(ym){
   const h = vs.length >> 1;
   return vs.length % 2 ? vs[h] : (vs[h-1] + vs[h]) / 2;
 }
-function txRows(items){
-  return items.map(e =>
-    '<tr><td class="num" style="white-space:nowrap;color:var(--muted)">'+e.date.slice(5)+'</td>'
-    + '<td style="text-align:left">'+e.note+'</td>'
-    + '<td style="color:var(--muted);white-space:nowrap">'+(e.acct||"Card")+'</td>'
-    + '<td class="num" style="white-space:nowrap">'
-    + (e.amount < 0 ? '<span class="tx-neg">−'+fmt2(Math.abs(e.amount))+'</span>' : fmt2(e.amount))
-    + '</td></tr>').join("");
-}
-const TX_HEAD = '<tr><th>Date</th><th style="text-align:left">Description</th><th>Account</th><th>Amount</th></tr>';
+const TX_COLS = [
+  {h:"Date", c: e => e.date.slice(5), m:1, nw:1},
+  {h:"Description", c: e => e.note, a:"l", num:false},
+  {h:"Account", c: e => e.acct || "Card", m:1, nw:1, num:false},
+  {h:"Amount", c: e => e.amount < 0 ? '<span class="tx-neg">\u2212'+fmt2(Math.abs(e.amount))+'</span>' : fmt2(e.amount), nw:1}];
 
 // A month's spending, each row in exactly one part (FINANCE.md §3a), so the parts add up to the total.
 function monthParts(ym){
@@ -1967,7 +1995,7 @@ function renderCatPage(){
   const drivers = rows.filter(isHigh).sort((a,b) => over(b) - over(a));
   const pct = v => total > 0 ? Math.round(pc(v, total)) : 0;
 
-  const card = (lab, val, status, cls) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status ? '<div class="cap'+(cls ? " "+cls : "")+'">'+status+'</div>' : "")+'</div>';
+  const card = (lab, val, status, cls) => StatCard(lab, val, status, {capCls: cls});
   const usual = monthMedian(viewYM), diff = usual === null ? null : total - usual;
   const nWin = catWindow(viewYM).length;
   $("catStats").innerHTML =
@@ -2014,7 +2042,7 @@ function renderCatPage(){
                  "A usual month is this category\u2019s median over the last "+win.length+" full months.", true),
                isHigh(sel) ? "hi" : ""]
         ])
-      + '<table class="dt" style="margin-top:12px">'+TX_HEAD+txRows(sel.items)+'</table>';
+      + DataTable(TX_COLS, sel.items, {style: "margin-top:12px"});
 }
 
 // ===== Yearly =====
@@ -2029,9 +2057,9 @@ function renderYr(){
 
   renderYearInsights();
   $("yrStats").innerHTML =
-    '<div class="card"><div class="lab">Spent in '+viewYear+'</div><div class="big num">'+numx(fmt(spent), [], "After refunds.")+'</div></div>'+
-    '<div class="card"><div class="lab">A month on average</div><div class="big num">'+(spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], "Months with spending on record.") : "\u2014")+'</div></div>'+
-    '<div class="card"><div class="lab">Purchases</div><div class="big num">'+es.length+'</div></div>';
+    StatCard("Spent in "+viewYear, numx(fmt(spent), [], "After refunds.")) +
+    StatCard("A month on average", spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], "Months with spending on record.") : null) +
+    StatCard("Purchases", es.length);
 
   const byCat = {};
   es.forEach(e => byCat[e.category] = (byCat[e.category]||0) + e.amount);
@@ -2042,7 +2070,7 @@ function renderYr(){
     : '<div class="empty">No records in '+viewYear+'</div>';
 
   const inc = ICATS.map(c => [c.k, cfy.reduce((s,m)=>s+(m[c.f]||0),0), c.c]).filter(x => x[1] > 0);
-  const icard = (lab, val, status) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status ? '<div class="cap">'+status+'</div>' : "")+'</div>';
+  const icard = StatCard;
   $("incStats").innerHTML =
     icard("Income in "+viewYear, hasIncome ? numx(fmt(income), inc.map(x => [x[0], fmt(x[1])]), cfy.length+" month"+(cfy.length === 1 ? "" : "s")+" on record.", true) : "\u2014")
     + icard("Spent in "+viewYear, numx(fmt(spent), [], "After refunds."))
@@ -2077,14 +2105,13 @@ function renderChq(){
     && (!q || (r.desc + " " + (r.raw || "") + " " + r.type).toLowerCase().includes(q))).slice().reverse();
   $("chqLab").textContent = "Every row in chequing, " + viewYear;
   const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
-  $("chqTable").innerHTML = rows.length
-    ? '<tr><th>Date</th><th style="text-align:left;padding-left:12px">What</th><th style="text-align:left;padding-left:12px">Type</th>'
-      + (accts.length > 1 ? '<th style="text-align:left;padding-left:12px">Account</th>' : '') + '<th>Amount</th></tr>'
-      + rows.slice(0, chqN).map(r => '<tr><td class="num">'+MN[Number(r.date.slice(5,7))-1]+' '+Number(r.date.slice(8,10))+'</td>'
-        + '<td class="chq-d"'+(r.raw ? ' title="'+esc(r.raw)+'"' : '')+'>'+esc(r.desc)+'</td><td class="chq-t">'+esc(r.type)+'</td>'
-        + (accts.length > 1 ? '<td class="chq-t">'+esc(r.src)+'</td>' : '')
-        + '<td class="num">'+fmt2(r.amount)+'</td></tr>').join("")
-    : '<tr><td class="empty">'+(CHEQUING.length ? "No row matches." : "No chequing statement yet.")+'</td></tr>';
+  $("chqTable").innerHTML = DataTable([
+      {h:"Date", c: r => MN[Number(r.date.slice(5,7))-1]+' '+Number(r.date.slice(8,10)), nw:1},
+      {h:"What", c: r => r.raw ? '<span title="'+esc(r.raw)+'">'+esc(r.desc)+'</span>' : esc(r.desc), a:"l", num:false},
+      {h:"Type", c: r => esc(r.type), a:"l", m:1, num:false}]
+      .concat(accts.length > 1 ? [{h:"Account", c: r => esc(r.src), a:"l", m:1, nw:1, num:false}] : [])
+      .concat([{h:"Amount", c: r => fmt2(r.amount), nw:1}]),
+    rows.slice(0, chqN), {inner: true, empty: CHEQUING.length ? "No row matches." : "No chequing statement yet."});
   $("chqMore").innerHTML = rows.length > chqN
     ? '<button class="pill" id="chqMoreB" style="margin-top:8px">Show '+Math.min(60, rows.length - chqN)+' more of '+(rows.length - chqN)+'</button>' : "";
   if($("chqMoreB")) $("chqMoreB").onclick = () => { chqN += 60; renderChq(); };
@@ -2203,7 +2230,7 @@ function safetyCalc(){
 const monthsTxt = m => (Math.round(m * 10) / 10).toFixed(1);
 function renderSafety(){
   const S = SAFETY, c = safetyCalc();
-  const card = (lab, val, status) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status ? '<div class="cap">'+status+'</div>' : "")+'</div>';
+  const card = StatCard;
   const costRows = [["Spending baseline", baselineAvg > 0 ? fmt(baselineAvg) : "\u2014"]].concat((S.repayRows || []).map(r => [r.n, fmt(r.v)]));
   $("safeStats").innerHTML =
     card(term("months_covered", "Months covered"),
@@ -2262,11 +2289,10 @@ function renderSubs(){
   }).filter(Boolean).sort((a,b) => a.at < b.at ? -1 : 1);
   const sum = next.reduce((t,x) => t + x.amt, 0);
   $("subsNext").innerHTML = next.length
-    ? '<table class="dt"><tr><th style="text-align:left">Expected</th><th style="text-align:left">Subscription</th><th>Amount</th></tr>'
-      + next.map(x => '<tr><td style="text-align:left" class="num">'+dLong(x.at)+(x.at < TODAY ? ' <span class="cap">likely charged</span>' : '')+'</td>'
-        + '<td style="text-align:left">'+x.name+' <span class="cap">every '+x.every+'</span></td>'
-        + '<td class="num">'+fmt2(x.amt)+'</td></tr>').join("")
-      + '<tr class="tot"><td colspan="2" style="text-align:left">In all</td><td class="num">'+fmt2(sum)+'</td></tr></table>'
+    ? DataTable([
+        {h:"Expected", c: x => dLong(x.at)+(x.at < TODAY ? ' <span class="cap">likely charged</span>' : ''), a:"l"},
+        {h:"Subscription", c: x => x.name+' <span class="cap">every '+x.every+'</span>', a:"l", num:false},
+        {h:"Amount", c: x => fmt2(x.amt)}], next, {foot: ["In all", "", fmt2(sum)]})
     : '<div class="empty">Nothing due.</div>';
   $("subsLab").innerHTML = "Every " + term("subscription");
   $("subs").innerHTML = rows.length ? rows.map(s =>
@@ -2317,7 +2343,7 @@ const baseDrift = () => { const m = measuredBase(); return m === null || !(PLAN_
 function renderFire(){
   if(unset("planBase")){
     // No planning figure, no target: every number on these pages is a share of it.
-    $("fireStats").innerHTML = '<div class="card"><div class="lab">'+term("fire_target", "Target")+'</div><div class="big num">'+notSet("planBase")+'</div></div>';
+    $("fireStats").innerHTML = StatCard(term("fire_target", "Target"), notSet("planBase"));
     $("fireProgLab").textContent = "Progress"; $("fireHero").innerHTML = notSet("planBase");
     $("fireFill").style.width = "0%"; $("fireCap").textContent = "";
   }
@@ -2326,7 +2352,7 @@ function renderFire(){
   const target = adjBase * 12 * 25;   // 4% rule: annual spend × 25
   const pct = Math.round(PORTFOLIO / target * 1000) / 10;
   const gap = Math.round(target - PORTFOLIO);
-  const fcard = (lab, val) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div></div>';
+  const fcard = StatCard;
   if(!unset("planBase")){
   $("fireStats").innerHTML =
       fcard(term("fire", "FIRE")+" progress", numx(pct+"%", [["Portfolio", fmt(PORTFOLIO)], ["Target", fmt(target)]], "The portfolio as a share of the target."))
@@ -2836,10 +2862,9 @@ function renderBacktest(bt, pot0){
   const med = [...bt.runs].map(r => r.end).sort((a,b) => a-b)[Math.floor(bt.n/2)];
   $("btLab").textContent = "Would it have lasted?";
   $("btStats").innerHTML =
-    '<div class="card"><div class="lab">Lasted to '+LIFE_TO+'</div><div class="big num">'+rate+'%</div><div class="cap">'+bt.ok+' of '+bt.n+' stretches</div></div>'+
-    '<div class="card"><div class="lab">'+(fails.length ? "Worst start" : "Closest call")+'</div><div class="big num">'+worst.y+'</div><div class="cap">'
-      +(fails.length ? "runs out at "+Math.floor(worst.dead) : fmt(worst.end)+" left at "+LIFE_TO)+'</div></div>'+
-    '<div class="card"><div class="lab">Left at '+LIFE_TO+', middle case</div><div class="big num">'+fmt(med)+'</div></div>';
+    StatCard("Lasted to "+LIFE_TO, rate+"%", bt.ok+" of "+bt.n+" stretches") +
+    StatCard(fails.length ? "Worst start" : "Closest call", worst.y, fails.length ? "runs out at "+Math.floor(worst.dead) : fmt(worst.end)+" left at "+LIFE_TO) +
+    StatCard("Left at "+LIFE_TO+", middle case", fmt(med));
   // One bar per start year: green above the line is what is left at the end, red below is how
   // many years short the money fell.
   const [W, H] = fit("btChart", 220), padL=58, padR=8, padT=12, padB=28, mid = padT + (H-padT-padB)*0.7;
@@ -3003,14 +3028,14 @@ function renderSubStats(){
   const byBrand = SUB_KEYS.map(b => ({name:b.name, v: subs.filter(e => e.sub === b.name).reduce((a,e)=>a+e.amount,0)}))
                           .sort((a,b)=>b.v-a.v)[0];
   const base = PLAN_BASE;
-  const card = (lab, val, status) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status ? '<div class="cap">'+status+'</div>' : "")+'</div>';
+  const card = StatCard;
   $("subStats").innerHTML =
     card(term("subscription", "Subscriptions")+" in "+yr, numx(fmt(ytd), [], "Every charge that repeats, this year."), "") +
     card("Per month", numx(fmt(perMo), [["This year", fmt(ytd)], ["Closed months", closed]], ""), "") +
     card("A full year", numx(fmt(perMo*12), [["Per month", fmt(perMo)], ["Months", "12"]], "Subscriptions renew whether or not you use them."),
       base ? Math.round(pc(perMo, base))+"% of your "+term("planning_figure") : "") +
-    '<div class="card"><div class="lab">Biggest one</div><div class="big num" style="font-size:20px">'+(byBrand && byBrand.v ? byBrand.name : "\u2014")+'</div>'
-      +(byBrand && byBrand.v ? '<div class="cap">'+fmt(byBrand.v)+", "+Math.round(pc(byBrand.v, ytd))+"% of subscriptions"+'</div>' : "")+'</div>';
+    StatCard("Biggest one", byBrand && byBrand.v ? byBrand.name : null,
+      byBrand && byBrand.v ? fmt(byBrand.v)+", "+Math.round(pc(byBrand.v, ytd))+"% of subscriptions" : "", {text: true});
 }
 
 // Foreign: the list of accounts never said how much of your net worth sits behind a border.
@@ -3041,16 +3066,10 @@ function renderAccounts(){
   const stale = known.filter(a => acctAge(a) > 30);
   const bad = G.filter(g => g.sev === "bad").length;
   $("acctStats").innerHTML =
-    '<div class="card"><div class="lab">Accounts tracked</div><div class="big num">' + A.length + '</div>'
-      + '<div class="cap">Across ' + insts.length + ' institutions</div></div>'
-    + '<div class="card"><div class="lab">Balances known'
-      + '</div><div class="big num">' + known.length + ' of ' + A.length + '</div>'
-      + '<div class="cap">' + (known.length === A.length ? "Nothing missing" : (A.length - known.length) + " with no figure at all") + '</div></div>'
-    + '<div class="card"><div class="lab">Older than 30 days'
-      + '</div><div class="big num">' + stale.length + '</div>'
-      + '<div class="cap">' + (stale.length ? "Oldest is " + Math.max(...stale.map(acctAge)) + " days" : "Everything is current") + '</div></div>'
-    + '<div class="card"><div class="lab">Open gaps</div><div class="big num">' + G.length + '</div>'
-      + '<div class="cap">' + (bad ? bad + " affects net worth" : "None affect net worth") + '</div></div>';
+    StatCard("Accounts tracked", A.length, "Across " + insts.length + " institutions")
+    + StatCard("Balances known", known.length + " of " + A.length, known.length === A.length ? "Nothing missing" : (A.length - known.length) + " with no figure at all")
+    + StatCard("Older than 30 days", stale.length, stale.length ? "Oldest is " + Math.max(...stale.map(acctAge)) + " days" : "Everything is current")
+    + StatCard("Open gaps", G.length, bad ? bad + " affects net worth" : "None affect net worth");
 
   // Grouped by institution, biggest first, and inside each the biggest account first (2026-11-03,
   // the owner asked for a table that reads at a glance). Four columns: the account, with its type
@@ -3074,7 +3093,7 @@ function renderAccounts(){
   const quietOf = l => l && l.quiet ? {sev:"warn", what:"Nothing back from " + l.name + " in " + l.quiet + " days",
       why:money2(l.owed, l.cur) + " is still owed", fix:"ask when the next repayment is coming, or settle a new amount and date"} : null;
   const gapsOf = a => G.filter(g => g.k === a.gap).concat(quietOf(loanOf(a)) || []);
-  let out = '<tr><th style="text-align:left">Account</th><th class="opt" style="text-align:left">For</th>'
+  let out = '<tr><th style="text-align:left">Account</th><th class="opt" style="text-align:left">For</th>'   // S10: a grouped table, kept until 2.0
           + '<th>As of</th><th>Balance</th></tr>';
   const groups = [...new Set(A.map(a => a.inst))]
     .map(inst => ({inst, rows:A.filter(a => a.inst === inst).sort((x,y) => cad(y) - cad(x))}))
@@ -3203,7 +3222,7 @@ function renderSources(){
   const age = d => Math.round((new Date(TODAY) - new Date(d))/864e5);
   let ep = "";
   $("srcTable").innerHTML =
-    '<tr><th style="text-align:left">Source</th><th style="text-align:left">File</th><th style="padding-right:16px">Closes</th><th style="text-align:left">Feeds</th><th>Last received</th><th>Age</th></tr>'
+    '<tr><th style="text-align:left">Source</th><th style="text-align:left">File</th><th style="padding-right:16px">Closes</th><th style="text-align:left">Feeds</th><th>Last received</th><th>Age</th></tr>'   // S10: a grouped table, kept until 2.0
     + SOURCES.map(r => {
         const d = last[r.src], a = d ? age(d) : null, ok = a === null || a <= 30;
         const head = r.ep !== ep ? (ep = r.ep, '<tr class="grp"><td colspan="6" style="text-align:left;font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:9px">'+r.ep+'</td></tr>') : "";
@@ -3232,22 +3251,20 @@ function renderWsInc(){
   const closed = WSINC.filter(m => m.ym < TODAY.slice(0,7));
   const perMo = closed.length ? closed.reduce((a,m)=>a+m.div+m.int+m.lend+m.tax,0)/closed.length : 0;
   const base = PLAN_BASE;
-  const wcard = (lab, val) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div></div>';
+  const wcard = StatCard;
   $("wsIncStats").innerHTML =
     wcard("Paid to you in "+TODAY.slice(0,4), numx(fmt(net), [["Dividends", fmt(tot("div"))], ["Interest", fmt(tot("int"))], ["Lending", fmt(tot("lend"))], ["Tax withheld", fmt(tot("tax"))]],
             "US dollars converted at "+INVEST.fx+".", true))
     + wcard("A month on average", numx(fmt(perMo), [], closed.length+" closed month"+(closed.length === 1 ? "" : "s")+"."))
     + wcard("Share of spending", base ? numx(Math.round(pc(perMo, base))+"%", [["A month on average", fmt(perMo)], ["Planning figure", fmt(base)]], "") : "\u2014")
     + wcard(term("withholding_tax", "Tax withheld"), fmt(-tot("tax")));
+  const dash = v => v ? fmt2(v) : '<span style="color:var(--muted)">\u2014</span>';
   $("wsIncTable").innerHTML =
-    '<tr><th style="text-align:left">Month</th><th>Dividends</th><th>Interest</th><th>Lending</th><th>Tax</th><th>Net</th></tr>'
-    + WSINC.map(m => {
-        const n = m.div+m.int+m.lend+m.tax;
-        const c = v => v ? fmt2(v) : '<span style="color:var(--muted)">—</span>';
-        return '<tr><td class="num">'+ymLabel(m.ym)+'</td><td class="num">'+c(m.div)+'</td><td class="num">'+c(m.int)+'</td>'
-             + '<td class="num">'+c(m.lend)+'</td><td class="num">'+(m.tax?fmt2(m.tax):'<span style="color:var(--muted)">—</span>')+'</td>'
-             + '<td class="num"><b>'+fmt2(n)+'</b></td></tr>';
-      }).join("");
+    DataTable([
+      {h:"Month", c: m => ymLabel(m.ym)},
+      {h:"Dividends", c: m => dash(m.div)}, {h:"Interest", c: m => dash(m.int)},
+      {h:"Lending", c: m => dash(m.lend)}, {h:"Tax", c: m => dash(m.tax)},
+      {h:"Net", c: m => '<b>'+fmt2(m.div+m.int+m.lend+m.tax)+'</b>'}], WSINC, {inner: true, empty: "No investment income on record yet."});
   const lastM = WSINC.length ? WSINC[WSINC.length-1].ym : "";
   $("wsIncCap").textContent = lastM && lastM >= TODAY.slice(0,7) ? ymFull(lastM)+" is still open, so its totals will rise." : "";
   // The months above swing because funds pay on different rhythms: which ones pay, how often,
@@ -3266,11 +3283,12 @@ function renderWsInc(){
   const names = {}, fund = n => n.split(" - ").filter(x => !/^ETF$/i.test(x.trim())).pop() || n;
   ((typeof DATA !== "undefined" && DATA.positions) || []).forEach(p => names[p.sym] = names[p.sym] || fund(p.name));
   const rows = Object.entries(by).filter(([k,b]) => b.v > 0).sort((a,b) => b[1].v - a[1].v);
-  $("wsIncBy").innerHTML = rows.length
-    ? '<tr><th style="text-align:left">Holding</th><th>Pays</th><th>'+term("dividend", "Dividends")+'</th><th>Share</th></tr>'
-      + rows.map(([k,b]) => '<tr><td><b>'+k+'</b>'+(names[k] ? ' <span style="color:var(--muted)">'+names[k]+'</span>' : "")+'</td>'
-        + '<td class="num">'+rhythm(b.ms)+'</td><td class="num">'+fmt2(b.v)+'</td><td class="num">'+Math.round(pc(b.v, divs))+'%</td></tr>').join("")
-    : '<tr><td class="empty">No dividends on record yet.</td></tr>';
+  $("wsIncBy").innerHTML =
+    DataTable([
+      {h:"Holding", c: ([k,b]) => '<b>'+k+'</b>'+(names[k] ? ' <span style="color:var(--muted)">'+names[k]+'</span>' : ""), num:false},
+      {h:"Pays", c: ([k,b]) => rhythm(b.ms)},
+      {h:term("dividend", "Dividends"), c: ([k,b]) => fmt2(b.v)},
+      {h:"Share", c: ([k,b]) => Math.round(pc(b.v, divs))+"%"}], rows, {inner: true, empty: "No dividends on record yet."});
 }
 
 // Coverage scorecard: the five entry points, what is wired in, and what is still missing.
@@ -3335,9 +3353,9 @@ function renderUpdates(){
   const age = d => Math.round((new Date(TODAY) - new Date(d))/864e5);
   const nFiles = r => r.files.length ? r.files.length + " file" + (r.files.length === 1 ? "" : "s") : "";
   $("updStats").innerHTML =
-    '<div class="card"><div class="lab">Last update</div><div class="big num">'+(last ? dLong(last.date) : "\u2014")+'</div><div class="cap">'+(last ? (age(last.date) === 0 ? "Today" : age(last.date)+" days ago") : "Nothing filed yet")+'</div></div>'+
-    '<div class="card"><div class="lab">Files on record</div><div class="big num">'+IMPORTS.reduce((a,r) => a + r.files.length, 0)+'</div></div>'+
-    '<div class="card"><div class="lab">Updates on file</div><div class="big num">'+IMPORTS.length+'</div><div class="cap">'+(IMPORTS.length ? "Since "+dLong(IMPORTS[IMPORTS.length-1].date) : "The first one comes with your first statements")+'</div></div>';
+    StatCard("Last update", last ? dLong(last.date) : null, last ? (age(last.date) === 0 ? "Today" : age(last.date)+" days ago") : "Nothing filed yet") +
+    StatCard("Files on record", IMPORTS.reduce((a,r) => a + r.files.length, 0)) +
+    StatCard("Updates on file", IMPORTS.length, IMPORTS.length ? "Since "+dLong(IMPORTS[IMPORTS.length-1].date) : "The first one comes with your first statements");
   const SYM = {bad:["\u2717","bad"], warn:["\u26a0","warn"], ok:["\u2713","ok"]};
   $("updList").innerHTML = IMPORTS.length ? IMPORTS.map(r =>
     '<div class="card" style="margin-bottom:10px"><div class="lab">'+dLong(r.date)+'</div>'
@@ -3461,7 +3479,7 @@ const IV = (function(){
     return '<div class="delta '+cls+'">'+arr+" "+txt+" since "+dLong(prev.date)+"</div>";
   };
   function renderStats(){
-    const stat = (lab, val, status) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status||"")+'</div>';
+    const stat = (lab, val, status) => StatCard(lab, val, status, {raw: true});
     const cap = t => t ? '<div class="cap">'+t+'</div>' : "";
     const accVal = a => positions.filter(p => p.account === a).reduce((s,p) => s + p.mv, 0);
     const dryWas = prev && prev.dryPct != null ? " "+(dryPct - prev.dryPct >= 0 ? "Up " : "Down ")+Math.abs(dryPct - prev.dryPct).toFixed(1)+" pts since "+dLong(prev.date)+"." : "";
