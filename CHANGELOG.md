@@ -2,6 +2,25 @@
 
 ## 1.0.1 — unreleased
 
+- **One page for both kinds of user** (2026-11-05, user 001). The sidebar is 18 pages in four
+  sections — Money in & out, Plan, Investing, then Accounts and the monthly import — in the order
+  someone starting out reads them; page keys are unchanged. The FIRE goal is said once (setup asks;
+  an import asks someone who never answered and has nothing invested) and the FIRE pages wait for
+  it. Home's four cards are chosen by two signals, something invested and a FIRE goal, and filled
+  from one list, so no owner sees an empty card.
+- **Safety net**, a new page: how many months the money you can reach today would last without a
+  paycheque — Spendable today less what in it is invested and what is owed on no asset, over the
+  spending baseline plus the repayments paid today. Money abroad is a line of its own. It judges
+  nothing.
+- **Card interest**: the interest each card statement printed is kept, one row per statement; the
+  first import after this version reads it from every card statement already filed. Shown only
+  when there is some — a Home card, a line on Year, an amber dot on Year while the newest
+  statement charged it.
+- **CPP and OAS in the drawdown**: the estimates from your My Service Canada account pay part of
+  what is taken out from the age each starts. Not given, the page says they are not counted.
+- **Every row in chequing** on the Income page: transfers, fees and e-Transfers one by one, with a
+  search and a pill per account.
+
 - **A page of the banks and files the tool reads** (2026-11-04, user 001): `docs/banks.md` and
   `docs/zh/banks.md`, bank by bank — which file, whether it has been confirmed on a real one, how to
   download it, what to know. Written from one table (`parsers/support.py`) by `tools/banks.py`;

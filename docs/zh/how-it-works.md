@@ -9,7 +9,7 @@
 | — | Home | 你现在在哪儿，值多少 |
 | Money in & out | This month | 这个月还能花多少，钱花到哪了 |
 | | Year | 这一年按分类、按月怎么样 |
-| | Income | 收入从哪来，留下了多少 |
+| | Income | 收入从哪来，留下了多少，支票账户的每一笔 |
 | | Subscriptions | 哪些在重复扣钱、一年多少、下一笔什么时候 |
 | | Spending baseline | 一个月实际花多少，计划用的是哪个数 |
 | Plan | Budget | 每份工资做什么用，基金里有多少 |
