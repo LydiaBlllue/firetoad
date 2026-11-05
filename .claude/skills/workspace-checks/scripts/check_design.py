@@ -124,6 +124,19 @@ def check(path):
     def warn(r, m): F.append(("WARN", r, m, "conform"))
     def note(r, m): F.append(("NOTE", r, m, "conform"))
 
+    # -- S10 (1.0.1): a card or a table is drawn by its component, never by hand -------
+    # Nine copies of the card helper and tables aligning each heading by hand were where UI
+    # changes kept breaking (2026-11-05). StatCard and DataTable are the only places their markup
+    # is written; a grouped table not yet moved says so on its line ("S10:").
+    # A stat card is a card whose label is followed by a big number, built in a script string.
+    hand_cards = len(re.findall(r"""'<div class="card"><div class="lab">.{0,200}?big num""", src))
+    if hand_cards > 1:
+        err("S10", f"{hand_cards - 1} stat card(s) written by hand — draw them with StatCard()")
+    for ln in src.split("\n"):
+        if "<th style=" in ln and "S10:" not in ln:
+            err("S10", "a table heading aligned by hand — draw the table with DataTable(): " + ln.strip()[:70])
+            break
+
     # -- §4 desktop-only layout -------------------------------------------
     body = re.search(r'\bbody\s*\{([^}]*)\}', css)
     bodycss = body.group(1) if body else ""

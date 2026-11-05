@@ -94,6 +94,12 @@
   or no time at all, never half of each; a thing is judged in one place, and Home only
   summarises.
 
+- **Components** (1.0.1): every stat card is drawn by `StatCard(label, value, line, options)` and
+  every plain table by `DataTable(columns, rows, options)`, where one column spec sets a column's
+  heading and cells together (text left, numbers right). **Lint rule S10** fails a stat card or a
+  hand-aligned table heading written outside them; the two grouped tables not yet moved (Accounts,
+  Statements) say so on their line. In 2.0 the two become the component library's Card and Table.
+
 <!-- LINT:PAGES pages=18 sections=4 -->
 - **The pages**: 18 pages under 4 sidebar sections, ordered the way someone starting out reads them (1.0.1). **Lint rule S4 checks this table against
   `NAV`**, so changing the navigation means changing this table too — and the page count, the
