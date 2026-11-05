@@ -8,6 +8,13 @@
   failure. Standard-library `unittest`; `checks.py --level release` runs them first and skips
   them in a workspace that has none. The parsers stay under fixtures, the checkers under the
   selftest.
+- **Every script a month goes through has a `run()` beside its `main()`** (2026-11-05): status,
+  update, confirm, rebuild, propose and scaffold do the work in `run(root, …, say=None)` and
+  return the exit code, every line the CLI prints and the script's own result (`verbs.py`);
+  `main()` only parses arguments and prints. Nothing changes for the CLI or the skills — 25
+  invocations were held byte-for-byte to their output before the change — and the selftest's
+  *two doors* check now proves run() and the CLI agree. Groundwork for a second way in that needs
+  no Claude plan (ROADMAP, 2.0.0).
 - **One page for both kinds of user** (2026-11-05, user 001). The sidebar is 18 pages in four
   sections — Money in & out, Plan, Investing, then Accounts and the monthly import — in the order
   someone starting out reads them; page keys are unchanged. The FIRE goal is said once (setup asks;

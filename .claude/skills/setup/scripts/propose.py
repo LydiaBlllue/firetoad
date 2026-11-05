@@ -38,6 +38,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(SKILLS, "update-dashboard"))
 sys.path.insert(0, os.path.join(SKILLS, "update-dashboard", "scripts"))
 import layout  # noqa: E402
+import verbs  # noqa: E402
 import scaffold  # noqa: E402  default_axes and the kinds the tool understands
 import seen_accounts  # noqa: E402
 from parsers import NAMES, ParseError, ParserUnavailable, parse  # noqa: E402
@@ -482,6 +483,31 @@ def report(a):
     return "\n".join(out)
 
 
+def run(root, inbox=None, write=False, say=None):
+    """Draft the answers from the files in `inbox` (verbs.py). Returns rc, lines (the readable
+    report), `draft` (the answers, what --json prints) and `written` (the file, or None)."""
+    emit, lines = verbs.speaker(say)
+    root = os.path.abspath(root)
+    inbox = os.path.abspath(inbox or os.path.join(root, "inbox"))
+    if not os.path.isdir(inbox):
+        emit(f"  ✗ no inbox at {inbox}", loud_line=True)
+        return verbs.result({"draft": None, "written": None}, 1, lines)
+    a = propose(root, inbox)
+    emit(report(a))
+    written = None
+    if write:
+        dst = os.path.join(root, layout.rel("setup-answers.json"))
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        with open(dst, "w", encoding="utf-8") as fh:
+            json.dump(a, fh, ensure_ascii=False, indent=2)
+            fh.write("\n")
+        written = os.path.relpath(dst, root)
+        emit(f"\n  → {written} (a draft: answer the questions, then run scaffold.py)")
+    else:
+        emit("\n  nothing written. Re-run with --write to save the draft.")
+    return verbs.result({"draft": a, "written": written}, 0, lines)
+
+
 def main(argv):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("root", nargs="?", default=".")
@@ -489,26 +515,11 @@ def main(argv):
     ap.add_argument("--write", action="store_true", help="write findata/register/setup-answers.json")
     ap.add_argument("--json", action="store_true", help="print the draft as JSON instead of the report")
     args = ap.parse_args(argv[1:])
-    root = os.path.abspath(args.root)
-    inbox = os.path.abspath(args.inbox or os.path.join(root, "inbox"))
-    if not os.path.isdir(inbox):
-        print(f"  ✗ no inbox at {inbox}"); return 1
-    a = propose(root, inbox)
-    if args.json:
-        print(json.dumps(a, ensure_ascii=False, indent=1))
-    else:
-        print(report(a))
-    if args.write:
-        dst = os.path.join(root, layout.rel("setup-answers.json"))
-        os.makedirs(os.path.dirname(dst), exist_ok=True)
-        with open(dst, "w", encoding="utf-8") as fh:
-            json.dump(a, fh, ensure_ascii=False, indent=2)
-            fh.write("\n")
-        if not args.json:
-            print(f"\n  → {os.path.relpath(dst, root)} (a draft: answer the questions, then run scaffold.py)")
-    elif not args.json:
-        print("\n  nothing written. Re-run with --write to save the draft.")
-    return 0
+    # --json prints the draft alone; the report and the "written" line are the readable form.
+    r = run(args.root, inbox=args.inbox, write=args.write, say=None if args.json else print)
+    if args.json and r["draft"] is not None:
+        print(json.dumps(r["draft"], ensure_ascii=False, indent=1))
+    return r["rc"]
 
 
 if __name__ == "__main__":

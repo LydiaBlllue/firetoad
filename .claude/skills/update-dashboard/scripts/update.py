@@ -67,6 +67,7 @@ import layout  # noqa: E402
 import preflight  # noqa: E402
 import seen_accounts  # noqa: E402
 import rebuild  # noqa: E402
+import verbs  # noqa: E402
 import loans  # noqa: E402  what a borrower still owes (loans.py)
 sys.path.insert(0, CHECKS)
 from check_data import merchant_key, refund_pool  # noqa: E402  the one definition of "the same merchant"
@@ -1331,63 +1332,60 @@ def restore(root, d):
     shutil.rmtree(old, ignore_errors=True)
 
 
-def undo(root):
+def undo(root, say=None):
+    """The last --write taken back (verbs.py): rc and lines, and `undone` (the import's date)."""
+    emit, lines = verbs.speaker(say)
+    root = os.path.abspath(root)
     top = os.path.join(root, ".undo")
     done = [d for d in sorted(os.listdir(top)) if (jload(os.path.join(top, d, "undo.json")) or {}).get("after")] \
         if os.path.isdir(top) else []
     if not done:
-        print("  ✗ nothing to undo: no finished import has a copy in .undo/"); return 1
+        emit("  ✗ nothing to undo: no finished import has a copy in .undo/")
+        return verbs.result({"undone": None}, 1, lines)
     d = os.path.join(top, done[-1])
     after, now = jload(os.path.join(d, "undo.json"))["after"], findata_hashes(root)
     edited = sorted(k for k in set(after) | set(now) if after.get(k) != now.get(k))
     if edited:
-        print(f"  ✗ findata/ has changed since the import of {done[-1][:8]}: {', '.join(edited[:6])}"
-              + (" …" if len(edited) > 6 else "") + " — undoing it would throw those edits away. Nothing was changed.")
-        return 1
+        emit(f"  ✗ findata/ has changed since the import of {done[-1][:8]}: {', '.join(edited[:6])}"
+             + (" …" if len(edited) > 6 else "") + " — undoing it would throw those edits away. Nothing was changed.")
+        return verbs.result({"undone": None}, 1, lines)
     restore(root, d)
     shutil.rmtree(d, ignore_errors=True)
-    run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
-    run(os.path.join(HERE, "preflight.py"), [".", "--reseed"], root)
-    print(f"  ✓ the import of {done[-1][:8]} is undone: findata/ is as it was before it, and its files are back in inbox/")
-    return 0
+    _script(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
+    _script(os.path.join(HERE, "preflight.py"), [".", "--reseed"], root)
+    emit(f"  ✓ the import of {done[-1][:8]} is undone: findata/ is as it was before it, and its files are back in inbox/")
+    return verbs.result({"undone": done[-1][:8]}, 0, lines)
 
 
-def run(script, args, root):
+def _script(script, args, root):
     p = subprocess.run([sys.executable, script] + args, cwd=root, capture_output=True, text=True)
     return p.returncode, p.stdout + p.stderr
 
 
-# ---------------------------------------------------------------- main
-def main(argv):
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("root", nargs="?", default=".")
-    ap.add_argument("--write", action="store_true", help="apply; without it, only say what would happen")
-    ap.add_argument("--json", action="store_true", help="print the summary as JSON")
-    ap.add_argument("--hand", help="JSON of statements the model read and transcribed (see above)")
-    ap.add_argument("--balance", action="append", default=[], metavar="KEY=AMOUNT",
-                    help="the balance the banking app shows, for a download with no running balance (repeatable)")
-    ap.add_argument("--undo", action="store_true", help="put findata/ and inbox/ back as they were before the last --write")
-    a = ap.parse_args(argv)
-    root = os.path.abspath(a.root)
-    if a.undo:
-        return undo(root)
+# ---------------------------------------------------------------- run / main
+def run(root, write=False, hand=None, balance=None, undo_last=False, say=None, loud=None):
+    """The import (verbs.py). `hand` is the list of transcriptions --hand reads from its file;
+    `balance` is {account key: amount} for a download with no running balance; `undo_last` is
+    --undo. Returns the summary --json prints, plus rc and lines. `loud` receives the lines that
+    reach the terminal even in --json mode (a refusal, a failure)."""
+    root = os.path.abspath(root)
+    if undo_last:
+        return undo(root, say=say)
+    emit, lines = verbs.speaker(say, loud)
+    rc, summary = _import(root, write, hand or [], balance or {}, emit)
+    return verbs.result(summary, rc, lines)
+
+
+def _import(root, write, hand, balance, say):
+    """(rc, summary) — the import itself, printing through `say`."""
     ws = Workspace(root)
     plan = Plan()
     plan.hand = {}
-    plan.stated = {}
-    for b in a.balance:
-        k, _, v = b.partition("=")
-        try:
-            plan.stated[k.strip()] = float(v.replace(",", "").replace("$", ""))
-        except ValueError:
-            print(f"  ✗ --balance {b}: say it as key=amount"); return 1
-    if a.hand:
-        try:
-            for h in json.load(open(a.hand, encoding="utf-8")):
-                plan.hand[os.path.basename(h["file"])] = h
-        except (ValueError, KeyError, TypeError, OSError) as e:
-            print(f"  ✗ --hand {a.hand}: not a list of transcriptions ({e})"); return 1
+    plan.stated = dict(balance)
+    for h in hand:
+        plan.hand[os.path.basename(h["file"])] = h
     summary = {"date": ws.today.isoformat(), "written": False}
+    run = _script
     # Seconds per stage (2026-11, user 002: nothing said how long an import took, so two could not
     # be compared). Tokens are the session's, not this script's: the app's usage view has them.
     t0 = time.monotonic(); secs = {}
@@ -1405,8 +1403,8 @@ def main(argv):
             else:
                 plan_export(ws, plan, path, doc)
     except ParserUnavailable as e:
-        print(f"  ✗ {e}. Nothing can be parsed until it is installed; then run again.")
-        return 3
+        say(f"  ✗ {e}. Nothing can be parsed until it is installed; then run again.", loud_line=True)
+        return 3, summary
     lap("read")
     plan.interest += interest_backfill(ws, plan)
     # The FIRE goal is asked once (1.0.1): a workspace that never answered, with nothing invested,
@@ -1419,7 +1417,6 @@ def main(argv):
                                "what": "Is retiring early (FIRE) something you are working toward? Yes or no; "
                                        "the FIRE pages show only for yes."})
 
-    say = print if not a.json else (lambda *x, **k: None)
     say(f"=== update — {len(named)} file(s) named in inbox/, {len(plan.unknown)} unnamed ===\n")
     for src, dst in plan.archive:
         say(f"  {os.path.basename(src)}  →  archive/{os.path.basename(dst)}")
@@ -1454,10 +1451,8 @@ def main(argv):
                    credits=plan.credits, counts=dict(plan.counts))
     if stop:
         say("\n  Nothing written. Ask the owner, then run again.")
-        if a.json:
-            print(json.dumps(summary, ensure_ascii=False, indent=1))
-        return 1
-    if not (plan.archive or plan.delete) and plan.interest and a.write:
+        return 1, summary
+    if not (plan.archive or plan.delete) and plan.interest and write:
         # Nothing new in inbox, but statements already filed have interest to record (the first
         # run after 1.0.1): only that file is written, then the page is rebuilt.
         only = Plan(); only.interest = plan.interest
@@ -1467,14 +1462,10 @@ def main(argv):
         say(f"  card interest recorded for {len(plan.interest)} statement(s) already filed.")
     if not (plan.archive or plan.delete):
         say("  nothing to import.")
-        if a.json:
-            print(json.dumps(summary, ensure_ascii=False, indent=1))
-        return 0
-    if not a.write:
+        return 0, summary
+    if not write:
         say("\n  Nothing written. Re-run with --write to apply.")
-        if a.json:
-            print(json.dumps(summary, ensure_ascii=False, indent=1))
-        return 0
+        return 0, summary
 
     snap = snapshot(ws, plan)
     try:
@@ -1497,8 +1488,9 @@ def main(argv):
         restore(root, snap)
         shutil.rmtree(snap, ignore_errors=True)
         run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
-        print(f"  ✗ the write failed ({type(e).__name__}: {e}). findata/ and inbox/ are back as they were — nothing was written.")
-        return 1
+        say(f"  ✗ the write failed ({type(e).__name__}: {e}). findata/ and inbox/ are back as they were — nothing was written.",
+            loud_line=True)
+        return 1, summary
     summary.update(written=True, changed=changed, noticed=noticed, record=rec)
 
     rc, out = run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
@@ -1528,9 +1520,41 @@ def main(argv):
             say("  " + f)
     else:
         say("\n  ✓ checkers clean")
+    return (2 if any(f.startswith("✗") for f in findings) else 0), summary
+
+
+def main(argv):
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("root", nargs="?", default=".")
+    ap.add_argument("--write", action="store_true", help="apply; without it, only say what would happen")
+    ap.add_argument("--json", action="store_true", help="print the summary as JSON")
+    ap.add_argument("--hand", help="JSON of statements the model read and transcribed (see above)")
+    ap.add_argument("--balance", action="append", default=[], metavar="KEY=AMOUNT",
+                    help="the balance the banking app shows, for a download with no running balance (repeatable)")
+    ap.add_argument("--undo", action="store_true", help="put findata/ and inbox/ back as they were before the last --write")
+    a = ap.parse_args(argv)
+    if a.undo:
+        return undo(a.root, say=print)["rc"]
+    balance = {}
+    for b in a.balance:
+        k, _, v = b.partition("=")
+        try:
+            balance[k.strip()] = float(v.replace(",", "").replace("$", ""))
+        except ValueError:
+            print(f"  ✗ --balance {b}: say it as key=amount"); return 1
+    hand = []
+    if a.hand:
+        try:
+            hand = json.load(open(a.hand, encoding="utf-8"))
+            for h in hand:
+                os.path.basename(h["file"])
+        except (ValueError, KeyError, TypeError, OSError) as e:
+            print(f"  ✗ --hand {a.hand}: not a list of transcriptions ({e})"); return 1
+    # --json prints the summary alone; a refusal or a failure still reaches the terminal (loud).
+    r = run(a.root, write=a.write, hand=hand, balance=balance, say=None if a.json else print, loud=print)
     if a.json:
-        print(json.dumps(summary, ensure_ascii=False, indent=1))
-    return 2 if any(f.startswith("✗") for f in findings) else 0
+        print(json.dumps(verbs.public(r), ensure_ascii=False, indent=1))
+    return r["rc"]
 
 
 def rebuild_page(root):
