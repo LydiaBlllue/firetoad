@@ -13,6 +13,9 @@ already shipped is in [`CHANGELOG.md`](CHANGELOG.md).
   plan does not assume you live on savings alone.
 - **Chequing, row by row**: transfers, fees and e-Transfers listed one by one.
 - **A simpler sidebar**, ordered the way someone starting out reads it.
+- **More banks and brokers**: TD, Scotiabank, CIBC, Tangerine, Simplii and EQ Bank confirmed on
+  real files, and the first brokers beyond Wealthsimple. What is read today:
+  [Supported banks and brokers](docs/banks.md).
 
 ## 2.0.0
 
