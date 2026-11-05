@@ -423,6 +423,11 @@ def derive(d):
     out["LIFE_TO"] = ret.get("lifeTo", 95)
     out["COAST_R"] = ret.get("coastR", 0.05)
     out["HOME_CARE"] = ret.get("homeCare", {})
+    # Government pensions (1.0.1): CPP and OAS as the owner's own statement estimates them, in
+    # today's dollars a month, from the age each starts. They pay part of what the drawdown takes.
+    out["PENSIONS"] = [{"k": p["name"], "v": p["monthly"], "from": p.get("from", 65), "asof": p.get("asof", ""),
+                        "src": p.get("source", "")}
+                       for p in ret.get("pensions", []) if p.get("monthly") is not None]
     out["LTC_TIERS"] = ret.get("ltcTiers", [])
 
     out["NW_HISTORY"] = [{k: v for k, v in h.items() if k in ("ym", "v", "cadOnly")}

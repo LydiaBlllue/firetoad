@@ -4,6 +4,10 @@
   "skipMonths": {
     "2025-12": "Only the tail of the first card statement — 11 days, not a month"
   },
+  "fire": {
+    "goal": true,
+    "asked": "2025-12-20"
+  },
   "retirement": {
     "scenarios": [
       {
@@ -50,6 +54,22 @@
         "v": 6500,
         "esc": 0.015,
         "d": "Private retirement residence with a care package. No waitlist and no subsidy, and priced like any other private service, so it climbs with wages"
+      }
+    ],
+    "pensions": [
+      {
+        "name": "CPP",
+        "monthly": 760,
+        "from": 65,
+        "asof": "2025-12-20",
+        "source": "My Service Canada estimate"
+      },
+      {
+        "name": "OAS",
+        "monthly": 740,
+        "from": 65,
+        "asof": "2025-12-20",
+        "source": "My Service Canada estimate"
       }
     ]
   }

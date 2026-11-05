@@ -431,7 +431,8 @@ def build(a, today):
         "planBase": int(plan.get("planBase") or plan.get("everyday")) if (plan.get("planBase") or plan.get("everyday")) else None,
         "skipMonths": {},
         **({"fire": plan["fire"]} if isinstance(plan.get("fire"), dict) else {}),
-        "retirement": a.get("retirement") or RETIREMENT_DEFAULTS,
+        "retirement": dict(a.get("retirement") or RETIREMENT_DEFAULTS,
+                           **({"pensions": a["pensions"]} if a.get("pensions") else {})),
     }, ensure_ascii=False, indent=2) + "\n"
     out[layout.rel("networth_history.json")] = json.dumps({
         "note": "One net-worth point per month, appended on every 'update dashboards' when the "

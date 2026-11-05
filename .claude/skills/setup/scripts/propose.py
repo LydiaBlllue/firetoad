@@ -375,6 +375,8 @@ def propose(root, inbox):
     # and the page reads that as yes only for someone already investing.
     questions.append({"id": "fire", "q": "Is retiring early — reaching the point where work is optional (FIRE) — something "
                                          "you are working toward? Yes, no, or skip."})
+    questions.append({"id": "pensions", "q": "If you know them: the CPP and OAS your My Service Canada account estimates, "
+                                             "a month, and from what age? They pay part of what retirement takes. Skip if not."})
     questions.append({"id": "planBase", "q": "Your planning spend for the FIRE target, a month, rent after FIRE included?",
                       "suggest": plan.get("everyday")})
     plan["planBase"] = plan.get("everyday")
