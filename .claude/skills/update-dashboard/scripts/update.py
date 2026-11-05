@@ -77,6 +77,10 @@ LONG = ("January", "February", "March", "April", "May", "June", "July", "August"
 LEDGER_COLS = layout.LEDGER_COLS
 SPEND_COLS = ["date", "amount", "currency", "category", "note"]
 REWARD_COLS = ["date", "amount", "currency", "note"]
+# The interest a card statement charged (1.0.1): its printed Interest total, which the card parsers
+# already read to reconcile. One row per statement; a card paid in full has rows of 0.00.
+INTEREST_COLS = ["date", "account", "statement", "interest"]
+CARD_PDF_PARSERS = ("rbc_visa", "bmo_mastercard")
 # A card's cash back or points turned into money (2026-10-28, user 002: a redemption sat as a
 # credit nobody claimed). Income, shown on its own line, never pay (FINANCE.md §2).
 REWARD = re.compile(r"CASH\s*BACK|REWARDS?\b|REDEMPTION|REDEEM|POINTS\s+(?:CREDIT|CONVERSION)", re.I)
@@ -394,6 +398,7 @@ class Plan:
         self.untyped = []
         self.credits = []
         self.rewards = []                               # rewards.csv rows: cash back a card paid
+        self.interest = []                              # card_interest.csv rows: what a statement charged
         self.files = []                                 # sentences, the way the owner knows them
         self.holdings = None                            # (src path, asof)
         self.activities = None
@@ -537,6 +542,9 @@ def plan_statement(ws, plan, path, doc):
         month = p_end.strftime("%Y-%m")
         if into == "spending.csv":
             n = plan_card(ws, plan, acc, pdoc, part, p_end)
+            charged = (part.get("totals") or {}).get("interest")
+            if charged is not None:
+                plan.interest.append([p_end.isoformat(), acc["key"], f"{acc.get('spendTag') or tag}/{stamp(p_end)}", f"{charged:.2f}"])
         elif into == "banks.json":
             n = 0
         else:
@@ -552,6 +560,44 @@ def plan_statement(ws, plan, path, doc):
         plan.files.append(f"{ws.doc_name(pdoc)} statement to {short(p_end)}" + (" (again)" if redrop else ""))
     if not filed_any:
         plan.archive.pop()
+
+
+def interest_backfill(ws, plan):
+    """What each card statement already in archive/ charged, for the statements card_interest.csv
+    does not have yet: the first run after 1.0.1 fills the past, every later one finds nothing to
+    do. Read by the same parsers, so a statement that does not reconcile adds nothing."""
+    have = {r["statement"] for r in csv_rows(ws.fd("card_interest.csv"))} if os.path.exists(ws.fd("card_interest.csv")) else set()
+    have |= {r[2] for r in plan.interest}
+    arch = os.path.join(ws.root, "archive")
+    out = []
+    if not os.path.isdir(arch):
+        return out
+    for doc in ws.docs:
+        if doc.get("parser") not in CARD_PDF_PARSERS:
+            continue
+        for tag in doc.get("tags") or []:
+            for f in sorted(os.listdir(arch)):
+                if not (f.lower().endswith(".pdf") and re.match(r"\d{8}_" + re.escape(tag) + "_", f)):
+                    continue
+                try:
+                    res = parse_file(os.path.join(arch, f), doc["parser"])
+                except Exception:              # unreadable, not reconciled, or no PDF reader: nothing to add
+                    continue
+                if not res["reconcile"]["ok"] or (res.get("totals") or {}).get("interest") is None:
+                    continue
+                # A card reissued under a new number: its old statements carry the old one. The file
+                # was filed under this document already, so a document for one card is that card.
+                acc = ws.account_for(doc, res.get("account"))
+                if not acc and len(doc.get("covers") or []) == 1:
+                    acc = next((x for x in ws.reg["accounts"] if x["key"] == doc["covers"][0]), None)
+                if not acc:
+                    continue
+                end = iso_to_date(res["period"]["to"])
+                st = f"{acc.get('spendTag') or tag}/{stamp(end)}"
+                if st not in have:
+                    have.add(st)
+                    out.append([end.isoformat(), acc["key"], st, f"{res['totals']['interest']:.2f}"])
+    return out
 
 
 def csv_fit(ws, plan, doc, res, name):
@@ -936,6 +982,17 @@ def write_plan(ws, plan):
             if new:
                 w.writerow(SPEND_COLS)
             w.writerows(sorted(plan.spend, key=lambda r: (r[0], r[4])))
+    if plan.interest:
+        p = fd("card_interest.csv")
+        have = {r["statement"] for r in csv_rows(p)} if os.path.exists(p) else set()
+        rows = [r for r in sorted(plan.interest) if r[2] not in have]
+        new = not os.path.exists(p) or os.path.getsize(p) == 0
+        if rows:
+            with open(p, "a", encoding="utf-8", newline="") as fh:
+                w = csv.writer(fh)
+                if new:
+                    w.writerow(INTEREST_COLS)
+                w.writerows(rows)
     if plan.rewards:
         p = fd("rewards.csv")
         new = not os.path.exists(p) or os.path.getsize(p) == 0
@@ -1351,6 +1408,7 @@ def main(argv):
         print(f"  ✗ {e}. Nothing can be parsed until it is installed; then run again.")
         return 3
     lap("read")
+    plan.interest += interest_backfill(ws, plan)
     # The FIRE goal is asked once (1.0.1): a workspace that never answered, with nothing invested,
     # gets one question. Someone already investing reads as yes until they say otherwise.
     pj = jload(ws.fd("plan.json"), {})
@@ -1399,6 +1457,14 @@ def main(argv):
         if a.json:
             print(json.dumps(summary, ensure_ascii=False, indent=1))
         return 1
+    if not (plan.archive or plan.delete) and plan.interest and a.write:
+        # Nothing new in inbox, but statements already filed have interest to record (the first
+        # run after 1.0.1): only that file is written, then the page is rebuilt.
+        only = Plan(); only.interest = plan.interest
+        write_plan(ws, only)
+        run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
+        run(os.path.join(HERE, "preflight.py"), [".", "--reseed"], root)
+        say(f"  card interest recorded for {len(plan.interest)} statement(s) already filed.")
     if not (plan.archive or plan.delete):
         say("  nothing to import.")
         if a.json:

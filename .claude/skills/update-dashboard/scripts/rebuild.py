@@ -158,6 +158,7 @@ def load(root):
                          f"tools/migrate_{have}to{have+1}.py on the workspace first, then rebuild")
     if have > SCHEMA:
         raise SystemExit(f"findata/ is schema {have}, newer than this tool ({SCHEMA}) — sync a newer tool")
+    d["card_interest"] = rd("card_interest.csv")   # absent until the first import after 1.0.1
     d["clock"] = clock(root)[0].isoformat()     # the date age is measured from (clock.py)
     return d
 
@@ -734,6 +735,12 @@ def derive(d):
                      "repay": ft["repayNow"],
                      "repayRows": [{"n": f.get("name") or f.get("pays"), "v": f.get("amount") or 0}
                                    for f in ft["committedNow"] if f.get("pays")]}
+    # What each card statement charged in interest (1.0.1): a fact the import keeps, one row per
+    # statement, from the Interest total the statement prints. Never read off a merchant name.
+    names = {a["key"]: a.get("label") or a.get("name") for a in accs}
+    out["CARD_INTEREST"] = sorted(({"d": r["date"], "k": r["account"], "n": names.get(r["account"], r["account"]),
+                                    "v": round(float(r["interest"]), 2)}
+                                   for r in d["card_interest"] if r["account"] in names), key=lambda x: (x["d"], x["k"]))
     got_parts = sum(r["v"] for r in out["NWPARTS"]) - R_debt
     got_reach = sum(r["v"] for r in out["REACH"]) - (R_debt - secured)
     if not (got_parts == got_reach == net_worth + fgn_cad):

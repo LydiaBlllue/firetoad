@@ -133,8 +133,8 @@
   once it has a purchase, otherwise the newest one the statements reach. What is left of Everyday
   is This month's to say, 2026-11-03). Invested, no goal: Portfolio · Invested. A goal, nothing
   invested: FIRE progress. The rest fill from one list, in order, taking only a card with a
-  number: Spent in \<month\> · Months covered · Kept this year · A year of subscriptions · Biggest
-  category. So no owner sees an empty card.
+  number: Card interest (only when a statement charged some) · Spent in \<month\> · Months covered ·
+  Kept this year · A year of subscriptions · Biggest category. So no owner sees an empty card.
 - **Net worth in one card, cut both ways at once**: one row per `role`, cash split by where it
   is — For FIRE / Set aside / Cash / Cash in \<abroad\> / Owed to you / Other assets (only for
   things that are not money). Each row's bar is as long as its share and coloured by `reach`

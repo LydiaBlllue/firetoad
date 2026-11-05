@@ -816,6 +816,8 @@ function pageFlags(){
   // Accounts: red when a gap actually removes money from net worth, amber for the rest.
   if(ACCT.gaps.some(g => g.sev === "bad")) f.acct = "#d03b3b";
   else if(ACCT.gaps.length) f.acct = "#c98500";
+  // Year: amber while the newest statement of any card charged interest; paying it off clears it.
+  if(cardInterest().charging) f.trends = "#c98500";
   const bd = baseDrift();
   if(bd !== null && Math.abs(bd) > DRIFT_FLAG) f.base = "#c98500";
   // The investing pages: the band and the cap from rules.json, never a literal 40/45/10.
@@ -987,6 +989,7 @@ const GLOSSARY = {
   rewards:        {w:"rewards", pos:"noun", def:"Money a card pays back for spending on it: cash back, or points turned into money. It counts as income but never as pay, and it stays on the card.", eg:"1% cash back on $2,000 of purchases is $20 of rewards.", not:"A refund, which gives back a purchase and comes off spending.", also:["investment_income"]},
   investment_income: {w:"investment income", pos:"noun", def:"What your investments pay you while you still hold them: dividends, interest and securities lending, after any tax withheld.", eg:"A fund paying $40 of dividends, less $6 withheld, is $34 of investment income.", not:"A gain from selling, which is not paid until you sell.", also:["dividend","securities_lending","withholding_tax"]},
   unrealized_gain:{w:"unrealized gain", pos:"noun", def:"How much more an investment is worth today than you paid for it, while you still hold it. It is not money until you sell.", f:"unrealized gain = market value \u2212 book value", eg:"Bought for $1,000, worth $1,200 today: a $200 unrealized gain.", also:["book_value","market_value"]},
+  card_interest:  {w:"card interest", pos:"noun", def:"What a credit card charges on a balance not paid off. Paying the whole statement balance by the due date means no interest on purchases; leaving part of it unpaid is what starts it.", not:"A fee, such as an annual fee, which is charged whatever you pay."},
   emergency_fund: {w:"emergency fund", pos:"noun", def:"Money kept where you can reach it at once, to live on if the paycheque stops or a large bill arrives. A common guide is three to six months of spending.", also:["safety_net"]},
   long_term_care: {w:"long-term care", pos:"noun", def:"Help with daily living in later life, at home or in a facility, usually paid for privately."},
   // Words this page coined
@@ -1348,6 +1351,13 @@ function renderHome(){
         numx(fmt(total), rows.map(p => [p[0], fmt(p[1])]), es.length+" purchase"+(es.length === 1 ? "" : "s")+(ym > covEnd ? ", and the month is still open." : "."), true),
         rows.map(p => p[0]+" "+fmt(p[1])).join(" \u00b7 "));
     },
+    interest: () => {
+      const ci = cardInterest();
+      if(!(ci.total > 0.005)) return null;
+      return card(term("card_interest", "Card interest"),
+        numx(fmt2(ci.total), Object.entries(ci.by).filter(e => e[1] > 0.005).map(e => [e[0], fmt2(e[1])]), "What your card statements charged in interest, the last 12 months.", true),
+        ci.latest ? "Newest statement: " + fmt2(ci.latest.v) : "");
+    },
     covered: () => {
       if(waitsFor("safe")) return null;
       const s = safetyCalc();
@@ -1379,7 +1389,7 @@ function renderHome(){
     },
   };
   const first = INVESTED() ? (GOAL() ? ["port", "fire", "inv", "spent"] : ["port", "inv"]) : (GOAL() ? ["fire"] : []);
-  const FILL = ["spent", "covered", "kept", "subs", "bigcat"];
+  const FILL = ["interest", "spent", "covered", "kept", "subs", "bigcat"];
   const shown = [];
   for(const k of first.concat(FILL)){
     if(shown.length >= 4 || shown.some(s => s.k === k)) continue;
@@ -2112,6 +2122,21 @@ function renderBaseline(){
     $("baseHero").textContent = "—";
     $("baseMonths").innerHTML = '<div class="empty">Needs 3 closed months with records ('+vals.length+' so far).</div>';
   }
+}
+
+// ===== Card interest (1.0.1): what the cards charged, as a fact and never a verdict =====
+// One row per card statement, from the Interest total it prints. Shown only when there is some.
+const CARD_INTEREST = [];
+function cardInterest(){
+  const from = ymShift(TODAY.slice(0,7), -11);
+  const last12 = CARD_INTEREST.filter(r => r.d.slice(0,7) >= from);
+  const by = {};
+  last12.forEach(r => by[r.n] = (by[r.n] || 0) + r.v);
+  const newest = {};
+  CARD_INTEREST.forEach(r => { if(!newest[r.k] || r.d >= newest[r.k].d) newest[r.k] = r; });
+  const latest = Object.values(newest).sort((a,b) => a.d < b.d ? 1 : -1)[0] || null;
+  return {total: last12.reduce((s,r) => s + r.v, 0), by, latest,
+          charging: Object.values(newest).some(r => r.v > 0)};
 }
 
 // ===== Safety net (1.0.1): how long the money would last without a paycheque =====
@@ -3285,6 +3310,8 @@ function renderYearInsights(){
   yes.forEach(e => byCat[e.category] = (byCat[e.category]||0) + e.amount);
   const top = Object.entries(byCat).sort((a,b) => b[1]-a[1])[0];
   if(top) ins.push({s:"n", t:"<b>"+catName(top[0])+"</b> is the biggest category: "+fmt(top[1])+", "+Math.round(pc(top[1], ytd))+"% of the year."});
+  const ciYr = CARD_INTEREST.filter(r => r.d.startsWith(yr)).reduce((s,r) => s + r.v, 0);
+  if(ciYr > 0.005) ins.push({s:"w", t:"<b>"+term("card_interest", "Card interest")+"</b> cost "+fmt2(ciYr)+" this year."});
   // The charges that repeat (`sub`, measured at build time), and the biggest of them.
   const byBrand = {};
   yes.filter(e => e.sub).forEach(e => { byBrand[e.sub] = (byBrand[e.sub]||0) + e.amount; });
