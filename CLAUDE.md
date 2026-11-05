@@ -189,9 +189,9 @@ report template are all in that file. **Do not work from memory.**
 
 ## Nothing in a dashboard is typed by hand
 
-<!-- LINT:CONSTS n=52 -->
+<!-- LINT:CONSTS n=53 -->
 `rebuild.py` builds the dashboard from `templates/dashboards/` and `findata/`, deriving
-**52 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CARD_INTEREST, CATS, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DEBT_ACCTS, DECISIONS, DOC_LATEST, FGN, FIRE_GOAL, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SAFETY, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
+**53 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CARD_INTEREST, CATS, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DEBT_ACCTS, DECISIONS, DOC_LATEST, FGN, FIRE_GOAL, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PENSIONS, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SAFETY, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
 applies, and it is idempotent. `--template DIR` writes the page with every constant emptied,
 which is what the template *is*: page code and nobody's numbers.
 

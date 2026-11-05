@@ -430,12 +430,16 @@ def build(out):
     J("profile.json", OrderedDict([
         ("note", "Who this workspace belongs to. The FIRST thing to change when you make it yours: "
                  "the name appears in the browser tab and under the Jade Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. Jade Toad itself is the product, not a setting."),
-        ("schema", 13), ("demo", True), ("owner", P["name"]), ("born", 1994), ("importDay", 1)]))
+        ("schema", 18), ("demo", True), ("owner", P["name"]), ("born", 1994), ("importDay", 1)]))
     J("plan.json", OrderedDict([
         ("note", "Your planning assumptions. `planBase` is the monthly planning spend the FIRE target is built on (× 12 × 25); `skipMonths` are months excluded from every comparison, each with the reason the page shows. `retirement` holds the projection scenarios and the late-life care model; `descriptions` are your own one-liners under the net-worth parts (leave them out and the page describes each part from the register)."),
         ("planBase", int(P["rent"] + P["everyday"])),
         ("skipMonths", OrderedDict([("2025-12", "Only the tail of the first card statement — 11 days, not a month")])),
-        ("retirement", RETIREMENT_DEFAULTS),
+        # She said yes to FIRE at setup, and gave the estimates her My Service Canada account shows.
+        ("fire", OrderedDict([("goal", True), ("asked", "2025-12-20")])),
+        ("retirement", OrderedDict(list(RETIREMENT_DEFAULTS.items()) + [("pensions", [
+            OrderedDict([("name", "CPP"), ("monthly", 760), ("from", 65), ("asof", "2025-12-20"), ("source", "My Service Canada estimate")]),
+            OrderedDict([("name", "OAS"), ("monthly", 740), ("from", 65), ("asof", "2025-12-20"), ("source", "My Service Canada estimate")])])])),
     ]))
     J("foreign.json", OrderedDict([("asof", TODAY), ("currency", None), ("symbol", ""), ("label", "Foreign"),
                                    ("cadPerUnit", 0), ("total", 0),

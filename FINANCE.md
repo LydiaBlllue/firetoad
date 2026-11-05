@@ -344,3 +344,9 @@ Debts → liability; a foreign-currency account → asset · abroad, role per ac
   some: Home's first fill card (the last 12 months, split by card), a line in the Year's *What
   stands out*, and an amber dot on Year while the newest statement of any card charged interest.
   No rate is read, and the page never says what to do.
+- **Government pensions** in the drawdown: `plan.json` `retirement.pensions`, each
+  `{name, monthly, from, asof, source}` — CPP and OAS as the owner's own My Service Canada
+  statement estimates them, in today's dollars, said by the owner and never estimated here. From
+  the age each starts they pay part of what is taken out (spending and care), so the portfolio
+  takes only the rest; a pension that starts before the drawdown does not add to the pot. The FIRE
+  target is unchanged: it still has to carry the years before the pensions start.

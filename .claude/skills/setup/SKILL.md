@@ -229,6 +229,10 @@ the page shows is a sum of them.
 - **Whether retiring early is something they are working toward** — asked once, in plain words.
   Yes or no goes in as `plan.fire` `{"goal": true|false, "asked": "<today>"}`; skipped is left
   out. The FIRE pages show only for yes (for an owner already investing, unanswered reads as yes).
+- **CPP and OAS, if they know them** — the monthly estimates their My Service Canada account
+  shows, and the age each starts. They go in as top-level `pensions`:
+  `[{"name":"CPP","monthly":850,"from":65,"asof":"<today>","source":"My Service Canada estimate"}]`.
+  Skipped is left out; the Drawdown page then says they are not counted. Never estimate them.
 
 ### 5 · The one investing question
 
