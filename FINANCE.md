@@ -326,11 +326,11 @@ Debts → liability; a foreign-currency account → asset · abroad, role per ac
   an investor had disappears, and as no otherwise; the next import asks once.
 - **Safety net**, how long the money would last without a paycheque:
 
-  > **months covered = (Spendable today − what is invested in it − what is owed on no asset) ÷ what a month costs**
+  > **months covered = (Spendable today − what is invested in it − what is owed on no asset) ÷ a usual month**
 
   The money starts from Home's own *Spendable today* row, so the two pages cannot disagree, and
-  takes out what in it is invested (a TFSA can be spent today, but it is held to grow). **What a
-  month costs** = the spending baseline's average + the repayments the plan pays today (active
+  takes out what in it is invested (a TFSA can be spent today, but it is held to grow). **A usual
+  month** = the average of up to twelve full months of spending (the Monthly spending page) + the repayments the plan pays today (active
   committed flows with `pays`, `flows.py` `repayNow`). Rent and bills paid today are in
   `spending.csv` already, so they are not added; `COMMITTED_KEEP` is not used, because it holds
   rent that starts only at FIRE. Money abroad is its own line, never in the headline. Below zero

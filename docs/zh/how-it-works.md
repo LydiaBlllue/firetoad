@@ -7,11 +7,12 @@
 | 分组 | 页面 | 回答什么 |
 |---|---|---|
 | — | Home | 你现在在哪儿，值多少 |
+| — | Accounts | 钱放在哪些地方 |
 | Money in & out | This month | 这个月还能花多少，钱花到哪了 |
 | | Year | 这一年按分类、按月怎么样 |
-| | Income | 收入从哪来，留下了多少，支票账户的每一笔 |
+| | Income & chequing | 收入从哪来，留下了多少，支票账户的每一笔 |
 | | Subscriptions | 哪些在重复扣钱、一年多少、下一笔什么时候 |
-| | Spending baseline | 一个月实际花多少，计划用的是哪个数 |
+| | Monthly spending | 平常一个月花多少，计划用的是哪个数 |
 | Plan | Budget | 每份工资做什么用，基金里有多少 |
 | | Safety net | 没有工资的话，今天能动用的钱能撑几个月 |
 | | FIRE | 离目标还有多远，哪年到 |
@@ -20,7 +21,6 @@
 | | Performance | 和同一天买入一只基准基金相比表现如何 |
 | | Holdings | 每个持仓，按角色或按账户 |
 | | Investment income | 不卖任何东西，投资组合付给你多少，哪只持仓什么时候付 |
-| — | Accounts | 钱放在哪些地方 |
 | Monthly import | Updates | 每次更新改了什么 |
 | | Statements | 哪份对账单哪个月到了，还缺什么 |
 | — | Glossary | 每个金融术语，以及页面自己起的每个词 |

@@ -107,11 +107,10 @@
   reader:
   | Section | Pages |
   |---|---|
-  | — | Home (four cards, net worth in one card, net worth over time) |
-  | Money in & out | This month · Year · Income · Subscriptions · Spending baseline |
+  | — | Home (four cards, net worth in one card, net worth over time) · Accounts |
+  | Money in & out | This month · Year · Income & chequing · Subscriptions · Monthly spending |
   | Plan | Budget · Safety net · FIRE · Drawdown & care |
   | Investing | Portfolio · Performance · Holdings · Investment income |
-  | — | Accounts |
   | Monthly import | Updates · Statements |
   | — | Glossary, at the foot of the sidebar, under the pages still waiting for their data |
 
@@ -202,7 +201,7 @@
 
 ### Plan
 
-- **Safety net** (1.0.1): three cards — Months covered, The money, What a month costs — each
+- **Safety net** (1.0.1): three cards — Months covered, The money, A usual month — each
   opening its sum, then where the money is and what is owed on no asset. No band, colour or
   target; money abroad only in the line under Months covered (FINANCE.md §8d).
 
@@ -237,20 +236,25 @@
   closest call, the middle case), one bar per start year (green up = what is left, red down = how
   early it ran out), and a note that this is American history and the stretches overlap. Only
   the years of taking money out are replayed; the first day's pot is the steady path's.
-- **Spending baseline**: the planning figure against what is really spent, with a 12-month bar
+- **One name for a month's spending** (2026-11-05, the owner): **A usual month** is the average of
+  up to twelve full months, unusual ones left out — on Monthly spending, Safety net, Investment
+  income and This month's comparison. *Spent a month in <year>* (Year) is only that year's
+  average and says so; the **Planning figure** is the one the FIRE target is built on.
+- **Monthly spending** (was Spending baseline): *A usual month* on top, then the planning figure against what is really spent, with a 12-month bar
   chart, the months in the average highlighted, the average of up to twelve usable months a red
   dashed line.
 
 ### Accounts, and the Monthly import
 
-- **Accounts sits under Home**, not with the import (2026-11-03): it answers *where is my money*,
-  which is net worth opened up, while Updates and Statements answer *is the data in, and what
-  did each update change*.
+- **Accounts sits under Home**, right below it in the sidebar (2026-11-03, 2026-11-05): it answers
+  *where is my money*, which is net worth opened up, while Updates and Statements answer *is the
+  data in, and what did each update change*. Its four cards are Home's money cut the same way —
+  Net worth · Cash · Invested · You owe — never the tool's own counts.
 
 - **No To do page** (taken off 2026-10-28). `tasks.json` and `decisions.json` are still
   written and read by the import; nothing on the page lists them, and an old link opens Updates.
-- **Updates**: where an update leaves its trace — three stat cards (last update, files on record,
-  updates on file), then one card per update from `findata/history/imports.json`: what changed
+- **Updates**: where an update leaves its trace — two stat cards (the last update, and the next one
+  with how many statements are still to bring), then one card per update from `findata/history/imports.json`: what changed
   (label, from, to), what was noticed, what was decided without asking, what you were asked.
   **The story of an update lives here and nowhere else; every other page shows a status computed
   today.**
