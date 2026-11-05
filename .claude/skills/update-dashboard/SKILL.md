@@ -259,28 +259,18 @@ Then `--reseed`.
 
 ## Step 5 — Check
 
-```bash
-python3 .claude/skills/workspace-checks/scripts/check_design.py \
-  dashboards/finance_dashboard.html
-python3 .claude/skills/workspace-checks/scripts/check_data.py .
-```
-
-The PostToolUse hook runs these after individual edits; run them once over everything at the end
-anyway. Pass the page by name rather than globbing `dashboards/*.html`: an owner's workspace may
-keep other HTML files there (mock-ups, decision records) that were never meant to follow the spec.
-
-Those two read the files as text. The four things they cannot see — whether a page throws
-instead of drawing, sideways scrolling, how wide a chart is really painted, whether a page fills
-a screen — are now a third command rather than a manual pass in a browser:
+The import already ended with the money checks (`check_data.py . --money`): its summary lists
+anything they found. Nothing else runs by itself (2026-11-05). When this import changed the
+data's shape — a new account, a new document, a new kind of row — run the page level too, and say
+what it found:
 
 ```bash
-python3 .claude/skills/workspace-checks/scripts/check_render.py \
-  dashboards/finance_dashboard.html
+python3 .claude/skills/workspace-checks/scripts/checks.py . --level page
 ```
 
-It drives headless Chromium (Playwright, installed 2026-09-08), loads each page at 800 / 1120 /
-1440 / 1760 px, clicks every sidebar entry and measures what was drawn. About 11 seconds, and it replaces
-roughly 28 hand-driven browser calls a run.
+That is check_data in full, check_design, and check_render, which drives headless Chromium
+(Playwright): each page at 800 / 1120 / 1440 / 1760 px, the sidebar in a short window, and the
+page drawn for every kind of owner. About 20 seconds.
 
 One thing worth knowing before trusting it: **it measures the chart's painted width, not its
 element box.** With a fixed height and `preserveAspectRatio`, the `<svg>` still stretches to full

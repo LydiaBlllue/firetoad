@@ -1,6 +1,6 @@
 ---
 name: workspace-checks
-description: Check the workspace across five questions — does the money reconcile, are the financial rules in FINANCE.md still held, is the dashboard current with findata/, is the data itself clean, and does the page still follow DESIGN.md. Use after ANY edit to a dashboard or to findata/, before reporting a change as done — and whenever the owner asks to review the UI, adds a page or chart, or says a number looks wrong. Findings are grouped by which of those five questions failed, because a balance chain that does not close and a stale README link are not the same kind of problem.
+description: Check the workspace at three levels — the money by itself after every edit, "check the page" (检查页面) and "check before a release" (发版前检查) when asked — across five questions — does the money reconcile, are the financial rules in FINANCE.md still held, is the dashboard current with findata/, is the data itself clean, and does the page still follow DESIGN.md. Use after ANY edit to a dashboard or to findata/, before reporting a change as done — and whenever the owner asks to review the UI, adds a page or chart, or says a number looks wrong. Findings are grouped by which of those five questions failed, because a balance chain that does not close and a stale README link are not the same kind of problem.
 ---
 
 # Workspace checks
@@ -44,8 +44,19 @@ python3 .claude/skills/workspace-checks/scripts/check_render.py \
 pip3 install --user playwright && python3 -m playwright install chromium
 ```
 
-It is deliberately **not** in the PostToolUse hook — 11 seconds on every edit is too slow. Run it
-before calling a dashboard change done.
+It runs at level ② (below), never on an edit.
+
+## Three levels
+
+Only whether the money is right runs by itself: `check_data.py . --money` after any edit to
+`findata/` and at the end of an import, silent when clean. The rest is run when asked
+(2026-11-05, the owner):
+
+- **检查页面 / "check the page"** — `checks.py . --level page`: check_data in full, check_design,
+  check_render. Run it yourself before saying any change to the page, a template, DESIGN.md,
+  README or the data's shape is done, and say what it found.
+- **发版前检查 / "check before a release"** — `checks.py . --level release`: the page level and the
+  selftest. Before every release PR.
 
 ## Check the checkers
 
@@ -53,8 +64,8 @@ before calling a dashboard change done.
 python3 .claude/skills/workspace-checks/scripts/selftest.py .
 ```
 
-<!-- LINT:FAULTS n=63 -->
-Plants 63 specific faults in a **copy** of the workspace and asserts that a named rule fires
+<!-- LINT:FAULTS n=65 -->
+Plants 65 specific faults in a **copy** of the workspace and asserts that a named rule fires
 for each. Run it after changing a linter, and after moving anything the linters read.
 
 It exists because on 2026-09-08 two linter bugs shipped in one afternoon and both were silent: S4
@@ -67,9 +78,8 @@ hole nobody had noticed: nothing compared the dashboard's `FOREIGN` constant to 
 It also reports rules that exist but that nothing here breaks — its own blind spots, named rather
 than assumed away.
 
-A `PostToolUse` hook in `.claude/settings.json` already runs the matching one after
-any Edit/Write under `dashboards/` or `findata/`, and stays silent when everything is
-clean. Run them by hand when you want the full picture, or when the hook is off.
+The `PostToolUse` hook in `.claude/settings.json` runs only the money checks, after any
+Edit/Write under `findata/`. The page is never checked on an edit: run level ② for it.
 
 Pass the dashboard by name. Do **not** glob `dashboards/*.html`: an owner's workspace may keep
 other HTML files there (mock-ups, decision records) that were never meant to follow the spec.
