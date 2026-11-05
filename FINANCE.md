@@ -317,3 +317,22 @@ order.
 Mapping today's `feeds` onto the axes: Portfolio → asset · grow · today (registered retirement
 accounts: costs); Earmarked → asset · set-aside · spoken; Bank cash → asset · buffer · today;
 Debts → liability; a foreign-currency account → asset · abroad, role per account.
+
+### 8d. The FIRE goal and the Safety net (1.0.1)
+
+- **The FIRE goal is a declaration**: `plan.json` `fire` `{goal, asked}`. Setup asks once, in plain
+  words, whether retiring early is something they are working toward; skipped leaves it out. It
+  changes by saying so. Never answered reads as yes for someone with money invested, so no page
+  an investor had disappears, and as no otherwise; the next import asks once.
+- **Safety net**, how long the money would last without a paycheque:
+
+  > **months covered = (Spendable today − what is invested in it − what is owed on no asset) ÷ what a month costs**
+
+  The money starts from Home's own *Spendable today* row, so the two pages cannot disagree, and
+  takes out what in it is invested (a TFSA can be spent today, but it is held to grow). **What a
+  month costs** = the spending baseline's average + the repayments the plan pays today (active
+  committed flows with `pays`, `flows.py` `repayNow`). Rent and bills paid today are in
+  `spending.csv` already, so they are not added; `COMMITTED_KEEP` is not used, because it holds
+  rent that starts only at FIRE. Money abroad is its own line, never in the headline. Below zero
+  is 0; without three closed months the page says so instead of a figure. It judges nothing: no
+  band, colour or target. The usual three to six months is the Glossary's *emergency fund*.

@@ -248,6 +248,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .foot{font-size:12px;color:var(--muted);margin-top:9px}
 /* the Glossary: on its own at the foot of the sidebar */
 .side .grp.foot{margin-top:14px}
+.side .grp.solo{margin-top:14px}
 .side [hidden]{display:none!important}
 .dt{width:100%;border-collapse:collapse;font-size:13px}
 .dt th{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 0;border-bottom:1px solid var(--grid)}
@@ -568,6 +569,11 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
   </div>
 </section>
 
+<section data-pg="safe" hidden>
+  <div class="grid-stats" id="safeStats"></div>
+  <div class="card" id="safeAccts"></div>
+</section>
+
 <section data-pg="upd" hidden>
   <div class="grid-stats" id="updStats"></div>
   <div id="updList"></div>
@@ -770,28 +776,30 @@ addEventListener("DOMContentLoaded", () => {
 });
 
 const NAV = [
-  // Accounts sits with Home (2026-11-03): it is net worth opened up, a question about the money,
-  // not about the import.
-  {sec:"",          items:[{k:"home",  n:"Home",             t:"Home",                 d:""},
-                           {k:"acct",  n:"Accounts",         t:"Accounts",             d:""}]},
-  // Spending is read two ways and in this order (2026-09-10): this month, opened up, is what
-  // you look at every week; the year is what you look at now and then.
-  {sec:"Spending",  items:[{k:"cat",   n:"This month",       t:"This month",           d:""},
+  // Ordered the way someone starting out reads it (1.0.1, decided 2026-11-02): what came in and
+  // went out, then the plan, then investing, which only someone who invests sees. Page keys never
+  // change, so an old link or a saved state still lands.
+  {sec:"",          items:[{k:"home",  n:"Home",             t:"Home",                 d:""}]},
+  {sec:"Money in & out", items:[{k:"cat", n:"This month",    t:"This month",           d:""},
                            {k:"trends",n:"Year",             t:"The year",             d:""},
-                           {k:"subs",  n:"Subscriptions",    t:"Subscriptions",        d:""}]},
-  {sec:"Income",    items:[{k:"income",n:"Income",           t:"Income",               d:""},
-                           {k:"wsinc", n:"Investment income",t:"Investment income",    d:""}]},
+                           {k:"income",n:"Income",           t:"Income",               d:""},
+                           {k:"subs",  n:"Subscriptions",    t:"Subscriptions",        d:""},
+                           {k:"base",  n:"Spending baseline", t:"Spending baseline",   d:""}]},
+  {sec:"Plan",      items:[{k:"budget",n:"Budget",           t:"Budget",               d:""},
+                           {k:"safe",  n:"Safety net",       t:"Safety net",           d:""},
+                           {k:"fire",  n:"FIRE",             t:"FIRE",                 d:""},
+                           {k:"coast", n:"Drawdown & care",  t:"Drawdown and care",    d:""}]},
   {sec:"Investing", items:[{k:"port",  n:"Portfolio",        t:"Portfolio",            d:""},
                            {k:"perf",  n:"Performance",      t:"Performance",          d:""},
-                           {k:"hold",  n:"Holdings",         t:"Holdings",             d:""}]},
-  {sec:"Plan",      items:[{k:"budget",n:"Budget",           t:"Budget",               d:""},
-                           {k:"fire",  n:"FIRE",             t:"FIRE",                 d:""},
-                           {k:"coast", n:"Drawdown & care",  t:"Drawdown and care",    d:""},
-                           {k:"base",  n:"Spending baseline", t:"Spending baseline",   d:""}]},
+                           {k:"hold",  n:"Holdings",         t:"Holdings",             d:""},
+                           {k:"wsinc", n:"Investment income",t:"Investment income",    d:""}]},
+  // Accounts is net worth opened up, a question about the money, not about the import.
+  {sec:"",          items:[{k:"acct",  n:"Accounts",         t:"Accounts",             d:""}]},
   // The monthly import's two pages: what each update changed, and which statements are in.
   {sec:"Monthly import", items:[{k:"upd", n:"Updates",       t:"Updates",              d:""},
                            {k:"src",   n:"Statements",       t:"Statements",           d:""}]},
-  // The Glossary is a reference: on its own at the foot of the sidebar (2026-10-28).
+  // The Glossary is a reference: on its own at the foot of the sidebar, under the pages still
+  // waiting for their data.
   {sec:"",          items:[{k:"gloss", n:"Glossary",         t:"Glossary",             d:""}]}
 ];
 const PAGES = NAV.flatMap(g => g.items);
@@ -821,14 +829,23 @@ function pageFlags(){
 // Income, Investing and the FIRE pages were empty frames). The page comes back by itself the day
 // its data arrives; there is no setting.
 const INVESTED = () => PORTFOLIO > 0 || !!INVEST.investable;
+// The FIRE goal is the owner's declaration (plan.json `fire`), asked once at setup: true, false,
+// or null when never answered. Unanswered reads as yes only for someone already investing, so
+// no page an investor had disappears; otherwise as no.
+const FIRE_GOAL = null;
+const GOAL = () => FIRE_GOAL === true || (FIRE_GOAL === null && INVESTED());
 const WAITS = {
   income: () => (INVEST.cashflow || []).length ? "" : "a chequing statement",
   wsinc:  () => (WSINC || []).length ? "" : "a broker's activity",
   port:   () => INVESTED() ? "" : "a broker's holdings",
   perf:   () => INVESTED() ? "" : "a broker's holdings",
   hold:   () => INVESTED() ? "" : "a broker's holdings",
-  fire:   () => INVESTED() ? "" : "something invested",
-  coast:  () => INVESTED() ? "" : "something invested",
+  safe:   () => (INVEST.cashflow || []).length ? "" : "a chequing statement",
+  // The FIRE pages wait for a goal, not for money (1.0.1): someone saving toward FIRE with
+  // nothing invested yet still has a target to read. Drawdown also waits for something invested,
+  // so nobody with nothing invested reads that the money runs out.
+  fire:   () => GOAL() ? "" : "a FIRE goal",
+  coast:  () => !GOAL() ? "a FIRE goal" : INVESTED() ? "" : "something invested",
 };
 const waitsFor = k => WAITS[k] ? WAITS[k]() : "";
 let waitOpen = false;
@@ -842,11 +859,12 @@ function drawNav(){
     + '<div class="grp">' + waiting.map(i => '<button data-k="'+i.k+'" class="'+(i.k===curPage?"sel":"")+'"><span>'+i.n
       + '<small>with '+waitsFor(i.k)+'</small></span></button>').join("") + '</div></details>';
   $("sideNav").innerHTML = NAV.map((g, gi) => {
-    if(!g.sec && gi > 0) return fold + '<div class="grp foot">' + g.items.map(btn).join("") + '</div>';
+    if(gi === NAV.length - 1) return fold + '<div class="grp foot">' + g.items.map(btn).join("") + '</div>';
     const items = g.items.filter(i => !waitsFor(i.k));
     if(!items.length) return "";
+    // A page with no section of its own after the first (Accounts) stands apart from the one above.
     const head = !g.sec ? '' : '<div class="sec">'+g.sec+'</div>';
-    return head + '<div class="grp">' + items.map(btn).join("") + '</div>';
+    return head + '<div class="grp'+(!g.sec && gi > 0 ? " solo" : "")+'">' + items.map(btn).join("") + '</div>';
   }).join("");
   const det = $("sideNav").querySelector("details.wait");
   if(det) det.ontoggle = () => { waitOpen = det.open; };
@@ -969,6 +987,7 @@ const GLOSSARY = {
   rewards:        {w:"rewards", pos:"noun", def:"Money a card pays back for spending on it: cash back, or points turned into money. It counts as income but never as pay, and it stays on the card.", eg:"1% cash back on $2,000 of purchases is $20 of rewards.", not:"A refund, which gives back a purchase and comes off spending.", also:["investment_income"]},
   investment_income: {w:"investment income", pos:"noun", def:"What your investments pay you while you still hold them: dividends, interest and securities lending, after any tax withheld.", eg:"A fund paying $40 of dividends, less $6 withheld, is $34 of investment income.", not:"A gain from selling, which is not paid until you sell.", also:["dividend","securities_lending","withholding_tax"]},
   unrealized_gain:{w:"unrealized gain", pos:"noun", def:"How much more an investment is worth today than you paid for it, while you still hold it. It is not money until you sell.", f:"unrealized gain = market value \u2212 book value", eg:"Bought for $1,000, worth $1,200 today: a $200 unrealized gain.", also:["book_value","market_value"]},
+  emergency_fund: {w:"emergency fund", pos:"noun", def:"Money kept where you can reach it at once, to live on if the paycheque stops or a large bill arrives. A common guide is three to six months of spending.", also:["safety_net"]},
   long_term_care: {w:"long-term care", pos:"noun", def:"Help with daily living in later life, at home or in a facility, usually paid for privately."},
   // Words this page coined
   for_fire:       {own:1, w:"For FIRE", pos:"on this page", def:"Money whose job is to grow until you stop working. FIRE progress is measured on it.", also:["portfolio","fire"]},
@@ -991,6 +1010,8 @@ const GLOSSARY = {
   committed:      {own:1, w:"committed payment", pos:"on this page", def:"A payment made every month before anything is chosen, such as rent, a mortgage or a loan.", also:["planning_figure"]},
   fund:           {own:1, w:"fund", pos:"on this page", def:"A name you put on part of the money in one of your accounts, for something you are saving toward. Nothing is moved: the money stays where it is, and the plan can add to it each month.", also:["unallocated"]},
   unallocated:    {own:1, w:"Unallocated", pos:"on this page", def:"What is left of take-home pay once every line of the plan is paid. It stays where the paycheque landed.", also:["everyday"]},
+  safety_net:     {own:1, w:"Safety net", pos:"on this page", def:"The money you could live on today without a paycheque, and how many months it would last.", also:["months_covered","emergency_fund"]},
+  months_covered: {own:1, w:"Months covered", pos:"on this page", def:"How many months of your usual spending the money you can reach today would pay for, after what you owe on no asset.", f:"(spendable today − what you owe on no asset) ÷ what a month costs", also:["safety_net","spendable_today"]},
   complete_to:    {own:1, w:"Complete to", pos:"on this page", def:"The day every account’s numbers are in up to. After it, some accounts are still waiting for their next statement."},
 };
 // The register's axes in the page's own words (Home's net-worth card, the Accounts table).
@@ -1143,6 +1164,7 @@ function render(){
   renderIncChart();
   renderCatPage();
   renderBaseline();
+  renderSafety();
   renderSubs();
   renderYear();
   renderAlwYear();
@@ -1298,29 +1320,73 @@ function renderHome(){
   // Four cards, each a label, a number and at most one fact (DESIGN.md §5b′). How a number is
   // made opens from the number; what a word means opens from the word.
   const card = (lab, val, status) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status ? '<div class="cap">'+status+'</div>' : "")+'</div>';
-  $("homeStats").innerHTML =
-    card(term("portfolio", "Portfolio"),
+  // The cards, each null when it has no number to show. The signals (something invested, a FIRE
+  // goal) choose the first ones; the rest fill from one list, in order, so a card-only owner and
+  // an owner with no plan never see an empty card (1.0.1). Invested with a goal is the four an
+  // investor has always had.
+  const C = {
+    port: () => card(term("portfolio", "Portfolio"),
       numx(fmt(PORTFOLIO), split(grow.by), "Every account you hold to grow. Set-aside accounts and bank cash are not in it.", true),
-      !INVEST.investable ? "Nothing invested yet" : bandLab()+" "+INVEST.dryPct+"%") +
-    card(term("fire", "FIRE")+" progress",
+      !INVEST.investable ? "Nothing invested yet" : bandLab()+" "+INVEST.dryPct+"%"),
+    fire: () => card(term("fire", "FIRE")+" progress",
       unset("planBase") ? notSet("planBase")
         : numx(pctP+"%", [["Portfolio", fmt(PORTFOLIO)], ["Target", fmt(target)]], "The target is your planning figure × 12 × 25."),
-      !unset("planBase") && crossP ? "On track for "+dTxt(crossP) : "") +
-    card(dep ? "Invested in "+ymLabel(dep.ym) : "Invested this month",
+      !unset("planBase") && crossP ? "On track for "+dTxt(crossP) : ""),
+    inv: () => card(dep ? "Invested in "+ymLabel(dep.ym) : "Invested this month",
       unset("invest") ? (dep ? numx(fmt(dep.amt), [], "Counted the day "+BROKER+" receives it. The plan has no investing amount yet.") : notSet("invest"))
         : dep ? numx(fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>', [["Planned", fmt(FUNDS.plan.invest)], ["Arrived", fmt(dep.amt)]], "Two transfers of "+fmt(half)+", counted the day "+BROKER+" receives them.") : "\u2014",
-      dep && !unset("invest") ? (dep.nRule >= 2 ? "Both transfers arrived \u2713" : dep.nRule === 1 ? "One of two transfers arrived" : "No transfer arrived yet") : "") +
+      dep && !unset("invest") ? (dep.nRule >= 2 ? "Both transfers arrived \u2713" : dep.nRule === 1 ? "One of two transfers arrived" : "No transfer arrived yet") : ""),
     // The month's whole spending, not the everyday amount (2026-11-03, the owner): Home says what
     // the month cost, and what is left of Everyday is This month's to say. The month is today's
     // when it has a purchase yet, otherwise the newest one the statements reach.
-    (() => {
-      const ym = MONTHS.includes(curYM) || !MONTHS.length ? curYM : MONTHS[MONTHS.length - 1];
+    spent: () => {
+      if(!MONTHS.length) return null;
+      const ym = MONTHS.includes(curYM) ? curYM : MONTHS[MONTHS.length - 1];
       const es = monthOf(ym), total = es.reduce((s,e) => s + e.amount, 0), parts = monthParts(ym);
       const rows = [["Bills & housing", parts.bills], ["Everyday", parts.everyday]].filter(p => Math.abs(p[1]) > 0.005);
       return card("Spent in "+ymLabel(ym),
         numx(fmt(total), rows.map(p => [p[0], fmt(p[1])]), es.length+" purchase"+(es.length === 1 ? "" : "s")+(ym > covEnd ? ", and the month is still open." : "."), true),
         rows.map(p => p[0]+" "+fmt(p[1])).join(" \u00b7 "));
-    })();
+    },
+    covered: () => {
+      if(waitsFor("safe")) return null;
+      const s = safetyCalc();
+      return s.months === null ? null : card(term("months_covered", "Months covered"),
+        numx(monthsTxt(s.months), [["The money", fmt(s.money)], ["What a month costs", fmt(s.cost)]], "From the Safety net page."), "Without a paycheque");
+    },
+    kept: () => {
+      const cfy = (INVEST.cashflow || []).filter(m => m.ym.startsWith(yr));
+      if(!cfy.length) return null;
+      const income = cfy.reduce((s,m) => s + incomeOf(m), 0);
+      const spent = SPENDING.filter(e => e.date.startsWith(yr) && e.currency === "CAD").reduce((s,e) => s + e.amount, 0);
+      const net = income - spent;
+      return card(term("kept", "Kept")+" in "+yr, numx((net >= 0 ? "+" : "\u2212") + fmt(Math.abs(net)), [["Income", fmt(income)], ["Spent", "\u2212"+fmt(spent)]], "", true),
+        income > 0 ? Math.round(pc(net, income))+"% of income" : "");
+    },
+    subs: () => {
+      const subs = SPENDING.filter(e => e.date.startsWith(yr) && e.sub), ytd = subs.reduce((a,e) => a + e.amount, 0);
+      if(!(ytd > 0)) return null;
+      const closed = MONTHS.filter(m => m <= covEnd && m.startsWith(yr)).length || 1;
+      return card("A year of "+term("subscription", "subscriptions"), numx(fmt(ytd/closed*12), [["Per month", fmt(ytd/closed)], ["Months", "12"]], "Every charge that repeats, at this year's rate."), "");
+    },
+    bigcat: () => {
+      const by = {};
+      SPENDING.filter(e => e.date.startsWith(yr) && e.currency === "CAD").forEach(e => by[e.category] = (by[e.category] || 0) + e.amount);
+      const top = Object.entries(by).sort((a,b) => b[1] - a[1])[0];
+      if(!top || !(top[1] > 0)) return null;
+      const all = Object.values(by).reduce((s,v) => s + v, 0);
+      return card("Biggest category in "+yr, '<span style="font-size:20px">'+catName(top[0])+'</span>', fmt(top[1])+", "+Math.round(pc(top[1], all))+"% of spending");
+    },
+  };
+  const first = INVESTED() ? (GOAL() ? ["port", "fire", "inv", "spent"] : ["port", "inv"]) : (GOAL() ? ["fire"] : []);
+  const FILL = ["spent", "covered", "kept", "subs", "bigcat"];
+  const shown = [];
+  for(const k of first.concat(FILL)){
+    if(shown.length >= 4 || shown.some(s => s.k === k)) continue;
+    const html = C[k]();
+    if(html) shown.push({k, html});
+  }
+  $("homeStats").innerHTML = shown.map(s => s.html).join("");
 
   // Net worth, both cuts in one card: a row per purpose, its bar as long as its share and
   // coloured by reach; the row's number opens the accounts in it. Then total assets and what is
@@ -2046,6 +2112,44 @@ function renderBaseline(){
     $("baseHero").textContent = "—";
     $("baseMonths").innerHTML = '<div class="empty">Needs 3 closed months with records ('+vals.length+' so far).</div>';
   }
+}
+
+// ===== Safety net (1.0.1): how long the money would last without a paycheque =====
+// months covered = (Spendable today − what is owed on no asset) ÷ what a month costs. The money is
+// Home's own "Spendable today" row, so the two pages cannot disagree; investments are never in
+// it, and money abroad is a line of its own. What a month costs is the spending baseline plus the
+// repayments the plan pays today: rent and bills paid today are in the spending already. It
+// judges nothing: no band, no colour, no target (FINANCE.md §8d).
+const SAFETY = {"today": 54466, "invested": 39110, "abroad": 0, "unsecured": 991, "accts": [{"n": "Primary Chequing", "i": "BMO", "v": 8445, "asof": "2026-09-05", "cur": ""}, {"n": "Savings Amplifier", "i": "BMO", "v": 6911, "asof": "2026-09-05", "cur": ""}], "debts": [{"n": "MasterCard", "i": "BMO", "v": 991, "asof": "2026-08-20", "cur": ""}], "repay": 0, "repayRows": []};
+function safetyCalc(){
+  const S = SAFETY, money = (S.today || 0) - (S.invested || 0) - (S.unsecured || 0);
+  const cost = baselineAvg > 0 ? baselineAvg + (S.repay || 0) : null;
+  return {money, cost, months: cost ? Math.max(0, money / cost) : null,
+          abroadMonths: cost && S.abroad > 0 ? Math.max(0, (money + S.abroad) / cost) : null};
+}
+const monthsTxt = m => (Math.round(m * 10) / 10).toFixed(1);
+function renderSafety(){
+  const S = SAFETY, c = safetyCalc();
+  const card = (lab, val, status) => '<div class="card"><div class="lab">'+lab+'</div><div class="big num">'+val+'</div>'+(status ? '<div class="cap">'+status+'</div>' : "")+'</div>';
+  const costRows = [["Spending baseline", baselineAvg > 0 ? fmt(baselineAvg) : "\u2014"]].concat((S.repayRows || []).map(r => [r.n, fmt(r.v)]));
+  $("safeStats").innerHTML =
+    card(term("months_covered", "Months covered"),
+      c.months === null ? "\u2014" : numx(monthsTxt(c.months), [["The money", fmt(c.money)], ["What a month costs", fmt(c.cost)]], "The money \u00f7 what a month costs.", false),
+      c.months === null ? "Needs three closed months of spending to know what a month costs."
+        : c.abroadMonths !== null ? "With money abroad, " + monthsTxt(c.abroadMonths) + " months" : "") +
+    card("The money",
+      numx(fmt(c.money), [[term("spendable_today", "Spendable today"), fmt(S.today || 0)]]
+          .concat(S.invested ? [["Less what is invested", "\u2212"+fmt(S.invested)]] : [])
+          .concat(S.unsecured ? [["Less what you owe", "\u2212"+fmt(S.unsecured)]] : []),
+        "What you could spend today, less what you owe that sits on no asset. Investments are not in it.", true),
+      S.abroad > 0 ? "Not counting " + fmt(S.abroad) + " " + term("held_abroad", "held abroad") : "") +
+    card("What a month costs",
+      c.cost === null ? "\u2014" : numx(fmt(c.cost), costRows, "The spending baseline, plus the repayments your plan pays today. Rent and bills are already in the spending.", true),
+      "");
+  const row = a => '<div class="both-acct"><span>'+(a.i ? '<span class="i">'+a.i+'</span>' : "")+a.n+(a.cur ? '<span class="a">'+a.cur+'</span>' : "")+'</span><span class="v num">'+fmt(a.v)+'</span></div>';
+  $("safeAccts").innerHTML = '<div class="lab">Where the money is</div>'
+    + ((S.accts || []).length ? (S.accts || []).map(row).join("") : '<div class="empty">No account you could spend from today.</div>')
+    + ((S.debts || []).length ? '<div class="lab" style="margin-top:12px">What you owe on no asset</div>' + S.debts.map(row).join("") : "");
 }
 
 const TREND_INC = "#2a78d6", TREND_SP = "#eb6834";

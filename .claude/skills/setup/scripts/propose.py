@@ -371,6 +371,10 @@ def propose(root, inbox):
         questions.append({"id": "everyday", "q": "What everyday amount a month — the guilt-free line, no categories under it?"})
     questions.append({"id": "committed", "q": "Anything paid every month before you choose anything — rent, a mortgage, a loan? "
                                               "And rent you do not pay now but will after FIRE?"})
+    # Asked once, in plain words (1.0.1): the FIRE pages show only for yes. Skipped leaves it out,
+    # and the page reads that as yes only for someone already investing.
+    questions.append({"id": "fire", "q": "Is retiring early — reaching the point where work is optional (FIRE) — something "
+                                         "you are working toward? Yes, no, or skip."})
     questions.append({"id": "planBase", "q": "Your planning spend for the FIRE target, a month, rent after FIRE included?",
                       "suggest": plan.get("everyday")})
     plan["planBase"] = plan.get("everyday")

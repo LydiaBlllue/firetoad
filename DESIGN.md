@@ -94,20 +94,25 @@
   or no time at all, never half of each; a thing is judged in one place, and Home only
   summarises.
 
-<!-- LINT:PAGES pages=17 sections=5 -->
-- **The pages**: 17 pages under 5 sidebar sections. **Lint rule S4 checks this table against
+<!-- LINT:PAGES pages=18 sections=4 -->
+- **The pages**: 18 pages under 4 sidebar sections, ordered the way someone starting out reads them (1.0.1). **Lint rule S4 checks this table against
   `NAV`**, so changing the navigation means changing this table too — and the page count, the
   sidebar list and the minimum width stated in `README.md`, and every path the README hands the
   reader:
   | Section | Pages |
   |---|---|
-  | — | Home (four cards, net worth in one card, net worth over time) · Accounts |
-  | Spending | This month · Year · Subscriptions |
-  | Income | Income · Investment income |
-  | Investing | Portfolio · Performance · Holdings |
-  | Plan | Budget · FIRE · Drawdown & care · Spending baseline |
+  | — | Home (four cards, net worth in one card, net worth over time) |
+  | Money in & out | This month · Year · Income · Subscriptions · Spending baseline |
+  | Plan | Budget · Safety net · FIRE · Drawdown & care |
+  | Investing | Portfolio · Performance · Holdings · Investment income |
+  | — | Accounts |
   | Monthly import | Updates · Statements |
-  | — | Glossary, at the foot of the sidebar |
+  | — | Glossary, at the foot of the sidebar, under the pages still waiting for their data |
+
+  **What a page waits for** (`WAITS`): Income and Safety net a chequing statement; Portfolio,
+  Performance and Holdings a broker's holdings; Investment income a broker's activity; FIRE a FIRE
+  goal; Drawdown & care a FIRE goal and something invested. A page that waits is folded under
+  *Waiting for data*, saying what it waits for, and comes back by itself.
 
 ### Home
 
@@ -121,11 +126,15 @@
   home one; the amounts sum to the row. So does *Less what you owe*.
 - **Net worth over time** under the net-worth card: one point per month, what really was, nothing
   projected, from two months on. It is not the FIRE chart, which follows the portfolio to a target.
-- **Four stat cards**, one per section: **Portfolio** (with its dry-powder share), **FIRE progress**
-  (with the on-track year), **Invested in \<month\>** (pay-yourself-first, from the broker's
-  record), **Spent in \<month\>** (the month's whole spending, bills & housing and everyday beneath
-  it; today's month once it has a purchase, otherwise the newest one the statements reach. What is
-  left of Everyday is This month's to say, 2026-11-03).
+- **Four stat cards**, chosen by two signals, something invested and a FIRE goal (1.0.1). Invested
+  with a goal: **Portfolio** (with its dry-powder share), **FIRE progress** (with the on-track
+  year), **Invested in \<month\>** (pay-yourself-first, from the broker's record), **Spent in
+  \<month\>** (the month's whole spending, bills & housing and everyday beneath it; today's month
+  once it has a purchase, otherwise the newest one the statements reach. What is left of Everyday
+  is This month's to say, 2026-11-03). Invested, no goal: Portfolio · Invested. A goal, nothing
+  invested: FIRE progress. The rest fill from one list, in order, taking only a card with a
+  number: Spent in \<month\> · Months covered · Kept this year · A year of subscriptions · Biggest
+  category. So no owner sees an empty card.
 - **Net worth in one card, cut both ways at once**: one row per `role`, cash split by where it
   is — For FIRE / Set aside / Cash / Cash in \<abroad\> / Owed to you / Other assets (only for
   things that are not money). Each row's bar is as long as its share and coloured by `reach`
