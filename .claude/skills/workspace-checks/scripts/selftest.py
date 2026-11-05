@@ -203,7 +203,7 @@ def m_readme_image_gone(r):
 # after the rename, and the checks skill said "fifteen" faults when the table held 42.
 def m_skill_path(r):
     # Not the `ly_` name itself: an owner's workspace may still have that page, and S4 accepts it.
-    edit(r, ".claude/skills/update-dashboard/SKILL.md",
+    edit(r, ".claude/skills/setup/SKILL.md",
          lambda s: s.replace("dashboards/finance_dashboard.html", "dashboards/spending_dashboard.html", 1))
 
 def m_skill_faults(r):
