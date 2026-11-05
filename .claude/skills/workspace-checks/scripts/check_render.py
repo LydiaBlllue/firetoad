@@ -110,6 +110,8 @@ REACH = r"""
   const out = [];
   document.querySelectorAll('#sideNav button, #sideNav summary').forEach(b => {
     if (!b.getClientRects().length) return;
+    const fold = b.closest('details');                 // inside a closed fold: not shown, not asked
+    if (fold && !fold.open && b.tagName !== 'SUMMARY') return;
     b.scrollIntoView({block: 'nearest'});
     window.scrollTo(0, 0);
     const r = b.getBoundingClientRect();
