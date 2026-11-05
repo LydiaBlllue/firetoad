@@ -357,8 +357,10 @@ def derive(d):
         src = a["inst"] + " " + trailing_digits(a.get("id"))
         for r in d["ledgers"].get(a["key"], []):
             if r.get("type"):
+                # `raw` is the bank's own words, kept beside a label so a search by merchant finds it
                 chq.append({"date": r["date"], "desc": r.get("label") or r["description"],
-                            "type": r["type"], "amount": float(r["amount"]), "src": src})
+                            "type": r["type"], "amount": float(r["amount"]), "src": src,
+                            **({"raw": r["description"]} if r.get("label") and r["label"] != r["description"] else {})})
     chq.sort(key=lambda r: r["date"])
     out["CHEQUING"] = chq
 

@@ -165,6 +165,9 @@
 - **Follows the year only**: Income / Spent / Kept, the year by source — Investment and Rewards
   (a card's cash back) carry their explanation, since neither reaches chequing — a line for what
   a borrower paid back, which is never income, and the months by source.
+- **Every row in chequing** (1.0.1), under them: each typed ledger row of the year — transfers,
+  fees and e-Transfers one row each, newest first, sixty at a time — with a search that reads the
+  label and the bank's own words, and one pill per account when there is more than one.
 - **Investment income**: what was paid, a month on average, its share of spending, the tax
   withheld; the months, each split into dividends, interest, lending and tax; and **By holding**
   — which funds paid the dividends, how often each pays (every month, every quarter), and its
@@ -192,6 +195,10 @@
   funds are rows in **Holdings**.
 
 ### Plan
+
+- **Safety net** (1.0.1): three cards — Months covered, The money, What a month costs — each
+  opening its sum, then where the money is and what is owed on no asset. No band, colour or
+  target; money abroad only in the line under Months covered (FINANCE.md §8d).
 
 - **Budget** follows no time: the plan, no category caps. Below the split, a Funds card appears
   only when the owner has a fund: each one's set-aside amount against its goal, what the plan adds,

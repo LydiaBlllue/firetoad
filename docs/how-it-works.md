@@ -9,7 +9,7 @@ The detail behind the [README](../README.md).
 | — | Home | Where you stand, and what you are worth |
 | Money in & out | This month | How much is still free to spend, and where the money went |
 | | Year | How the year went, by category and month by month |
-| | Income | What came in, by source, and how much of it you kept |
+| | Income | What came in, by source, how much of it you kept, and every row in chequing |
 | | Subscriptions | What repeats, what it costs a year, what is due next |
 | | Spending baseline | What a month really costs, and the figure your plan is built on |
 | Plan | Budget | What each paycheque is for, and what the funds hold |

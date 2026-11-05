@@ -251,6 +251,11 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .side .grp.solo{margin-top:14px}
 .side [hidden]{display:none!important}
 .dt{width:100%;border-collapse:collapse;font-size:13px}
+.chq-ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 6px}
+.chq-ctl input{flex:1 1 200px;min-width:0;font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--ink)}
+.chq-ctl .pills{margin:0}
+.dt td.chq-d{text-align:left;padding-left:12px;white-space:normal}
+.dt td.chq-t{color:var(--muted);font-size:12px;padding-left:12px;text-align:left}
 .dt th{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 0;border-bottom:1px solid var(--grid)}
 .dt th:first-child{text-align:left}
 .dt td{padding:5px 0;border-bottom:1px solid var(--grid);text-align:right}
@@ -419,6 +424,12 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
     <svg class="year-svg" id="incChart" viewBox="0 0 940 280" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="year-legend" id="incLegend"></div>
     <div class="cap" id="incChartCap"></div>
+  </div>
+  <div class="card" style="margin-top:10px">
+    <div class="lab" id="chqLab">Every row in chequing</div>
+    <div class="chq-ctl"><input type="search" id="chqQ" placeholder="Search by merchant or description" aria-label="Search chequing rows"><div class="pills" id="chqAcct"></div></div>
+    <table class="dt" id="chqTable"></table>
+    <div id="chqMore"></div>
   </div>
 </section>
 
@@ -2045,7 +2056,39 @@ function renderYr(){
     + (CP && repaid > 0 ? '<div style="margin-top:8px">'+metaList([[term("repayment", "Paid back")+" by "+CP.name, numx(fmt(repaid), [], CP.tip || "")]])+'</div>' : "");
 
   $("yrCap").textContent = "";
+  renderChq();
 }
+
+// ===== Chequing, row by row (1.0.1) =====
+// Every typed row of every ledger in the year: transfers, fees and e-Transfers one row each, as
+// the import typed them. Search reads the label and the bank's own words; the pills pick one
+// account. The year follows the year pills, like the rest of the page.
+let chqAcct = "", chqQ = "", chqN = 60;
+function renderChq(){
+  const accts = [...new Set(CHEQUING.map(r => r.src))];
+  $("chqAcct").innerHTML = accts.length > 1 ? ["", ...accts].map(a =>
+    '<button class="pill'+(a === chqAcct ? " sel" : "")+'" data-a="'+a+'">'+(a || "All")+'</button>').join("") : "";
+  $("chqAcct").querySelectorAll(".pill").forEach(b => b.onclick = () => { chqAcct = b.dataset.a; chqN = 60; renderChq(); });
+  const q = chqQ.trim().toLowerCase();
+  const rows = CHEQUING.filter(r => r.date.startsWith(viewYear) && (!chqAcct || r.src === chqAcct)
+    && (!q || (r.desc + " " + (r.raw || "") + " " + r.type).toLowerCase().includes(q))).slice().reverse();
+  $("chqLab").textContent = "Every row in chequing, " + viewYear;
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+  $("chqTable").innerHTML = rows.length
+    ? '<tr><th>Date</th><th style="text-align:left;padding-left:12px">What</th><th style="text-align:left;padding-left:12px">Type</th>'
+      + (accts.length > 1 ? '<th style="text-align:left;padding-left:12px">Account</th>' : '') + '<th>Amount</th></tr>'
+      + rows.slice(0, chqN).map(r => '<tr><td class="num">'+MN[Number(r.date.slice(5,7))-1]+' '+Number(r.date.slice(8,10))+'</td>'
+        + '<td class="chq-d"'+(r.raw ? ' title="'+esc(r.raw)+'"' : '')+'>'+esc(r.desc)+'</td><td class="chq-t">'+esc(r.type)+'</td>'
+        + (accts.length > 1 ? '<td class="chq-t">'+esc(r.src)+'</td>' : '')
+        + '<td class="num">'+fmt2(r.amount)+'</td></tr>').join("")
+    : '<tr><td class="empty">'+(CHEQUING.length ? "No row matches." : "No chequing statement yet.")+'</td></tr>';
+  $("chqMore").innerHTML = rows.length > chqN
+    ? '<button class="pill" id="chqMoreB" style="margin-top:8px">Show '+Math.min(60, rows.length - chqN)+' more of '+(rows.length - chqN)+'</button>' : "";
+  if($("chqMoreB")) $("chqMoreB").onclick = () => { chqN += 60; renderChq(); };
+}
+addEventListener("DOMContentLoaded", () => {
+  const i = $("chqQ"); if(i) i.oninput = () => { chqQ = i.value; chqN = 60; renderChq(); };
+});
 
 
 function drawDonut(svgId, centerId, legendId, rows, totalVal, emptyMsg, withPct, fmtV){
