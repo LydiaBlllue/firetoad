@@ -1058,7 +1058,7 @@ const GLOSSARY = {
   fund:           {own:1, w:"fund", pos:"on this page", def:"A name you put on part of the money in one of your accounts, for something you are saving toward. Nothing is moved: the money stays where it is, and the plan can add to it each month.", also:["unallocated"]},
   unallocated:    {own:1, w:"Unallocated", pos:"on this page", def:"What is left of take-home pay once every line of the plan is paid. It stays where the paycheque landed.", also:["everyday"]},
   safety_net:     {own:1, w:"Safety net", pos:"on this page", def:"The money you could live on today without a paycheque, and how many months it would last.", also:["months_covered","emergency_fund"]},
-  usual_month:    {own:1, w:"A usual month", pos:"on this page", def:"What a month usually costs you: the average of your last full months of spending, up to twelve, leaving out months you marked as unusual.", also:["months_covered","planning_figure"]},
+  usual_month:    {own:1, w:"A usual month", pos:"on this page", def:"What a month usually costs you: everything spent, averaged over your last full months, up to twelve, leaving out months you marked as unusual. A yearly charge counts as a twelfth each month.", also:["months_covered","planning_figure"]},
   months_covered: {own:1, w:"Months covered", pos:"on this page", def:"How many months of your usual spending the money you can reach today would pay for, after what you owe on no asset.", f:"(spendable today − what you owe on no asset) ÷ a usual month", also:["safety_net","spendable_today"]},
   complete_to:    {own:1, w:"Complete to", pos:"on this page", def:"The day every account’s numbers are in up to. After it, some accounts are still waiting for their next statement."},
 };
@@ -1208,7 +1208,7 @@ function render(){
     : "";
 
 
-  renderBaseline();                     // first: a usual month (baselineAvg) is read by the pages below
+  renderBaseline();                     // first: the page's figures, before the pages that compare to them
   renderYr();
   renderIncChart();
   renderCatPage();
@@ -1952,6 +1952,17 @@ function catMedian(cat, ym){
 // A usual month, whole: the median of the monthly totals over the same window. Until
 // 2026-10-26 the card added up only the categories that ran over and let the ones that ran under
 // count for nothing, so it showed a gap no two figures on the page could produce.
+// A usual month (2026-11-05, the owner: one name, one sum): everything spent, a yearly charge
+// spread over its twelve months, averaged over the full months before `ym` — up to twelve, the
+// months set aside as unusual left out. Big months are in it, because they happen. Unlike the
+// planning figure's calibration it keeps the categories that end before FIRE: today they are
+// still paid. Safety net, Investment income, This month and Monthly spending all read this.
+function usualMonthAt(ym){
+  const win = usableMonths().filter(m => m < ym).slice(-12)
+    .map(m => cmpOf(m).reduce((s, e) => s + e.amount, 0)).filter(v => v > 0);
+  return win.length >= 3 ? {v: win.reduce((s, v) => s + v, 0) / win.length, n: win.length} : null;
+}
+const usualMonth = () => usualMonthAt(TODAY.slice(0, 7));
 function monthMedian(ym){
   const win = catWindow(ym);
   if(win.length < 3) return null;
@@ -1992,8 +2003,8 @@ function renderCatPage(){
   const pct = v => total > 0 ? Math.round(pc(v, total)) : 0;
 
   const card = (lab, val, status, cls) => StatCard(lab, val, status, {capCls: cls});
-  const usual = monthMedian(viewYM), diff = usual === null ? null : total - usual;
-  const nWin = catWindow(viewYM).length;
+  const um = usualMonthAt(viewYM), usual = um ? um.v : null, diff = usual === null ? null : total - usual;
+  const nWin = um ? um.n : 0;
   $("catStats").innerHTML =
     card("Spent in "+ymLabel(viewYM), numx(fmt(total), partRows.map(p => [p[0], fmt(p[1])]), es.length+" purchase"+(es.length === 1 ? "" : "s")+" in "+rows.length+" categor"+(rows.length === 1 ? "y" : "ies")+"."),
         partRows.map(p => p[0]+" "+fmt(p[1])).join(" \u00b7 "))
@@ -2001,7 +2012,7 @@ function renderCatPage(){
     + card("Against a usual month",
         diff === null ? "\u2014" : numx((diff >= 0 ? "+" : "\u2212") + fmt(Math.abs(diff)),
           [["This month", fmt(total)], ["A usual month", "\u2212"+fmt(usual)]],
-          "A usual month is the median of the last "+nWin+" full months. Months you set aside as unusual are left out.", true),
+          "A usual month is the average of the "+nWin+" full months before this one. Months you set aside as unusual are left out.", true),
         diff === null ? "Needs three full months" : diff > 0 && drivers.length ? "Mostly " + drivers.slice(0,2).map(r => catName(r.k)).join(" and ") : "",
         diff !== null && diff > 0 ? "hi" : "");
 
@@ -2032,8 +2043,8 @@ function renderCatPage(){
           ["Share of the month", pct(sel.v)+"%"],
           ["Purchases", sel.items.length],
           sel.med === null
-            ? ["Against a usual month", "Needs three full months", "mut"]
-            : ["Against a usual month",
+            ? ["Against its usual month", "Needs three full months", "mut"]
+            : ["Against its usual month",
                numx((over(sel) >= 0 ? "+" : "\u2212") + fmt(Math.abs(over(sel))), [["This month", fmt(sel.v)], ["A usual month", "\u2212"+fmt(sel.med)]],
                  "A usual month is this category\u2019s median over the last "+win.length+" full months.", true),
                isHigh(sel) ? "hi" : ""]
@@ -2054,7 +2065,7 @@ function renderYr(){
   renderYearInsights();
   $("yrStats").innerHTML =
     StatCard("Spent in "+viewYear, numx(fmt(spent), [], "After refunds.")) +
-    StatCard("Spent a month in "+viewYear, spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], "This year only, open months included. "+(baselineAvg > 0 ? "A usual month, from your last full months, is "+fmt(baselineAvg)+"." : "")) : null) +
+    StatCard("Spent a month in "+viewYear, spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], "This year only, open months included. "+(usualMonth() ? "A usual month, from your last full months, is "+fmt(usualMonth().v)+"." : "")) : null) +
     (() => { const mt = spendMonths.map(m => ({m, v: monthTotal(m)})).sort((a,b) => b.v - a.v)[0];
              return StatCard("Biggest month", mt ? ymFull(mt.m) : null, mt ? fmt(mt.v) : "", {text: true}); })();
 
@@ -2187,7 +2198,8 @@ function renderBaseline(){
   const vals = usableMonths().filter(m => m < closed).map(m => ({m, v:monthTarget(m)})).filter(x => x.v > 0).slice(-12);
   if(vals.length >= 3){
     baselineAvg = vals.reduce((s,x) => s + x.v, 0) / vals.length;
-    $("baseStats").innerHTML = StatCard(term("usual_month", "A usual month"), numx(fmt(baselineAvg), [["Months", vals.length]], "The average of your last full months, unusual ones left out."), "From "+vals.length+" full months");
+    const um = usualMonth();
+    $("baseStats").innerHTML = StatCard(term("usual_month", "A usual month"), um ? numx(fmt(um.v), [["Months", um.n]], "Everything spent, averaged over your last full months, unusual ones left out.") : null, um ? "From "+um.n+" full months" : "");
     $("baseMonths").innerHTML = vals.map(x =>
       '<div class="bm-row"><span>'+ymLabel(x.m)+' '+x.m.slice(0,4)+'</span><span class="num">'+fmt(x.v)+'</span></div>').join("");
   }else{
@@ -2221,7 +2233,7 @@ function cardInterest(){
 const SAFETY = {};
 function safetyCalc(){
   const S = SAFETY, money = (S.today || 0) - (S.invested || 0) - (S.unsecured || 0);
-  const cost = baselineAvg > 0 ? baselineAvg + (S.repay || 0) : null;
+  const um = usualMonth(), cost = um ? um.v + (S.repay || 0) : null;
   return {money, cost, months: cost ? Math.max(0, money / cost) : null,
           abroadMonths: cost && S.abroad > 0 ? Math.max(0, (money + S.abroad) / cost) : null};
 }
@@ -2229,7 +2241,7 @@ const monthsTxt = m => (Math.round(m * 10) / 10).toFixed(1);
 function renderSafety(){
   const S = SAFETY, c = safetyCalc();
   const card = StatCard;
-  const costRows = [["Spending", baselineAvg > 0 ? fmt(baselineAvg) : "\u2014"]].concat((S.repayRows || []).map(r => [r.n, fmt(r.v)]));
+  const costRows = [["Spending", usualMonth() ? fmt(usualMonth().v) : "\u2014"]].concat((S.repayRows || []).map(r => [r.n, fmt(r.v)]));
   $("safeStats").innerHTML =
     card(term("months_covered", "Months covered"),
       c.months === null ? "\u2014" : numx(monthsTxt(c.months), [["The money", fmt(c.money)], ["A usual month", fmt(c.cost)]], "The money \u00f7 a usual month.", false),
@@ -2369,7 +2381,9 @@ function renderFire(){
   const usedM = [...$("baseMonths").querySelectorAll(".bm-row span:first-child")].map(x => x.textContent.trim());
   const skipM = Object.keys(MONTH_SKIP).filter(m => MONTHS.includes(m));
   $("baseCap").innerHTML = metaList([
-    ["Spending, on average", baselineAvg ? numx(fmt(baselineAvg), [], "Average of the last "+usedM.length+" usable months"+(usedM.length < 12 ? ", until there are twelve" : "")+", big months included. Early retirement pays for those too.") : "Not enough months yet"],
+    [CATS.some(c => c.noFire) ? "Spending that goes on after FIRE" : "Spending, on average", baselineAvg ? numx(fmt(baselineAvg),
+        CATS.some(c => c.noFire) && usualMonth() ? [[term("usual_month", "A usual month"), fmt(usualMonth().v)], ["Less what ends before FIRE ("+CATS.filter(c => c.noFire).map(c => c.n).join(", ")+")", "\u2212"+fmt(usualMonth().v - baselineAvg)]] : [],
+        "Average of the last "+usedM.length+" usable months"+(usedM.length < 12 ? ", until there are twelve" : "")+", big months included. Early retirement pays for those too.") : "Not enough months yet"],
     ["Fixed costs not in spending", numx("+ "+fmt(COMMITTED_KEEP), [], "Rent that starts at FIRE, and a mortgage or loan payment: the ones that continue after FIRE. Rent and bills paid today are in spending already; tuition is not counted, it ends.")],
     ["A comparable month", measuredBase() ? numx(fmt(measuredBase()), baselineAvg ? [["On average", fmt(baselineAvg)], ["Fixed costs", fmt(COMMITTED_KEEP)]] : [], "", true) : "\u2014"],
     drift === null ? null
@@ -2981,11 +2995,14 @@ function renderBaseChart(){
   // baseline $1,290 when June was $2,534" -- a year of context answers that; sixty bars 7px wide
   // do not.
   const months = MONTHS.filter(m => m <= covEnd).slice(-12);
-  if(!months.length || !baselineAvg) return;
+  // The bars and the line are a usual month's own: everything spent, the same as the card above.
+  const um = usualMonth();
+  if(!months.length || !um) return;
+  const usual = um.v, monthAll = m => cmpOf(m).reduce((s, e) => s + e.amount, 0);
   const counted = [...$("baseMonths").querySelectorAll(".bm-row span:first-child")].map(x => x.textContent.trim());
   const isCounted = m => counted.includes(ymFull(m));
   const [W, H] = fit("baseChart", 250), padL=54, padR=10, padT=22, padB=28;
-  const vals = months.map(monthTarget), mx = Math.max(...vals, baselineAvg)*1.12;
+  const vals = months.map(monthAll), mx = Math.max(...vals, usual)*1.12;
   const step = (W-padL-padR)/months.length, bw = Math.min(56, step*0.58);
   const y = v => H-padB - v/mx*(H-padT-padB);
   let out = "";
@@ -3000,10 +3017,10 @@ function renderBaseChart(){
         +  (out_?' stroke="#dcdad3" stroke-dasharray="3 2"':'')+' data-m="'+m+'"/>'
         +  '<text x="'+(x+bw/2)+'" y="'+(H-9)+'" text-anchor="middle" font-size="12" fill="'+(on?"var(--ink)":"var(--muted)")+'" font-weight="'+(on?600:400)+'">'+ymLabel(m)+(out_?" ×":"")+'</text>';
   });
-  out += '<line x1="'+padL+'" y1="'+y(baselineAvg)+'" x2="'+(W-padR)+'" y2="'+y(baselineAvg)+'" stroke="#d03b3b" stroke-width="2" stroke-dasharray="6 4"/>'
-      +  '<text x="'+(W-padR)+'" y="'+(y(baselineAvg)-7)+'" text-anchor="end" font-size="12" class="num" fill="#d03b3b" font-weight="700">average '+fmt(baselineAvg)+'</text>';
+  out += '<line x1="'+padL+'" y1="'+y(usual)+'" x2="'+(W-padR)+'" y2="'+y(usual)+'" stroke="#d03b3b" stroke-width="2" stroke-dasharray="6 4"/>'
+      +  '<text x="'+(W-padR)+'" y="'+(y(usual)-7)+'" text-anchor="end" font-size="12" class="num" fill="#d03b3b" font-weight="700">a usual month '+fmt(usual)+'</text>';
   const svg = $("baseChart"); svg.innerHTML = out;
-  svg.querySelectorAll("rect[data-m]").forEach(r => hoverable(r, ymFull(r.dataset.m)+"<br>"+fmt2(monthTarget(r.dataset.m))
+  svg.querySelectorAll("rect[data-m]").forEach(r => hoverable(r, ymFull(r.dataset.m)+"<br>"+fmt2(monthAll(r.dataset.m))
     + (isCounted(r.dataset.m) ? "<br>counted in the average" : "")
     + (skipped(r.dataset.m) ? "<br>left out — "+MONTH_SKIP[r.dataset.m] : "")));
   $("baseChartCap").innerHTML = '<div class="cap">'+ymFull(months[vals.indexOf(Math.max(...vals))])+' was the highest month, at '+fmt(Math.max(...vals))+'.</div>';
@@ -3244,7 +3261,7 @@ function renderWsInc(){
   const net = tot("div")+tot("int")+tot("lend")+tot("tax");
   const closed = WSINC.filter(m => m.ym < TODAY.slice(0,7));
   const perMo = closed.length ? closed.reduce((a,m)=>a+m.div+m.int+m.lend+m.tax,0)/closed.length : 0;
-  const base = baselineAvg > 0 ? baselineAvg : null;
+  const base = usualMonth() ? usualMonth().v : null;
   const wcard = StatCard;
   $("wsIncStats").innerHTML =
     wcard("Paid to you in "+TODAY.slice(0,4), numx(fmt(net), [["Dividends", fmt(tot("div"))], ["Interest", fmt(tot("int"))], ["Lending", fmt(tot("lend"))], ["Tax withheld", fmt(tot("tax"))]],
