@@ -24,7 +24,9 @@
 body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;padding:38px 28px 72px;min-width:800px;max-width:1760px;margin:0 auto}
 /* Desktop-only layout (2026-09-06: the owner dropped the mobile view). Sidebar left, content right. */
 .shell{display:flex;gap:28px;align-items:flex-start}
-.side{width:210px;flex-shrink:0;position:sticky;top:38px}
+/* Taller than a short window (18 pages, 1.0.1): the sidebar scrolls on its own, so the foot of it
+   is never out of reach while the page stays put. */
+.side{width:210px;flex-shrink:0;position:sticky;top:38px;max-height:calc(100vh - 38px);overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
 .ver{margin-top:18px;font-size:10.5px;letter-spacing:.04em;color:var(--muted)}
 .side .brand{display:flex;align-items:flex-end;gap:9px;width:100%;height:var(--headh);padding:0 10px 15px;
   background:none;border:none;border-bottom:1px solid var(--border);font-family:inherit;font-size:21px;
@@ -41,6 +43,7 @@ body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system
 .side button:hover{background:var(--pill)}
 .side button.sel{background:var(--ink);color:#fff;font-weight:600}
 .side details.wait summary{cursor:pointer;list-style:none}
+.side details.wait summary.sec{margin-top:15px}
 .side details.wait summary::-webkit-details-marker{display:none}
 .side details.wait summary::after{content:" +";letter-spacing:0}
 .side details.wait[open] summary::after{content:" \2212"}
