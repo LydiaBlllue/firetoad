@@ -2,14 +2,14 @@
 sometimes more than one account in one PDF.
 
 The PDF's digit font has no text map, so pypdf hands the digits and punctuation back as glyph
-codes: "/5/2c/4/3/8/2e/0/2" is 5,438.02 and "May /0/5/2c /2/0/2/6" is May 05, 2026. `decode`
+codes: "/3/2c/2/1/5/2e/0/6" is 3,215.06 and "May /0/5/2c /2/0/2/6" is May 05, 2026. `decode`
 turns that back into text before anything else looks at it. What it then looks like:
 
     For the period ending August 05, 2026
     Savings Amplifier Account # 0006 3874-471            <- an account section starts here
-    Jul 04 Opening balance 0.11
-    Jul 21 Online Transfer, TF 0006#3874-471 2,000.00 2,000.11     <- movement, then balance
-    Jul 31 Interest Earned 0.30 2,000.41
+    Jul 04 Opening balance 0.25
+    Jul 21 Online Transfer, TF 0006#3874-471 2,000.00 2,000.25     <- movement, then balance
+    Jul 31 Interest Earned 0.30 2,000.55
     Aug 05 Closing totals 0.00 2,000.30                   <- deducted total, added total
 
 A long description wraps, and the amounts come on the line where it ends — the second or the

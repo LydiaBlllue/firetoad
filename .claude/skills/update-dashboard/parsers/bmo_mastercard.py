@@ -11,7 +11,7 @@ What the text looks like once pypdf has read it:
     Total balance $541.70
     Transactions since your last statement
     Jul. 21 Jul. 22 FARM BOY                 OTTAWA       ON 4.49 CR     <- CR = money in
-    Jul. 21 Jul. 22 FARM BOY                 OTTAWA       ON 92.28
+    Jul. 21 Jul. 22 FARM BOY                 OTTAWA       ON 64.10
     Aug. 16 Aug. 17 COSTCO WHOLESALE W1105   OTTAWA                    <- a row can wrap:
     ON                                                                  <- province, then
     3.15                                                                <- the amount, alone

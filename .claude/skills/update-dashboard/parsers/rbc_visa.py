@@ -8,11 +8,11 @@ What the text looks like once pypdf has read it:
     Purchases & debits $927.92
     Interest $0.00
     Fees $0.00
-    NEW BALANCE $37.51
+    NEW BALANCE $45.20
     JUL 25 JUL 27 WL *STEAM PURCHASE 425-889-9642 WA      <- transaction date, posting date, merchant
     24011346207100002795626                                  <- reference number, its own line
-    $20.84                                                   <- the amount, its own line
-    AUG 10 AUG 10 AUTOMATIC PAYMENT -THANK YOU -$77.77       <- or all on one line, no reference
+    $18.60                                                   <- the amount, its own line
+    AUG 10 AUG 10 AUTOMATIC PAYMENT -THANK YOU -$55.00       <- or all on one line, no reference
 
 A card paid past zero has no NEW BALANCE line; it prints "CREDIT BALANCE -$312.40" (and
 "Total Account Balance -$312.40") instead, and the closing balance is negative.

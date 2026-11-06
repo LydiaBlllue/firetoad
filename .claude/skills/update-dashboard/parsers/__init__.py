@@ -11,8 +11,8 @@ Every parser returns the same shape:
     {"parser": name, "file": path,
      "account": "816",                       # the digits the statement itself carries
      "period": {"from": "2026-07-24", "to": "2026-08-25"},
-     "opening": 766.99, "closing": -4.00,     # None for a card statement without them
-     "rows": [{"date": "2026-08-03", "description": "...", "amount": -156.65, "balance": 610.34}],
+     "opening": 1000.00, "closing": -4.00,     # None for a card statement without them
+     "rows": [{"date": "2026-08-03", "description": "...", "amount": -142.30, "balance": 857.70}],
      "totals": {...},                          # what the statement prints about itself
      "reconcile": {"rule": "...", "ok": True, "detail": "..."},
      # What the statement says about the account itself, when it prints it (None otherwise).

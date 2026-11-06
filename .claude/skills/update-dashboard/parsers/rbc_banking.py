@@ -4,17 +4,17 @@ Find & Save). One layout for all three.
 What the text looks like once pypdf has read it:
 
     From July 24, 2026 to August 25, 2026
-    Your account number: 03652-5027740
-    Your opening balance on July 24, 2026 $766.99
-    Total deposits into your account + 1,177.84
-    Total withdrawals from your account - 1,948.83
+    Your account number: 01234-5011111
+    Your opening balance on July 24, 2026 $1,000.00
+    Total deposits into your account + 500.00
+    Total withdrawals from your account - 1,504.00
     Your closing balance on August 25, 2026 = - $4.00
     Details of your account activity
-    Opening Balance 766.99
-    3 Aug Contactless Interac purchase - 7473          <- a description can wrap: the amounts
-    ESSO CIRCLE K 156.65 610.34                        <- come on the last line of it
-    11 Aug Online Banking transfer - 5723 100.07       <- one amount, no balance printed
-    e-Transfer received EMMA ROY CAYmXJKs 1,000.00 1,690.41
+    Opening Balance 1,000.00
+    3 Aug Contactless Interac purchase - 1111          <- a description can wrap: the amounts
+    ESSO CIRCLE K 142.30 857.70                        <- come on the last line of it
+    11 Aug Online Banking transfer - 2222 120.00       <- one amount, no balance printed
+    e-Transfer received EMMA ROY CAYmXJKs 1,000.00 1,977.70
     Closing Balance - $4.00
 
 A row's date is printed only on the first row of a day. A line ends in one amount (the movement)
@@ -84,7 +84,7 @@ def parse(path):
     ok = (t_dep is None or abs(dep - t_dep) < 0.005) and (t_wd is None or abs(wd - t_wd) < 0.005)
     detail = (f"{len(rows)} rows; opening {opening:,.2f} → closing {closing:,.2f}; deposits {dep:,.2f} "
               f"(statement {t_dep}); withdrawals {wd:,.2f} (statement {t_wd})")
-    # "RBC Day to Day BankingTM 03652-5022306" / "Find & SaveTM 03652-5062831" names the product;
+    # "RBC Day to Day BankingTM 01234-5011111" / "Find & SaveTM 01234-5012222" names the product;
     # "Your RBC personal savings account statement" says savings, "personal banking" chequing.
     pm = next((re.match(r"^(.+?)(?:TM|™)\s+\d{5}-\d{5,}", l) for l in lines
                if re.match(r"^(?!Your account number)(.+?)(?:TM|™)\s+\d{5}-\d{5,}", l)), None)

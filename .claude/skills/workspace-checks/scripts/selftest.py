@@ -82,8 +82,8 @@ def m_design_pages(r):
     edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Monthly import \| )[^·|]+·", r"\1Insights ·", s, count=1))
 def m_hand_card(r):
     # a stat card written by hand beside StatCard: the copy that drifts
-    edit(r, main_dash(r), lambda s: s.replace('StatCard("Purchases", es.length)',
-         "'<div class=\"card\"><div class=\"lab\">Purchases</div><div class=\"big num\">'+es.length+'</div></div>'", 1))
+    edit(r, main_dash(r), lambda s: s.replace('StatCard("Spent in "+viewYear, numx(fmt(spent), [], "After refunds."))',
+         "'<div class=\"card\"><div class=\"lab\">Spent</div><div class=\"big num\">'+fmt(spent)+'</div></div>'", 1))
 def m_nav_orphan(r):
     edit(r, main_dash(r),
          lambda s: s.replace('<section data-pg="acct" hidden>', '<section data-pg="acctX" hidden>'))
@@ -738,7 +738,7 @@ def wrap_check(ws):
     start, end = datetime.date(2026, 10, 1), datetime.date(2026, 10, 31)
     out, good = [], 0
     for parser, pages in (("bmo_banking", fixtures.bmo_banking("Primary Chequing", "4471", start, end, 1000.0, rows, "Emma Roy")),
-                          ("rbc_banking", fixtures.rbc_banking("2306", start, end, 1000.0, rows, "Emma Roy"))):
+                          ("rbc_banking", fixtures.rbc_banking("1234", start, end, 1000.0, rows, "Emma Roy"))):
         p = os.path.join(ws, "_fixtures", f"wrapped_{parser}.pdf")
         os.makedirs(os.path.dirname(p), exist_ok=True)
         write_pdf(p, pages)
@@ -1267,15 +1267,15 @@ def ofx_download_check(root, base):
     from parsers import ofx as ofx_
     p = os.path.join(base, "rbc_shape.ofx")
     open(p, "w").write("OFXHEADER:100\n<OFX>\n <BANKMSGSRSV1>\n  <STMTTRNRS>\n   <STMTRS>\n    <CURDEF>CAD\n    <BANKACCTFROM>\n"
-                       "     <ACCTID>036525024471\n     <ACCTTYPE>CHECKING\n    </BANKACCTFROM>\n    <BANKTRANLIST>\n"
+                       "     <ACCTID>012345024471\n     <ACCTTYPE>CHECKING\n    </BANKACCTFROM>\n    <BANKTRANLIST>\n"
                        "     <STMTTRN>\n      <TRNTYPE>DEBIT\n      <DTPOSTED>20261002120000[-5:EST]\n      <TRNAMT>-20.00\n"
                        "      <FITID>A1\n      <NAME>TO FIND &amp; SAVE                  \n     </STMTTRN>\n"
                        "     <STMTTRN>\n      <TRNTYPE>DEBIT\n      <DTPOSTED>20261003120000[-5:EST]\n      <TRNAMT>-4.50\n"
-                       "      <FITID>A2\n      <NAME>C-IDP PURCHASE-7473             \n      <MEMO>CAFE \n     </STMTTRN>\n"
+                       "      <FITID>A2\n      <NAME>C-IDP PURCHASE-1111             \n      <MEMO>CAFE \n     </STMTTRN>\n"
                        "    </BANKTRANLIST>\n    <LEDGERBAL>\n     <BALAMT>975.50\n     <DTASOF>20261103\n    </LEDGERBAL>\n"
                        "   </STMTRS>\n  </STMTTRNRS>\n </BANKMSGSRSV1>\n</OFX>\n")
     got = ofx_.parse(p)
-    if [r["description"] for r in got["rows"]] != ["TO FIND & SAVE", "C-IDP PURCHASE-7473 CAFE"] or got["opening"] != 1000.0:
+    if [r["description"] for r in got["rows"]] != ["TO FIND & SAVE", "C-IDP PURCHASE-1111 CAFE"] or got["opening"] != 1000.0:
         return [f"  ✗ ofx download: an RBC-shaped file read as {[r['description'] for r in got['rows']]}, opening {got['opening']}"]
     return ["  ✓ ofx download: a chequing month and a card, named by the account ids inside, came back exactly with no balance "
             "asked; a file with a row missing was refused; an RBC-shaped file (indented, &amp;, NAME and MEMO) read right"]

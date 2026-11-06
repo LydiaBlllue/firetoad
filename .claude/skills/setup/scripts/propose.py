@@ -66,8 +66,8 @@ CARD_CREDIT = re.compile(r"PAYMENT|TRSF FROM|CASHBACK|REMISES", re.I)
 
 
 def pattern_of(name):
-    """The bank's own filename with its date taken out: 'Chequing Statement-2306 2026-08-25.pdf'
-    -> 'Chequing Statement-2306 <date>.pdf', 'August 5, 2026-2.pdf' -> '<Month D, YYYY>-2.pdf'.
+    """The bank's own filename with its date taken out: 'Chequing Statement-1234 2026-08-25.pdf'
+    -> 'Chequing Statement-1234 <date>.pdf', 'August 5, 2026-2.pdf' -> '<Month D, YYYY>-2.pdf'.
     That pattern is how preflight will recognise next month's file."""
     stem, ext = os.path.splitext(name)
     s = re.sub(MONTH + r" \d{1,2}, \d{4}", "<Month D, YYYY>", stem)

@@ -72,7 +72,7 @@ def rbc_banking(acct_digits, start, end, opening, rows, owner):
     closing = round(opening + dep - wd, 2)
     head = ["1 of 1", "Royal Bank of Canada", "Your RBC personal banking", "account statement",
             f"From {long_date(start)} to {long_date(end)}",
-            f"Your account number: 03652-50{acct_digits}", owner.upper(),
+            f"Your account number: 01234-50{acct_digits}", owner.upper(),
             "Summary of your account for this period",
             f"Your opening balance on {long_date(start)} {money(opening, True)}",
             f"Total deposits into your account + {money(dep)}",

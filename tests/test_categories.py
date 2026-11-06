@@ -37,7 +37,7 @@ class Brand(unittest.TestCase):
     """The merchant of a row, read off a truncated statement string — never for meaning."""
 
     def test_statement_tag_and_store_number_come_off(self):
-        self.assertEqual(C.brand_of("TIM HORTONS #1234 TORONTO ON [RBC3133/2026-09]"), "TIM HORTONS")
+        self.assertEqual(C.brand_of("TIM HORTONS #1234 TORONTO ON [RBC1111/2026-09]"), "TIM HORTONS")
 
     def test_web_suffix_and_place_are_not_a_name(self):
         self.assertEqual(C.brand_of("APPLE.COM/BILL TORONTO ON"), "APPLE")

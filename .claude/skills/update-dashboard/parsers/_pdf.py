@@ -1,8 +1,8 @@
 """What every statement parser shares: the text of a PDF, money, dates, and the sign puzzle.
 
 The sign puzzle is the real work. A bank statement's text comes out of the PDF as lines with
-the amounts at the end and the column headings gone — "Online Banking transfer - 5723 100.07"
-is a deposit and "Misc Payment RBC CREDIT CARD 77.77" is a withdrawal, and nothing in the line
+the amounts at the end and the column headings gone — "Online Banking transfer - 2222 120.00"
+is a deposit and "Misc Payment RBC CREDIT CARD 55.00" is a withdrawal, and nothing in the line
 says which. What does say is the running balance the statement prints every few rows: between
 two printed balances the signed amounts must add up to the difference, and with a handful of
 rows there is exactly one way to sign them. `assign_signs` solves that; when two ways fit (rare,
@@ -59,7 +59,7 @@ def join_split(line):
 
 
 def money(s):
-    """'$1,234.56' / '- 4.00' / '4.49 CR' / '-$690.41' -> float; CR and a leading minus are negative."""
+    """'$1,234.56' / '- 4.00' / '4.49 CR' / '-$712.40' -> float; CR and a leading minus are negative."""
     t = s.strip()
     neg = t.startswith("-") or t.endswith("CR")
     t = re.sub(r"[^\d.]", "", t)
