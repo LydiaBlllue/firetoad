@@ -27,6 +27,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                                 "update-dashboard", "scripts"))
 import layout  # noqa: E402  where each findata file lives (schema 6)
+import verbs  # noqa: E402  the shape run() returns
 
 LEDGER_COLS = layout.LEDGER_COLS
 SPENDING_COLS = ["date", "amount", "currency", "category", "note"]
@@ -239,6 +240,8 @@ def build(a, today):
             rec["statedBalance"] = acc["balance"]
         if acc.get("limit"):
             rec["limit"] = acc["limit"]
+        if acc.get("ofxId"):                  # the bank's own id for it, as its OFX download names it
+            rec["ofxId"] = acc["ofxId"]
         if acc.get("gap"):
             rec["gap"] = acc["gap"]
         accounts.append(rec)
@@ -270,6 +273,9 @@ def build(a, today):
             # the statement is read by hand; D14 rejects a name no parser has.
             if doc.get("parser"):
                 d["parser"] = doc["parser"]
+            # A bank's own download is read by the column map drafted from the file (csv_bank.py).
+            if doc.get("csv"):
+                d["csv"] = doc["csv"]
             d["reconcile"] = doc.get("reconcile") or (
                 "opening + in - out = closing" if acc.get("ledger")
                 else "positions replace the previous snapshot" if acc["kind"] == "Investment"
@@ -425,7 +431,9 @@ def build(a, today):
                 "model; `descriptions` are your own one-liners under the net-worth parts.",
         "planBase": int(plan.get("planBase") or plan.get("everyday")) if (plan.get("planBase") or plan.get("everyday")) else None,
         "skipMonths": {},
-        "retirement": a.get("retirement") or RETIREMENT_DEFAULTS,
+        **({"fire": plan["fire"]} if isinstance(plan.get("fire"), dict) else {}),
+        "retirement": dict(a.get("retirement") or RETIREMENT_DEFAULTS,
+                           **({"pensions": a["pensions"]} if a.get("pensions") else {})),
     }, ensure_ascii=False, indent=2) + "\n"
     out[layout.rel("networth_history.json")] = json.dumps({
         "note": "One net-worth point per month, appended on every 'update dashboards' when the "
@@ -523,36 +531,33 @@ def keep_private(root, today):
         print(f"  → pre-commit data guard: {hook} (a commit carrying findata/ into a repository with a remote is refused)")
 
 
-def main(argv):
-    ap = argparse.ArgumentParser()
-    ap.add_argument("root", nargs="?", default=".")
-    ap.add_argument("--answers")
-    ap.add_argument("--write", action="store_true")
-    ap.add_argument("--force", action="store_true")
-
-    args = ap.parse_args(argv[1:])
-
-    root = os.path.abspath(args.root)
+def run(root, answers=None, write=False, force=False, say=None):
+    """Build findata/ from an answers file and, with write, put it in place (verbs.py). Refusals
+    (`die`) still raise SystemExit, as the setup skill relies on. Returns rc, lines, `files` (the
+    relative paths built) and `written`."""
+    emit, lines = verbs.speaker(say)
+    root = os.path.abspath(root)
     # The refusal comes FIRST, before the answers are even parsed: "is this workspace already
     # somebody's?" is the question the setup skill asks with a throwaway answers path, and it has
     # to get the refusal rather than a JSON error.
     busy = occupied(root)
-    if busy and not args.force:
+    if busy and not force:
         die("these ledgers already have rows in them: " + ", ".join(busy) +
             ".\n    Setup writes empty ledgers, so running it here would throw away months you "
             "have already imported.\n    If that is really what you want, pass --force.")
 
-    if not args.answers:
+    if not answers:
         die("--answers is required")
-    a = load_answers(args.answers)
+    a = load_answers(answers)
     today = a.get("today") or datetime.date.today().isoformat()
     files = build(a, today)
-    print(f"=== setup scaffold — {len(files)} files from {len(a['accounts'])} accounts")
+    emit(f"=== setup scaffold — {len(files)} files from {len(a['accounts'])} accounts")
     for path in sorted(files):
-        print(f"  {'→' if args.write else '·'} {path}")
-    if not args.write:
-        print("\n  nothing written. Re-run with --write to apply.")
-        return 0
+        emit(f"  {'→' if write else '·'} {path}")
+    res = {"files": sorted(files), "written": False}
+    if not write:
+        emit("\n  nothing written. Re-run with --write to apply.")
+        return verbs.result(res, 0, lines)
 
     # A demo workspace's ledgers belong to nobody; the new register may not name them at all
     # (the demo's friend ledger stayed behind on the first real clone, 2026-09-11). Cleared only
@@ -568,7 +573,7 @@ def main(argv):
         for f in stale:
             os.remove(os.path.join(led, f))
         if stale:
-            print("  − demo ledgers cleared: " + ", ".join(stale))
+            emit("  − demo ledgers cleared: " + ", ".join(stale))
         clear_demo(root)
     for path, text in files.items():
         full = os.path.join(root, path)
@@ -576,9 +581,20 @@ def main(argv):
         with open(full, "w", encoding="utf-8") as fh:
             fh.write(text)
     keep_private(root, today)
-    print("\n  written. Now run rebuild.py --write, then the four checkers — they are the "
-          "acceptance test for this scaffold.")
-    return 0
+    emit("\n  written. Now run rebuild.py --write, then the four checkers — they are the "
+         "acceptance test for this scaffold.")
+    res["written"] = True
+    return verbs.result(res, 0, lines)
+
+
+def main(argv):
+    ap = argparse.ArgumentParser()
+    ap.add_argument("root", nargs="?", default=".")
+    ap.add_argument("--answers")
+    ap.add_argument("--write", action="store_true")
+    ap.add_argument("--force", action="store_true")
+    args = ap.parse_args(argv[1:])
+    return run(args.root, answers=args.answers, write=args.write, force=args.force, say=print)["rc"]
 
 
 if __name__ == "__main__":

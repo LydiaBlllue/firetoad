@@ -30,6 +30,7 @@ import layout  # noqa: E402
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(HERE)), "workspace-checks", "scripts"))
 from check_data import merchant_key  # noqa: E402  the one definition
 import categories  # noqa: E402
+import verbs  # noqa: E402
 from update import jload, jsave, csv_rows  # noqa: E402
 
 SEEN = re.compile(r"^(.*?), seen for the first time\.")
@@ -44,21 +45,20 @@ def merchant_of(item):
     return m.group(1) if m else None
 
 
-def main(argv):
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("root", nargs="?", default=".")
-    ap.add_argument("--write", action="store_true")
-    ap.add_argument("--ok", action="store_true", help="confirm every item not --set as suggested, or as it was filed")
-    ap.add_argument("--set", action="append", default=[], metavar="N=CATEGORY")
-    a = ap.parse_args(argv)
-    root = os.path.abspath(a.root)
+def run(root, write=False, ok=False, sets=(), say=None):
+    """The table of open items, the answers checked, and — with write — applied (verbs.py).
+    `sets` are the `--set` strings. Returns rc, lines, `items` (the table rows), `bad` (what was
+    refused), `closed` and `changed` (how many items and purchases moved)."""
+    emit, lines = verbs.speaker(say)
+    root = os.path.abspath(root)
     fd = lambda n: layout.path(root, n)
+    res = {"items": [], "bad": [], "closed": 0, "changed": 0}
 
     dec = jload(fd("decisions.json"), {"decisions": []})
     items = [d for d in dec.get("decisions", []) if d.get("status") == "open"]
     if not items:
-        print("Nothing is waiting to be confirmed.")
-        return 0
+        emit("Nothing is waiting to be confirmed.")
+        return verbs.result(res, 0, lines)
     merchants = jload(fd("merchants.json"), {"merchants": []})
     table = {e["match"]: e for e in merchants.get("merchants", [])}
     spend = csv_rows(fd("spending.csv"))
@@ -71,8 +71,8 @@ def main(argv):
     # Questions about money first, then merchants by how often they appear: the first rows settle the most.
     items.sort(key=lambda d: count.get(merchant_of(d), 0) * -1 if d.get("kind") == "merchant" else -10 ** 6)
 
-    print(f"=== to confirm — {len(items)} item(s) ===")
-    print(f"  {'#':>3}  {'what':<38} {'filed as':<14} {'suggested':<14} {'seen':>4}  why")
+    emit(f"=== to confirm — {len(items)} item(s) ===")
+    emit(f"  {'#':>3}  {'what':<38} {'filed as':<14} {'suggested':<14} {'seen':>4}  why")
     for i, d in enumerate(items, 1):
         k = merchant_of(d) if d.get("kind") == "merchant" else None
         what = k or d.get("what", "")
@@ -80,17 +80,27 @@ def main(argv):
         why = "starter map" if "starter map" in w else "was Subscription" if "no longer a category" in w \
             else "same amount each month" if d.get("credit") and d.get("suggest") \
             else "fits better" if d.get("suggest") else ("first time" if k else d.get("kind", ""))
-        print(f"  {i:>3}  {what[:38]:<38} {str(d.get('default'))[:14]:<14} {str(d.get('suggest') or '')[:14]:<14} "
-              f"{count.get(k, '') if k else '':>4}  {why}")
+        emit(f"  {i:>3}  {what[:38]:<38} {str(d.get('default'))[:14]:<14} {str(d.get('suggest') or '')[:14]:<14} "
+             f"{count.get(k, '') if k else '':>4}  {why}")
+        res["items"].append({"n": i, "kind": d.get("kind"), "what": what, "default": d.get("default"),
+                             "suggest": d.get("suggest"), "seen": count.get(k, 0) if k else None, "why": why})
 
     # what the owner said
-    want, bad = {}, []
-    for s in a.set:
+    want, bad = {}, res["bad"]
+    for s in sets:
         if "=" not in s:
             bad.append(f"--set {s!r}: write it as N=Category or MERCHANT=Category"); continue
         who, said = (x.strip() for x in s.rsplit("=", 1))
         cat = next((k for k, n, *_ in categories.TABLE if said.lower() in (k.lower(), n.lower())), None)
         idx = int(who) - 1 if who.isdigit() else next((i for i, d in enumerate(items) if merchant_of(d) == who.upper()), None)
+        if idx is not None and 0 <= idx < len(items) and items[idx].get("kind") == "fire":
+            # the FIRE goal is answered yes or no, and lands in plan.json
+            yn = {"yes": "Yes", "y": "Yes", "no": "No", "n": "No"}.get(said.lower())
+            if yn is None:
+                bad.append(f"--set {s!r}: #{idx + 1} is the FIRE goal; say yes or no")
+            else:
+                want[idx] = yn
+            continue
         if idx is not None and 0 <= idx < len(items) and items[idx].get("credit"):
             # money coming in is answered with what it was, not a category
             t = next((x for x in INCOMING if said.lower() in (x.lower(), INCOMING[x].lower())), None)
@@ -110,18 +120,18 @@ def main(argv):
         else:
             want[idx] = cat
     if bad:
-        print()
+        emit()
         for b in bad:
-            print(f"  ✗ {b}")
-        return 1
-    if not a.write:
-        print("\n  nothing written. Say which to change, then run with --write --ok (and --set N=Category).")
-        return 0
+            emit(f"  ✗ {b}")
+        return verbs.result(res, 1, lines)
+    if not write:
+        emit("\n  nothing written. Say which to change, then run with --write --ok (and --set N=Category).")
+        return verbs.result(res, 0, lines)
 
     today = datetime.date.today().isoformat()
     changed, closed = 0, 0
     for i, d in enumerate(items):
-        if i not in want and not a.ok:
+        if i not in want and not ok:
             continue
         ans = want.get(i, d.get("suggest") or d.get("default"))
         if d.get("kind") == "transfer" and i in want and d.get("row"):
@@ -159,6 +169,11 @@ def main(argv):
                         break
                 with open(lp, "w", encoding="utf-8", newline="") as fh:
                     w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
+        if d.get("kind") == "fire":
+            pj = jload(fd("plan.json"), {})
+            pj["fire"] = {"goal": ans == "Yes", "asked": today}
+            jsave(fd("plan.json"), pj)
+            changed += 1
         d["answer"], d["resolved"], d["status"] = ans, today, "confirmed"
         closed += 1
     jsave(fd("merchants.json"), merchants)
@@ -169,8 +184,19 @@ def main(argv):
         w.writerows(spend)
     for script, args in (("rebuild.py", [".", "--write"]), ("preflight.py", [".", "--reseed"])):
         subprocess.run([sys.executable, os.path.join(HERE, script)] + args, cwd=root, capture_output=True, text=True)
-    print(f"\n  {closed} confirmed, {changed} purchase(s) moved to the category given; the page is rebuilt.")
-    return 0
+    emit(f"\n  {closed} confirmed, {changed} purchase(s) moved to the category given; the page is rebuilt.")
+    res.update(closed=closed, changed=changed)
+    return verbs.result(res, 0, lines)
+
+
+def main(argv):
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("root", nargs="?", default=".")
+    ap.add_argument("--write", action="store_true")
+    ap.add_argument("--ok", action="store_true", help="confirm every item not --set as suggested, or as it was filed")
+    ap.add_argument("--set", action="append", default=[], metavar="N=CATEGORY")
+    a = ap.parse_args(argv)
+    return run(a.root, write=a.write, ok=a.ok, sets=a.set, say=print)["rc"]
 
 
 if __name__ == "__main__":

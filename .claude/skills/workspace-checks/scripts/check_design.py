@@ -124,6 +124,19 @@ def check(path):
     def warn(r, m): F.append(("WARN", r, m, "conform"))
     def note(r, m): F.append(("NOTE", r, m, "conform"))
 
+    # -- S10 (1.0.1): a card or a table is drawn by its component, never by hand -------
+    # Nine copies of the card helper and tables aligning each heading by hand were where UI
+    # changes kept breaking (2026-11-05). StatCard and DataTable are the only places their markup
+    # is written; a grouped table not yet moved says so on its line ("S10:").
+    # A stat card is a card whose label is followed by a big number, built in a script string.
+    hand_cards = len(re.findall(r"""'<div class="card"><div class="lab">.{0,200}?big num""", src))
+    if hand_cards > 1:
+        err("S10", f"{hand_cards - 1} stat card(s) written by hand — draw them with StatCard()")
+    for ln in src.split("\n"):
+        if "<th style=" in ln and "S10:" not in ln:
+            err("S10", "a table heading aligned by hand — draw the table with DataTable(): " + ln.strip()[:70])
+            break
+
     # -- §4 desktop-only layout -------------------------------------------
     body = re.search(r'\bbody\s*\{([^}]*)\}', css)
     bodycss = body.group(1) if body else ""
@@ -285,6 +298,25 @@ def check(path):
                     if missing:
                         err("S7", f"{doc} lists the constants rebuild.py derives but omits "
                                   + ", ".join(missing))
+
+            # S9 (2026-11-04): the banks page is written from the tool's own table, and a CSV map
+            # is confirmed only where the table says a real file was read. A status changed in one
+            # place and not the other is a page telling a user something the tool does not know.
+            sk = os.path.join(root, ".claude", "skills", "update-dashboard")
+            if os.path.exists(os.path.join(sk, "parsers", "support.py")):
+                sys.path.insert(0, sk)
+                import importlib
+                import parsers.support as support_, parsers.csv_bank as csv_bank_
+                importlib.reload(support_); importlib.reload(csv_bank_)
+                for lang, rel in (("en", "docs/banks.md"), ("zh", "docs/zh/banks.md")):
+                    bp = os.path.join(root, rel)
+                    if os.path.exists(bp) and open(bp, encoding="utf-8").read() != support_.render(lang):
+                        err("S9", f"{rel} differs from the table in parsers/support.py — run tools/banks.py")
+                for r_ in support_.SUPPORT:
+                    prof = r_.get("profile")
+                    if prof and prof in csv_bank_.PROFILES and csv_bank_.PROFILES[prof]["verified"] != (r_["status"] == "confirmed"):
+                        err("S9", f"{r_['bank']} CSV is '{r_['status']}' in support.py but its map says verified="
+                                  f"{csv_bank_.PROFILES[prof]['verified']} in csv_bank.py")
 
             st = os.path.join(root, ".claude", "skills", "workspace-checks", "scripts", "selftest.py")
             if os.path.exists(st):

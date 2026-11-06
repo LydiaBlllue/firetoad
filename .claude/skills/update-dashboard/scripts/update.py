@@ -67,6 +67,7 @@ import layout  # noqa: E402
 import preflight  # noqa: E402
 import seen_accounts  # noqa: E402
 import rebuild  # noqa: E402
+import verbs  # noqa: E402
 import loans  # noqa: E402  what a borrower still owes (loans.py)
 sys.path.insert(0, CHECKS)
 from check_data import merchant_key, refund_pool  # noqa: E402  the one definition of "the same merchant"
@@ -77,6 +78,10 @@ LONG = ("January", "February", "March", "April", "May", "June", "July", "August"
 LEDGER_COLS = layout.LEDGER_COLS
 SPEND_COLS = ["date", "amount", "currency", "category", "note"]
 REWARD_COLS = ["date", "amount", "currency", "note"]
+# The interest a card statement charged (1.0.1): its printed Interest total, which the card parsers
+# already read to reconcile. One row per statement; a card paid in full has rows of 0.00.
+INTEREST_COLS = ["date", "account", "statement", "interest"]
+CARD_PDF_PARSERS = ("rbc_visa", "bmo_mastercard")
 # A card's cash back or points turned into money (2026-10-28, user 002: a redemption sat as a
 # credit nobody claimed). Income, shown on its own line, never pay (FINANCE.md §2).
 REWARD = re.compile(r"CASH\s*BACK|REWARDS?\b|REDEMPTION|REDEEM|POINTS\s+(?:CREDIT|CONVERSION)", re.I)
@@ -194,6 +199,15 @@ class Workspace:
         same institution (one BMO PDF can carry two accounts)."""
         cands = [self.by_key[k] for k in doc.get("covers", []) if k in self.by_key]
         cands += [a for a in self.accounts if a.get("inst") == doc.get("ep") and a not in cands]
+        # an OFX download names each account by the bank's own id, which setup keeps as ofxId
+        exact = [a for a in cands if parsed_digits and a.get("ofxId") == parsed_digits]
+        if exact:
+            return exact[0]
+        if doc.get("parser") == "ofx":
+            # RBC's id ends in the account number the register already has; BMO's is its own and
+            # needs ofxId. One account whose number the id ends with is that account, never more.
+            tail = [a for a in cands if digits(a.get("id")) and parsed_digits.endswith(digits(a.get("id"))[-4:])]
+            return tail[0] if len(tail) == 1 else None
         if parsed_digits:
             for a in cands:
                 if digits(a.get("id")) and digits(a.get("id")).endswith(parsed_digits[-4:]):
@@ -209,8 +223,11 @@ class Workspace:
 
 # ---------------------------------------------------------------- what a ledger row is
 def merchant_of_debit(desc):
-    """'Contactless Interac purchase - 7740 FARM BOY #17 OTTAWA ON' -> 'FARM BOY #17 OTTAWA ON'."""
-    m = re.search(r"interac\s+purchase[\s,\-]*(?:\d{3,}\s*)?(.*)$", desc, re.I)
+    """'Contactless Interac purchase - 1111 FARM BOY #17 OTTAWA ON' -> 'FARM BOY #17 OTTAWA ON';
+    'Debit Card Purchase, FORTINOS' -> 'FORTINOS' (BMO's wording, in its PDF and its OFX alike:
+    until 2026-11-04 the words stayed on the merchant, so every BMO debit merchant read as new)."""
+    m = re.search(r"interac\s+purchase[\s,\-]*(?:\d{3,}\s*)?(.*)$", desc, re.I) \
+        or re.search(r"(?:debit\s*card|point\s+of\s+sale|pos)\s*purchase[\s,\-]*(?:\d{3,}\s*)?(.*)$", desc, re.I)
     return (m.group(1) if m else desc).strip(" ,-")
 
 
@@ -382,6 +399,7 @@ class Plan:
         self.untyped = []
         self.credits = []
         self.rewards = []                               # rewards.csv rows: cash back a card paid
+        self.interest = []                              # card_interest.csv rows: what a statement charged
         self.files = []                                 # sentences, the way the owner knows them
         self.holdings = None                            # (src path, asof)
         self.activities = None
@@ -447,6 +465,8 @@ def name_by_contents(ws, plan, path, quiet=False):
         return None
     hits = []
     for name in PARSERS:
+        if name in ("csv", "ofx"):
+            continue                          # a download is named by its register entry, not read blind
         try:
             res = parse_file(path, name)
         except ParseError:
@@ -474,12 +494,16 @@ def plan_statement(ws, plan, path, doc):
     res = None
     if doc.get("parser"):
         try:
-            res = parse_file(path, doc["parser"])
+            res = parse_file(path, doc["parser"], doc.get("csv"))
         except ParserUnavailable:
             raise
         except ParseError as e:
             if name not in plan.hand:
                 plan.by_hand.append((name, f"{doc['parser']}: {e}"))
+                return
+        if res is not None and doc["parser"] in ("csv", "ofx"):
+            res = csv_fit(ws, plan, doc, res, name)
+            if res is None:
                 return
         if res is not None and not res["reconcile"]["ok"] and name not in plan.hand:
             plan.by_hand.append((name, "does not reconcile: " + res["reconcile"]["detail"]))
@@ -510,10 +534,18 @@ def plan_statement(ws, plan, path, doc):
             continue
         pdoc = ws.doc_for_account(acc["key"]) or doc
         into = pdoc.get("into")
+        if doc.get("parser") in ("csv", "ofx"):
+            # A download is filed under itself, and each account in it goes where that account's
+            # money goes: a card to spending, a ledger to its ledger, a balance-only one to banks.
+            pdoc = doc
+            into = "spending.csv" if acc.get("side") == "liability" else (acc.get("ledger") or "banks.json")
         p_end = iso_to_date(part["period"]["to"])
         month = p_end.strftime("%Y-%m")
         if into == "spending.csv":
             n = plan_card(ws, plan, acc, pdoc, part, p_end)
+            charged = (part.get("totals") or {}).get("interest")
+            if charged is not None:
+                plan.interest.append([p_end.isoformat(), acc["key"], f"{acc.get('spendTag') or tag}/{stamp(p_end)}", f"{charged:.2f}"])
         elif into == "banks.json":
             n = 0
         else:
@@ -529,6 +561,142 @@ def plan_statement(ws, plan, path, doc):
         plan.files.append(f"{ws.doc_name(pdoc)} statement to {short(p_end)}" + (" (again)" if redrop else ""))
     if not filed_any:
         plan.archive.pop()
+
+
+def interest_backfill(ws, plan):
+    """What each card statement already in archive/ charged, for the statements card_interest.csv
+    does not have yet: the first run after 1.0.1 fills the past, every later one finds nothing to
+    do. Read by the same parsers, so a statement that does not reconcile adds nothing."""
+    have = {r["statement"] for r in csv_rows(ws.fd("card_interest.csv"))} if os.path.exists(ws.fd("card_interest.csv")) else set()
+    have |= {r[2] for r in plan.interest}
+    arch = os.path.join(ws.root, "archive")
+    out = []
+    if not os.path.isdir(arch):
+        return out
+    for doc in ws.docs:
+        if doc.get("parser") not in CARD_PDF_PARSERS:
+            continue
+        for tag in doc.get("tags") or []:
+            for f in sorted(os.listdir(arch)):
+                if not (f.lower().endswith(".pdf") and re.match(r"\d{8}_" + re.escape(tag) + "_", f)):
+                    continue
+                try:
+                    res = parse_file(os.path.join(arch, f), doc["parser"])
+                except Exception:              # unreadable, not reconciled, or no PDF reader: nothing to add
+                    continue
+                if not res["reconcile"]["ok"] or (res.get("totals") or {}).get("interest") is None:
+                    continue
+                # A card reissued under a new number: its old statements carry the old one. The file
+                # was filed under this document already, so a document for one card is that card.
+                acc = ws.account_for(doc, res.get("account"))
+                if not acc and len(doc.get("covers") or []) == 1:
+                    acc = next((x for x in ws.reg["accounts"] if x["key"] == doc["covers"][0]), None)
+                if not acc:
+                    continue
+                end = iso_to_date(res["period"]["to"])
+                st = f"{acc.get('spendTag') or tag}/{stamp(end)}"
+                if st not in have:
+                    have.add(st)
+                    out.append([end.isoformat(), acc["key"], st, f"{res['totals']['interest']:.2f}"])
+    return out
+
+
+def csv_fit(ws, plan, doc, res, name):
+    """A bank's download covers the last 30 or 90 days, so it overlaps what is already in the
+    books; and it prints no totals. Rows already filed are dropped (a ledger: up to the row the
+    ledger ends on; a card: a purchase already in spending.csv). A file with no running balance is
+    checked against the balance the owner reads off the banking app (--balance): the last balance
+    known plus every new row has to land on it. Nothing is guessed: without it the run stops.
+    One download can carry several accounts (RBC's does); each is fitted on its own."""
+    parts = res.get("accounts") or [res]
+    fitted = []
+    for part in parts:
+        acc = ws.account_for(doc, part.get("account"))
+        if not acc:
+            plan.by_hand.append((name, f"the {ws.doc_name(doc)} download has rows for …{part.get('account') or '?'}, "
+                                       f"which matches no account in the register; say which"))
+            return None
+        fitted.append(csv_fit_part(ws, plan, doc, acc, part))
+    if any(f_ is None for f_ in fitted):          # every balance still needed is asked at once
+        return None
+    if not res.get("accounts"):
+        return fitted[0]
+    return dict(res, accounts=fitted,
+                reconcile={"rule": "each account on its own", "ok": all(p_["reconcile"]["ok"] for p_ in fitted),
+                           "detail": "; ".join(f"…{p_['account']}: {p_['reconcile']['detail']}" for p_ in fitted)})
+
+
+def csv_fit_part(ws, plan, doc, acc, res):
+    rows = res["rows"]
+    if acc.get("spendTag") and (acc.get("side") == "liability" or doc.get("into") == "spending.csv"):
+        tag = f"[{acc.get('spendTag')}/"
+        seen = {(r["date"], r["amount"], r["note"].rsplit(" [", 1)[0].strip())
+                for r in csv_rows(ws.fd("spending.csv")) if tag in r.get("note", "")}
+        keep = [r for r in rows if (r["date"], f"{-r['amount']:.2f}", r["description"].strip()) not in seen]
+    elif not acc.get("ledger"):
+        # A balance-only account keeps no rows: what it holds as of its date already counts every
+        # row up to then, so only what came after can move it.
+        keep = [r for r in rows if r["date"] > (acc.get("asof") or "")]
+    else:
+        existing = csv_rows(ws.fd(acc["ledger"])) + [dict(zip(LEDGER_COLS, x)) for x in plan.ledger.get(acc["ledger"], [])]
+        keep = rows
+        if existing:
+            last = existing[-1]
+            same = lambda r: (r["date"] == last["date"] and abs(r["amount"] - float(last["amount"])) < 0.005
+                              and (r.get("balance") is None or abs(r["balance"] - float(last["balance"])) < 0.005))
+            hit = max((i for i, r in enumerate(rows) if same(r)), default=None)
+            if hit is not None:
+                keep = rows[hit + 1:]
+            else:
+                on_last = {(x["date"], f"{float(x['amount']):.2f}") for x in existing if x["date"] == last["date"]}
+                keep = [r for r in rows if r["date"] > last["date"]
+                        or (r["date"] == last["date"] and (r["date"], f"{r['amount']:.2f}") not in on_last)]
+    dropped = len(rows) - len(keep)
+    if dropped:
+        plan.judged.append(f"The {acc['name']} rows of the {ws.doc_name(doc)} file repeated {dropped} already in the books; "
+                           f"they were left out.")
+    res = dict(res, rows=keep)
+    if keep:
+        res["period"] = {"from": keep[0]["date"], "to": keep[-1]["date"]}
+    since = acc.get("asof") or ""
+    moving = [r for r in keep if r["date"] > since]
+    if res["reconcile"].get("bank_balance") and not acc.get("ledger"):
+        # OFX: the bank says what the account holds now. What the books held as of their date,
+        # plus every row since, has to be that, or a row is missing (a ledger is held to it by the
+        # opening balance instead, in plan_ledger).
+        before = float(acc.get("balance") or 0.0)
+        expect = round(before + sum(r["amount"] for r in moving), 2)
+        ok = abs(expect - res["closing"]) < 0.01
+        res["reconcile"] = dict(res["reconcile"], ok=ok,
+                                detail=f"{before:,.2f} as of {since} and {len(moving)} row(s) since make {expect:,.2f}; "
+                                       f"the bank says {res['closing']:,.2f}" + ("" if ok else " — a row is missing or counted twice"))
+    if res["reconcile"].get("bank_balance") and acc.get("side") == "liability":
+        res["closing"] = -res["closing"]       # a card's balance as a statement prints it: owed is positive
+    if res["reconcile"].get("needs_balance") and not moving:
+        # nothing after the balance on hand: it stands, and there is nothing to ask
+        res["closing"] = None
+        res["reconcile"] = {"rule": "nothing new since the balance on hand", "ok": True,
+                            "detail": f"no row after {since}; the balance stays as it was"}
+    elif res["reconcile"].get("needs_balance"):
+        said = plan.stated.get(acc["key"], plan.stated.get(doc["key"]))
+        if said is None:
+            plan.stopped.append(f"The {ws.doc_name(doc)} file has no running balance for {acc['name']}. Read the balance your "
+                                f"banking app shows for it and run again with --balance \"{acc['key']}=<amount>\"")
+            return None
+        liability = acc.get("side") == "liability"
+        before = float(acc.get("balance") or 0.0)
+        # The balance known is as of its date: only rows after it move it (a card's purchases
+        # before that day are new to spending.csv but already in what the statement said was owed).
+        # A card's balance is said the way the app shows it: owed is positive, in credit negative;
+        # the register keeps it the other way round.
+        expect = round(before + sum(r["amount"] for r in moving), 2)
+        target = -said if liability else said
+        ok = abs(expect - target) < 0.01
+        res["closing"] = said
+        res["reconcile"] = {"rule": "the last balance plus every new row lands on the balance the app shows", "ok": ok,
+                            "detail": f"{before:,.2f} and {len(keep)} new row(s) make {expect:,.2f}; the app shows {target:,.2f}"
+                                      + ("" if ok else " — a row is missing or one is counted twice")}
+    return res
 
 
 def hand_result(ws, plan, doc, h):
@@ -815,6 +983,17 @@ def write_plan(ws, plan):
             if new:
                 w.writerow(SPEND_COLS)
             w.writerows(sorted(plan.spend, key=lambda r: (r[0], r[4])))
+    if plan.interest:
+        p = fd("card_interest.csv")
+        have = {r["statement"] for r in csv_rows(p)} if os.path.exists(p) else set()
+        rows = [r for r in sorted(plan.interest) if r[2] not in have]
+        new = not os.path.exists(p) or os.path.getsize(p) == 0
+        if rows:
+            with open(p, "a", encoding="utf-8", newline="") as fh:
+                w = csv.writer(fh)
+                if new:
+                    w.writerow(INTEREST_COLS)
+                w.writerows(rows)
     if plan.rewards:
         p = fd("rewards.csv")
         new = not os.path.exists(p) or os.path.getsize(p) == 0
@@ -1153,54 +1332,60 @@ def restore(root, d):
     shutil.rmtree(old, ignore_errors=True)
 
 
-def undo(root):
+def undo(root, say=None):
+    """The last --write taken back (verbs.py): rc and lines, and `undone` (the import's date)."""
+    emit, lines = verbs.speaker(say)
+    root = os.path.abspath(root)
     top = os.path.join(root, ".undo")
     done = [d for d in sorted(os.listdir(top)) if (jload(os.path.join(top, d, "undo.json")) or {}).get("after")] \
         if os.path.isdir(top) else []
     if not done:
-        print("  ✗ nothing to undo: no finished import has a copy in .undo/"); return 1
+        emit("  ✗ nothing to undo: no finished import has a copy in .undo/")
+        return verbs.result({"undone": None}, 1, lines)
     d = os.path.join(top, done[-1])
     after, now = jload(os.path.join(d, "undo.json"))["after"], findata_hashes(root)
     edited = sorted(k for k in set(after) | set(now) if after.get(k) != now.get(k))
     if edited:
-        print(f"  ✗ findata/ has changed since the import of {done[-1][:8]}: {', '.join(edited[:6])}"
-              + (" …" if len(edited) > 6 else "") + " — undoing it would throw those edits away. Nothing was changed.")
-        return 1
+        emit(f"  ✗ findata/ has changed since the import of {done[-1][:8]}: {', '.join(edited[:6])}"
+             + (" …" if len(edited) > 6 else "") + " — undoing it would throw those edits away. Nothing was changed.")
+        return verbs.result({"undone": None}, 1, lines)
     restore(root, d)
     shutil.rmtree(d, ignore_errors=True)
-    run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
-    run(os.path.join(HERE, "preflight.py"), [".", "--reseed"], root)
-    print(f"  ✓ the import of {done[-1][:8]} is undone: findata/ is as it was before it, and its files are back in inbox/")
-    return 0
+    _script(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
+    _script(os.path.join(HERE, "preflight.py"), [".", "--reseed"], root)
+    emit(f"  ✓ the import of {done[-1][:8]} is undone: findata/ is as it was before it, and its files are back in inbox/")
+    return verbs.result({"undone": done[-1][:8]}, 0, lines)
 
 
-def run(script, args, root):
+def _script(script, args, root):
     p = subprocess.run([sys.executable, script] + args, cwd=root, capture_output=True, text=True)
     return p.returncode, p.stdout + p.stderr
 
 
-# ---------------------------------------------------------------- main
-def main(argv):
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("root", nargs="?", default=".")
-    ap.add_argument("--write", action="store_true", help="apply; without it, only say what would happen")
-    ap.add_argument("--json", action="store_true", help="print the summary as JSON")
-    ap.add_argument("--hand", help="JSON of statements the model read and transcribed (see above)")
-    ap.add_argument("--undo", action="store_true", help="put findata/ and inbox/ back as they were before the last --write")
-    a = ap.parse_args(argv)
-    root = os.path.abspath(a.root)
-    if a.undo:
-        return undo(root)
+# ---------------------------------------------------------------- run / main
+def run(root, write=False, hand=None, balance=None, undo_last=False, say=None, loud=None):
+    """The import (verbs.py). `hand` is the list of transcriptions --hand reads from its file;
+    `balance` is {account key: amount} for a download with no running balance; `undo_last` is
+    --undo. Returns the summary --json prints, plus rc and lines. `loud` receives the lines that
+    reach the terminal even in --json mode (a refusal, a failure)."""
+    root = os.path.abspath(root)
+    if undo_last:
+        return undo(root, say=say)
+    emit, lines = verbs.speaker(say, loud)
+    rc, summary = _import(root, write, hand or [], balance or {}, emit)
+    return verbs.result(summary, rc, lines)
+
+
+def _import(root, write, hand, balance, say):
+    """(rc, summary) — the import itself, printing through `say`."""
     ws = Workspace(root)
     plan = Plan()
     plan.hand = {}
-    if a.hand:
-        try:
-            for h in json.load(open(a.hand, encoding="utf-8")):
-                plan.hand[os.path.basename(h["file"])] = h
-        except (ValueError, KeyError, TypeError, OSError) as e:
-            print(f"  ✗ --hand {a.hand}: not a list of transcriptions ({e})"); return 1
+    plan.stated = dict(balance)
+    for h in hand:
+        plan.hand[os.path.basename(h["file"])] = h
     summary = {"date": ws.today.isoformat(), "written": False}
+    run = _script
     # Seconds per stage (2026-11, user 002: nothing said how long an import took, so two could not
     # be compared). Tokens are the session's, not this script's: the app's usage view has them.
     t0 = time.monotonic(); secs = {}
@@ -1218,11 +1403,20 @@ def main(argv):
             else:
                 plan_export(ws, plan, path, doc)
     except ParserUnavailable as e:
-        print(f"  ✗ {e}. Nothing can be parsed until it is installed; then run again.")
-        return 3
+        say(f"  ✗ {e}. Nothing can be parsed until it is installed; then run again.", loud_line=True)
+        return 3, summary
     lap("read")
+    plan.interest += interest_backfill(ws, plan)
+    # The FIRE goal is asked once (1.0.1): a workspace that never answered, with nothing invested,
+    # gets one question. Someone already investing reads as yes until they say otherwise.
+    pj = jload(ws.fd("plan.json"), {})
+    investing = any(x.get("role") == "grow" and (x.get("balance") or 0) > 0 for x in ws.reg.get("accounts", []))
+    if "fire" not in pj and not investing and not any(d.get("kind") == "fire" and d.get("status") == "open"
+                                                       for d in ws.decisions.get("decisions", [])):
+        plan.decisions.append({"kind": "fire", "default": "No",
+                               "what": "Is retiring early (FIRE) something you are working toward? Yes or no; "
+                                       "the FIRE pages show only for yes."})
 
-    say = print if not a.json else (lambda *x, **k: None)
     say(f"=== update — {len(named)} file(s) named in inbox/, {len(plan.unknown)} unnamed ===\n")
     for src, dst in plan.archive:
         say(f"  {os.path.basename(src)}  →  archive/{os.path.basename(dst)}")
@@ -1257,19 +1451,21 @@ def main(argv):
                    credits=plan.credits, counts=dict(plan.counts))
     if stop:
         say("\n  Nothing written. Ask the owner, then run again.")
-        if a.json:
-            print(json.dumps(summary, ensure_ascii=False, indent=1))
-        return 1
+        return 1, summary
+    if not (plan.archive or plan.delete) and plan.interest and write:
+        # Nothing new in inbox, but statements already filed have interest to record (the first
+        # run after 1.0.1): only that file is written, then the page is rebuilt.
+        only = Plan(); only.interest = plan.interest
+        write_plan(ws, only)
+        run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
+        run(os.path.join(HERE, "preflight.py"), [".", "--reseed"], root)
+        say(f"  card interest recorded for {len(plan.interest)} statement(s) already filed.")
     if not (plan.archive or plan.delete):
         say("  nothing to import.")
-        if a.json:
-            print(json.dumps(summary, ensure_ascii=False, indent=1))
-        return 0
-    if not a.write:
+        return 0, summary
+    if not write:
         say("\n  Nothing written. Re-run with --write to apply.")
-        if a.json:
-            print(json.dumps(summary, ensure_ascii=False, indent=1))
-        return 0
+        return 0, summary
 
     snap = snapshot(ws, plan)
     try:
@@ -1292,15 +1488,17 @@ def main(argv):
         restore(root, snap)
         shutil.rmtree(snap, ignore_errors=True)
         run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
-        print(f"  ✗ the write failed ({type(e).__name__}: {e}). findata/ and inbox/ are back as they were — nothing was written.")
-        return 1
+        say(f"  ✗ the write failed ({type(e).__name__}: {e}). findata/ and inbox/ are back as they were — nothing was written.",
+            loud_line=True)
+        return 1, summary
     summary.update(written=True, changed=changed, noticed=noticed, record=rec)
 
     rc, out = run(os.path.join(HERE, "rebuild.py"), [".", "--write"], root)
     lap("rebuild")
     say("\n  rebuild: " + (out.strip().splitlines()[-1].strip() if out.strip() else f"exit {rc}"))
     findings = []
-    for script, args in (("check_data.py", ["."]), ("check_design.py", [rebuild_page(root)])):
+    # The import ends with the money checks only; the page is checked when asked (checks.py).
+    for script, args in (("check_data.py", [".", "--money"]),):
         rc2, out2 = run(os.path.join(CHECKS, script), args, root)
         findings += [l.strip() for l in out2.splitlines() if l.strip().startswith(("✗", "⚠"))]
     summary["findings"] = findings
@@ -1322,9 +1520,41 @@ def main(argv):
             say("  " + f)
     else:
         say("\n  ✓ checkers clean")
+    return (2 if any(f.startswith("✗") for f in findings) else 0), summary
+
+
+def main(argv):
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("root", nargs="?", default=".")
+    ap.add_argument("--write", action="store_true", help="apply; without it, only say what would happen")
+    ap.add_argument("--json", action="store_true", help="print the summary as JSON")
+    ap.add_argument("--hand", help="JSON of statements the model read and transcribed (see above)")
+    ap.add_argument("--balance", action="append", default=[], metavar="KEY=AMOUNT",
+                    help="the balance the banking app shows, for a download with no running balance (repeatable)")
+    ap.add_argument("--undo", action="store_true", help="put findata/ and inbox/ back as they were before the last --write")
+    a = ap.parse_args(argv)
+    if a.undo:
+        return undo(a.root, say=print)["rc"]
+    balance = {}
+    for b in a.balance:
+        k, _, v = b.partition("=")
+        try:
+            balance[k.strip()] = float(v.replace(",", "").replace("$", ""))
+        except ValueError:
+            print(f"  ✗ --balance {b}: say it as key=amount"); return 1
+    hand = []
+    if a.hand:
+        try:
+            hand = json.load(open(a.hand, encoding="utf-8"))
+            for h in hand:
+                os.path.basename(h["file"])
+        except (ValueError, KeyError, TypeError, OSError) as e:
+            print(f"  ✗ --hand {a.hand}: not a list of transcriptions ({e})"); return 1
+    # --json prints the summary alone; a refusal or a failure still reaches the terminal (loud).
+    r = run(a.root, write=a.write, hand=hand, balance=balance, say=None if a.json else print, loud=print)
     if a.json:
-        print(json.dumps(summary, ensure_ascii=False, indent=1))
-    return 2 if any(f.startswith("✗") for f in findings) else 0
+        print(json.dumps(verbs.public(r), ensure_ascii=False, indent=1))
+    return r["rc"]
 
 
 def rebuild_page(root):

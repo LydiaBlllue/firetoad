@@ -1,5 +1,130 @@
 # Changelog
 
+## 1.0.1 — 2026-11-06
+
+- **Every example in the parsers' notes, the tests and the fixtures is invented** (2026-11-06):
+  account numbers, a branch number and amounts that had come from real statements are replaced.
+- **Unit tests** (2026-11-05): `tests/` holds one test per rule for the pure modules — `flows.py`
+  (the plan's sums) and `loans.py` (what is still owed) — with their edges pinned (a repayment on
+  the agreed day, a null amount against a zero) and one known gap written down as an expected
+  failure; then `categories.py` (the groups, a brand read off a statement string, a charge that
+  repeats, a yearly one), `layout.py` and `clock.py` against a temporary folder — 60 tests, two
+  known gaps; and `tools/migrate.py` end to end — the demo as each release shipped it
+  (`tests/fixtures/schema9`, `schema18`) is migrated to the tool's schema, reconciled, built, and
+  migrated again to prove nothing moves. Standard-library `unittest`; `checks.py --level release` runs them first and skips
+  them in a workspace that has none. The parsers stay under fixtures, the checkers under the
+  selftest.
+- **Every script a month goes through has a `run()` beside its `main()`** (2026-11-05): status,
+  update, confirm, rebuild, propose and scaffold do the work in `run(root, …, say=None)` and
+  return the exit code, every line the CLI prints and the script's own result (`verbs.py`);
+  `main()` only parses arguments and prints. Nothing changes for the CLI or the skills — 25
+  invocations were held byte-for-byte to their output before the change — and the selftest's
+  *two doors* check now proves run() and the CLI agree. Groundwork for a second way in that needs
+  no Claude plan (ROADMAP, 2.0.0).
+- **One page for both kinds of user** (2026-11-05, user 001). The sidebar is 18 pages in four
+  sections — Money in & out, Plan, Investing, then Accounts and the monthly import — in the order
+  someone starting out reads them; page keys are unchanged. The FIRE goal is said once (setup asks;
+  an import asks someone who never answered and has nothing invested) and the FIRE pages wait for
+  it. Home's four cards are chosen by two signals, something invested and a FIRE goal, and filled
+  from one list, so no owner sees an empty card.
+- **Safety net**, a new page: how many months the money you can reach today would last without a
+  paycheque — Spendable today less what in it is invested and what is owed on no asset, over the
+  spending baseline plus the repayments paid today. Money abroad is a line of its own. It judges
+  nothing.
+- **Card interest**: the interest each card statement printed is kept, one row per statement; the
+  first import after this version reads it from every card statement already filed. Shown only
+  when there is some — a Home card, a line on Year, an amber dot on Year while the newest
+  statement charged it.
+- **CPP and OAS in the drawdown**: the estimates from your My Service Canada account pay part of
+  what is taken out from the age each starts. Not given, the page says they are not counted.
+- **Every row in chequing** on the Income page: transfers, fees and e-Transfers one by one, with a
+  search and a pill per account.
+- **Card by card** (2026-11-05, user 001). Accounts sits right under Home; Income is *Income &
+  chequing*; Spending baseline is *Monthly spending*. **A usual month** is the one name and the
+  one sum for a month's spending — everything spent, averaged over up to twelve full months — on
+  This month, Monthly spending, Safety net and Investment income. Accounts' cards show the money
+  (net worth, cash, invested, what you owe) and Updates shows the next update; cards that repeated
+  another page are gone. Portfolio no longer shows a dollar more than Home.
+- **Cards and tables are drawn by two components**, `StatCard` and `DataTable`, where nine copies
+  of one helper and hand-aligned headings used to be; check_design's S10 fails one written by hand.
+- **Checks in three levels**: whether the money is right runs by itself after an edit and at the
+  end of an import; *check the page* and *check before a release* (`checks.py --level page |
+  release`) run when asked. The browser check now reaches every sidebar entry in a short window
+  (R6) and draws the page for every kind of owner (R7). Sync keeps the page and fault counts an
+  owner's README states in step with the tool. 65 selftest faults.
+
+- **A page of the banks and files the tool reads** (2026-11-04, user 001): `docs/banks.md` and
+  `docs/zh/banks.md`, bank by bank — which file, whether it has been confirmed on a real one, how to
+  download it, what to know. Written from one table (`parsers/support.py`) by `tools/banks.py`;
+  check_design's S9 fails when a page differs from the table, or when a CSV map is marked
+  confirmed in one place and not the other. One selftest fault (62).
+
+- **A bank's OFX or QFX download, for any bank** (2026-11-04, user 001). One reader
+  (`parsers/ofx.py`) for the standard most Canadian banks offer as *Money* or *Quicken*: every
+  account in the file with the bank's id for it (kept as `ofxId`), its type and currency, a unique id
+  per transaction and the bank's own balance. Each row's balance is worked back from the bank's, so
+  a download has to join the ledger's last balance, and a card or balance-only account has to land
+  on the bank's figure: nothing is asked. A file is named by the ids inside it, not its name. BMO's
+  two-letter codes ("[DN]") are spelled the way its PDF spells them, so rows type as before. On a
+  real BMO download, two months of chequing matched the PDF ledger row for row and the books ended
+  on the bank's balance to the cent; on a real RBC one, chequing matched row for row and the
+  eSavings, Find & Save and Visa each landed on the bank's figure. An id that ends in the account
+  number the register already has (RBC's) is matched without being asked. Setup drafts accounts from it and asks which bank and which
+  account each id is. A debit purchase's merchant no longer keeps "Debit Card Purchase," in its name
+  (it made every BMO debit merchant look new, PDFs included).
+
+- **A bank's own CSV download** (2026-11-03, user 001: lower the barrier for banks with no PDF
+  parser). One reader, `parsers/csv_bank.py`, follows a `csv` map kept on the register's
+  document — which column is the date, the description, the money out and in, the balance — that
+  setup drafts from the file itself, with starting points for TD, Scotiabank (current and older),
+  CIBC, Tangerine and Simplii, taken from open-source importers since no bank publishes its
+  columns, each marked unconfirmed until a real file has been read. A card's owed balance is
+  told apart from a chequing balance by which way the rows follow, and a Scotiabank download cut
+  at its 100-row limit is refused. A download overlapping
+  the last one has its repeated rows left out; one with a running balance reconciles by it, and
+  one without stops for the balance the banking app shows (`update.py --balance`). The selftest
+  puts the demo's newest chequing month back in as a download and expects it back exactly, and
+  a card download has to be refused with a wrong balance and taken with the right one.
+  - **RBC's download, confirmed on a real one** (user 001): one file for every account, each row
+    naming its account, so a download is split by account and each is fitted on its own. Its 28
+    chequing rows matched the ledger read from the PDFs one for one. A balance-only account counts
+    only the rows after the balance on hand, an account with nothing new is not asked about, every
+    balance still needed is asked at once, and a card's balance is said the way the app shows it
+    (owed positive, in credit negative). A second drop of the same file adds nothing.
+
+- **The repository says what a user can rely on, and no more** (2026-11-03, user 001). The
+  product notes, the competitor survey and the internal plan left the repository; ROADMAP.md is
+  what you will be able to do next and the version rule. The README's data section became *Why
+  you can trust it*: your data, your numbers, and the people behind it.
+
+- **One mark, one meaning, and a demo that is not stale** (2026-11-03, user 001). On Accounts an
+  old balance is its date in amber with its age on hover; ⚠ means only "unaccounted for". The demo
+  is dated by its own newest data on the page as it already was in the checkers (`clock.py`, one
+  module for both), so the live demo no longer shows every balance as old.
+- **CONTRIBUTING.md and SECURITY.md**: how to report a problem without sharing a statement, and
+  a privacy problem privately (GitHub's private reporting is on). Pull requests are not taken for
+  now; ideas come as issues.
+
+- **One rule for version numbers** (2026-11-03, user 001), at the top of ROADMAP.md: a version a
+  workspace takes with a sync is a patch, one that also needs a migration is a minor, a change of
+  technology is a major.
+
+- **The demo owner is an ordinary saver** (2026-11-03, user 001: less complex, more general).
+  Emma Roy, 32, banks at one bank (chequing, savings, a MasterCard) and invests in a TFSA and an
+  RRSP, three index funds and a bond band of 15–25%. No single stocks, crypto, FHSA, US dollars,
+  foreign money or loan; 5 accounts where there were 14. `tools/demo.py` writes all of it again,
+  benchmark included. Two tool changes came with her: "Invested this month" counts deposits
+  straight into an investment account when there is no doorway account, and the band on Home
+  and Portfolio is named after its bucket ("Bonds") unless it is the dry-powder one.
+- **The selftest no longer leans on the demo's accounts.** The money-lent and exchange-rate
+  faults plant their own loan and rate; a parser the demo owner does not use is held to an
+  ordinary month rendered on the spot. And a tamper fault with nothing to tamper is now a fault
+  not planted, not a fault caught: it had been passing without testing anything.
+
+- **What is still unaccounted for sits on its row** (2026-11-03, user 001). The card at the foot of
+  Accounts is gone: a ⚠ beside the balance of the account a gap belongs to, its story on hover; a
+  gap that belongs to no account is one line above the table; with none, nothing is shown.
+
 ## 1.0.0 — 2026-11-03
 
 The first public release. It gathers everything built under the old two-digit numbers: the

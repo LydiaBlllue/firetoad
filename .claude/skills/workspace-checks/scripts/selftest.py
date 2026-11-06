@@ -44,8 +44,10 @@ def stage(root, dst):
     # OWNER.md is optional (a workspace may not have written one yet); README names it.
     # .gitignore too: S4 exempts the files an owner writes and the tool deliberately does not ship
     # (setup-answers.json), and it learns which those are from there (2026-09-13).
-    # LICENSE, CHANGELOG.md and ROADMAP.md: README links to them, and S4 resolves every link.
-    for f in ("CLAUDE.md", "DESIGN.md", "FINANCE.md", "README.md", "OWNER.md", ".gitignore", "LICENSE", "CHANGELOG.md", "ROADMAP.md", "CONTRIBUTING.md", "SECURITY.md"):
+    # LICENSE, CHANGELOG.md, ROADMAP.md, CONTRIBUTING.md and SECURITY.md: README links to them,
+    # and S4 resolves every link.
+    for f in ("CLAUDE.md", "DESIGN.md", "FINANCE.md", "README.md", "OWNER.md", ".gitignore", "LICENSE", "CHANGELOG.md", "ROADMAP.md",
+              "CONTRIBUTING.md", "SECURITY.md"):
         if os.path.exists(os.path.join(root, f)):
             shutil.copy2(os.path.join(root, f), dst)
     # README names these folders in prose and S4 checks that every path it hands the reader
@@ -78,6 +80,10 @@ def m_readme_path(r):
 def m_design_pages(r):
     # The Monthly import row's first page swapped for one that does not exist, whatever the row lists.
     edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Monthly import \| )[^·|]+·", r"\1Insights ·", s, count=1))
+def m_hand_card(r):
+    # a stat card written by hand beside StatCard: the copy that drifts
+    edit(r, main_dash(r), lambda s: s.replace('StatCard("Spent in "+viewYear, numx(fmt(spent), [], "After refunds."))',
+         "'<div class=\"card\"><div class=\"lab\">Spent</div><div class=\"big num\">'+fmt(spent)+'</div></div>'", 1))
 def m_nav_orphan(r):
     edit(r, main_dash(r),
          lambda s: s.replace('<section data-pg="acct" hidden>', '<section data-pg="acctX" hidden>'))
@@ -95,6 +101,9 @@ def m_fund_flow_nowhere(r):
     # A saving flow sent to a name that is no fund and no account leaves the plan for nowhere.
     edit_json(r, layout.rel("funds.json"), lambda d: d["plan"]["flows"].append(
               {"key": "x", "kind": "saving", "name": "Somewhere", "amount": 10, "to": "nowhere"}))
+def m_banks_drift(r):
+    # A bank marked confirmed on the page that the tool's table does not confirm.
+    edit(r, "docs/banks.md", lambda t: t.replace("| [TD](#td) | — | ○ |", "| [TD](#td) | — | ✓ |", 1))
 def m_acct_drift(r):
     edit_json(r, layout.rel("accounts.json"), lambda d: d["accounts"][0].__setitem__("balance", 1.0))
 def m_bad_cover(r):
@@ -137,7 +146,7 @@ def m_nav_marker_gone(r):
 def m_readme_sidebar(r):
     # the "·" list under the marker is what a reader is shown; it has to match the real sidebar
     edit(r, "README.md",
-         lambda s: s.replace(" · Spending · ", " · Spendingg · ", 1))
+         lambda s: s.replace(" · Plan · Investing · ", " · Plan · Investingg · ", 1))
 def m_figures_end_gone(r):
     edit(r, "FINANCE.md", lambda s: s.replace("<!-- LINT:FIGURES:END -->", "", 1))
 
@@ -194,7 +203,7 @@ def m_readme_image_gone(r):
 # after the rename, and the checks skill said "fifteen" faults when the table held 42.
 def m_skill_path(r):
     # Not the `ly_` name itself: an owner's workspace may still have that page, and S4 accepts it.
-    edit(r, ".claude/skills/update-dashboard/SKILL.md",
+    edit(r, ".claude/skills/setup/SKILL.md",
          lambda s: s.replace("dashboards/finance_dashboard.html", "dashboards/spending_dashboard.html", 1))
 
 def m_skill_faults(r):
@@ -216,9 +225,20 @@ def m_stated_no_asof(r):
                               "side": "asset", "role": "none", "reach": "locked", "value": "stated",
                               "ledger": None, "feeds": "", "key": "home"})
     edit_json(r, layout.rel("accounts.json"), f)
+def with_loan(d):
+    """The money-lent faults need a loan to break. A workspace with none (the demo owner lends
+    nobody anything since 2026-11-03) gets one that checks clean first: agreed $500 on a date,
+    nothing back since, so what is owed is $500."""
+    if not any(a.get("role") == "owed" for a in d["accounts"]):
+        d["accounts"].append({"inst": "Owed to you", "id": "—", "name": "Alex", "kind": "Lent", "cur": "CAD",
+                              "balance": 500.0, "asof": "2026-03-01", "src": None, "side": "asset", "role": "owed",
+                              "reach": "lent", "value": "stated", "ledger": None, "feeds": "", "key": "loan-alex",
+                              "agreed": {"amount": 500.0, "asof": "2026-03-01"}, "names": ["ALEX EXAMPLE"]})
+    return d
 def m_loan_axes(r):
     # Money lent left on the "today" row: it would be counted as cash you can spend.
     def f(d):
+        with_loan(d)
         for a in d["accounts"]:
             if a.get("role") == "owed":
                 a["reach"] = "today"
@@ -226,6 +246,7 @@ def m_loan_axes(r):
 def m_loan_copy(r):
     # A loan's balance typed over by hand: the register says one thing, agreed less repaid another.
     def f(d):
+        with_loan(d)
         for a in d["accounts"]:
             if a.get("role") == "owed":
                 a["balance"] = round(float(a["balance"]) + 250, 2)
@@ -233,6 +254,7 @@ def m_loan_copy(r):
 def m_loan_overpaid(r):
     # An agreed amount set too low: more has come back than was ever owed.
     def f(d):
+        with_loan(d)
         for a in d["accounts"]:
             if a.get("role") == "owed":
                 a["agreed"]["amount"] = -1000.0
@@ -252,6 +274,13 @@ def m_fx_stale(r):
     # A rate months older than the statements around it. The demo is judged against its own
     # newest data rather than the calendar (so a clone checks clean), and that clock must still
     # see a rate that rotted inside it.
+    # An owner with no US dollars has no fx.json (the demo since 2026-11-03): the stale rate is
+    # written whole, the way an export once left one behind.
+    p = layout.path(r, "fx.json")
+    if not os.path.exists(p):
+        json.dump({"usd_cad": 1.37, "asof": "2026-06-01", "quality": "broker-rate", "history": []},
+                  open(p, "w", encoding="utf-8"), indent=2)
+        return
     edit_json(r, layout.rel("fx.json"), lambda d: d.__setitem__("asof", "2026-06-01"))
 # The setup's data guard (setup/scripts/guard.py). Runner kind "guard": the mutation makes the
 # staged copy a git checkout with a remote, the way a clone of the public repository is, lets the
@@ -285,7 +314,7 @@ def m_guard_data(r):
 # "reconciled". Runner kind "parse": it generates the fixtures into the staged copy and runs
 # parse.py on the tampered one.
 def m_parse_tampered(r):
-    return "rbc_visa"       # which fixture to tamper; the runner does the rest
+    return ("rbc_visa", "bmo_mastercard")   # whichever card the demo has; the runner does the rest
 def m_class_missing(r):
     # An ETF bought since anyone said what it holds: the asset-type split would file it nowhere.
     edit_json(r, layout.rel("rules.json"), lambda d: d["assetClass"].pop(next(iter(d["assetClass"]))))
@@ -448,6 +477,13 @@ def m_render_nan(r):
     # looking at "undefined".
     edit(r, main_dash(r),
          lambda s: re.sub(r'"netWorth":\s*-?[\d.]+,\s*', '', s, count=1))
+def m_render_sidebar_stuck(r):
+    # the sidebar loses its own scroll: in a short window its foot is out of reach (2026-11-05)
+    edit(r, main_dash(r), lambda s: s.replace(";max-height:calc(100vh - 38px);overflow-y:auto", "", 1))
+def m_render_empty_card(r):
+    # Home fills a card even when it has no number for it
+    edit(r, main_dash(r), lambda s: s.replace("    const html = C[k]();\n    if(html) shown.push({k, html});",
+                                              '    const html = C[k]() || StatCard("Empty", null);\n    shown.push({k, html});', 1))
 def m_render_chart_capped(r):
     edit(r, main_dash(r),
          lambda s: s.replace("year-svg{width:100%;height:auto", "year-svg{width:100%;height:190px", 1))
@@ -470,10 +506,12 @@ CASES = [
     ("S4", "README points at a file that moved",            m_readme_path,     "dash"),
     ("S4", "DESIGN.md page table drifts from NAV",          m_design_pages,    "dash"),
     ("S1", "a NAV entry with no matching section",          m_nav_orphan,      "dash"),
+    ("S10", "a stat card written by hand",                  m_hand_card,       "dash"),
     ("D12", "a spending.csv row missing from the page",     m_spending_row,    "find"),
     ("D13", "funds.json changed but the page did not",      m_funds_drift,     "find"),
     ("D13", "a fund on an account the register lacks",      m_fund_no_account, "find"),
     ("D13", "a saving flow sent to no fund and no account", m_fund_flow_nowhere, "find"),
+    ("S9",  "the banks page drifts from the tool's table",  m_banks_drift,     "dash"),
     ("D14", "accounts.json changed but the page did not",   m_acct_drift,      "find"),
     ("D19", "a liability given a role",                     m_axes_illegal,    "find"),
     ("D20", "a stated balance with no date",                m_stated_no_asof,  "find"),
@@ -528,6 +566,8 @@ CASES = [
     ("D29", "a gift declared in the broker with no such deposit", m_broker_gift_no_deposit, "find"),
     ("D30", "a chequing bill that never reached spending",  m_chequing_no_spend_tag, "find"),
     ("R3", "a chart pinned to a fixed height",              m_render_chart_capped,"render"),
+    ("R6", "the sidebar cannot scroll in a short window",   m_render_sidebar_stuck,"render"),
+    ("R7", "Home shows a card with no number",              m_render_empty_card,  "render"),
 ]
 
 
@@ -566,9 +606,12 @@ def parse_fault(ws, parser, rule):
     man = fixtures_for(ws)
     if man is None:
         return None
-    pick = next((m for m in man if m["parser"] == parser), None)
-    if not pick:
-        return f"✗ [{rule}] no {parser} fixture to tamper"
+    parsers = parser if isinstance(parser, tuple) else (parser,)
+    pick = next((m for m in man if m["parser"] in parsers), None)
+    # Nothing to tamper is a fault that was never planted, not one that was caught: said as
+    # "✗ no fixture", it used to read as the rule firing (2026-11-03, when the demo lost its Visa).
+    assert pick, f"no {' or '.join(parsers)} fixture to tamper"
+    parser = pick["parser"]
     sys.path.insert(0, os.path.join(ws, "tools"))
     from pypdf import PdfReader
     import pdfgen
@@ -581,11 +624,57 @@ def parse_fault(ws, parser, rule):
             if l.startswith("Purchases & debits $"):
                 v = float(l.split("$")[1].replace(",", "")) + 10
                 pg[i] = f"Purchases & debits ${v:,.2f}"; hit = True
-    if not hit:
-        return f"✗ [{rule}] fixture has no total line to tamper"
+            elif l.startswith("Purchases and other charges +"):
+                v = float(l.split("+")[1].replace(",", "")) + 10
+                pg[i] = f"Purchases and other charges +{v:,.2f}"; hit = True
+    assert hit, f"the {parser} fixture has no total line to tamper"
     pdfgen.write_pdf(pick["file"], lines)
     ok, n, detail = parse_one(ws, pick["file"], parser)
     return f"{'·' if ok else '✗'} [{rule}] {detail}"
+
+
+def every_parser_check(ws, man):
+    """Every parser reads an ordinary month, whatever banks the demo owner happens to use. The
+    round trip above covers the demo's own documents; since 2026-11-03 she banks at one bank, so
+    a parser her register does not name is held here to a month rendered from rows written below."""
+    if not os.path.exists(os.path.join(ws, "tools", "fixtures.py")):
+        return []
+    sys.path.insert(0, os.path.join(ws, "tools"))
+    import fixtures
+    from pdfgen import write_pdf
+    have = {m["parser"] for m in (man or [])}
+    s, e = datetime.date(2026, 9, 26), datetime.date(2026, 10, 25)
+    bank, bal = [], 1200.0
+    for ds, desc, amt in (("2026-09-30", "Payroll Deposit EXAMPLE CO", 1850.0), ("2026-10-01", "Bill Payment HYDRO", -84.20),
+                          ("2026-10-01", "Contactless Interac purchase - 1234 GROCER", -42.15), ("2026-10-15", "Payroll Deposit EXAMPLE CO", 1850.0),
+                          ("2026-10-20", "Online Banking transfer - 1111", -500.0)):
+        bal = round(bal + amt, 2); bank.append({"date": ds, "description": desc, "amount": amt, "balance": bal})
+    card = [{"date": "2026-09-28", "description": "GROCER TORONTO ON", "amount": 64.10},
+            {"date": "2026-10-03", "description": "PHARMACY TORONTO ON", "amount": 18.75},
+            {"date": "2026-10-09", "description": "PAYMENT - THANK YOU", "amount": -300.0},
+            {"date": "2026-10-14", "description": "CAFE TORONTO ON", "amount": 7.40}]
+    cases = {"rbc_banking": lambda: fixtures.rbc_banking("1234", s, e, 1200.0, bank, "Alex Example"),
+             "bmo_banking": lambda: fixtures.bmo_banking("Primary Chequing", "1234", s, e, 1200.0, bank, "Alex Example"),
+             "rbc_visa": lambda: fixtures.rbc_visa("1234", s, e, 300.0, card, "Alex Example"),
+             "bmo_mastercard": lambda: fixtures.bmo_mastercard("1234", s, e, 300.0, card, "Alex Example")}
+    out, done = [], []
+    for parser, render in cases.items():
+        if parser in have:
+            continue
+        path = os.path.join(ws, "_fixtures", f"ordinary_{parser}.pdf")
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        write_pdf(path, render())
+        ok, n, detail = parse_one(ws, path, parser)
+        # A card template also prints the payment of the previous balance, so a card month has
+        # every row written here and that one more.
+        want = len(bank) if parser.endswith("banking") else len(card)
+        if ok and want <= n <= want + 1:
+            done.append(parser)
+        else:
+            out.append(f"  ✗ parsers: an ordinary {parser} month: {detail} — expected {want} rows")
+    if done:
+        out.append(f"  ✓ parsers the demo owner does not use ({', '.join(done)}): an ordinary month each, read and reconciled")
+    return out
 
 
 def credit_balance_check(ws):
@@ -968,6 +1057,230 @@ def browser_copy_check(root, base):
     return ["  ✓ browser copy: a (1) on a statement's name is named as the statement it copies"]
 
 
+def csv_download_check(root, base):
+    """A bank's own CSV download, end to end (2026-11-03: banks with no PDF parser here). The demo's
+    newest chequing month goes back in as a TD-style download -- no header, newest first, a few
+    rows of the month before repeated -- and the ledger has to come back exactly as it was, nothing
+    twice. Then a card download with no running balance: the run has to stop for the balance the
+    app shows, refuse a wrong one, and take the right one."""
+    if not demo_like(root):
+        return []
+    ws = os.path.join(base, "csvdl"); os.makedirs(ws); stage(root, ws)
+    sys.path.insert(0, os.path.join(root, ".claude", "skills", "update-dashboard", "scripts"))
+    ap_ = layout.path(ws, "accounts.json"); reg = json.load(open(ap_, encoding="utf-8"))
+    chq = next(d for d in reg["documents"] if d.get("into") == "chequing.csv")
+    card = next(d for d in reg["documents"] if d.get("into") == "spending.csv" and d.get("parser"))
+    chq.update(parser="csv", file="accountactivity.csv", csv={"header": False, "date": 0, "dateFormat": "%m/%d/%Y",
+                                                              "description": 1, "out": 2, "in": 3, "balance": 4})
+    card.update(parser="csv", file="card-activity.csv", csv={"header": False, "date": 0, "dateFormat": "%m/%d/%Y",
+                                                             "description": 1, "out": 2, "in": 3})
+    json.dump(reg, open(ap_, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+    lp = layout.path(ws, "chequing.csv")
+    rows = list(csv.DictReader(open(lp, encoding="utf-8"))); cols = list(rows[0].keys())
+    newest = rows[-1]["statement"]
+    first = next(i for i, r in enumerate(rows) if r["statement"] == newest)
+    keep, back = rows[:first], rows[first:]
+    with open(lp, "w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=cols, lineterminator="\n"); w.writeheader(); w.writerows(keep)
+    sp = layout.path(ws, "spending.csv")
+    srows = list(csv.DictReader(open(sp, encoding="utf-8"))); scols = list(srows[0].keys())
+    stamp_ = newest.split("/")[1]
+    srows = [r for r in srows if not (r["note"].rstrip().endswith(f"/{stamp_}]") and "(chequing)" in r["note"] or
+                                      r["note"].rstrip().endswith(f"/{stamp_}]") and "(debit)" in r["note"])]
+    with open(sp, "w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=scols, lineterminator="\n"); w.writeheader(); w.writerows(srows)
+    us = lambda d: f"{d[5:7]}/{d[8:10]}/{d[:4]}"
+    dl = [[us(r["date"]), r["description"], f"{-float(r['amount']):.2f}" if float(r["amount"]) < 0 else "",
+           f"{float(r['amount']):.2f}" if float(r["amount"]) > 0 else "", r["balance"]] for r in keep[-4:] + back]
+    with open(os.path.join(ws, "inbox", "accountactivity.csv"), "w", newline="") as f:
+        csv.writer(f).writerows(reversed(dl))
+    upd = lambda *a: subprocess.run([sys.executable, os.path.join(ws, ".claude", "skills", "update-dashboard", "scripts", "update.py"),
+                                     ".", "--write", *a], cwd=ws, capture_output=True, text=True, timeout=300)
+    r = upd()
+    got = list(csv.DictReader(open(lp, encoding="utf-8")))
+    sig = lambda xs: [(x["date"], x["amount"], x["balance"], x["type"]) for x in xs]
+    if r.returncode not in (0, 2) or sig(got) != sig(keep + back):
+        return [f"  ✗ csv download: the chequing month did not come back as it was (exit {r.returncode}, "
+                f"{len(got)} rows, expected {len(keep) + len(back)}): " + " | ".join((r.stdout + r.stderr).strip().splitlines()[-3:])]
+    # the card: three purchases after the newest, no running balance
+    acc = next(a for a in reg["accounts"] if card["covers"][0] == a["key"])
+    acc = next(a for a in json.load(open(ap_, encoding="utf-8"))["accounts"] if a["key"] == acc["key"])
+    buys = [("09/02/2026", "CORNER GROCER OTTAWA ON", 23.40), ("09/03/2026", "BOOKSHOP OTTAWA ON", 18.00),
+            ("09/04/2026", "CORNER GROCER OTTAWA ON", 11.25)]
+    with open(os.path.join(ws, "inbox", "card-activity.csv"), "w", newline="") as f:
+        csv.writer(f).writerows([[d, m, f"{a:.2f}", ""] for d, m, a in buys])
+    owed = round(-float(acc["balance"]) + sum(a for _, _, a in buys), 2)
+    n0 = len(list(csv.DictReader(open(sp, encoding="utf-8"))))
+    asked, wrong, right = upd(), upd("--balance", f"{acc['key']}={owed + 5:.2f}"), upd("--balance", f"{acc['key']}={owed:.2f}")
+    n1 = len(list(csv.DictReader(open(sp, encoding="utf-8"))))
+    if "--balance" not in asked.stdout or n1 - n0 != 3 or "does not reconcile" not in wrong.stdout:
+        return [f"  ✗ csv download: a card download without balances (asked {'--balance' in asked.stdout}, "
+                f"wrong balance refused {'does not reconcile' in wrong.stdout}, purchases added {n1 - n0} of 3)"]
+    return ["  ✓ csv download: a chequing month (no header, newest first, overlapping the last) came back exactly, nothing twice; "
+            "a card download without balances stopped for the app's balance, refused a wrong one, took the right one"]
+
+
+def csv_layouts_check(root, base):
+    """Each bank layout the csv reader starts from, as open-source importers describe it (2026-11),
+    is recognised as that bank and read with money out negative; a Scotiabank download cut at 100
+    rows is refused; a layout nobody described is not read at all."""
+    sys.path.insert(0, os.path.join(root, ".claude", "skills", "update-dashboard"))
+    import importlib
+    from parsers import csv_bank, ParseError as PE
+    importlib.reload(csv_bank)
+    d = os.path.join(base, "csvlayouts"); os.makedirs(d)
+    cases = [
+        ("td_chequing.csv", "2026-10-01,PAYROLL CO,,2100.00,3100.00\n2026-10-02,RENT,1450.00,,1650.00\n", "td", [2100.0, -1450.0]),
+        ("td_visa.csv", "10/02/2026,CAFE,4.50,,504.50\n10/05/2026,PAYMENT - THANK YOU,,200.00,304.50\n", "td", [-4.5, 200.0]),
+        ("cibc_card.csv", '2026-10-02,"CAFE",4.50,,4500********1234\n2026-10-05,"PAYMENT",,200.00,4500********1234\n', "cibc", [-4.5, 200.0]),
+        ("scotia.csv", "\ufeffFilter,Date,Description,Sub-description,Type of Transaction,Amount,Balance\n"
+                       "Current statement period,2026-10-01,Deposit,PAYROLL CO,Credit,2100.00,3100.00\n,2026-10-02,POS purchase,CAFE,Debit,-4.50,3095.50\n",
+         "scotia", [2100.0, -4.5]),
+        ("scotia_card.csv", "Filter,Date,Description,Sub-description,Status,Type of Transaction,Amount\n"
+                            ",2026-10-02,Purchase,CAFE,Posted,Debit,4.50\n,2026-10-05,Payment,PAYMENT,Posted,Credit,-200.00\n",
+         "scotia_card", [-4.5, 200.0]),
+        ("tangerine.csv", "Date,Transaction,Name,Memo,Amount\n10/2/2026,DEBIT,CAFE,Interac purchase,-4.50\n", "tangerine", [-4.5]),
+        ("simplii.csv", "Date, Transaction Details, Funds Out, Funds In\n10/01/2026, PAYROLL CO,, 2100.00\n10/02/2026, CAFE, 4.50,\n",
+         "simplii", [2100.0, -4.5]),
+        # BMO: a line before the header, a section per account under its own header, codes spelled
+        # out; one account downloaded, so one section has rows (the shape of a real file, 2026-11-04).
+        ("bmo.csv", "Following data is valid as of 20261104000000 (Year/Month/Day/Hour/Minute/Second)\n\n\n"
+                    "First Bank Card,Transaction Type,Date Posted, Transaction Amount,Description\n\n\n"
+                    "'0000000000000000',CREDIT,20261002,2100.0,[DN]PAYROLL CO   PAY/PAY\n"
+                    "'0000000000000000',DEBIT,20261005,-4.5,[PR]CAFE   TORONTO ON\n\n"
+                    "First Bank Card,Transaction Type,Date Posted, Transaction Amount,Description\n\n\n", "bmo", [2100.0, -4.5]),
+        ("bmo_card.csv", "Following data is valid as of 20261104000000:\n\n"
+                         "Item #,Card #,Transaction Date,Posting Date,Transaction Amount,Description\n"
+                         "1,'0000000000000000',20261002,20261003,4.5,CAFE TORONTO ON\n"
+                         "2,'0000000000000000',20261005,20261005,-200.0,TRSF FROM/DE ACCT/CPT 0000-XXXX-000\n", "bmo_card", [-4.5, 200.0]),
+    ]
+    out = []
+    for name, text, want, amts in cases:
+        p = os.path.join(d, name); open(p, "w", encoding="utf-8").write(text)
+        got = csv_bank.detect(p)
+        rows = [r["amount"] for r in csv_bank.parse(p, csv_bank.spec_of(got))["rows"]] if got else None
+        if got != want or rows != amts:
+            out.append(f"  ✗ csv layouts: {name} read as {got} with {rows}, expected {want} with {amts}")
+    p = os.path.join(d, "cut.csv")
+    open(p, "w").write("Filter,Date,Description,Sub-description,Type of Transaction,Amount,Balance\n"
+                       + "".join(f",2026-10-01,POS purchase,SHOP{i},Debit,-1.00,{999 - i:.2f}\n" for i in range(100)))
+    try:
+        csv_bank.parse(p, csv_bank.spec_of("scotia")); out.append("  ✗ csv layouts: a Scotiabank download of exactly 100 rows was read")
+    except PE:
+        pass
+    p = os.path.join(d, "bmo_two.csv")
+    open(p, "w").write("First Bank Card,Transaction Type,Date Posted, Transaction Amount,Description\n"
+                       "'0',CREDIT,20261002,2100.0,[DN]PAYROLL CO\n\n"
+                       "First Bank Card,Transaction Type,Date Posted, Transaction Amount,Description\n"
+                       "'0',CREDIT,20261031,0.3,[IN]\n")
+    try:
+        csv_bank.parse(p, csv_bank.spec_of("bmo")); out.append("  ✗ csv layouts: a BMO download with two accounts' rows was read")
+    except PE:
+        pass
+    p = os.path.join(d, "odd.csv"); open(p, "w").write("Posted,What,Value\n2026-10-01,CAFE,-4.50\n")
+    if csv_bank.detect(p):
+        out.append("  ✗ csv layouts: a layout nobody described was recognised as a bank's")
+    return out or [f"  ✓ csv layouts: {len(cases)} bank layouts recognised and read with money out negative; "
+                   "a download cut at 100 rows refused; an unknown layout left alone"]
+
+
+def write_ofx(path, accounts):
+    """An OFX 1.x (SGML) download the way a bank writes one, from (id, type, cur, balance, rows)."""
+    def stm(acct, kind, cur, bal, rows, card):
+        trs = "".join(f"<STMTTRN>\n<TRNTYPE>{'CREDIT' if a > 0 else 'DEBIT'}\n<DTPOSTED>{d.replace('-', '')}000000.000[-5:EDT]\n"
+                      f"<TRNAMT>{a}\n<FITID>{d.replace('-', '')}{i:04d}\n<NAME>{n}\n</STMTTRN>\n" for i, (d, a, n) in enumerate(rows))
+        frm = f"<CCACCTFROM>\n<ACCTID>{acct}\n</CCACCTFROM>" if card else \
+              f"<BANKACCTFROM>\n<BANKID>000000000\n<ACCTID>{acct}\n<ACCTTYPE>{kind}\n</BANKACCTFROM>"
+        tag = "CCSTMTRS" if card else "STMTRS"
+        return (f"<{tag}>\n<CURDEF>{cur}\n{frm}\n<BANKTRANLIST>\n{trs}</BANKTRANLIST>\n"
+                f"<LEDGERBAL>\n<BALAMT>{bal}\n<DTASOF>20260908000000.000[-5:EDT]\n</LEDGERBAL>\n</{tag}>\n")
+    bank = "".join(stm(*a, False) for a in accounts if a[1] != "CARD")
+    cards = "".join(stm(*a, True) for a in accounts if a[1] == "CARD")
+    open(path, "w", encoding="cp1252").write(
+        "OFXHEADER:100\nDATA:OFXSGML\nVERSION:102\n\n<OFX>\n"
+        + (f"<BANKMSGSRSV1>\n<STMTTRNRS>\n{bank}</STMTTRNRS>\n</BANKMSGSRSV1>\n" if bank else "")
+        + (f"<CREDITCARDMSGSRSV1>\n<CCSTMTTRNRS>\n{cards}</CCSTMTTRNRS>\n</CREDITCARDMSGSRSV1>\n" if cards else "")
+        + "</OFX>\n")
+
+
+def ofx_download_check(root, base):
+    """An OFX download end to end (2026-11-04: one standard for every bank, with the bank's own
+    balance). The demo's newest chequing month goes back in as OFX with the month before repeated,
+    named by the account id inside, not the filename; the ledger has to come back exactly. A card
+    in the same file takes new purchases with no balance asked, because the bank's is there. Then
+    the same file with one chequing row taken out has to be refused: its balances no longer join."""
+    if not demo_like(root):
+        return []
+    def setup(tag):
+        ws = os.path.join(base, tag); os.makedirs(ws); stage(root, ws)
+        ap_ = layout.path(ws, "accounts.json"); reg = json.load(open(ap_, encoding="utf-8"))
+        chq = next(a for a in reg["accounts"] if a.get("ledger") == "chequing.csv")
+        card = next(a for a in reg["accounts"] if a.get("side") == "liability" and a.get("spendTag"))
+        chq["ofxId"], card["ofxId"] = "900000001", "900000009"
+        for d in reg["documents"]:
+            if {chq["key"], card["key"]} & set(d.get("covers") or []):
+                d["optional"] = True
+        reg["documents"].append({"key": "OFX download", "ep": chq["inst"], "file": "statement.ofx", "closes": "any time",
+                                 "feeds": "Cash flow", "covers": [chq["key"], card["key"]], "tags": ["OFX"],
+                                 "into": "chequing.csv", "reconcile": "the bank's balance", "parser": "ofx"})
+        json.dump(reg, open(ap_, "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+        lp = layout.path(ws, "chequing.csv")
+        rows = list(csv.DictReader(open(lp, encoding="utf-8"))); cols = list(rows[0].keys())
+        newest = rows[-1]["statement"]; first = next(i for i, r in enumerate(rows) if r["statement"] == newest)
+        keep, back = rows[:first], rows[first:]
+        with open(lp, "w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=cols, lineterminator="\n"); w.writeheader(); w.writerows(keep)
+        sp = layout.path(ws, "spending.csv")
+        srows = list(csv.DictReader(open(sp, encoding="utf-8"))); scols = list(srows[0].keys())
+        stamp_ = newest.split("/")[1]
+        srows = [r for r in srows if not (r["note"].rstrip().endswith(f"/{stamp_}]") and ("(chequing)" in r["note"] or "(debit)" in r["note"]))]
+        with open(sp, "w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=scols, lineterminator="\n"); w.writeheader(); w.writerows(srows)
+        return ws, keep, back, card
+    upd = lambda ws: subprocess.run([sys.executable, os.path.join(ws, ".claude", "skills", "update-dashboard", "scripts", "update.py"),
+                                     ".", "--write"], cwd=ws, capture_output=True, text=True, timeout=300)
+    buys = [("2026-09-02", -23.40, "CORNER GROCER OTTAWA ON"), ("2026-09-03", -18.00, "BOOKSHOP OTTAWA ON")]
+    ws, keep, back, card = setup("ofxdl")
+    tx = [(r["date"], float(r["amount"]), r["description"]) for r in keep[-3:] + back]
+    owed = round(float(card["balance"]) + sum(a for _, a, _ in buys), 2)
+    write_ofx(os.path.join(ws, "inbox", "statement (1).ofx"),
+              [("900000001", "CHECKING", "CAD", back[-1]["balance"], tx), ("900000009", "CARD", "CAD", owed, buys)])
+    sp = layout.path(ws, "spending.csv"); n0 = len(list(csv.DictReader(open(sp, encoding="utf-8"))))
+    r = upd(ws)
+    got = list(csv.DictReader(open(layout.path(ws, "chequing.csv"), encoding="utf-8")))
+    sig = lambda xs: [(x["date"], x["amount"], x["balance"], x["type"]) for x in xs]
+    added = len(list(csv.DictReader(open(sp, encoding="utf-8")))) - n0
+    chq_spend = sum(1 for x in back if x["type"] in ("Rent", "Bill", "Fee", "Cash", "Payment", "Debit purchase", "Interest") and float(x["amount"]) < 0)
+    if r.returncode not in (0, 2) or sig(got) != sig(keep + back) or added != len(buys) + chq_spend:
+        return [f"  ✗ ofx download: did not come back as it was (exit {r.returncode}, {len(got)} of {len(keep) + len(back)} ledger rows, "
+                f"{added} spending rows, expected {len(buys) + chq_spend}): " + " | ".join((r.stdout + r.stderr).strip().splitlines()[-3:])]
+    ws2, keep2, back2, card2 = setup("ofxbad")
+    tx2 = [(x["date"], float(x["amount"]), x["description"]) for x in keep2[-3:] + back2]
+    del tx2[len(tx2) // 2]                       # one row the bank lists is missing from the file
+    write_ofx(os.path.join(ws2, "inbox", "statement.ofx"), [("900000001", "CHECKING", "CAD", back2[-1]["balance"], tx2)])
+    r2 = upd(ws2)
+    if r2.returncode == 0 and "Nothing written" not in r2.stdout and "by hand" not in r2.stdout:
+        return ["  ✗ ofx download: a file with a row missing was taken in"]
+    # RBC's shape: tags indented, & written &amp;, a description in NAME and MEMO, an id that ends
+    # in the account number the register already has (so no ofxId is needed).
+    sys.path.insert(0, os.path.join(root, ".claude", "skills", "update-dashboard"))
+    from parsers import ofx as ofx_
+    p = os.path.join(base, "rbc_shape.ofx")
+    open(p, "w").write("OFXHEADER:100\n<OFX>\n <BANKMSGSRSV1>\n  <STMTTRNRS>\n   <STMTRS>\n    <CURDEF>CAD\n    <BANKACCTFROM>\n"
+                       "     <ACCTID>012345024471\n     <ACCTTYPE>CHECKING\n    </BANKACCTFROM>\n    <BANKTRANLIST>\n"
+                       "     <STMTTRN>\n      <TRNTYPE>DEBIT\n      <DTPOSTED>20261002120000[-5:EST]\n      <TRNAMT>-20.00\n"
+                       "      <FITID>A1\n      <NAME>TO FIND &amp; SAVE                  \n     </STMTTRN>\n"
+                       "     <STMTTRN>\n      <TRNTYPE>DEBIT\n      <DTPOSTED>20261003120000[-5:EST]\n      <TRNAMT>-4.50\n"
+                       "      <FITID>A2\n      <NAME>C-IDP PURCHASE-1111             \n      <MEMO>CAFE \n     </STMTTRN>\n"
+                       "    </BANKTRANLIST>\n    <LEDGERBAL>\n     <BALAMT>975.50\n     <DTASOF>20261103\n    </LEDGERBAL>\n"
+                       "   </STMTRS>\n  </STMTTRNRS>\n </BANKMSGSRSV1>\n</OFX>\n")
+    got = ofx_.parse(p)
+    if [r["description"] for r in got["rows"]] != ["TO FIND & SAVE", "C-IDP PURCHASE-1111 CAFE"] or got["opening"] != 1000.0:
+        return [f"  ✗ ofx download: an RBC-shaped file read as {[r['description'] for r in got['rows']]}, opening {got['opening']}"]
+    return ["  ✓ ofx download: a chequing month and a card, named by the account ids inside, came back exactly with no balance "
+            "asked; a file with a row missing was refused; an RBC-shaped file (indented, &amp;, NAME and MEMO) read right"]
+
+
 def month_parts_check(root, base):
     """The sentence setup ends with: its parts have to add up to the month's total in spending.csv."""
     r = subprocess.run([sys.executable, os.path.join(root, ".claude", "skills", "setup", "scripts", "month_sentence.py"), root],
@@ -1181,6 +1494,7 @@ def parser_checks(root, base):
             else:
                 lines.append(f"  ✗ fixture {os.path.basename(m['file'])} ({m['parser']}): {detail} — expected {m['rows']} rows")
         lines.append(f"\n  {'✓' if good == len(man) else '✗'} parsers: {good} of {len(man)} synthetic statements read and reconciled")
+        lines += every_parser_check(ws, man)
         lines += credit_balance_check(ws)
         lines += wrap_check(ws)
         lines += propose_check(ws, man)
@@ -1945,6 +2259,47 @@ def money_s(v):
     return f"${v:,.2f}"
 
 
+def two_doors_check(root, base):
+    """Every script a month goes through has a run() beside its main() (verbs.py, 2026-11-05),
+    so a second front door — a local server drawing a panel — can call the same code the CLI
+    runs. The proof that the two cannot drift: on a staged copy, run() called from Python returns
+    exactly the lines the CLI prints and the exit code it returns, for status, rebuild, the
+    import's dry run, the confirm table and the setup draft."""
+    import importlib.util
+    ws = os.path.join(base, "doors"); os.makedirs(ws); stage(root, ws)
+    sk = os.path.join(ws, ".claude", "skills")
+    scripts = {"status": ("monthly-import", ["--root", "."]), "rebuild": ("update-dashboard", ["."]),
+               "update": ("update-dashboard", ["."]), "confirm": ("update-dashboard", ["."]),
+               "propose": ("setup", [".", "--inbox", os.path.join(ws, "_doors_inbox")])}
+    if not all(os.path.exists(os.path.join(sk, d, "scripts", n + ".py")) for n, (d, _) in scripts.items()):
+        return []
+    man = fixtures_for(ws) or []
+    inbox = os.path.join(ws, "_doors_inbox"); os.makedirs(inbox)
+    for m in man:
+        shutil.copy(m["file"], inbox)
+    kw = {"propose": {"inbox": inbox}}
+    bad = []
+    for name, (skill, args) in scripts.items():
+        path = os.path.join(sk, skill, "scripts", name + ".py")
+        for d in ("update-dashboard", "monthly-import", "setup", "fetch-statements"):
+            sys.path.insert(0, os.path.join(sk, d, "scripts"))
+        spec = importlib.util.spec_from_file_location("doors_" + name, path)
+        mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
+        if not hasattr(mod, "run"):
+            bad.append(f"{name}.py has no run()"); continue
+        r = mod.run(ws, **kw.get(name, {}))
+        p = subprocess.run([sys.executable, path] + args, cwd=ws, capture_output=True, text=True, timeout=300)
+        lines = "\n".join(r.get("lines", [])) + "\n"
+        # propose's __main__ adds a timing line after main() returns; it is the terminal's, not run()'s
+        got = re.sub(r"  time: [0-9.]+s to read the files and draft\n$", "", p.stdout)
+        if r.get("rc") != p.returncode or lines != got:
+            bad.append(f"{name}: run() rc {r.get('rc')} / {len(r.get('lines', []))} lines, CLI exit {p.returncode} / "
+                       f"{len(p.stdout.splitlines())} lines" + ("" if lines == p.stdout else " — the text differs"))
+    if bad:
+        return ["  ✗ two doors: " + b for b in bad]
+    return [f"  ✓ two doors: run() returns what the CLI prints and exits with, for {', '.join(scripts)}"]
+
+
 def csv_rows_of(p):
     return list(csv.DictReader(open(p, encoding="utf-8"))) if os.path.exists(p) else []
 
@@ -2021,8 +2376,8 @@ def main(argv):
         # and in an owner's workspace every real statement in archive/ that names a parser.
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
-                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, browser_copy_check, month_parts_check, starter_check,
-                    demo_clear_check):
+                    own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, browser_copy_check, csv_download_check, csv_layouts_check, ofx_download_check, month_parts_check, starter_check,
+                    demo_clear_check, two_doors_check):
             try:
                 runs += chk(root, base)
             except Exception as e:                 # a check with nothing to run on, as above

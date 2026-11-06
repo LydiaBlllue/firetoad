@@ -58,6 +58,7 @@ The rest of `findata/`, and what each carries:
 |---|---|
 | `spending.csv` | every purchase, tagged with the statement it came from |
 | `rewards.csv` | a card's cash back, tagged the same way — income, never pay, never spending |
+| `card_interest.csv` | what each card statement charged in interest, from the total it prints — one row per statement, 0.00 included |
 | each account's ledger CSV | date, description, amount, balance, statement, **`type`**, `label` — the balance chain must close (D1), and `type` is the classification the page shows |
 | `holdings_latest.csv`, `ws_activities.csv` | the broker's exports |
 | `banks.json` | one balance and one as-of date per bank account |
@@ -188,9 +189,9 @@ report template are all in that file. **Do not work from memory.**
 
 ## Nothing in a dashboard is typed by hand
 
-<!-- LINT:CONSTS n=49 -->
+<!-- LINT:CONSTS n=53 -->
 `rebuild.py` builds the dashboard from `templates/dashboards/` and `findata/`, deriving
-**49 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CATS, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DEBT_ACCTS, DECISIONS, DOC_LATEST, FGN, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
+**53 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CARD_INTEREST, CATS, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DEBT_ACCTS, DECISIONS, DOC_LATEST, FGN, FIRE_GOAL, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PENSIONS, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SAFETY, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
 applies, and it is idempotent. `--template DIR` writes the page with every constant emptied,
 which is what the template *is*: page code and nobody's numbers.
 
@@ -222,14 +223,20 @@ Contracts that let the prose be reworded or translated without silencing a check
 
 ## The checkers
 
-A `PostToolUse` hook runs the matching checker after any edit to `dashboards/` or `findata/`.
-**Silent when clean.**
+Three levels (2026-11-05, the owner: most checks are run when asked, not after every edit):
+
+| level | when | what |
+|---|---|---|
+| **① the money** — by itself | after any edit to `findata/` (the `PostToolUse` hook) and at the end of an import | `check_data.py . --money`: the `reconcile` and `rules` findings only. Under a second, **silent when clean** |
+| **② check the page** — 检查页面 | when the owner says so, and **before saying a change to the page, a template, DESIGN.md, README or the data's shape is done** | `checks.py . --level page`: check_data in full, check_design, check_render (widths, a short window, every kind of owner). About 20 seconds |
+| **③ check before a release** — 发版前检查 | when the owner says so, and before a release PR | `checks.py . --level release`: the unit tests in `tests/` (one per rule in a pure module — `flows.py`, `loans.py`, `categories.py`, `layout.py`, `clock.py`; standard-library `unittest`, see `tests/README.md`), level ② and the selftest |
+
+⚠ Level ② is manual for the owner, **not optional for you**: a change to the page is not done
+until it has run, and the reply says what it found.
 
 ```bash
-python3 .claude/skills/workspace-checks/scripts/check_data.py .
-python3 .claude/skills/workspace-checks/scripts/check_design.py dashboards/finance_dashboard.html
-python3 .claude/skills/workspace-checks/scripts/check_render.py dashboards/finance_dashboard.html
-python3 .claude/skills/workspace-checks/scripts/selftest.py .
+python3 .claude/skills/workspace-checks/scripts/checks.py . --level page
+python3 .claude/skills/workspace-checks/scripts/checks.py . --level release
 ```
 
 - `check_data.py` — whether the numbers are real. Its output is grouped by what actually failed:
@@ -243,9 +250,11 @@ python3 .claude/skills/workspace-checks/scripts/selftest.py .
   counts, lists, paths and images DESIGN.md and README.md state about themselves are still true.
 - `check_render.py` — headless Chromium at 800 / 1120 / 1440 / 1760px: every page draws, nothing scrolls
   sideways, a chart's **painted** width really grows with the window, and no `undefined` reaches
-  the screen. Needs
-  `pip3 install --user playwright && python3 -m playwright install chromium`. Not on the hook;
-  run it after changing a template.
+  the screen; in a 700 and 800px-tall window every sidebar entry can be reached (R6); and the
+  page drawn for every kind of owner — invested or not, a FIRE goal or not, cards only — with
+  each page drawing, Home's cards all carrying a number, and nothing in the sidebar that owner
+  has no data for (R7). Needs
+  `pip3 install --user playwright && python3 -m playwright install chromium`.
 - `selftest.py` — the checker of the checkers. It plants specific faults in a copy of the
   workspace and asserts the matching rule fires for each; the count is in README's `LINT:FAULTS`.
 

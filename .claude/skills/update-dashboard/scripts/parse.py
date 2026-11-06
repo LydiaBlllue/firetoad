@@ -3,6 +3,7 @@
 
     python3 .claude/skills/update-dashboard/scripts/parse.py <file> --doc "<documents[].key>"
     python3 .claude/skills/update-dashboard/scripts/parse.py <file> --parser rbc_visa
+    python3 .claude/skills/update-dashboard/scripts/parse.py <file> --parser csv --csv '<map as JSON>'
     ... --json            # the full result (rows and all) as JSON on stdout, for the import step
 
 Step 1 of the update-dashboard skill runs this on every file preflight named. Exit 0 means the
@@ -41,11 +42,12 @@ def main(argv):
     ap.add_argument("file")
     ap.add_argument("--doc", help="documents[].key in accounts.json; its `parser` field names the parser")
     ap.add_argument("--parser", choices=NAMES)
+    ap.add_argument("--csv", help="a csv map as JSON, to try one before it goes in the register")
     ap.add_argument("--json", action="store_true", help="print the whole result as JSON")
     ap.add_argument("--root", default=".", help="the workspace (default: found upward from here)")
     a = ap.parse_args(argv)
 
-    name = a.parser
+    name, spec = a.parser, None
     if not name and a.doc:
         root = find_root(a.root) or find_root(HERE)
         if not root:
@@ -54,14 +56,16 @@ def main(argv):
         doc = next((d for d in reg.get("documents", []) if d.get("key") == a.doc), None)
         if not doc:
             print(f"  ✗ no document {a.doc!r} in accounts.json"); return 1
-        name = doc.get("parser")
+        name, spec = doc.get("parser"), doc.get("csv")
         if not name:
             print(f"  · document {a.doc!r} has no parser; read it by hand"); return 1
     if not name:
         print("  ✗ say which parser: --doc <key> or --parser <name>"); return 1
+    if a.csv:
+        spec = json.loads(a.csv)
 
     try:
-        res = parse(a.file, name)
+        res = parse(a.file, name, spec)
     except ParserUnavailable as e:
         print(f"  · {e}"); return 3
     except ParseError as e:

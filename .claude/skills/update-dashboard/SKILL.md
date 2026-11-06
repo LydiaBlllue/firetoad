@@ -34,6 +34,17 @@ rows. **Read the summary, not the statements.** What it hands back is the whole 
   parser can place stops the run.) A statement that does not follow its
   ledger (the opening balance is not the ledger's closing): a statement in between is missing —
   ask for it, do not bridge the gap by hand.
+- **An OFX or QFX download** is named by the account ids inside it (the register's `ofxId`), never
+  by its name: every bank's arrives as `statement.ofx`. It carries the bank's balance, so it is
+  held to it on its own: a ledger's rows have to join its last balance, a card or balance-only
+  account has to land on the bank's figure. A file whose ids the register does not know yet stops
+  the run: setup (or `ofxId` on the account) adds them. Ask the owner to download a **date range**,
+  not "since last download": the bank moves that mark with every download, a CSV included.
+- **A bank's own download (CSV) with no running balance** (`--balance` in a STOP line): ask the
+  owner for the balance their banking app shows for that account today, then run again with
+  `--balance "<account key>=<amount>"` (a card's balance as the app shows it, a positive number).
+  The last balance known plus every new row has to land on it, or nothing is written. A download
+  that repeats rows already in the books is fine: those rows are left out by themselves.
 - **A file to read by hand** (`by hand:` lines): a statement that does not reconcile, a layout no
   parser knows (2026-09-15: no new parsers for now — a bank without one is read this way), a
   screenshot of an account held abroad. A statement you read is only **transcribed**, never
@@ -248,28 +259,18 @@ Then `--reseed`.
 
 ## Step 5 — Check
 
-```bash
-python3 .claude/skills/workspace-checks/scripts/check_design.py \
-  dashboards/finance_dashboard.html
-python3 .claude/skills/workspace-checks/scripts/check_data.py .
-```
-
-The PostToolUse hook runs these after individual edits; run them once over everything at the end
-anyway. Pass the page by name rather than globbing `dashboards/*.html`: an owner's workspace may
-keep other HTML files there (mock-ups, decision records) that were never meant to follow the spec.
-
-Those two read the files as text. The four things they cannot see — whether a page throws
-instead of drawing, sideways scrolling, how wide a chart is really painted, whether a page fills
-a screen — are now a third command rather than a manual pass in a browser:
+The import already ended with the money checks (`check_data.py . --money`): its summary lists
+anything they found. Nothing else runs by itself (2026-11-05). When this import changed the
+data's shape — a new account, a new document, a new kind of row — run the page level too, and say
+what it found:
 
 ```bash
-python3 .claude/skills/workspace-checks/scripts/check_render.py \
-  dashboards/finance_dashboard.html
+python3 .claude/skills/workspace-checks/scripts/checks.py . --level page
 ```
 
-It drives headless Chromium (Playwright, installed 2026-09-08), loads each page at 800 / 1120 /
-1440 / 1760 px, clicks every sidebar entry and measures what was drawn. About 11 seconds, and it replaces
-roughly 28 hand-driven browser calls a run.
+That is check_data in full, check_design, and check_render, which drives headless Chromium
+(Playwright): each page at 800 / 1120 / 1440 / 1760 px, the sidebar in a short window, and the
+page drawn for every kind of owner. About 20 seconds.
 
 One thing worth knowing before trusting it: **it measures the chart's painted width, not its
 element box.** With a fixed height and `preserveAspectRatio`, the `<svg>` still stretches to full

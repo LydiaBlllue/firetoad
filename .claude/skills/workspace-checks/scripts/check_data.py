@@ -120,27 +120,7 @@ def load(root, name):
     p = layout.path(root, name)
     return p if os.path.exists(p) else None
 
-def clock(root):
-    """The date the staleness rules (D9, D20) measure age from. A workspace's is today. The demo
-    is a snapshot nobody imports into, so its rate and its stated values age with the calendar
-    while nothing else in it moves: a clone a few weeks old greeted its first run with a stale
-    rate (2026-10). The demo is measured against its own newest fact instead — the latest bank
-    as-of date or ledger row — so it checks clean on any day and still ages within itself."""
-    today = datetime.date.today()
-    pp = load(root, "profile.json")
-    if not pp or not json.load(open(pp, encoding="utf-8")).get("demo"):
-        return today, None
-    dates = []
-    bp = load(root, "banks.json")
-    if bp:
-        bj = json.load(open(bp, encoding="utf-8"))
-        dates += [x["asof"] for side in ("assets", "debts") for x in bj.get(side, []) if x.get("asof")]
-    led = os.path.dirname(layout.path(root, "spending.csv"))
-    for f in sorted(os.listdir(led)) if os.path.isdir(led) else []:
-        if f.endswith(".csv"):
-            dates += [r["date"] for r in csv.DictReader(open(os.path.join(led, f), encoding="utf-8")) if r.get("date")]
-    dates = [d for d in dates if re.fullmatch(r"\d{4}-\d{2}-\d{2}", d)]
-    return (datetime.date.fromisoformat(max(dates)), "the demo's newest data") if dates else (today, None)
+from clock import clock  # noqa: E402  the date age is measured from, shared with rebuild.py
 
 # The ledger types the import also writes to spending.csv (update.py SPENT).
 SPENDING_TYPES = ("Debit purchase", "Bill", "Payment", "Rent", "Cash", "Fee", "Interest")
@@ -1279,10 +1259,19 @@ def check(root):
             note("D16", "docs/zh/guide.md restates no figure", "conform")
     return F
 
+MONEY = ("reconcile", "rules")
+
+
 def main(argv):
+    """--money: only whether the money is right (reconcile, rules) — what runs by itself after
+    every edit to findata/ and at the end of an import. Whether the page is current and whether
+    the data is tidy wait for "check the page" (checks.py --level page), 2026-11-05."""
     v = "-v" in argv or "--verbose" in argv
     root = next((a for a in argv if not a.startswith("-")), ".")
-    return 1 if render("data — is the money true", check(root), v) else 0
+    F = check(root)
+    if "--money" in argv:
+        F = [f for f in F if f[3] in MONEY]
+    return 1 if render("data — is the money true", F, v) else 0
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

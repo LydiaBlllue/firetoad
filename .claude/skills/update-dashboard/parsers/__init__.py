@@ -21,13 +21,15 @@ Every parser returns the same shape:
 
 Amounts are signed the ledger's way: money out is negative. Row order is the statement's.
 
-They depend on pypdf for the text (`pip3 install --user pypdf cryptography`). Without it every parser raises
+`ofx` reads a bank's OFX or QFX download, one standard for every bank, with its own balances
+(ofx.py). `csv` reads a bank's own transaction download by the `csv` map the register keeps on the
+document (csv_bank.py); it needs nothing installed. The PDF parsers depend on pypdf for the text (`pip3 install --user pypdf cryptography`). Without it every parser raises
 ParserUnavailable, and the skill reads the file itself — the tool degrades to what it was, it
 does not guess.
 """
 import importlib
 
-NAMES = ("rbc_banking", "rbc_visa", "bmo_banking", "bmo_mastercard")
+NAMES = ("rbc_banking", "rbc_visa", "bmo_banking", "bmo_mastercard", "csv", "ofx")
 
 
 class ParserUnavailable(Exception):
@@ -38,8 +40,12 @@ class ParseError(Exception):
     """The file was read but not understood: a layout this parser does not know."""
 
 
-def parse(path, name):
+def parse(path, name, spec=None):
+    """`spec` is the document's `csv` map, for the csv parser; the PDF parsers ignore it."""
     if name not in NAMES:
         raise ParseError(f"no parser named {name!r}; the register knows {', '.join(NAMES)}")
+    if name == "csv":
+        from . import csv_bank
+        return csv_bank.parse(path, spec)
     mod = importlib.import_module(__name__ + "." + name)
     return mod.parse(path)

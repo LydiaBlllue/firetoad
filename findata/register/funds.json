@@ -7,14 +7,14 @@
         "key": "pay",
         "kind": "income",
         "name": "Take-home pay",
-        "amount": 3600,
-        "note": "Payroll of $1,800 twice a month. Investment income stays with the broker and is not counted."
+        "amount": 4300,
+        "note": "Payroll of $2,150 twice a month. Investment income stays with the broker and is not counted."
       },
       {
         "key": "rent",
         "kind": "committed",
         "name": "Rent",
-        "amount": 1250,
+        "amount": 1450,
         "afterFire": "keep",
         "note": "Pre-authorized on the 1st, from chequing. Still there after FIRE."
       },
@@ -22,15 +22,23 @@
         "key": "invest",
         "kind": "saving",
         "name": "Invest",
-        "amount": 800,
+        "amount": 700,
         "to": "broker",
         "note": "Off the top, before anything else — pay-yourself-first."
+      },
+      {
+        "key": "emergency",
+        "kind": "saving",
+        "name": "Emergency fund",
+        "amount": 300,
+        "to": "bmo-sav-9032",
+        "note": "To savings on the 5th."
       },
       {
         "key": "everyday",
         "kind": "everyday",
         "name": "Everyday",
-        "amount": 1300,
+        "amount": 1500,
         "note": "The guilt-free line. No categories and no caps below it."
       }
     ]

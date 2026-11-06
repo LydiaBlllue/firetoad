@@ -20,12 +20,14 @@ import sys, os, re, json, csv, collections
 import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from clock import clock  # noqa: E402
 from flows import totals as flow_totals   # the plan's sums, read from its flows -- one place
 from flows import unset as flow_unset    # the numbers the owner never gave
 NOT_SET = "Not set"                       # what the figures table says for one of them
 import layout                              # where each findata file lives (schema 6)
 import loans                               # what a borrower still owes, read from the ledgers -- one place
 import categories                          # the spending categories and their groups -- one place
+import verbs                               # the shape run() returns, shared by every script a month goes through
 
 MAIN_NAMES = ("ly_finance_dashboard.html", "finance_dashboard.html")   # an owner's copy, or the template's
 INV_NAME = "investment_dashboard.html"
@@ -157,6 +159,8 @@ def load(root):
                          f"tools/migrate_{have}to{have+1}.py on the workspace first, then rebuild")
     if have > SCHEMA:
         raise SystemExit(f"findata/ is schema {have}, newer than this tool ({SCHEMA}) — sync a newer tool")
+    d["card_interest"] = rd("card_interest.csv")   # absent until the first import after 1.0.1
+    d["clock"] = clock(root)[0].isoformat()     # the date age is measured from (clock.py)
     return d
 
 
@@ -354,8 +358,10 @@ def derive(d):
         src = a["inst"] + " " + trailing_digits(a.get("id"))
         for r in d["ledgers"].get(a["key"], []):
             if r.get("type"):
+                # `raw` is the bank's own words, kept beside a label so a search by merchant finds it
                 chq.append({"date": r["date"], "desc": r.get("label") or r["description"],
-                            "type": r["type"], "amount": float(r["amount"]), "src": src})
+                            "type": r["type"], "amount": float(r["amount"]), "src": src,
+                            **({"raw": r["description"]} if r.get("label") and r["label"] != r["description"] else {})})
     chq.sort(key=lambda r: r["date"])
     out["CHEQUING"] = chq
 
@@ -388,7 +394,8 @@ def derive(d):
         if brands.get(b, b) in yr and float(r["amount"]) > 0:
             e["yr"] = 1
 
-    today = datetime.date.today().isoformat()
+    # The demo's "today" is its own newest data, the same clock the checkers use (clock.py).
+    today = d["clock"]
     out["TODAY"] = today
     out["PROFILE"] = clean(prof)
     out["RULES"] = clean(d["rules"])
@@ -404,6 +411,9 @@ def derive(d):
     # --- the owner's plan: the figure the FIRE target is built on, the months excluded from
     # every comparison, and the projection / late-life care assumptions
     out["PLAN_BASE_DEFAULT"] = plan["planBase"]
+    # The FIRE goal is a declaration (1.0.1): true, false, or None when never asked. The page
+    # reads None as yes only for someone already investing.
+    out["FIRE_GOAL"] = (plan.get("fire") or {}).get("goal")
     # The fixed part of the planning figure: every committed flow still paid after FIRE, paid
     # today or not (an owner who does not pay rent yet has one that starts at FIRE). Added to the
     # measured everyday average on the Baseline page so the two can be compared.
@@ -416,6 +426,11 @@ def derive(d):
     out["LIFE_TO"] = ret.get("lifeTo", 95)
     out["COAST_R"] = ret.get("coastR", 0.05)
     out["HOME_CARE"] = ret.get("homeCare", {})
+    # Government pensions (1.0.1): CPP and OAS as the owner's own statement estimates them, in
+    # today's dollars a month, from the age each starts. They pay part of what the drawdown takes.
+    out["PENSIONS"] = [{"k": p["name"], "v": p["monthly"], "from": p.get("from", 65), "asof": p.get("asof", ""),
+                        "src": p.get("source", "")}
+                       for p in ret.get("pensions", []) if p.get("monthly") is not None]
     out["LTC_TIERS"] = ret.get("ltcTiers", [])
 
     out["NW_HISTORY"] = [{k: v for k, v in h.items() if k in ("ym", "v", "cadOnly")}
@@ -451,11 +466,14 @@ def derive(d):
 
     # --- WSDEP: only EFT landing in the broker's chequing doorway account. Money paid straight
     # into a registered account is a contribution, not the pay-yourself-first cadence.
+    # An owner with no doorway account (most people: the deposit goes straight into the TFSA)
+    # has every EFT counted, wherever it lands (2026-11-03, a general demo owner).
     half = round(flow_totals(d["funds"]["plan"])["invest"] / 2, 2)
     dep = collections.defaultdict(lambda: {"amt": 0.0, "nRule": 0})
+    doorway = any(r["account_type"] == "Chequing" for r in d["acts"])
     for r in d["acts"]:
         if (r["activity_type"] == "MoneyMovement" and r["activity_sub_type"] == "EFT"
-                and r["account_type"] == "Chequing" and r["currency"] == "CAD"):
+                and (r["account_type"] == "Chequing" or not doorway) and r["currency"] == "CAD"):
             a = float(r["net_cash_amount"] or 0)
             if a > 0:
                 ym = r["effective_date"][:7]
@@ -704,6 +722,33 @@ def derive(d):
                                "accts": part_accounts(role, where, part_value(role, where))})
     out["REACH"] = [{"k": lab, "r": r, "v": by_reach[r], "c": c, "d": desc.get("reach", {}).get(lab, generic_reach[lab])}
                     for r, lab, c in REACH_ROWS if r in reach_present]
+    # The Safety net (FINANCE.md §8d): the money it counts is Home's own "Spendable today" row,
+    # less what is owed on no asset, so the two pages cannot disagree. Money abroad is a line of
+    # its own and investments are never in it. What a month costs is the page's: the spending
+    # baseline, measured there, plus the repayments the plan pays today.
+    def listed(rows, total):
+        rows = sorted((one_account(a, v) for a, v in rows if round(v)), key=lambda x: -x["v"])
+        if rows:
+            rows[0]["v"] += total - sum(x["v"] for x in rows)
+        return rows
+    # A TFSA is spendable today, but it is invested: Spendable today less what in it is held to
+    # grow, so the step from Home's row to this one is on the page.
+    unsecured = R_debt - secured
+    ft = flow_totals(d["funds"]["plan"])
+    inv_today = round(sum(v for a, v in ca if a.get("reach") == "today" and a.get("role") == "grow"))
+    out["SAFETY"] = {"today": by_reach["today"], "invested": inv_today, "abroad": by_reach["abroad"], "unsecured": unsecured,
+                     "accts": listed([(a, v) for a, v in ca if a.get("reach") == "today" and a.get("role") != "grow"],
+                                     by_reach["today"] - inv_today),
+                     "debts": listed([(a, v) for a, v in liabs if by_key.get(a.get("against") or "") is None], unsecured),
+                     "repay": ft["repayNow"],
+                     "repayRows": [{"n": f.get("name") or f.get("pays"), "v": f.get("amount") or 0}
+                                   for f in ft["committedNow"] if f.get("pays")]}
+    # What each card statement charged in interest (1.0.1): a fact the import keeps, one row per
+    # statement, from the Interest total the statement prints. Never read off a merchant name.
+    names = {a["key"]: a.get("label") or a.get("name") for a in accs}
+    out["CARD_INTEREST"] = sorted(({"d": r["date"], "k": r["account"], "n": names.get(r["account"], r["account"]),
+                                    "v": round(float(r["interest"]), 2)}
+                                   for r in d["card_interest"] if r["account"] in names), key=lambda x: (x["d"], x["k"]))
     got_parts = sum(r["v"] for r in out["NWPARTS"]) - R_debt
     got_reach = sum(r["v"] for r in out["REACH"]) - (R_debt - secured)
     if not (got_parts == got_reach == net_worth + fgn_cad):
@@ -930,11 +975,15 @@ def sync_figures(root, out):
     return hits
 
 
-def main(argv):
-    root = os.path.abspath(argv[1]) if len(argv) > 1 and not argv[1].startswith("--") else os.getcwd()
-    write = "--write" in argv
-    template = argv[argv.index("--template") + 1] if "--template" in argv else None
+def run(root, write=False, template=None, say=None):
+    """Derive every constant and fill the page (verbs.py). Returns rc, lines, `constants` (how
+    many), `changes` (how many constants or page-code differences the build found), `written`
+    (the pages written) and `skipped` (the warnings)."""
+    emit, lines = verbs.speaker(say)
+    root = os.path.abspath(root)
+    res = {"constants": 0, "changes": 0, "written": [], "skipped": []}
     out = derive(load(root))
+    res["constants"] = len(out)
 
     files = []
     tdir = os.path.join(root, "templates", "dashboards")
@@ -953,14 +1002,14 @@ def main(argv):
         # it, so it is also the one that removes what no longer builds.
         if write:
             os.remove(os.path.join(root, "dashboards", INV_NAME))
-            print(f"  − dashboards/{INV_NAME}: removed, its pages are in the main dashboard now")
+            emit(f"  − dashboards/{INV_NAME}: removed, its pages are in the main dashboard now")
         else:
-            print(f"  · dashboards/{INV_NAME} has no template any more; --write removes it")
+            emit(f"  · dashboards/{INV_NAME} has no template any more; --write removes it")
     if not files:
         raise SystemExit("no dashboard found under dashboards/ and no template under templates/dashboards/")
     os.makedirs(os.path.join(root, "dashboards"), exist_ok=True)
 
-    print(f"=== rebuild — {len(out)} constants derived from findata/ ===")
+    emit(f"=== rebuild — {len(out)} constants derived from findata/ ===")
     total_changes = 0
     for which, fn in files:
         path = os.path.join(root, "dashboards", fn)
@@ -1013,29 +1062,39 @@ def main(argv):
             orphan = [k for k in json.loads(src[ia:ib]) if k not in want["INVEST"] and f"INVEST.{k}" not in src]
             if orphan:
                 skipped.append("INVEST has fields nobody reads and rebuild does not maintain: " + ", ".join(orphan))
-        print(f"\n  {fn}" + ("  (from templates/dashboards/" + tname + ")" if tsrc is not None else ""))
+        emit(f"\n  {fn}" + ("  (from templates/dashboards/" + tname + ")" if tsrc is not None else ""))
         if insync:
-            print(f"    ✓ in sync ({len(insync)}): " + ", ".join(sorted(insync)))
-        for m in changes: print(f"    → {m}")
-        for m in skipped: print(f"    ⚠ {m}")
+            emit(f"    ✓ in sync ({len(insync)}): " + ", ".join(sorted(insync)))
+        for m in changes: emit(f"    → {m}")
+        for m in skipped: emit(f"    ⚠ {m}")
         total_changes += len(changes)
+        res["skipped"] += skipped
         if template:
             os.makedirs(template, exist_ok=True)
             tname = "finance_dashboard.html" if which == "main" else fn
             open(os.path.join(template, tname), "w", encoding="utf-8").write(emptied(src, want))
-            print(f"    template → {os.path.join(template, tname)}")
+            emit(f"    template → {os.path.join(template, tname)}")
         elif write and changes:
             open(path, "w", encoding="utf-8").write(src)
-            print(f"    written. Run the checkers.")
+            emit(f"    written. Run the checkers.")
+            res["written"].append(os.path.join("dashboards", fn))
     if write:
         hits = sync_figures(root, out)
         if hits:
-            print(f"\n  FINANCE.md: figures updated — " + ", ".join(hits))
+            emit(f"\n  FINANCE.md: figures updated — " + ", ".join(hits))
     if not write and not template and total_changes:
-        print(f"\n  {total_changes} change(s) NOT written. Re-run with --write to apply.")
+        emit(f"\n  {total_changes} change(s) NOT written. Re-run with --write to apply.")
     elif not total_changes and not template:
-        print("\n  nothing to do.")
-    return 0
+        emit("\n  nothing to do.")
+    res["changes"] = total_changes
+    return verbs.result(res, 0, lines)
+
+
+def main(argv):
+    root = argv[1] if len(argv) > 1 and not argv[1].startswith("--") else os.getcwd()
+    write = "--write" in argv
+    template = argv[argv.index("--template") + 1] if "--template" in argv else None
+    return run(root, write=write, template=template, say=print)["rc"]
 
 
 if __name__ == "__main__":

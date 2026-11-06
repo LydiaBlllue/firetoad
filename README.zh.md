@@ -26,8 +26,10 @@
 | **你的对账单** | 上个月的 PDF。只有一张信用卡也能开始 |
 | **屏幕** | 页面要求窗口至少 800px 宽；手机上只能看截图 |
 
-**银行。** RBC、BMO 的对账单和 Wealthsimple 的导出由本地解析器读取。其他银行也能用，但要由 Claude
-逐份手读：更慢，而且 Claude 会看到对账单内容。
+**银行。** RBC、BMO 的对账单和 Wealthsimple 的导出由本地解析器读取。其他银行，在网银里把交易下载成
+**OFX 或 QFX**（下载选项里的 *Money* 或 *Quicken*）：文件里带着银行给的余额，每次下载都能自己核对。
+任何银行都用同一种方式读，已用一份真实的 BMO 下载确认过。只提供表格（CSV）的银行也能用，每月从 app 上
+读一次余额。其他格式由 Claude 逐份手读：更慢，而且 Claude 会看到内容。逐家银行和券商的情况见 **[支持的银行和券商](docs/zh/banks.md)**。
 
 **按加拿大设计。** 加元、TFSA / RRSP / FHSA、CPP 和 OAS。国内账户也计入净资产。
 
@@ -70,13 +72,14 @@
 ## 更多
 
 - **[工作原理](docs/zh/how-it-works.md)**：每一页、每月流程、文件夹结构，以及保证数字可信的检查器。
-<!-- LINT:FAULTS n=61 -->
-  四个检查器让每个数字都对得上来源；selftest 埋下 61 个问题，证明它们还抓得到。
+<!-- LINT:FAULTS n=65 -->
+  四个检查器让每个数字都对得上来源；selftest 埋下 62 个问题，证明它们还抓得到。
+- **[支持的银行和券商](docs/zh/banks.md)**：能读哪些银行、券商的哪些文件、该用哪种、哪些已用真实文件确认、每种怎么下载。
 - **[路线图](ROADMAP.md)** 和 **[更新记录](CHANGELOG.md)**。
 
-<!-- LINT:NAV main=17/5 minwidth=800 -->
-页面共 17 页、5 个侧栏分组 ——
-Home · Accounts · Spending · Income · Investing · Plan · Monthly import · Glossary
+<!-- LINT:NAV main=18/4 minwidth=800 -->
+页面共 18 页、4 个侧栏分组 ——
+Home · Accounts · Money in & out · Plan · Investing · Monthly import · Glossary
 —— 仅桌面端，至少 800px 宽。
 
 MIT 许可：见 [`LICENSE`](LICENSE)。

@@ -1,8 +1,12 @@
 {
   "note": "Your planning assumptions. `planBase` is the monthly planning spend the FIRE target is built on (× 12 × 25); `skipMonths` are months excluded from every comparison, each with the reason the page shows. `retirement` holds the projection scenarios and the late-life care model; `descriptions` are your own one-liners under the net-worth parts (leave them out and the page describes each part from the register).",
-  "planBase": 2550,
+  "planBase": 2950,
   "skipMonths": {
-    "2025-12": "Only the tail of the first Visa statement — 11 days, not a month"
+    "2025-12": "Only the tail of the first card statement — 11 days, not a month"
+  },
+  "fire": {
+    "goal": true,
+    "asked": "2025-12-20"
   },
   "retirement": {
     "scenarios": [
@@ -50,6 +54,22 @@
         "v": 6500,
         "esc": 0.015,
         "d": "Private retirement residence with a care package. No waitlist and no subsidy, and priced like any other private service, so it climbs with wages"
+      }
+    ],
+    "pensions": [
+      {
+        "name": "CPP",
+        "monthly": 760,
+        "from": 65,
+        "asof": "2025-12-20",
+        "source": "My Service Canada estimate"
+      },
+      {
+        "name": "OAS",
+        "monthly": 740,
+        "from": 65,
+        "asof": "2025-12-20",
+        "source": "My Service Canada estimate"
       }
     ]
   }

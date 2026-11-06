@@ -94,20 +94,30 @@
   or no time at all, never half of each; a thing is judged in one place, and Home only
   summarises.
 
-<!-- LINT:PAGES pages=17 sections=5 -->
-- **The pages**: 17 pages under 5 sidebar sections. **Lint rule S4 checks this table against
+- **Components** (1.0.1): every stat card is drawn by `StatCard(label, value, line, options)` and
+  every plain table by `DataTable(columns, rows, options)`, where one column spec sets a column's
+  heading and cells together (text left, numbers right). **Lint rule S10** fails a stat card or a
+  hand-aligned table heading written outside them; the two grouped tables not yet moved (Accounts,
+  Statements) say so on their line. In 2.0 the two become the component library's Card and Table.
+
+<!-- LINT:PAGES pages=18 sections=4 -->
+- **The pages**: 18 pages under 4 sidebar sections, ordered the way someone starting out reads them (1.0.1). **Lint rule S4 checks this table against
   `NAV`**, so changing the navigation means changing this table too — and the page count, the
   sidebar list and the minimum width stated in `README.md`, and every path the README hands the
   reader:
   | Section | Pages |
   |---|---|
   | — | Home (four cards, net worth in one card, net worth over time) · Accounts |
-  | Spending | This month · Year · Subscriptions |
-  | Income | Income · Investment income |
-  | Investing | Portfolio · Performance · Holdings |
-  | Plan | Budget · FIRE · Drawdown & care · Spending baseline |
+  | Money in & out | This month · Year · Income & chequing · Subscriptions · Monthly spending |
+  | Plan | Budget · Safety net · FIRE · Drawdown & care |
+  | Investing | Portfolio · Performance · Holdings · Investment income |
   | Monthly import | Updates · Statements |
-  | — | Glossary, at the foot of the sidebar |
+  | — | Glossary, at the foot of the sidebar, under the pages still waiting for their data |
+
+  **What a page waits for** (`WAITS`): Income and Safety net a chequing statement; Portfolio,
+  Performance and Holdings a broker's holdings; Investment income a broker's activity; FIRE a FIRE
+  goal; Drawdown & care a FIRE goal and something invested. A page that waits is folded under
+  *Waiting for data*, saying what it waits for, and comes back by itself.
 
 ### Home
 
@@ -121,11 +131,15 @@
   home one; the amounts sum to the row. So does *Less what you owe*.
 - **Net worth over time** under the net-worth card: one point per month, what really was, nothing
   projected, from two months on. It is not the FIRE chart, which follows the portfolio to a target.
-- **Four stat cards**, one per section: **Portfolio** (with its dry-powder share), **FIRE progress**
-  (with the on-track year), **Invested in \<month\>** (pay-yourself-first, from the broker's
-  record), **Spent in \<month\>** (the month's whole spending, bills & housing and everyday beneath
-  it; today's month once it has a purchase, otherwise the newest one the statements reach. What is
-  left of Everyday is This month's to say, 2026-11-03).
+- **Four stat cards**, chosen by two signals, something invested and a FIRE goal (1.0.1). Invested
+  with a goal: **Portfolio** (with its dry-powder share), **FIRE progress** (with the on-track
+  year), **Invested in \<month\>** (pay-yourself-first, from the broker's record), **Spent in
+  \<month\>** (the month's whole spending, bills & housing and everyday beneath it; today's month
+  once it has a purchase, otherwise the newest one the statements reach. What is left of Everyday
+  is This month's to say, 2026-11-03). Invested, no goal: Portfolio · Invested. A goal, nothing
+  invested: FIRE progress. The rest fill from one list, in order, taking only a card with a
+  number: Card interest (only when a statement charged some) · Spent in \<month\> · Months covered ·
+  Kept this year · A year of subscriptions · Biggest category. So no owner sees an empty card.
 - **Net worth in one card, cut both ways at once**: one row per `role`, cash split by where it
   is — For FIRE / Set aside / Cash / Cash in \<abroad\> / Owed to you / Other assets (only for
   things that are not money). Each row's bar is as long as its share and coloured by `reach`
@@ -156,6 +170,9 @@
 - **Follows the year only**: Income / Spent / Kept, the year by source — Investment and Rewards
   (a card's cash back) carry their explanation, since neither reaches chequing — a line for what
   a borrower paid back, which is never income, and the months by source.
+- **Every row in chequing** (1.0.1), under them: each typed ledger row of the year — transfers,
+  fees and e-Transfers one row each, newest first, sixty at a time — with a search that reads the
+  label and the bank's own words, and one pill per account when there is more than one.
 - **Investment income**: what was paid, a month on average, its share of spending, the tax
   withheld; the months, each split into dividends, interest, lending and tax; and **By holding**
   — which funds paid the dividends, how often each pays (every month, every quarter), and its
@@ -183,6 +200,10 @@
   funds are rows in **Holdings**.
 
 ### Plan
+
+- **Safety net** (1.0.1): three cards — Months covered, The money, A usual month — each
+  opening its sum, then where the money is and what is owed on no asset. No band, colour or
+  target; money abroad only in the line under Months covered (FINANCE.md §8d).
 
 - **Budget** follows no time: the plan, no category caps. Below the split, a Funds card appears
   only when the owner has a fund: each one's set-aside amount against its goal, what the plan adds,
@@ -215,20 +236,25 @@
   closest call, the middle case), one bar per start year (green up = what is left, red down = how
   early it ran out), and a note that this is American history and the stretches overlap. Only
   the years of taking money out are replayed; the first day's pot is the steady path's.
-- **Spending baseline**: the planning figure against what is really spent, with a 12-month bar
+- **One name for a month's spending** (2026-11-05, the owner): **A usual month** is the average of
+  up to twelve full months, unusual ones left out — on Monthly spending, Safety net, Investment
+  income and This month's comparison. *Spent a month in <year>* (Year) is only that year's
+  average and says so; the **Planning figure** is the one the FIRE target is built on.
+- **Monthly spending** (was Spending baseline): *A usual month* on top, then the planning figure against what is really spent, with a 12-month bar
   chart, the months in the average highlighted, the average of up to twelve usable months a red
   dashed line.
 
 ### Accounts, and the Monthly import
 
-- **Accounts sits under Home**, not with the import (2026-11-03): it answers *where is my money*,
-  which is net worth opened up, while Updates and Statements answer *is the data in, and what
-  did each update change*.
+- **Accounts sits under Home**, right below it in the sidebar (2026-11-03, 2026-11-05): it answers
+  *where is my money*, which is net worth opened up, while Updates and Statements answer *is the
+  data in, and what did each update change*. Its four cards are Home's money cut the same way —
+  Net worth · Cash · Invested · You owe — never the tool's own counts.
 
 - **No To do page** (taken off 2026-10-28). `tasks.json` and `decisions.json` are still
   written and read by the import; nothing on the page lists them, and an old link opens Updates.
-- **Updates**: where an update leaves its trace — three stat cards (last update, files on record,
-  updates on file), then one card per update from `findata/history/imports.json`: what changed
+- **Updates**: where an update leaves its trace — two stat cards (the last update, and the next one
+  with how many statements are still to bring), then one card per update from `findata/history/imports.json`: what changed
   (label, from, to), what was noticed, what was decided without asking, what you were asked.
   **The story of an update lives here and nowhere else; every other page shows a status computed
   today.**

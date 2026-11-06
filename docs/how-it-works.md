@@ -7,19 +7,20 @@ The detail behind the [README](../README.md).
 | Section | Page | What it answers |
 |---|---|---|
 | — | Home | Where you stand, and what you are worth |
-| Spending | This month | How much is still free to spend, and where the money went |
+| — | Accounts | Every place the money sits |
+| Money in & out | This month | How much is still free to spend, and where the money went |
 | | Year | How the year went, by category and month by month |
+| | Income & chequing | What came in, by source, how much of it you kept, and every row in chequing |
 | | Subscriptions | What repeats, what it costs a year, what is due next |
-| Income | Income | What came in, by source, and how much of it you kept |
-| | Investment income | What the portfolio paid you before you sold anything, and which holding pays when |
+| | Monthly spending | A usual month, and the figure your plan is built on |
+| Plan | Budget | What each paycheque is for, and what the funds hold |
+| | Safety net | How many months the money you can reach today would last without a paycheque |
+| | FIRE | How far the portfolio is from the target, and when it gets there |
+| | Drawdown & care | Whether the money lasts, care included, and in how many real stretches of history it would have |
 | Investing | Portfolio | What is invested, by currency, by kind of asset and by bucket |
 | | Performance | How it did against one benchmark fund bought on the same days |
 | | Holdings | Every position, by role or by account |
-| Plan | Budget | What each paycheque is for, and what the funds hold |
-| | FIRE | How far the portfolio is from the target, and when it gets there |
-| | Drawdown & care | Whether the money lasts, care included, and in how many real stretches of history it would have |
-| | Spending baseline | The monthly figure the target is built on, against what you really spend |
-| — | Accounts | Every place the money sits |
+| | Investment income | What the portfolio paid you before you sold anything, and which holding pays when |
 | Monthly import | Updates | What each update changed |
 | | Statements | Which statement arrived which month, and what is missing |
 | — | Glossary | Every finance term, and every word the page coined |
@@ -50,8 +51,8 @@ The detail behind the [README](../README.md).
 3. **Open the page.** Monthly import → Statements shows which month got which file, so a gap is
    visible at a glance.
 
-For Emma the monthly drop is eight files: three RBC PDFs, three BMO PDFs and two Wealthsimple
-exports. Yours is whatever your register says.
+For Emma the monthly drop is five files: three BMO PDFs (chequing, savings, MasterCard) and two
+Wealthsimple exports. Yours is whatever your register says.
 
 ## Why the numbers can be trusted
 
@@ -64,7 +65,7 @@ line, and a fifth checks the checkers:
   against sections, this README against the real pages.
 - **Does it actually draw** — a headless browser opens every page at three widths and looks for
   anything that failed to render.
-- **Are the checkers still checking** — a selftest plants 61 specific faults in a copy of the
+- **Are the checkers still checking** — a selftest plants 62 specific faults in a copy of the
   workspace and asserts each one is caught. It exists because a checker once linted an empty
   folder and reported success.
 

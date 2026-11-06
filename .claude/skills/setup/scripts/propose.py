@@ -38,9 +38,11 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(SKILLS, "update-dashboard"))
 sys.path.insert(0, os.path.join(SKILLS, "update-dashboard", "scripts"))
 import layout  # noqa: E402
+import verbs  # noqa: E402
 import scaffold  # noqa: E402  default_axes and the kinds the tool understands
 import seen_accounts  # noqa: E402
 from parsers import NAMES, ParseError, ParserUnavailable, parse  # noqa: E402
+from parsers import csv_bank  # noqa: E402
 
 IGNORE = {"README.txt", ".gitkeep", ".DS_Store"}
 IMAGES = (".png", ".jpg", ".jpeg", ".heic", ".webp")
@@ -149,8 +151,53 @@ def propose(root, inbox):
                 activities = (f, list(csv.DictReader(open(p, encoding="utf-8-sig"))))
                 seen.append((f, "broker activities export", f"{len(activities[1])} rows"))
             else:
+                # A bank's own transaction download (2026-11-03): its layout is recognised, never
+                # guessed, and the map that reads it goes into the register for the owner to check.
+                prof = csv_bank.detect(p)
+                spec = csv_bank.spec_of(prof) if prof else None
+                try:
+                    res = csv_bank.parse(p, spec) if spec else None
+                except ParseError as e:
+                    res, why = None, str(e)
+                if not res:
+                    unknown.append(f)
+                    seen.append((f, "a CSV", "a layout no map reads yet: show the first lines and draft its `csv` map"))
+                    continue
+                inst = csv_bank.PROFILES[prof]["label"]
+                named = re.findall(r"\d{3,}", f)
+                digits = named[-1][-4:] if named else f"{prof}{len(stmts) + 1}"
+                card = res.get("owed") or prof == "scotia_card"
+                part = dict(res, parser="csv", account=digits, kind="Credit card" if card else "Chequing",
+                            _file=f, _inst=inst, _csv=spec, _verified=csv_bank.PROFILES[prof]["verified"],
+                            _nodigits=not named)
+                k = (inst, digits)
+                moves += part["rows"]
+                if k not in stmts or part["period"]["to"] > stmts[k]["period"]["to"]:
+                    stmts[k] = part
+                first[k] = min(first.get(k, part["period"]["to"][:7]), part["period"]["to"][:7])
+                seen.append((f, f"a {inst} download", f"{len(res['rows'])} rows to {res['period']['to']}, "
+                             + ("balances follow" if res["reconcile"]["ok"] else "no running balance")
+                             + ("" if csv_bank.PROFILES[prof]["verified"] else " — layout not yet confirmed on a real file")))
+        elif low.endswith((".ofx", ".qfx")):
+            # A bank's OFX/QFX download (2026-11-04): one standard, the bank's own balance, every
+            # account in it named by the bank's id. Which bank, and which of the owner's accounts
+            # each id is, the file cannot say in words: _open asks.
+            try:
+                res = parse(p, "ofx")
+            except ParseError as e:
                 unknown.append(f)
-                seen.append((f, "a CSV", "columns match no export the tool reads"))
+                seen.append((f, "an OFX file", f"not read: {e}"))
+                continue
+            for part in (res.get("accounts") or [res]):
+                card = part["kind"] in scaffold.DEBT_KINDS
+                k = ("OFX", part["account"])
+                part = dict(part, parser="ofx", _file=f, _inst="OFX", _ofx=True,
+                            closing=-part["closing"] if card else part["closing"])   # a card: owed, positive
+                moves += part["rows"]
+                stmts[k] = part
+                first[k] = part["period"]["to"][:7]
+                seen.append((f, "an OFX download", f"{part['kind']} {part['cur']} …{part['account'][-4:]}, "
+                             f"{len(part['rows'])} rows, the bank's balance {part['closing']:,.2f} on {part['asof']}"))
         elif low.endswith(IMAGES):
             images.append(f)
             seen.append((f, "a screenshot", "read with you — balances abroad, usually"))
@@ -181,7 +228,7 @@ def propose(root, inbox):
     KORDER = {"Chequing": 0, "Savings": 1, "Credit card": 2}
     for (inst, digits), s in sorted(stmts.items(), key=lambda kv: (kv[0][0], KORDER.get(kv[1].get("kind"), 3), kv[0][1])):
         kind = s.get("kind") or "Chequing"
-        name = s.get("product") or f"{kind} {digits}"
+        name = s.get("product") or (kind if s.get("_nodigits") else f"{kind} {digits[-4:] if s.get('_ofx') else digits}")
         card = kind in scaffold.DEBT_KINDS
         rows = s["rows"]
         pays = [r["amount"] for r in rows if r["amount"] > 0 and PAY.search(r["description"].upper())]
@@ -189,15 +236,21 @@ def propose(root, inbox):
         ledger = None if card or kind != "Chequing" else re.sub(r"\W+", "_", f"{inst}_{kind}_{digits}").lower() + ".csv"
         if s.get("holder"):
             holders[s["holder"]] += 1
-        acc = {"inst": inst, "name": name, "kind": kind, "id": "…" + digits, "cur": "CAD",
+        acc = {"inst": inst, "name": name, "kind": kind, "id": "—" if s.get("_nodigits") or s.get("_ofx") else "…" + digits,
+               "cur": s.get("cur") or "CAD",
                "balance": -s["closing"] if card and s["closing"] is not None else s["closing"],
                "asof": s["period"]["to"], "feeds": "Spending" if card else ("Cash flow" if ledger else "")}
         if ledger:
             acc["ledger"] = ledger
             if debit:
                 acc["feeds"] += ", Spending"
-        acc["doc"] = {"file": pattern_of(s["_file"]), "closes": int(s["period"]["to"][8:]),
+        if s.get("_ofx"):
+            acc["ofxId"] = digits
+            acc["asof"] = s.get("asof") or acc["asof"]
+        acc["doc"] = {"file": s["_file"] if s.get("_csv") or s.get("_ofx") else pattern_of(s["_file"]),
+                      "closes": "any time" if s.get("_csv") or s.get("_ofx") else int(s["period"]["to"][8:]),
                       "from": first[(inst, digits)], "parser": s["parser"],
+                      **({"csv": s["_csv"]} if s.get("_csv") else {}),
                       "into": "spending.csv" if card else (ledger or "banks.json"),
                       "reconcile": s["reconcile"]["rule"] if (card or ledger) else "balance and as-of only"}
         acc.update({k: v for k, v in scaffold.default_axes({**acc, "src": "banks.json"}).items() if k in ("role", "reach")})
@@ -319,6 +372,12 @@ def propose(root, inbox):
         questions.append({"id": "everyday", "q": "What everyday amount a month — the guilt-free line, no categories under it?"})
     questions.append({"id": "committed", "q": "Anything paid every month before you choose anything — rent, a mortgage, a loan? "
                                               "And rent you do not pay now but will after FIRE?"})
+    # Asked once, in plain words (1.0.1): the FIRE pages show only for yes. Skipped leaves it out,
+    # and the page reads that as yes only for someone already investing.
+    questions.append({"id": "fire", "q": "Is retiring early — reaching the point where work is optional (FIRE) — something "
+                                         "you are working toward? Yes, no, or skip."})
+    questions.append({"id": "pensions", "q": "If you know them: the CPP and OAS your My Service Canada account estimates, "
+                                             "a month, and from what age? They pay part of what retirement takes. Skip if not."})
     questions.append({"id": "planBase", "q": "Your planning spend for the FIRE target, a month, rent after FIRE included?",
                       "suggest": plan.get("everyday")})
     plan["planBase"] = plan.get("everyday")
@@ -367,6 +426,23 @@ def propose(root, inbox):
                           + "). Is anyone paying you back a loan? Their payments are never counted as income."})
     questions.append({"id": "foreign", "q": (f"You dropped {len(images)} screenshot(s). " if images else "") +
                                             "Anything held in another currency? The bank, the balance, the currency and today's rate."})
+    # One OFX file is one document: the first account carries it and it covers the rest.
+    by_file = collections.defaultdict(list)
+    for a in accounts:
+        if a.get("ofxId"):
+            by_file[a["doc"]["file"]].append(a)
+    for f_, accs in by_file.items():
+        accs[0]["doc"]["alsoCovers"] = [x["name"] for x in accs[1:]]
+        accs[0]["doc"]["reconcile"] = "the bank's balance less every transaction is the balance the books end on"
+        for x in accs[1:]:
+            x.pop("doc", None)
+        questions.append({"id": f"ofx:{f_}", "q": f"{f_} is an OFX download from which bank? And which of your accounts is each: "
+                          + "; ".join(f"…{x['ofxId'][-4:]} ({x['kind']}, {x['cur']} {x['balance']:,.2f})" for x in accs) + "?"})
+    # A download's kind and balance are not in the file the way a statement prints them.
+    for a in accounts:
+        if a.get("doc", {}).get("csv"):
+            questions.append({"id": f"csv:{a['name']}", "q": f"{a['inst']} download {a['doc']['file']}: is it a chequing account, a savings "
+                              f"account or a credit card (drafted as {a['kind']}), and what balance does your banking app show for it today?"})
     if unknown or by_hand:
         questions.append({"id": "files", "q": "These files were not recognised: " + ", ".join(unknown + by_hand) +
                                               ". What are they?"})
@@ -407,6 +483,31 @@ def report(a):
     return "\n".join(out)
 
 
+def run(root, inbox=None, write=False, say=None):
+    """Draft the answers from the files in `inbox` (verbs.py). Returns rc, lines (the readable
+    report), `draft` (the answers, what --json prints) and `written` (the file, or None)."""
+    emit, lines = verbs.speaker(say)
+    root = os.path.abspath(root)
+    inbox = os.path.abspath(inbox or os.path.join(root, "inbox"))
+    if not os.path.isdir(inbox):
+        emit(f"  ✗ no inbox at {inbox}", loud_line=True)
+        return verbs.result({"draft": None, "written": None}, 1, lines)
+    a = propose(root, inbox)
+    emit(report(a))
+    written = None
+    if write:
+        dst = os.path.join(root, layout.rel("setup-answers.json"))
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        with open(dst, "w", encoding="utf-8") as fh:
+            json.dump(a, fh, ensure_ascii=False, indent=2)
+            fh.write("\n")
+        written = os.path.relpath(dst, root)
+        emit(f"\n  → {written} (a draft: answer the questions, then run scaffold.py)")
+    else:
+        emit("\n  nothing written. Re-run with --write to save the draft.")
+    return verbs.result({"draft": a, "written": written}, 0, lines)
+
+
 def main(argv):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("root", nargs="?", default=".")
@@ -414,26 +515,11 @@ def main(argv):
     ap.add_argument("--write", action="store_true", help="write findata/register/setup-answers.json")
     ap.add_argument("--json", action="store_true", help="print the draft as JSON instead of the report")
     args = ap.parse_args(argv[1:])
-    root = os.path.abspath(args.root)
-    inbox = os.path.abspath(args.inbox or os.path.join(root, "inbox"))
-    if not os.path.isdir(inbox):
-        print(f"  ✗ no inbox at {inbox}"); return 1
-    a = propose(root, inbox)
-    if args.json:
-        print(json.dumps(a, ensure_ascii=False, indent=1))
-    else:
-        print(report(a))
-    if args.write:
-        dst = os.path.join(root, layout.rel("setup-answers.json"))
-        os.makedirs(os.path.dirname(dst), exist_ok=True)
-        with open(dst, "w", encoding="utf-8") as fh:
-            json.dump(a, fh, ensure_ascii=False, indent=2)
-            fh.write("\n")
-        if not args.json:
-            print(f"\n  → {os.path.relpath(dst, root)} (a draft: answer the questions, then run scaffold.py)")
-    elif not args.json:
-        print("\n  nothing written. Re-run with --write to save the draft.")
-    return 0
+    # --json prints the draft alone; the report and the "written" line are the readable form.
+    r = run(args.root, inbox=args.inbox, write=args.write, say=None if args.json else print)
+    if args.json and r["draft"] is not None:
+        print(json.dumps(r["draft"], ensure_ascii=False, indent=1))
+    return r["rc"]
 
 
 if __name__ == "__main__":

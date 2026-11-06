@@ -38,6 +38,7 @@ TOOL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SYNCED = [
     ".claude/skills",
+    "tests",              # the unit tests; checks.py --level release runs them where they exist
     ".claude/settings.json",
     "templates/dashboards",
     "CLAUDE.md",
@@ -47,6 +48,7 @@ SYNCED = [
     "CHANGELOG.md",
     "docs/pipeline.svg",
     "docs/hero.png",
+    "docs/banks.md",      # the banks page, written from parsers/support.py (S9)
     "docs/logo.svg",
     "docs/zh",            # the Chinese guide is the tool's, like README; screens/ stays the demo's
     ".gitignore",         # not for git: check_design's S4 reads it to skip files an owner writes
@@ -116,6 +118,44 @@ def differs(a, b):
 def figures_block(text):
     m = re.search(r'<!-- LINT:FIGURES.*?<!-- LINT:FIGURES:END -->\n', text, re.S)
     return m.group(0) if m else None
+
+
+def markers(ws, name):
+    """An owner's README is theirs and never copied over, but it carries the tool's own numbers in
+    markers that check_design reads: how many pages and sections, the sidebar's list, how many
+    faults the selftest plants. A sync that changed the page left every owner's README failing
+    S4 and S6 until someone edited it by hand (2026-11-05, user 002). So the numbers, and only
+    the numbers and the sidebar line, follow the tool; every other word stays the owner's."""
+    import re as _re
+    p, src = os.path.join(ws, name), os.path.join(TOOL, "README.md")
+    if not os.path.exists(p):
+        return False
+    tool = open(src, encoding="utf-8").read()
+    t0 = t = open(p, encoding="utf-8").read()
+    nav = _re.search(r"<!--\s*LINT:NAV main=(\d+)/(\d+)[^>]*-->", tool)
+    fl = _re.search(r"<!--\s*LINT:FAULTS n=(\d+)\s*-->", tool)
+    side = next((l.strip() for l in tool[nav.end():].splitlines() if " · " in l), None) if nav else None
+    m = _re.search(r"<!--\s*LINT:NAV main=(\d+)/(\d+)([^>]*)-->", t)
+    if nav and m:
+        old_p, old_s = m.group(1), m.group(2)
+        lines = t[m.end():].splitlines(keepends=True)
+        for i, l in enumerate(lines[:4]):
+            if " · " in l and side:
+                lines[i] = l[:len(l) - len(l.lstrip())] + side + ("\n" if l.endswith("\n") else "")
+                break
+            lines[i] = _re.sub(r"\b" + old_p + r"(\s*(?:pages|页))", nav.group(1) + r"\1", l)
+            lines[i] = _re.sub(r"\b" + old_s + r"(\s*(?:sidebar |个侧栏|sections|groups))", nav.group(2) + r"\1", lines[i])
+        t = t[:m.start()] + f"<!-- LINT:NAV main={nav.group(1)}/{nav.group(2)}{m.group(3)}-->" + "".join(lines)
+    f = _re.search(r"<!--\s*LINT:FAULTS n=(\d+)\s*-->", t)
+    if fl and f and f.group(1) != fl.group(1):
+        old = f.group(1)
+        t = t.replace(f.group(0), f"<!-- LINT:FAULTS n={fl.group(1)} -->")
+        t = _re.sub(r"\b" + old + r"(\s*(?:specific\s+)?faults?)", fl.group(1) + r"\1", t)
+        t = _re.sub(r"种下\s*" + old + r"\s*个故障", f"种下 {fl.group(1)} 个故障", t)
+    if t != t0:
+        open(p, "w", encoding="utf-8").write(t)
+        return True
+    return False
 
 
 def main(argv):
@@ -192,6 +232,9 @@ def main(argv):
 
     if check:
         return 0
+    for name in ("README.md", "README.zh.md"):
+        if markers(ws, name):
+            print(f"  → {name}: the page and fault counts it states follow the tool")
     rb = os.path.join(ws, ".claude", "skills", "update-dashboard", "scripts", "rebuild.py")
     if os.path.isdir(os.path.join(ws, "findata")) and os.path.exists(rb):
         print()

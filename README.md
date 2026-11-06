@@ -27,8 +27,12 @@ page: what you spent, what you own, how far you are from FIRE. No bank login, no
 | **Your statements** | Last month's PDFs. A single credit card is enough to start |
 | **A screen** | The page needs a window at least 800px wide; a phone shows screenshots only |
 
-**Banks.** RBC and BMO statements and Wealthsimple exports are read by a local parser. Any other
-bank works too, but Claude reads those statements by hand: slower, and it means Claude sees them.
+**Banks.** RBC and BMO statements and Wealthsimple exports are read by a local parser. For any
+other bank, download your transactions as **OFX or QFX** (the *Money* or *Quicken* choice in
+online banking): they carry the bank's own balance, so every download checks itself. Read the same
+way for any bank, and confirmed on a real BMO one. A bank that offers only a spreadsheet (CSV)
+works too, with its balance read off the app once a month. Anything else, Claude reads by hand:
+slower, and it means Claude sees it. Bank by bank and broker by broker: **[Supported banks and brokers](docs/banks.md)**.
 
 **Built for Canada.** Canadian dollars, TFSA / RRSP / FHSA, CPP and OAS. Accounts abroad count in
 net worth.
@@ -81,13 +85,15 @@ report and any questions a program cannot answer, like a merchant it has not see
 
 - **[How it works](docs/how-it-works.md)**: every page, the monthly run, the folder, and the
   checkers that keep the numbers honest.
-<!-- LINT:FAULTS n=61 -->
-  Four checkers hold every figure to its source; a selftest plants 61 faults to prove they still catch them.
+<!-- LINT:FAULTS n=65 -->
+  Four checkers hold every figure to its source; a selftest plants 65 faults to prove they still catch them.
+- **[Supported banks and brokers](docs/banks.md)**: which to use, which banks' files are read, which are confirmed on a real
+  one, and how to download each.
 - **[Roadmap](ROADMAP.md)** and **[Changelog](CHANGELOG.md)**.
 
-<!-- LINT:NAV main=17/5 minwidth=800 -->
-The page is 17 pages in 5 sidebar groups —
-Home · Accounts · Spending · Income · Investing · Plan · Monthly import · Glossary
+<!-- LINT:NAV main=18/4 minwidth=800 -->
+The page is 18 pages in 4 sidebar groups —
+Home · Accounts · Money in & out · Plan · Investing · Monthly import · Glossary
 — desktop only, at least 800px wide.
 
 MIT licence: see [`LICENSE`](LICENSE).

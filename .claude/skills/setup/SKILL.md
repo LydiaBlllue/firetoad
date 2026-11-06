@@ -85,6 +85,28 @@ often pay arrives, whether last month's transfers are the standing rule, the eve
 payments and rent after FIRE, the planning spend, the investing buckets, a counterparty
 who repays a loan, and anything held abroad.
 
+**A bank's OFX or QFX download** (2026-11-04) is the way in for a bank with no PDF parser:
+one standard for every bank, the bank's own balance in it, so it reconciles without asking. The
+draft reads every account in the file, its type, currency and balance, and keeps the bank's id for
+each as `ofxId`; its `_open` question asks which bank it is and which of the owner's accounts each
+id is. One file is one document, covering all its accounts. Prefer it to a CSV wherever the bank
+offers it (the *Money* or *Quicken* choice).
+
+**A bank's own download (CSV).** A bank with no PDF parser here is read from its transaction
+download: TD, Scotiabank, CIBC, Tangerine and Simplii have starting maps; any other bank, EQ among them, is mapped from its first lines (2026-11-03). The draft recognises a
+known layout and writes a `csv` map on the document (which column is the date, the description,
+the money out and in, the balance); its `_open` question asks the kind of account and the
+balance the app shows. A layout it does not recognise is listed as not recognised: show the
+owner its first two lines with the numbers changed, draft the map, and try it before it goes in
+the register —
+
+```bash
+python3 .claude/skills/update-dashboard/scripts/parse.py inbox/<file>.csv --parser csv --csv '{"header": true, "date": "Date", "description": "Description", "amount": "Amount"}'
+```
+
+— until it reads every row. Never guess a column from its position alone: the first rows have to
+read as the owner sees them in the banking app.
+
 ## Before you write anything
 
 Check whether this workspace is already somebody's:
@@ -204,6 +226,13 @@ the page shows is a sum of them.
   `estimate: true`: no single payment can match it, so D21 notes it instead of warning every run.
 - How much they invest per month — the transfer to the broker.
 - Their everyday amount — the guilt-free line. **No category caps**; that is the point of it.
+- **Whether retiring early is something they are working toward** — asked once, in plain words.
+  Yes or no goes in as `plan.fire` `{"goal": true|false, "asked": "<today>"}`; skipped is left
+  out. The FIRE pages show only for yes (for an owner already investing, unanswered reads as yes).
+- **CPP and OAS, if they know them** — the monthly estimates their My Service Canada account
+  shows, and the age each starts. They go in as top-level `pensions`:
+  `[{"name":"CPP","monthly":850,"from":65,"asof":"<today>","source":"My Service Canada estimate"}]`.
+  Skipped is left out; the Drawdown page then says they are not counted. Never estimate them.
 
 ### 5 · The one investing question
 
@@ -328,7 +357,7 @@ Three things, in this order:
      "balance":38400,"asof":"2026-09-06","feeds":"Portfolio",
      "doc":{"file":"holdings-<date>.csv"}}
   ],
-  "plan": {"takeHome":4200,"invest":900,"everyday":1800},
+  "plan": {"takeHome":4200,"invest":900,"everyday":1800,"fire":{"goal":true,"asked":"2026-09-06"}},
   "rules": {
     "buckets": [{"key":"rest","name":"Holdings","catchAll":true}],
     "maxHoldings": 8
