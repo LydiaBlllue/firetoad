@@ -17,6 +17,8 @@
   tapped — and written by a new verb, `balance.py`, which this chat uses too: by register key,
   the register's copy following, refused where a ledger or a loan already says the figure. The
   setup wizard and the packaged app follow.
+- `tools/sync.py` now carries `tools/` into a workspace (2026-11-06): the migration tests import
+  `tools/migrate.py`, and without it the release-level checks failed in every workspace.
 
 ## 1.0.1 — 2026-11-06
 

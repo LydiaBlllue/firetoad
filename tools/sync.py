@@ -41,6 +41,8 @@ SYNCED = [
     "app.py",             # the second door (2.0.0): python3 app.py serves the dashboard and the panel
     "templates/panel",    # the panel's markup, read from the workspace like templates/dashboards/
     "tests",              # the unit tests; checks.py --level release runs them where they exist
+    "tools",              # what the tests and the selftest import (migrate.py, fixtures.py); without it
+                          # tests/test_migrate.py failed in every workspace (2026-11-06, user 001)
     ".claude/settings.json",
     "templates/dashboards",
     "CLAUDE.md",
