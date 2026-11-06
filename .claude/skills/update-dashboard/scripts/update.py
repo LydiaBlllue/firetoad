@@ -223,7 +223,7 @@ class Workspace:
 
 # ---------------------------------------------------------------- what a ledger row is
 def merchant_of_debit(desc):
-    """'Contactless Interac purchase - 7740 FARM BOY #17 OTTAWA ON' -> 'FARM BOY #17 OTTAWA ON';
+    """'Contactless Interac purchase - 1111 FARM BOY #17 OTTAWA ON' -> 'FARM BOY #17 OTTAWA ON';
     'Debit Card Purchase, FORTINOS' -> 'FORTINOS' (BMO's wording, in its PDF and its OFX alike:
     until 2026-11-04 the words stayed on the merchant, so every BMO debit merchant read as new)."""
     m = re.search(r"interac\s+purchase[\s,\-]*(?:\d{3,}\s*)?(.*)$", desc, re.I) \

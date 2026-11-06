@@ -1,7 +1,9 @@
 # Changelog
 
-## 1.0.1 — unreleased
+## 1.0.1 — 2026-11-06
 
+- **Every example in the parsers' notes, the tests and the fixtures is invented** (2026-11-06):
+  account numbers, a branch number and amounts that had come from real statements are replaced.
 - **Unit tests** (2026-11-05): `tests/` holds one test per rule for the pure modules — `flows.py`
   (the plan's sums) and `loans.py` (what is still owed) — with their edges pinned (a repayment on
   the agreed day, a null amount against a zero) and one known gap written down as an expected

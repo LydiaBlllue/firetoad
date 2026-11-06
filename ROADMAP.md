@@ -3,16 +3,8 @@
 What is coming, said as what you will be able to do. These are aims, not promises; what has
 already shipped is in [`CHANGELOG.md`](CHANGELOG.md).
 
-## Next — 1.0.1
+## Next — 1.0.2
 
-- **Safety net**: how long your money would last without a paycheque, from what you really spend.
-- **Your FIRE goal, said once**: the page remembers whether you are aiming for it, and stops
-  showing a target to someone who is not.
-- **What your credit cards cost you**: the interest each card has charged, as a fact.
-- **Government pensions in the retirement plan**: CPP and OAS from your own statement, so the
-  plan does not assume you live on savings alone.
-- **Chequing, row by row**: transfers, fees and e-Transfers listed one by one.
-- **A simpler sidebar**, ordered the way someone starting out reads it.
 - **More banks and brokers**: TD, Scotiabank, CIBC, Tangerine, Simplii and EQ Bank confirmed on
   real files, and the first brokers beyond Wealthsimple. What is read today:
   [Supported banks and brokers](docs/banks.md).
