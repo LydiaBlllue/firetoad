@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jade Toad · Monthly import</title>
+<style>
+/* The dashboard's tokens (templates/dashboards/finance_dashboard.html :root), so the panel reads
+   as the same product. Sized for a phone screen; it is the monthly-import card, not a page. */
+:root{color-scheme:light;--page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--muted:#75736d;
+  --grid:#e1e0d9;--border:rgba(11,11,11,.10);--pill:#efeeea;--warn-bg:#fdf6e6;--warn-bd:#f0dfb4;--warn:#c98500;
+  --ok-bg:#eaf6ef;--ok:#1a7a4a;--bad-bg:#fbeaea;--bad:#b3261e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;padding:28px 16px 64px}
+.wrap{max-width:560px;margin:0 auto}
+.brand{display:flex;align-items:baseline;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.brand h1{font-size:19px;font-weight:700;letter-spacing:-.3px}
+.brand small{color:var(--muted);font-size:12px}
+.brand a{margin-left:auto;font-size:12.5px;color:var(--ink-2)}
+.lead{font-size:13.5px;color:var(--ink-2);margin-bottom:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 15px;margin-bottom:12px}
+.lab{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.row{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--border)}
+.row:first-of-type{border-top:0}
+.row .ic{width:16px;flex-shrink:0;color:var(--muted);text-align:center;font-size:12px;margin-top:2px}
+.row.bad .ic{color:var(--bad)}
+.row .rw{flex:1;min-width:0;display:flex;flex-direction:column}
+.row .rw b{font-size:13px}
+.row .wh{font-size:12.5px;color:var(--ink-2)}
+.row.bad .wh{color:var(--bad)}
+.row.ok-line .wh{color:var(--muted)}
+.st{font-size:11px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap;flex-shrink:0;margin-top:2px;background:var(--pill);color:var(--ink-2)}
+.st.todo{background:var(--warn-bg);color:var(--warn)}
+.st.inbox,.st.ok{background:var(--ok-bg);color:var(--ok)}
+.foot{font-size:12px;color:var(--muted);margin-top:8px}
+.foot code{font-size:11.5px;background:var(--pill);padding:1px 5px;border-radius:4px;word-break:break-all}
+.busy{font-size:12.5px;background:var(--warn-bg);border:1px solid var(--warn-bd);border-radius:8px;padding:7px 10px;margin-bottom:10px}
+.act{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.btn{border:1px solid var(--border);background:var(--pill);color:var(--ink);border-radius:8px;padding:7px 14px;font-size:13px;font-family:inherit;cursor:pointer}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
+.btn[disabled]{opacity:.4;cursor:default}
+.hint{font-size:11.5px;color:var(--muted)}
+pre.log{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f3f2ee;border-radius:8px;padding:10px 12px;margin-top:10px;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;display:none}
+pre.log.on{display:block}
+.q{padding:9px 0;border-top:1px solid var(--border)}
+.q:first-child{border-top:0}
+.qt{font-size:13px}
+.qs{font-size:11.5px;color:var(--muted);margin-top:2px}
+.pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.pl{border:1px solid var(--border);background:var(--pill);color:var(--ink-2);border-radius:999px;padding:3px 11px;font-size:12px;font-family:inherit;cursor:pointer}
+.pl.sel{background:var(--ink);color:var(--page);border-color:var(--ink);font-weight:600}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-top:1px solid var(--border);font-size:13px}
+.kv:first-of-type{border-top:0}
+.kv .k{color:var(--muted)}
+.kv .v{font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.nt{display:flex;gap:8px;font-size:12.5px;padding:4px 0;color:var(--ink-2)}
+.nt .ic{width:14px;flex-shrink:0;text-align:center;color:var(--ok)}
+.nt.warn .ic,.nt.bad .ic{color:var(--warn)}
+.nt.bad .ic{color:var(--bad)}
+.err{color:var(--bad);font-size:12.5px;margin-top:8px}
+</style>
+</head>
+<body data-base="{{BASE}}">
+<div class="wrap">
+  <div class="brand"><h1>Jade Toad</h1><small>Monthly import · {{TODAY}}</small><a href="{{BASE}}/" target="_blank" rel="noopener">Open the dashboard ↗</a></div>
+  <p class="lead">{{LEAD}}</p>
+  {{BUSY}}
+
+  <div class="card" id="bring"><div class="lab">Bring</div>{{BRING}}</div>
+
+  <div class="card" id="import"><div class="lab">Import</div>
+    <div class="act">
+      <button type="button" class="btn primary" id="dry">Import what's here</button>
+      <button type="button" class="btn primary" id="go" style="display:none">Go</button>
+      <button type="button" class="btn" id="undo">Undo the last import</button>
+      <span class="hint" id="ihint">first a look at what would happen; nothing is written until Go</span>
+    </div>
+    <pre class="log" id="log"></pre>
+    <div class="err" id="ierr"></div>
+  </div>
+
+  <div class="card" id="questions"><div class="lab">Questions ({{NQ}})</div>{{QUESTIONS}}<div class="err" id="qerr"></div></div>
+
+  <div class="card" id="result"><div class="lab">Result</div>{{RESULT}}</div>
+</div>
+<script>
+(function(){
+  var base = document.body.getAttribute('data-base');
+  var $ = function(id){ return document.getElementById(id); };
+  var log = $('log'), dry = $('dry'), go = $('go'), undo = $('undo'), ihint = $('ihint'), ierr = $('ierr');
+  var running = false;
+
+  function api(method, path, body){
+    return fetch(base + path, {method: method, headers: {'Content-Type': 'application/json'},
+                               body: body ? JSON.stringify(body) : undefined})
+      .then(function(r){ return r.json().then(function(j){ j.status = r.status; return j; }); });
+  }
+  function setBusy(on){
+    running = on;
+    [dry, go, undo, $('save')].forEach(function(b){ if (b) b.disabled = on; });
+  }
+  function follow(onDone){
+    log.textContent = ''; log.classList.add('on');
+    var es = new EventSource(base + '/api/events');
+    es.addEventListener('line', function(ev){ log.textContent += JSON.parse(ev.data) + '\n'; log.scrollTop = log.scrollHeight; });
+    es.addEventListener('done', function(ev){ es.close(); var j = {}; try { j = JSON.parse(ev.data); } catch (e) {} onDone(j); });
+    es.onerror = function(){ es.close(); api('GET', '/api/job').then(function(r){ if (r.ok && r.data && r.data.done) { log.textContent = r.data.lines.join('\n') + '\n'; onDone(r.data); } }); };
+  }
+  function start(path, body, hint, onDone){
+    if (running) return;
+    ierr.textContent = ''; ihint.textContent = hint; setBusy(true);
+    api('POST', path, body).then(function(r){
+      if (!r.ok) { setBusy(false); ierr.textContent = r.error && r.error.text || ('HTTP ' + r.status); return; }
+      follow(function(job){ setBusy(false); onDone(job); });
+    }).catch(function(e){ setBusy(false); ierr.textContent = String(e); });
+  }
+  dry.onclick = function(){
+    start('/api/import', {write: false}, 'looking at what is in inbox/ …', function(job){
+      var res = job.result || {};
+      if (job.error) { ihint.textContent = 'that failed; the lines say where'; return; }
+      if ((res.unknown || []).length || (res.stopped || []).length) { ihint.textContent = 'the import stops on what is marked ✗ above; nothing is written'; return; }
+      if (!(res.files || []).length && !(res.counts && Object.keys(res.counts).length)) { ihint.textContent = 'nothing to import'; return; }
+      ihint.textContent = 'that is the plan. Go writes it, rebuilds the page and archives the files'; go.style.display = '';
+    });
+  };
+  go.onclick = function(){
+    go.style.display = 'none';
+    start('/api/import', {write: true}, 'importing …', function(job){
+      ihint.textContent = job.error ? 'the import failed and nothing was written; the lines say why' : 'done — the page is rebuilt';
+      if (!job.error) setTimeout(function(){ location.reload(); }, 1800);
+    });
+  };
+  undo.onclick = function(){
+    if (!confirm('Put findata/ back as it was before the last import?')) return;
+    start('/api/undo', {}, 'undoing …', function(job){
+      ihint.textContent = job.error || (job.result && job.result.undone == null) ? 'nothing was undone; the lines say why' : 'undone — the page is rebuilt';
+      if (job.result && job.result.undone) setTimeout(function(){ location.reload(); }, 1500);
+    });
+  };
+  // the questions: tapping selects; Save answers sends every selection at once
+  document.querySelectorAll('.q .pl').forEach(function(p){
+    p.onclick = function(){
+      var q = p.closest('.q');
+      q.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); });
+      p.classList.add('sel');
+    };
+  });
+  var save = $('save');
+  if (save) save.onclick = function(){
+    var set = {};
+    document.querySelectorAll('.q').forEach(function(q){
+      var s = q.querySelector('.pl.sel'); if (s) set[q.getAttribute('data-n')] = s.getAttribute('data-v');
+    });
+    $('qerr').textContent = '';
+    start('/api/answers', {set: set}, 'saving answers …', function(job){
+      if (job.error || (job.result && job.result.rc)) { $('qerr').textContent = 'not saved; the lines under Import say which answer was refused'; return; }
+      ihint.textContent = 'answers saved — the page is rebuilt';
+      setTimeout(function(){ location.reload(); }, 1200);
+    });
+  };
+  setInterval(function(){ api('GET', '/api/ping').catch(function(){}); }, 30000);
+})();
+</script>
+</body>
+</html>

@@ -18,7 +18,7 @@ with backups, one mistake away from being the fault it was testing for.
 
     selftest.py [root]
 """
-import sys, os, re, csv, json, shutil, tempfile, subprocess, datetime, hashlib
+import sys, os, re, csv, json, shutil, tempfile, subprocess, datetime, hashlib, time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "update-dashboard", "scripts"))
 import layout  # where each findata file lives (schema 6)
@@ -46,8 +46,9 @@ def stage(root, dst):
     # (setup-answers.json), and it learns which those are from there (2026-09-13).
     # LICENSE, CHANGELOG.md, ROADMAP.md, CONTRIBUTING.md and SECURITY.md: README links to them,
     # and S4 resolves every link.
+    # app.py too (2026-11-06): the local-app skill hands the reader `python3 app.py`, and S4 resolves it.
     for f in ("CLAUDE.md", "DESIGN.md", "FINANCE.md", "README.md", "OWNER.md", ".gitignore", "LICENSE", "CHANGELOG.md", "ROADMAP.md",
-              "CONTRIBUTING.md", "SECURITY.md"):
+              "CONTRIBUTING.md", "SECURITY.md", "app.py"):
         if os.path.exists(os.path.join(root, f)):
             shutil.copy2(os.path.join(root, f), dst)
     # README names these folders in prose and S4 checks that every path it hands the reader
@@ -2300,6 +2301,119 @@ def two_doors_check(root, base):
     return [f"  ✓ two doors: run() returns what the CLI prints and exits with, for {', '.join(scripts)}"]
 
 
+def local_app_check(root, base):
+    """The second door (local-app/server.py, 2026-11-06): a month imported through
+    POST /api/import on one staged copy and through update.py --write on another has to leave
+    the same findata/ and the same archive — the proof that the app contains no financial logic
+    of its own. Also: a request without the token is 404, not 401; an import started while the
+    lock is held by a live process is 409."""
+    import urllib.request, urllib.error
+    srv = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "local-app", "scripts", "server.py"))
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    if not (os.path.exists(srv) and os.path.exists(upd)):
+        return []
+    copies = {}
+    for door in ("cli", "api"):
+        ws = os.path.join(base, "door_" + door); os.makedirs(ws); stage(root, ws)
+        man = fixtures_for(ws)
+        if not man:
+            return []
+        newest = {}
+        for m in man:
+            newest[m["doc"]] = max(newest.get(m["doc"], m), m, key=lambda x: os.path.basename(x["file"]))
+        for m in newest.values():
+            strip_statement(ws, m)
+        subprocess.run([sys.executable, os.path.join(os.path.dirname(upd), "rebuild.py"), ".", "--write"], cwd=ws, capture_output=True)
+        copies[door] = ws
+    bad = []
+    # the first door
+    r = subprocess.run([sys.executable, upd, ".", "--write"], cwd=copies["cli"], capture_output=True, text=True, timeout=300)
+    if r.returncode != 0:
+        bad.append(f"update.py --write exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:]))
+    # the second door: the server as its own process, the way app.py starts it
+    ws = copies["api"]
+    proc = subprocess.Popen([sys.executable, srv, ".", "--port", "0"], cwd=ws, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    try:
+        line = ""
+        for _ in range(200):
+            line = proc.stdout.readline()
+            if "http://127.0.0.1:" in line or not line:
+                break
+        m = re.search(r"(http://127\.0\.0\.1:\d+)(/t/[^/\s]+)/panel", line)
+        if not m:
+            return ["  ✗ local app: the server did not say where it is (" + line.strip()[:120] + ")"]
+        origin, tok = m.group(1), m.group(2)
+
+        def req(method, path, body=None, headers=None):
+            data = json.dumps(body).encode() if body is not None else None
+            rq = urllib.request.Request(origin + path, data=data, method=method,
+                                        headers=headers or {"Content-Type": "application/json"})
+            try:
+                with urllib.request.urlopen(rq, timeout=300) as resp:
+                    raw = resp.read()
+                    return resp.status, (json.loads(raw) if resp.headers.get_content_type() == "application/json" else raw)
+            except urllib.error.HTTPError as e:
+                raw = e.read()
+                return e.code, (json.loads(raw) if e.headers.get_content_type() == "application/json" else raw)
+
+        if req("GET", "/api/status")[0] != 404 or req("GET", "/t/wrong/api/status")[0] != 404:
+            bad.append("a request without the token was not answered 404")
+        if req("POST", tok + "/api/import", {"write": False}, {"Content-Type": "application/json", "Origin": "http://127.0.0.1:1"})[0] != 403:
+            bad.append("a POST from another origin was not refused")
+        lock = os.path.join(ws, ".jade.lock")
+        json.dump({"pid": os.getpid(), "verb": "import", "since": "now"}, open(lock, "w"))
+        st, body = req("POST", tok + "/api/import", {"write": True})
+        if st != 409:
+            bad.append(f"an import while the lock is held got {st}, not 409")
+        os.remove(lock)
+        st, body = req("POST", tok + "/api/import", {"write": True})
+        if st != 202:
+            bad.append(f"POST /api/import answered {st}: {str(body)[:120]}")
+        else:
+            for _ in range(600):
+                st, job = req("GET", tok + "/api/job")
+                if job.get("data", {}).get("done"):
+                    break
+                time.sleep(0.5)
+            job = job.get("data") or {}
+            if not job.get("done") or job.get("error") or (job.get("result") or {}).get("rc") not in (None, 0) \
+                    or not (job.get("result") or {}).get("written"):
+                bad.append("the import through the app did not finish clean: " + " | ".join(job.get("lines", [])[-2:])[:200])
+        if os.path.exists(lock):
+            bad.append("the lock was left behind after the import")
+        st, body = req("GET", tok + "/panel")
+        if st != 200 or b"Save answers" not in body and b"Nothing is waiting" not in body:
+            bad.append(f"GET /panel answered {st}")
+    finally:
+        proc.kill(); proc.wait()
+    # the same month, both doors: findata/ and archive/ identical, but for the seconds an import
+    # records and the prices a run may or may not have fetched
+    def digest(ws):
+        out = {}
+        for top in ("findata", "archive"):
+            for dp, _, fs in os.walk(os.path.join(ws, top)):
+                for f in fs:
+                    rel = os.path.relpath(os.path.join(dp, f), ws)
+                    if f == "prices.json":
+                        continue
+                    data = open(os.path.join(dp, f), "rb").read()
+                    if f == "imports.json":
+                        j = json.loads(data.decode("utf-8"))
+                        for rec in (j.get("imports") if isinstance(j, dict) else j) or []:
+                            rec.pop("seconds", None)
+                        data = json.dumps(j, sort_keys=True).encode()
+                    out[rel] = hashlib.sha256(data).hexdigest()
+        return out
+    a, b = digest(copies["cli"]), digest(copies["api"])
+    diff = sorted(k for k in set(a) | set(b) if a.get(k) != b.get(k))
+    if diff:
+        bad.append("the two doors left different files: " + ", ".join(diff[:6]) + (" …" if len(diff) > 6 else ""))
+    if bad:
+        return ["  ✗ local app: " + x for x in bad[:6]]
+    return [f"  ✓ local app: the same month through update.py and through POST /api/import left identical findata/ and archive/ "
+            f"({len(a)} files); no token → 404, another origin → 403, the lock held → 409"]
+
+
 def csv_rows_of(p):
     return list(csv.DictReader(open(p, encoding="utf-8"))) if os.path.exists(p) else []
 
@@ -2377,7 +2491,7 @@ def main(argv):
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
                     own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, browser_copy_check, csv_download_check, csv_layouts_check, ofx_download_check, month_parts_check, starter_check,
-                    demo_clear_check, two_doors_check):
+                    demo_clear_check, two_doors_check, local_app_check):
             try:
                 runs += chk(root, base)
             except Exception as e:                 # a check with nothing to run on, as above

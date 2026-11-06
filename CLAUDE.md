@@ -187,6 +187,23 @@ report template are all in that file. **Do not work from memory.**
 - The import day is `profile.json` `importDay`; it appears once per dashboard as `IMPORT_DAY`,
   and every label derives from it.
 
+## The second door: the local app
+
+**`python3 app.py` is Jade Toad without Claude** (2026-11-06, ROADMAP 2.0.0 step 1b). It
+starts a standard-library HTTP server on `127.0.0.1` with a per-launch token in the path, opens
+the system browser, and serves two things: the built dashboard, as the static file it is, and
+the **panel** (`templates/panel/panel.html`, filled by `local-app/scripts/panel.py`) — Bring ·
+Import · Questions · Result, the `monthly-import` skill's card with the chat removed. The server
+(`local-app/scripts/server.py`) holds **no financial logic**: each route is one call into a
+script's `run()` — `status`, `update`, `update.undo`, `confirm` — and the import still rebuilds
+through `rebuild.py`; the browser reloads the file. One lock file (`.jade.lock`) makes it one
+writer at a time, and its log is `.jade/log/` (both ignored by git). The selftest's *local app*
+check imports the same month through `update.py --write` and through `POST /api/import` and
+expects identical `findata/` and `archive/`. Both doors are the same code, so a change to the
+import is made once, in the script, and the panel follows. What the app cannot do yet — take a
+dropped file, read a screenshot, set up a workspace, use a model — is the rest of the roadmap
+entry, in order.
+
 ## Nothing in a dashboard is typed by hand
 
 <!-- LINT:CONSTS n=53 -->

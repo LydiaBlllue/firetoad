@@ -38,6 +38,8 @@ TOOL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SYNCED = [
     ".claude/skills",
+    "app.py",             # the second door (2.0.0): python3 app.py serves the dashboard and the panel
+    "templates/panel",    # the panel's markup, read from the workspace like templates/dashboards/
     "tests",              # the unit tests; checks.py --level release runs them where they exist
     ".claude/settings.json",
     "templates/dashboards",

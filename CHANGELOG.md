@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.2 — unreleased
+
+- **A second way in, beside Claude** (2026-11-06, ROADMAP 2.0.0 step 1b): `python3 app.py`
+  serves the dashboard and a monthly panel on `127.0.0.1` — Bring · Import · Questions · Result —
+  through the scripts' own `run()`s, so a month done by tapping in the browser is the month the
+  import skill would have done: the dry run, then *Go* with the lines streaming in, *Undo*, the
+  open questions as pills saved at once. The server is the standard library, loopback only, a
+  token in the path, one writer at a time (`.jade.lock`), and no financial logic of its own; the
+  selftest's *local app* check imports one month through both doors and expects identical
+  `findata/`. Files still go into `inbox/` by hand; the drop zone, screenshots and the setup
+  wizard follow.
+
 ## 1.0.1 — 2026-11-06
 
 - **Every example in the parsers' notes, the tests and the fixtures is invented** (2026-11-06):
