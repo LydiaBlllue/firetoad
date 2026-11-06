@@ -192,21 +192,39 @@ def result(rec):
 
 
 # ---------------------------------------------------------------- the page
-def render(base, root, st, q, rec, job, held):
+def tool_notice(tool):
+    """One line about the folder's copy of the tool, only when it is not the app's own."""
+    if not tool or tool.get("state") == "same":
+        return ""
+    st = tool.get("state")
+    sc = tool.get("schema") or {}
+    if st == "newer":
+        return (f'<p class="busy bad">This folder\'s data is a newer shape (schema {e(sc.get("workspace"))}) than this app builds '
+                f'(schema {e(sc.get("app"))}). Nothing is written until the app is updated.</p>')
+    if st == "migrate":
+        return (f'<p class="busy">This folder\'s data is an older shape (schema {e(sc.get("workspace"))}) than this app builds '
+                f'(schema {e(sc.get("app"))}): it has to be migrated first (tools/migrate.py), then refreshed.</p>')
+    n = len(tool.get("changed") or [])
+    return (f'<p class="busy">This folder\'s copy of the tool differs from the app\'s in {n} place{"s" if n != 1 else ""} — '
+            f'both doors should run one version. <button type="button" class="btn sm" id="syncbtn">Refresh the copy</button></p>')
+
+
+def render(base, root, st, q, rec, job, held, tool=None):
     tpl = template(root)
     nq = len((q or {}).get("items") or [])
-    busy = ""
+    busy = tool_notice(tool)
     if job and not job.get("done"):
-        busy = f'<p class="busy">{e(job["verb"])} is running — the lines below follow it.</p>'
+        busy += f'<p class="busy">{e(job["verb"])} is running — the lines below follow it.</p>'
     elif held:
-        busy = f'<p class="busy">{e(held.get("verb"))} is running elsewhere (since {e(held.get("since"))}); wait for it.</p>'
+        busy += f'<p class="busy">{e(held.get("verb"))} is running elsewhere (since {e(held.get("since"))}); wait for it.</p>'
     todo = sum(1 for k in ("statements", "exports", "screenshots", "balances") for r in st.get(k) or [] if r.get("state") == "todo")
     todo += len(st.get("unnamed") or [])
     first = "Nothing to bring. " if not todo else f"{todo} thing{'s' if todo != 1 else ''} to bring. "
     first += f"{nq} question{'s' if nq != 1 else ''} waiting." if nq else "No questions waiting."
     fill = {"{{BASE}}": e(base), "{{TODAY}}": e(st.get("today")), "{{LEAD}}": e(first),
             "{{BRING}}": bring(st, root), "{{QUESTIONS}}": questions(q), "{{RESULT}}": result(rec),
-            "{{BUSY}}": busy, "{{NQ}}": str(nq)}
+            "{{BUSY}}": busy, "{{NQ}}": str(nq),
+            "{{VERSION}}": e((tool or {}).get("version") or "")}
     for k, v in fill.items():
         tpl = tpl.replace(k, v)
     return tpl

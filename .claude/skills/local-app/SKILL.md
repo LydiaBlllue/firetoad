@@ -14,7 +14,15 @@ leaves; the selftest holds the two doors to the same `findata/`.
 python3 app.py
 ```
 
-That is the whole instruction. It picks a free port on `127.0.0.1`, prints an address with a
+That is the whole instruction — or, packaged, a double-click: `python3 build/build.py` makes
+`dist/Jade Toad.app` (a folder with Python, the tool and the demo inside; `build/build.py` says
+what goes in and what never does). The packaged app asks for the workspace folder on its first
+launch — *Open a folder* or *Make one* — and remembers it in the system's application-support
+folder, never in the workspace; `--choose` asks again. On every launch it compares the folder's
+copy of the tool with its own (`app.py` `tool_state`, sync.py's rules): a folder that differs
+gets a *Refresh the copy* button on the panel, a folder whose data is a newer shape than the
+app builds is shown and **not written to** until the app is updated. Inside the app there is no
+`python3`: the app's own binary runs the core's scripts when the core calls them. It picks a free port on `127.0.0.1`, prints an address with a
 fresh token in it, opens the panel in the system browser, and exits by itself five minutes after
 the last tab is closed. `--no-browser` prints the address only; `--port N` fixes the port.
 
@@ -44,3 +52,7 @@ panel says so and the amount is typed.
 - **It never edits the page.** The import rebuilds through `rebuild.py` as it always did; the
   browser reloads the static file.
 - Logs: the app.log file under .jade/log/ in the workspace, nothing in the repository (both are gitignored).
+- **The build carries no workspace.** `build/build.py` refuses a checkout whose `findata/` is
+  not the demo's, and bundles only what `tools/sync.py` copies plus the demo. Without `--sign`
+  it is ad-hoc signed (this Mac runs it; another asks for right-click → Open once); a public
+  download needs `--sign` with a Developer ID and `--notarize`.

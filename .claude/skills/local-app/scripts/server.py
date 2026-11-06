@@ -40,6 +40,9 @@ Routes (every API answer is {"ok": bool, "data" | "error": …, "took": seconds}
                                                         screenshot, ranked by the account's capture line —
                                                         candidates only; the image is kept under .jade/shots/
   POST /api/open-inbox     —                            opens the inbox folder in the file manager
+  GET  /api/tool           —                            how the folder's copy of the tool compares with the
+                                                        app's (app.py tool_state: same / differs / newer)
+  POST /api/sync           tools/sync.py                refreshes the folder's copy from the app's (a job)
   GET  /api/events         server-sent events of the running job: line / done
   GET  /api/job            the running or last job: its lines so far and, when done, its result
   GET  /api/ping           keeps the server alive
@@ -193,9 +196,13 @@ class Job:
 
 # ---------------------------------------------------------------- the app
 class App:
-    def __init__(self, root, token=None):
+    def __init__(self, root, token=None, tool=None, tool_hooks=None):
         self.root = os.path.abspath(root)
         self.token = token or secrets.token_urlsafe(18)
+        # how the folder's copy of the tool compares with the app's (app.py tool_state), and the
+        # two calls that re-read it and refresh it; None when started bare (server.py <ws>)
+        self.tool = tool
+        self.tool_hooks = tool_hooks or {}
         self.lock = Lock(self.root)
         self.job = None
         self.last_ping = time.monotonic()
@@ -225,9 +232,12 @@ class App:
 
     # -- verbs: each one call into the core ---------------------------------------------------
     def start_job(self, verb, write, fn):
-        """Run `fn(say)` under the lock in a thread. 409 (as a tuple) when something runs."""
+        """Run `fn(say)` under the lock in a thread. 409 (as a tuple) when something runs, or when
+        the folder's data is a newer shape than this app builds (then nothing may be written)."""
         if self.job is not None and not self.job.done.is_set():
             return None, self.job.verb
+        if write and verb != "sync" and self.tool and self.tool.get("state") == "newer":
+            return None, "nothing (this folder's data is newer than the app — update the app first)"
         held = self.lock.acquire(verb)
         if held:
             return None, held
@@ -329,6 +339,19 @@ class App:
         else:
             subprocess.Popen(["xdg-open", inbox])
         return {"inbox": inbox}
+
+    def do_sync(self):
+        """The folder's copy of the tool refreshed from the app's, then the state re-read."""
+        if "refresh" not in self.tool_hooks:
+            raise ValueError("this server was started without an app copy to refresh from")
+
+        def go(say):
+            rc, out = self.tool_hooks["refresh"]()
+            for l in out.splitlines():
+                say(l)
+            self.tool = self.tool_hooks["state"]()
+            return {"rc_sync": rc, "tool": self.tool}
+        return self.start_job("sync", True, go)
 
     def last_import(self):
         try:
@@ -455,7 +478,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if path == "/panel":
                 return self._send(200, panel.render(app.base, app.root, app.do_status(), app.do_questions(),
                                                     app.last_import(), app.job.public() if app.job else None,
-                                                    app.lock.holder()),
+                                                    app.lock.holder(), app.tool),
                                   extra=[("Content-Security-Policy",
                                           "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; "
                                           "connect-src 'self'; img-src data:; base-uri 'none'; form-action 'none'")])
@@ -467,6 +490,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self._json(200, True, app.do_questions(), t0)
             if path == "/api/job":
                 return self._json(200, True, app.job.public() if app.job else None, t0)
+            if path == "/api/tool":
+                return self._json(200, True, app.tool, t0)
             if path == "/api/events":
                 return self._events()
             return self._not_found()
@@ -527,6 +552,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self._json(200, True, app.do_ocr((body.get("fields") or {}).get("key"), files[0][0], files[0][1]), t0)
             elif path == "/api/open-inbox":
                 return self._json(200, True, app.open_inbox(), t0)
+            elif path == "/api/sync":
+                job, busy = app.do_sync()
             else:
                 return self._not_found()
             if busy:
@@ -539,10 +566,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return self._json(500, False, {"type": type(e).__name__, "text": str(e)}, t0)
 
 
-def serve(root, port=0, token=None, ready=None):
+def serve(root, port=0, token=None, ready=None, tool=None, tool_hooks=None):
     """Start the server on 127.0.0.1:<port> (0 = a free one) and block until it exits. `ready`,
-    when given, is called with (url, app) once the socket is bound — app.py opens the browser from it."""
-    app = App(root, token)
+    when given, is called with (url, app) once the socket is bound — app.py opens the browser from
+    it; `tool` and `tool_hooks` are app.py's view of the folder's tool copy (None when bare)."""
+    app = App(root, token, tool, tool_hooks)
     handler = type("Handler", (Handler,), {"app": app})
     httpd = http.server.ThreadingHTTPServer(("127.0.0.1", port), handler)
     httpd.daemon_threads = True

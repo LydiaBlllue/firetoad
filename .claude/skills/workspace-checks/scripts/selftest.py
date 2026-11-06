@@ -35,9 +35,12 @@ def stage(root, dst):
     # templates/ too: T1 rebuilds the pages from it and compares.
     # tools/ too: README hands the reader `tools/sync.py`, and S4 resolves every such path.
     # .private/ too, when it exists: an owner's README may name its deny list and S4 resolves it.
-    for d in ("findata", "dashboards", "docs", "templates", "tools", ".private"):
+    # build/ too (2026-11-06): the local-app skill hands the reader build/build.py, and S4 resolves it;
+    # its work/ and the dist/ beside it are not copied (they are not the tool).
+    for d in ("findata", "dashboards", "docs", "templates", "tools", ".private", "build"):
         if os.path.isdir(os.path.join(root, d)):
-            shutil.copytree(os.path.join(root, d), os.path.join(dst, d))
+            shutil.copytree(os.path.join(root, d), os.path.join(dst, d),
+                            ignore=shutil.ignore_patterns("work", "pyi", "__pycache__") if d == "build" else None)
     # .claude/ has to come too: S4 resolves the script paths README points at, and without it
     # every baseline run failed on paths that are perfectly fine in the real workspace.
     shutil.copytree(os.path.join(root, ".claude"), os.path.join(dst, ".claude"))

@@ -3,6 +3,7 @@
 
     python3 app.py                # this folder's workspace, a free port, the browser opened
     python3 app.py ~/JadeToad     # another workspace
+    python3 app.py --choose       # ask for the folder again (it is remembered between launches)
     python3 app.py --no-browser   # print the address instead of opening it
 
 It starts a small server on 127.0.0.1 that only this computer can reach, with a fresh address
@@ -10,36 +11,256 @@ each launch, opens the panel in your browser, and exits by itself five minutes a
 tab is closed. Everything it does — the import, the answers, the rebuild — is the same code the
 Claude Code skills run; this is only the second door to it (ROADMAP 2.0.0;
 .claude/skills/local-app/scripts/server.py has the routes).
+
+Packaged (build/build.py makes a double-clickable app with Python inside), the same file is the
+app's entry: the first launch asks where your Jade Toad folder is — or makes one — and remembers
+it in the system's application-support folder, never in the workspace. On every launch it
+compares the folder's copy of the tool with its own and offers to refresh the copy, so a folder
+used through both doors runs one version; a folder whose data is newer than the app is shown
+and not written to.
 """
 import argparse
+import json
 import os
+import re
+import runpy
+import shutil
+import subprocess
 import sys
 import webbrowser
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(HERE, ".claude", "skills", "local-app", "scripts"))
-sys.path.insert(0, os.path.join(HERE, ".claude", "skills", "fetch-statements", "scripts"))
+FROZEN = bool(getattr(sys, "frozen", False))
+# where the tool's own copy lives: beside this file, or inside the packaged app
+TOOL = getattr(sys, "_MEIPASS", HERE) if FROZEN else HERE
+APP_NAME = "Jade Toad"
 
 
+def _run_script_mode():
+    """Inside the packaged app there is no `python3`, and the core runs its own scripts as
+    `sys.executable <script.py> args` (rebuild after an import, the money checks, --reseed).
+    So the app's binary doubles as the interpreter: called with a .py file first, it runs that
+    file as __main__ with the rest of the arguments and exits with its code. Only a file that
+    exists is run, and only when the first argument ends in .py — nothing else is interpreted."""
+    script = sys.argv[1]
+    sys.argv = sys.argv[1:]
+    sys.path.insert(0, os.path.dirname(os.path.abspath(script)))
+    try:
+        runpy.run_path(script, run_name="__main__")
+    except SystemExit as e:
+        code = e.code
+        sys.exit(0 if code is None else (code if isinstance(code, int) else 1))
+    sys.exit(0)
+
+
+if FROZEN and len(sys.argv) > 1 and sys.argv[1].endswith(".py") and os.path.isfile(sys.argv[1]):
+    _run_script_mode()
+
+for d in ("local-app", "fetch-statements"):
+    sys.path.insert(0, os.path.join(TOOL, ".claude", "skills", d, "scripts"))
+sys.path.insert(0, os.path.join(TOOL, "tools"))
+
+
+# ---------------------------------------------------------------- remembered settings
+def support_dir():
+    """The system's application-support folder for this app — outside every workspace."""
+    if sys.platform == "darwin":
+        base = os.path.expanduser("~/Library/Application Support")
+    elif sys.platform.startswith("win"):
+        base = os.environ.get("APPDATA") or os.path.expanduser("~")
+    else:
+        base = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
+    return os.path.join(base, APP_NAME)
+
+
+def settings_path():
+    return os.path.join(support_dir(), "settings.json")
+
+
+def load_settings():
+    try:
+        return json.load(open(settings_path(), encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def save_settings(s):
+    os.makedirs(support_dir(), exist_ok=True)
+    tmp = settings_path() + ".tmp"
+    json.dump(s, open(tmp, "w", encoding="utf-8"), indent=2)
+    os.replace(tmp, settings_path())
+
+
+def remember(ws):
+    s = load_settings()
+    s["workspace"] = ws
+    recent = [ws] + [r for r in s.get("recent", []) if r != ws]
+    s["recent"] = recent[:5]
+    save_settings(s)
+
+
+# ---------------------------------------------------------------- the folder
+def is_workspace(p):
+    return bool(p) and os.path.isdir(os.path.join(p, "findata")) and os.path.isdir(os.path.join(p, "dashboards"))
+
+
+def ask_folder(prompt):
+    """A folder dialog with the system's own means: AppleScript on macOS, PowerShell on Windows,
+    a typed path elsewhere. Fixed scripts; the prompt is the only text and it is this file's."""
+    if sys.platform == "darwin":
+        r = subprocess.run(["osascript", "-e", f'POSIX path of (choose folder with prompt "{prompt}")'],
+                           capture_output=True, text=True)
+        return (r.stdout.strip().rstrip("/") or None) if r.returncode == 0 else None
+    if sys.platform.startswith("win"):
+        ps = ("Add-Type -AssemblyName System.Windows.Forms; $d = New-Object System.Windows.Forms.FolderBrowserDialog; "
+              f"$d.Description = '{prompt}'; if ($d.ShowDialog() -eq 'OK') {{ $d.SelectedPath }}")
+        r = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True)
+        return (r.stdout.strip() or None) if r.returncode == 0 else None
+    try:
+        return input(prompt + " ").strip() or None
+    except EOFError:
+        return None
+
+
+def ask_choice(text, buttons):
+    """One question with two or three buttons; the button's text comes back. macOS has a dialog;
+    elsewhere the first button is taken, which is always the safe one."""
+    if sys.platform == "darwin":
+        bl = ", ".join(f'"{b}"' for b in buttons)
+        r = subprocess.run(["osascript", "-e", f'button returned of (display dialog "{text}" buttons {{{bl}}} '
+                                               f'default button "{buttons[0]}" with title "{APP_NAME}")'],
+                           capture_output=True, text=True)
+        return r.stdout.strip() if r.returncode == 0 else None
+    return buttons[0]
+
+
+def make_workspace(dest):
+    """A new workspace in an empty (or new) folder: the tool's copy and the demo's data, the way a
+    fresh clone has them — the setup replaces the demo with the owner's own. sync.py does the
+    copying; it never touches a folder that already has findata/."""
+    import sync
+    os.makedirs(dest, exist_ok=True)
+    if os.listdir(dest) and not is_workspace(dest):
+        raise SystemExit(f"✗ {dest} is not empty and not a Jade Toad folder; choose an empty one")
+    if not os.path.isdir(os.path.join(dest, "findata")):
+        shutil.copytree(os.path.join(TOOL, "findata"), os.path.join(dest, "findata"))
+    sync.main(["sync.py", dest])
+    return dest
+
+
+def find_root(p):
+    import fetch
+    return fetch.find_root(p)
+
+
+def choose_workspace(args):
+    """The folder to serve, in order: the argument, the remembered one, the folder this file is
+    in (when not packaged), then a dialog — open one, or make one."""
+    if args.root:
+        ws = find_root(args.root)
+        if ws:
+            return ws
+        if args.make:
+            return make_workspace(os.path.abspath(args.root))
+        raise SystemExit(f"✗ {args.root} is not a Jade Toad workspace (no findata/ and dashboards/ in it or above it)")
+    s = load_settings()
+    if not args.choose:
+        if is_workspace(s.get("workspace")):
+            return s["workspace"]
+        if not FROZEN:
+            ws = find_root(HERE)
+            if ws:
+                return ws
+    while True:
+        pick = ask_choice("Where is your Jade Toad folder?", ["Open a folder", "Make one", "Quit"])
+        if pick in (None, "Quit"):
+            return None
+        d = ask_folder("Choose your Jade Toad folder" if pick == "Open a folder" else "Choose an empty folder for Jade Toad")
+        if not d:
+            return None
+        if pick == "Make one":
+            return make_workspace(d)
+        ws = find_root(d)
+        if ws:
+            return ws
+        again = ask_choice(f"{d} has no findata/ and dashboards/. It is not a Jade Toad folder yet.",
+                           ["Choose again", "Make one here", "Quit"])
+        if again == "Make one here":
+            return make_workspace(d)
+        if again != "Choose again":
+            return None
+
+
+# ---------------------------------------------------------------- the tool's copy
+def tool_version():
+    """The version the page prints (templates/dashboards/*.html `const VERSION`)."""
+    try:
+        t = open(os.path.join(TOOL, "templates", "dashboards", "finance_dashboard.html"), encoding="utf-8").read()
+        m = re.search(r'const VERSION = "([^"]+)"', t)
+        return m.group(1) if m else None
+    except OSError:
+        return None
+
+
+def tool_state(ws):
+    """How the workspace's copy of the tool compares with this app's: `same`, `differs` (this
+    app can refresh it), `migrate` (the folder's data is an older shape; tools/migrate.py first)
+    or `newer` (a newer shape than this app builds — the app will not write). sync.py's own
+    rules, read without copying anything."""
+    import sync
+    have, want = sync.workspace_schema(ws), sync.tool_schema()
+    changed = []
+    for rel in sync.SYNCED:
+        if rel == "FINANCE.md":
+            continue   # the seam: its figures table is the workspace's own and always differs
+        src, dst = os.path.join(TOOL, rel), os.path.join(ws, rel)
+        if os.path.exists(src) and sync.differs(src, dst):
+            changed.append(rel)
+    if have is not None and want is not None and have > want:
+        state = "newer"
+    elif have is not None and want is not None and have < want:
+        state = "migrate"
+    else:
+        state = "differs" if changed else "same"
+    return {"state": state, "changed": changed, "schema": {"workspace": have, "app": want},
+            "version": tool_version(), "tool": TOOL, "frozen": FROZEN}
+
+
+def refresh_tool(ws):
+    """sync.py from this app's copy into the workspace, as a subprocess so its prints are its own
+    (inside the packaged app sys.executable is this binary, which runs .py files — see above)."""
+    r = subprocess.run([sys.executable, os.path.join(TOOL, "tools", "sync.py"), ws], capture_output=True, text=True)
+    return r.returncode, r.stdout + r.stderr
+
+
+# ---------------------------------------------------------------- main
 def main(argv):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("root", nargs="?", default=HERE, help="the workspace folder (default: this one)")
+    ap.add_argument("root", nargs="?", help="the workspace folder (default: the remembered one, or this one)")
     ap.add_argument("--port", type=int, default=0, help="0 picks a free port")
     ap.add_argument("--no-browser", action="store_true")
+    ap.add_argument("--choose", action="store_true", help="ask for the folder even when one is remembered")
+    ap.add_argument("--make", action="store_true", help="with a folder: make a new workspace there")
+    ap.add_argument("--forget", action="store_true", help="do not remember this folder for next time")
     a = ap.parse_args(argv)
-    import fetch
-    root = fetch.find_root(a.root)
+    root = choose_workspace(a)
     if not root:
-        print(f"✗ {a.root} is not a Jade Toad workspace (no findata/ and dashboards/ in it or above it)")
         return 2
+    root = os.path.abspath(root)
+    if not a.forget:
+        remember(root)
     import server
+    tool = tool_state(root)
 
     def ready(url, app):
-        print(f"  Jade Toad · {root}\n  {url}\n  (closes by itself five minutes after the last tab is closed; Ctrl-C stops it now)", flush=True)
+        print(f"  {APP_NAME} · {root}\n  {url}\n  (closes by itself five minutes after the last tab is closed; Ctrl-C stops it now)", flush=True)
+        if tool["state"] != "same":
+            print(f"  the folder's copy of the tool: {tool['state']}" + (f" ({len(tool['changed'])} files)" if tool["changed"] else ""), flush=True)
         if not a.no_browser:
             webbrowser.open(url)
     try:
-        return server.serve(root, a.port, ready=ready)
+        return server.serve(root, a.port, ready=ready, tool=tool,
+                            tool_hooks={"state": lambda: tool_state(root), "refresh": lambda: refresh_tool(root)})
     except KeyboardInterrupt:
         return 0
 

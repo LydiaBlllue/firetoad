@@ -15,8 +15,14 @@
   into the row that asks for it, or read off a phone screenshot — Apple Vision on this computer,
   the amounts on the image offered as pills, the likeliest first, nothing written until one is
   tapped — and written by a new verb, `balance.py`, which this chat uses too: by register key,
-  the register's copy following, refused where a ledger or a loan already says the figure. The
-  setup wizard and the packaged app follow.
+  the register's copy following, refused where a ledger or a loan already says the figure.
+- **A double-clickable app** (2026-11-06, step 1d): `python3 build/build.py` packages the tool,
+  its Python and the demo into `dist/Jade Toad.app` (a `.dmg` beside it; a zip on Windows and
+  Linux). The first launch asks where your folder is, or makes one, and remembers it outside the
+  workspace; every launch compares the folder's copy of the tool with the app's and offers to
+  refresh it, and refuses to write when the folder's data is a newer shape than the app builds.
+  The build never carries a workspace. Ad-hoc signed until a Developer ID is given; the setup
+  wizard follows.
 - `tools/sync.py` now carries `tools/` into a workspace (2026-11-06): the migration tests import
   `tools/migrate.py`, and without it the release-level checks failed in every workspace.
 

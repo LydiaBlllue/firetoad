@@ -206,8 +206,14 @@ script, and the panel follows. Two verbs came with the panel and serve this chat
 ledger, by register key, the register's copy following (D14, D20), refused for an account with
 a ledger (D7) or a loan (D23) — and **`ocr.py`** reads a phone screenshot with Apple Vision on
 this computer and ranks its amounts by the account's `capture` line; it offers, never writes.
-What the app cannot do yet — set up a workspace, use a model — is the rest of the roadmap entry,
-in order.
+**Packaged** (1d, `build/build.py` → `dist/Jade Toad.app`, PyInstaller, one folder, the demo
+inside and never a workspace), the same `app.py` is the entry: the first launch asks for the
+folder or makes one (remembered in the system's application-support folder, outside the
+workspace), and every launch compares the folder's tool copy with the app's — *Refresh the
+copy* on the panel when they differ, no writes when the folder's data is a newer shape. Inside
+the app the binary doubles as the interpreter for the core's own subprocess calls. Unsigned
+until an Apple Developer identity is passed to the build. What the app cannot do yet — set up a
+workspace, use a model — is the rest of the roadmap entry, in order.
 
 ## Nothing in a dashboard is typed by hand
 
