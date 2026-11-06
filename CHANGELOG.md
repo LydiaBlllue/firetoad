@@ -9,8 +9,14 @@
   open questions as pills saved at once. The server is the standard library, loopback only, a
   token in the path, one writer at a time (`.jade.lock`), and no financial logic of its own; the
   selftest's *local app* check imports one month through both doors and expects identical
-  `findata/`. Files still go into `inbox/` by hand; the drop zone, screenshots and the setup
-  wizard follow.
+  `findata/`.
+- **The month closes in the panel** (2026-11-06, step 1c): files dropped on the panel land in
+  `inbox/` under their own names and are named at once; a balance no file carries is typed
+  into the row that asks for it, or read off a phone screenshot — Apple Vision on this computer,
+  the amounts on the image offered as pills, the likeliest first, nothing written until one is
+  tapped — and written by a new verb, `balance.py`, which this chat uses too: by register key,
+  the register's copy following, refused where a ledger or a loan already says the figure. The
+  setup wizard and the packaged app follow.
 
 ## 1.0.1 — 2026-11-06
 

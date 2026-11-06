@@ -57,7 +57,10 @@ rows. **Read the summary, not the statements.** What it hands back is the whole 
   transcription to the same reconciliation as a parser: the chain from opening to closing, the
   debits and credits against the printed totals; what does not add up is refused and named,
   and nothing is written. Then it files the rows the way it files everything else. A
-  screenshot has no rows: read the balances into `foreign.json` yourself, as before.
+  screenshot has no rows: read the balance off it — `scripts/ocr.py <image> --capture "<the
+  register's capture line>"` ranks the amounts it sees, or your own eyes — and write it with
+  `scripts/balance.py . <account key> <amount> --asof <date> --write`, never by editing
+  `foreign.json` or `banks.json` by hand (2026-11-06; the local app's panel does the same).
 - **A row it could not type** (`untyped:` lines): fill the ledger's `type` and `label` for that
   row; D22 points at it until you do.
 - **A card credit it could not place** (`credit not filed:` lines). A refund that gives back an

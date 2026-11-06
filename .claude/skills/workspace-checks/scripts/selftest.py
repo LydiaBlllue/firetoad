@@ -2306,8 +2306,11 @@ def local_app_check(root, base):
     POST /api/import on one staged copy and through update.py --write on another has to leave
     the same findata/ and the same archive — the proof that the app contains no financial logic
     of its own. Also: a request without the token is 404, not 401; an import started while the
-    lock is held by a live process is 409."""
-    import urllib.request, urllib.error
+    lock is held by a live process is 409. Since 1c (2026-11-06): one statement reaches the app
+    copy as an upload (POST /api/inbox) instead of a copy into inbox/, a typed balance goes through
+    POST /api/balance on one copy and balance.py on the other, and a screenshot that is not an
+    image is answered with a reason, not a crash."""
+    import io, uuid, urllib.request, urllib.error
     srv = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "local-app", "scripts", "server.py"))
     upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
     if not (os.path.exists(srv) and os.path.exists(upd)):
@@ -2326,10 +2329,37 @@ def local_app_check(root, base):
         subprocess.run([sys.executable, os.path.join(os.path.dirname(upd), "rebuild.py"), ".", "--write"], cwd=ws, capture_output=True)
         copies[door] = ws
     bad = []
+    # a balance no file carries: an account with no ledger (a card in the demo), typed the same on both sides
+    reg = json.load(open(layout.path(copies["cli"], "accounts.json"), encoding="utf-8"))
+    typed = next((a["key"] for a in reg["accounts"] if a.get("src") == "banks.json" and not a.get("ledger")), None)
+    bal = os.path.join(os.path.dirname(upd), "balance.py")
+    if typed and os.path.exists(bal):
+        r = subprocess.run([sys.executable, bal, ".", typed, "1234.56", "--asof", "2026-01-15", "--write"], cwd=copies["cli"],
+                           capture_output=True, text=True, timeout=120)
+        if r.returncode not in (0, 2):
+            bad.append(f"balance.py exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:]))
     # the first door
     r = subprocess.run([sys.executable, upd, ".", "--write"], cwd=copies["cli"], capture_output=True, text=True, timeout=300)
     if r.returncode != 0:
         bad.append(f"update.py --write exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:]))
+    # one statement leaves the app copy's inbox, to come back as an upload
+    held = sorted(os.listdir(os.path.join(copies["api"], "inbox")))
+    up_name = held[0] if held else None
+    up_data = open(os.path.join(copies["api"], "inbox", up_name), "rb").read() if up_name else b""
+    if up_name:
+        os.remove(os.path.join(copies["api"], "inbox", up_name))
+
+    def form(fields, files):
+        b = uuid.uuid4().hex
+        out = io.BytesIO()
+        for k, v in fields.items():
+            out.write(f"--{b}\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n".encode())
+        for k, (name, data) in files.items():
+            out.write(f"--{b}\r\nContent-Disposition: form-data; name=\"{k}\"; filename=\"{name}\"\r\n"
+                      f"Content-Type: application/octet-stream\r\n\r\n".encode())
+            out.write(data); out.write(b"\r\n")
+        out.write(f"--{b}--\r\n".encode())
+        return out.getvalue(), {"Content-Type": f"multipart/form-data; boundary={b}"}
     # the second door: the server as its own process, the way app.py starts it
     ws = copies["api"]
     proc = subprocess.Popen([sys.executable, srv, ".", "--port", "0"], cwd=ws, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
@@ -2345,7 +2375,7 @@ def local_app_check(root, base):
         origin, tok = m.group(1), m.group(2)
 
         def req(method, path, body=None, headers=None):
-            data = json.dumps(body).encode() if body is not None else None
+            data = body if isinstance(body, (bytes, bytearray)) else (json.dumps(body).encode() if body is not None else None)
             rq = urllib.request.Request(origin + path, data=data, method=method,
                                         headers=headers or {"Content-Type": "application/json"})
             try:
@@ -2366,16 +2396,40 @@ def local_app_check(root, base):
         if st != 409:
             bad.append(f"an import while the lock is held got {st}, not 409")
         os.remove(lock)
-        st, body = req("POST", tok + "/api/import", {"write": True})
-        if st != 202:
-            bad.append(f"POST /api/import answered {st}: {str(body)[:120]}")
-        else:
+
+        def wait_job():
+            job = {}
             for _ in range(600):
                 st, job = req("GET", tok + "/api/job")
                 if job.get("data", {}).get("done"):
                     break
                 time.sleep(0.5)
-            job = job.get("data") or {}
+            return job.get("data") or {}
+        if up_name:
+            data, hdr = form({}, {"file": (up_name, up_data)})
+            st, body = req("POST", tok + "/api/inbox", data, hdr)
+            states = [x.get("state") for x in (body.get("data") or [])] if st == 200 else []
+            if states != ["saved"] or not os.path.exists(os.path.join(ws, "inbox", up_name)):
+                bad.append(f"the upload of {up_name} answered {st} {states}")
+            data, hdr = form({}, {"file": ("../" + up_name, up_data)})
+            st, body = req("POST", tok + "/api/inbox", data, hdr)
+            if st != 200 or [x.get("state") for x in body.get("data") or []] != ["already there"] \
+                    or os.path.exists(os.path.join(os.path.dirname(ws), up_name)):
+                bad.append("an upload named with a path was not reduced to its basename")
+        if typed and os.path.exists(bal):
+            st, body = req("POST", tok + "/api/balance", {"key": typed, "amount": "1,234.56", "asof": "2026-01-15"})
+            job = wait_job() if st == 202 else {}
+            if st != 202 or not (job.get("result") or {}).get("written"):
+                bad.append(f"POST /api/balance answered {st}: " + " | ".join(job.get("lines", [])[-2:])[:160])
+            data, hdr = form({"key": typed}, {"image": ("shot.png", b"not an image")})
+            st, body = req("POST", tok + "/api/ocr", data, hdr)
+            if st != 200 or not (body.get("data") or {}).get("error"):
+                bad.append(f"POST /api/ocr with junk answered {st} without a reason")
+        st, body = req("POST", tok + "/api/import", {"write": True})
+        if st != 202:
+            bad.append(f"POST /api/import answered {st}: {str(body)[:120]}")
+        else:
+            job = wait_job()
             if not job.get("done") or job.get("error") or (job.get("result") or {}).get("rc") not in (None, 0) \
                     or not (job.get("result") or {}).get("written"):
                 bad.append("the import through the app did not finish clean: " + " | ".join(job.get("lines", [])[-2:])[:200])
@@ -2411,7 +2465,8 @@ def local_app_check(root, base):
     if bad:
         return ["  ✗ local app: " + x for x in bad[:6]]
     return [f"  ✓ local app: the same month through update.py and through POST /api/import left identical findata/ and archive/ "
-            f"({len(a)} files); no token → 404, another origin → 403, the lock held → 409"]
+            f"({len(a)} files), with one statement uploaded and one balance typed through the app; no token → 404, "
+            f"another origin → 403, the lock held → 409, a screenshot that is no image answered with a reason"]
 
 
 def csv_rows_of(p):

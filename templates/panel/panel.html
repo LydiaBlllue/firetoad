@@ -58,6 +58,27 @@ pre.log.on{display:block}
 .nt.warn .ic,.nt.bad .ic{color:var(--warn)}
 .nt.bad .ic{color:var(--bad)}
 .err{color:var(--bad);font-size:12.5px;margin-top:8px}
+.btn.sm{padding:4px 10px;font-size:12px;border-radius:7px}
+.bf{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:7px}
+.bf input{font:inherit;font-size:12.5px;padding:4px 8px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--ink)}
+.bf .amt{width:150px;font-variant-numeric:tabular-nums}
+.bf .asof{width:136px}
+.cands{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.cands .pl b{font-weight:700;font-variant-numeric:tabular-nums}
+.cands .pl small{color:var(--muted);margin-left:5px}
+.cands .note{font-size:11.5px;color:var(--muted);width:100%}
+details.more{border-top:1px solid var(--border);padding-top:7px;margin-top:4px}
+details.more summary{font-size:12px;color:var(--muted);cursor:pointer;list-style:none}
+details.more summary::before{content:"+ "}
+details.more[open] summary::before{content:"\2212 "}
+.drop{margin-top:12px;border:1.5px dashed var(--grid);border-radius:10px;padding:14px;text-align:center;font-size:12.5px;color:var(--ink-2);display:flex;flex-direction:column;gap:3px;align-items:center}
+.drop.over{border-color:var(--ink);background:var(--pill)}
+.drop b{font-size:13px;color:var(--ink)}
+.drop small{font-size:11px;color:var(--muted);word-break:break-all}
+.lnk{background:none;border:none;padding:0;font:inherit;color:var(--ink);text-decoration:underline;cursor:pointer}
+.dropped{width:100%;text-align:left;font-size:12px;margin-top:4px}
+.dropped div{padding:2px 0}
+.dropped .no{color:var(--bad)}
 </style>
 </head>
 <body data-base="{{BASE}}">
@@ -158,6 +179,74 @@ pre.log.on{display:block}
       setTimeout(function(){ location.reload(); }, 1200);
     });
   };
+  // files dropped on the panel go to inbox/ under their own names; nothing is parsed until Import
+  var drop = $('drop'), dropped = $('dropped'), pick = $('pick');
+  function upload(files){
+    if (!files || !files.length) return;
+    var fd = new FormData();
+    for (var i = 0; i < files.length; i++) fd.append('file', files[i], files[i].name);
+    dropped.textContent = 'saving …';
+    fetch(base + '/api/inbox', {method: 'POST', body: fd}).then(function(r){ return r.json(); }).then(function(r){
+      dropped.textContent = '';
+      if (!r.ok) { dropped.innerHTML = '<div class="no">' + (r.error && r.error.text || 'failed') + '</div>'; return; }
+      r.data.forEach(function(f){
+        var d = document.createElement('div');
+        d.className = f.state === 'refused' ? 'no' : '';
+        d.textContent = f.name + ' — ' + f.state + (f.label ? ' · ' + f.label : (f.why || f.note ? ' · ' + (f.why || f.note) : ''));
+        dropped.appendChild(d);
+      });
+      if (r.data.some(function(f){ return f.state === 'saved'; })) setTimeout(function(){ location.reload(); }, 1600);
+    }).catch(function(e){ dropped.innerHTML = '<div class="no">' + e + '</div>'; });
+  }
+  if (drop) {
+    ['dragenter', 'dragover'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add('over'); }); });
+    ['dragleave', 'drop'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove('over'); }); });
+    drop.addEventListener('drop', function(e){ upload(e.dataTransfer.files); });
+    document.addEventListener('dragover', function(e){ e.preventDefault(); });
+    document.addEventListener('drop', function(e){ e.preventDefault(); });
+  }
+  if (pick) pick.onchange = function(){ upload(pick.files); pick.value = ''; };
+  var oi = $('openinbox');
+  if (oi) oi.onclick = function(){ api('POST', '/api/open-inbox', {}).catch(function(){}); };
+  // a balance no file carries: typed, or read off a screenshot and tapped
+  document.querySelectorAll('.bf').forEach(function(f){
+    var key = f.getAttribute('data-key'), amt = f.querySelector('.amt'), asof = f.querySelector('.asof');
+    var cands = f.nextElementSibling;
+    f.querySelector('.sv').onclick = function(){
+      if (!amt.value.trim()) { amt.focus(); return; }
+      start('/api/balance', {key: key, amount: amt.value, asof: asof.value}, 'writing the balance …', function(job){
+        var r = job.result || {};
+        if (job.error || !r.written) { ihint.textContent = 'not written; the lines say why'; return; }
+        ihint.textContent = 'written — the page is rebuilt';
+        setTimeout(function(){ location.reload(); }, 1200);
+      });
+    };
+    var inp = f.querySelector('.shot input');
+    if (inp) inp.onchange = function(){
+      if (!inp.files.length) return;
+      var fd = new FormData(); fd.append('key', key); fd.append('image', inp.files[0], inp.files[0].name);
+      cands.innerHTML = '<span class="note">reading …</span>';
+      fetch(base + '/api/ocr', {method: 'POST', body: fd}).then(function(r){ return r.json(); }).then(function(r){
+        cands.innerHTML = '';
+        if (!r.ok) { cands.innerHTML = '<span class="note">' + (r.error && r.error.text || 'failed') + '</span>'; return; }
+        var d = r.data;
+        if (d.error) { cands.innerHTML = '<span class="note">' + d.error + '</span>'; return; }
+        if (!d.candidates.length) { cands.innerHTML = '<span class="note">no amount found on the image; type it</span>'; return; }
+        d.candidates.forEach(function(c, i){
+          var b = document.createElement('button'); b.type = 'button'; b.className = 'pl' + (i === 0 ? ' sel' : '');
+          b.innerHTML = '<b>' + c.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</b>' + (c.near ? '<small>near ' + c.near + '</small>' : '');
+          b.onclick = function(){ cands.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); b.classList.add('sel'); amt.value = c.amount.toFixed(2); };
+          cands.appendChild(b);
+        });
+        amt.value = d.candidates[0].amount.toFixed(2);
+        if (d.dates && d.dates.length) asof.value = d.dates[0];
+        var n = document.createElement('span'); n.className = 'note';
+        n.textContent = 'the amounts on the image, likeliest first' + (d.dates && d.dates.length ? ' · date read: ' + d.dates[0] : '') + ' — check, then Save';
+        cands.appendChild(n);
+      }).catch(function(e){ cands.innerHTML = '<span class="note">' + e + '</span>'; });
+      inp.value = '';
+    };
+  });
   setInterval(function(){ api('GET', '/api/ping').catch(function(){}); }, 30000);
 })();
 </script>

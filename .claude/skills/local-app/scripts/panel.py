@@ -63,14 +63,30 @@ def pill(state):
     return f'<span class="st {e(state)}">{e(STATE_WORD.get(state, state))}</span>'
 
 
-def row(icon, who, what, state):
+def row(icon, who, what, state, extra=""):
     return (f'<div class="row"><span class="ic">{icon}</span><div class="rw"><b>{e(who)}</b>'
-            f'<span class="wh">{e(what)}</span></div>{pill(state)}</div>')
+            f'<span class="wh">{e(what)}</span>{extra}</div>{pill(state)}</div>')
+
+
+def balance_form(key, capture, today, with_shot):
+    """The typed-balance form (balance.py behind it) and, for an account read off a screenshot,
+    the button that reads one (ocr.py behind it): candidates come back as pills, a tap fills the
+    amount, Save writes. The form invents nothing: the key is the register's, the capture line
+    is the register's, the amounts are the image's."""
+    shot = ('<label class="btn sm shot">Read a screenshot<input type="file" accept="image/*" hidden></label>'
+            if with_shot else "")
+    return (f'<form class="bf" data-key="{e(key)}" data-capture="{e(capture or "")}">'
+            f'<input class="amt" inputmode="decimal" placeholder="the amount the app shows" aria-label="amount">'
+            f'<input class="asof" type="date" value="{e(today)}" aria-label="as of">'
+            f'<button type="button" class="btn sm primary sv">Save</button>{shot}</form><div class="cands"></div>')
 
 
 # ---------------------------------------------------------------- Bring
 def bring(st, root):
     rows, done = [], []
+    today = st.get("today") or ""
+    stated = {x["account"]: x for x in st.get("stated") or []}
+    shown = set()
     for n in st.get("unnamed") or []:
         rows.append(f'<div class="row bad"><span class="ic">✗</span><div class="rw"><b>{e(n)}</b>'
                     f'<span class="wh">nobody can name this file — the import stops until it is named</span></div></div>')
@@ -89,11 +105,15 @@ def bring(st, root):
     for s in st.get("screenshots") or []:
         if s["state"] == "ok":
             done.append(s.get("inst") or s.get("name")); continue
-        rows.append(row("▣", s.get("inst") or s.get("name"), s.get("capture") or "the page with the balance", s["state"]))
+        shown.add(s.get("account"))
+        rows.append(row("▣", s.get("inst") or s.get("name"), s.get("capture") or "the page with the balance", s["state"],
+                        balance_form(s.get("account"), s.get("capture"), today, True) if s.get("account") in stated else ""))
     for b in st.get("balances") or []:
         if b["state"] == "ok":
             done.append(b.get("inst") or b.get("name")); continue
-        rows.append(row("#", b.get("inst") or "", f"{b.get('name')} — the balance, read off the app (as of {b.get('asof') or 'never'})", b["state"]))
+        shown.add(b.get("account"))
+        rows.append(row("#", b.get("inst") or "", f"{b.get('name')} — the balance, read off the app (as of {b.get('asof') or 'never'})", b["state"],
+                        balance_form(b.get("account"), b.get("capture"), today, bool(b.get("capture"))) if b.get("account") in stated else ""))
     for p in st.get("people") or []:
         rows.append(row("☺", p.get("who"), f"only if something changed (last {p.get('last') or 'never'})", "optional"))
     seen, uniq = set(), []
@@ -103,10 +123,21 @@ def bring(st, root):
     if uniq:
         rows.append(f'<div class="row ok-line"><span class="ic">✓</span><div class="rw"><span class="wh">'
                     f'{e(", ".join(uniq))} up to date</span></div></div>')
+    # every other balance that is typed, not read from a file, folded away: it is there for the
+    # month something changes, not every month
+    rest = [x for k, x in stated.items() if k not in shown]
+    if rest:
+        inner = "".join(row("#", x.get("inst") or "", f"{x.get('name')} (as of {x.get('asof') or 'never'})",
+                            "ok" if x.get("age") is not None and x["age"] < 25 else "optional",
+                            balance_form(x["account"], x.get("capture"), today, bool(x.get("capture")))) for x in rest)
+        rows.append(f'<details class="more"><summary>Other balances you type ({len(rest)})</summary>{inner}</details>')
     inbox = os.path.join(root, "inbox")
     n = st.get("inbox") or 0
-    foot = (f'<p class="foot">Put files here: <code>{e(inbox)}</code> — {n} file{"s" if n != 1 else ""} waiting.</p>')
-    return "".join(rows) + foot
+    drop = ('<div class="drop" id="drop"><b>Drop statements and exports here</b>'
+            '<span>or <label class="lnk">choose files<input type="file" multiple hidden id="pick"></label> · '
+            '<button type="button" class="lnk" id="openinbox">open the inbox folder</button></span>'
+            f'<small>{e(inbox)} — {n} file{"s" if n != 1 else ""} waiting</small><div class="dropped" id="dropped"></div></div>')
+    return "".join(rows) + drop
 
 
 # ---------------------------------------------------------------- Questions

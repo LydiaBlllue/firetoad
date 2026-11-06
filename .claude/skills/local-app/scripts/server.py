@@ -33,6 +33,13 @@ Routes (every API answer is {"ok": bool, "data" | "error": …, "took": seconds}
   POST /api/import         update.run(write=…)          starts the import as a job; lines on /api/events
   POST /api/answers        confirm.run(write, ok, sets) {"set": {"<n>": "<answer>"}}; rebuilds
   POST /api/undo           update.undo()                the last write back
+  POST /api/inbox          (multipart)                  files dropped on the panel, saved to inbox/ under
+                                                        their own names and named by preflight; nothing parsed
+  POST /api/balance        balance.run(key, amount, asof, write) a balance no file carries; rebuilds
+  POST /api/ocr            ocr.read(image, capture)     (multipart: key + image) the amounts Vision sees on a
+                                                        screenshot, ranked by the account's capture line —
+                                                        candidates only; the image is kept under .jade/shots/
+  POST /api/open-inbox     —                            opens the inbox folder in the file manager
   GET  /api/events         server-sent events of the running job: line / done
   GET  /api/job            the running or last job: its lines so far and, when done, its result
   GET  /api/ping           keeps the server alive
@@ -42,13 +49,17 @@ Errors from the core are returned whole (the exception's name and text) and logg
 """
 import argparse
 import datetime as dt
+import email.parser
+import email.policy
 import html
 import http.server
 import json
 import logging
 import os
 import queue
+import re
 import secrets
+import subprocess
 import sys
 import threading
 import time
@@ -58,9 +69,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SKILLS = os.path.dirname(os.path.dirname(HERE))
 for d in ("update-dashboard", "monthly-import", "fetch-statements", "local-app"):
     sys.path.insert(0, os.path.join(SKILLS, d, "scripts"))
+import balance  # noqa: E402
 import confirm  # noqa: E402
 import fetch  # noqa: E402  find_root
+import ocr  # noqa: E402
 import panel  # noqa: E402
+import preflight  # noqa: E402  names a dropped file
 import rebuild  # noqa: E402  MAIN_NAMES
 import status  # noqa: E402
 import update  # noqa: E402
@@ -68,7 +82,9 @@ import verbs  # noqa: E402
 
 PING_EVERY = 30          # seconds between the page's pings
 IDLE_EXIT = 300          # seconds without a ping before the server exits
-MAX_BODY = 1 << 20       # a request body larger than this is refused
+MAX_BODY = 1 << 20       # a JSON body larger than this is refused
+MAX_UPLOAD = 64 << 20    # and a multipart one larger than this (a month of statements is a few MB)
+IMAGES = (".png", ".jpg", ".jpeg", ".heic", ".webp")
 LOCK_NAME = ".jade.lock"
 
 log = logging.getLogger("jade.app")
@@ -251,6 +267,69 @@ class App:
         return self.start_job("answers", True,
                               lambda say: verbs.public(confirm.run(self.root, write=True, ok=True, sets=args, say=say)))
 
+    def do_balance(self, key, amount, asof):
+        if not key or amount in (None, ""):
+            raise ValueError("key and amount are needed")
+        return self.start_job("balance", True,
+                              lambda say: verbs.public(balance.run(self.root, str(key), amount, asof=asof or None, write=True, say=say)))
+
+    def save_inbox(self, parts):
+        """Files dropped on the panel: into inbox/ under their own (base)names, then named the way
+        preflight names them. A file already there, byte for byte, is said so and not written
+        twice; a different file under the same name is refused rather than overwritten."""
+        inbox = os.path.join(self.root, "inbox")
+        os.makedirs(inbox, exist_ok=True)
+        preflight.ROOT = self.root
+        preflight.DOCS = preflight.load_docs(self.root)
+        out = []
+        for name, data in parts:
+            name = safe_name(name)
+            if not name:
+                out.append({"name": name, "state": "refused", "why": "no usable filename"}); continue
+            dest = os.path.join(inbox, name)
+            if os.path.exists(dest):
+                if open(dest, "rb").read() == data:
+                    out.append({"name": name, "state": "already there", "label": preflight.classify(name)[0]}); continue
+                out.append({"name": name, "state": "refused", "why": "a different file of that name is already in inbox"}); continue
+            with open(dest, "wb") as fh:
+                fh.write(data)
+            label, _a, _into, note = preflight.classify(name)
+            out.append({"name": name, "state": "saved", "label": label, "note": None if label else note})
+        log.info("inbox: %s", [(o["name"], o["state"]) for o in out])
+        return out
+
+    def do_ocr(self, key, name, data):
+        """A screenshot for one account: kept under .jade/shots/, read, the candidates returned.
+        Writes nothing to findata/; the owner picks, and /api/balance writes."""
+        reg = json.load(open(os.path.join(self.root, "findata", "register", "accounts.json"), encoding="utf-8")) \
+            if os.path.exists(os.path.join(self.root, "findata", "register", "accounts.json")) else {}
+        acc = next((a for a in reg.get("accounts", []) if a.get("key") == key), None)
+        if acc is None:
+            raise ValueError(f"no account with key {key!r}")
+        ext = os.path.splitext(safe_name(name) or "")[1].lower() or ".png"
+        if ext not in IMAGES:
+            raise ValueError("not an image")
+        shots = os.path.join(self.root, ".jade", "shots")
+        os.makedirs(shots, exist_ok=True)
+        path = os.path.join(shots, f"{re.sub(r'[^A-Za-z0-9_-]', '_', key)}-{dt.datetime.now().strftime('%Y%m%d-%H%M%S')}{ext}")
+        with open(path, "wb") as fh:
+            fh.write(data)
+        r = ocr.read(path, acc.get("capture"))
+        r.update(key=key, capture=acc.get("capture"), shot=os.path.relpath(path, self.root))
+        return r
+
+    def open_inbox(self):
+        """The inbox folder in the file manager: a fixed command with one fixed argument, no shell."""
+        inbox = os.path.join(self.root, "inbox")
+        os.makedirs(inbox, exist_ok=True)
+        if sys.platform == "darwin":
+            subprocess.Popen(["open", inbox])
+        elif sys.platform.startswith("win"):
+            os.startfile(inbox)  # noqa: S606  (Windows only)
+        else:
+            subprocess.Popen(["xdg-open", inbox])
+        return {"inbox": inbox}
+
     def last_import(self):
         try:
             recs = json.load(open(os.path.join(self.root, "findata", "history", "imports.json"), encoding="utf-8"))
@@ -267,6 +346,32 @@ class App:
                 log.info("no ping for %ss; exiting", IDLE_EXIT)
                 threading.Thread(target=self.httpd.shutdown, daemon=True).start()
                 return
+
+
+def safe_name(name):
+    """A dropped file's name as a bare basename: no path, no leading dot, no control characters."""
+    n = os.path.basename((name or "").replace("\\", "/")).strip()
+    n = re.sub(r"[\x00-\x1f\x7f]", "", n)
+    if not n or n.startswith(".") or n in ("README.txt",):
+        return ""
+    return n[:180]
+
+
+def multipart(ctype, body):
+    """[(filename, bytes)] for the file parts and {field: text} for the rest of a form."""
+    msg = email.parser.BytesParser(policy=email.policy.HTTP).parsebytes(
+        b"Content-Type: " + ctype.encode("latin-1") + b"\r\nMIME-Version: 1.0\r\n\r\n" + body)
+    files, fields = [], {}
+    if not msg.is_multipart():
+        raise ValueError("expected multipart/form-data")
+    for part in msg.iter_parts():
+        fn = part.get_filename()
+        payload = part.get_payload(decode=True) or b""
+        if fn:
+            files.append((fn, payload))
+        else:
+            fields[part.get_param("name", header="content-disposition") or ""] = payload.decode("utf-8", "replace")
+    return files, fields
 
 
 # ---------------------------------------------------------------- HTTP
@@ -312,7 +417,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self._send(404, "<!doctype html><title>404</title><p>Not found.", "text/html; charset=utf-8")
 
     def _body(self):
+        """A JSON object, or, for multipart/form-data, {"files": [(name, bytes)], "fields": {...}}."""
         n = int(self.headers.get("Content-Length") or 0)
+        ctype = self.headers.get("Content-Type") or ""
+        if ctype.startswith("multipart/form-data"):
+            if n > MAX_UPLOAD:
+                raise ValueError("upload too large")
+            files, fields = multipart(ctype, self.rfile.read(n) if n else b"")
+            return {"files": files, "fields": fields}
         if n > MAX_BODY:
             raise ValueError("request too large")
         raw = self.rfile.read(n) if n else b""
@@ -404,6 +516,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 job, busy = app.do_undo()
             elif path == "/api/answers":
                 job, busy = app.do_answers(body.get("set") or {})
+            elif path == "/api/balance":
+                job, busy = app.do_balance(body.get("key"), body.get("amount"), body.get("asof"))
+            elif path == "/api/inbox":
+                return self._json(200, True, app.save_inbox(body.get("files") or []), t0)
+            elif path == "/api/ocr":
+                files = body.get("files") or []
+                if not files:
+                    raise ValueError("no image in the upload")
+                return self._json(200, True, app.do_ocr((body.get("fields") or {}).get("key"), files[0][0], files[0][1]), t0)
+            elif path == "/api/open-inbox":
+                return self._json(200, True, app.open_inbox(), t0)
             else:
                 return self._not_found()
             if busy:

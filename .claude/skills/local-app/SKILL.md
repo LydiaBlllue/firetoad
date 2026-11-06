@@ -18,12 +18,19 @@ That is the whole instruction. It picks a free port on `127.0.0.1`, prints an ad
 fresh token in it, opens the panel in the system browser, and exits by itself five minutes after
 the last tab is closed. `--no-browser` prints the address only; `--port N` fixes the port.
 
-What the panel can do today (1b): show what is left to bring (the rows `status.py` draws), run
-the import as a dry run and then for real with its lines streaming in, undo the last import,
-answer the open questions with pills and save them all at once, and show the last import's
-result. What it cannot yet: take a file dropped onto it (the owner puts files in `inbox/`
-themselves; the panel says where), read a screenshot (1c), set up a fresh workspace (the wizard,
-step 2 of the roadmap), or use a model (step 3).
+What the panel can do today (1b + 1c): show what is left to bring (the rows `status.py`
+draws); take files dropped onto it into `inbox/` under their own names, named by preflight at
+once (nothing is parsed until Import); run the import as a dry run and then for real with its
+lines streaming in; undo the last import; answer the open questions with pills and save them all
+at once; type a balance no file carries (`balance.py` behind it — banks.json and foreign.json
+rows with no ledger; the register's copy follows); read such a balance off a phone screenshot
+(`ocr.py`: Apple Vision on this computer, the amounts ranked by the account's `capture` line,
+offered as pills, never written until tapped; the image is kept under .jade/shots/); open the
+inbox folder; and show the last import's result. What it cannot yet: download a statement (the
+owner does that, or this chat does with `fetch-statements`), set up a fresh workspace (the
+wizard, step 2 of the roadmap), or use a model (step 3). OCR needs `ocrmac`
+(`pip3 install --user ocrmac`; on the system Python 3.9, `pyobjc-core<11` first); without it the
+panel says so and the amount is typed.
 
 ## Rules the server keeps
 

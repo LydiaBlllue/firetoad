@@ -154,6 +154,17 @@ def status(root, today):
                                 "asof": a.get("asof"), "age": ag,
                                 "state": "todo" if ag is None or ag >= CYCLE_DAYS else "ok"})
 
+    # accounts whose balance is stated, not read from a file: what balance.py accepts — a row in
+    # banks.json or foreign.json with no ledger behind it. The panel's typed-balance forms draw
+    # from this list (2026-11-06); it adds no row to the panel's groups above.
+    out["stated"] = []
+    for k, a in accts.items():
+        if a.get("ledger") or a.get("src") not in ("banks.json", "foreign.json"):
+            continue
+        out["stated"].append({"account": k, "inst": a.get("inst"), "name": a.get("name"), "asof": a.get("asof"),
+                              "age": age(a.get("asof"), today), "capture": a.get("capture"),
+                              "currency": a.get("currency"), "src": a.get("src")})
+
     # questions: open decisions, each with the choices a tap can give
     types, cats = None, None
     for i, q in enumerate(jload(root, "decisions.json", {}).get("decisions", [])):

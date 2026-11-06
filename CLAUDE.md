@@ -199,10 +199,15 @@ script's `run()` — `status`, `update`, `update.undo`, `confirm` — and the im
 through `rebuild.py`; the browser reloads the file. One lock file (`.jade.lock`) makes it one
 writer at a time, and its log is `.jade/log/` (both ignored by git). The selftest's *local app*
 check imports the same month through `update.py --write` and through `POST /api/import` and
-expects identical `findata/` and `archive/`. Both doors are the same code, so a change to the
-import is made once, in the script, and the panel follows. What the app cannot do yet — take a
-dropped file, read a screenshot, set up a workspace, use a model — is the rest of the roadmap
-entry, in order.
+expects identical `findata/` and `archive/`, with one statement uploaded and one balance typed
+through the app. Both doors are the same code, so a change to the import is made once, in the
+script, and the panel follows. Two verbs came with the panel and serve this chat too (1c):
+**`balance.py`** writes a balance no file carries — a banks.json or foreign.json row with no
+ledger, by register key, the register's copy following (D14, D20), refused for an account with
+a ledger (D7) or a loan (D23) — and **`ocr.py`** reads a phone screenshot with Apple Vision on
+this computer and ranks its amounts by the account's `capture` line; it offers, never writes.
+What the app cannot do yet — set up a workspace, use a model — is the rest of the roadmap entry,
+in order.
 
 ## Nothing in a dashboard is typed by hand
 
