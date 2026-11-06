@@ -5,7 +5,7 @@ fourth, and the smallest:
 
 | layer | what proves it | where |
 |---|---|---|
-| a function's arithmetic (`flows.py`, `loans.py`, `layout.py`) | **unit tests, here** — a hand-written input of five lines and the number it must give | `tests/test_*.py` |
+| a function's arithmetic (`flows.py`, `loans.py`, `categories.py`, `layout.py`, `clock.py`) | **unit tests, here** — a hand-written input of five lines and the number it must give | `tests/test_*.py` |
 | a parser against a real statement shape | fixtures: the demo ledgers rendered back into statements and parsed again | `tools/fixtures.py`, run by the selftest |
 | a checker still checks | the selftest plants a fault in a copy and asserts the rule fires | `selftest.py` |
 | the page draws for every owner | headless Chromium at four widths | `check_render.py` |
@@ -25,7 +25,8 @@ A test that only proves "the function runs" is not worth its line.
 ## How far to take it
 
 - Only modules that are **pure** (a dict in, a number out; no files, no findata) and whose
-  interface has **stopped moving**. Today: `flows.py`, `loans.py`, `layout.py`.
+  interface has **stopped moving**. Today: `flows.py`, `loans.py`, `categories.py`, `layout.py`,
+  `clock.py` (the last two against a temporary folder, never the real `findata/`).
 - `rebuild.py`, `update.py` and the page's JavaScript stay under the selftest and check_render
   until their interfaces settle; the parsers stay under fixtures.
 - No coverage number. The measure is: every rule in FINANCE.md §8a/§8b that one of these modules

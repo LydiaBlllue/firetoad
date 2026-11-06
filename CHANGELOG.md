@@ -5,7 +5,9 @@
 - **Unit tests** (2026-11-05): `tests/` holds one test per rule for the pure modules — `flows.py`
   (the plan's sums) and `loans.py` (what is still owed) — with their edges pinned (a repayment on
   the agreed day, a null amount against a zero) and one known gap written down as an expected
-  failure. Standard-library `unittest`; `checks.py --level release` runs them first and skips
+  failure; then `categories.py` (the groups, a brand read off a statement string, a charge that
+  repeats, a yearly one), `layout.py` and `clock.py` against a temporary folder — 60 tests, two
+  known gaps. Standard-library `unittest`; `checks.py --level release` runs them first and skips
   them in a workspace that has none. The parsers stay under fixtures, the checkers under the
   selftest.
 - **Every script a month goes through has a `run()` beside its `main()`** (2026-11-05): status,
