@@ -42,6 +42,9 @@ Routes (every API answer is {"ok": bool, "data" | "error": …, "took": seconds}
   POST /api/open-inbox     —                            opens the inbox folder in the file manager
   GET  /api/setup          wizard.state()               the setup screens, drafted from inbox/ (demo folders)
   POST /api/setup          wizard.apply(answers, write) the answers file, scaffold, rebuild, first import (a job)
+  GET  /api/ai             ai.status()                  which model is set, and whether a key is stored (never the key)
+  POST /api/ai             ai.save_settings / key_set   {"provider", "baseUrl", "model", "key"?}; provider "none" turns it off
+  POST /api/ai/test        ai.categorise(merchant)      one merchant string, the category back — or the error
   GET  /api/tool           —                            how the folder's copy of the tool compares with the
                                                         app's (app.py tool_state: same / differs / newer)
   POST /api/sync           tools/sync.py                refreshes the folder's copy from the app's (a job)
@@ -74,6 +77,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SKILLS = os.path.dirname(os.path.dirname(HERE))
 for d in ("update-dashboard", "monthly-import", "fetch-statements", "local-app", "setup"):
     sys.path.insert(0, os.path.join(SKILLS, d, "scripts"))
+import ai  # noqa: E402  a model, by choice
 import balance  # noqa: E402
 import confirm  # noqa: E402
 import fetch  # noqa: E402  find_root
@@ -343,6 +347,28 @@ class App:
             subprocess.Popen(["xdg-open", inbox])
         return {"inbox": inbox}
 
+    def do_ai(self, body):
+        prov = body.get("provider") or "none"
+        if prov == "none":
+            ai.save_settings(self.root, {"provider": "none"})
+            return ai.status(self.root)
+        if prov not in ai.PROVIDERS:
+            raise ValueError(f"unknown provider {prov!r}")
+        st = {"provider": prov, "baseUrl": (body.get("baseUrl") or ai.PROVIDERS[prov]["baseUrl"]).strip(),
+              "model": (body.get("model") or ai.PROVIDERS[prov]["model"]).strip(), "since": dt.date.today().isoformat()}
+        if not st["baseUrl"].startswith(("https://", "http://127.0.0.1", "http://localhost")):
+            raise ValueError("the base URL has to be https, or this computer")
+        ai.save_settings(self.root, st)
+        key = (body.get("key") or "").strip()
+        if key:
+            ai.key_set(self.root, prov, key)
+            log.info("ai: key stored for %s", prov)
+        return ai.status(self.root)
+
+    def do_ai_test(self, merchant):
+        cat, how = ai.categorise(self.root, (merchant or "STARBUCKS 1234 TORONTO ON").strip()[:80])
+        return {"category": cat, "how": how}
+
     def is_demo(self):
         return wizard.is_demo(self.root)
 
@@ -512,6 +538,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self._json(200, True, app.job.public() if app.job else None, t0)
             if path == "/api/tool":
                 return self._json(200, True, app.tool, t0)
+            if path == "/api/ai":
+                return self._json(200, True, ai.status(app.root), t0)
             if path == "/api/setup":
                 return self._json(200, True, app.do_setup_state(), t0)
             if path == "/api/events":
@@ -578,6 +606,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 job, busy = app.do_sync()
             elif path == "/api/setup":
                 job, busy = app.do_setup(body.get("answers") or {})
+            elif path == "/api/ai":
+                return self._json(200, True, app.do_ai(body), t0)
+            elif path == "/api/ai/test":
+                return self._json(200, True, app.do_ai_test(body.get("merchant")), t0)
             else:
                 return self._not_found()
             if busy:

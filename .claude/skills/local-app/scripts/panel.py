@@ -28,6 +28,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(HERE)), "update-dashboard", "scripts"))
+import ai  # noqa: E402  which model is set, for the settings card
 import categories  # noqa: E402
 import confirm  # noqa: E402  INCOMING: what money in from no named sender can be
 
@@ -170,7 +171,8 @@ def questions(q):
         seen = f' · seen {it["seen"]}×' if it.get("seen") else ""
         out.append(f'<div class="q" data-n="{it["n"]}"><div class="qt"><b>{it["n"]}.</b> {e(it.get("what"))}</div>'
                    f'<div class="qs">filed as <b>{e(it.get("default"))}</b>'
-                   + (f' · suggested <b>{e(confirm.INCOMING.get(it["suggest"], it["suggest"]) if it.get("credit") else it["suggest"])}</b>' if it.get("suggest") else "")
+                   + (f' · suggested <b>{e(confirm.INCOMING.get(it["suggest"], it["suggest"]) if it.get("credit") else it["suggest"])}</b>'
+                      + ('<span class="dot" title="a model\'s suggestion">●</span>' if it.get("suggestBy") == "model" else "") if it.get("suggest") else "")
                    + f'{e(seen)}{" · " + e(why) if why else ""}</div>'
                    + (f'<div class="pills">{pills}</div>' if pills else '<div class="qs">answered in its ledger, not here</div>')
                    + '</div>')
@@ -210,6 +212,30 @@ def tool_notice(tool):
             f'both doors should run one version. <button type="button" class="btn sm" id="syncbtn">Refresh the copy</button></p>')
 
 
+def ai_card(root):
+    """One line of settings: Off · With my own key · On this computer. The key goes to the
+    Keychain and never comes back to the page; the card says only that one is stored."""
+    st = ai.status(root)
+    opts = "".join(f'<option value="{e(k)}"{" selected" if k == st["provider"] else ""}>{e(v["label"])}</option>'
+                   for k, v in st["providers"].items())
+    notes = json.dumps({k: {"note": v["note"], "baseUrl": v["baseUrl"], "model": v["model"], "key": v["key"]}
+                        for k, v in st["providers"].items()}).replace("</", "<\\/")
+    on = st["provider"] != "none"
+    return (f'<div class="ai" data-notes=\'{e(notes)}\'>'
+            f'<div class="qs">Help with what the programs cannot read — a merchant none of the maps know. '
+            f'Sent: the merchant string and the fifteen category names, nothing else. The answer is a suggestion you confirm, never the filing.</div>'
+            f'<div class="act"><select id="aiprov"><option value="none"{"" if on else " selected"}>Off</option>{opts}</select>'
+            f'<span class="hint" id="ainote"></span></div>'
+            f'<div class="aif" id="aif" style="display:{"flex" if on else "none"}">'
+            f'<input id="aiurl" placeholder="base URL" value="{e(st["baseUrl"] or "")}">'
+            f'<input id="aimodel" placeholder="model" value="{e(st["model"] or "")}">'
+            f'<input id="aikey" type="password" placeholder="{"a key is stored — leave blank to keep it" if st["keyStored"] and on else "API key"}" autocomplete="off">'
+            f'</div>'
+            f'<div class="act"><button type="button" class="btn sm primary" id="aisave">Save</button>'
+            f'<button type="button" class="btn sm" id="aitest"{"" if st["enabled"] else " disabled"}>Try it on a merchant</button>'
+            f'<span class="hint" id="aimsg">{"on · " + e(st["provider"]) + " · " + e(st["model"] or "") if st["enabled"] else ("set, but no key stored" if on else "off")}</span></div></div>')
+
+
 def render(base, root, st, q, rec, job, held, tool=None):
     tpl = template(root)
     nq = len((q or {}).get("items") or [])
@@ -224,7 +250,7 @@ def render(base, root, st, q, rec, job, held, tool=None):
     first += f"{nq} question{'s' if nq != 1 else ''} waiting." if nq else "No questions waiting."
     fill = {"{{BASE}}": e(base), "{{TODAY}}": e(st.get("today")), "{{LEAD}}": e(first),
             "{{BRING}}": bring(st, root), "{{QUESTIONS}}": questions(q), "{{RESULT}}": result(rec),
-            "{{BUSY}}": busy, "{{NQ}}": str(nq),
+            "{{BUSY}}": busy, "{{NQ}}": str(nq), "{{AI}}": ai_card(root),
             "{{VERSION}}": e((tool or {}).get("version") or "")}
     for k, v in fill.items():
         tpl = tpl.replace(k, v)

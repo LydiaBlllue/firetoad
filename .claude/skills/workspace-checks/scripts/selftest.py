@@ -2572,6 +2572,122 @@ def local_app_setup_check(root, base):
             f"month imported through the app; findata/ identical to wizard.py on the command line ({len(a)} files); the panel took over"]
 
 
+def ai_sidecar_check(root, base):
+    """A model, by choice (ai.py, 2026-11-06). On a fresh workspace built from two card statements
+    (every merchant new), a mock OpenAI-shaped server on loopback answers every merchant
+    "Travel": with no provider set the import must not call it at all and the new merchants are
+    asked as before; with the provider
+    set to the mock, the merchants nobody knows carry a model's suggestion and are STILL filed
+    Other until the owner says, the mock saw only merchant strings and category names, and the
+    exchange is in .jade/log/ai.jsonl."""
+    import http.server, threading
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    aip = os.path.join(os.path.dirname(upd), "ai.py")
+    if not (os.path.exists(upd) and os.path.exists(aip)):
+        return []
+    seen = []
+
+    class Mock(http.server.BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def do_POST(self):
+            n = int(self.headers.get("Content-Length") or 0)
+            body = json.loads(self.rfile.read(n).decode("utf-8")) if n else {}
+            seen.append({"path": self.path, "auth": self.headers.get("Authorization"), "body": body})
+            out = json.dumps({"choices": [{"message": {"content": "Travel"}}]}).encode()
+            self.send_response(200); self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(out))); self.end_headers(); self.wfile.write(out)
+    httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Mock)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{httpd.server_address[1]}/v1"
+    bad = []
+    try:
+        for mode in ("off", "on"):
+            # a fresh workspace, the card-only setup's way: every merchant is new there, so the
+            # question is asked and — on — the model is consulted (an owner's months already
+            # know their merchants, which is exactly why a model is for the first sightings)
+            ws = os.path.join(base, "ai_" + mode); os.makedirs(ws); stage(root, ws)
+            man = fixtures_for(ws) or []
+            cards = sorted((m for m in man if m["parser"] in ("rbc_visa", "bmo_mastercard")), key=lambda m: m["file"])
+            if not cards:
+                return []
+            doc = cards[-1]["doc"]; two = [m for m in cards if m["doc"] == doc][-2:]
+            for f in os.listdir(os.path.join(ws, "inbox")):
+                if not f.startswith("."):
+                    os.remove(os.path.join(ws, "inbox", f))
+            for m in two:
+                shutil.copy(m["file"], os.path.join(ws, "inbox"))
+            sk = os.path.join(ws, ".claude", "skills")
+            step = lambda script, *a: subprocess.run([sys.executable, os.path.join(sk, script), ".", *a],
+                                                      cwd=ws, capture_output=True, text=True, timeout=300)
+            step("setup/scripts/propose.py", "--write")
+            ans_p = layout.path(ws, "setup-answers.json")
+            a = json.load(open(ans_p, encoding="utf-8")); a["owner"] = "Sam Lee"; a.pop("born", None); a["_open"] = []
+            json.dump(a, open(ans_p, "w", encoding="utf-8"), indent=2)
+            step("setup/scripts/scaffold.py", "--answers", ans_p, "--write")
+            step("update-dashboard/scripts/rebuild.py", "--write")
+            # the demo's merchants are the common chains the starter map knows; emptied in this
+            # copy, every one of them is a merchant nobody has decided — the model's case
+            json.dump({"patterns": []}, open(os.path.join(sk, "setup", "data", "starter_merchants.json"), "w", encoding="utf-8"))
+            env = dict(os.environ, JADE_AI_KEY="selftest-key")
+            # the staged copy's own scripts, so the emptied starter map is the one update.py reads
+            upd_ws = os.path.join(sk, "update-dashboard", "scripts", "update.py")
+            if mode == "on":
+                subprocess.run([sys.executable, os.path.join(sk, "update-dashboard", "scripts", "ai.py"), ".", "set", "openai",
+                                "--base-url", url, "--model", "mock"], cwd=ws, capture_output=True)
+            before = len(seen)
+            r = subprocess.run([sys.executable, upd_ws, ".", "--write"], cwd=ws, capture_output=True, text=True, timeout=300, env=env)
+            if r.returncode != 0:
+                bad.append(f"{mode}: update.py exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:]))
+            dec = [d for d in json.load(open(layout.path(ws, "decisions.json"), encoding="utf-8"))["decisions"]
+                   if d.get("kind") == "merchant" and d.get("status") == "open" and "starter map" not in (d.get("what") or "")]
+            calls = seen[before:]
+            if mode == "off":
+                if calls:
+                    bad.append(f"off: the mock was called {len(calls)} time(s) with no provider set")
+                if any(d.get("suggestBy") == "model" for d in dec):
+                    bad.append("off: a question carries a model's suggestion")
+                continue
+            with_model = [d for d in dec if d.get("suggestBy") == "model"]
+            if not dec:
+                bad.append("on: no merchant was asked, so nothing exercised the model")
+            elif not with_model:
+                bad.append(f"on: {len(dec)} merchant(s) asked, none with the model's suggestion ({len(calls)} call(s))")
+            if any(d.get("default") != "Other" for d in with_model):
+                bad.append("on: a model's suggestion was filed as the category instead of Other")
+            if any(d.get("suggest") != "Travel" for d in with_model):
+                bad.append("on: the suggestion is not what the model said")
+            sp = [r_ for r_ in csv.DictReader(open(layout.path(ws, "spending.csv"), encoding="utf-8"))
+                  if any(merchant_key_of(r_["note"]) == d.get("match") for d in with_model)]
+            if any(r_["category"] != "Other" for r_ in sp):
+                bad.append("on: spending.csv took the model's word before the owner confirmed")
+            for c in calls:
+                text = json.dumps(c["body"])
+                if "$" in text or re.search(r"\b20\d\d-\d\d-\d\d\b", text) or re.search(r"\d+\.\d\d\b", text):
+                    bad.append("on: a request carried an amount or a date"); break
+                if c["auth"] != "Bearer selftest-key":
+                    bad.append("on: the key did not travel as the bearer token"); break
+            lp = os.path.join(ws, ".jade", "log", "ai.jsonl")
+            if not os.path.exists(lp) or len(open(lp, encoding="utf-8").read().splitlines()) < len(calls):
+                bad.append("on: .jade/log/ai.jsonl does not hold every exchange")
+            if "suggests Travel" not in r.stdout:
+                bad.append("on: the run's summary does not say the model suggested")
+            n_calls, n_model = len(calls), len(with_model)
+    finally:
+        httpd.shutdown()
+    if bad:
+        return ["  ✗ model side-car: " + x for x in bad[:6]]
+    return [f"  ✓ model side-car: off → not one call; on → {n_model} merchant(s) carry the model's suggestion over {n_calls} call(s), "
+            f"filed Other until confirmed, nothing but merchant strings and category names sent, every exchange logged"]
+
+
+def merchant_key_of(note):
+    sys.path.insert(0, HERE)
+    from check_data import merchant_key
+    return merchant_key(note)
+
+
 def findata_digest(ws):
     """findata/ and archive/ as hashes, but for the seconds an import records and the prices a run
     may or may not have fetched — what two doors have to agree on."""
@@ -2668,7 +2784,7 @@ def main(argv):
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
                     own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, browser_copy_check, csv_download_check, csv_layouts_check, ofx_download_check, month_parts_check, starter_check,
-                    demo_clear_check, two_doors_check, local_app_check, local_app_setup_check):
+                    demo_clear_check, two_doors_check, local_app_check, local_app_setup_check, ai_sidecar_check):
             try:
                 runs += chk(root, base)
             except Exception as e:                 # a check with nothing to run on, as above

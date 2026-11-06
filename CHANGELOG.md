@@ -28,6 +28,12 @@
   suggestions, the one FIRE question, the import day, build. The answers land in the setup's own
   answers file and the same scaffold, rebuild and first import run; a question skipped stays
   unanswered, never guessed. What the screens do not cover is listed as left for the chat.
+- **A model, by choice** (2026-11-06, steps 3 and 4): off by default; the panel's last card
+  turns it on with your own key (an OpenAI-compatible service or Anthropic) or a model on this
+  computer (Ollama). It is asked one thing only — what category a merchant none of the maps
+  know belongs to — with the merchant string and the fifteen category names and nothing else.
+  Its answer is a suggestion you confirm, marked with a dot, never the filing; the key stays in
+  the Keychain, every exchange is logged in the workspace, one merchant costs one call.
 - `tools/sync.py` now carries `tools/` into a workspace (2026-11-06): the migration tests import
   `tools/migrate.py`, and without it the release-level checks failed in every workspace.
 

@@ -216,8 +216,17 @@ until an Apple Developer identity is passed to the build. **The setup as screens
 wizard — the setup skill's interview in six screens, drafted by `setup/scripts/wizard.py` from
 `propose.py`'s draft and written back into `setup-answers.json`, then scaffold, rebuild, first
 import; the selftest's *local app setup* check builds the same workspace through the app and
-through `wizard.py --apply` and expects identical `findata/`. What the app cannot do yet — use a
-model — is the last roadmap entry.
+through `wizard.py --apply` and expects identical `findata/`. **A model, by choice** (steps 3–4): `ai.py` in the
+update-dashboard scripts, off unless the owner sets a provider (OpenAI-compatible, Anthropic,
+or Ollama on this computer) on the panel's last card or with `ai.py . set`; asked at one place
+only — a merchant every map misses, in `note_merchant` — with the merchant string and the
+fifteen category names and nothing else; its answer is validated against the fifteen, written
+as the question's `suggest` with `suggestBy: model`, never as the category (Other stays until
+the owner confirms); the key in the Keychain, the choice in `.jade/settings.json`, every
+exchange in `.jade/log/ai.jsonl`. The selftest's *model side-car* check runs an import against a
+loopback mock: off means no call, on means suggestions and still Other, and only merchant
+strings and category names on the wire. The second door is complete; what follows is a Windows
+build and signing.
 
 ## Nothing in a dashboard is typed by hand
 

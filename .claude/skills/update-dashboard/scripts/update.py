@@ -69,6 +69,7 @@ import seen_accounts  # noqa: E402
 import rebuild  # noqa: E402
 import verbs  # noqa: E402
 import loans  # noqa: E402  what a borrower still owes (loans.py)
+import ai  # noqa: E402  a model, by choice, where the maps miss (ai.py; off unless the owner set one)
 sys.path.insert(0, CHECKS)
 from check_data import merchant_key, refund_pool  # noqa: E402  the one definition of "the same merchant"
 
@@ -828,13 +829,13 @@ def spent_of(ws, plan, table, t, desc, when, src):
         merchant = payee_of(desc)
         key = merchant_key(merchant)
         cat = table[key]["category"] if key in table else SPENT[t]
-        note_merchant(plan, key, cat, "type", when, src)
+        note_merchant(plan, key, cat, "type", when, src, ws.root)
         return merchant, cat
     cat, how, key = categorise(ws, merchant, table)
     if how == "new" and t == "Bill":
         # the payee says what it is: a tax is the home's, the rest is a bill. Still asked.
         cat = "Housing" if re.search(r"TAX", merchant, re.I) else SPENT[t]
-    note_merchant(plan, key, cat, how, when, src)
+    note_merchant(plan, key, cat, how, when, src, ws.root)
     return merchant, cat
 
 
@@ -863,7 +864,7 @@ def plan_card(ws, plan, acc, doc, part, end):
                 plan.credits.append((src, r["date"], desc, amt))
             continue
         cat, how, key = categorise(ws, desc, table)
-        note_merchant(plan, key, cat, how, r["date"], src)
+        note_merchant(plan, key, cat, how, r["date"], src, ws.root)
         plan.spend.append([r["date"], f"{-amt:.2f}", acc.get("cur", "CAD"), cat, f"{desc} {tagend}"])
         n += 1
     plan.counts["purchases"] += n
@@ -890,7 +891,7 @@ def plan_refund(plan, existing, acc, desc, amt, when, src, tagend):
     return True
 
 
-def note_merchant(plan, key, cat, how, when, src):
+def note_merchant(plan, key, cat, how, when, src, root=None):
     plan.merchant_seen[key] += 1
     plan.cat_used[key] = cat
     f, l = plan.merchant_dates.get(key, (when, when))
@@ -898,8 +899,16 @@ def note_merchant(plan, key, cat, how, when, src):
     if how in ("new", "starter") and key not in plan.new_merchants:
         plan.new_merchants[key] = (cat, src)
         why = " The starter map of common chains suggests " + cat + "." if how == "starter" else ""
-        plan.decisions.append({"kind": "merchant", "match": key, "what": f"{key}, seen for the first time.{why}",
-                               "default": cat, "source": f"{src}, {short(iso_to_date(when))}"})
+        item = {"kind": "merchant", "match": key, "what": f"{key}, seen for the first time.{why}",
+                "default": cat, "source": f"{src}, {short(iso_to_date(when))}"}
+        # A model, only where every map missed and only if the owner set one (ai.py): its answer
+        # is the question's suggestion, never the category — Other stays until the owner says.
+        if how == "new" and root and ai.enabled(root):
+            sug, by = ai.categorise(root, key)
+            if sug and sug != cat:
+                item["suggest"], item["suggestBy"] = sug, "model"
+                item["what"] += f" A model suggests {sug}."
+        plan.decisions.append(item)
     elif how == "brand" and key not in plan.new_merchants:
         plan.new_merchants[key] = (cat, src)
         plan.judged.append(f"Filed {key} as {cat}, like the other {key.split()[0]} charges.")
@@ -1060,7 +1069,7 @@ def write_plan(ws, plan):
                 {"added": ws.today.isoformat(), "kind": d["kind"], **({"match": d["match"]} if d.get("match") else {}),
                  "what": d["what"], "default": d["default"], "source": d.get("source", ""), "status": "open",
                  # what confirm.py needs to act on the answer: a suggestion, and the row it lands on
-                 **{k: d[k] for k in ("suggest", "row", "credit") if d.get(k)}})
+                 **{k: d[k] for k in ("suggest", "suggestBy", "row", "credit") if d.get(k)}})
         jsave(fd("decisions.json"), ws.decisions)
     os.makedirs(os.path.join(ws.root, "archive"), exist_ok=True)
     for src, dst in plan.archive:

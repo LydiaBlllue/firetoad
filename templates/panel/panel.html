@@ -38,6 +38,10 @@ body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system
 .busy.bad{background:var(--bad-bg);border-color:#efc4c1;color:var(--bad)}
 .busy .btn{margin-left:6px}
 .ver{font-size:10.5px;color:var(--muted);letter-spacing:.04em;margin-top:18px;text-align:center}
+.dot{color:#6250d6;font-size:9px;margin-left:4px;vertical-align:middle}
+.ai select,.ai input{font:inherit;font-size:12.5px;padding:5px 8px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--ink)}
+.aif{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.aif input{flex:1 1 150px;min-width:0}
 .act{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
 .btn{border:1px solid var(--border);background:var(--pill);color:var(--ink);border-radius:8px;padding:7px 14px;font-size:13px;font-family:inherit;cursor:pointer}
 .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
@@ -106,6 +110,8 @@ details.more[open] summary::before{content:"\2212 "}
   <div class="card" id="questions"><div class="lab">Questions ({{NQ}})</div>{{QUESTIONS}}<div class="err" id="qerr"></div></div>
 
   <div class="card" id="result"><div class="lab">Result</div>{{RESULT}}</div>
+
+  <div class="card" id="model"><div class="lab">A model, by choice</div>{{AI}}</div>
   <div class="ver">v{{VERSION}}</div>
 </div>
 <script>
@@ -251,6 +257,38 @@ details.more[open] summary::before{content:"\2212 "}
       inp.value = '';
     };
   });
+  // the model, by choice: the key goes to the server once and is stored in the Keychain
+  var aiprov = $('aiprov');
+  if (aiprov) {
+    var notes = JSON.parse(document.querySelector('.ai').getAttribute('data-notes'));
+    function aiShow(fill){
+      var p = aiprov.value, on = p !== 'none';
+      $('aif').style.display = on ? 'flex' : 'none';
+      $('ainote').textContent = on ? (notes[p].note || '') : '';
+      if (on && fill) { $('aiurl').value = notes[p].baseUrl; $('aimodel').value = notes[p].model; }
+      $('aikey').style.display = on && notes[p].key ? '' : 'none';
+    }
+    aiprov.onchange = function(){ aiShow(true); };
+    aiShow(false);
+    $('aisave').onclick = function(){
+      var body = {provider: aiprov.value, baseUrl: $('aiurl').value, model: $('aimodel').value, key: $('aikey').value};
+      $('aimsg').textContent = 'saving …';
+      api('POST', '/api/ai', body).then(function(r){
+        if (!r.ok) { $('aimsg').textContent = r.error && r.error.text || 'failed'; return; }
+        $('aikey').value = '';
+        $('aimsg').textContent = r.data.enabled ? 'on · ' + r.data.provider + ' · ' + r.data.model : (r.data.provider === 'none' ? 'off' : 'set, but no key stored');
+        $('aitest').disabled = !r.data.enabled;
+      }).catch(function(e){ $('aimsg').textContent = String(e); });
+    };
+    $('aitest').onclick = function(){
+      var m = prompt('A merchant string, as a statement prints it:', 'STARBUCKS 1234 TORONTO ON');
+      if (!m) return;
+      $('aimsg').textContent = 'asking …';
+      api('POST', '/api/ai/test', {merchant: m}).then(function(r){
+        $('aimsg').textContent = !r.ok ? (r.error && r.error.text || 'failed') : (r.data.category ? m + ' → ' + r.data.category + ' (' + r.data.how + ')' : 'no usable answer (' + r.data.how + ') — .jade/log/ai.jsonl has the exchange');
+      });
+    };
+  }
   var sb = $('syncbtn');
   if (sb) sb.onclick = function(){
     start('/api/sync', {}, 'refreshing this folder\'s copy of the tool …', function(job){
