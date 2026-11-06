@@ -1,0 +1,38 @@
+{
+  "asof_note": "The guilt-free plan: pay-yourself-first, one everyday amount. The dashboard's FUNDS constant is a copy of this file (check_data D13). Fields that render on the page are English.",
+  "plan": {
+    "start": "2026-08",
+    "flows": [
+      {
+        "key": "pay",
+        "kind": "income",
+        "name": "Take-home pay",
+        "amount": 3600,
+        "note": "Payroll of $1,800 twice a month. Investment income stays with the broker and is not counted."
+      },
+      {
+        "key": "rent",
+        "kind": "committed",
+        "name": "Rent",
+        "amount": 1250,
+        "afterFire": "keep",
+        "note": "Pre-authorized on the 1st, from chequing. Still there after FIRE."
+      },
+      {
+        "key": "invest",
+        "kind": "saving",
+        "name": "Invest",
+        "amount": 800,
+        "to": "broker",
+        "note": "Off the top, before anything else — pay-yourself-first."
+      },
+      {
+        "key": "everyday",
+        "kind": "everyday",
+        "name": "Everyday",
+        "amount": 1300,
+        "note": "The guilt-free line. No categories and no caps below it."
+      }
+    ]
+  }
+}
