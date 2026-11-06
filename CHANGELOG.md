@@ -7,7 +7,9 @@
   the agreed day, a null amount against a zero) and one known gap written down as an expected
   failure; then `categories.py` (the groups, a brand read off a statement string, a charge that
   repeats, a yearly one), `layout.py` and `clock.py` against a temporary folder — 60 tests, two
-  known gaps. Standard-library `unittest`; `checks.py --level release` runs them first and skips
+  known gaps; and `tools/migrate.py` end to end — the demo as each release shipped it
+  (`tests/fixtures/schema9`, `schema18`) is migrated to the tool's schema, reconciled, built, and
+  migrated again to prove nothing moves. Standard-library `unittest`; `checks.py --level release` runs them first and skips
   them in a workspace that has none. The parsers stay under fixtures, the checkers under the
   selftest.
 - **Every script a month goes through has a `run()` beside its `main()`** (2026-11-05): status,
