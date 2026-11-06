@@ -22,6 +22,7 @@ Four cards, the skill's order:
 No number here is typed by hand, and nothing here is financial logic.
 """
 import html
+import json
 import os
 import sys
 
@@ -31,14 +32,14 @@ import categories  # noqa: E402
 import confirm  # noqa: E402  INCOMING: what money in from no named sender can be
 
 
-def template(root):
+def template(root, name="panel.html"):
     """The workspace's copy of the markup, the way rebuild.py reads templates/dashboards/ from
     the workspace; the tool's own beside these scripts when a workspace has none yet."""
     for base in (root, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(HERE))))):
-        p = os.path.join(base, "templates", "panel", "panel.html")
+        p = os.path.join(base, "templates", "panel", name)
         if os.path.exists(p):
             return open(p, encoding="utf-8").read()
-    raise FileNotFoundError("templates/panel/panel.html")
+    raise FileNotFoundError("templates/panel/" + name)
 
 STATE_WORD = {"todo": "to bring", "inbox": "in inbox", "ok": "up to date", "optional": "only if it changed"}
 
@@ -225,6 +226,20 @@ def render(base, root, st, q, rec, job, held, tool=None):
             "{{BRING}}": bring(st, root), "{{QUESTIONS}}": questions(q), "{{RESULT}}": result(rec),
             "{{BUSY}}": busy, "{{NQ}}": str(nq),
             "{{VERSION}}": e((tool or {}).get("version") or "")}
+    for k, v in fill.items():
+        tpl = tpl.replace(k, v)
+    return tpl
+
+
+# ---------------------------------------------------------------- the setup wizard
+def render_setup(base, root, st, job, tool=None):
+    """The wizard instead of the panel while the folder still holds the demo: the screens come
+    from wizard.state(), as JSON the page draws; the markup is templates/panel/setup.html."""
+    tpl = template(root, "setup.html")
+    fill = {"{{BASE}}": e(base), "{{STATE}}": json.dumps(st, ensure_ascii=False).replace("</", "<\\/"),
+            "{{BUSY}}": tool_notice(tool), "{{INBOX}}": e(os.path.join(root, "inbox")),
+            "{{VERSION}}": e((tool or {}).get("version") or ""),
+            "{{JOB}}": json.dumps(job, ensure_ascii=False).replace("</", "<\\/") if job else "null"}
     for k, v in fill.items():
         tpl = tpl.replace(k, v)
     return tpl

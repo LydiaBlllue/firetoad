@@ -2439,29 +2439,14 @@ def local_app_check(root, base):
         if os.path.exists(lock):
             bad.append("the lock was left behind after the import")
         st, body = req("GET", tok + "/panel")
-        if st != 200 or b"Save answers" not in body and b"Nothing is waiting" not in body:
+        # a demo folder (this staged copy) gets the setup wizard on /panel; an owner's gets the panel
+        if st != 200 or not any(x in body for x in (b"Save answers", b"Nothing is waiting", b"make this folder yours")):
             bad.append(f"GET /panel answered {st}")
     finally:
         proc.kill(); proc.wait()
     # the same month, both doors: findata/ and archive/ identical, but for the seconds an import
     # records and the prices a run may or may not have fetched
-    def digest(ws):
-        out = {}
-        for top in ("findata", "archive"):
-            for dp, _, fs in os.walk(os.path.join(ws, top)):
-                for f in fs:
-                    rel = os.path.relpath(os.path.join(dp, f), ws)
-                    if f == "prices.json":
-                        continue
-                    data = open(os.path.join(dp, f), "rb").read()
-                    if f == "imports.json":
-                        j = json.loads(data.decode("utf-8"))
-                        for rec in (j.get("imports") if isinstance(j, dict) else j) or []:
-                            rec.pop("seconds", None)
-                        data = json.dumps(j, sort_keys=True).encode()
-                    out[rel] = hashlib.sha256(data).hexdigest()
-        return out
-    a, b = digest(copies["cli"]), digest(copies["api"])
+    a, b = findata_digest(copies["cli"]), findata_digest(copies["api"])
     diff = sorted(k for k in set(a) | set(b) if a.get(k) != b.get(k))
     if diff:
         bad.append("the two doors left different files: " + ", ".join(diff[:6]) + (" …" if len(diff) > 6 else ""))
@@ -2470,6 +2455,140 @@ def local_app_check(root, base):
     return [f"  ✓ local app: the same month through update.py and through POST /api/import left identical findata/ and archive/ "
             f"({len(a)} files), with one statement uploaded and one balance typed through the app; no token → 404, "
             f"another origin → 403, the lock held → 409, a screenshot that is no image answered with a reason"]
+
+
+def local_app_setup_check(root, base):
+    """The setup through the app (setup/scripts/wizard.py, 2026-11-06): on a staged demo copy, two
+    card statements uploaded, the screens drafted, the answers posted the way the wizard posts
+    them (a name, the everyday figure confirmed, everything else skipped), the workspace built and
+    the first month imported — and findata/ identical to the same answers applied through
+    wizard.py on the command line. The wizard shows instead of the panel while the folder is the
+    demo's, and the panel once it is not."""
+    import io, uuid, urllib.request, urllib.error
+    if not demo_like(root):
+        return []
+    srv = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "local-app", "scripts", "server.py"))
+    wiz = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "setup", "scripts", "wizard.py"))
+    if not (os.path.exists(srv) and os.path.exists(wiz)):
+        return []
+    copies, two = {}, None
+    for door in ("cli", "api"):
+        ws = os.path.join(base, "wiz_" + door); os.makedirs(ws); stage(root, ws)
+        man = fixtures_for(ws) or []
+        cards = sorted((m for m in man if m["parser"] in ("rbc_visa", "bmo_mastercard")), key=lambda m: m["file"])
+        if not cards:
+            return []
+        doc = cards[-1]["doc"]; two = [m for m in cards if m["doc"] == doc][-2:]
+        for f in os.listdir(os.path.join(ws, "inbox")):
+            if not f.startswith("."):
+                os.remove(os.path.join(ws, "inbox", f))
+        copies[door] = (ws, two)
+    bad = []
+    ws, two = copies["api"]
+    proc = subprocess.Popen([sys.executable, srv, ".", "--port", "0"], cwd=ws, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    answers = None
+    try:
+        line = ""
+        for _ in range(200):
+            line = proc.stdout.readline()
+            if "http://127.0.0.1:" in line or not line:
+                break
+        m = re.search(r"(http://127\.0\.0\.1:\d+)(/t/[^/\s]+)/panel", line)
+        if not m:
+            return ["  ✗ local app setup: the server did not say where it is (" + line.strip()[:120] + ")"]
+        origin, tok = m.group(1), m.group(2)
+
+        def req(method, path, body=None, headers=None):
+            data = body if isinstance(body, (bytes, bytearray)) else (json.dumps(body).encode() if body is not None else None)
+            rq = urllib.request.Request(origin + path, data=data, method=method, headers=headers or {"Content-Type": "application/json"})
+            try:
+                with urllib.request.urlopen(rq, timeout=300) as resp:
+                    raw = resp.read()
+                    return resp.status, (json.loads(raw) if resp.headers.get_content_type() == "application/json" else raw)
+            except urllib.error.HTTPError as e:
+                raw = e.read()
+                return e.code, (json.loads(raw) if e.headers.get_content_type() == "application/json" else raw)
+
+        def form(files):
+            b = uuid.uuid4().hex; out = io.BytesIO()
+            for k, (name, data) in files.items():
+                out.write(f"--{b}\r\nContent-Disposition: form-data; name=\"{k}\"; filename=\"{name}\"\r\n"
+                          f"Content-Type: application/octet-stream\r\n\r\n".encode()); out.write(data); out.write(b"\r\n")
+            out.write(f"--{b}--\r\n".encode())
+            return out.getvalue(), {"Content-Type": f"multipart/form-data; boundary={b}"}
+        st, body = req("GET", tok + "/panel")
+        if st != 200 or b"Setup" not in body or b"Bring" in body:
+            bad.append(f"a demo folder did not get the wizard page ({st})")
+        for mm in two:
+            d, h = form({"file": (os.path.basename(mm["file"]), open(mm["file"], "rb").read())})
+            st, body = req("POST", tok + "/api/inbox", d, h)
+            if st != 200 or [x.get("state") for x in body.get("data") or []] != ["saved"]:
+                bad.append(f"the upload of {os.path.basename(mm['file'])} answered {st}")
+        st, body = req("GET", tok + "/api/setup")
+        sc = (body.get("data") or {}).get("screens") if st == 200 else None
+        if not sc or not sc["accounts"]["rows"]:
+            bad.append(f"GET /api/setup drafted no accounts from two statements ({st})")
+            sc = {"day": {"suggest": 1}, "money": {"everyday": {}}}
+        answers = {"owner": "Sam Lee", "born": "", "importDay": sc["day"]["suggest"], "accounts": [], "added": [],
+                   "money": {"takeHome": "", "invest": "", "everyday": sc["money"]["everyday"].get("suggest") or "",
+                             "planBase": "", "committed": [], "pensions": []}, "goal": ""}
+        st, body = req("POST", tok + "/api/setup", {"answers": answers})
+        job = {}
+        if st == 202:
+            for _ in range(900):
+                st2, jj = req("GET", tok + "/api/job")
+                job = jj.get("data") or {}
+                if job.get("done"):
+                    break
+                time.sleep(0.5)
+        res = job.get("result") or {}
+        if st != 202 or not res.get("written") or not (res.get("import") or {}).get("written"):
+            bad.append(f"POST /api/setup: {st}, " + " | ".join(job.get("lines", [])[-2:])[:200])
+        st, body = req("GET", tok + "/panel")
+        if st != 200 or b"Bring" not in body:
+            bad.append("after the build the panel did not take over from the wizard")
+    finally:
+        proc.kill(); proc.wait()
+    prof = json.load(open(layout.path(ws, "profile.json"), encoding="utf-8"))
+    if prof.get("owner") != "Sam Lee" or prof.get("born") is not None or prof.get("demo"):
+        bad.append(f"profile.json after the wizard: {prof.get('owner')!r}, born {prof.get('born')!r}, demo {prof.get('demo')!r}")
+    out = run("check_data.py", ["."], ws)
+    bad += [l.strip()[:120] for l in out.splitlines() if l.strip().startswith("✗")][:2]
+    # the same answers through the verb on the command line
+    ws2, two2 = copies["cli"]
+    for mm in two2:
+        shutil.copy(mm["file"], os.path.join(ws2, "inbox"))
+    ap = os.path.join(base, "wiz_answers.json"); json.dump(answers or {}, open(ap, "w"))
+    r = subprocess.run([sys.executable, wiz, ".", "--apply", ap, "--write"], cwd=ws2, capture_output=True, text=True, timeout=600)
+    if r.returncode not in (0, 2):
+        bad.append(f"wizard.py --apply exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:])[:160])
+    a, b = findata_digest(ws), findata_digest(ws2)
+    diff = sorted(k for k in set(a) | set(b) if a.get(k) != b.get(k))
+    if diff:
+        bad.append("the wizard's two doors left different files: " + ", ".join(diff[:6]))
+    if bad:
+        return ["  ✗ local app setup: " + x for x in bad[:6]]
+    return [f"  ✓ local app setup: two statements uploaded, the screens drafted, the answers posted, the workspace built and the first "
+            f"month imported through the app; findata/ identical to wizard.py on the command line ({len(a)} files); the panel took over"]
+
+
+def findata_digest(ws):
+    """findata/ and archive/ as hashes, but for the seconds an import records and the prices a run
+    may or may not have fetched — what two doors have to agree on."""
+    out = {}
+    for top in ("findata", "archive"):
+        for dp, _, fs in os.walk(os.path.join(ws, top)):
+            for f in fs:
+                if f == "prices.json":
+                    continue
+                data = open(os.path.join(dp, f), "rb").read()
+                if f == "imports.json":
+                    j = json.loads(data.decode("utf-8"))
+                    for rec in (j.get("imports") if isinstance(j, dict) else j) or []:
+                        rec.pop("seconds", None)
+                    data = json.dumps(j, sort_keys=True).encode()
+                out[os.path.relpath(os.path.join(dp, f), ws)] = hashlib.sha256(data).hexdigest()
+    return out
 
 
 def csv_rows_of(p):
@@ -2549,7 +2668,7 @@ def main(argv):
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
                     own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, browser_copy_check, csv_download_check, csv_layouts_check, ofx_download_check, month_parts_check, starter_check,
-                    demo_clear_check, two_doors_check, local_app_check):
+                    demo_clear_check, two_doors_check, local_app_check, local_app_setup_check):
             try:
                 runs += chk(root, base)
             except Exception as e:                 # a check with nothing to run on, as above

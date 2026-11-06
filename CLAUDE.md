@@ -212,8 +212,12 @@ folder or makes one (remembered in the system's application-support folder, outs
 workspace), and every launch compares the folder's tool copy with the app's — *Refresh the
 copy* on the panel when they differ, no writes when the folder's data is a newer shape. Inside
 the app the binary doubles as the interpreter for the core's own subprocess calls. Unsigned
-until an Apple Developer identity is passed to the build. What the app cannot do yet — set up a
-workspace, use a model — is the rest of the roadmap entry, in order.
+until an Apple Developer identity is passed to the build. **The setup as screens** (step 2): while a folder still holds the demo, `/panel` is the
+wizard — the setup skill's interview in six screens, drafted by `setup/scripts/wizard.py` from
+`propose.py`'s draft and written back into `setup-answers.json`, then scaffold, rebuild, first
+import; the selftest's *local app setup* check builds the same workspace through the app and
+through `wizard.py --apply` and expects identical `findata/`. What the app cannot do yet — use a
+model — is the last roadmap entry.
 
 ## Nothing in a dashboard is typed by hand
 

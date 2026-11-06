@@ -165,12 +165,15 @@ def choose_workspace(args):
         raise SystemExit(f"✗ {args.root} is not a Jade Toad workspace (no findata/ and dashboards/ in it or above it)")
     s = load_settings()
     if not args.choose:
-        if is_workspace(s.get("workspace")):
-            return s["workspace"]
+        # `python3 app.py` inside a workspace means that workspace, whatever the packaged app
+        # remembered: the two are different doors and must not swap folders under each other
+        # (a copy run for a test served the remembered real folder, 2026-11-06).
         if not FROZEN:
             ws = find_root(HERE)
             if ws:
                 return ws
+        if is_workspace(s.get("workspace")):
+            return s["workspace"]
     while True:
         pick = ask_choice("Where is your Jade Toad folder?", ["Open a folder", "Make one", "Quit"])
         if pick in (None, "Quit"):

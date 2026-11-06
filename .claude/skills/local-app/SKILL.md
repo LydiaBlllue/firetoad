@@ -34,9 +34,16 @@ at once; type a balance no file carries (`balance.py` behind it — banks.json a
 rows with no ledger; the register's copy follows); read such a balance off a phone screenshot
 (`ocr.py`: Apple Vision on this computer, the amounts ranked by the account's `capture` line,
 offered as pills, never written until tapped; the image is kept under .jade/shots/); open the
-inbox folder; and show the last import's result. What it cannot yet: download a statement (the
-owner does that, or this chat does with `fetch-statements`), set up a fresh workspace (the
-wizard, step 2 of the roadmap), or use a model (step 3). OCR needs `ocrmac`
+inbox folder; and show the last import's result. **A fresh folder gets the
+setup as screens** (step 2, 2026-11-06): while `findata/` is still the demo's, `/panel` draws the
+wizard instead — Ready · Files · Accounts · Money in and out · Goal · Day · Build — from
+`setup/scripts/wizard.py`, which drafts the screens with `propose.py` from the files dropped
+and, on *Build it*, writes `setup-answers.json` in the skill's own shape, runs the scaffold, the
+rebuild and the first import. A question skipped stays unanswered (the skill's rule); what the
+screens do not cover (anything abroad, a counterparty, the buckets, a CSV or OFX nobody could
+name) is listed on the last screen as left for the chat. What it cannot yet: download a
+statement (the owner does that, or this chat does with `fetch-statements`), or use a model
+(step 3). OCR needs `ocrmac`
 (`pip3 install --user ocrmac`; on the system Python 3.9, `pyobjc-core<11` first); without it the
 panel says so and the amount is typed.
 

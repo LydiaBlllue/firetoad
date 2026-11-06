@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jade Toad · Setup</title>
+<style>
+/* The setup wizard: the setup skill's interview as screens, in the dashboard's tokens
+   (templates/dashboards/finance_dashboard.html :root). Shown instead of the monthly panel while
+   the folder still holds the demo. Phone-sized, one screen at a time. */
+:root{color-scheme:light;--page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--muted:#75736d;
+  --grid:#e1e0d9;--border:rgba(11,11,11,.10);--pill:#efeeea;--warn-bg:#fdf6e6;--warn-bd:#f0dfb4;--warn:#c98500;
+  --ok-bg:#eaf6ef;--ok:#1a7a4a;--bad-bg:#fbeaea;--bad:#b3261e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;padding:28px 16px 64px}
+.wrap{max-width:560px;margin:0 auto}
+.brand{display:flex;align-items:baseline;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.brand h1{font-size:19px;font-weight:700;letter-spacing:-.3px}
+.brand small{color:var(--muted);font-size:12px}
+.steps{display:flex;gap:4px;margin-bottom:14px}
+.steps span{flex:1;height:4px;border-radius:2px;background:var(--grid)}
+.steps span.on{background:var(--ink)}
+.steps span.done{background:var(--ok)}
+.lead{font-size:13.5px;color:var(--ink-2);margin-bottom:12px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 15px;margin-bottom:12px}
+.lab{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+h2{font-size:17px;font-weight:700;letter-spacing:-.2px;margin-bottom:4px}
+.q{font-size:13px;color:var(--ink-2);margin:6px 0 8px}
+.row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--border)}
+.row:first-of-type{border-top:0}
+.row .rw{flex:1;min-width:0}
+.row b{font-size:13px}
+.row .wh{font-size:12.5px;color:var(--ink-2);display:block}
+.field{display:flex;flex-direction:column;gap:3px;margin:8px 0}
+.field label{font-size:11.5px;color:var(--muted)}
+input[type=text],input[type=number],input[type=date],select{font:inherit;font-size:13px;padding:6px 9px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--ink);max-width:100%}
+input.amt{width:160px;font-variant-numeric:tabular-nums}
+.pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.pl{border:1px solid var(--border);background:var(--pill);color:var(--ink-2);border-radius:999px;padding:3px 11px;font-size:12px;font-family:inherit;cursor:pointer}
+.pl.sel{background:var(--ink);color:var(--page);border-color:var(--ink);font-weight:600}
+.pl small{display:block;font-size:10.5px;color:inherit;opacity:.75}
+.act{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.btn{border:1px solid var(--border);background:var(--pill);color:var(--ink);border-radius:8px;padding:7px 14px;font-size:13px;font-family:inherit;cursor:pointer}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
+.btn.sm{padding:4px 10px;font-size:12px;border-radius:7px}
+.btn[disabled]{opacity:.4;cursor:default}
+.hint{font-size:11.5px;color:var(--muted)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.busy{font-size:12.5px;background:var(--warn-bg);border:1px solid var(--warn-bd);border-radius:8px;padding:7px 10px;margin-bottom:10px}
+.busy.bad{background:var(--bad-bg);border-color:#efc4c1;color:var(--bad)}
+pre.log{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f3f2ee;border-radius:8px;padding:10px 12px;margin-top:10px;white-space:pre-wrap;word-break:break-word;max-height:360px;overflow:auto}
+.drop{margin-top:10px;border:1.5px dashed var(--grid);border-radius:10px;padding:16px;text-align:center;font-size:12.5px;color:var(--ink-2)}
+.drop.over{border-color:var(--ink);background:var(--pill)}
+.drop b{display:block;font-size:13px;color:var(--ink)}
+.drop small{display:block;font-size:11px;color:var(--muted);word-break:break-all;margin-top:4px}
+.lnk{background:none;border:none;padding:0;font:inherit;color:var(--ink);text-decoration:underline;cursor:pointer}
+ul.files{list-style:none;font-size:12.5px;margin-top:8px}
+ul.files li{padding:3px 0;border-top:1px solid var(--border)}
+ul.files li:first-child{border-top:0}
+.later{font-size:12px;color:var(--muted);margin-top:10px;border-top:1px solid var(--border);padding-top:8px}
+.ver{font-size:10.5px;color:var(--muted);letter-spacing:.04em;margin-top:18px;text-align:center}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+table.cm{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+table.cm td{padding:3px 4px 3px 0}
+table.cm input{width:100%}
+</style>
+</head>
+<body data-base="{{BASE}}">
+<div class="wrap">
+  <div class="brand"><h1>Jade Toad</h1><small>Setup · make this folder yours</small></div>
+  {{BUSY}}
+  <div class="steps" id="steps"></div>
+  <p class="lead" id="lead"></p>
+  <div id="screen"></div>
+  <div class="ver">v{{VERSION}}</div>
+</div>
+<script>
+(function(){
+  var base = document.body.getAttribute('data-base');
+  var S = {{STATE}};
+  var JOB = {{JOB}};
+  var INBOX = "{{INBOX}}";
+  var A = {owner: '', born: '', importDay: '', accounts: [], added: [], money: {committed: [], pensions: []}, goal: ''};
+  var NAMES = ['Ready', 'Files', 'Accounts', 'Money in and out', 'Goal', 'Day', 'Build'];
+  var step = 0;
+  var $ = function(id){ return document.getElementById(id); };
+  function el(tag, cls, html){ var d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; return d; }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function money(v){ return v == null ? '' : '$' + Number(v).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+  function api(method, path, body){
+    return fetch(base + path, {method: method, headers: body instanceof FormData ? {} : {'Content-Type': 'application/json'},
+                               body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined)})
+      .then(function(r){ return r.json().then(function(j){ j.status = r.status; return j; }); });
+  }
+  function steps(){
+    var s = $('steps'); s.innerHTML = '';
+    NAMES.forEach(function(n, i){ var d = el('span', i < step ? 'done' : (i === step ? 'on' : '')); d.title = n; s.appendChild(d); });
+    $('lead').textContent = 'Step ' + (step + 1) + ' of ' + NAMES.length + ' · ' + NAMES[step];
+  }
+  function nav(card, back, next, nextLabel){
+    var a = el('div', 'act');
+    if (back) { var b = el('button', 'btn', 'Back'); b.type = 'button'; b.onclick = function(){ step--; draw(); }; a.appendChild(b); }
+    if (next) { var n = el('button', 'btn primary', nextLabel || 'Next'); n.type = 'button'; n.onclick = next; a.appendChild(n); }
+    card.appendChild(a);
+  }
+  function field(card, label, input){ var f = el('div', 'field'); var l = el('label', null, label); f.appendChild(l); f.appendChild(input); card.appendChild(f); return input; }
+  function text(val, ph, cls){ var i = el('input', cls || null); i.type = 'text'; i.value = val == null ? '' : val; if (ph) i.placeholder = ph; return i; }
+
+  // --- the screens
+  function draw(){
+    steps();
+    var sc = $('screen'); sc.innerHTML = '';
+    var card = el('div', 'card'); sc.appendChild(card);
+    var scr = S.screens;
+    if (step === 0) {
+      card.appendChild(el('h2', null, 'Is this computer ready?'));
+      card.appendChild(el('p', 'q', 'Python and the PDF reader, checked before anything is asked. About twenty minutes with last month\'s files at hand.'));
+      var pre = el('pre', 'log', esc(S.ready.lines.join('\n')) || 'nothing to report'); card.appendChild(pre);
+      var ok = S.ready.rc === 0;
+      card.appendChild(el('p', ok ? 'ok' : 'bad', ok ? '✓ ready' : '✗ not yet — install what it names, then reload this page'));
+      nav(card, false, ok ? function(){ step = 1; draw(); } : null);
+    } else if (step === 1) {
+      card.appendChild(el('h2', null, 'Last month\'s files'));
+      card.appendChild(el('p', 'q', 'Drop the statements, the broker\'s holdings and activities exports, a screenshot of anything held abroad — with the banks\' own filenames. They are the draft, and the first import.'));
+      var drop = el('div', 'drop', '<b>Drop files here</b><span>or <label class="lnk">choose files<input type="file" multiple hidden id="pick"></label></span><small>' + esc(INBOX) + '</small>');
+      card.appendChild(drop);
+      var ul = el('ul', 'files');
+      (S.files || []).forEach(function(f){ ul.appendChild(el('li', null, esc(f))); });
+      if (!(S.files || []).length) ul.appendChild(el('li', 'hint', 'nothing yet'));
+      card.appendChild(ul);
+      var msg = el('div', 'hint'); card.appendChild(msg);
+      function upload(files){
+        if (!files || !files.length) return;
+        var fd = new FormData();
+        for (var i = 0; i < files.length; i++) fd.append('file', files[i], files[i].name);
+        msg.textContent = 'saving …';
+        api('POST', '/api/inbox', fd).then(function(r){
+          if (!r.ok) { msg.textContent = r.error && r.error.text || 'failed'; return; }
+          msg.textContent = 'saved — reading the files …';
+          return api('GET', '/api/setup').then(function(r2){ if (r2.ok) { S = r2.data; } draw(); });
+        }).catch(function(e){ msg.textContent = String(e); });
+      }
+      ['dragenter', 'dragover'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add('over'); }); });
+      ['dragleave', 'drop'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove('over'); }); });
+      drop.addEventListener('drop', function(e){ upload(e.dataTransfer.files); });
+      document.addEventListener('dragover', function(e){ e.preventDefault(); });
+      document.addEventListener('drop', function(e){ e.preventDefault(); });
+      drop.querySelector('#pick').onchange = function(ev){ upload(ev.target.files); ev.target.value = ''; };
+      if (scr) card.appendChild(el('p', 'ok', '✓ ' + scr.accounts.rows.length + ' account(s) drafted from these files'));
+      nav(card, true, scr ? function(){ step = 2; draw(); } : null);
+    } else if (step === 2) {
+      card.appendChild(el('h2', null, 'Who, and the accounts'));
+      var own = field(card, 'Your name, as the page should show it' + (scr.owner.suggest ? ' (the statements say ' + esc(scr.owner.suggest) + ')' : ''), text(A.owner || scr.owner.suggest || '', 'your name'));
+      var born = field(card, 'Roughly what year were you born? Only the retirement arithmetic uses it; blank is fine', text(A.born, 'e.g. 1993', 'amt'));
+      born.inputMode = 'numeric';
+      card.appendChild(el('p', 'q', 'One card per account the files show. Say what each one is for — the page\'s totals follow from it. Change a name if it is not what you call it.'));
+      scr.accounts.rows.forEach(function(r){
+        var row = el('div', 'row');
+        var rw = el('div', 'rw');
+        var sel = (A.accounts[r.i] || {}).role || r.role;
+        rw.appendChild(el('b', null, esc(r.inst) + ' · ' + esc(r.kind) + (r.id && r.id !== '—' ? ' ' + esc(r.id) : '')));
+        rw.appendChild(el('span', 'wh', (r.balance != null ? money(r.balance) + ' as of ' + esc(r.asof) : 'the exports carry no balance for it') + (r.doc ? ' · ' + esc(r.doc) : '')));
+        var nm = text((A.accounts[r.i] || {}).name || r.name, 'what you call it'); nm.style.marginTop = '5px';
+        nm.oninput = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).name = nm.value; };
+        rw.appendChild(nm);
+        if (r.needsBalance) {
+          var bl = text((A.accounts[r.i] || {}).balance || '', 'the balance the app shows', 'amt'); bl.inputMode = 'decimal'; bl.style.marginTop = '5px';
+          bl.oninput = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).balance = bl.value; };
+          rw.appendChild(bl);
+        }
+        if (!r.liability) {
+          var pills = el('div', 'pills');
+          scr.accounts.roles.forEach(function(ro){
+            var p = el('button', 'pl' + (ro.key === sel ? ' sel' : ''), esc(ro.label) + '<small>' + esc(ro.why) + '</small>'); p.type = 'button';
+            p.onclick = function(){ pills.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); p.classList.add('sel'); (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).role = ro.key; };
+            pills.appendChild(p);
+          });
+          rw.appendChild(pills);
+        } else rw.appendChild(el('span', 'wh', 'a debt — it is subtracted, nothing to choose'));
+        row.appendChild(rw); card.appendChild(row);
+      });
+      card.appendChild(el('p', 'q', esc(scr.accounts.missing || 'Any account these files do not show — savings with no statement this month, a loan, a home, an account abroad?') + ' Add it with the balance the app shows today; leave empty if none.'));
+      var addBox = el('div'); card.appendChild(addBox);
+      function drawAdded(){
+        addBox.innerHTML = '';
+        A.added.forEach(function(x, k){
+          var t = el('table', 'cm');
+          var tr = el('tr'); t.appendChild(tr);
+          [['inst', 'bank or broker'], ['name', 'what you call it'], ['balance', 'balance']].forEach(function(f){
+            var td = el('td'); var i = text(x[f[0]] || '', f[1]); i.oninput = function(){ x[f[0]] = i.value; }; td.appendChild(i); tr.appendChild(td);
+          });
+          var td = el('td'); var s = el('select'); scr.accounts.kinds.forEach(function(k2){ var o = el('option', null, esc(k2)); o.value = k2; if (k2 === (x.kind || 'Savings')) o.selected = true; s.appendChild(o); });
+          s.onchange = function(){ x.kind = s.value; }; td.appendChild(s); tr.appendChild(td);
+          var td2 = el('td'); var rm = el('button', 'btn sm', '×'); rm.type = 'button'; rm.onclick = function(){ A.added.splice(k, 1); drawAdded(); }; td2.appendChild(rm); tr.appendChild(td2);
+          addBox.appendChild(t);
+        });
+        var add = el('button', 'btn sm', '+ add an account'); add.type = 'button'; add.onclick = function(){ A.added.push({kind: 'Savings'}); drawAdded(); };
+        addBox.appendChild(add);
+      }
+      drawAdded();
+      nav(card, true, function(){
+        A.owner = own.value; A.born = born.value;
+        if (!A.owner.trim()) { own.focus(); own.style.borderColor = 'var(--bad)'; return; }
+        step = 3; draw();
+      });
+    } else if (step === 3) {
+      var m = scr.money;
+      card.appendChild(el('h2', null, 'Money in and out, a month'));
+      card.appendChild(el('p', 'q', 'The files suggest a figure where they can; confirm or change it. Blank means not set, never zero.'));
+      var th = field(card, m.takeHome.ask || 'Take-home pay a month', text(A.money.takeHome != null ? A.money.takeHome : (m.takeHome.suggest || ''), 'a month', 'amt'));
+      var inv = field(card, m.invest.ask || 'To the broker a month', text(A.money.invest != null ? A.money.invest : (m.invest.suggest || ''), 'a month', 'amt'));
+      var ev = field(card, m.everyday.ask || 'The everyday amount — guilt-free, no categories', text(A.money.everyday != null ? A.money.everyday : (m.everyday.suggest || ''), 'a month', 'amt'));
+      [th, inv, ev].forEach(function(i){ i.inputMode = 'decimal'; });
+      card.appendChild(el('p', 'q', esc(m.committed.ask || 'Anything paid every month before you choose anything — rent, a mortgage, a loan?')));
+      var cbox = el('div'); card.appendChild(cbox);
+      function drawCommitted(){
+        cbox.innerHTML = '';
+        A.money.committed.forEach(function(c, k){
+          var t = el('table', 'cm'); var tr = el('tr'); t.appendChild(tr);
+          var td1 = el('td'); var n = text(c.name || '', 'rent, mortgage, car loan …'); n.oninput = function(){ c.name = n.value; }; td1.appendChild(n); tr.appendChild(td1);
+          var td2 = el('td'); var am = text(c.amount || '', 'a month', 'amt'); am.inputMode = 'decimal'; am.oninput = function(){ c.amount = am.value; }; td2.appendChild(am); tr.appendChild(td2);
+          var td3 = el('td'); var s = el('select'); [['keep', 'continues after FIRE'], ['drop', 'ends by then']].forEach(function(o){ var op = el('option', null, o[1]); op.value = o[0]; if ((c.afterFire === false ? 'drop' : 'keep') === o[0]) op.selected = true; s.appendChild(op); });
+          s.onchange = function(){ c.afterFire = s.value === 'keep'; }; td3.appendChild(s); tr.appendChild(td3);
+          var td4 = el('td'); var rm = el('button', 'btn sm', '×'); rm.type = 'button'; rm.onclick = function(){ A.money.committed.splice(k, 1); drawCommitted(); }; td4.appendChild(rm); tr.appendChild(td4);
+          cbox.appendChild(t);
+        });
+        var add = el('button', 'btn sm', '+ add one'); add.type = 'button'; add.onclick = function(){ A.money.committed.push({afterFire: true}); drawCommitted(); };
+        cbox.appendChild(add);
+      }
+      drawCommitted();
+      var rent = field(card, 'Rent you do not pay today but would after retiring early (blank if none)', text(A.money.imputedRent || '', 'a month', 'amt')); rent.inputMode = 'decimal';
+      var pb = field(card, m.planBase.ask || 'Planning spend a month, for the FIRE target (the everyday figure is the usual start)', text(A.money.planBase != null ? A.money.planBase : (m.planBase.suggest || ''), 'a month', 'amt')); pb.inputMode = 'decimal';
+      nav(card, true, function(){
+        A.money.takeHome = th.value; A.money.invest = inv.value; A.money.everyday = ev.value; A.money.imputedRent = rent.value; A.money.planBase = pb.value;
+        step = 4; draw();
+      });
+    } else if (step === 4) {
+      card.appendChild(el('h2', null, 'One question'));
+      card.appendChild(el('p', 'q', esc(scr.goal.ask || 'Is retiring early — reaching the point where work is optional (FIRE) — something you are working toward?')));
+      var pills = el('div', 'pills');
+      [['yes', 'Yes'], ['no', 'No'], ['', 'Skip']].forEach(function(o){
+        var p = el('button', 'pl' + (A.goal === o[0] ? ' sel' : ''), o[1]); p.type = 'button';
+        p.onclick = function(){ pills.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); p.classList.add('sel'); A.goal = o[0]; };
+        pills.appendChild(p);
+      });
+      card.appendChild(pills);
+      card.appendChild(el('p', 'hint', 'Skipped means no for now; the FIRE pages show only for yes. It can be said later.'));
+      card.appendChild(el('p', 'q', 'If you know them: the CPP and OAS your My Service Canada account estimates, and the age each starts. Blank is fine — never guessed.'));
+      var pbox = el('div'); card.appendChild(pbox);
+      if (!A.money.pensions.length) A.money.pensions = [{name: 'CPP'}, {name: 'OAS'}];
+      A.money.pensions.forEach(function(p){
+        var t = el('table', 'cm'); var tr = el('tr'); t.appendChild(tr);
+        tr.appendChild(el('td', null, esc(p.name)));
+        var td = el('td'); var mo = text(p.monthly || '', 'a month', 'amt'); mo.inputMode = 'decimal'; mo.oninput = function(){ p.monthly = mo.value; }; td.appendChild(mo); tr.appendChild(td);
+        var td2 = el('td'); var fr = text(p.from || '', 'from age', 'amt'); fr.inputMode = 'numeric'; fr.oninput = function(){ p.from = fr.value; }; td2.appendChild(fr); tr.appendChild(td2);
+        pbox.appendChild(t);
+      });
+      nav(card, true, function(){ step = 5; draw(); });
+    } else if (step === 5) {
+      card.appendChild(el('h2', null, 'Your import day'));
+      card.appendChild(el('p', 'q', 'The day of the month you sit down with the new statements. ' + (scr.day.closes.length ? 'Your statements close on the ' + scr.day.closes.join(', ') + ', so the day after the last one brings everything at once.' : 'The 1st is the tool\'s default; any day works.')));
+      var d = field(card, 'Day of the month (1–28)', text(A.importDay || scr.day.suggest, '', 'amt')); d.inputMode = 'numeric';
+      nav(card, true, function(){ A.importDay = d.value; step = 6; draw(); });
+    } else if (step === 6) {
+      card.appendChild(el('h2', null, 'Build your workspace'));
+      card.appendChild(el('p', 'q', 'What will be written: your accounts and monthly files, your plan, empty ledgers — then the files in inbox/ are imported as your first month and the page is built. The demo owner\'s data is cleared.'));
+      var sum = el('ul', 'files');
+      sum.appendChild(el('li', null, '<b>' + esc(A.owner) + '</b>' + (A.born ? ', born ' + esc(A.born) : '')));
+      sum.appendChild(el('li', null, scr.accounts.rows.length + ' account(s) from the files' + (A.added.filter(function(x){ return x.inst && x.name; }).length ? ' + ' + A.added.filter(function(x){ return x.inst && x.name; }).length + ' added' : '')));
+      sum.appendChild(el('li', null, 'take-home ' + (A.money.takeHome || 'not set') + ' · invest ' + (A.money.invest || 'not set') + ' · everyday ' + (A.money.everyday || 'not set') + ' · ' + A.money.committed.filter(function(c){ return c.name && c.amount; }).length + ' committed'));
+      sum.appendChild(el('li', null, 'FIRE: ' + (A.goal || 'skipped') + ' · import day ' + esc(A.importDay || scr.day.suggest)));
+      card.appendChild(sum);
+      if (scr.later && scr.later.length) {
+        var lt = el('div', 'later', '<b>Left for later, in the chat or by hand:</b>');
+        scr.later.forEach(function(x){ lt.appendChild(el('div', null, '· ' + esc(x.q))); });
+        card.appendChild(lt);
+      }
+      var log = el('pre', 'log'); log.style.display = 'none'; card.appendChild(log);
+      var hint = el('p', 'hint', 'This takes a minute. Nothing can be undone by a button afterwards: the demo is gone, your data is here.'); card.appendChild(hint);
+      var a = el('div', 'act'); var b = el('button', 'btn', 'Back'); b.type = 'button'; b.onclick = function(){ step = 5; draw(); }; a.appendChild(b);
+      var go = el('button', 'btn primary', 'Build it'); go.type = 'button'; a.appendChild(go); card.appendChild(a);
+      go.onclick = function(){
+        go.disabled = true; b.disabled = true; hint.textContent = 'building …'; log.style.display = 'block'; log.textContent = '';
+        var answers = {owner: A.owner, born: A.born, importDay: A.importDay || scr.day.suggest,
+                       accounts: Object.keys(A.accounts).map(function(k){ return A.accounts[k]; }).filter(Boolean),
+                       added: A.added.filter(function(x){ return x.inst && x.name; }),
+                       money: {takeHome: A.money.takeHome, invest: A.money.invest, everyday: A.money.everyday, planBase: A.money.planBase,
+                               imputedRent: A.money.imputedRent, committed: A.money.committed.filter(function(c){ return c.name && c.amount; }),
+                               pensions: A.money.pensions.filter(function(p){ return p.monthly && p.from; })},
+                       goal: A.goal};
+        api('POST', '/api/setup', {answers: answers}).then(function(r){
+          if (!r.ok) { hint.textContent = r.error && r.error.text || ('HTTP ' + r.status); go.disabled = false; b.disabled = false; return; }
+          var es = new EventSource(base + '/api/events');
+          es.addEventListener('line', function(ev){ log.textContent += JSON.parse(ev.data) + '\n'; log.scrollTop = log.scrollHeight; });
+          es.addEventListener('done', function(ev){
+            es.close(); var j = {}; try { j = JSON.parse(ev.data); } catch (e) {}
+            var res = j.result || {};
+            if (j.error || !res.written) { hint.textContent = 'that did not finish; the lines say why'; go.disabled = false; b.disabled = false; return; }
+            hint.innerHTML = '<span class="ok">✓ built. Your page is ready; the monthly panel takes over from here.</span>';
+            var open = el('a', 'btn primary', 'Open the dashboard'); open.href = base + '/'; open.target = '_blank'; a.appendChild(open);
+            var pan = el('a', 'btn', 'The monthly panel'); pan.href = base + '/panel'; a.appendChild(pan);
+          });
+        }).catch(function(e){ hint.textContent = String(e); go.disabled = false; b.disabled = false; });
+      };
+    }
+  }
+  if (JOB && !JOB.done && JOB.verb === 'setup') { step = 6; }
+  draw();
+  setInterval(function(){ api('GET', '/api/ping').catch(function(){}); }, 30000);
+})();
+</script>
+</body>
+</html>

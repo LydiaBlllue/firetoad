@@ -21,8 +21,13 @@
   Linux). The first launch asks where your folder is, or makes one, and remembers it outside the
   workspace; every launch compares the folder's copy of the tool with the app's and offers to
   refresh it, and refuses to write when the folder's data is a newer shape than the app builds.
-  The build never carries a workspace. Ad-hoc signed until a Developer ID is given; the setup
-  wizard follows.
+  The build never carries a workspace. Ad-hoc signed until a Developer ID is given.
+- **Setup without Claude** (2026-11-06, step 2): a folder that still holds the demo opens on a
+  wizard instead of the panel — is the computer ready, drop last month's files, one card per
+  account with *what is this money for*, the month's money in and out with the files' own
+  suggestions, the one FIRE question, the import day, build. The answers land in the setup's own
+  answers file and the same scaffold, rebuild and first import run; a question skipped stays
+  unanswered, never guessed. What the screens do not cover is listed as left for the chat.
 - `tools/sync.py` now carries `tools/` into a workspace (2026-11-06): the migration tests import
   `tools/migrate.py`, and without it the release-level checks failed in every workspace.
 

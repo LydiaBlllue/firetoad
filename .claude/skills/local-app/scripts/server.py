@@ -40,6 +40,8 @@ Routes (every API answer is {"ok": bool, "data" | "error": …, "took": seconds}
                                                         screenshot, ranked by the account's capture line —
                                                         candidates only; the image is kept under .jade/shots/
   POST /api/open-inbox     —                            opens the inbox folder in the file manager
+  GET  /api/setup          wizard.state()               the setup screens, drafted from inbox/ (demo folders)
+  POST /api/setup          wizard.apply(answers, write) the answers file, scaffold, rebuild, first import (a job)
   GET  /api/tool           —                            how the folder's copy of the tool compares with the
                                                         app's (app.py tool_state: same / differs / newer)
   POST /api/sync           tools/sync.py                refreshes the folder's copy from the app's (a job)
@@ -70,7 +72,7 @@ import urllib.parse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SKILLS = os.path.dirname(os.path.dirname(HERE))
-for d in ("update-dashboard", "monthly-import", "fetch-statements", "local-app"):
+for d in ("update-dashboard", "monthly-import", "fetch-statements", "local-app", "setup"):
     sys.path.insert(0, os.path.join(SKILLS, d, "scripts"))
 import balance  # noqa: E402
 import confirm  # noqa: E402
@@ -82,6 +84,7 @@ import rebuild  # noqa: E402  MAIN_NAMES
 import status  # noqa: E402
 import update  # noqa: E402
 import verbs  # noqa: E402
+import wizard  # noqa: E402  the setup as screens
 
 PING_EVERY = 30          # seconds between the page's pings
 IDLE_EXIT = 300          # seconds without a ping before the server exits
@@ -340,6 +343,17 @@ class App:
             subprocess.Popen(["xdg-open", inbox])
         return {"inbox": inbox}
 
+    def is_demo(self):
+        return wizard.is_demo(self.root)
+
+    def do_setup_state(self):
+        return verbs.public(wizard.state(self.root))
+
+    def do_setup(self, answers):
+        if not isinstance(answers, dict):
+            raise ValueError("answers has to be an object")
+        return self.start_job("setup", True, lambda say: verbs.public(wizard.apply(self.root, answers, write=True, say=say)))
+
     def do_sync(self):
         """The folder's copy of the tool refreshed from the app's, then the state re-read."""
         if "refresh" not in self.tool_hooks:
@@ -475,6 +489,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 if not p:
                     return self._send(200, panel.no_dashboard(app.base), "text/html; charset=utf-8")
                 return self._send(200, open(p, "rb").read())
+            if path == "/panel" and app.is_demo():
+                return self._send(200, panel.render_setup(app.base, app.root, app.do_setup_state(),
+                                                          app.job.public() if app.job else None, app.tool),
+                                  extra=[("Content-Security-Policy",
+                                          "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; "
+                                          "connect-src 'self'; img-src data:; base-uri 'none'; form-action 'none'")])
             if path == "/panel":
                 return self._send(200, panel.render(app.base, app.root, app.do_status(), app.do_questions(),
                                                     app.last_import(), app.job.public() if app.job else None,
@@ -492,6 +512,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self._json(200, True, app.job.public() if app.job else None, t0)
             if path == "/api/tool":
                 return self._json(200, True, app.tool, t0)
+            if path == "/api/setup":
+                return self._json(200, True, app.do_setup_state(), t0)
             if path == "/api/events":
                 return self._events()
             return self._not_found()
@@ -554,6 +576,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self._json(200, True, app.open_inbox(), t0)
             elif path == "/api/sync":
                 job, busy = app.do_sync()
+            elif path == "/api/setup":
+                job, busy = app.do_setup(body.get("answers") or {})
             else:
                 return self._not_found()
             if busy:
