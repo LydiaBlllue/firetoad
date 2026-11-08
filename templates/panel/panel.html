@@ -79,6 +79,8 @@ details.how p{font-size:12.5px;color:var(--ink-2);background:var(--pill);border-
 .hint{font-size:12px;color:var(--muted)}
 pre.log{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f3f2ee;border-radius:8px;padding:10px 12px;margin-top:10px;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;display:none}
 pre.log.on{display:block}
+.rcard{margin-top:8px}
+.rcard .kv .v{text-align:right;max-width:70%;white-space:normal;word-break:break-word}
 .q-intro{font-size:12.5px;color:var(--ink-2);margin-bottom:6px}
 .q{padding:9px 0;border-top:1px solid var(--border)}
 .q:first-of-type{border-top:0}
@@ -210,6 +212,34 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
       .then(function(r){ return r.json().then(function(j){ j.status = r.status; return j; }); });
   }
   function setBusy(on){ running = on; [dry, go, undo, $('save')].forEach(function(b){ if (b) b.disabled = on; }); }
+  // step 3's result as a card from the summary the import returns; its lines stay under a fold
+  var rbox = document.createElement('div'); rbox.className = 'rcard'; log.parentNode.insertBefore(rbox, log);
+  function resultCard(res, written, err){
+    rbox.innerHTML = '';
+    if (!res) return;
+    var h = el('div', 'qh', esc(written ? T.r_done_h : T.r_dry_h)); rbox.appendChild(h);
+    var files = res.files || [];
+    rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(T.r_files) + '</span><span class="v">' + (files.length ? esc(files.join(' · ')) : esc(T.r_none_read)) + '</span>'));
+    var counts = res.counts || {}, cs = [];
+    Object.keys(counts).forEach(function(k){ var key = 'c_' + k; cs.push(T[key] ? fmtS(T[key], {n: counts[k]}) : counts[k] + ' ' + k); });
+    if (cs.length) rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(T.r_counts) + '</span><span class="v">' + esc(cs.join(' · ')) + '</span>'));
+    var notes = [];
+    if ((res.unknown || []).length) notes.push(['bad', fmtS(T.r_unknown, {n: res.unknown.length}) + ': ' + res.unknown.map(function(u){ return u[0]; }).join(', ')]);
+    if ((res.stopped || []).length) notes.push(['bad', T.r_stopped + ': ' + res.stopped.join('; ')]);
+    if ((res.by_hand || []).length) notes.push(['warn', fmtS(T.r_by_hand, {n: res.by_hand.length}) + ': ' + res.by_hand.map(function(u){ return u[0]; }).join(', ')]);
+    if ((res.untyped || []).length) notes.push(['warn', fmtS(T.r_untyped, {n: res.untyped.length})]);
+    if ((res.asked || []).length) notes.push(['ok', fmtS(T.r_asked, {n: res.asked.length})]);
+    notes.forEach(function(n){ rbox.appendChild(el('div', 'nt ' + n[0], '<span class="ic">' + (n[0] === 'ok' ? '✓' : '!') + '</span>' + esc(n[1]))); });
+    if (!written && ((res.unknown || []).length || (res.stopped || []).length)) rbox.appendChild(el('p', 'hint', esc(T.r_nothing_written)));
+    if (written) {
+      (res.changed || []).forEach(function(c){ rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(c.label) + '</span><span class="v">' + esc(c.from) + ' → ' + esc(c.to) + '</span>')); });
+      (res.noticed || []).forEach(function(n){ rbox.appendChild(el('div', 'nt ' + (n.sev || 'ok'), '<span class="ic">' + (n.sev === 'ok' ? '✓' : '!') + '</span>' + esc(n.text))); });
+      if ((res.findings || []).length) { rbox.appendChild(el('div', 'qh', esc(T.r_findings))); res.findings.forEach(function(f){ rbox.appendChild(el('div', 'nt warn', '<span class="ic">!</span>' + esc(f))); }); }
+      else rbox.appendChild(el('div', 'nt ok', '<span class="ic">✓</span>' + esc(T.r_clean)));
+    }
+    if (err) rbox.appendChild(el('div', 'nt bad', '<span class="ic">✗</span>' + esc(err.text || err)));
+    var d = el('details', 'more'); d.appendChild(el('summary', null, esc(T.r_raw))); d.appendChild(log); rbox.appendChild(d);
+  }
   function follow(onDone){
     log.textContent = ''; log.classList.add('on');
     var es = new EventSource(base + '/api/events');
@@ -227,8 +257,10 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
     }).catch(function(e){ setBusy(false); ierr.textContent = String(e); });
   }
   dry.onclick = function(){
+    rbox.innerHTML = ''; log.parentNode === rbox && rbox.appendChild(log);
     start('/api/import', {write: false}, T.dry_running, function(job){
       var res = job.result || {};
+      resultCard(res, false, job.error);
       if (job.error) { ihint.textContent = T.failed_lines; return; }
       if ((res.unknown || []).length || (res.stopped || []).length) { ihint.textContent = T.dry_stop; return; }
       if (!(res.files || []).length && !(res.counts && Object.keys(res.counts).length)) { ihint.textContent = T.dry_none; return; }
@@ -238,6 +270,7 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
   go.onclick = function(){
     go.style.display = 'none';
     start('/api/import', {write: true}, T.go_running, function(job){
+      resultCard(job.result || {}, true, job.error);
       ihint.textContent = job.error ? T.go_failed : T.go_done;
       if (!job.error) setTimeout(function(){ location.reload(); }, 1800);
     });
@@ -282,8 +315,9 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
     [it.brand, it.suggest, it.default].forEach(function(c){ if (c && c !== (big ? 'Other' : null) && order.indexOf(c) >= 0 && first.indexOf(c) < 0) first.push(c); });
     order = first.concat(order.filter(function(c){ return first.indexOf(c) < 0 && !(big && c === 'Other'); })).concat(big && order.indexOf('Other') >= 0 ? ['Other'] : []);
     var limit = big ? 6 : order.length, more = null;
+    var lab = function(c){ return (it.labels && it.labels[c]) || (Q.catLabels && Q.catLabels[c]) || c; };
     order.forEach(function(c, i){
-      var b = el('button', 'pl' + (big ? ' big' : '') + (c === selected ? ' sel' : ''), esc(c)); b.type = 'button';
+      var b = el('button', 'pl' + (big ? ' big' : '') + (c === selected ? ' sel' : ''), esc(lab(c))); b.type = 'button';
       if (big && i >= limit) { b.style.display = 'none'; b.setAttribute('data-more', '1'); }
       b.onclick = function(){ wrap.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); b.classList.add('sel'); onPick(c); };
       wrap.appendChild(b);
@@ -305,8 +339,9 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
       qm.appendChild(el('div', 'qh', esc(T.q_money_h)));
       moneyQ.forEach(function(it){
         var d = el('div', 'q'); d.setAttribute('data-n', it.n);
-        d.appendChild(el('div', 'qt', '<b>' + it.n + '.</b> ' + esc(it.what)));
-        d.appendChild(el('div', 'qs', esc(T.filed_as) + ' <b>' + esc(it.default) + '</b>' + (it.suggest ? ' · ' + esc(T.suggested) + ' <b>' + esc(it.suggest) + '</b>' : '')));
+        var L = function(c){ return (it.labels && it.labels[c]) || c; };
+        d.appendChild(el('div', 'qt', '<b>' + it.n + '.</b> ' + esc(it.text || it.what)));
+        d.appendChild(el('div', 'qs', esc(T.filed_as) + ' <b>' + esc(L(it.default)) + '</b>' + (it.suggest ? ' · ' + esc(T.suggested) + ' <b>' + esc(L(it.suggest)) + '</b>' : '')));
         if (it.choices.length) d.appendChild(pills(it, it.suggest || it.default, false, function(c){ keep(it, c); })); else d.appendChild(el('div', 'qs', esc(T.in_ledger)));
         qm.appendChild(d);
       });
@@ -323,12 +358,13 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
         var to = it.suggest || it.default;
         var row = el('div', 'sug');
         var m = el('span', 'm', esc(it.what)); var a = el('span', 'a', it.amount != null ? esc(fmtS(T.q_meta, {amount: money(it.amount), n: it.seen || 0})) : '');
-        var toEl = el('span', 'to', '→ ' + esc(to) + (it.suggestBy === 'model' ? '<span class="dot" title="' + esc(T.model_dot) + '">●</span>' : ''));
+        var LL = function(c){ return (it.labels && it.labels[c]) || (Q.catLabels && Q.catLabels[c]) || c; };
+        var toEl = el('span', 'to', '→ ' + esc(LL(to)) + (it.suggestBy === 'model' ? '<span class="dot" title="' + esc(T.model_dot) + '">●</span>' : ''));
         var ch = el('button', 'lnk', esc(T.q_change)); ch.type = 'button';
         ch.onclick = function(){
           if (row.classList.contains('open')) return;
           row.classList.add('open');
-          row.appendChild(pills(it, answers[it.n] || to, false, function(c){ keep(it, c); toEl.innerHTML = '→ ' + esc(c); }));
+          row.appendChild(pills(it, answers[it.n] || to, false, function(c){ keep(it, c); toEl.innerHTML = '→ ' + esc(LL(c)); }));
         };
         row.appendChild(m); row.appendChild(a); row.appendChild(toEl); row.appendChild(ch); list.appendChild(row);
       });
@@ -357,7 +393,7 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
         var c = el('div', 'cq');
         c.appendChild(el('div', 'name', esc(it.what)));
         c.appendChild(el('div', 'meta', (it.amount != null ? esc(fmtS(T.q_meta, {amount: money(it.amount), n: it.seen || 0})) : '') + (it.source ? ' · ' + esc(it.source) : '')));
-        if (it.brand) c.appendChild(el('div', 'brand', esc(fmtS(T.q_brand, {brand: it.what.split(' ')[0], cat: it.brand}))));
+        if (it.brand) c.appendChild(el('div', 'brand', esc(fmtS(T.q_brand, {brand: it.what.split(' ')[0], cat: (Q.catLabels && Q.catLabels[it.brand]) || it.brand}))));
         c.appendChild(pills(it, null, true, function(ch){ answer(it, ch); }));
         var f = el('div', 'foot2');
         var skip = el('button', 'lnk', esc(T.q_skip)); skip.type = 'button'; skip.onclick = function(){ answer(it, null); };

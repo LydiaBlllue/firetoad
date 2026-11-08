@@ -128,7 +128,13 @@ table.cm input{width:100%}
     if (step === 0) {
       card.appendChild(el('h2', null, esc(W.w_ready_h)));
       card.appendChild(el('p', 'q', esc(W.w_ready_q)));
-      card.appendChild(el('pre', 'log', esc(S.ready.lines.join('\n')) || esc(W.w_nothing)));
+      var R = S.ready, ul = el('ul', 'files');
+      ul.appendChild(el('li', R.python && R.python.ok ? 'ok' : 'bad', (R.python && R.python.ok ? '✓ ' : '✗ ') + esc(R.python && R.python.ok ? fmt(W.w_py_ok, {v: R.python.version}) : fmt(W.w_py_old, {v: R.python ? R.python.version : '?', min: R.python ? R.python.min : ''}))));
+      if (R.pdf && R.pdf.ok) ul.appendChild(el('li', 'ok', '✓ ' + esc(W.w_pdf_ok)));
+      else ul.appendChild(el('li', 'bad', '✗ ' + esc(W.w_pdf_missing) + '<pre class="log mono" style="margin-top:6px">' + esc(R.pdf && R.pdf.command || '') + '</pre>'));
+      var fk = R.files ? Object.keys(R.files.kinds || {}).map(function(k){ return R.files.kinds[k] + ' ' + k; }).join(', ') : '';
+      ul.appendChild(el('li', R.files && R.files.n ? 'ok' : 'hint', (R.files && R.files.n ? '✓ ' : '· ') + esc(R.files && R.files.n ? fmt(W.w_files_n, {n: R.files.n, kinds: fk}) : W.w_files_0)));
+      card.appendChild(ul);
       var ok = S.ready.rc === 0;
       card.appendChild(el('p', ok ? 'ok' : 'bad', esc(ok ? W.w_ready_ok : W.w_ready_no)));
       nav(card, false, ok ? function(){ step = 1; draw(); } : null);

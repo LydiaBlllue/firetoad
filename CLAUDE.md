@@ -198,7 +198,11 @@ numbered steps, *get the files · put them here · import · answer · done*, wi
 lit and a line saying what to do next; every sentence from `local-app/scripts/strings.py` in
 English and Chinese (`?lang=`, remembered in `.jade/settings.json`, else profile.json `lang`),
 and each missing file's *how do I get it* read from `parsers/support.py` (2026-11-07, after the
-first version's four internal names left the owner not knowing what to do). The server
+first version's four internal names left the owner not knowing what to do). Every question the
+import raises carries `facts` (kind, amount, date, sender, merchant) beside its English `what`:
+the panel says the question in the owner's language from the facts (`panel.say`), the chat
+reads `what`; the categories keep English keys and get a screen name per language
+(`categories.label`); step 3 draws the import's returned summary as a card, the lines folded. The server
 (`local-app/scripts/server.py`) holds **no financial logic**: each route is one call into a
 script's `run()` — `status`, `update`, `update.undo`, `confirm` — and the import still rebuilds
 through `rebuild.py`; the browser reloads the file. One lock file (`.jade.lock`, `jlock.py` in the

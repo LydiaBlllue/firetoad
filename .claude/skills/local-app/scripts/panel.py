@@ -211,7 +211,45 @@ def choices_for(item):
     return []
 
 
-def qdata(q):
+def money_s(v):
+    try:
+        return "$" + format(float(v), ",.2f")
+    except (TypeError, ValueError):
+        return str(v)
+
+
+def say(lang, it):
+    """The question in the owner's language, from the facts the import recorded; the stored
+    English sentence when there are none (items from before the facts, or kinds without them)."""
+    f = it.get("facts") or {}
+    k = f.get("kind")
+    if k == "credit":
+        d = f.get("date") or ""
+        if f.get("sender"):
+            return t(lang, "qs_credit_named", amount=money_s(f.get("amount")), date=d, who=str(f["sender"]).title())
+        return t(lang, "qs_credit", amount=money_s(f.get("amount")), date=d)
+    if k == "sent":
+        return t(lang, "qs_sent", amount=money_s(f.get("amount")), date=f.get("date") or "")
+    if k == "account":
+        key = "qs_account_to" if f.get("way") == "to" else "qs_account_from"
+        return t(lang, key, amount=money_s(f.get("amount")), date=f.get("date") or "", desc=f.get("desc") or "")
+    if k == "merchant":
+        if f.get("starter"):
+            return t(lang, "qs_merchant_starter", merchant=f.get("merchant"), cat=categories.label(f["starter"], lang))
+        return t(lang, "qs_merchant", merchant=f.get("merchant"))
+    if k == "fire" or it.get("kind") == "fire":
+        return t(lang, "qs_fire")
+    return it.get("what") or ""
+
+
+def option_label(lang, c):
+    """What a choice is called on screen: a category's name, or the money words, in the language."""
+    if c in categories.CATEGORIES:
+        return categories.label(c, lang)
+    return t(lang, "opt_" + c) if ("opt_" + c) in __import__("strings").S else c
+
+
+def qdata(q, lang="en"):
     """What step 4 draws: every open item with its choices, and the spending totals the Other
     share is computed from. The page groups them — money first, then the merchants with a
     suggestion, then the unknown ones as cards by amount."""
@@ -221,8 +259,12 @@ def qdata(q):
         d["choices"] = choices_for(it)
         if it.get("credit") and d.get("suggest"):
             d["suggest"] = confirm.INCOMING.get(d["suggest"], d["suggest"])
+        d["text"] = say(lang, it)
+        d["labels"] = {c: option_label(lang, c) for c in d["choices"]}
+        d["labels"].update({x: option_label(lang, x) for x in (d.get("default"), d.get("suggest")) if x})
         items.append(d)
-    return {"items": items, "spendTotal": (q or {}).get("spendTotal") or 0, "otherTotal": (q or {}).get("otherTotal") or 0}
+    return {"items": items, "spendTotal": (q or {}).get("spendTotal") or 0, "otherTotal": (q or {}).get("otherTotal") or 0,
+            "catLabels": {c: categories.label(c, lang) for c in categories.CATEGORIES}}
 
 
 def step4(lang, q):
@@ -248,7 +290,7 @@ def merchants_list(lang, root):
     out = [f'<details class="more" id="mlist"><summary>{e(t(lang, "m_title", n=len(rows)))}</summary><p class="qs">{e(t(lang, "m_intro"))}</p>']
     for i, m in enumerate(rows):
         hide = ' style="display:none"' if i >= 20 else ""
-        opts = "".join(f'<option value="{e(c)}"{" selected" if c == m["category"] else ""}>{e(c)}</option>' for c in cats)
+        opts = "".join(f'<option value="{e(c)}"{" selected" if c == m["category"] else ""}>{e(categories.label(c, lang))}</option>' for c in cats)
         out.append(f'<div class="sug mrow" data-match="{e(m["match"])}"{hide}><span class="m">{e(m["match"])}</span>'
                    f'<span class="a">{e(t(lang, "q_meta", amount="$" + format(m["amount"], ",.0f"), n=m["seen"]))}</span>'
                    f'<select class="mcat">{opts}</select><span class="hint mmsg"></span></div>')
@@ -363,7 +405,7 @@ def render(base, root, st, q, rec, job, held, tool=None, lang="en"):
             "{{BUSY}}": busy, "{{NQ}}": str(nq), "{{AI}}": ai_card(lang, root), "{{AI_TITLE}}": e(t(lang, "ai_title")),
             "{{SETTINGS}}": e(t(lang, "settings")),
             "{{JS}}": json.dumps(js_strings(lang), ensure_ascii=False).replace("</", "<\\/"),
-            "{{QDATA}}": json.dumps(qdata(q), ensure_ascii=False).replace("</", "<\\/"),
+            "{{QDATA}}": json.dumps(qdata(q, lang), ensure_ascii=False).replace("</", "<\\/"),
             "{{VERSION}}": e((tool or {}).get("version") or "")}
     for k, v in fill.items():
         tpl = tpl.replace(k, v)

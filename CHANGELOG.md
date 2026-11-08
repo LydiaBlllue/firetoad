@@ -18,6 +18,13 @@
   the amount and the count, the likeliest categories first and "Other" last, skip or leave the
   rest, and the share of spending still in Other falling as you go. A card slides away when
   answered (120 ms, none for anyone who asked their system for less motion).
+- **A panel you can read without knowing the tool** (2026-11-08, user 001): step 3 shows what
+  the import did as a card — files read, what they held, questions raised, anything stopped —
+  in your language, with the program's own lines under a fold; every question is stored as its
+  facts (the amount, the date, who sent it, the merchant) and said by the panel in your language,
+  the English sentence kept for the chat; the fifteen categories have Chinese names on screen
+  (the keys in the data stay English); the wizard's first screen says in three lines what is
+  installed and what is not, with the one command when something is missing.
 - **Structure, not features** (2026-11-08, user 001): the panel is a desktop page now — two
   columns from 1000px, what you do on the left, what the program does on the right, one column
   below that; the dashboard's header says how many answers wait and, when the app serves the

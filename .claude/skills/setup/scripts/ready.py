@@ -14,6 +14,34 @@ import os, sys
 MIN = (3, 9)
 
 
+def check(root):
+    """What the screen draws (2026-11-08): python {ok, version}, pdf {ok, missing, command},
+    browser {ok}, files {n, kinds}. main() prints the same facts as lines."""
+    v = sys.version_info
+    missing = []
+    for mod in ("pypdf", "cryptography"):
+        try:
+            __import__(mod)
+        except ImportError:
+            missing.append(mod)
+    try:
+        import playwright  # noqa: F401
+        browser = True
+    except ImportError:
+        browser = False
+    inbox = os.path.join(root, "inbox")
+    files = sorted(f for f in os.listdir(inbox) if not f.startswith(".")) if os.path.isdir(inbox) else []
+    kinds = {}
+    for f in files:
+        ext = os.path.splitext(f)[1].lower().lstrip(".") or "other"
+        kinds[ext] = kinds.get(ext, 0) + 1
+    return {"python": {"ok": (v.major, v.minor) >= MIN, "version": f"{v.major}.{v.minor}", "min": f"{MIN[0]}.{MIN[1]}"},
+            "pdf": {"ok": not missing, "missing": missing,
+                    "command": f"{os.path.basename(sys.executable)} -m pip install --user {' '.join(missing)}" if missing else None},
+            "browser": {"ok": browser}, "files": {"n": len(files), "kinds": kinds},
+            "ok": (v.major, v.minor) >= MIN and not missing}
+
+
 def main(argv):
     root = os.path.abspath(argv[1]) if len(argv) > 1 else os.getcwd()
     need, ok, nice = [], [], []

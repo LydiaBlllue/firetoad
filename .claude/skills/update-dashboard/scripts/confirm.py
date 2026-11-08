@@ -201,7 +201,8 @@ def run(root, write=False, ok=False, sets=(), say=None):
                              # money in from no named sender, or a transfer out that may be spending
                              "credit": bool(d.get("credit")), "spent": bool(d.get("row")),
                              "suggestBy": d.get("suggestBy"),
-                             "amount": total.get(k) if k else None, "brand": kin.pop() if len(kin) == 1 else None})
+                             "amount": total.get(k) if k else None, "brand": kin.pop() if len(kin) == 1 else None,
+                             "facts": d.get("facts"), "source": d.get("source")})
 
     # what the owner said
     want, bad = {}, res["bad"]

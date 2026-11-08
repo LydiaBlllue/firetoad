@@ -347,10 +347,11 @@ def type_row(ws, acc, desc, amt, when, holder=None):
             return "Other", "e-Transfer received", {
                 "kind": "transfer", "what": (f"A {money(amt)} e-Transfer received on {short(iso_to_date(when))} from {who.title()} — what is it?"
                                               if who else f"A {money(amt)} e-Transfer received on {short(iso_to_date(when))} carries no sender you have named."),
-                "default": "Other income", **({"sender": who} if who else {})}
+                "default": "Other income", **({"sender": who} if who else {}),
+                "facts": {"kind": "credit", "amount": amt, "date": when, "sender": who or None}}
         return "Transfer", "e-Transfer sent", {
             "kind": "transfer", "what": f"A {money(-amt)} e-Transfer sent on {short(iso_to_date(when))} went to someone you have not named.",
-            "default": "Transfer"}
+            "default": "Transfer", "facts": {"kind": "sent", "amount": -amt, "date": when, "to": sender_of(desc) or None}}
     if broker_n and (broker_n in dn or "WSINVESTMENT" in dn or "WSIMPLE" in dn):
         return "Transfer", f"Transfer {'to' if amt < 0 else 'from'} {ws.broker}", None
     if amt > 0 and ("PAYROLL" in dn or ("PAY" in dn and "DEPOSIT" in dn)):
@@ -382,7 +383,7 @@ def type_row(ws, acc, desc, amt, when, holder=None):
             "kind": "transfer",
             "what": f"A {money(abs(amt))} transfer {way} an account the register does not have, on "
                     f"{short(iso_to_date(when))} ({desc.strip()[:60]}).",
-            "default": "Transfer"}
+            "default": "Transfer", "facts": {"kind": "account", "amount": abs(amt), "date": when, "way": way, "desc": desc.strip()[:60]}}
     if amt < 0 and PAYMENT.search(d):
         return "Payment", "Payment — " + payee_of(desc).title(), None
     if "FEE" in dn:
@@ -937,7 +938,8 @@ def note_merchant(plan, key, cat, how, when, src, root=None):
         plan.new_merchants[key] = (cat, src)
         why = " The starter map of common chains suggests " + cat + "." if how == "starter" else ""
         item = {"kind": "merchant", "match": key, "what": f"{key}, seen for the first time.{why}",
-                "default": cat, "source": f"{src}, {short(iso_to_date(when))}"}
+                "default": cat, "source": f"{src}, {short(iso_to_date(when))}",
+                "facts": {"kind": "merchant", "merchant": key, "starter": cat if how == "starter" else None, "date": when}}
         # A model, only where every map missed and only if the owner set one (ai.py): its answer
         # is the question's suggestion, never the category — Other stays until the owner says.
         if how == "new" and root and ai.enabled(root):
@@ -1106,7 +1108,7 @@ def write_plan(ws, plan):
                 {"added": ws.today.isoformat(), "kind": d["kind"], **({"match": d["match"]} if d.get("match") else {}),
                  "what": d["what"], "default": d["default"], "source": d.get("source", ""), "status": "open",
                  # what confirm.py needs to act on the answer: a suggestion, and the row it lands on
-                 **{k: d[k] for k in ("suggest", "suggestBy", "row", "credit", "sender") if d.get(k)}})
+                 **{k: d[k] for k in ("suggest", "suggestBy", "row", "credit", "sender", "facts") if d.get(k)}})
         jsave(fd("decisions.json"), ws.decisions)
     os.makedirs(os.path.join(ws.root, "archive"), exist_ok=True)
     for src, dst in plan.archive:
@@ -1463,7 +1465,7 @@ def _import(root, write, hand, balance, say):
     investing = any(x.get("role") == "grow" and (x.get("balance") or 0) > 0 for x in ws.reg.get("accounts", []))
     if "fire" not in pj and not investing and not any(d.get("kind") == "fire" and d.get("status") == "open"
                                                        for d in ws.decisions.get("decisions", [])):
-        plan.decisions.append({"kind": "fire", "default": "No",
+        plan.decisions.append({"kind": "fire", "default": "No", "facts": {"kind": "fire"},
                                "what": "Is retiring early (FIRE) something you are working toward? Yes or no; "
                                        "the FIRE pages show only for yes."})
 

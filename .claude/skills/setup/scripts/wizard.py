@@ -115,7 +115,7 @@ def state(root, say=None):
     root = os.path.abspath(root)
     today = datetime.date.today().isoformat()
     rc, rl = ready_lines(root)
-    res = {"demo": is_demo(root), "ready": {"rc": rc, "lines": rl}, "files": inbox_files(root),
+    res = {"demo": is_demo(root), "ready": {"rc": rc, "lines": rl, **ready.check(root)}, "files": inbox_files(root),
            "draft": None, "screens": None, "today": today}
     who = "the demo is still here" if res["demo"] else "this folder is already somebody's"
     emit(f"=== setup — {who} · {len(res['files'])} file(s) in inbox/ ===")
