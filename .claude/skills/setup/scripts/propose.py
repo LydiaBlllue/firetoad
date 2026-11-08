@@ -342,8 +342,11 @@ def propose(root, inbox):
     if activities:
         dep = collections.defaultdict(list)
         for r in activities[1]:
+            # money reaching the broker from a bank: an EFT into any of its accounts — the chequing
+            # doorway some owners use, or straight into a TFSA or RRSP (the first full simulation
+            # on the demo, 2026-11-07, drafted no investing figure because the demo deposits there)
             if (r.get("activity_type") == "MoneyMovement" and r.get("activity_sub_type") == "EFT"
-                    and "chequ" in (r.get("account_type") or "").lower() and r.get("currency") == "CAD"):
+                    and r.get("currency") == "CAD"):
                 a = float(r.get("net_cash_amount") or 0)
                 if a > 0:
                     dep[r["effective_date"][:7]].append(a)

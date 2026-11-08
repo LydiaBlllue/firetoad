@@ -51,7 +51,7 @@ S = {
     "missing": {"en": "{doc}: {n} missing ({months})", "zh": "{doc}：缺 {n} 份（{months}）"},
     "doc_ok": {"en": "{doc}: up to date", "zh": "{doc}：已是最新"},
     "doc_inbox": {"en": "{doc}: in inbox", "zh": "{doc}：已放进来"},
-    "export_line": {"en": "{key} export · newest {asof}", "zh": "{key} 导出 · 最新到 {asof}"},
+    "export_line": {"en": "{what} export · newest {asof}", "zh": "{what} 导出 · 最新到 {asof}"},
     "how": {"en": "How do I get it?", "zh": "怎么拿？"},
     "how_bank_generic": {"en": "Sign in to {bank} online banking → Statements → download last month's PDF. Keep the file name the bank gives it, then drop it in step 2.",
                          "zh": "登录 {bank} 网银 → 对账单（Statements）→ 下载上个月的 PDF。文件名别改，然后在第 2 步放进来。"},
@@ -153,7 +153,9 @@ MONTHS = {"en": ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", 
 
 
 def t(lang, key, **kw):
-    """The string for `key` in `lang` (English when the language has none), formatted."""
+    """The string for `key` in `lang` (English when the language has none), formatted. A
+    placeholder may not be called `lang` or `key` (the panel crashed on `{key}` once a broker
+    export was missing, 2026-11-07, found by the first full simulation)."""
     row = S.get(key) or {}
     text = row.get(lang) or row.get("en") or key
     try:

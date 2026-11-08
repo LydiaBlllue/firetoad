@@ -78,7 +78,9 @@ def screens(draft, today):
               if isinstance((a.get("doc") or {}).get("closes"), int)]
     day = (max(closes) % 28) + 1 if closes else int(draft.get("importDay") or 1)
     return {
-        "owner": {"suggest": draft.get("owner"), "ask": (q.get("owner") or {}).get("q")},
+        # the name the statements carry is the owner question's `suggest`, not the draft's `owner`
+        # (which stays None until answered); the first simulation showed an empty name field
+        "owner": {"suggest": draft.get("owner") or (q.get("owner") or {}).get("suggest"), "ask": (q.get("owner") or {}).get("q")},
         "born": {"ask": (q.get("born") or {}).get("q")},
         "accounts": {"rows": accounts, "roles": [{"key": k, "label": l, "why": w} for k, l, w in ROLES],
                      "ask": (q.get("accounts") or {}).get("q"), "missing": (q.get("missing") or {}).get("q"),

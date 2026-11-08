@@ -135,7 +135,7 @@ def step1(lang, st):
         if x["state"] == "ok":
             done.append(x["from"]); continue
         extra = how(lang, export_how(lang, x["from"], x["key"])) if x["state"] == "todo" else ""
-        rows.append(row("export", x["from"], e(t(lang, "export_line", key=x["key"], asof=x.get("asof") or t(lang, "never"))),
+        rows.append(row("export", x["from"], e(t(lang, "export_line", what=x["key"], asof=x.get("asof") or t(lang, "never"))),
                         x["state"], lang, extra, "export"))
     for s in st.get("screenshots") or []:
         if s["state"] == "ok":

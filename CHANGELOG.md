@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.3 — unreleased
+
+- **Found by the first full simulation on the demo owner** (2026-11-07): the panel crashed
+  when a broker export was missing (a placeholder in the strings table clashed with the
+  helper's own parameter; a test now forbids it); the setup wizard did not pre-fill the name
+  the statements carry; the draft offered no investing figure when deposits land straight in a
+  TFSA or RRSP instead of passing through a chequing account at the broker.
+
 ## 1.0.2 — 2026-11-07
 
 - **A second way in, beside Claude** (2026-11-06, ROADMAP 2.0.0 step 1b): `python3 app.py`
