@@ -17,9 +17,20 @@ the demo (profile.json `demo: true`), a sign it is someone's folder, and it adds
 archive/, .private/, product/ or feedback/: the same lines the privacy guard draws for a commit.
 
 Signing: without --sign the app is ad-hoc signed, which runs on this Mac and asks the next Mac
-to System Settings → Privacy & Security → Open Anyway once (macOS 14 and earlier: right-click → Open). With --sign (a Developer ID Application identity) it is signed with
-the hardened runtime and build/entitlements.plist; with --notarize (a notarytool keychain
-profile) it is notarised and stapled, which is what a public download needs. uv is used for
+to System Settings → Privacy & Security → Open Anyway once (macOS 14 and earlier: right-click →
+Open). With --sign (a Developer ID Application identity) every library is signed inside out with
+the hardened runtime, then the app with build/entitlements.plist; --sign - does the same ad hoc,
+a local test that the app still runs hardened. With --notarize (a notarytool keychain profile)
+the app is sent to Apple and stapled, then the disk image: what a public download needs.
+
+Signing for real, once per Mac:
+  1. An Apple Developer Program membership (developer.apple.com/programs, as an individual).
+  2. Xcode → Settings → Accounts → the Apple ID → Manage Certificates → + → Developer ID
+     Application. `security find-identity -v -p codesigning` then lists it.
+  3. An app-specific password (account.apple.com → Sign-In and Security), then
+     xcrun notarytool store-credentials jadetoad --apple-id <the Apple ID> --team-id <team>
+     which asks for that password and keeps it in the Keychain under the profile "jadetoad".
+  4. python3 build/build.py --sign "Developer ID Application: <name> (<team>)" --notarize jadetoad uv is used for
 PyInstaller when it is installed (a pinned, modern Python); otherwise this interpreter's.
 """
 import argparse
@@ -162,13 +173,19 @@ def build(args):
 
     out = os.path.join(dist, NAME + ".app") if sys.platform == "darwin" else os.path.join(dist, NAME)
     if sys.platform == "darwin":
-        ent = os.path.join(HERE, "entitlements.plist")
         if args.sign:
-            run(["codesign", "--force", "--deep", "--options", "runtime", "--timestamp", "--entitlements", ent,
-                 "--sign", args.sign, out])
+            sign_app(out, args.sign)
         else:
             run(["codesign", "--force", "--deep", "--sign", "-", out])
         run(["codesign", "--verify", "--deep", "--strict", out])
+        if args.notarize:
+            # the app first, its ticket stapled to it: once dragged out of the disk image it
+            # carries its own proof and opens with no network (the dmg's ticket stays on the dmg)
+            z = os.path.join(dist, NAME + ".zip")
+            run(["ditto", "-c", "-k", "--keepParent", out, z])
+            notarize(z, args.notarize)
+            os.remove(z)
+            run(["xcrun", "stapler", "staple", out])
     ver = version()
     if not args.no_dmg:
         if sys.platform == "darwin":
@@ -177,18 +194,84 @@ def build(args):
                 os.remove(dmg)
             make_dmg(out, dmg)
             if args.sign:
-                run(["codesign", "--force", "--timestamp", "--sign", args.sign, dmg])
+                run(["codesign", "--force", "--timestamp=none" if args.sign == "-" else "--timestamp", "--sign", args.sign, dmg])
             if args.notarize:
-                run(["xcrun", "notarytool", "submit", dmg, "--keychain-profile", args.notarize, "--wait"])
-                run(["xcrun", "stapler", "staple", out])
+                notarize(dmg, args.notarize)
                 run(["xcrun", "stapler", "staple", dmg])
+                run(["spctl", "--assess", "--type", "open", "--context", "context:primary-signature", "-v", dmg])
             print(f"\n  ✓ {dmg}")
         else:
             z = shutil.make_archive(os.path.join(dist, f"JadeToad-{ver}-{platform.system().lower()}"), "zip", dist, NAME)
             print(f"\n  ✓ {z}")
-    print(f"  ✓ {out}" + ("" if args.sign else "  (ad-hoc signed: this Mac runs it; another asks for System Settings → Privacy & Security → Open Anyway once)"))
+    how = ("  (notarised: any Mac opens it with a double-click)" if args.notarize else
+           "  (hardened, ad-hoc: a local test of the signed build)" if args.sign == "-" else
+           "  (signed, not notarised: another Mac still asks once)" if args.sign else
+           "  (ad-hoc signed: this Mac runs it; another asks for System Settings → Privacy & Security → Open Anyway once)")
+    print(f"  ✓ {out}" + how)
     return 0
 
+
+
+MACHO = (b"\xcf\xfa\xed\xfe", b"\xce\xfa\xed\xfe", b"\xca\xfe\xba\xbe", b"\xfe\xed\xfa\xcf", b"\xfe\xed\xfa\xce")
+
+
+def sign_app(app, identity):
+    """Sign for notarisation, inside out. `codesign --deep` only reaches code in the places a
+    bundle is supposed to keep it, and PyInstaller puts a few hundred Python extensions
+    (.so, .dylib) under Frameworks/ and Resources/; notarisation refuses the app if any one of
+    them lacks a signature, the hardened runtime or a secure timestamp. So every Mach-O file is
+    signed on its own, deepest first, then each nested bundle (Python3.framework) as a whole, then
+    the app with build/entitlements.plist, which is what
+    Python needs under the hardened runtime. `--sign -` runs the same path ad hoc (no timestamp
+    is possible): a local test that the app still starts with the hardened runtime on."""
+    ent = os.path.join(HERE, "entitlements.plist")
+    ts = ["--timestamp=none"] if identity == "-" else ["--timestamp"]
+    main_exe = os.path.join(app, "Contents", "MacOS", NAME)
+    found = []
+    for d, _, fs in os.walk(app):
+        for f in fs:
+            p = os.path.join(d, f)
+            if os.path.islink(p) or p == main_exe:
+                continue
+            try:
+                with open(p, "rb") as fh:
+                    if fh.read(4) in MACHO:
+                        found.append(p)
+            except OSError:
+                pass
+    found.sort(key=lambda p: -p.count(os.sep))
+    print(f"  $ codesign {len(found)} libraries and extensions, then the app (hardened runtime)")
+    for i in range(0, len(found), 50):     # in batches: one codesign call per file is minutes
+        subprocess.run(["codesign", "--force", "--options", "runtime", *ts, "--sign", identity, *found[i:i + 50]],
+                       check=True, stdout=subprocess.DEVNULL)
+    # a nested bundle (PyInstaller ships Python3.framework) has its own seal over what is inside
+    # it: signed after its contents, as a bundle, or the app's signature calls it "modified"
+    nested = []
+    for d, dirs, _ in os.walk(app):
+        for x in dirs:
+            p = os.path.join(d, x)
+            if x.endswith((".framework", ".bundle", ".app", ".xpc")) and not os.path.islink(p):
+                nested.append(p)
+    for p in sorted(nested, key=lambda p: -p.count(os.sep)):
+        run(["codesign", "--force", "--options", "runtime", *ts, "--sign", identity, p])
+    run(["codesign", "--force", "--options", "runtime", *ts, "--entitlements", ent, "--sign", identity, app])
+
+
+def notarize(path, profile):
+    """Send to Apple and wait; stop with Apple's own log when it is not Accepted. notarytool
+    exits 0 even for an Invalid submission, so its answer is read, not its exit code."""
+    print(f"  $ xcrun notarytool submit {os.path.basename(path)} --keychain-profile {profile} --wait")
+    r = subprocess.run(["xcrun", "notarytool", "submit", path, "--keychain-profile", profile, "--wait",
+                        "--output-format", "json"], capture_output=True, text=True)
+    try:
+        res = json.loads(r.stdout)
+    except ValueError:
+        die("notarytool: " + (r.stderr or r.stdout).strip()[:400])
+    if res.get("status") != "Accepted":
+        log = subprocess.run(["xcrun", "notarytool", "log", res.get("id", ""), "--keychain-profile", profile],
+                             capture_output=True, text=True).stdout
+        die(f"Apple did not accept {os.path.basename(path)} ({res.get('status')}):\n{log[:3000]}")
+    print(f"  ✓ notarised: {os.path.basename(path)}")
 
 
 def make_dmg(app, dmg):
@@ -265,7 +348,7 @@ end tell"""
 
 def main(argv):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--sign", help="a Developer ID Application identity (macOS)")
+    ap.add_argument("--sign", help='a Developer ID Application identity (macOS); "-" is the same signing ad hoc, a local test')
     ap.add_argument("--notarize", help="a notarytool keychain profile; implies --sign")
     ap.add_argument("--no-dmg", action="store_true")
     a = ap.parse_args(argv)

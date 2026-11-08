@@ -90,4 +90,5 @@ panel says so and the amount is typed.
 - **The build carries no workspace.** `build/build.py` refuses a checkout whose `findata/` is
   not the demo's, and bundles only what `tools/sync.py` copies. Without `--sign`
   it is ad-hoc signed (this Mac runs it; another asks for System Settings → Privacy & Security → Open Anyway once); a public
-  download needs `--sign` with a Developer ID and `--notarize`.
+  download needs `--sign` with a Developer ID and `--notarize` (the build's own help lists the
+  four steps to get them); `--sign -` tests the hardened, signed path on this Mac.

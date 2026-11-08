@@ -7,6 +7,14 @@
   languages on the first launch; `docs/install.md` (and the Chinese page) walks the first launch
   on macOS 15 and on macOS 14 and earlier, with the words each dialog uses, and says why macOS
   asks; README and the release notes point there instead of saying it three different ways.
+- **The signed build, ready for a Developer ID** (2026-11-08, user 001): `build/build.py --sign`
+  now signs every one of the app's libraries on its own with the hardened runtime, then the
+  bundled Python framework, then the app; `--deep` had left most of them unsigned, which
+  notarisation refuses. The entitlements file did not parse (a `--` inside an XML comment), so a
+  signed build could not have succeeded at all. `--notarize` sends the app, staples it, then the
+  disk image, and stops with Apple's log when the answer is not Accepted. `--sign -` runs the
+  same path ad hoc: the app, hardened, makes a folder, builds and imports a month and reads a
+  screenshot. What is left is the Developer ID itself; the build's own help says the four steps.
 - **A new folder holds no one's data** (2026-11-08, user 001): *Make one* used to fill the
   folder with the demo owner's accounts until the setup replaced them; it now writes only the
   tool and a profile.json that says the folder is not set up yet, so the wizard starts on an
