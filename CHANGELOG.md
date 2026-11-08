@@ -7,6 +7,12 @@
   languages on the first launch; `docs/install.md` (and the Chinese page) walks the first launch
   on macOS 15 and on macOS 14 and earlier, with the words each dialog uses, and says why macOS
   asks; README and the release notes point there instead of saying it three different ways.
+- **The arrow** (2026-11-08, user 001): opening the disk image shows the window most Mac
+  downloads have — the app on the left, the Applications folder on the right, an arrow between
+  them and "drag Jade Toad onto Applications" under it in both languages, the first-launch note
+  below. Finder lays it out at build time (`build/dmg_art.py` draws the picture and holds the
+  window's geometry); a layout written without Finder came out blank on macOS 26. The build
+  refuses while another disk of the same name is mounted, which is what silently broke it.
 
 ## 1.0.3 — 2026-11-08 — a panel you can read without knowing the tool
 

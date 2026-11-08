@@ -32,6 +32,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 TOOL = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(TOOL, "tools"))
+sys.path.insert(0, HERE)   # dmg_art.py, the disk image window
 import sync  # noqa: E402  SYNCED: the one list of what the tool is
 
 NAME = "Jade Toad"
@@ -172,18 +173,7 @@ def build(args):
             dmg = os.path.join(dist, f"JadeToad-{ver}.dmg")
             if os.path.exists(dmg):
                 os.remove(dmg)
-            # the disk image shows three things: the app, the Applications folder to drag it onto,
-            # and a one-page note on the first launch (build/dmg/), in both languages
-            stage_dir = os.path.join(dist, "dmg-stage")
-            shutil.rmtree(stage_dir, ignore_errors=True)
-            os.makedirs(stage_dir)
-            shutil.copytree(out, os.path.join(stage_dir, os.path.basename(out)), symlinks=True)
-            os.symlink("/Applications", os.path.join(stage_dir, "Applications"))
-            for f in os.listdir(os.path.join(HERE, "dmg")):
-                if not f.startswith("."):
-                    shutil.copy(os.path.join(HERE, "dmg", f), stage_dir)
-            run(["hdiutil", "create", "-volname", NAME, "-srcfolder", stage_dir, "-ov", "-format", "UDZO", dmg])
-            shutil.rmtree(stage_dir, ignore_errors=True)
+            make_dmg(out, dmg)
             if args.sign:
                 run(["codesign", "--force", "--timestamp", "--sign", args.sign, dmg])
             if args.notarize:
@@ -197,6 +187,79 @@ def build(args):
     print(f"  ✓ {out}" + ("" if args.sign else "  (ad-hoc signed: this Mac runs it; another asks for System Settings → Privacy & Security → Open Anyway once)"))
     return 0
 
+
+
+def make_dmg(app, dmg):
+    """The disk image a person opens: the app on the left, the Applications folder on the right,
+    an arrow between them and the instruction in both languages under it (build/dmg_art.py),
+    the first-launch note at the foot (build/dmg/).
+
+    Finder lays the window out itself: a writable image is mounted, AppleScript tells Finder the
+    background, the icon size and where each icon sits, and the image is then compressed. A
+    .DS_Store written without Finder (dmgbuild) is ignored by Finder on macOS 26: the window came
+    out blank. The first build asks once for permission to control Finder. Without Finder (or
+    without Pillow) the image still has all three things, in Finder's plain window."""
+    import tempfile
+    notes = [os.path.join(HERE, "dmg", f) for f in sorted(os.listdir(os.path.join(HERE, "dmg"))) if not f.startswith(".")]
+    vol = os.path.join("/Volumes", NAME)
+    if os.path.exists(vol):
+        # Finder is told the disk by name; a second one would be "Jade Toad 1" and the layout
+        # would land on whichever Finder found first
+        sys.exit(f'  ✗ a disk named {NAME} is mounted: eject it first (Finder, or hdiutil detach "{vol}")')
+    work = tempfile.mkdtemp(prefix="jade-dmg-")
+    stage_dir = os.path.join(work, "stage")
+    os.makedirs(stage_dir)
+    shutil.copytree(app, os.path.join(stage_dir, os.path.basename(app)), symlinks=True)
+    os.symlink("/Applications", os.path.join(stage_dir, "Applications"))
+    for f in notes:
+        shutil.copy(f, stage_dir)
+    laid_out = False
+    try:
+        import dmg_art
+        os.makedirs(os.path.join(stage_dir, ".background"))
+        dmg_art.write(os.path.join(stage_dir, ".background", "bg.tiff"))
+    except Exception as e:                       # no Pillow, no tiffutil: the plain window
+        print(f"  · plain disk image (the background could not be drawn: {e})")
+        dmg_art = None
+    if dmg_art:
+        rw = os.path.join(work, "rw.dmg")
+        run(["hdiutil", "create", "-quiet", "-volname", NAME, "-srcfolder", stage_dir, "-fs", "HFS+",
+             "-format", "UDRW", "-ov", rw])
+        run(["hdiutil", "attach", "-quiet", "-nobrowse", "-noautoopen", rw])
+        w, h = dmg_art.WINDOW["size"]
+        place = [(os.path.basename(app), dmg_art.ICONS["app"]), ("Applications", dmg_art.ICONS["apps"])]
+        place += [(os.path.basename(f), dmg_art.ICONS["note"]) for f in notes]
+        where = "\n".join(f'    set position of item "{n}" of container window to {{{x}, {y}}}' for n, (x, y) in place)
+        script = f"""tell application "Finder"
+  tell disk "{NAME}"
+    open
+    set current view of container window to icon view
+    set toolbar visible of container window to false
+    set statusbar visible of container window to false
+    set the bounds of container window to {{200, 120, {200 + w}, {120 + h + dmg_art.TITLE_BAR}}}
+    set opts to the icon view options of container window
+    set arrangement of opts to not arranged
+    set icon size of opts to {dmg_art.WINDOW["icon_size"]}
+    set text size of opts to 13
+    set background picture of opts to file ".background:bg.tiff"
+{where}
+    update without registering applications
+    delay 1
+    close
+  end tell
+end tell"""
+        r = subprocess.run(["osascript", "-"], input=script, text=True, capture_output=True)
+        laid_out = r.returncode == 0
+        if not laid_out:
+            print(f"  · plain disk image (Finder did not lay it out: {r.stderr.strip()[:160]})")
+        subprocess.run(["sync"])
+        run(["hdiutil", "detach", "-quiet", vol])
+        if laid_out:
+            run(["hdiutil", "convert", "-quiet", rw, "-format", "UDZO", "-ov", "-o", dmg])
+    if not laid_out:
+        shutil.rmtree(os.path.join(stage_dir, ".background"), ignore_errors=True)
+        run(["hdiutil", "create", "-volname", NAME, "-srcfolder", stage_dir, "-ov", "-format", "UDZO", dmg])
+    shutil.rmtree(work, ignore_errors=True)
 
 def main(argv):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
