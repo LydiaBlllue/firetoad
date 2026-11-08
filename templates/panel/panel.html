@@ -1,56 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{LANG}}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jade Toad · Monthly import</title>
+<title>Jade Toad · {{SUBTITLE}}</title>
 <style>
 /* The dashboard's tokens (templates/dashboards/finance_dashboard.html :root), so the panel reads
-   as the same product. Sized for a phone screen; it is the monthly-import card, not a page. */
+   as the same product. Sized for a phone screen. Five numbered steps; the current one is lit. */
 :root{color-scheme:light;--page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--muted:#75736d;
   --grid:#e1e0d9;--border:rgba(11,11,11,.10);--pill:#efeeea;--warn-bg:#fdf6e6;--warn-bd:#f0dfb4;--warn:#c98500;
-  --ok-bg:#eaf6ef;--ok:#1a7a4a;--bad-bg:#fbeaea;--bad:#b3261e}
+  --ok-bg:#eaf6ef;--ok:#1a7a4a;--bad-bg:#fbeaea;--bad:#b3261e;--jade:#1baf7a}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.45;padding:28px 16px 64px}
-.wrap{max-width:560px;margin:0 auto}
-.brand{display:flex;align-items:baseline;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:14px}
+body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;font-size:14px;line-height:1.5;padding:24px 16px 64px}
+.wrap{max-width:600px;margin:0 auto}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:12px}
 .brand h1{font-size:19px;font-weight:700;letter-spacing:-.3px}
 .brand small{color:var(--muted);font-size:12px}
-.brand a{margin-left:auto;font-size:12.5px;color:var(--ink-2)}
-.lead{font-size:13.5px;color:var(--ink-2);margin-bottom:14px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 15px;margin-bottom:12px}
-.lab{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.row{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--border)}
+.brand .r{margin-left:auto;display:flex;gap:12px;font-size:12.5px}
+.brand a{color:var(--ink-2)}
+.intro{font-size:13px;color:var(--ink-2);margin-bottom:12px}
+.muted{color:var(--muted)}
+/* the strip: five steps, the current one lit */
+.strip{display:flex;gap:4px;margin-bottom:8px}
+.stp{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:9px;text-decoration:none;color:var(--muted);border:1px solid transparent}
+.stp .n{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:var(--pill);color:var(--ink-2)}
+.stp .t{font-size:11px;text-align:center;line-height:1.2}
+.stp.done .n{background:var(--ok-bg);color:var(--ok)}
+.stp.done{color:var(--ok)}
+.stp.on{background:var(--surface);border-color:var(--border);color:var(--ink)}
+.stp.on .n{background:var(--ink);color:#fff}
+.lead{font-size:13.5px;font-weight:600;margin:4px 0 14px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--ink);border-radius:8px}
+/* a step card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 15px;margin-bottom:12px;scroll-margin-top:12px}
+.card.on{border-color:var(--ink)}
+.card h2{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:700;margin-bottom:8px}
+.card h2 .n{width:22px;height:22px;border-radius:50%;background:var(--pill);color:var(--ink-2);font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card.on h2 .n{background:var(--ink);color:#fff}
+.card.done h2 .n{background:var(--ok-bg);color:var(--ok)}
+.row{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--border)}
 .row:first-of-type{border-top:0}
-.row .ic{width:16px;flex-shrink:0;color:var(--muted);text-align:center;font-size:12px;margin-top:2px}
-.row.bad .ic{color:var(--bad)}
+.row .ic{width:20px;height:20px;flex-shrink:0;color:var(--muted);margin-top:1px}
+.row .ic svg{width:20px;height:20px}
+.row.todo .ic{color:var(--warn)}
+.row.inbox .ic{color:var(--ok)}
 .row .rw{flex:1;min-width:0;display:flex;flex-direction:column}
-.row .rw b{font-size:13px}
-.row .wh{font-size:12.5px;color:var(--ink-2)}
-.row.bad .wh{color:var(--bad)}
+.row .rw b{font-size:13.5px}
+.row .kind{font-size:11px;color:var(--muted)}
+.row .wh{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.row.ok-line .ic{color:var(--ok);font-size:14px;text-align:center}
 .row.ok-line .wh{color:var(--muted)}
 .st{font-size:11px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap;flex-shrink:0;margin-top:2px;background:var(--pill);color:var(--ink-2)}
 .st.todo{background:var(--warn-bg);color:var(--warn)}
 .st.inbox,.st.ok{background:var(--ok-bg);color:var(--ok)}
-.foot{font-size:12px;color:var(--muted);margin-top:8px}
-.foot code{font-size:11.5px;background:var(--pill);padding:1px 5px;border-radius:4px;word-break:break-all}
+details.how{margin-top:6px}
+details.how summary{cursor:pointer;font-size:12px;color:var(--ink);text-decoration:underline dotted;list-style:none;display:inline}
+details.how summary::-webkit-details-marker{display:none}
+details.how p{font-size:12.5px;color:var(--ink-2);background:var(--pill);border-radius:8px;padding:8px 10px;margin-top:6px}
+.foot{font-size:12.5px;color:var(--ink-2);margin-top:8px}
 .busy{font-size:12.5px;background:var(--warn-bg);border:1px solid var(--warn-bd);border-radius:8px;padding:7px 10px;margin-bottom:10px}
 .busy.bad{background:var(--bad-bg);border-color:#efc4c1;color:var(--bad)}
 .busy .btn{margin-left:6px}
-.ver{font-size:10.5px;color:var(--muted);letter-spacing:.04em;margin-top:18px;text-align:center}
-.dot{color:#6250d6;font-size:9px;margin-left:4px;vertical-align:middle}
-.ai select,.ai input{font:inherit;font-size:12.5px;padding:5px 8px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--ink)}
-.aif{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.aif input{flex:1 1 150px;min-width:0}
 .act{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
-.btn{border:1px solid var(--border);background:var(--pill);color:var(--ink);border-radius:8px;padding:7px 14px;font-size:13px;font-family:inherit;cursor:pointer}
+.btn{border:1px solid var(--border);background:var(--pill);color:var(--ink);border-radius:8px;padding:8px 15px;font-size:13.5px;font-family:inherit;cursor:pointer;text-decoration:none;display:inline-block}
 .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
+.btn.big{padding:10px 18px;font-size:14px}
+.btn.sm{padding:4px 10px;font-size:12px;border-radius:7px}
 .btn[disabled]{opacity:.4;cursor:default}
-.hint{font-size:11.5px;color:var(--muted)}
+.lnk{background:none;border:none;padding:0;font:inherit;color:var(--ink);text-decoration:underline;cursor:pointer}
+.hint{font-size:12px;color:var(--muted)}
 pre.log{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f3f2ee;border-radius:8px;padding:10px 12px;margin-top:10px;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;display:none}
 pre.log.on{display:block}
+.q-intro{font-size:12.5px;color:var(--ink-2);margin-bottom:6px}
 .q{padding:9px 0;border-top:1px solid var(--border)}
-.q:first-child{border-top:0}
+.q:first-of-type{border-top:0}
 .qt{font-size:13px}
 .qs{font-size:11.5px;color:var(--muted);margin-top:2px}
 .pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
@@ -62,14 +84,12 @@ pre.log.on{display:block}
 .kv .v{font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
 .nt{display:flex;gap:8px;font-size:12.5px;padding:4px 0;color:var(--ink-2)}
 .nt .ic{width:14px;flex-shrink:0;text-align:center;color:var(--ok)}
-.nt.warn .ic,.nt.bad .ic{color:var(--warn)}
-.nt.bad .ic{color:var(--bad)}
+.nt.warn .ic{color:var(--warn)}.nt.bad .ic{color:var(--bad)}
 .err{color:var(--bad);font-size:12.5px;margin-top:8px}
-.btn.sm{padding:4px 10px;font-size:12px;border-radius:7px}
 .bf{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:7px}
-.bf input{font:inherit;font-size:12.5px;padding:4px 8px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--ink)}
-.bf .amt{width:150px;font-variant-numeric:tabular-nums}
-.bf .asof{width:136px}
+.bf input{font:inherit;font-size:12.5px;padding:5px 8px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--ink)}
+.bf .amt{width:170px;font-variant-numeric:tabular-nums}
+.bf .asof{width:140px}
 .cands{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .cands .pl b{font-weight:700;font-variant-numeric:tabular-nums}
 .cands .pl small{color:var(--muted);margin-left:5px}
@@ -78,58 +98,79 @@ details.more{border-top:1px solid var(--border);padding-top:7px;margin-top:4px}
 details.more summary{font-size:12px;color:var(--muted);cursor:pointer;list-style:none}
 details.more summary::before{content:"+ "}
 details.more[open] summary::before{content:"\2212 "}
-.drop{margin-top:12px;border:1.5px dashed var(--grid);border-radius:10px;padding:14px;text-align:center;font-size:12.5px;color:var(--ink-2);display:flex;flex-direction:column;gap:3px;align-items:center}
+.drop{border:1.5px dashed var(--grid);border-radius:10px;padding:18px 14px;text-align:center;font-size:12.5px;color:var(--ink-2);display:flex;flex-direction:column;gap:4px;align-items:center;background:#fff}
 .drop.over{border-color:var(--ink);background:var(--pill)}
-.drop b{font-size:13px;color:var(--ink)}
+.drop b{font-size:14px;color:var(--ink)}
 .drop small{font-size:11px;color:var(--muted);word-break:break-all}
-.lnk{background:none;border:none;padding:0;font:inherit;color:var(--ink);text-decoration:underline;cursor:pointer}
 .dropped{width:100%;text-align:left;font-size:12px;margin-top:4px}
 .dropped div{padding:2px 0}
 .dropped .no{color:var(--bad)}
+ul.files{list-style:none;font-size:12.5px;margin-top:4px}
+ul.files li{padding:4px 0;border-top:1px solid var(--border)}
+ul.files li:first-child{border-top:0}
+ul.files li.bad{color:var(--bad)}
+.ok{color:var(--ok)}
+.dot{color:#6250d6;font-size:9px;margin-left:4px;vertical-align:middle}
+.ai select,.ai input{font:inherit;font-size:12.5px;padding:5px 8px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--ink)}
+.aif{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.aif input{flex:1 1 150px;min-width:0}
+details.settings{margin-top:18px}
+details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-align:center}
+.ver{font-size:10.5px;color:var(--muted);letter-spacing:.04em;margin-top:14px;text-align:center}
 </style>
 </head>
-<body data-base="{{BASE}}">
+<body data-base="{{BASE}}" data-cur="{{CUR}}">
 <div class="wrap">
-  <div class="brand"><h1>Jade Toad</h1><small>Monthly import · {{TODAY}}</small><a href="{{BASE}}/" target="_blank" rel="noopener">Open the dashboard ↗</a></div>
+  <div class="brand"><h1>{{TITLE}}</h1><small>{{SUBTITLE}}</small>
+    <span class="r"><a href="{{BASE}}/panel?lang={{OTHER_LANG}}">{{LANG_OTHER}}</a><a href="{{BASE}}/" target="_blank" rel="noopener">{{OPEN_DASH}}</a></span></div>
+  <p class="intro">{{INTRO}}</p>
+  <div class="strip">{{STRIP}}</div>
   <p class="lead">{{LEAD}}</p>
   {{BUSY}}
 
-  <div class="card" id="bring"><div class="lab">Bring</div>{{BRING}}</div>
+  <div class="card" id="step1" data-step="1"><h2><span class="n">1</span>{{S1}}</h2>{{STEP1}}</div>
 
-  <div class="card" id="import"><div class="lab">Import</div>
+  <div class="card" id="step2" data-step="2"><h2><span class="n">2</span>{{S2}}</h2>{{STEP2}}</div>
+
+  <div class="card" id="step3" data-step="3"><h2><span class="n">3</span>{{S3}}</h2>
     <div class="act">
-      <button type="button" class="btn primary" id="dry">Import what's here</button>
-      <button type="button" class="btn primary" id="go" style="display:none">Go</button>
-      <button type="button" class="btn" id="undo">Undo the last import</button>
-      <span class="hint" id="ihint">first a look at what would happen; nothing is written until Go</span>
+      <button type="button" class="btn primary big" id="dry">{{DRY}}</button>
+      <button type="button" class="btn primary big" id="go" style="display:none">{{GO}}</button>
     </div>
+    <p class="hint" id="ihint">{{DRY_HINT}}</p>
     <pre class="log" id="log"></pre>
     <div class="err" id="ierr"></div>
+    <div class="act"><button type="button" class="lnk hint" id="undo">{{UNDO}}</button></div>
   </div>
 
-  <div class="card" id="questions"><div class="lab">Questions ({{NQ}})</div>{{QUESTIONS}}<div class="err" id="qerr"></div></div>
+  <div class="card" id="step4" data-step="4"><h2><span class="n">4</span>{{S4}} <span class="muted">({{NQ}})</span></h2>{{STEP4}}<div class="err" id="qerr"></div></div>
 
-  <div class="card" id="result"><div class="lab">Result</div>{{RESULT}}</div>
+  <div class="card" id="step5" data-step="5"><h2><span class="n">5</span>{{S5}}</h2>{{STEP5}}</div>
 
-  <div class="card" id="model"><div class="lab">A model, by choice</div>{{AI}}</div>
+  <details class="settings"><summary>{{SETTINGS}} · {{AI_TITLE}}</summary>
+    <div class="card" id="model" style="margin-top:10px">{{AI}}</div>
+  </details>
   <div class="ver">v{{VERSION}}</div>
 </div>
 <script>
 (function(){
   var base = document.body.getAttribute('data-base');
+  var T = {{JS}};
   var $ = function(id){ return document.getElementById(id); };
   var log = $('log'), dry = $('dry'), go = $('go'), undo = $('undo'), ihint = $('ihint'), ierr = $('ierr');
   var running = false;
+  var cur = parseInt(document.body.getAttribute('data-cur'), 10) || 1;
+  document.querySelectorAll('.card[data-step]').forEach(function(c){
+    var n = parseInt(c.getAttribute('data-step'), 10);
+    if (n === cur) c.classList.add('on'); else if (n < cur) c.classList.add('done');
+  });
 
   function api(method, path, body){
-    return fetch(base + path, {method: method, headers: {'Content-Type': 'application/json'},
-                               body: body ? JSON.stringify(body) : undefined})
+    return fetch(base + path, {method: method, headers: body instanceof FormData ? {} : {'Content-Type': 'application/json'},
+                               body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined)})
       .then(function(r){ return r.json().then(function(j){ j.status = r.status; return j; }); });
   }
-  function setBusy(on){
-    running = on;
-    [dry, go, undo, $('save')].forEach(function(b){ if (b) b.disabled = on; });
-  }
+  function setBusy(on){ running = on; [dry, go, undo, $('save')].forEach(function(b){ if (b) b.disabled = on; }); }
   function follow(onDone){
     log.textContent = ''; log.classList.add('on');
     var es = new EventSource(base + '/api/events');
@@ -140,69 +181,63 @@ details.more[open] summary::before{content:"\2212 "}
   function start(path, body, hint, onDone){
     if (running) return;
     ierr.textContent = ''; ihint.textContent = hint; setBusy(true);
+    $('step3').scrollIntoView({behavior: 'smooth', block: 'start'});
     api('POST', path, body).then(function(r){
       if (!r.ok) { setBusy(false); ierr.textContent = r.error && r.error.text || ('HTTP ' + r.status); return; }
       follow(function(job){ setBusy(false); onDone(job); });
     }).catch(function(e){ setBusy(false); ierr.textContent = String(e); });
   }
   dry.onclick = function(){
-    start('/api/import', {write: false}, 'looking at what is in inbox/ …', function(job){
+    start('/api/import', {write: false}, T.dry_running, function(job){
       var res = job.result || {};
-      if (job.error) { ihint.textContent = 'that failed; the lines say where'; return; }
-      if ((res.unknown || []).length || (res.stopped || []).length) { ihint.textContent = 'the import stops on what is marked ✗ above; nothing is written'; return; }
-      if (!(res.files || []).length && !(res.counts && Object.keys(res.counts).length)) { ihint.textContent = 'nothing to import'; return; }
-      ihint.textContent = 'that is the plan. Go writes it, rebuilds the page and archives the files'; go.style.display = '';
+      if (job.error) { ihint.textContent = T.failed_lines; return; }
+      if ((res.unknown || []).length || (res.stopped || []).length) { ihint.textContent = T.dry_stop; return; }
+      if (!(res.files || []).length && !(res.counts && Object.keys(res.counts).length)) { ihint.textContent = T.dry_none; return; }
+      ihint.textContent = T.dry_plan; go.style.display = ''; dry.classList.remove('primary');
     });
   };
   go.onclick = function(){
     go.style.display = 'none';
-    start('/api/import', {write: true}, 'importing …', function(job){
-      ihint.textContent = job.error ? 'the import failed and nothing was written; the lines say why' : 'done — the page is rebuilt';
+    start('/api/import', {write: true}, T.go_running, function(job){
+      ihint.textContent = job.error ? T.go_failed : T.go_done;
       if (!job.error) setTimeout(function(){ location.reload(); }, 1800);
     });
   };
   undo.onclick = function(){
-    if (!confirm('Put findata/ back as it was before the last import?')) return;
-    start('/api/undo', {}, 'undoing …', function(job){
-      ihint.textContent = job.error || (job.result && job.result.undone == null) ? 'nothing was undone; the lines say why' : 'undone — the page is rebuilt';
+    if (!confirm(T.undo_q)) return;
+    start('/api/undo', {}, T.undo_running, function(job){
+      ihint.textContent = job.error || (job.result && job.result.undone == null) ? T.undo_none : T.undo_done;
       if (job.result && job.result.undone) setTimeout(function(){ location.reload(); }, 1500);
     });
   };
-  // the questions: tapping selects; Save answers sends every selection at once
   document.querySelectorAll('.q .pl').forEach(function(p){
-    p.onclick = function(){
-      var q = p.closest('.q');
-      q.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); });
-      p.classList.add('sel');
-    };
+    p.onclick = function(){ var q = p.closest('.q'); q.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); p.classList.add('sel'); };
   });
   var save = $('save');
   if (save) save.onclick = function(){
     var set = {};
-    document.querySelectorAll('.q').forEach(function(q){
-      var s = q.querySelector('.pl.sel'); if (s) set[q.getAttribute('data-n')] = s.getAttribute('data-v');
-    });
+    document.querySelectorAll('.q').forEach(function(q){ var s = q.querySelector('.pl.sel'); if (s) set[q.getAttribute('data-n')] = s.getAttribute('data-v'); });
     $('qerr').textContent = '';
-    start('/api/answers', {set: set}, 'saving answers …', function(job){
-      if (job.error || (job.result && job.result.rc)) { $('qerr').textContent = 'not saved; the lines under Import say which answer was refused'; return; }
-      ihint.textContent = 'answers saved — the page is rebuilt';
+    start('/api/answers', {set: set}, T.saving, function(job){
+      if (job.error || (job.result && job.result.rc)) { $('qerr').textContent = T.not_saved; return; }
+      ihint.textContent = T.saved_rebuilt;
       setTimeout(function(){ location.reload(); }, 1200);
     });
   };
-  // files dropped on the panel go to inbox/ under their own names; nothing is parsed until Import
   var drop = $('drop'), dropped = $('dropped'), pick = $('pick');
   function upload(files){
     if (!files || !files.length) return;
     var fd = new FormData();
     for (var i = 0; i < files.length; i++) fd.append('file', files[i], files[i].name);
-    dropped.textContent = 'saving …';
-    fetch(base + '/api/inbox', {method: 'POST', body: fd}).then(function(r){ return r.json(); }).then(function(r){
+    dropped.textContent = '…';
+    api('POST', '/api/inbox', fd).then(function(r){
       dropped.textContent = '';
       if (!r.ok) { dropped.innerHTML = '<div class="no">' + (r.error && r.error.text || 'failed') + '</div>'; return; }
       r.data.forEach(function(f){
         var d = document.createElement('div');
         d.className = f.state === 'refused' ? 'no' : '';
-        d.textContent = f.name + ' — ' + f.state + (f.label ? ' · ' + f.label : (f.why || f.note ? ' · ' + (f.why || f.note) : ''));
+        var word = f.state === 'saved' ? T.saved : (f.state === 'already there' ? T.already : T.refused);
+        d.textContent = f.name + ' — ' + word + (f.label ? ' · ' + f.label : (f.why || f.note ? ' · ' + (f.why || f.note) : ''));
         dropped.appendChild(d);
       });
       if (r.data.some(function(f){ return f.state === 'saved'; })) setTimeout(function(){ location.reload(); }, 1600);
@@ -218,16 +253,15 @@ details.more[open] summary::before{content:"\2212 "}
   if (pick) pick.onchange = function(){ upload(pick.files); pick.value = ''; };
   var oi = $('openinbox');
   if (oi) oi.onclick = function(){ api('POST', '/api/open-inbox', {}).catch(function(){}); };
-  // a balance no file carries: typed, or read off a screenshot and tapped
   document.querySelectorAll('.bf').forEach(function(f){
     var key = f.getAttribute('data-key'), amt = f.querySelector('.amt'), asof = f.querySelector('.asof');
     var cands = f.nextElementSibling;
     f.querySelector('.sv').onclick = function(){
       if (!amt.value.trim()) { amt.focus(); return; }
-      start('/api/balance', {key: key, amount: amt.value, asof: asof.value}, 'writing the balance …', function(job){
+      start('/api/balance', {key: key, amount: amt.value, asof: asof.value}, T.go_running, function(job){
         var r = job.result || {};
-        if (job.error || !r.written) { ihint.textContent = 'not written; the lines say why'; return; }
-        ihint.textContent = 'written — the page is rebuilt';
+        if (job.error || !r.written) { ihint.textContent = T.failed_lines; return; }
+        ihint.textContent = T.go_done;
         setTimeout(function(){ location.reload(); }, 1200);
       });
     };
@@ -235,29 +269,28 @@ details.more[open] summary::before{content:"\2212 "}
     if (inp) inp.onchange = function(){
       if (!inp.files.length) return;
       var fd = new FormData(); fd.append('key', key); fd.append('image', inp.files[0], inp.files[0].name);
-      cands.innerHTML = '<span class="note">reading …</span>';
-      fetch(base + '/api/ocr', {method: 'POST', body: fd}).then(function(r){ return r.json(); }).then(function(r){
+      cands.innerHTML = '<span class="note">…</span>';
+      api('POST', '/api/ocr', fd).then(function(r){
         cands.innerHTML = '';
         if (!r.ok) { cands.innerHTML = '<span class="note">' + (r.error && r.error.text || 'failed') + '</span>'; return; }
         var d = r.data;
         if (d.error) { cands.innerHTML = '<span class="note">' + d.error + '</span>'; return; }
-        if (!d.candidates.length) { cands.innerHTML = '<span class="note">no amount found on the image; type it</span>'; return; }
+        if (!d.candidates.length) { cands.innerHTML = '<span class="note">' + T.cands_none + '</span>'; return; }
         d.candidates.forEach(function(c, i){
           var b = document.createElement('button'); b.type = 'button'; b.className = 'pl' + (i === 0 ? ' sel' : '');
-          b.innerHTML = '<b>' + c.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</b>' + (c.near ? '<small>near ' + c.near + '</small>' : '');
+          b.innerHTML = '<b>' + c.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + '</b>' + (c.near ? '<small>' + T.near + ' ' + c.near + '</small>' : '');
           b.onclick = function(){ cands.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); b.classList.add('sel'); amt.value = c.amount.toFixed(2); };
           cands.appendChild(b);
         });
         amt.value = d.candidates[0].amount.toFixed(2);
         if (d.dates && d.dates.length) asof.value = d.dates[0];
         var n = document.createElement('span'); n.className = 'note';
-        n.textContent = 'the amounts on the image, likeliest first' + (d.dates && d.dates.length ? ' · date read: ' + d.dates[0] : '') + ' — check, then Save';
+        n.textContent = T.cands_note + (d.dates && d.dates.length ? ' · ' + T.date_read + ' ' + d.dates[0] : '');
         cands.appendChild(n);
       }).catch(function(e){ cands.innerHTML = '<span class="note">' + e + '</span>'; });
       inp.value = '';
     };
   });
-  // the model, by choice: the key goes to the server once and is stored in the Keychain
   var aiprov = $('aiprov');
   if (aiprov) {
     var notes = JSON.parse(document.querySelector('.ai').getAttribute('data-notes'));
@@ -272,28 +305,28 @@ details.more[open] summary::before{content:"\2212 "}
     aiShow(false);
     $('aisave').onclick = function(){
       var body = {provider: aiprov.value, baseUrl: $('aiurl').value, model: $('aimodel').value, key: $('aikey').value};
-      $('aimsg').textContent = 'saving …';
+      $('aimsg').textContent = '…';
       api('POST', '/api/ai', body).then(function(r){
         if (!r.ok) { $('aimsg').textContent = r.error && r.error.text || 'failed'; return; }
         $('aikey').value = '';
-        $('aimsg').textContent = r.data.enabled ? 'on · ' + r.data.provider + ' · ' + r.data.model : (r.data.provider === 'none' ? 'off' : 'set, but no key stored');
+        $('aimsg').textContent = r.data.enabled ? T.ai_on + ' · ' + r.data.provider + ' · ' + r.data.model : (r.data.provider === 'none' ? T.ai_off : T.ai_nokey);
         $('aitest').disabled = !r.data.enabled;
       }).catch(function(e){ $('aimsg').textContent = String(e); });
     };
     $('aitest').onclick = function(){
-      var m = prompt('A merchant string, as a statement prints it:', 'STARBUCKS 1234 TORONTO ON');
+      var m = prompt(T.ai_try_q, 'STARBUCKS 1234 TORONTO ON');
       if (!m) return;
-      $('aimsg').textContent = 'asking …';
+      $('aimsg').textContent = T.ai_asking;
       api('POST', '/api/ai/test', {merchant: m}).then(function(r){
-        $('aimsg').textContent = !r.ok ? (r.error && r.error.text || 'failed') : (r.data.category ? m + ' → ' + r.data.category + ' (' + r.data.how + ')' : 'no usable answer (' + r.data.how + ') — .jade/log/ai.jsonl has the exchange');
+        $('aimsg').textContent = !r.ok ? (r.error && r.error.text || 'failed') : (r.data.category ? m + ' → ' + r.data.category + ' (' + r.data.how + ')' : T.ai_noanswer.replace('{how}', r.data.how));
       });
     };
   }
   var sb = $('syncbtn');
   if (sb) sb.onclick = function(){
-    start('/api/sync', {}, 'refreshing this folder\'s copy of the tool …', function(job){
+    start('/api/sync', {}, T.refresh_running, function(job){
       var t = job.result && job.result.tool;
-      ihint.textContent = t && t.state === 'same' ? 'refreshed — both doors run one version now' : 'the refresh did not finish; the lines say why';
+      ihint.textContent = t && t.state === 'same' ? T.refresh_done : T.refresh_failed;
       if (t && t.state === 'same') setTimeout(function(){ location.reload(); }, 1400);
     });
   };

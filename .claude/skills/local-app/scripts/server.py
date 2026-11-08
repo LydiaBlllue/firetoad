@@ -369,6 +369,29 @@ class App:
         cat, how = ai.categorise(self.root, (merchant or "STARBUCKS 1234 TORONTO ON").strip()[:80])
         return {"category": cat, "how": how}
 
+    def lang(self, q=None):
+        """The panel's language: ?lang= on the request (remembered in .jade/settings.json),
+        else the remembered one, else profile.json `lang`, else English (strings.py)."""
+        want = (q or {}).get("lang", [None])[0]
+        sp = os.path.join(self.root, ".jade", "settings.json")
+        try:
+            allset = json.load(open(sp, encoding="utf-8"))
+        except (OSError, ValueError):
+            allset = {}
+        if want in ("en", "zh") and allset.get("lang") != want:
+            allset["lang"] = want
+            os.makedirs(os.path.dirname(sp), exist_ok=True)
+            json.dump(allset, open(sp, "w", encoding="utf-8"), indent=2)
+        if allset.get("lang") in ("en", "zh"):
+            return allset["lang"]
+        try:
+            prof = json.load(open(os.path.join(self.root, "findata", "register", "profile.json"), encoding="utf-8"))
+            if prof.get("lang") in ("en", "zh"):
+                return prof["lang"]
+        except (OSError, ValueError):
+            pass
+        return "en"
+
     def is_demo(self):
         return wizard.is_demo(self.root)
 
@@ -517,14 +540,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self._send(200, open(p, "rb").read())
             if path == "/panel" and app.is_demo():
                 return self._send(200, panel.render_setup(app.base, app.root, app.do_setup_state(),
-                                                          app.job.public() if app.job else None, app.tool),
+                                                          app.job.public() if app.job else None, app.tool, app.lang(q)),
                                   extra=[("Content-Security-Policy",
                                           "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; "
                                           "connect-src 'self'; img-src data:; base-uri 'none'; form-action 'none'")])
             if path == "/panel":
                 return self._send(200, panel.render(app.base, app.root, app.do_status(), app.do_questions(),
                                                     app.last_import(), app.job.public() if app.job else None,
-                                                    app.lock.holder(), app.tool),
+                                                    app.lock.holder(), app.tool, app.lang(q)),
                                   extra=[("Content-Security-Policy",
                                           "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; "
                                           "connect-src 'self'; img-src data:; base-uri 'none'; form-action 'none'")])

@@ -2440,7 +2440,8 @@ def local_app_check(root, base):
             bad.append("the lock was left behind after the import")
         st, body = req("GET", tok + "/panel")
         # a demo folder (this staged copy) gets the setup wizard on /panel; an owner's gets the panel
-        if st != 200 or not any(x in body for x in (b"Save answers", b"Nothing is waiting", b"make this folder yours")):
+        # a demo folder (this staged copy) gets the setup wizard on /panel; an owner's gets the five steps
+        if st != 200 or not any(x in body for x in (b'id="step4"', b"make this folder yours")):
             bad.append(f"GET /panel answered {st}")
     finally:
         proc.kill(); proc.wait()
@@ -2517,7 +2518,7 @@ def local_app_setup_check(root, base):
             out.write(f"--{b}--\r\n".encode())
             return out.getvalue(), {"Content-Type": f"multipart/form-data; boundary={b}"}
         st, body = req("GET", tok + "/panel")
-        if st != 200 or b"Setup" not in body or b"Bring" in body:
+        if st != 200 or b"make this folder yours" not in body or b'id="step3"' in body:
             bad.append(f"a demo folder did not get the wizard page ({st})")
         for mm in two:
             d, h = form({"file": (os.path.basename(mm["file"]), open(mm["file"], "rb").read())})
@@ -2545,7 +2546,7 @@ def local_app_setup_check(root, base):
         if st != 202 or not res.get("written") or not (res.get("import") or {}).get("written"):
             bad.append(f"POST /api/setup: {st}, " + " | ".join(job.get("lines", [])[-2:])[:200])
         st, body = req("GET", tok + "/panel")
-        if st != 200 or b"Bring" not in body:
+        if st != 200 or b'id="step3"' not in body or b"make this folder yours" in body:
             bad.append("after the build the panel did not take over from the wizard")
     finally:
         proc.kill(); proc.wait()

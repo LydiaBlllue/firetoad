@@ -104,7 +104,9 @@ def status(root, today):
     for d, last, gap in fetch.missing(root, None, today):
         have = waiting.get(d["key"], [])
         by_bank.setdefault(d["ep"], []).append(
-            {"key": d["key"], "last": last, "missing": gap, "inbox": have})
+            {"key": d["key"], "last": last, "missing": gap, "inbox": have,
+             # how the file arrives, for the panel's "how do I get this" line (parsers/support.py)
+             "parser": d.get("parser"), "file": d.get("file")})
     for ep, rows in by_bank.items():
         todo = [r for r in rows if r["missing"] and len(r["inbox"]) < len(r["missing"])]
         out["statements"].append({"bank": ep, "docs": rows,

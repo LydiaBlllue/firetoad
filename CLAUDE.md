@@ -192,8 +192,12 @@ report template are all in that file. **Do not work from memory.**
 **`python3 app.py` is Jade Toad without Claude** (2026-11-06, ROADMAP 2.0.0 step 1b). It
 starts a standard-library HTTP server on `127.0.0.1` with a per-launch token in the path, opens
 the system browser, and serves two things: the built dashboard, as the static file it is, and
-the **panel** (`templates/panel/panel.html`, filled by `local-app/scripts/panel.py`) — Bring ·
-Import · Questions · Result, the `monthly-import` skill's card with the chat removed. The server
+the **panel** (`templates/panel/panel.html`, filled by `local-app/scripts/panel.py`) — five
+numbered steps, *get the files · put them here · import · answer · done*, with the current one
+lit and a line saying what to do next; every sentence from `local-app/scripts/strings.py` in
+English and Chinese (`?lang=`, remembered in `.jade/settings.json`, else profile.json `lang`),
+and each missing file's *how do I get it* read from `parsers/support.py` (2026-11-07, after the
+first version's four internal names left the owner not knowing what to do). The server
 (`local-app/scripts/server.py`) holds **no financial logic**: each route is one call into a
 script's `run()` — `status`, `update`, `update.undo`, `confirm` — and the import still rebuilds
 through `rebuild.py`; the browser reloads the file. One lock file (`.jade.lock`) makes it one

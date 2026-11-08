@@ -26,6 +26,16 @@ app builds is shown and **not written to** until the app is updated. Inside the 
 fresh token in it, opens the panel in the system browser, and exits by itself five minutes after
 the last tab is closed. `--no-browser` prints the address only; `--port N` fixes the port.
 
+**The panel is five numbered steps in the owner's language** (2026-11-07, after the owner could
+not tell what the first version wanted): 1 get this month's files (one row per thing, a plain
+state — still missing · in inbox · up to date — and *How do I get it?* folded under each missing
+one: the bank's own download path from `parsers/support.py`, the app page for a screenshot, a
+field for a number) · 2 put them here · 3 import (look first, then import) · 4 answer a few
+questions · 5 done. A strip at the top lights the current step and one line says what to do
+next. Every sentence is in `scripts/strings.py`, English and Chinese; the page picks the
+language from `?lang=zh|en` (remembered in .jade/settings.json), else profile.json `lang`, else
+English, and the header has the switch. The setup wizard is still English only.
+
 What the panel can do today (1b + 1c): show what is left to bring (the rows `status.py`
 draws); take files dropped onto it into `inbox/` under their own names, named by preflight at
 once (nothing is parsed until Import); run the import as a dry run and then for real with its

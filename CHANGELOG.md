@@ -28,6 +28,11 @@
   suggestions, the one FIRE question, the import day, build. The answers land in the setup's own
   answers file and the same scaffold, rebuild and first import run; a question skipped stays
   unanswered, never guessed. What the screens do not cover is listed as left for the chat.
+- **The panel says what to do** (2026-11-07, user 001): five numbered steps — get this month's
+  files · put them here · import · answer a few questions · done — with the step you are at lit
+  and one line of what to do next; under each missing file, *How do I get it?* with the bank's
+  own download path; plain states (still missing · in inbox · up to date) instead of the
+  tool's words; and the whole panel in Chinese or English, switched in the header.
 - **A model, by choice** (2026-11-06, steps 3 and 4): off by default; the panel's last card
   turns it on with your own key (an OpenAI-compatible service or Anthropic) or a model on this
   computer (Ollama). It is asked one thing only — what category a merchant none of the maps
