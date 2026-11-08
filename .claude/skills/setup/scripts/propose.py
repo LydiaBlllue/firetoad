@@ -363,8 +363,19 @@ def propose(root, inbox):
     spend = 0.0
     for (inst, digits), s in stmts.items():
         if (s.get("kind") or "") in scaffold.DEBT_KINDS:
-            spend += sum(-r["amount"] for r in s["rows"] if r["amount"] < 0
-                         and not CARD_CREDIT.search(r["description"]))
+            rows = [r for r in s["rows"] if r["amount"] < 0 and not CARD_CREDIT.search(r["description"])]
+            # a PDF statement is one month; an OFX or CSV download can span many — the everyday
+            # figure is one month's, the last full one (nine months of purchases were offered as
+            # the monthly amount in the first simulation of an OFX setup, 2026-11-07)
+            if s.get("_ofx") or s.get("_csv"):
+                by_month = collections.defaultdict(float)
+                for r in rows:
+                    by_month[r["date"][:7]] += -r["amount"]
+                months_ = sorted(by_month)
+                pick = months_[-2] if len(months_) >= 2 else (months_[0] if months_ else None)
+                spend += by_month[pick] if pick else 0.0
+            else:
+                spend += sum(-r["amount"] for r in rows)
     if spend:
         plan["everyday"] = int(round(spend / 50.0) * 50)
         src("plan.everyday", f"{money(spend)} of card purchases on the newest statements, rounded")

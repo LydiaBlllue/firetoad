@@ -162,8 +162,13 @@ def occupied(root):
 
 
 def ordinal(n):
+    """'5' → '5th'. A closing day that is words — 'any time' for an OFX or CSV download, which
+    the draft writes as `closes` — is kept as it is (an OFX setup through the wizard crashed
+    here, 2026-11-07)."""
     if n is None:
         return None
+    if isinstance(n, str) and not n.strip().isdigit():
+        return n
     n = int(n)
     suf = "th" if 11 <= n % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
     return f"{n}{suf}"

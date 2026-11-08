@@ -159,12 +159,17 @@ table.cm input{width:100%}
       var own = field(card, esc(W.w_name_l) + (scr.owner.suggest ? esc(fmt(W.w_name_says, {who: scr.owner.suggest})) : ''), text(A.owner || scr.owner.suggest || '', W.w_name_ph));
       var born = field(card, esc(W.w_born_l), text(A.born, W.w_born_ph, 'amt'));
       born.inputMode = 'numeric';
+      A.ofx = A.ofx || {};
+      (scr.ofx || []).forEach(function(o){
+        var inp = field(card, esc(fmt(W.w_ofx_q, {file: o.file})), text(A.ofx[o.file] || '', W.w_ofx_ph));
+        inp.oninput = function(){ A.ofx[o.file] = inp.value; };
+      });
       card.appendChild(el('p', 'q', esc(W.w_acc_q)));
       scr.accounts.rows.forEach(function(r){
         var row = el('div', 'row');
         var rw = el('div', 'rw');
         var sel = (A.accounts[r.i] || {}).role || r.role;
-        rw.appendChild(el('b', null, esc(r.inst) + ' · ' + esc(r.kind) + (r.id && r.id !== '—' ? ' ' + esc(r.id) : '')));
+        rw.appendChild(el('b', null, esc(r.inst === 'OFX' ? ((A.ofx && Object.values(A.ofx)[0]) || '?') : r.inst) + ' · ' + esc(r.kind) + (r.id && r.id !== '—' ? ' ' + esc(r.id) : '')));
         rw.appendChild(el('span', 'wh', (r.balance != null ? money(r.balance) + ' · ' + esc(r.asof) : esc(W.w_no_balance)) + (r.doc ? ' · ' + esc(r.doc) : '')));
         var nm = text((A.accounts[r.i] || {}).name || r.name, W.w_call_it); nm.style.marginTop = '5px';
         nm.oninput = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).name = nm.value; };
@@ -298,7 +303,7 @@ table.cm input{width:100%}
                        money: {takeHome: A.money.takeHome, invest: A.money.invest, everyday: A.money.everyday, planBase: A.money.planBase,
                                imputedRent: A.money.imputedRent, committed: A.money.committed.filter(function(c){ return c.name && c.amount; }),
                                pensions: A.money.pensions.filter(function(p){ return p.monthly && p.from; })},
-                       goal: A.goal};
+                       goal: A.goal, ofx: A.ofx || {}};
         api('POST', '/api/setup', {answers: answers}).then(function(r){
           if (!r.ok) { hint.textContent = r.error && r.error.text || ('HTTP ' + r.status); go.disabled = false; b.disabled = false; return; }
           var es = new EventSource(base + '/api/events');

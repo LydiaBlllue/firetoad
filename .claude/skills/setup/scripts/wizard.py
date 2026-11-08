@@ -74,6 +74,13 @@ def screens(draft, today):
                          "needsBalance": a.get("balance") is None,
                          "doc": (a.get("doc") or {}).get("file"), "liability": a.get("kind") in scaffold.DEBT_KINDS})
     plan = draft.get("plan") or {}
+    # an OFX download names its accounts by id, never the bank: the wizard asks the bank once per file
+    ofx = []
+    for x in (draft.get("_open") or []):
+        if x["id"].startswith("ofx:"):
+            f = x["id"][4:]
+            ids = [i for i, a in enumerate(draft.get("accounts") or []) if a.get("ofxId")]
+            ofx.append({"file": f, "accounts": ids, "ask": x.get("q")})
     closes = [int((a.get("doc") or {}).get("closes")) for a in draft.get("accounts") or []
               if isinstance((a.get("doc") or {}).get("closes"), int)]
     day = (max(closes) % 28) + 1 if closes else int(draft.get("importDay") or 1)
@@ -93,8 +100,9 @@ def screens(draft, today):
                   "pensions": {"ask": (q.get("pensions") or {}).get("q")}},
         "goal": {"ask": (q.get("fire") or {}).get("q")},
         "day": {"suggest": day, "closes": closes},
+        "ofx": ofx,
         "later": [x for x in (draft.get("_open") or [])
-                  if x["id"] in ("foreign", "counterparty", "buckets", "files") or x["id"].startswith(("ofx:", "csv:"))],
+                  if x["id"] in ("foreign", "counterparty", "buckets", "files") or x["id"].startswith("csv:")],
         "today": today,
     }
 
@@ -148,6 +156,16 @@ def merge(draft, answers, today):
     day = _num(answers.get("importDay"))
     if day and 1 <= day <= 28:
         a["importDay"] = int(day)
+    # an OFX download's bank, said once per file, lands on every account the file named
+    for f, bank in (answers.get("ofx") or {}).items():
+        bank = (bank or "").strip()
+        if not bank:
+            continue
+        for acc in a.get("accounts") or []:
+            if acc.get("ofxId") and (acc.get("inst") in ("OFX", None) or (acc.get("doc") or {}).get("file") == f):
+                acc["inst"] = bank
+                if (acc.get("doc") or {}).get("file") == f:
+                    acc["doc"]["ep"] = bank
     # accounts: a role per row, a name an owner changes, a balance the exports do not carry
     for row in answers.get("accounts") or []:
         i = row.get("i")

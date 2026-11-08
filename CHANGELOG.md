@@ -7,6 +7,11 @@
   helper's own parameter; a test now forbids it); the setup wizard did not pre-fill the name
   the statements carry; the draft offered no investing figure when deposits land straight in a
   TFSA or RRSP instead of passing through a chequing account at the broker.
+- **And by the same simulation with an OFX download instead of PDFs** (2026-11-07): the wizard
+  now asks which bank an OFX file is from (the file names its accounts by number only) and puts
+  the answer on those accounts; a setup from an OFX or CSV download no longer crashes on its
+  closing day ("any time"); the everyday figure drafted from a download spanning months is one
+  month's — the last full one — not the whole span. Both paths now build the same workspace.
 
 ## 1.0.2 — 2026-11-07
 
