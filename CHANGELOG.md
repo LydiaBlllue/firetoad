@@ -18,6 +18,11 @@
   the amount and the count, the likeliest categories first and "Other" last, skip or leave the
   rest, and the share of spending still in Other falling as you go. A card slides away when
   answered (120 ms, none for anyone who asked their system for less motion).
+- **Who sent it, answered once** (2026-11-07, user 001): an e-Transfer from a named sender is
+  asked once — "from Alex Ng, what is it?" — and the answer becomes their rule in
+  `senders.json`; the next one from them is typed and not asked. The rule used to live only in
+  the owner's notes for Claude, which the app never reads. A bank that prints no sender name
+  still asks each time.
 - **Answers that survive a closed tab, and a way to change one** (2026-11-07): each answer is
   written the moment it is given (one at a time, by the question's own id, so the numbering
   cannot drift); Save at the end only confirms what was left. Under the questions, the merchants

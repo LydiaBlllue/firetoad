@@ -395,6 +395,11 @@ def build(a, today):
     }, ensure_ascii=False, indent=2) + "\n"
 
     # --- merchant map: the categories are fixed, the merchants are yours ------------------
+    out[layout.rel("senders.json")] = json.dumps({
+        "note": "Who sends you money and what it is, answered once: `match` is the name as the statement prints it, "
+                "`type` one of Payroll / Gift / Other / Transfer / Repayment. The import types the next e-Transfer "
+                "from them by this and does not ask; change a line to change your mind.",
+        "senders": []}, indent=2, ensure_ascii=False) + "\n"
     out[layout.rel("merchants.json")] = json.dumps({
         "note": "The one source of truth for merchant → category. Look a merchant up BEFORE "
                 "judging it; a miss is a new merchant and has to be confirmed with you.",

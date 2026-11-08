@@ -31,7 +31,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(HERE)), "workspa
 from check_data import merchant_key  # noqa: E402  the one definition
 import categories  # noqa: E402
 import verbs  # noqa: E402
-from update import jload, jsave, csv_rows  # noqa: E402
+from update import jload, jsave, csv_rows, sender_of  # noqa: E402
 
 SEEN = re.compile(r"^(.*?), seen for the first time\.")
 # what money coming in from no named sender can be: the ledger type, and how it is said
@@ -62,6 +62,29 @@ def _file_merchant(k, ans, table, merchants, spend):
         if mine and r["category"] != ans:
             r["category"] = ans; changed += 1
     return changed
+
+
+def remember_sender(root, who, t, today):
+    """A named sender's answer, kept as their rule in register/senders.json, so the next
+    e-Transfer from them is typed and not asked (the rule the owner used to keep in prose).
+    A statement that prints no name (BMO) leaves nothing to remember."""
+    who = (who or "").strip().upper()
+    if not who or t not in INCOMING:
+        return False
+    p = layout.path(os.path.abspath(root), "senders.json")
+    sj = jload(p, {}) or {}
+    sj.setdefault("note", "Who sends you money and what it is, answered once: `match` is the name as the statement prints it, "
+                          "`type` one of Payroll / Gift / Other / Transfer / Repayment. The import types the next "
+                          "e-Transfer from them by this and does not ask; change a line to change your mind.")
+    rows = sj.setdefault("senders", [])
+    for s in rows:
+        if s.get("match", "").upper() == who:
+            s["type"], s["asof"] = t, today
+            break
+    else:
+        rows.append({"match": who, "type": t, "asof": today})
+    jsave(p, sj)
+    return True
 
 
 def _after_write(root):
@@ -256,6 +279,7 @@ def run(root, write=False, ok=False, sets=(), say=None):
                         break
                 with open(lp, "w", encoding="utf-8", newline="") as fh:
                     w = csv.DictWriter(fh, fieldnames=list(rows[0].keys())); w.writeheader(); w.writerows(rows)
+                remember_sender(root, d.get("sender") or sender_of(c.get("description") or ""), t, today)
         if d.get("kind") == "fire":
             pj = jload(fd("plan.json"), {})
             pj["fire"] = {"goal": ans == "Yes", "asked": today}
