@@ -187,6 +187,51 @@ report template are all in that file. **Do not work from memory.**
 - The import day is `profile.json` `importDay`; it appears once per dashboard as `IMPORT_DAY`,
   and every label derives from it.
 
+## The second door: the local app
+
+**`python3 app.py` is Jade Toad without Claude** (2026-11-06, ROADMAP 2.0.0 step 1b). It
+starts a standard-library HTTP server on `127.0.0.1` with a per-launch token in the path, opens
+the system browser, and serves two things: the built dashboard, as the static file it is, and
+the **panel** (`templates/panel/panel.html`, filled by `local-app/scripts/panel.py`) — five
+numbered steps, *get the files · put them here · import · answer · done*, with the current one
+lit and a line saying what to do next; every sentence from `local-app/scripts/strings.py` in
+English and Chinese (`?lang=`, remembered in `.jade/settings.json`, else profile.json `lang`),
+and each missing file's *how do I get it* read from `parsers/support.py` (2026-11-07, after the
+first version's four internal names left the owner not knowing what to do). The server
+(`local-app/scripts/server.py`) holds **no financial logic**: each route is one call into a
+script's `run()` — `status`, `update`, `update.undo`, `confirm` — and the import still rebuilds
+through `rebuild.py`; the browser reloads the file. One lock file (`.jade.lock`) makes it one
+writer at a time, and its log is `.jade/log/` (both ignored by git). The selftest's *local app*
+check imports the same month through `update.py --write` and through `POST /api/import` and
+expects identical `findata/` and `archive/`, with one statement uploaded and one balance typed
+through the app. Both doors are the same code, so a change to the import is made once, in the
+script, and the panel follows. Two verbs came with the panel and serve this chat too (1c):
+**`balance.py`** writes a balance no file carries — a banks.json or foreign.json row with no
+ledger, by register key, the register's copy following (D14, D20), refused for an account with
+a ledger (D7) or a loan (D23) — and **`ocr.py`** reads a phone screenshot with Apple Vision on
+this computer and ranks its amounts by the account's `capture` line; it offers, never writes.
+**Packaged** (1d, `build/build.py` → `dist/Jade Toad.app`, PyInstaller, one folder, the demo
+inside and never a workspace), the same `app.py` is the entry: the first launch asks for the
+folder or makes one (remembered in the system's application-support folder, outside the
+workspace), and every launch compares the folder's tool copy with the app's — *Refresh the
+copy* on the panel when they differ, no writes when the folder's data is a newer shape. Inside
+the app the binary doubles as the interpreter for the core's own subprocess calls. Unsigned
+until an Apple Developer identity is passed to the build. **The setup as screens** (step 2): while a folder still holds the demo, `/panel` is the
+wizard — the setup skill's interview in six screens, in English or Chinese like the panel, drafted by `setup/scripts/wizard.py` from
+`propose.py`'s draft and written back into `setup-answers.json`, then scaffold, rebuild, first
+import; the selftest's *local app setup* check builds the same workspace through the app and
+through `wizard.py --apply` and expects identical `findata/`. **A model, by choice** (steps 3–4): `ai.py` in the
+update-dashboard scripts, off unless the owner sets a provider (OpenAI-compatible, Anthropic,
+or Ollama on this computer) on the panel's last card or with `ai.py . set`; asked at one place
+only — a merchant every map misses, in `note_merchant` — with the merchant string and the
+fifteen category names and nothing else; its answer is validated against the fifteen, written
+as the question's `suggest` with `suggestBy: model`, never as the category (Other stays until
+the owner confirms); the key in the Keychain, the choice in `.jade/settings.json`, every
+exchange in `.jade/log/ai.jsonl`. The selftest's *model side-car* check runs an import against a
+loopback mock: off means no call, on means suggestions and still Other, and only merchant
+strings and category names on the wire. The second door is complete; what follows is a Windows
+build and signing.
+
 ## Nothing in a dashboard is typed by hand
 
 <!-- LINT:CONSTS n=53 -->

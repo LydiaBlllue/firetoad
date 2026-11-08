@@ -83,7 +83,11 @@ def run(root, write=False, ok=False, sets=(), say=None):
         emit(f"  {i:>3}  {what[:38]:<38} {str(d.get('default'))[:14]:<14} {str(d.get('suggest') or '')[:14]:<14} "
              f"{count.get(k, '') if k else '':>4}  {why}")
         res["items"].append({"n": i, "kind": d.get("kind"), "what": what, "default": d.get("default"),
-                             "suggest": d.get("suggest"), "seen": count.get(k, 0) if k else None, "why": why})
+                             "suggest": d.get("suggest"), "seen": count.get(k, 0) if k else None, "why": why,
+                             # what the item can be answered with (the panel's pills, local-app/panel.py):
+                             # money in from no named sender, or a transfer out that may be spending
+                             "credit": bool(d.get("credit")), "spent": bool(d.get("row")),
+                             "suggestBy": d.get("suggestBy")})
 
     # what the owner said
     want, bad = {}, res["bad"]

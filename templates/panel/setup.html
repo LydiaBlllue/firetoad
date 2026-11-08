@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jade Toad · {{W_TITLE}}</title>
+<style>
+/* The setup wizard: the setup skill's interview as screens, in the dashboard's tokens
+   (templates/dashboards/finance_dashboard.html :root). Shown instead of the monthly panel while
+   the folder still holds the demo. Phone-sized, one screen at a time. Every word comes from
+   strings.py (W), in the language the header switch picks. */
+:root{color-scheme:light;--page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--muted:#75736d;
+  --grid:#e1e0d9;--border:rgba(11,11,11,.10);--pill:#efeeea;--warn-bg:#fdf6e6;--warn-bd:#f0dfb4;--warn:#c98500;
+  --ok-bg:#eaf6ef;--ok:#1a7a4a;--bad-bg:#fbeaea;--bad:#b3261e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;font-size:14px;line-height:1.5;padding:28px 16px 64px}
+.wrap{max-width:560px;margin:0 auto}
+.brand{display:flex;align-items:baseline;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.brand h1{font-size:19px;font-weight:700;letter-spacing:-.3px}
+.brand small{color:var(--muted);font-size:12px}
+.brand a{margin-left:auto;font-size:12.5px;color:var(--ink-2)}
+.steps{display:flex;gap:4px;margin-bottom:14px}
+.steps span{flex:1;height:4px;border-radius:2px;background:var(--grid)}
+.steps span.on{background:var(--ink)}
+.steps span.done{background:var(--ok)}
+.lead{font-size:13.5px;color:var(--ink-2);margin-bottom:12px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 15px;margin-bottom:12px}
+h2{font-size:17px;font-weight:700;letter-spacing:-.2px;margin-bottom:4px}
+.q{font-size:13px;color:var(--ink-2);margin:6px 0 8px}
+.row{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--border)}
+.row:first-of-type{border-top:0}
+.row .rw{flex:1;min-width:0}
+.row b{font-size:13px}
+.row .wh{font-size:12.5px;color:var(--ink-2);display:block}
+.field{display:flex;flex-direction:column;gap:3px;margin:8px 0}
+.field label{font-size:11.5px;color:var(--muted)}
+input[type=text],input[type=number],input[type=date],select{font:inherit;font-size:13px;padding:6px 9px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--ink);max-width:100%}
+input.amt{width:160px;font-variant-numeric:tabular-nums}
+.pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.pl{border:1px solid var(--border);background:var(--pill);color:var(--ink-2);border-radius:999px;padding:3px 11px;font-size:12px;font-family:inherit;cursor:pointer}
+.pl.sel{background:var(--ink);color:var(--page);border-color:var(--ink);font-weight:600}
+.pl small{display:block;font-size:10.5px;color:inherit;opacity:.75}
+.act{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.btn{border:1px solid var(--border);background:var(--pill);color:var(--ink);border-radius:8px;padding:7px 14px;font-size:13px;font-family:inherit;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:600}
+.btn.sm{padding:4px 10px;font-size:12px;border-radius:7px}
+.btn[disabled]{opacity:.4;cursor:default}
+.hint{font-size:11.5px;color:var(--muted)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.busy{font-size:12.5px;background:var(--warn-bg);border:1px solid var(--warn-bd);border-radius:8px;padding:7px 10px;margin-bottom:10px}
+.busy.bad{background:var(--bad-bg);border-color:#efc4c1;color:var(--bad)}
+pre.log{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f3f2ee;border-radius:8px;padding:10px 12px;margin-top:10px;white-space:pre-wrap;word-break:break-word;max-height:360px;overflow:auto}
+.drop{margin-top:10px;border:1.5px dashed var(--grid);border-radius:10px;padding:16px;text-align:center;font-size:12.5px;color:var(--ink-2)}
+.drop.over{border-color:var(--ink);background:var(--pill)}
+.drop b{display:block;font-size:13px;color:var(--ink)}
+.drop small{display:block;font-size:11px;color:var(--muted);word-break:break-all;margin-top:4px}
+.lnk{background:none;border:none;padding:0;font:inherit;color:var(--ink);text-decoration:underline;cursor:pointer}
+ul.files{list-style:none;font-size:12.5px;margin-top:8px}
+ul.files li{padding:3px 0;border-top:1px solid var(--border)}
+ul.files li:first-child{border-top:0}
+.later{font-size:12px;color:var(--muted);margin-top:10px;border-top:1px solid var(--border);padding-top:8px}
+.ver{font-size:10.5px;color:var(--muted);letter-spacing:.04em;margin-top:18px;text-align:center}
+table.cm{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+table.cm td{padding:3px 4px 3px 0}
+table.cm input{width:100%}
+</style>
+</head>
+<body data-base="{{BASE}}">
+<div class="wrap">
+  <div class="brand"><h1>Jade Toad</h1><small>{{W_TITLE}}</small><a href="{{BASE}}/panel?lang={{OTHER_LANG}}">{{W_LANG}}</a></div>
+  {{BUSY}}
+  <div class="steps" id="steps"></div>
+  <p class="lead" id="lead"></p>
+  <div id="screen"></div>
+  <div class="ver">v{{VERSION}}</div>
+</div>
+<script>
+(function(){
+  var base = document.body.getAttribute('data-base');
+  var S = {{STATE}};
+  var JOB = {{JOB}};
+  var W = {{WS}};
+  var INBOX = "{{INBOX}}";
+  var A = {owner: '', born: '', importDay: '', accounts: [], added: [], money: {committed: [], pensions: []}, goal: ''};
+  var NAMES = [W.w_s1, W.w_s2, W.w_s3, W.w_s4, W.w_s5, W.w_s6, W.w_s7];
+  var step = 0;
+  var $ = function(id){ return document.getElementById(id); };
+  function fmt(s, o){ return String(s).replace(/\{(\w+)\}/g, function(_, k){ return o[k] == null ? '' : o[k]; }); }
+  function el(tag, cls, html){ var d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; return d; }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function money(v){ return v == null ? '' : '$' + Number(v).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+  function api(method, path, body){
+    return fetch(base + path, {method: method, headers: body instanceof FormData ? {} : {'Content-Type': 'application/json'},
+                               body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined)})
+      .then(function(r){ return r.json().then(function(j){ j.status = r.status; return j; }); });
+  }
+  function steps(){
+    var s = $('steps'); s.innerHTML = '';
+    NAMES.forEach(function(n, i){ var d = el('span', i < step ? 'done' : (i === step ? 'on' : '')); d.title = n; s.appendChild(d); });
+    $('lead').textContent = fmt(W.w_step, {i: step + 1, n: NAMES.length, name: NAMES[step]});
+  }
+  function nav(card, back, next, nextLabel){
+    var a = el('div', 'act');
+    if (back) { var b = el('button', 'btn', esc(W.w_back)); b.type = 'button'; b.onclick = function(){ step--; draw(); }; a.appendChild(b); }
+    if (next) { var n = el('button', 'btn primary', esc(nextLabel || W.w_next)); n.type = 'button'; n.onclick = next; a.appendChild(n); }
+    card.appendChild(a);
+  }
+  function field(card, label, input){ var f = el('div', 'field'); f.appendChild(el('label', null, label)); f.appendChild(input); card.appendChild(f); return input; }
+  function text(val, ph, cls){ var i = el('input', cls || null); i.type = 'text'; i.value = val == null ? '' : val; if (ph) i.placeholder = ph; return i; }
+  // the draft's suggestions come with numbers; the sentences are ours, in the owner's language
+  function payAsk(m){
+    if (m.takeHome.suggest) return fmt(W.w_take_sug, {per: money(m.takeHome.suggest / 2), sum: money(m.takeHome.suggest)});
+    return W.w_take_none;
+  }
+
+  function draw(){
+    steps();
+    var sc = $('screen'); sc.innerHTML = '';
+    var card = el('div', 'card'); sc.appendChild(card);
+    var scr = S.screens;
+    if (step === 0) {
+      card.appendChild(el('h2', null, esc(W.w_ready_h)));
+      card.appendChild(el('p', 'q', esc(W.w_ready_q)));
+      card.appendChild(el('pre', 'log', esc(S.ready.lines.join('\n')) || esc(W.w_nothing)));
+      var ok = S.ready.rc === 0;
+      card.appendChild(el('p', ok ? 'ok' : 'bad', esc(ok ? W.w_ready_ok : W.w_ready_no)));
+      nav(card, false, ok ? function(){ step = 1; draw(); } : null);
+    } else if (step === 1) {
+      card.appendChild(el('h2', null, esc(W.w_files_h)));
+      card.appendChild(el('p', 'q', esc(W.w_files_q)));
+      var drop = el('div', 'drop', '<b>' + esc(W.w_drop) + '</b><span><label class="lnk">' + esc(W.w_or_choose) + '<input type="file" multiple hidden id="pick"></label></span><small>' + esc(INBOX) + '</small>');
+      card.appendChild(drop);
+      var ul = el('ul', 'files');
+      (S.files || []).forEach(function(f){ ul.appendChild(el('li', null, esc(f))); });
+      if (!(S.files || []).length) ul.appendChild(el('li', 'hint', esc(W.w_none_yet)));
+      card.appendChild(ul);
+      var msg = el('div', 'hint'); card.appendChild(msg);
+      function upload(files){
+        if (!files || !files.length) return;
+        var fd = new FormData();
+        for (var i = 0; i < files.length; i++) fd.append('file', files[i], files[i].name);
+        msg.textContent = W.w_saving;
+        api('POST', '/api/inbox', fd).then(function(r){
+          if (!r.ok) { msg.textContent = r.error && r.error.text || 'failed'; return; }
+          msg.textContent = W.w_reading;
+          return api('GET', '/api/setup').then(function(r2){ if (r2.ok) { S = r2.data; } draw(); });
+        }).catch(function(e){ msg.textContent = String(e); });
+      }
+      ['dragenter', 'dragover'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add('over'); }); });
+      ['dragleave', 'drop'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove('over'); }); });
+      drop.addEventListener('drop', function(e){ upload(e.dataTransfer.files); });
+      document.addEventListener('dragover', function(e){ e.preventDefault(); });
+      document.addEventListener('drop', function(e){ e.preventDefault(); });
+      drop.querySelector('#pick').onchange = function(ev){ upload(ev.target.files); ev.target.value = ''; };
+      if (scr) card.appendChild(el('p', 'ok', esc(fmt(W.w_drafted, {n: scr.accounts.rows.length}))));
+      nav(card, true, scr ? function(){ step = 2; draw(); } : null);
+    } else if (step === 2) {
+      card.appendChild(el('h2', null, esc(W.w_acc_h)));
+      var own = field(card, esc(W.w_name_l) + (scr.owner.suggest ? esc(fmt(W.w_name_says, {who: scr.owner.suggest})) : ''), text(A.owner || scr.owner.suggest || '', W.w_name_ph));
+      var born = field(card, esc(W.w_born_l), text(A.born, W.w_born_ph, 'amt'));
+      born.inputMode = 'numeric';
+      card.appendChild(el('p', 'q', esc(W.w_acc_q)));
+      scr.accounts.rows.forEach(function(r){
+        var row = el('div', 'row');
+        var rw = el('div', 'rw');
+        var sel = (A.accounts[r.i] || {}).role || r.role;
+        rw.appendChild(el('b', null, esc(r.inst) + ' · ' + esc(r.kind) + (r.id && r.id !== '—' ? ' ' + esc(r.id) : '')));
+        rw.appendChild(el('span', 'wh', (r.balance != null ? money(r.balance) + ' · ' + esc(r.asof) : esc(W.w_no_balance)) + (r.doc ? ' · ' + esc(r.doc) : '')));
+        var nm = text((A.accounts[r.i] || {}).name || r.name, W.w_call_it); nm.style.marginTop = '5px';
+        nm.oninput = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).name = nm.value; };
+        rw.appendChild(nm);
+        if (r.needsBalance) {
+          var bl = text((A.accounts[r.i] || {}).balance || '', W.w_bal_ph, 'amt'); bl.inputMode = 'decimal'; bl.style.marginTop = '5px';
+          bl.oninput = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).balance = bl.value; };
+          rw.appendChild(bl);
+        }
+        if (!r.liability) {
+          var pills = el('div', 'pills');
+          scr.accounts.roles.forEach(function(ro){
+            var p = el('button', 'pl' + (ro.key === sel ? ' sel' : ''), esc(W['role_' + ro.key] || ro.label) + '<small>' + esc(W['role_' + ro.key + '_why'] || ro.why) + '</small>'); p.type = 'button';
+            p.onclick = function(){ pills.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); p.classList.add('sel'); (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).role = ro.key; };
+            pills.appendChild(p);
+          });
+          rw.appendChild(pills);
+        } else rw.appendChild(el('span', 'wh', esc(W.w_debt)));
+        row.appendChild(rw); card.appendChild(row);
+      });
+      card.appendChild(el('p', 'q', esc(W.w_missing) + esc(W.w_missing_tail)));
+      var addBox = el('div'); card.appendChild(addBox);
+      function drawAdded(){
+        addBox.innerHTML = '';
+        A.added.forEach(function(x, k){
+          var t = el('table', 'cm'); var tr = el('tr'); t.appendChild(tr);
+          [['inst', W.w_inst_ph], ['name', W.w_call_it], ['balance', W.w_balance_ph]].forEach(function(f){
+            var td = el('td'); var i = text(x[f[0]] || '', f[1]); i.oninput = function(){ x[f[0]] = i.value; }; td.appendChild(i); tr.appendChild(td);
+          });
+          var td = el('td'); var s = el('select'); scr.accounts.kinds.forEach(function(k2){ var o = el('option', null, esc(k2)); o.value = k2; if (k2 === (x.kind || 'Savings')) o.selected = true; s.appendChild(o); });
+          s.onchange = function(){ x.kind = s.value; }; td.appendChild(s); tr.appendChild(td);
+          var td2 = el('td'); var rm = el('button', 'btn sm', '×'); rm.type = 'button'; rm.onclick = function(){ A.added.splice(k, 1); drawAdded(); }; td2.appendChild(rm); tr.appendChild(td2);
+          addBox.appendChild(t);
+        });
+        var add = el('button', 'btn sm', esc(W.w_add_acc)); add.type = 'button'; add.onclick = function(){ A.added.push({kind: 'Savings'}); drawAdded(); };
+        addBox.appendChild(add);
+      }
+      drawAdded();
+      nav(card, true, function(){
+        A.owner = own.value; A.born = born.value;
+        if (!A.owner.trim()) { own.focus(); own.style.borderColor = 'var(--bad)'; return; }
+        step = 3; draw();
+      });
+    } else if (step === 3) {
+      var m = scr.money;
+      card.appendChild(el('h2', null, esc(W.w_money_h)));
+      card.appendChild(el('p', 'q', esc(W.w_money_q)));
+      var th = field(card, esc(payAsk(m)), text(A.money.takeHome != null ? A.money.takeHome : (m.takeHome.suggest || ''), W.w_amonth, 'amt'));
+      var inv = field(card, esc(W.w_invest), text(A.money.invest != null ? A.money.invest : (m.invest.suggest || ''), W.w_amonth, 'amt'));
+      var evLabel = m.everyday.suggest ? fmt(W.w_everyday_sug, {sug: money(m.everyday.suggest)}) : W.w_everyday;
+      var ev = field(card, esc(evLabel), text(A.money.everyday != null ? A.money.everyday : (m.everyday.suggest || ''), W.w_amonth, 'amt'));
+      [th, inv, ev].forEach(function(i){ i.inputMode = 'decimal'; });
+      card.appendChild(el('p', 'q', esc(W.w_committed)));
+      var cbox = el('div'); card.appendChild(cbox);
+      function drawCommitted(){
+        cbox.innerHTML = '';
+        A.money.committed.forEach(function(c, k){
+          var t = el('table', 'cm'); var tr = el('tr'); t.appendChild(tr);
+          var td1 = el('td'); var n = text(c.name || '', W.w_committed_ph); n.oninput = function(){ c.name = n.value; }; td1.appendChild(n); tr.appendChild(td1);
+          var td2 = el('td'); var am = text(c.amount || '', W.w_amonth, 'amt'); am.inputMode = 'decimal'; am.oninput = function(){ c.amount = am.value; }; td2.appendChild(am); tr.appendChild(td2);
+          var td3 = el('td'); var s = el('select'); [['keep', W.w_keep], ['drop', W.w_ends]].forEach(function(o){ var op = el('option', null, esc(o[1])); op.value = o[0]; if ((c.afterFire === false ? 'drop' : 'keep') === o[0]) op.selected = true; s.appendChild(op); });
+          s.onchange = function(){ c.afterFire = s.value === 'keep'; }; td3.appendChild(s); tr.appendChild(td3);
+          var td4 = el('td'); var rm = el('button', 'btn sm', '×'); rm.type = 'button'; rm.onclick = function(){ A.money.committed.splice(k, 1); drawCommitted(); }; td4.appendChild(rm); tr.appendChild(td4);
+          cbox.appendChild(t);
+        });
+        var add = el('button', 'btn sm', esc(W.w_add_one)); add.type = 'button'; add.onclick = function(){ A.money.committed.push({afterFire: true}); drawCommitted(); };
+        cbox.appendChild(add);
+      }
+      drawCommitted();
+      var rent = field(card, esc(W.w_rent), text(A.money.imputedRent || '', W.w_amonth, 'amt')); rent.inputMode = 'decimal';
+      var pb = field(card, esc(W.w_planbase), text(A.money.planBase != null ? A.money.planBase : (m.planBase.suggest || ''), W.w_amonth, 'amt')); pb.inputMode = 'decimal';
+      nav(card, true, function(){
+        A.money.takeHome = th.value; A.money.invest = inv.value; A.money.everyday = ev.value; A.money.imputedRent = rent.value; A.money.planBase = pb.value;
+        step = 4; draw();
+      });
+    } else if (step === 4) {
+      card.appendChild(el('h2', null, esc(W.w_goal_h)));
+      card.appendChild(el('p', 'q', esc(W.w_goal_q)));
+      var pills = el('div', 'pills');
+      [['yes', W.w_yes], ['no', W.w_no], ['', W.w_skip]].forEach(function(o){
+        var p = el('button', 'pl' + (A.goal === o[0] ? ' sel' : ''), esc(o[1])); p.type = 'button';
+        p.onclick = function(){ pills.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); p.classList.add('sel'); A.goal = o[0]; };
+        pills.appendChild(p);
+      });
+      card.appendChild(pills);
+      card.appendChild(el('p', 'hint', esc(W.w_goal_hint)));
+      card.appendChild(el('p', 'q', esc(W.w_pens_q)));
+      var pbox = el('div'); card.appendChild(pbox);
+      if (!A.money.pensions.length) A.money.pensions = [{name: 'CPP'}, {name: 'OAS'}];
+      A.money.pensions.forEach(function(p){
+        var t = el('table', 'cm'); var tr = el('tr'); t.appendChild(tr);
+        tr.appendChild(el('td', null, esc(p.name)));
+        var td = el('td'); var mo = text(p.monthly || '', W.w_amonth, 'amt'); mo.inputMode = 'decimal'; mo.oninput = function(){ p.monthly = mo.value; }; td.appendChild(mo); tr.appendChild(td);
+        var td2 = el('td'); var fr = text(p.from || '', W.w_from_age, 'amt'); fr.inputMode = 'numeric'; fr.oninput = function(){ p.from = fr.value; }; td2.appendChild(fr); tr.appendChild(td2);
+        pbox.appendChild(t);
+      });
+      nav(card, true, function(){ step = 5; draw(); });
+    } else if (step === 5) {
+      card.appendChild(el('h2', null, esc(W.w_day_h)));
+      card.appendChild(el('p', 'q', esc(W.w_day_q) + ' ' + esc(scr.day.closes.length ? fmt(W.w_day_closes, {days: scr.day.closes.join(', ')}) : W.w_day_default)));
+      var d = field(card, esc(W.w_day_l), text(A.importDay || scr.day.suggest, '', 'amt')); d.inputMode = 'numeric';
+      nav(card, true, function(){ A.importDay = d.value; step = 6; draw(); });
+    } else if (step === 6) {
+      card.appendChild(el('h2', null, esc(W.w_build_h)));
+      card.appendChild(el('p', 'q', esc(W.w_build_q)));
+      var added = A.added.filter(function(x){ return x.inst && x.name; }).length;
+      var sum = el('ul', 'files');
+      sum.appendChild(el('li', null, '<b>' + esc(A.owner) + '</b>' + (A.born ? esc(fmt(W.w_born_is, {y: A.born})) : '')));
+      sum.appendChild(el('li', null, esc(fmt(W.w_sum_acc, {n: scr.accounts.rows.length})) + (added ? esc(fmt(W.w_sum_added, {n: added})) : '')));
+      sum.appendChild(el('li', null, esc(fmt(W.w_sum_money, {a: A.money.takeHome || W.w_not_set, b: A.money.invest || W.w_not_set, c: A.money.everyday || W.w_not_set, n: A.money.committed.filter(function(c){ return c.name && c.amount; }).length}))));
+      sum.appendChild(el('li', null, esc(fmt(W.w_sum_goal, {g: A.goal === 'yes' ? W.w_yes : (A.goal === 'no' ? W.w_no : W.w_skipped), d: A.importDay || scr.day.suggest}))));
+      card.appendChild(sum);
+      if (scr.later && scr.later.length) {
+        var lt = el('div', 'later', '<b>' + esc(W.w_later) + '</b>');
+        scr.later.forEach(function(x){
+          var key = 'later_' + x.id.split(':')[0];
+          var line = W[key] ? W[key] + (x.id.indexOf(':') > 0 ? ' ' + x.id.split(':').slice(1).join(':') : '') : x.q;
+          lt.appendChild(el('div', null, '· ' + esc(line)));
+        });
+        card.appendChild(lt);
+      }
+      var log = el('pre', 'log'); log.style.display = 'none'; card.appendChild(log);
+      var hint = el('p', 'hint', esc(W.w_build_hint)); card.appendChild(hint);
+      var a = el('div', 'act'); var b = el('button', 'btn', esc(W.w_back)); b.type = 'button'; b.onclick = function(){ step = 5; draw(); }; a.appendChild(b);
+      var go = el('button', 'btn primary', esc(W.w_build_it)); go.type = 'button'; a.appendChild(go); card.appendChild(a);
+      go.onclick = function(){
+        go.disabled = true; b.disabled = true; hint.textContent = W.w_building; log.style.display = 'block'; log.textContent = '';
+        var answers = {owner: A.owner, born: A.born, importDay: A.importDay || scr.day.suggest,
+                       accounts: Object.keys(A.accounts).map(function(k){ return A.accounts[k]; }).filter(Boolean),
+                       added: A.added.filter(function(x){ return x.inst && x.name; }),
+                       money: {takeHome: A.money.takeHome, invest: A.money.invest, everyday: A.money.everyday, planBase: A.money.planBase,
+                               imputedRent: A.money.imputedRent, committed: A.money.committed.filter(function(c){ return c.name && c.amount; }),
+                               pensions: A.money.pensions.filter(function(p){ return p.monthly && p.from; })},
+                       goal: A.goal};
+        api('POST', '/api/setup', {answers: answers}).then(function(r){
+          if (!r.ok) { hint.textContent = r.error && r.error.text || ('HTTP ' + r.status); go.disabled = false; b.disabled = false; return; }
+          var es = new EventSource(base + '/api/events');
+          es.addEventListener('line', function(ev){ log.textContent += JSON.parse(ev.data) + '\n'; log.scrollTop = log.scrollHeight; });
+          es.addEventListener('done', function(ev){
+            es.close(); var j = {}; try { j = JSON.parse(ev.data); } catch (e) {}
+            var res = j.result || {};
+            if (j.error || !res.written) { hint.textContent = W.w_not_finished; go.disabled = false; b.disabled = false; return; }
+            hint.innerHTML = '<span class="ok">' + esc(W.w_built) + '</span>';
+            var open = el('a', 'btn primary', esc(W.w_open_dash)); open.href = base + '/'; open.target = '_blank'; a.appendChild(open);
+            var pan = el('a', 'btn', esc(W.w_panel)); pan.href = base + '/panel'; a.appendChild(pan);
+          });
+        }).catch(function(e){ hint.textContent = String(e); go.disabled = false; b.disabled = false; });
+      };
+    }
+  }
+  if (JOB && !JOB.done && JOB.verb === 'setup') { step = 6; }
+  draw();
+  setInterval(function(){ api('GET', '/api/ping').catch(function(){}); }, 30000);
+})();
+</script>
+</body>
+</html>

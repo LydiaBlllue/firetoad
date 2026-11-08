@@ -18,7 +18,7 @@ with backups, one mistake away from being the fault it was testing for.
 
     selftest.py [root]
 """
-import sys, os, re, csv, json, shutil, tempfile, subprocess, datetime, hashlib
+import sys, os, re, csv, json, shutil, tempfile, subprocess, datetime, hashlib, time
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "update-dashboard", "scripts"))
 import layout  # where each findata file lives (schema 6)
@@ -35,9 +35,12 @@ def stage(root, dst):
     # templates/ too: T1 rebuilds the pages from it and compares.
     # tools/ too: README hands the reader `tools/sync.py`, and S4 resolves every such path.
     # .private/ too, when it exists: an owner's README may name its deny list and S4 resolves it.
-    for d in ("findata", "dashboards", "docs", "templates", "tools", ".private"):
+    # build/ too (2026-11-06): the local-app skill hands the reader build/build.py, and S4 resolves it;
+    # its work/ and the dist/ beside it are not copied (they are not the tool).
+    for d in ("findata", "dashboards", "docs", "templates", "tools", ".private", "build"):
         if os.path.isdir(os.path.join(root, d)):
-            shutil.copytree(os.path.join(root, d), os.path.join(dst, d))
+            shutil.copytree(os.path.join(root, d), os.path.join(dst, d),
+                            ignore=shutil.ignore_patterns("work", "pyi", "__pycache__") if d == "build" else None)
     # .claude/ has to come too: S4 resolves the script paths README points at, and without it
     # every baseline run failed on paths that are perfectly fine in the real workspace.
     shutil.copytree(os.path.join(root, ".claude"), os.path.join(dst, ".claude"))
@@ -46,8 +49,9 @@ def stage(root, dst):
     # (setup-answers.json), and it learns which those are from there (2026-09-13).
     # LICENSE, CHANGELOG.md, ROADMAP.md, CONTRIBUTING.md and SECURITY.md: README links to them,
     # and S4 resolves every link.
+    # app.py too (2026-11-06): the local-app skill hands the reader `python3 app.py`, and S4 resolves it.
     for f in ("CLAUDE.md", "DESIGN.md", "FINANCE.md", "README.md", "OWNER.md", ".gitignore", "LICENSE", "CHANGELOG.md", "ROADMAP.md",
-              "CONTRIBUTING.md", "SECURITY.md"):
+              "CONTRIBUTING.md", "SECURITY.md", "app.py"):
         if os.path.exists(os.path.join(root, f)):
             shutil.copy2(os.path.join(root, f), dst)
     # README names these folders in prose and S4 checks that every path it hands the reader
@@ -2300,6 +2304,410 @@ def two_doors_check(root, base):
     return [f"  ✓ two doors: run() returns what the CLI prints and exits with, for {', '.join(scripts)}"]
 
 
+def local_app_check(root, base):
+    """The second door (local-app/server.py, 2026-11-06): a month imported through
+    POST /api/import on one staged copy and through update.py --write on another has to leave
+    the same findata/ and the same archive — the proof that the app contains no financial logic
+    of its own. Also: a request without the token is 404, not 401; an import started while the
+    lock is held by a live process is 409. Since 1c (2026-11-06): one statement reaches the app
+    copy as an upload (POST /api/inbox) instead of a copy into inbox/, a typed balance goes through
+    POST /api/balance on one copy and balance.py on the other, and a screenshot that is not an
+    image is answered with a reason, not a crash."""
+    import io, uuid, urllib.request, urllib.error
+    srv = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "local-app", "scripts", "server.py"))
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    if not (os.path.exists(srv) and os.path.exists(upd)):
+        return []
+    copies = {}
+    for door in ("cli", "api"):
+        ws = os.path.join(base, "door_" + door); os.makedirs(ws); stage(root, ws)
+        man = fixtures_for(ws)
+        if not man:
+            return []
+        newest = {}
+        for m in man:
+            newest[m["doc"]] = max(newest.get(m["doc"], m), m, key=lambda x: os.path.basename(x["file"]))
+        for m in newest.values():
+            strip_statement(ws, m)
+        subprocess.run([sys.executable, os.path.join(os.path.dirname(upd), "rebuild.py"), ".", "--write"], cwd=ws, capture_output=True)
+        copies[door] = ws
+    bad = []
+    # a balance no file carries: an account with no ledger (a card in the demo), typed the same on both sides
+    reg = json.load(open(layout.path(copies["cli"], "accounts.json"), encoding="utf-8"))
+    typed = next((a["key"] for a in reg["accounts"] if a.get("src") == "banks.json" and not a.get("ledger")), None)
+    bal = os.path.join(os.path.dirname(upd), "balance.py")
+    if typed and os.path.exists(bal):
+        r = subprocess.run([sys.executable, bal, ".", typed, "1234.56", "--asof", "2026-01-15", "--write"], cwd=copies["cli"],
+                           capture_output=True, text=True, timeout=120)
+        if r.returncode not in (0, 2):
+            bad.append(f"balance.py exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:]))
+    # the first door
+    r = subprocess.run([sys.executable, upd, ".", "--write"], cwd=copies["cli"], capture_output=True, text=True, timeout=300)
+    if r.returncode != 0:
+        bad.append(f"update.py --write exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:]))
+    # one statement leaves the app copy's inbox, to come back as an upload
+    held = sorted(os.listdir(os.path.join(copies["api"], "inbox")))
+    up_name = held[0] if held else None
+    up_data = open(os.path.join(copies["api"], "inbox", up_name), "rb").read() if up_name else b""
+    if up_name:
+        os.remove(os.path.join(copies["api"], "inbox", up_name))
+
+    def form(fields, files):
+        b = uuid.uuid4().hex
+        out = io.BytesIO()
+        for k, v in fields.items():
+            out.write(f"--{b}\r\nContent-Disposition: form-data; name=\"{k}\"\r\n\r\n{v}\r\n".encode())
+        for k, (name, data) in files.items():
+            out.write(f"--{b}\r\nContent-Disposition: form-data; name=\"{k}\"; filename=\"{name}\"\r\n"
+                      f"Content-Type: application/octet-stream\r\n\r\n".encode())
+            out.write(data); out.write(b"\r\n")
+        out.write(f"--{b}--\r\n".encode())
+        return out.getvalue(), {"Content-Type": f"multipart/form-data; boundary={b}"}
+    # the second door: the server as its own process, the way app.py starts it
+    ws = copies["api"]
+    proc = subprocess.Popen([sys.executable, srv, ".", "--port", "0"], cwd=ws, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    try:
+        line = ""
+        for _ in range(200):
+            line = proc.stdout.readline()
+            if "http://127.0.0.1:" in line or not line:
+                break
+        m = re.search(r"(http://127\.0\.0\.1:\d+)(/t/[^/\s]+)/panel", line)
+        if not m:
+            return ["  ✗ local app: the server did not say where it is (" + line.strip()[:120] + ")"]
+        origin, tok = m.group(1), m.group(2)
+
+        def req(method, path, body=None, headers=None):
+            data = body if isinstance(body, (bytes, bytearray)) else (json.dumps(body).encode() if body is not None else None)
+            rq = urllib.request.Request(origin + path, data=data, method=method,
+                                        headers=headers or {"Content-Type": "application/json"})
+            try:
+                with urllib.request.urlopen(rq, timeout=300) as resp:
+                    raw = resp.read()
+                    return resp.status, (json.loads(raw) if resp.headers.get_content_type() == "application/json" else raw)
+            except urllib.error.HTTPError as e:
+                raw = e.read()
+                return e.code, (json.loads(raw) if e.headers.get_content_type() == "application/json" else raw)
+
+        if req("GET", "/api/status")[0] != 404 or req("GET", "/t/wrong/api/status")[0] != 404:
+            bad.append("a request without the token was not answered 404")
+        if req("POST", tok + "/api/import", {"write": False}, {"Content-Type": "application/json", "Origin": "http://127.0.0.1:1"})[0] != 403:
+            bad.append("a POST from another origin was not refused")
+        lock = os.path.join(ws, ".jade.lock")
+        json.dump({"pid": os.getpid(), "verb": "import", "since": "now"}, open(lock, "w"))
+        st, body = req("POST", tok + "/api/import", {"write": True})
+        if st != 409:
+            bad.append(f"an import while the lock is held got {st}, not 409")
+        os.remove(lock)
+
+        def wait_job():
+            job = {}
+            for _ in range(600):
+                st, job = req("GET", tok + "/api/job")
+                if job.get("data", {}).get("done"):
+                    break
+                time.sleep(0.5)
+            return job.get("data") or {}
+        if up_name:
+            data, hdr = form({}, {"file": (up_name, up_data)})
+            st, body = req("POST", tok + "/api/inbox", data, hdr)
+            states = [x.get("state") for x in (body.get("data") or [])] if st == 200 else []
+            if states != ["saved"] or not os.path.exists(os.path.join(ws, "inbox", up_name)):
+                bad.append(f"the upload of {up_name} answered {st} {states}")
+            data, hdr = form({}, {"file": ("../" + up_name, up_data)})
+            st, body = req("POST", tok + "/api/inbox", data, hdr)
+            if st != 200 or [x.get("state") for x in body.get("data") or []] != ["already there"] \
+                    or os.path.exists(os.path.join(os.path.dirname(ws), up_name)):
+                bad.append("an upload named with a path was not reduced to its basename")
+        if typed and os.path.exists(bal):
+            st, body = req("POST", tok + "/api/balance", {"key": typed, "amount": "1,234.56", "asof": "2026-01-15"})
+            job = wait_job() if st == 202 else {}
+            if st != 202 or not (job.get("result") or {}).get("written"):
+                bad.append(f"POST /api/balance answered {st}: " + " | ".join(job.get("lines", [])[-2:])[:160])
+            data, hdr = form({"key": typed}, {"image": ("shot.png", b"not an image")})
+            st, body = req("POST", tok + "/api/ocr", data, hdr)
+            if st != 200 or not (body.get("data") or {}).get("error"):
+                bad.append(f"POST /api/ocr with junk answered {st} without a reason")
+        st, body = req("POST", tok + "/api/import", {"write": True})
+        if st != 202:
+            bad.append(f"POST /api/import answered {st}: {str(body)[:120]}")
+        else:
+            job = wait_job()
+            if not job.get("done") or job.get("error") or (job.get("result") or {}).get("rc") not in (None, 0) \
+                    or not (job.get("result") or {}).get("written"):
+                bad.append("the import through the app did not finish clean: " + " | ".join(job.get("lines", [])[-2:])[:200])
+        if os.path.exists(lock):
+            bad.append("the lock was left behind after the import")
+        st, body = req("GET", tok + "/panel")
+        # a demo folder (this staged copy) gets the setup wizard on /panel; an owner's gets the panel
+        # a demo folder (this staged copy) gets the setup wizard on /panel; an owner's gets the five steps
+        if st != 200 or not any(x in body for x in (b'id="step4"', b"make this folder yours")):
+            bad.append(f"GET /panel answered {st}")
+    finally:
+        proc.kill(); proc.wait()
+    # the same month, both doors: findata/ and archive/ identical, but for the seconds an import
+    # records and the prices a run may or may not have fetched
+    a, b = findata_digest(copies["cli"]), findata_digest(copies["api"])
+    diff = sorted(k for k in set(a) | set(b) if a.get(k) != b.get(k))
+    if diff:
+        bad.append("the two doors left different files: " + ", ".join(diff[:6]) + (" …" if len(diff) > 6 else ""))
+    if bad:
+        return ["  ✗ local app: " + x for x in bad[:6]]
+    return [f"  ✓ local app: the same month through update.py and through POST /api/import left identical findata/ and archive/ "
+            f"({len(a)} files), with one statement uploaded and one balance typed through the app; no token → 404, "
+            f"another origin → 403, the lock held → 409, a screenshot that is no image answered with a reason"]
+
+
+def local_app_setup_check(root, base):
+    """The setup through the app (setup/scripts/wizard.py, 2026-11-06): on a staged demo copy, two
+    card statements uploaded, the screens drafted, the answers posted the way the wizard posts
+    them (a name, the everyday figure confirmed, everything else skipped), the workspace built and
+    the first month imported — and findata/ identical to the same answers applied through
+    wizard.py on the command line. The wizard shows instead of the panel while the folder is the
+    demo's, and the panel once it is not."""
+    import io, uuid, urllib.request, urllib.error
+    if not demo_like(root):
+        return []
+    srv = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "local-app", "scripts", "server.py"))
+    wiz = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "setup", "scripts", "wizard.py"))
+    if not (os.path.exists(srv) and os.path.exists(wiz)):
+        return []
+    copies, two = {}, None
+    for door in ("cli", "api"):
+        ws = os.path.join(base, "wiz_" + door); os.makedirs(ws); stage(root, ws)
+        man = fixtures_for(ws) or []
+        cards = sorted((m for m in man if m["parser"] in ("rbc_visa", "bmo_mastercard")), key=lambda m: m["file"])
+        if not cards:
+            return []
+        doc = cards[-1]["doc"]; two = [m for m in cards if m["doc"] == doc][-2:]
+        for f in os.listdir(os.path.join(ws, "inbox")):
+            if not f.startswith("."):
+                os.remove(os.path.join(ws, "inbox", f))
+        copies[door] = (ws, two)
+    bad = []
+    ws, two = copies["api"]
+    proc = subprocess.Popen([sys.executable, srv, ".", "--port", "0"], cwd=ws, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    answers = None
+    try:
+        line = ""
+        for _ in range(200):
+            line = proc.stdout.readline()
+            if "http://127.0.0.1:" in line or not line:
+                break
+        m = re.search(r"(http://127\.0\.0\.1:\d+)(/t/[^/\s]+)/panel", line)
+        if not m:
+            return ["  ✗ local app setup: the server did not say where it is (" + line.strip()[:120] + ")"]
+        origin, tok = m.group(1), m.group(2)
+
+        def req(method, path, body=None, headers=None):
+            data = body if isinstance(body, (bytes, bytearray)) else (json.dumps(body).encode() if body is not None else None)
+            rq = urllib.request.Request(origin + path, data=data, method=method, headers=headers or {"Content-Type": "application/json"})
+            try:
+                with urllib.request.urlopen(rq, timeout=300) as resp:
+                    raw = resp.read()
+                    return resp.status, (json.loads(raw) if resp.headers.get_content_type() == "application/json" else raw)
+            except urllib.error.HTTPError as e:
+                raw = e.read()
+                return e.code, (json.loads(raw) if e.headers.get_content_type() == "application/json" else raw)
+
+        def form(files):
+            b = uuid.uuid4().hex; out = io.BytesIO()
+            for k, (name, data) in files.items():
+                out.write(f"--{b}\r\nContent-Disposition: form-data; name=\"{k}\"; filename=\"{name}\"\r\n"
+                          f"Content-Type: application/octet-stream\r\n\r\n".encode()); out.write(data); out.write(b"\r\n")
+            out.write(f"--{b}--\r\n".encode())
+            return out.getvalue(), {"Content-Type": f"multipart/form-data; boundary={b}"}
+        st, body = req("GET", tok + "/panel")
+        if st != 200 or b"make this folder yours" not in body or b'id="step3"' in body:
+            bad.append(f"a demo folder did not get the wizard page ({st})")
+        for mm in two:
+            d, h = form({"file": (os.path.basename(mm["file"]), open(mm["file"], "rb").read())})
+            st, body = req("POST", tok + "/api/inbox", d, h)
+            if st != 200 or [x.get("state") for x in body.get("data") or []] != ["saved"]:
+                bad.append(f"the upload of {os.path.basename(mm['file'])} answered {st}")
+        st, body = req("GET", tok + "/api/setup")
+        sc = (body.get("data") or {}).get("screens") if st == 200 else None
+        if not sc or not sc["accounts"]["rows"]:
+            bad.append(f"GET /api/setup drafted no accounts from two statements ({st})")
+            sc = {"day": {"suggest": 1}, "money": {"everyday": {}}}
+        answers = {"owner": "Sam Lee", "born": "", "importDay": sc["day"]["suggest"], "accounts": [], "added": [],
+                   "money": {"takeHome": "", "invest": "", "everyday": sc["money"]["everyday"].get("suggest") or "",
+                             "planBase": "", "committed": [], "pensions": []}, "goal": ""}
+        st, body = req("POST", tok + "/api/setup", {"answers": answers})
+        job = {}
+        if st == 202:
+            for _ in range(900):
+                st2, jj = req("GET", tok + "/api/job")
+                job = jj.get("data") or {}
+                if job.get("done"):
+                    break
+                time.sleep(0.5)
+        res = job.get("result") or {}
+        if st != 202 or not res.get("written") or not (res.get("import") or {}).get("written"):
+            bad.append(f"POST /api/setup: {st}, " + " | ".join(job.get("lines", [])[-2:])[:200])
+        st, body = req("GET", tok + "/panel")
+        if st != 200 or b'id="step3"' not in body or b"make this folder yours" in body:
+            bad.append("after the build the panel did not take over from the wizard")
+    finally:
+        proc.kill(); proc.wait()
+    prof = json.load(open(layout.path(ws, "profile.json"), encoding="utf-8"))
+    if prof.get("owner") != "Sam Lee" or prof.get("born") is not None or prof.get("demo"):
+        bad.append(f"profile.json after the wizard: {prof.get('owner')!r}, born {prof.get('born')!r}, demo {prof.get('demo')!r}")
+    out = run("check_data.py", ["."], ws)
+    bad += [l.strip()[:120] for l in out.splitlines() if l.strip().startswith("✗")][:2]
+    # the same answers through the verb on the command line
+    ws2, two2 = copies["cli"]
+    for mm in two2:
+        shutil.copy(mm["file"], os.path.join(ws2, "inbox"))
+    ap = os.path.join(base, "wiz_answers.json"); json.dump(answers or {}, open(ap, "w"))
+    r = subprocess.run([sys.executable, wiz, ".", "--apply", ap, "--write"], cwd=ws2, capture_output=True, text=True, timeout=600)
+    if r.returncode not in (0, 2):
+        bad.append(f"wizard.py --apply exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:])[:160])
+    a, b = findata_digest(ws), findata_digest(ws2)
+    diff = sorted(k for k in set(a) | set(b) if a.get(k) != b.get(k))
+    if diff:
+        bad.append("the wizard's two doors left different files: " + ", ".join(diff[:6]))
+    if bad:
+        return ["  ✗ local app setup: " + x for x in bad[:6]]
+    return [f"  ✓ local app setup: two statements uploaded, the screens drafted, the answers posted, the workspace built and the first "
+            f"month imported through the app; findata/ identical to wizard.py on the command line ({len(a)} files); the panel took over"]
+
+
+def ai_sidecar_check(root, base):
+    """A model, by choice (ai.py, 2026-11-06). On a fresh workspace built from two card statements
+    (every merchant new), a mock OpenAI-shaped server on loopback answers every merchant
+    "Travel": with no provider set the import must not call it at all and the new merchants are
+    asked as before; with the provider
+    set to the mock, the merchants nobody knows carry a model's suggestion and are STILL filed
+    Other until the owner says, the mock saw only merchant strings and category names, and the
+    exchange is in .jade/log/ai.jsonl."""
+    import http.server, threading
+    upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
+    aip = os.path.join(os.path.dirname(upd), "ai.py")
+    if not (os.path.exists(upd) and os.path.exists(aip)):
+        return []
+    seen = []
+
+    class Mock(http.server.BaseHTTPRequestHandler):
+        def log_message(self, *a):
+            pass
+
+        def do_POST(self):
+            n = int(self.headers.get("Content-Length") or 0)
+            body = json.loads(self.rfile.read(n).decode("utf-8")) if n else {}
+            seen.append({"path": self.path, "auth": self.headers.get("Authorization"), "body": body})
+            out = json.dumps({"choices": [{"message": {"content": "Travel"}}]}).encode()
+            self.send_response(200); self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(out))); self.end_headers(); self.wfile.write(out)
+    httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Mock)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{httpd.server_address[1]}/v1"
+    bad = []
+    try:
+        for mode in ("off", "on"):
+            # a fresh workspace, the card-only setup's way: every merchant is new there, so the
+            # question is asked and — on — the model is consulted (an owner's months already
+            # know their merchants, which is exactly why a model is for the first sightings)
+            ws = os.path.join(base, "ai_" + mode); os.makedirs(ws); stage(root, ws)
+            man = fixtures_for(ws) or []
+            cards = sorted((m for m in man if m["parser"] in ("rbc_visa", "bmo_mastercard")), key=lambda m: m["file"])
+            if not cards:
+                return []
+            doc = cards[-1]["doc"]; two = [m for m in cards if m["doc"] == doc][-2:]
+            for f in os.listdir(os.path.join(ws, "inbox")):
+                if not f.startswith("."):
+                    os.remove(os.path.join(ws, "inbox", f))
+            for m in two:
+                shutil.copy(m["file"], os.path.join(ws, "inbox"))
+            sk = os.path.join(ws, ".claude", "skills")
+            step = lambda script, *a: subprocess.run([sys.executable, os.path.join(sk, script), ".", *a],
+                                                      cwd=ws, capture_output=True, text=True, timeout=300)
+            step("setup/scripts/propose.py", "--write")
+            ans_p = layout.path(ws, "setup-answers.json")
+            a = json.load(open(ans_p, encoding="utf-8")); a["owner"] = "Sam Lee"; a.pop("born", None); a["_open"] = []
+            json.dump(a, open(ans_p, "w", encoding="utf-8"), indent=2)
+            step("setup/scripts/scaffold.py", "--answers", ans_p, "--write")
+            step("update-dashboard/scripts/rebuild.py", "--write")
+            # the demo's merchants are the common chains the starter map knows; emptied in this
+            # copy, every one of them is a merchant nobody has decided — the model's case
+            json.dump({"patterns": []}, open(os.path.join(sk, "setup", "data", "starter_merchants.json"), "w", encoding="utf-8"))
+            env = dict(os.environ, JADE_AI_KEY="selftest-key")
+            # the staged copy's own scripts, so the emptied starter map is the one update.py reads
+            upd_ws = os.path.join(sk, "update-dashboard", "scripts", "update.py")
+            if mode == "on":
+                subprocess.run([sys.executable, os.path.join(sk, "update-dashboard", "scripts", "ai.py"), ".", "set", "openai",
+                                "--base-url", url, "--model", "mock"], cwd=ws, capture_output=True)
+            before = len(seen)
+            r = subprocess.run([sys.executable, upd_ws, ".", "--write"], cwd=ws, capture_output=True, text=True, timeout=300, env=env)
+            if r.returncode != 0:
+                bad.append(f"{mode}: update.py exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:]))
+            dec = [d for d in json.load(open(layout.path(ws, "decisions.json"), encoding="utf-8"))["decisions"]
+                   if d.get("kind") == "merchant" and d.get("status") == "open" and "starter map" not in (d.get("what") or "")]
+            calls = seen[before:]
+            if mode == "off":
+                if calls:
+                    bad.append(f"off: the mock was called {len(calls)} time(s) with no provider set")
+                if any(d.get("suggestBy") == "model" for d in dec):
+                    bad.append("off: a question carries a model's suggestion")
+                continue
+            with_model = [d for d in dec if d.get("suggestBy") == "model"]
+            if not dec:
+                bad.append("on: no merchant was asked, so nothing exercised the model")
+            elif not with_model:
+                bad.append(f"on: {len(dec)} merchant(s) asked, none with the model's suggestion ({len(calls)} call(s))")
+            if any(d.get("default") != "Other" for d in with_model):
+                bad.append("on: a model's suggestion was filed as the category instead of Other")
+            if any(d.get("suggest") != "Travel" for d in with_model):
+                bad.append("on: the suggestion is not what the model said")
+            sp = [r_ for r_ in csv.DictReader(open(layout.path(ws, "spending.csv"), encoding="utf-8"))
+                  if any(merchant_key_of(r_["note"]) == d.get("match") for d in with_model)]
+            if any(r_["category"] != "Other" for r_ in sp):
+                bad.append("on: spending.csv took the model's word before the owner confirmed")
+            for c in calls:
+                text = json.dumps(c["body"])
+                if "$" in text or re.search(r"\b20\d\d-\d\d-\d\d\b", text) or re.search(r"\d+\.\d\d\b", text):
+                    bad.append("on: a request carried an amount or a date"); break
+                if c["auth"] != "Bearer selftest-key":
+                    bad.append("on: the key did not travel as the bearer token"); break
+            lp = os.path.join(ws, ".jade", "log", "ai.jsonl")
+            if not os.path.exists(lp) or len(open(lp, encoding="utf-8").read().splitlines()) < len(calls):
+                bad.append("on: .jade/log/ai.jsonl does not hold every exchange")
+            if "suggests Travel" not in r.stdout:
+                bad.append("on: the run's summary does not say the model suggested")
+            n_calls, n_model = len(calls), len(with_model)
+    finally:
+        httpd.shutdown()
+    if bad:
+        return ["  ✗ model side-car: " + x for x in bad[:6]]
+    return [f"  ✓ model side-car: off → not one call; on → {n_model} merchant(s) carry the model's suggestion over {n_calls} call(s), "
+            f"filed Other until confirmed, nothing but merchant strings and category names sent, every exchange logged"]
+
+
+def merchant_key_of(note):
+    sys.path.insert(0, HERE)
+    from check_data import merchant_key
+    return merchant_key(note)
+
+
+def findata_digest(ws):
+    """findata/ and archive/ as hashes, but for the seconds an import records and the prices a run
+    may or may not have fetched — what two doors have to agree on."""
+    out = {}
+    for top in ("findata", "archive"):
+        for dp, _, fs in os.walk(os.path.join(ws, top)):
+            for f in fs:
+                if f == "prices.json":
+                    continue
+                data = open(os.path.join(dp, f), "rb").read()
+                if f == "imports.json":
+                    j = json.loads(data.decode("utf-8"))
+                    for rec in (j.get("imports") if isinstance(j, dict) else j) or []:
+                        rec.pop("seconds", None)
+                    data = json.dumps(j, sort_keys=True).encode()
+                out[os.path.relpath(os.path.join(dp, f), ws)] = hashlib.sha256(data).hexdigest()
+    return out
+
+
 def csv_rows_of(p):
     return list(csv.DictReader(open(p, encoding="utf-8"))) if os.path.exists(p) else []
 
@@ -2377,7 +2785,7 @@ def main(argv):
         runs = []
         for chk in (parser_checks, update_check, update_batch_check, undo_check, drift_check,
                     own_name_check, loan_import_check, pay_etransfer_check, seen_account_check, yearly_check, reward_check, broker_gift_check, first_import_quiet_check, unset_check, ready_check, types_check, spending_check, confirm_check, refile_check, card_only_setup_check, chequing_setup_check, no_pay_check, browser_copy_check, csv_download_check, csv_layouts_check, ofx_download_check, month_parts_check, starter_check,
-                    demo_clear_check, two_doors_check):
+                    demo_clear_check, two_doors_check, local_app_check, local_app_setup_check, ai_sidecar_check):
             try:
                 runs += chk(root, base)
             except Exception as e:                 # a check with nothing to run on, as above

@@ -21,7 +21,7 @@ page: what you spent, what you own, how far you are from FIRE. No bank login, no
 
 | | |
 |---|---|
-| **Claude plan** | Pro, Max, Team or Enterprise. The free plan does not include Claude Code. Nothing else to pay for |
+| **Claude plan** | Pro, Max, Team or Enterprise. The free plan does not include Claude Code. Nothing else to pay for — **or no plan at all**: see *Without Claude* below |
 | **Claude desktop app** | On a **Mac or Windows** computer, using its **Code** tab, not Chat. Claude Code comes with it |
 | **Python 3 and pypdf** | Setup checks for them and gives you the one command if one is missing |
 | **Your statements** | Last month's PDFs. A single credit card is enough to start |
@@ -51,7 +51,28 @@ About twenty minutes.
 ## Each month
 
 Download the month's statements into `inbox/` and say **"update dashboards"**. You get a short
-report and any questions a program cannot answer, like a merchant it has not seen.
+report and any questions a program cannot answer, like a merchant it has not seen. In the app
+(below) the same month is the panel's five steps.
+
+## Without Claude
+
+There is a second way in that needs no Claude plan. **Jade Toad.app** — a disk image for macOS
+on the releases page, or `python3 app.py` in this folder with Python 3 and pypdf installed —
+opens your folder in your browser. The first launch asks where your folder is, or makes one and
+walks you through the setup in six screens; every month after that, a panel of five steps: get
+this month's files, put them here, import, answer a few questions, done. English or Chinese,
+switched in the header. It runs the very code Claude Code runs, on your computer only, and the
+same checks hold both doors to the same result. The build is not signed yet, so the first
+launch on a Mac is right-click → *Open*.
+
+A model is optional and **off by default**. Turned on in the panel's settings — with your own
+key to an OpenAI-compatible service or Anthropic, or Ollama on this computer — it is asked one
+thing only: which category a merchant none of the maps know belongs to. It receives the
+merchant string and the fifteen category names, nothing else, and its answer is a suggestion
+you confirm, never the filing. Every exchange is logged in your folder.
+
+Claude Code stays the other door: the chat, a statement no parser reads, the setup questions
+the screens do not cover (anything held abroad, a loan to a friend, your investing buckets).
 
 ## Why you can trust it
 

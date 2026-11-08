@@ -1,5 +1,48 @@
 # Changelog
 
+## 1.0.2 — 2026-11-07
+
+- **A second way in, beside Claude** (2026-11-06, ROADMAP 2.0.0 step 1b): `python3 app.py`
+  serves the dashboard and a monthly panel on `127.0.0.1` — Bring · Import · Questions · Result —
+  through the scripts' own `run()`s, so a month done by tapping in the browser is the month the
+  import skill would have done: the dry run, then *Go* with the lines streaming in, *Undo*, the
+  open questions as pills saved at once. The server is the standard library, loopback only, a
+  token in the path, one writer at a time (`.jade.lock`), and no financial logic of its own; the
+  selftest's *local app* check imports one month through both doors and expects identical
+  `findata/`.
+- **The month closes in the panel** (2026-11-06, step 1c): files dropped on the panel land in
+  `inbox/` under their own names and are named at once; a balance no file carries is typed
+  into the row that asks for it, or read off a phone screenshot — Apple Vision on this computer,
+  the amounts on the image offered as pills, the likeliest first, nothing written until one is
+  tapped — and written by a new verb, `balance.py`, which this chat uses too: by register key,
+  the register's copy following, refused where a ledger or a loan already says the figure.
+- **A double-clickable app** (2026-11-06, step 1d): `python3 build/build.py` packages the tool,
+  its Python and the demo into `dist/Jade Toad.app` (a `.dmg` beside it; a zip on Windows and
+  Linux). The first launch asks where your folder is, or makes one, and remembers it outside the
+  workspace; every launch compares the folder's copy of the tool with the app's and offers to
+  refresh it, and refuses to write when the folder's data is a newer shape than the app builds.
+  The build never carries a workspace. Ad-hoc signed until a Developer ID is given.
+- **Setup without Claude** (2026-11-06, step 2): a folder that still holds the demo opens on a
+  wizard instead of the panel — is the computer ready, drop last month's files, one card per
+  account with *what is this money for*, the month's money in and out with the files' own
+  suggestions, the one FIRE question, the import day, build. The answers land in the setup's own
+  answers file and the same scaffold, rebuild and first import run; a question skipped stays
+  unanswered, never guessed. What the screens do not cover is listed as left for the chat.
+- **The panel says what to do** (2026-11-07, user 001): five numbered steps — get this month's
+  files · put them here · import · answer a few questions · done — with the step you are at lit
+  and one line of what to do next; under each missing file, *How do I get it?* with the bank's
+  own download path; plain states (still missing · in inbox · up to date) instead of the
+  tool's words; and the whole panel in Chinese or English, switched in the header. The setup
+  wizard speaks the same two languages (2026-11-07).
+- **A model, by choice** (2026-11-06, steps 3 and 4): off by default; the panel's last card
+  turns it on with your own key (an OpenAI-compatible service or Anthropic) or a model on this
+  computer (Ollama). It is asked one thing only — what category a merchant none of the maps
+  know belongs to — with the merchant string and the fifteen category names and nothing else.
+  Its answer is a suggestion you confirm, marked with a dot, never the filing; the key stays in
+  the Keychain, every exchange is logged in the workspace, one merchant costs one call.
+- `tools/sync.py` now carries `tools/` into a workspace (2026-11-06): the migration tests import
+  `tools/migrate.py`, and without it the release-level checks failed in every workspace.
+
 ## 1.0.1 — 2026-11-06
 
 - **Every example in the parsers' notes, the tests and the fixtures is invented** (2026-11-06):

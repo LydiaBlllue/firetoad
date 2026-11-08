@@ -21,3 +21,11 @@ findata/register/setup-answers.json
 .undo/
 findata.restoring/
 findata.replaced/
+
+# the local app (app.py): its lock while a verb runs, and its log
+.jade.lock
+.jade/
+
+# build/build.py: PyInstaller work and the built app
+build/work/
+dist/
