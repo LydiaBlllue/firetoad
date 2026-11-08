@@ -16,7 +16,7 @@ What never goes in: a workspace. The build refuses unless findata/ is the demo (
 lines the privacy guard draws for a commit.
 
 Signing: without --sign the app is ad-hoc signed, which runs on this Mac and asks the next Mac
-to right-click → Open once. With --sign (a Developer ID Application identity) it is signed with
+to System Settings → Privacy & Security → Open Anyway once (macOS 14 and earlier: right-click → Open). With --sign (a Developer ID Application identity) it is signed with
 the hardened runtime and build/entitlements.plist; with --notarize (a notarytool keychain
 profile) it is notarised and stapled, which is what a public download needs. uv is used for
 PyInstaller when it is installed (a pinned, modern Python); otherwise this interpreter's.
@@ -183,7 +183,7 @@ def build(args):
         else:
             z = shutil.make_archive(os.path.join(dist, f"JadeToad-{ver}-{platform.system().lower()}"), "zip", dist, NAME)
             print(f"\n  ✓ {z}")
-    print(f"  ✓ {out}" + ("" if args.sign else "  (ad-hoc signed: this Mac runs it; another asks for right-click → Open once)"))
+    print(f"  ✓ {out}" + ("" if args.sign else "  (ad-hoc signed: this Mac runs it; another asks for System Settings → Privacy & Security → Open Anyway once)"))
     return 0
 
 

@@ -88,5 +88,5 @@ panel says so and the amount is typed.
 - Logs: the app.log file under .jade/log/ in the workspace, nothing in the repository (both are gitignored).
 - **The build carries no workspace.** `build/build.py` refuses a checkout whose `findata/` is
   not the demo's, and bundles only what `tools/sync.py` copies plus the demo. Without `--sign`
-  it is ad-hoc signed (this Mac runs it; another asks for right-click → Open once); a public
+  it is ad-hoc signed (this Mac runs it; another asks for System Settings → Privacy & Security → Open Anyway once); a public
   download needs `--sign` with a Developer ID and `--notarize`.

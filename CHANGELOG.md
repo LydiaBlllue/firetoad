@@ -1,6 +1,10 @@
 # Changelog
 
-## 1.0.3 — unreleased
+## 1.0.3 — 2026-11-08 — a panel you can read without knowing the tool
+
+Structure before features (user 001, 2026-11-08): nothing new to learn, less to know. The
+signed download planned for this version waits for a developer account and moves to 1.0.4;
+until then the first launch is one visit to System Settings → Privacy & Security → Open Anyway.
 
 - **Found by the first full simulation on the demo owner** (2026-11-07): the panel crashed
   when a broker export was missing (a placeholder in the strings table clashed with the
