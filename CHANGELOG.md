@@ -1,5 +1,52 @@
 # Changelog
 
+## 1.0.3 — 2026-11-08 — a panel you can read without knowing the tool
+
+Structure before features (user 001, 2026-11-08): nothing new to learn, less to know. The
+signed download planned for this version waits for a developer account and moves to 1.0.4;
+until then the first launch is one visit to System Settings → Privacy & Security → Open Anyway.
+
+- **Found by the first full simulation on the demo owner** (2026-11-07): the panel crashed
+  when a broker export was missing (a placeholder in the strings table clashed with the
+  helper's own parameter; a test now forbids it); the setup wizard did not pre-fill the name
+  the statements carry; the draft offered no investing figure when deposits land straight in a
+  TFSA or RRSP instead of passing through a chequing account at the broker.
+- **And by the same simulation with an OFX download instead of PDFs** (2026-11-07): the wizard
+  now asks which bank an OFX file is from (the file names its accounts by number only) and puts
+  the answer on those accounts; a setup from an OFX or CSV download no longer crashes on its
+  closing day ("any time"); the everyday figure drafted from a download spanning months is one
+  month's — the last full one — not the whole span. Both paths now build the same workspace.
+- **Answering the merchants, redone** (2026-11-07, user 001): the money questions first; the
+  merchants with a suggestion (a known chain, a model's guess) as one list with *Accept all*,
+  each still changeable; the merchants nobody knows one card at a time, biggest first, with
+  the amount and the count, the likeliest categories first and "Other" last, skip or leave the
+  rest, and the share of spending still in Other falling as you go. A card slides away when
+  answered (120 ms, none for anyone who asked their system for less motion).
+- **A panel you can read without knowing the tool** (2026-11-08, user 001): step 3 shows what
+  the import did as a card — files read, what they held, questions raised, anything stopped —
+  in your language, with the program's own lines under a fold; every question is stored as its
+  facts (the amount, the date, who sent it, the merchant) and said by the panel in your language,
+  the English sentence kept for the chat; the fifteen categories have Chinese names on screen
+  (the keys in the data stay English); the wizard lost its first screen — the environment
+  check appears on the Files screen only when something is missing, naming it with the one
+  command, and Next stays shut until it is there (six screens now).
+- **Structure, not features** (2026-11-08, user 001): the panel is a desktop page now — two
+  columns from 1000px, what you do on the left, what the program does on the right, one column
+  below that; the dashboard's header says how many answers wait and, when the app serves the
+  page, links to the panel; the one-writer lock is the core's as well as the app's (`jlock.py`),
+  so an import started in the chat while the app imports is refused, and the other way round.
+- **Who sent it, answered once** (2026-11-07, user 001): an e-Transfer from a named sender is
+  asked once — "from Alex Ng, what is it?" — and the answer becomes their rule in
+  `senders.json`; the next one from them is typed and not asked. The rule used to live only in
+  the owner's notes for Claude, which the app never reads. A bank that prints no sender name
+  still asks each time.
+- **Answers that survive a closed tab, and a way to change one** (2026-11-07): each answer is
+  written the moment it is given (one at a time, by the question's own id, so the numbering
+  cannot drift); Save at the end only confirms what was left. Under the questions, the merchants
+  already filed, biggest first, each with its category to change — every purchase of it moves,
+  past and future (`confirm.py --refile`). The selftest answers the questions in a real browser
+  after the wizard builds, saves, and refiles a merchant.
+
 ## 1.0.2 — 2026-11-07
 
 - **A second way in, beside Claude** (2026-11-06, ROADMAP 2.0.0 step 1b): `python3 app.py`

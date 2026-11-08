@@ -14,7 +14,14 @@
   --ok-bg:#eaf6ef;--ok:#1a7a4a;--bad-bg:#fbeaea;--bad:#b3261e}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;font-size:14px;line-height:1.5;padding:28px 16px 64px}
-.wrap{max-width:560px;margin:0 auto}
+.wrap{max-width:760px;margin:0 auto}
+/* a wizard reads one screen at a time, so one column; on a desktop the accounts screen — the long
+   one — lays its account cards two abreast */
+@media (min-width:1000px){
+  .acc-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+  .acc-grid .row{border-top:1px solid var(--border)}
+  .acc-grid .row:nth-child(-n+2){border-top:0}
+}
 .brand{display:flex;align-items:baseline;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:14px}
 .brand h1{font-size:19px;font-weight:700;letter-spacing:-.3px}
 .brand small{color:var(--muted);font-size:12px}
@@ -63,6 +70,8 @@ ul.files li:first-child{border-top:0}
 table.cm{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
 table.cm td{padding:3px 4px 3px 0}
 table.cm input{width:100%}
+  .need{border:1px solid var(--bad,#b3261e);border-radius:10px;padding:12px 14px;margin:8px 0 14px}
+  .need b{display:block;margin-bottom:6px}
 </style>
 </head>
 <body data-base="{{BASE}}">
@@ -82,7 +91,7 @@ table.cm input{width:100%}
   var W = {{WS}};
   var INBOX = "{{INBOX}}";
   var A = {owner: '', born: '', importDay: '', accounts: [], added: [], money: {committed: [], pensions: []}, goal: ''};
-  var NAMES = [W.w_s1, W.w_s2, W.w_s3, W.w_s4, W.w_s5, W.w_s6, W.w_s7];
+  var NAMES = [W.w_s2, W.w_s3, W.w_s4, W.w_s5, W.w_s6, W.w_s7];
   var step = 0;
   var $ = function(id){ return document.getElementById(id); };
   function fmt(s, o){ return String(s).replace(/\{(\w+)\}/g, function(_, k){ return o[k] == null ? '' : o[k]; }); }
@@ -119,14 +128,18 @@ table.cm input{width:100%}
     var card = el('div', 'card'); sc.appendChild(card);
     var scr = S.screens;
     if (step === 0) {
-      card.appendChild(el('h2', null, esc(W.w_ready_h)));
-      card.appendChild(el('p', 'q', esc(W.w_ready_q)));
-      card.appendChild(el('pre', 'log', esc(S.ready.lines.join('\n')) || esc(W.w_nothing)));
-      var ok = S.ready.rc === 0;
-      card.appendChild(el('p', ok ? 'ok' : 'bad', esc(ok ? W.w_ready_ok : W.w_ready_no)));
-      nav(card, false, ok ? function(){ step = 1; draw(); } : null);
-    } else if (step === 1) {
       card.appendChild(el('h2', null, esc(W.w_files_h)));
+      var R = S.ready || {}, ok = !S.ready || S.ready.rc === 0;
+      if (!ok) {
+        var need = el('div', 'need');
+        need.appendChild(el('b', null, esc(W.w_need_h)));
+        if (R.python && !R.python.ok) need.appendChild(el('div', 'bad', '✗ ' + esc(fmt(W.w_py_old, {v: R.python.version, min: R.python.min}))));
+        if (R.pdf && !R.pdf.ok) need.appendChild(el('div', 'bad', '✗ ' + esc(W.w_pdf_missing) + '<pre class="log mono" style="margin-top:6px">' + esc(R.pdf.command || '') + '</pre>'));
+        if (!(R.python && !R.python.ok) && !(R.pdf && !R.pdf.ok)) (R.lines || []).filter(function(l){ return l.indexOf('✗') >= 0; }).forEach(function(l){ need.appendChild(el('div', 'bad mono', esc(l.trim()))); });
+        need.appendChild(el('div', 'hint', esc(W.w_need_then)));
+        card.appendChild(need);
+      }
+      card.appendChild(el('p', 'hint', esc(W.w_how_long)));
       card.appendChild(el('p', 'q', esc(W.w_files_q)));
       var drop = el('div', 'drop', '<b>' + esc(W.w_drop) + '</b><span><label class="lnk">' + esc(W.w_or_choose) + '<input type="file" multiple hidden id="pick"></label></span><small>' + esc(INBOX) + '</small>');
       card.appendChild(drop);
@@ -153,18 +166,24 @@ table.cm input{width:100%}
       document.addEventListener('drop', function(e){ e.preventDefault(); });
       drop.querySelector('#pick').onchange = function(ev){ upload(ev.target.files); ev.target.value = ''; };
       if (scr) card.appendChild(el('p', 'ok', esc(fmt(W.w_drafted, {n: scr.accounts.rows.length}))));
-      nav(card, true, scr ? function(){ step = 2; draw(); } : null);
-    } else if (step === 2) {
+      nav(card, false, scr && ok ? function(){ step = 1; draw(); } : null);
+    } else if (step === 1) {
       card.appendChild(el('h2', null, esc(W.w_acc_h)));
       var own = field(card, esc(W.w_name_l) + (scr.owner.suggest ? esc(fmt(W.w_name_says, {who: scr.owner.suggest})) : ''), text(A.owner || scr.owner.suggest || '', W.w_name_ph));
       var born = field(card, esc(W.w_born_l), text(A.born, W.w_born_ph, 'amt'));
       born.inputMode = 'numeric';
+      A.ofx = A.ofx || {};
+      (scr.ofx || []).forEach(function(o){
+        var inp = field(card, esc(fmt(W.w_ofx_q, {file: o.file})), text(A.ofx[o.file] || '', W.w_ofx_ph));
+        inp.oninput = function(){ A.ofx[o.file] = inp.value; };
+      });
       card.appendChild(el('p', 'q', esc(W.w_acc_q)));
+      var grid = el('div', 'acc-grid'); card.appendChild(grid);
       scr.accounts.rows.forEach(function(r){
         var row = el('div', 'row');
         var rw = el('div', 'rw');
         var sel = (A.accounts[r.i] || {}).role || r.role;
-        rw.appendChild(el('b', null, esc(r.inst) + ' · ' + esc(r.kind) + (r.id && r.id !== '—' ? ' ' + esc(r.id) : '')));
+        rw.appendChild(el('b', null, esc(r.inst === 'OFX' ? ((A.ofx && Object.values(A.ofx)[0]) || '?') : r.inst) + ' · ' + esc(r.kind) + (r.id && r.id !== '—' ? ' ' + esc(r.id) : '')));
         rw.appendChild(el('span', 'wh', (r.balance != null ? money(r.balance) + ' · ' + esc(r.asof) : esc(W.w_no_balance)) + (r.doc ? ' · ' + esc(r.doc) : '')));
         var nm = text((A.accounts[r.i] || {}).name || r.name, W.w_call_it); nm.style.marginTop = '5px';
         nm.oninput = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).name = nm.value; };
@@ -183,7 +202,7 @@ table.cm input{width:100%}
           });
           rw.appendChild(pills);
         } else rw.appendChild(el('span', 'wh', esc(W.w_debt)));
-        row.appendChild(rw); card.appendChild(row);
+        row.appendChild(rw); grid.appendChild(row);
       });
       card.appendChild(el('p', 'q', esc(W.w_missing) + esc(W.w_missing_tail)));
       var addBox = el('div'); card.appendChild(addBox);
@@ -206,9 +225,9 @@ table.cm input{width:100%}
       nav(card, true, function(){
         A.owner = own.value; A.born = born.value;
         if (!A.owner.trim()) { own.focus(); own.style.borderColor = 'var(--bad)'; return; }
-        step = 3; draw();
+        step = 2; draw();
       });
-    } else if (step === 3) {
+    } else if (step === 2) {
       var m = scr.money;
       card.appendChild(el('h2', null, esc(W.w_money_h)));
       card.appendChild(el('p', 'q', esc(W.w_money_q)));
@@ -238,9 +257,9 @@ table.cm input{width:100%}
       var pb = field(card, esc(W.w_planbase), text(A.money.planBase != null ? A.money.planBase : (m.planBase.suggest || ''), W.w_amonth, 'amt')); pb.inputMode = 'decimal';
       nav(card, true, function(){
         A.money.takeHome = th.value; A.money.invest = inv.value; A.money.everyday = ev.value; A.money.imputedRent = rent.value; A.money.planBase = pb.value;
-        step = 4; draw();
+        step = 3; draw();
       });
-    } else if (step === 4) {
+    } else if (step === 3) {
       card.appendChild(el('h2', null, esc(W.w_goal_h)));
       card.appendChild(el('p', 'q', esc(W.w_goal_q)));
       var pills = el('div', 'pills');
@@ -261,13 +280,13 @@ table.cm input{width:100%}
         var td2 = el('td'); var fr = text(p.from || '', W.w_from_age, 'amt'); fr.inputMode = 'numeric'; fr.oninput = function(){ p.from = fr.value; }; td2.appendChild(fr); tr.appendChild(td2);
         pbox.appendChild(t);
       });
-      nav(card, true, function(){ step = 5; draw(); });
-    } else if (step === 5) {
+      nav(card, true, function(){ step = 4; draw(); });
+    } else if (step === 4) {
       card.appendChild(el('h2', null, esc(W.w_day_h)));
       card.appendChild(el('p', 'q', esc(W.w_day_q) + ' ' + esc(scr.day.closes.length ? fmt(W.w_day_closes, {days: scr.day.closes.join(', ')}) : W.w_day_default)));
       var d = field(card, esc(W.w_day_l), text(A.importDay || scr.day.suggest, '', 'amt')); d.inputMode = 'numeric';
-      nav(card, true, function(){ A.importDay = d.value; step = 6; draw(); });
-    } else if (step === 6) {
+      nav(card, true, function(){ A.importDay = d.value; step = 5; draw(); });
+    } else if (step === 5) {
       card.appendChild(el('h2', null, esc(W.w_build_h)));
       card.appendChild(el('p', 'q', esc(W.w_build_q)));
       var added = A.added.filter(function(x){ return x.inst && x.name; }).length;
@@ -288,7 +307,7 @@ table.cm input{width:100%}
       }
       var log = el('pre', 'log'); log.style.display = 'none'; card.appendChild(log);
       var hint = el('p', 'hint', esc(W.w_build_hint)); card.appendChild(hint);
-      var a = el('div', 'act'); var b = el('button', 'btn', esc(W.w_back)); b.type = 'button'; b.onclick = function(){ step = 5; draw(); }; a.appendChild(b);
+      var a = el('div', 'act'); var b = el('button', 'btn', esc(W.w_back)); b.type = 'button'; b.onclick = function(){ step = 4; draw(); }; a.appendChild(b);
       var go = el('button', 'btn primary', esc(W.w_build_it)); go.type = 'button'; a.appendChild(go); card.appendChild(a);
       go.onclick = function(){
         go.disabled = true; b.disabled = true; hint.textContent = W.w_building; log.style.display = 'block'; log.textContent = '';
@@ -298,7 +317,7 @@ table.cm input{width:100%}
                        money: {takeHome: A.money.takeHome, invest: A.money.invest, everyday: A.money.everyday, planBase: A.money.planBase,
                                imputedRent: A.money.imputedRent, committed: A.money.committed.filter(function(c){ return c.name && c.amount; }),
                                pensions: A.money.pensions.filter(function(p){ return p.monthly && p.from; })},
-                       goal: A.goal};
+                       goal: A.goal, ofx: A.ofx || {}};
         api('POST', '/api/setup', {answers: answers}).then(function(r){
           if (!r.ok) { hint.textContent = r.error && r.error.text || ('HTTP ' + r.status); go.disabled = false; b.disabled = false; return; }
           var es = new EventSource(base + '/api/events');
@@ -315,7 +334,7 @@ table.cm input{width:100%}
       };
     }
   }
-  if (JOB && !JOB.done && JOB.verb === 'setup') { step = 6; }
+  if (JOB && !JOB.done && JOB.verb === 'setup') { step = 5; }
   draw();
   setInterval(function(){ api('GET', '/api/ping').catch(function(){}); }, 30000);
 })();

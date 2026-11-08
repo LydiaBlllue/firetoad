@@ -2,7 +2,7 @@
 """wizard.py — the setup as screens: what each one shows, and what the answers become.
 
 The setup skill is an interview in chat; the local app has no chat. This is the same setup
-with the questions laid out as screens — Ready · Files · Accounts · Money in and out · Goal ·
+with the questions laid out as screens — Files · Accounts · Money in and out · Goal ·
 Day · Build — in the order the skill asks them, drawn from the draft propose.py makes of the
 first files, and written back into the draft's own shape, so the scaffold runs on exactly the
 answers file the skill would have produced. Nothing here invents a question: every screen is a
@@ -74,11 +74,20 @@ def screens(draft, today):
                          "needsBalance": a.get("balance") is None,
                          "doc": (a.get("doc") or {}).get("file"), "liability": a.get("kind") in scaffold.DEBT_KINDS})
     plan = draft.get("plan") or {}
+    # an OFX download names its accounts by id, never the bank: the wizard asks the bank once per file
+    ofx = []
+    for x in (draft.get("_open") or []):
+        if x["id"].startswith("ofx:"):
+            f = x["id"][4:]
+            ids = [i for i, a in enumerate(draft.get("accounts") or []) if a.get("ofxId")]
+            ofx.append({"file": f, "accounts": ids, "ask": x.get("q")})
     closes = [int((a.get("doc") or {}).get("closes")) for a in draft.get("accounts") or []
               if isinstance((a.get("doc") or {}).get("closes"), int)]
     day = (max(closes) % 28) + 1 if closes else int(draft.get("importDay") or 1)
     return {
-        "owner": {"suggest": draft.get("owner"), "ask": (q.get("owner") or {}).get("q")},
+        # the name the statements carry is the owner question's `suggest`, not the draft's `owner`
+        # (which stays None until answered); the first simulation showed an empty name field
+        "owner": {"suggest": draft.get("owner") or (q.get("owner") or {}).get("suggest"), "ask": (q.get("owner") or {}).get("q")},
         "born": {"ask": (q.get("born") or {}).get("q")},
         "accounts": {"rows": accounts, "roles": [{"key": k, "label": l, "why": w} for k, l, w in ROLES],
                      "ask": (q.get("accounts") or {}).get("q"), "missing": (q.get("missing") or {}).get("q"),
@@ -91,8 +100,9 @@ def screens(draft, today):
                   "pensions": {"ask": (q.get("pensions") or {}).get("q")}},
         "goal": {"ask": (q.get("fire") or {}).get("q")},
         "day": {"suggest": day, "closes": closes},
+        "ofx": ofx,
         "later": [x for x in (draft.get("_open") or [])
-                  if x["id"] in ("foreign", "counterparty", "buckets", "files") or x["id"].startswith(("ofx:", "csv:"))],
+                  if x["id"] in ("foreign", "counterparty", "buckets", "files") or x["id"].startswith("csv:")],
         "today": today,
     }
 
@@ -105,7 +115,7 @@ def state(root, say=None):
     root = os.path.abspath(root)
     today = datetime.date.today().isoformat()
     rc, rl = ready_lines(root)
-    res = {"demo": is_demo(root), "ready": {"rc": rc, "lines": rl}, "files": inbox_files(root),
+    res = {"demo": is_demo(root), "ready": {"rc": rc, "lines": rl, **ready.check(root)}, "files": inbox_files(root),
            "draft": None, "screens": None, "today": today}
     who = "the demo is still here" if res["demo"] else "this folder is already somebody's"
     emit(f"=== setup — {who} · {len(res['files'])} file(s) in inbox/ ===")
@@ -146,6 +156,16 @@ def merge(draft, answers, today):
     day = _num(answers.get("importDay"))
     if day and 1 <= day <= 28:
         a["importDay"] = int(day)
+    # an OFX download's bank, said once per file, lands on every account the file named
+    for f, bank in (answers.get("ofx") or {}).items():
+        bank = (bank or "").strip()
+        if not bank:
+            continue
+        for acc in a.get("accounts") or []:
+            if acc.get("ofxId") and (acc.get("inst") in ("OFX", None) or (acc.get("doc") or {}).get("file") == f):
+                acc["inst"] = bank
+                if (acc.get("doc") or {}).get("file") == f:
+                    acc["doc"]["ep"] = bank
     # accounts: a role per row, a name an owner changes, a balance the exports do not carry
     for row in answers.get("accounts") or []:
         i = row.get("i")

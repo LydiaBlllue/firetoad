@@ -13,6 +13,15 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;font-size:14px;line-height:1.5;padding:24px 16px 64px}
 .wrap{max-width:600px;margin:0 auto}
+/* desktop first (the dashboard is a desktop page; this runs beside it): two columns from 1000px —
+   what you do on the left (get, put), what the program does on the right (import, answer, done) —
+   one column below that */
+@media (min-width:1000px){
+  .wrap{max-width:1000px}
+  .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+  .col{min-width:0}
+  .deck,.q-intro,#qmoney,#qsug{max-width:620px}
+}
 .brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:12px}
 .brand h1{font-size:19px;font-weight:700;letter-spacing:-.3px}
 .brand small{color:var(--muted);font-size:12px}
@@ -70,6 +79,8 @@ details.how p{font-size:12.5px;color:var(--ink-2);background:var(--pill);border-
 .hint{font-size:12px;color:var(--muted)}
 pre.log{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f3f2ee;border-radius:8px;padding:10px 12px;margin-top:10px;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;display:none}
 pre.log.on{display:block}
+.rcard{margin-top:8px}
+.rcard .kv .v{text-align:right;max-width:70%;white-space:normal;word-break:break-word}
 .q-intro{font-size:12.5px;color:var(--ink-2);margin-bottom:6px}
 .q{padding:9px 0;border-top:1px solid var(--border)}
 .q:first-of-type{border-top:0}
@@ -117,6 +128,34 @@ ul.files li.bad{color:var(--bad)}
 details.settings{margin-top:18px}
 details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-align:center}
 .ver{font-size:10.5px;color:var(--muted);letter-spacing:.04em;margin-top:14px;text-align:center}
+/* step 4: money questions, suggestions in one go, the unknown merchants as a deck of cards */
+.qh{font-size:12.5px;font-weight:700;margin:12px 0 4px}
+.qh:first-child{margin-top:4px}
+.sug{display:flex;gap:8px;align-items:baseline;padding:5px 0;border-top:1px solid var(--border);font-size:12.5px}
+.sug:first-of-type{border-top:0}
+.sug .m{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sug .a{color:var(--muted);white-space:nowrap}
+.sug .to{font-weight:600;white-space:nowrap}
+.sug .lnk{font-size:11.5px;color:var(--muted)}
+.sug.open{flex-wrap:wrap}
+.sug .pills{width:100%}
+.mrow select{font:inherit;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--ink)}
+.mrow .mmsg{white-space:nowrap}
+.deck{position:relative;margin-top:6px}
+.cq{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:0 1px 2px rgba(11,11,11,.04);transition:transform .12s ease-out,opacity .12s ease-out}
+.cq.out{transform:translateX(-36px);opacity:0}
+.cq.in{transform:translateX(24px);opacity:0}
+.cq .name{font-size:15px;font-weight:700;letter-spacing:-.2px;word-break:break-word}
+.cq .meta{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.cq .brand{font-size:11.5px;color:#6250d6;margin-top:4px}
+.cq .pills{margin-top:10px}
+.cq .pl.big{padding:6px 13px;font-size:13px}
+.cq .foot2{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:11.5px;color:var(--muted);flex-wrap:wrap;gap:6px}
+.share{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--ink-2);margin:4px 0 2px}
+.share b{font-variant-numeric:tabular-nums}
+.share .bar{flex:1;height:4px;background:var(--grid);border-radius:2px;margin:0 10px;overflow:hidden}
+.share .bar i{display:block;height:100%;background:var(--warn);transition:width .12s ease-out}
+@media (prefers-reduced-motion: reduce){.cq,.share .bar i{transition:none !important}}
 </style>
 </head>
 <body data-base="{{BASE}}" data-cur="{{CUR}}">
@@ -128,10 +167,11 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
   <p class="lead">{{LEAD}}</p>
   {{BUSY}}
 
+  <div class="cols"><div class="col">
   <div class="card" id="step1" data-step="1"><h2><span class="n">1</span>{{S1}}</h2>{{STEP1}}</div>
 
   <div class="card" id="step2" data-step="2"><h2><span class="n">2</span>{{S2}}</h2>{{STEP2}}</div>
-
+  </div><div class="col">
   <div class="card" id="step3" data-step="3"><h2><span class="n">3</span>{{S3}}</h2>
     <div class="act">
       <button type="button" class="btn primary big" id="dry">{{DRY}}</button>
@@ -146,6 +186,7 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
   <div class="card" id="step4" data-step="4"><h2><span class="n">4</span>{{S4}} <span class="muted">({{NQ}})</span></h2>{{STEP4}}<div class="err" id="qerr"></div></div>
 
   <div class="card" id="step5" data-step="5"><h2><span class="n">5</span>{{S5}}</h2>{{STEP5}}</div>
+  </div></div>
 
   <details class="settings"><summary>{{SETTINGS}} · {{AI_TITLE}}</summary>
     <div class="card" id="model" style="margin-top:10px">{{AI}}</div>
@@ -171,6 +212,34 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
       .then(function(r){ return r.json().then(function(j){ j.status = r.status; return j; }); });
   }
   function setBusy(on){ running = on; [dry, go, undo, $('save')].forEach(function(b){ if (b) b.disabled = on; }); }
+  // step 3's result as a card from the summary the import returns; its lines stay under a fold
+  var rbox = document.createElement('div'); rbox.className = 'rcard'; log.parentNode.insertBefore(rbox, log);
+  function resultCard(res, written, err){
+    rbox.innerHTML = '';
+    if (!res) return;
+    var h = el('div', 'qh', esc(written ? T.r_done_h : T.r_dry_h)); rbox.appendChild(h);
+    var files = res.files || [];
+    rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(T.r_files) + '</span><span class="v">' + (files.length ? esc(files.join(' · ')) : esc(T.r_none_read)) + '</span>'));
+    var counts = res.counts || {}, cs = [];
+    Object.keys(counts).forEach(function(k){ var key = 'c_' + k; cs.push(T[key] ? fmtS(T[key], {n: counts[k]}) : counts[k] + ' ' + k); });
+    if (cs.length) rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(T.r_counts) + '</span><span class="v">' + esc(cs.join(' · ')) + '</span>'));
+    var notes = [];
+    if ((res.unknown || []).length) notes.push(['bad', fmtS(T.r_unknown, {n: res.unknown.length}) + ': ' + res.unknown.map(function(u){ return u[0]; }).join(', ')]);
+    if ((res.stopped || []).length) notes.push(['bad', T.r_stopped + ': ' + res.stopped.join('; ')]);
+    if ((res.by_hand || []).length) notes.push(['warn', fmtS(T.r_by_hand, {n: res.by_hand.length}) + ': ' + res.by_hand.map(function(u){ return u[0]; }).join(', ')]);
+    if ((res.untyped || []).length) notes.push(['warn', fmtS(T.r_untyped, {n: res.untyped.length})]);
+    if ((res.asked || []).length) notes.push(['ok', fmtS(T.r_asked, {n: res.asked.length})]);
+    notes.forEach(function(n){ rbox.appendChild(el('div', 'nt ' + n[0], '<span class="ic">' + (n[0] === 'ok' ? '✓' : '!') + '</span>' + esc(n[1]))); });
+    if (!written && ((res.unknown || []).length || (res.stopped || []).length)) rbox.appendChild(el('p', 'hint', esc(T.r_nothing_written)));
+    if (written) {
+      (res.changed || []).forEach(function(c){ rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(c.label) + '</span><span class="v">' + esc(c.from) + ' → ' + esc(c.to) + '</span>')); });
+      (res.noticed || []).forEach(function(n){ rbox.appendChild(el('div', 'nt ' + (n.sev || 'ok'), '<span class="ic">' + (n.sev === 'ok' ? '✓' : '!') + '</span>' + esc(n.text))); });
+      if ((res.findings || []).length) { rbox.appendChild(el('div', 'qh', esc(T.r_findings))); res.findings.forEach(function(f){ rbox.appendChild(el('div', 'nt warn', '<span class="ic">!</span>' + esc(f))); }); }
+      else rbox.appendChild(el('div', 'nt ok', '<span class="ic">✓</span>' + esc(T.r_clean)));
+    }
+    if (err) rbox.appendChild(el('div', 'nt bad', '<span class="ic">✗</span>' + esc(err.text || err)));
+    var d = el('details', 'more'); d.appendChild(el('summary', null, esc(T.r_raw))); d.appendChild(log); rbox.appendChild(d);
+  }
   function follow(onDone){
     log.textContent = ''; log.classList.add('on');
     var es = new EventSource(base + '/api/events');
@@ -188,8 +257,10 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
     }).catch(function(e){ setBusy(false); ierr.textContent = String(e); });
   }
   dry.onclick = function(){
+    rbox.innerHTML = ''; log.parentNode === rbox && rbox.appendChild(log);
     start('/api/import', {write: false}, T.dry_running, function(job){
       var res = job.result || {};
+      resultCard(res, false, job.error);
       if (job.error) { ihint.textContent = T.failed_lines; return; }
       if ((res.unknown || []).length || (res.stopped || []).length) { ihint.textContent = T.dry_stop; return; }
       if (!(res.files || []).length && !(res.counts && Object.keys(res.counts).length)) { ihint.textContent = T.dry_none; return; }
@@ -199,6 +270,7 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
   go.onclick = function(){
     go.style.display = 'none';
     start('/api/import', {write: true}, T.go_running, function(job){
+      resultCard(job.result || {}, true, job.error);
       ihint.textContent = job.error ? T.go_failed : T.go_done;
       if (!job.error) setTimeout(function(){ location.reload(); }, 1800);
     });
@@ -210,20 +282,172 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
       if (job.result && job.result.undone) setTimeout(function(){ location.reload(); }, 1500);
     });
   };
-  document.querySelectorAll('.q .pl').forEach(function(p){
-    p.onclick = function(){ var q = p.closest('.q'); q.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); p.classList.add('sel'); };
-  });
+  // ---- step 4: the open questions, drawn here from Q
+  var Q = {{QDATA}};
+  var answers = {};            // n -> the answer chosen (merchants, money questions, accepted suggestions)
+  var pending = {};            // id -> answer not yet written
+  var saving = false, saveMsg = null;
+  // each answer is written as it is given (one job at a time, so they queue); the Save at the
+  // end confirms whatever is left as filed and reloads
+  function flush(){
+    if (saving) return;
+    var ids = Object.keys(pending); if (!ids.length) return;
+    var set = {}; ids.forEach(function(k){ set[k] = pending[k]; }); pending = {};
+    saving = true; if (saveMsg) saveMsg.textContent = T.q_saving_one;
+    api('POST', '/api/answers', {set: set, ok: false}).then(function(r){
+      if (!r.ok) { if (r.status === 409) { Object.assign(pending, set); setTimeout(function(){ saving = false; flush(); }, 1200); return; } saving = false; if (saveMsg) saveMsg.textContent = T.q_save_failed; return; }
+      var wait = function(){ api('GET', '/api/job').then(function(j){ if (j.ok && j.data && j.data.done) { saving = false; if (saveMsg) saveMsg.textContent = T.q_saved_one; flush(); } else setTimeout(wait, 400); }); };
+      wait();
+    }).catch(function(){ saving = false; Object.assign(pending, set); setTimeout(flush, 2000); });
+  }
+  function keep(it, c){ answers[it.n] = c; if (it.id != null) { pending['id:' + it.id] = c; flush(); } }
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function fmtS(s, o){ return String(s).replace(/\{(\w+)\}/g, function(_, k){ return o[k] == null ? '' : o[k]; }); }
+  function money(v){ return '$' + Number(v || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}); }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function el(tag, cls, html){ var d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; return d; }
+  function pills(it, selected, big, onPick){
+    var wrap = el('div', 'pills');
+    var order = it.choices.slice();
+    var first = [];
+    // the likeliest first: the brand's earlier answer, a suggestion, the current filing — but on a
+    // card "Other" is never the first choice (it is what skipping means), it goes last
+    [it.brand, it.suggest, it.default].forEach(function(c){ if (c && c !== (big ? 'Other' : null) && order.indexOf(c) >= 0 && first.indexOf(c) < 0) first.push(c); });
+    order = first.concat(order.filter(function(c){ return first.indexOf(c) < 0 && !(big && c === 'Other'); })).concat(big && order.indexOf('Other') >= 0 ? ['Other'] : []);
+    var limit = big ? 6 : order.length, more = null;
+    var lab = function(c){ return (it.labels && it.labels[c]) || (Q.catLabels && Q.catLabels[c]) || c; };
+    order.forEach(function(c, i){
+      var b = el('button', 'pl' + (big ? ' big' : '') + (c === selected ? ' sel' : ''), esc(lab(c))); b.type = 'button';
+      if (big && i >= limit) { b.style.display = 'none'; b.setAttribute('data-more', '1'); }
+      b.onclick = function(){ wrap.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); b.classList.add('sel'); onPick(c); };
+      wrap.appendChild(b);
+    });
+    if (big && order.length > limit) {
+      more = el('button', 'pl', esc(T.q_more)); more.type = 'button';
+      more.onclick = function(){ wrap.querySelectorAll('[data-more]').forEach(function(x){ x.style.display = ''; }); more.remove(); };
+      wrap.appendChild(more);
+    }
+    return wrap;
+  }
+  if (Q.items && Q.items.length) {
+    var moneyQ = Q.items.filter(function(i){ return i.kind !== 'merchant'; });
+    var sugQ = Q.items.filter(function(i){ return i.kind === 'merchant' && (i.suggest || i.why === 'starter map' || i.why === 'fits better' || i.why === 'was Subscription'); });
+    var unkQ = Q.items.filter(function(i){ return i.kind === 'merchant' && sugQ.indexOf(i) < 0; }).sort(function(a, b){ return (b.amount || 0) - (a.amount || 0); });
+    // money first
+    var qm = $('qmoney');
+    if (moneyQ.length) {
+      qm.appendChild(el('div', 'qh', esc(T.q_money_h)));
+      moneyQ.forEach(function(it){
+        var d = el('div', 'q'); d.setAttribute('data-n', it.n);
+        var L = function(c){ return (it.labels && it.labels[c]) || c; };
+        d.appendChild(el('div', 'qt', '<b>' + it.n + '.</b> ' + esc(it.text || it.what)));
+        d.appendChild(el('div', 'qs', esc(T.filed_as) + ' <b>' + esc(L(it.default)) + '</b>' + (it.suggest ? ' · ' + esc(T.suggested) + ' <b>' + esc(L(it.suggest)) + '</b>' : '')));
+        if (it.choices.length) d.appendChild(pills(it, it.suggest || it.default, false, function(c){ keep(it, c); })); else d.appendChild(el('div', 'qs', esc(T.in_ledger)));
+        qm.appendChild(d);
+      });
+    }
+    // the suggestions, in one go
+    var qs = $('qsug');
+    if (sugQ.length) {
+      qs.appendChild(el('div', 'qh', esc(fmtS(T.q_sug_h, {n: sugQ.length}))));
+      qs.appendChild(el('p', 'qs', esc(T.q_sug_intro)));
+      var acc = el('div', 'act'); var accBtn = el('button', 'btn sm primary', esc(fmtS(T.q_accept_all, {n: sugQ.length}))); accBtn.type = 'button';
+      var accMsg = el('span', 'hint', ''); acc.appendChild(accBtn); acc.appendChild(accMsg); qs.appendChild(acc);
+      var list = el('div'); qs.appendChild(list);
+      sugQ.forEach(function(it){
+        var to = it.suggest || it.default;
+        var row = el('div', 'sug');
+        var m = el('span', 'm', esc(it.what)); var a = el('span', 'a', it.amount != null ? esc(fmtS(T.q_meta, {amount: money(it.amount), n: it.seen || 0})) : '');
+        var LL = function(c){ return (it.labels && it.labels[c]) || (Q.catLabels && Q.catLabels[c]) || c; };
+        var toEl = el('span', 'to', '→ ' + esc(LL(to)) + (it.suggestBy === 'model' ? '<span class="dot" title="' + esc(T.model_dot) + '">●</span>' : ''));
+        var ch = el('button', 'lnk', esc(T.q_change)); ch.type = 'button';
+        ch.onclick = function(){
+          if (row.classList.contains('open')) return;
+          row.classList.add('open');
+          row.appendChild(pills(it, answers[it.n] || to, false, function(c){ keep(it, c); toEl.innerHTML = '→ ' + esc(LL(c)); }));
+        };
+        row.appendChild(m); row.appendChild(a); row.appendChild(toEl); row.appendChild(ch); list.appendChild(row);
+      });
+      accBtn.onclick = function(){
+        sugQ.forEach(function(it){ if (!answers[it.n]) keep(it, it.suggest || it.default); });
+        accBtn.disabled = true; accMsg.textContent = T.q_accepted;
+        if (!reduced) { list.style.transition = 'opacity .12s'; list.style.opacity = '.55'; } else list.style.opacity = '.55';
+      };
+    }
+    // the unknown merchants, one card at a time, biggest first
+    var qd = $('qdeck');
+    if (unkQ.length) {
+      qd.appendChild(el('div', 'qh', esc(fmtS(T.q_unknown_h, {n: unkQ.length}))));
+      qd.appendChild(el('p', 'qs', esc(T.q_unknown_intro)));
+      var share = el('div', 'share'); var shareNow = el('b'); var bar = el('div', 'bar', '<i></i>'); var shareAfter = el('span', 'hint'); share.appendChild(shareNow); share.appendChild(bar); share.appendChild(shareAfter); qd.appendChild(share);
+      var deck = el('div', 'deck'); qd.appendChild(deck);
+      var idx = 0, otherNow = Q.otherTotal || 0, total = Q.spendTotal || 1;
+      function pct(v){ return Math.round(v / total * 1000) / 10; }
+      function paintShare(){
+        shareNow.textContent = fmtS(T.q_other_now, {pct: pct(otherNow)});
+        bar.firstChild.style.width = Math.min(100, pct(otherNow)) + '%';
+        var it = unkQ[idx];
+        shareAfter.textContent = it ? fmtS(T.q_other_after, {pct: pct(Math.max(0, otherNow - (it.default === 'Other' ? (it.amount || 0) : 0)))}) + ' · ' + fmtS(T.q_left, {n: unkQ.length - idx}) : T.q_cards_done;
+      }
+      function card(it){
+        var c = el('div', 'cq');
+        c.appendChild(el('div', 'name', esc(it.what)));
+        c.appendChild(el('div', 'meta', (it.amount != null ? esc(fmtS(T.q_meta, {amount: money(it.amount), n: it.seen || 0})) : '') + (it.source ? ' · ' + esc(it.source) : '')));
+        if (it.brand) c.appendChild(el('div', 'brand', esc(fmtS(T.q_brand, {brand: it.what.split(' ')[0], cat: (Q.catLabels && Q.catLabels[it.brand]) || it.brand}))));
+        c.appendChild(pills(it, null, true, function(ch){ answer(it, ch); }));
+        var f = el('div', 'foot2');
+        var skip = el('button', 'lnk', esc(T.q_skip)); skip.type = 'button'; skip.onclick = function(){ answer(it, null); };
+        var rest = el('button', 'lnk', esc(T.q_skip_all)); rest.type = 'button'; rest.onclick = function(){ idx = unkQ.length; next(); };
+        var back = el('button', 'lnk', esc(T.q_undo_card)); back.type = 'button'; back.style.visibility = idx > 0 ? '' : 'hidden';
+        back.onclick = function(){ idx = Math.max(0, idx - 1); var p = unkQ[idx]; if (answers[p.n] && answers[p.n] !== 'Other' && p.default === 'Other') otherNow += p.amount || 0; delete answers[p.n]; next(true); };
+        f.appendChild(skip); f.appendChild(rest); f.appendChild(back); c.appendChild(f);
+        return c;
+      }
+      saveMsg = el('span', 'hint'); share.appendChild(saveMsg);
+      function answer(it, ch){
+        if (ch) { keep(it, ch); if (it.default === 'Other' && ch !== 'Other') otherNow = Math.max(0, otherNow - (it.amount || 0)); }
+        idx++; next();
+      }
+      function next(back){
+        var old = deck.firstChild;
+        var draw = function(){
+          deck.innerHTML = '';
+          if (idx < unkQ.length) {
+            var c = card(unkQ[idx]); if (!reduced) c.classList.add('in'); deck.appendChild(c);
+            if (!reduced) requestAnimationFrame(function(){ requestAnimationFrame(function(){ c.classList.remove('in'); }); });
+          } else deck.appendChild(el('p', 'foot', esc(T.q_cards_done)));
+          paintShare();
+        };
+        if (old && !reduced && !back) { old.classList.add('out'); setTimeout(draw, 130); } else draw();
+      }
+      next();
+    }
+  }
   var save = $('save');
   if (save) save.onclick = function(){
-    var set = {};
-    document.querySelectorAll('.q').forEach(function(q){ var s = q.querySelector('.pl.sel'); if (s) set[q.getAttribute('data-n')] = s.getAttribute('data-v'); });
+    var set = {}; Object.keys(pending).forEach(function(k){ set[k] = pending[k]; }); pending = {};
     $('qerr').textContent = '';
-    start('/api/answers', {set: set}, T.saving, function(job){
+    var go2 = function(){ start('/api/answers', {set: set, ok: true}, T.saving, function(job){
       if (job.error || (job.result && job.result.rc)) { $('qerr').textContent = T.not_saved; return; }
       ihint.textContent = T.saved_rebuilt;
       setTimeout(function(){ location.reload(); }, 1200);
-    });
+    }); };
+    var waitIdle = function(){ if (saving) setTimeout(waitIdle, 300); else go2(); }; waitIdle();
   };
+  // merchants already filed: change one, every purchase of it follows
+  document.querySelectorAll('.mrow .mcat').forEach(function(sel){
+    sel.onchange = function(){
+      var row = sel.closest('.mrow'), msg = row.querySelector('.mmsg'); msg.textContent = T.q_saving_one;
+      var post = function(){ api('POST', '/api/refile', {match: row.getAttribute('data-match'), category: sel.value}).then(function(r){
+        if (!r.ok) { if (r.status === 409) { setTimeout(post, 1200); return; } msg.textContent = r.error && r.error.text || 'failed'; return; }
+        var wait = function(){ api('GET', '/api/job').then(function(j){ if (j.ok && j.data && j.data.done) { var res = j.data.result || {}; msg.textContent = j.data.error || !res.written ? T.q_save_failed : fmtS(T.m_moved, {n: res.changed}); } else setTimeout(wait, 400); }); };
+        wait();
+      }); };
+      post();
+    };
+  });
+  var mm = $('mmore');
+  if (mm) mm.onclick = function(){ document.querySelectorAll('.mrow').forEach(function(r){ r.style.display = ''; }); mm.remove(); };
   var drop = $('drop'), dropped = $('dropped'), pick = $('pick');
   function upload(files){
     if (!files || !files.length) return;

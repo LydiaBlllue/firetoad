@@ -3,11 +3,11 @@
 What is coming, said as what you will be able to do. These are aims, not promises; what has
 already shipped is in [`CHANGELOG.md`](CHANGELOG.md).
 
-## Next — 1.0.3
+## Next — 1.0.4
 
-- **A signed download.** The app without a Claude plan shipped in 1.0.2 unsigned, so a Mac
-  asks for right-click → Open once; a Developer ID signs and notarises it, and a Windows build
-  follows.
+- **A signed download.** A Developer ID signs and notarises the app, so a Mac opens it without
+  the visit to System Settings; a Windows build follows. Waiting on the developer account
+  (decided 2026-11-08: 1.0.3 shipped without it rather than wait).
 - **More banks and brokers**: TD, Scotiabank, CIBC, Tangerine, Simplii and EQ Bank confirmed on
   real files, and the first brokers beyond Wealthsimple. What is read today:
   [Supported banks and brokers](docs/banks.md).
@@ -29,7 +29,7 @@ Three digits, `MAJOR.MINOR.PATCH`. What moves tells you what an update asks of y
 
 | to take the new version, your folder needs | the version moves | example |
 |---|---|---|
-| `python3 tools/sync.py <folder>` only — fixes, wording, the page, a check | **patch**: 1.0.1 → 1.0.2 | a statement layout read correctly |
+| `python3 tools/sync.py <folder>` only — fixes, wording, the page, a check | **patch**: 1.0.2 → 1.0.3 | a statement layout read correctly |
 | `python3 tools/migrate.py <folder>` too — your data changes shape | **minor**: 1.0.x → 1.1.0 | a new field in the account register |
 | a new technology | **major**: 1.x → 2.0.0 | the move to a database |
 

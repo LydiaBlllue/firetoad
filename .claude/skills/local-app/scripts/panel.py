@@ -135,7 +135,7 @@ def step1(lang, st):
         if x["state"] == "ok":
             done.append(x["from"]); continue
         extra = how(lang, export_how(lang, x["from"], x["key"])) if x["state"] == "todo" else ""
-        rows.append(row("export", x["from"], e(t(lang, "export_line", key=x["key"], asof=x.get("asof") or t(lang, "never"))),
+        rows.append(row("export", x["from"], e(t(lang, "export_line", what=x["key"], asof=x.get("asof") or t(lang, "never"))),
                         x["state"], lang, extra, "export"))
     for s in st.get("screenshots") or []:
         if s["state"] == "ok":
@@ -211,27 +211,92 @@ def choices_for(item):
     return []
 
 
+def money_s(v):
+    try:
+        return "$" + format(float(v), ",.2f")
+    except (TypeError, ValueError):
+        return str(v)
+
+
+def say(lang, it):
+    """The question in the owner's language, from the facts the import recorded; the stored
+    English sentence when there are none (items from before the facts, or kinds without them)."""
+    f = it.get("facts") or {}
+    k = f.get("kind")
+    if k == "credit":
+        d = f.get("date") or ""
+        if f.get("sender"):
+            return t(lang, "qs_credit_named", amount=money_s(f.get("amount")), date=d, who=str(f["sender"]).title())
+        return t(lang, "qs_credit", amount=money_s(f.get("amount")), date=d)
+    if k == "sent":
+        return t(lang, "qs_sent", amount=money_s(f.get("amount")), date=f.get("date") or "")
+    if k == "account":
+        key = "qs_account_to" if f.get("way") == "to" else "qs_account_from"
+        return t(lang, key, amount=money_s(f.get("amount")), date=f.get("date") or "", desc=f.get("desc") or "")
+    if k == "merchant":
+        if f.get("starter"):
+            return t(lang, "qs_merchant_starter", merchant=f.get("merchant"), cat=categories.label(f["starter"], lang))
+        return t(lang, "qs_merchant", merchant=f.get("merchant"))
+    if k == "fire" or it.get("kind") == "fire":
+        return t(lang, "qs_fire")
+    return it.get("what") or ""
+
+
+def option_label(lang, c):
+    """What a choice is called on screen: a category's name, or the money words, in the language."""
+    if c in categories.CATEGORIES:
+        return categories.label(c, lang)
+    return t(lang, "opt_" + c) if ("opt_" + c) in __import__("strings").S else c
+
+
+def qdata(q, lang="en"):
+    """What step 4 draws: every open item with its choices, and the spending totals the Other
+    share is computed from. The page groups them — money first, then the merchants with a
+    suggestion, then the unknown ones as cards by amount."""
+    items = []
+    for it in (q or {}).get("items") or []:
+        d = dict(it)
+        d["choices"] = choices_for(it)
+        if it.get("credit") and d.get("suggest"):
+            d["suggest"] = confirm.INCOMING.get(d["suggest"], d["suggest"])
+        d["text"] = say(lang, it)
+        d["labels"] = {c: option_label(lang, c) for c in d["choices"]}
+        d["labels"].update({x: option_label(lang, x) for x in (d.get("default"), d.get("suggest")) if x})
+        items.append(d)
+    return {"items": items, "spendTotal": (q or {}).get("spendTotal") or 0, "otherTotal": (q or {}).get("otherTotal") or 0,
+            "catLabels": {c: categories.label(c, lang) for c in categories.CATEGORIES}}
+
+
 def step4(lang, q):
     items = (q or {}).get("items") or []
     if not items:
         return f'<p class="foot">{e(t(lang, "q_none"))}</p>'
-    out = [f'<p class="q-intro">{e(t(lang, "q_intro"))}</p>']
-    for it in items:
-        ch = choices_for(it)
-        sel = it.get("suggest") or it.get("default")
-        if it.get("credit"):
-            sel = confirm.INCOMING.get(sel, sel)
-        pills = "".join(f'<button type="button" class="pl{" sel" if c == sel else ""}" data-n="{it["n"]}" data-v="{e(c)}">{e(c)}</button>' for c in ch)
-        sug = ""
-        if it.get("suggest"):
-            sug_text = confirm.INCOMING.get(it["suggest"], it["suggest"]) if it.get("credit") else it["suggest"]
-            sug = f' · {e(t(lang, "suggested"))} <b>{e(sug_text)}</b>' + (f'<span class="dot" title="{e(t(lang, "model_dot"))}">●</span>' if it.get("suggestBy") == "model" else "")
-        seen = f' · {e(t(lang, "seen_n", n=it["seen"]))}' if it.get("seen") else ""
-        out.append(f'<div class="q" data-n="{it["n"]}"><div class="qt"><b>{it["n"]}.</b> {e(it.get("what"))}</div>'
-                   f'<div class="qs">{e(t(lang, "filed_as"))} <b>{e(it.get("default"))}</b>{sug}{seen}</div>'
-                   + (f'<div class="pills">{pills}</div>' if pills else f'<div class="qs">{e(t(lang, "in_ledger"))}</div>') + '</div>')
-    out.append(f'<div class="act"><button type="button" class="btn primary" id="save">{e(t(lang, "save_answers"))}</button>'
-               f'<span class="hint">{e(t(lang, "unanswered_keep"))}</span></div>')
+    # the page draws this step from {{QDATA}}; the markup here is the frame it fills
+    return (f'<p class="q-intro">{e(t(lang, "q_intro"))} {e(t(lang, "q_resume"))}</p>'
+            f'<div id="qmoney"></div><div id="qsug"></div><div id="qdeck"></div>'
+            f'<div class="act"><button type="button" class="btn primary" id="save">{e(t(lang, "save_answers"))}</button>'
+            f'<span class="hint">{e(t(lang, "unanswered_keep"))}</span></div>')
+
+
+def merchants_list(lang, root):
+    """The merchants already filed, biggest first, each with a change link (confirm.refile)."""
+    try:
+        rows = confirm.merchants(root)
+    except Exception:  # noqa: BLE001
+        rows = []
+    if not rows:
+        return f'<details class="more" id="mlist"><summary>{e(t(lang, "m_title", n=0))}</summary><p class="foot">{e(t(lang, "m_none"))}</p></details>'
+    cats = list(categories.CATEGORIES)
+    out = [f'<details class="more" id="mlist"><summary>{e(t(lang, "m_title", n=len(rows)))}</summary><p class="qs">{e(t(lang, "m_intro"))}</p>']
+    for i, m in enumerate(rows):
+        hide = ' style="display:none"' if i >= 20 else ""
+        opts = "".join(f'<option value="{e(c)}"{" selected" if c == m["category"] else ""}>{e(categories.label(c, lang))}</option>' for c in cats)
+        out.append(f'<div class="sug mrow" data-match="{e(m["match"])}"{hide}><span class="m">{e(m["match"])}</span>'
+                   f'<span class="a">{e(t(lang, "q_meta", amount="$" + format(m["amount"], ",.0f"), n=m["seen"]))}</span>'
+                   f'<select class="mcat">{opts}</select><span class="hint mmsg"></span></div>')
+    if len(rows) > 20:
+        out.append(f'<button type="button" class="lnk hint" id="mmore">{e(t(lang, "m_more", n=len(rows)))}</button>')
+    out.append('</details>')
     return "".join(out)
 
 
@@ -334,11 +399,13 @@ def render(base, root, st, q, rec, job, held, tool=None, lang="en"):
             "{{OTHER_LANG}}": "zh" if lang == "en" else "en",
             "{{LEAD}}": e(t(lang, lead_key, **kw)), "{{STRIP}}": strip(lang, cur), "{{CUR}}": str(cur),
             "{{S1}}": e(t(lang, "s1")), "{{S2}}": e(t(lang, "s2")), "{{S3}}": e(t(lang, "s3")), "{{S4}}": e(t(lang, "s4")), "{{S5}}": e(t(lang, "s5")),
-            "{{STEP1}}": step1(lang, st), "{{STEP2}}": step2(lang, st, root), "{{STEP4}}": step4(lang, q), "{{STEP5}}": step5(lang, rec, base),
+            "{{STEP1}}": step1(lang, st), "{{STEP2}}": step2(lang, st, root), "{{STEP4}}": step4(lang, q) + merchants_list(lang, root),
+            "{{STEP5}}": step5(lang, rec, base),
             "{{DRY}}": e(t(lang, "dry")), "{{GO}}": e(t(lang, "go")), "{{DRY_HINT}}": e(t(lang, "dry_hint")), "{{UNDO}}": e(t(lang, "undo")),
             "{{BUSY}}": busy, "{{NQ}}": str(nq), "{{AI}}": ai_card(lang, root), "{{AI_TITLE}}": e(t(lang, "ai_title")),
             "{{SETTINGS}}": e(t(lang, "settings")),
             "{{JS}}": json.dumps(js_strings(lang), ensure_ascii=False).replace("</", "<\\/"),
+            "{{QDATA}}": json.dumps(qdata(q, lang), ensure_ascii=False).replace("</", "<\\/"),
             "{{VERSION}}": e((tool or {}).get("version") or "")}
     for k, v in fill.items():
         tpl = tpl.replace(k, v)

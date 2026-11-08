@@ -38,6 +38,11 @@ English, and the header has the switch. The setup wizard reads its words from th
 (`W` in `scripts/strings.py`) and switches the same way; the draft's own sentences are not shown
 — the wizard says each question in its own words with the draft's figure in it.
 
+Step 4 writes each answer as it is given (`POST /api/answers` with `ok: false`, the item named
+by its `id:` in decisions.json), so a closed tab loses nothing; Save confirms the rest. The
+merchants already filed are listed under it and any can be refiled (`confirm.py --refile
+"MERCHANT=Category" --write` does the same from this chat).
+
 What the panel can do today (1b + 1c): show what is left to bring (the rows `status.py`
 draws); take files dropped onto it into `inbox/` under their own names, named by preflight at
 once (nothing is parsed until Import); run the import as a dry run and then for real with its
@@ -48,7 +53,7 @@ rows with no ledger; the register's copy follows); read such a balance off a pho
 offered as pills, never written until tapped; the image is kept under .jade/shots/); open the
 inbox folder; and show the last import's result. **A fresh folder gets the
 setup as screens** (step 2, 2026-11-06): while `findata/` is still the demo's, `/panel` draws the
-wizard instead — Ready · Files · Accounts · Money in and out · Goal · Day · Build — from
+wizard instead — Files · Accounts · Money in and out · Goal · Day · Build — from
 `setup/scripts/wizard.py`, which drafts the screens with `propose.py` from the files dropped
 and, on *Build it*, writes `setup-answers.json` in the skill's own shape, runs the scaffold, the
 rebuild and the first import. A question skipped stays unanswered (the skill's rule); what the
@@ -83,5 +88,5 @@ panel says so and the amount is typed.
 - Logs: the app.log file under .jade/log/ in the workspace, nothing in the repository (both are gitignored).
 - **The build carries no workspace.** `build/build.py` refuses a checkout whose `findata/` is
   not the demo's, and bundles only what `tools/sync.py` copies plus the demo. Without `--sign`
-  it is ad-hoc signed (this Mac runs it; another asks for right-click → Open once); a public
+  it is ad-hoc signed (this Mac runs it; another asks for System Settings → Privacy & Security → Open Anyway once); a public
   download needs `--sign` with a Developer ID and `--notarize`.

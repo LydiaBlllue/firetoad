@@ -47,6 +47,19 @@ TABLE = [
 ]
 CATEGORIES = [k for k, *_ in TABLE]
 
+# What each category is called on a screen in the owner's language. The key stays English in the
+# data (merchants.json, spending.csv, the page's constants); only what is shown changes.
+LABEL_ZH = {"Grocery": "买菜", "Dining": "外食", "Housing": "住房", "Shopping": "购物", "Transport": "交通",
+            "Software": "软件工具", "Bills": "账单", "Travel": "旅行", "Entertainment": "娱乐", "Health": "健康",
+            "Family": "家人礼物", "Cash": "现金", "Fees": "手续费利息", "Education": "教育", "Other": "其他"}
+
+
+def label(key, lang="en"):
+    """The category's name on screen: its English name, or the Chinese one for lang 'zh'."""
+    if lang == "zh" and key in LABEL_ZH:
+        return LABEL_ZH[key]
+    return next((n for k, n, *_ in TABLE if k == key), key)
+
 # The seven categories before 2026-10-29, and where a row of each lands. Subscription has no
 # single answer -- it was how a charge was paid, not what it bought -- so its rows are filed by
 # merchant (the starter map, then Entertainment) by the migration, and asked.

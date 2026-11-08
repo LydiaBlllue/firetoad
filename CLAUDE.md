@@ -67,6 +67,7 @@ The rest of `findata/`, and what each carries:
 | `plan.json` | planning spend, months excluded from comparisons, deposits into the broker that were gifts (`brokerGifts`), the retirement assumptions, the owner's one-line descriptions of the net-worth parts |
 | `rules.json` | the investing buckets and their target bands, the owner's theses (`notes`) and `checkpoints`, `assetClass` — what each ETF holds (stocks / bonds / cash / gold / crypto), the one thing the broker's export cannot say — and `principles`, the owner's high-level rules, each naming a check the Investing overview runs today (with `placement`, which account each holding belongs in) |
 | `merchants.json` | merchant → category |
+| `senders.json` | who sends money by e-Transfer → what it is (Payroll / Gift / Other / Transfer / Repayment), answered once; the import types the next one by it and does not ask — the rule an owner used to keep in prose, as data both doors read (2026-11-07) |
 | `fx.json` | a dated exchange rate — absent means "no foreign-currency holdings" |
 | `prices.json` | the benchmark's daily prices (dividends included) and the Bank of Canada's USD/CAD, fetched by `prices.py` at each import for the fund `rules.json` `benchmark` names — the one file in `findata/` that comes from outside the owner's statements; absent until the first fetch |
 | `returns.json` | a year a row since 1928: US stocks, T-bills, 10-year Treasuries and gold (Damodaran, NYU Stern) and US inflation (BLS CPI-U), fetched by the same `prices.py`; the Drawdown page replays the plan through it |
@@ -88,7 +89,7 @@ checker guards it, and whether the page may read it:
 | **evidence** — `inbox/` → `archive/` | where is the original | the import (rename and move) | append only |
 | **facts** — `findata/ledgers/`: the ledgers, `spending.csv`, `rewards.csv`, the broker exports, `banks.json`, `fx.json`, `foreign.json` | what actually happened to the money | the import's parse step | a ledger is append only and every row carries its statement tag; a snapshot (`holdings_latest.csv`, `banks.json`, `fx.json`, `foreign.json`) is replaced whole and dated by `asof`, its previous state living in `archive/` and in `history/` |
 | **history** — `findata/history/`: `imports.json`, `decisions.json`, `filings.json`, the two `*_history.json` | what the world looked like at each update | the import's last step | one record per update, never rewritten — except a `decisions.json` item, which is closed in place (`answer`, `resolved`) when the owner answers |
-| **declarations** — `findata/register/`: `accounts.json`, `funds.json`, `plan.json`, `rules.json`, `merchants.json`, `profile.json`, `tasks.json` | how the owner chooses to see the money | the owner, through `setup` or out loud | edited, with a dated reason beside the value |
+| **declarations** — `findata/register/`: `accounts.json`, `funds.json`, `plan.json`, `rules.json`, `merchants.json`, `senders.json`, `profile.json`, `tasks.json` | how the owner chooses to see the money | the owner, through `setup` or out loud | edited, with a dated reason beside the value |
 | **derived** — `dashboards/`, the figures table in `FINANCE.md` | what the page shows | `rebuild.py` | overwritten whole, idempotent |
 
 The rules that follow, each with the checker that holds it:
@@ -197,11 +198,18 @@ numbered steps, *get the files · put them here · import · answer · done*, wi
 lit and a line saying what to do next; every sentence from `local-app/scripts/strings.py` in
 English and Chinese (`?lang=`, remembered in `.jade/settings.json`, else profile.json `lang`),
 and each missing file's *how do I get it* read from `parsers/support.py` (2026-11-07, after the
-first version's four internal names left the owner not knowing what to do). The server
+first version's four internal names left the owner not knowing what to do). Every question the
+import raises carries `facts` (kind, amount, date, sender, merchant) beside its English `what`:
+the panel says the question in the owner's language from the facts (`panel.say`), the chat
+reads `what`; the categories keep English keys and get a screen name per language
+(`categories.label`); step 3 draws the import's returned summary as a card, the lines folded. The server
 (`local-app/scripts/server.py`) holds **no financial logic**: each route is one call into a
 script's `run()` — `status`, `update`, `update.undo`, `confirm` — and the import still rebuilds
-through `rebuild.py`; the browser reloads the file. One lock file (`.jade.lock`) makes it one
-writer at a time, and its log is `.jade/log/` (both ignored by git). The selftest's *local app*
+through `rebuild.py`; the browser reloads the file. One lock file (`.jade.lock`, `jlock.py` in the
+update-dashboard scripts) makes it one writer at a time **through either door** — the app takes
+it around every verb, and `update`, `confirm` and `balance` refuse to write while another live
+process holds it — and its log is `.jade/log/` (both ignored by git). The dashboard's header
+counts the answers waiting and links to `/panel` when the app serves the page. The selftest's *local app*
 check imports the same month through `update.py --write` and through `POST /api/import` and
 expects identical `findata/` and `archive/`, with one statement uploaded and one balance typed
 through the app. Both doors are the same code, so a change to the import is made once, in the

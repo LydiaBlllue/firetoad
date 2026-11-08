@@ -192,6 +192,10 @@ The owner's own banks, and what each one does, are in `OWNER.md`.
 - Debit-card purchases on a chequing statement are spending. They stay in that account's ledger
   for the balance chain **and** get a second row in `spending.csv` carrying that account's
   `spendTag`. Writing only one of the two either breaks the chain or loses the expense.
+- A named sender answered once is a rule in `senders.json` (2026-11-07): the import types the
+  next e-Transfer from them by it and asks nothing; the question comes only for a sender nobody
+  has answered for, or a statement that prints no name. Answering through `confirm.py` writes
+  the rule; to change your mind, change the line.
 - Before typing any e-Transfer credit as income, check the sender against the counterparty
   ledger (the register document that carries `counterparty` — someone repaying a loan). A repayment counted as income once
   inflated both income and the savings rate by thousands; lint **D10** now checks every match.

@@ -32,6 +32,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import layout  # noqa: E402
+import jlock  # noqa: E402  one writer at a time, both doors
 import verbs  # noqa: E402
 from update import jload, jsave  # noqa: E402
 
@@ -136,6 +137,9 @@ def run(root, key, amount, asof=None, write=False, say=None):
         emit("\n  nothing written. Run with --write to apply.")
         return verbs.result(res, 0, lines)
 
+    other = jlock.held_by_other(root)
+    if other:
+        emit(jlock.refusal(other)); return verbs.result(res, 1, lines)
     # the register's copy follows the source (D14, D20)
     acc["balance"], acc["asof"] = a["balance"], asof
     jsave(fd("accounts.json"), reg)

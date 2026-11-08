@@ -162,8 +162,13 @@ def occupied(root):
 
 
 def ordinal(n):
+    """'5' → '5th'. A closing day that is words — 'any time' for an OFX or CSV download, which
+    the draft writes as `closes` — is kept as it is (an OFX setup through the wizard crashed
+    here, 2026-11-07)."""
     if n is None:
         return None
+    if isinstance(n, str) and not n.strip().isdigit():
+        return n
     n = int(n)
     suf = "th" if 11 <= n % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
     return f"{n}{suf}"
@@ -390,6 +395,11 @@ def build(a, today):
     }, ensure_ascii=False, indent=2) + "\n"
 
     # --- merchant map: the categories are fixed, the merchants are yours ------------------
+    out[layout.rel("senders.json")] = json.dumps({
+        "note": "Who sends you money and what it is, answered once: `match` is the name as the statement prints it, "
+                "`type` one of Payroll / Gift / Other / Transfer / Repayment. The import types the next e-Transfer "
+                "from them by this and does not ask; change a line to change your mind.",
+        "senders": []}, indent=2, ensure_ascii=False) + "\n"
     out[layout.rel("merchants.json")] = json.dumps({
         "note": "The one source of truth for merchant → category. Look a merchant up BEFORE "
                 "judging it; a miss is a new merchant and has to be confirmed with you.",

@@ -28,6 +28,8 @@ body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system
    is never out of reach while the page stays put. */
 .side{width:210px;flex-shrink:0;position:sticky;top:38px;max-height:calc(100vh - 38px);overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
 .ver{margin-top:18px;font-size:10.5px;letter-spacing:.04em;color:var(--muted)}
+.to-panel{display:block;margin:18px 10px 0;font-size:12.5px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--surface)}
+.to-panel:hover{background:var(--pill)}
 .side .brand{display:flex;align-items:flex-end;gap:9px;width:100%;height:var(--headh);padding:0 10px 15px;
   background:none;border:none;border-bottom:1px solid var(--border);font-family:inherit;font-size:21px;
   font-weight:700;letter-spacing:-.4px;color:var(--ink);cursor:pointer;text-align:left;margin-bottom:20px}
@@ -65,6 +67,8 @@ body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system
 .ph-r .v{font-size:22px;font-weight:700;letter-spacing:-.4px;font-variant-numeric:tabular-nums;margin-top:1px}
 .ph-r .s{font-size:11.5px;color:var(--muted);margin-top:1px}
 .hdr-line{cursor:pointer}.hdr-line:hover,.hdr-line:focus-visible{color:var(--ink-2)}
+/* what waits for an answer: its own line, so a long header never pushes the page sideways (R2) */
+.hdr-wait{display:block;color:var(--ink);font-weight:600;margin-top:2px}a.hdr-wait{text-decoration:underline dotted}
 .num{font-variant-numeric:tabular-nums}
 h1{font-size:21px;font-weight:700;letter-spacing:-.2px}
 .subtitle{color:var(--muted);font-size:13px;margin-top:2px}
@@ -349,6 +353,7 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
     <span class="wm"><span id="brandText">Jade Toad</span><small id="brandOwner"></small></span>
   </button>
   <nav id="sideNav"></nav>
+    <a id="toPanel" class="to-panel" href="panel" hidden>Monthly import →</a>
     <div id="ver" class="ver"></div>
 </aside>
 <main class="main">
@@ -804,7 +809,7 @@ function setYear(y){
 const PROFILE = {};
 const BROKER = "";          // the institution that holds the portfolio, from accounts.json
 const CP = INVEST.counterparty || null;   // who pays money back, from cashflow.json
-const VERSION = "1.0.2";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
+const VERSION = "1.0.3";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
 // The brand is data, not markup: it used to be typed into the <title>, the sidebar and the link
 // between the two dashboards, which is three places to miss when someone makes this theirs.
 // Jade Toad is the product; the owner's name is the instance. Both are shown, neither typed
@@ -815,6 +820,10 @@ addEventListener("DOMContentLoaded", () => {
   const b = document.getElementById("brandText"); if(b) b.textContent = PRODUCT;
   const o = document.getElementById("brandOwner"); if(o) o.textContent = PROFILE.owner || "";
   const v = document.getElementById("ver");   if(v) v.textContent = "v" + VERSION;
+  // served by the local app (its address carries /t/<token>/): the way back to the panel sits
+  // at the foot of the sidebar; opened from disk there is no panel to go to (2026-11-08)
+  const tp = document.getElementById("toPanel");
+  if(tp && location.protocol.startsWith("http") && /\/t\/[^/]+\//.test(location.pathname)) tp.hidden = false;
 });
 
 const NAV = [
@@ -3353,9 +3362,17 @@ function headerLine(){
   const req = SOURCES.filter(r => !r.optional).map(r => DOC_LATEST[r.src]).filter(Boolean).sort();
   const last = (IMPORTS[0] || {}).date || Object.values(DOC_LATEST).filter(Boolean).sort().pop();
   if(!req.length && !last) return "Nothing filed yet. Drop your first statements into inbox and say \u201cupdate dashboards\u201d.";
+  // what still waits for an answer, and where to answer it: the panel when the local app serves
+  // this page (its address carries /t/<token>/, and "panel" beside it is the panel), the app or
+  // the chat when the file was opened from disk (2026-11-07)
+  const open = (DECISIONS || []).filter(d => d.status === "open").length;
+  const served = location.protocol.startsWith("http") && /\/t\/[^/]+\//.test(location.pathname);
+  const waiting = !open ? "" : (served
+    ? '<a class="hdr-wait" href="panel">' + open + " to confirm \u2192 the panel</a>"
+    : '<span class="hdr-wait">' + open + " to confirm \u2014 open Jade Toad, or say so in the chat</span>");
   return (req.length ? term("complete_to") + " " + dLong(req[0]) : "")
     + (req.length && last ? '<span class="gap"></span>' : "")
-    + (last ? "Updated " + dLong(last) : "");
+    + (last ? "Updated " + dLong(last) : "") + waiting;
 }
 
 function renderUpdates(){

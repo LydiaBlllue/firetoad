@@ -24,7 +24,7 @@ The folder is still called findata/: iCloud for Windows excludes any folder name
 import os
 
 REGISTER = ("accounts.json", "profile.json", "funds.json", "plan.json", "rules.json",
-            "merchants.json", "tasks.json", "setup-answers.json")
+            "merchants.json", "senders.json", "tasks.json", "setup-answers.json")
 HISTORY = ("imports.json", "decisions.json", "filings.json", "investment_history.json",
            "networth_history.json")
 FOLDERS = ("register", "ledgers", "history")

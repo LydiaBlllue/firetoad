@@ -68,6 +68,7 @@ import preflight  # noqa: E402
 import seen_accounts  # noqa: E402
 import rebuild  # noqa: E402
 import verbs  # noqa: E402
+import jlock  # noqa: E402  one writer at a time, both doors
 import loans  # noqa: E402  what a borrower still owes (loans.py)
 import ai  # noqa: E402  a model, by choice, where the maps miss (ai.py; off unless the owner set one)
 sys.path.insert(0, CHECKS)
@@ -184,6 +185,10 @@ class Workspace:
         self.cp = cp_doc["counterparty"] if cp_doc else None
         self.cp_rows = csv_rows(fd(cp_doc["into"])) if cp_doc and cp_doc.get("into") else []
         self.loans = [a for a in self.accounts if loans.is_loan(a)]
+        # who sends money and what it is, answered once (register/senders.json): the rule the
+        # owner used to keep in prose, as data both doors read (2026-11-07)
+        self.senders = [s for s in (jload(fd("senders.json"), {}) or {}).get("senders", [])
+                        if s.get("match") and s.get("type") in SENDER_LABEL]
         flows = self.funds.get("plan", {}).get("flows", [])
         self.rent = [f["amount"] for f in flows if f.get("kind") == "committed"]
         self.cards = [a for a in self.accounts if a.get("kind") == "Credit card"]
@@ -230,6 +235,31 @@ def merchant_of_debit(desc):
     m = re.search(r"interac\s+purchase[\s,\-]*(?:\d{3,}\s*)?(.*)$", desc, re.I) \
         or re.search(r"(?:debit\s*card|point\s+of\s+sale|pos)\s*purchase[\s,\-]*(?:\d{3,}\s*)?(.*)$", desc, re.I)
     return (m.group(1) if m else desc).strip(" ,-")
+
+
+SENDER_NOISE = re.compile(r"\b(?:INTERACE?|E-?TRANSFERS?|ETRANSFER|E-?TRF|AUTODEPOSIT|AUTO-DEPOSIT|RECEIVED|RECD|SENT|FROM|TO|"
+                          r"REQUEST|FULFILLED|ONLINE|BANKING|TRANSFER|REF|MEMO)\b", re.I)
+
+
+def sender_of(desc):
+    """'e-Transfer received ALEX NG' → 'ALEX NG': the person on the other side of an e-Transfer,
+    the bank's own words for the transfer and every reference number taken off. Empty when the
+    statement prints no name (BMO)."""
+    s = re.sub(r"\S*\d\S*", " ", desc or "")          # reference numbers, dates, anything with a digit
+    s = re.sub(r"([a-z])([A-Z])", r"\1 \2", s)         # 'InteracE-TransferReceived' → words
+    s = SENDER_NOISE.sub(" ", s)
+    s = re.sub(r"[^A-Za-z' ]", " ", s)
+    return re.sub(r"\s+", " ", s).strip().upper()
+
+
+def sender_key(name):
+    return re.sub(r"[^A-Z0-9]", "", (name or "").upper())
+
+
+# how a sender's rule types the row (senders.json `type` → the ledger's type and label; the same
+# words confirm.py writes when the owner answers the question)
+SENDER_LABEL = {"Payroll": "Pay (e-Transfer)", "Gift": "e-Transfer received (family or gift)", "Other": "e-Transfer received",
+                "Transfer": "e-Transfer between your own accounts", "Repayment": "Paid back (e-Transfer)"}
 
 
 def payee_of(desc):
@@ -307,13 +337,21 @@ def type_row(ws, acc, desc, amt, when, holder=None):
                 else ("Lent", f"e-Transfer to {ws.cp} (loan)", None)
         if not received and any(abs(-amt - r) < 0.01 for r in ws.rent):
             return "Rent", "Rent (e-Transfer)", None
+        # a sender the owner has answered for before: the rule, not the question
         if received:
+            for s_ in getattr(ws, "senders", []):
+                if sender_key(s_["match"]) and sender_key(s_["match"]) in dn:
+                    return s_["type"], SENDER_LABEL[s_["type"]] + (f" — {s_['match'].title()}" if s_["type"] != "Transfer" else ""), None
+        if received:
+            who = sender_of(desc)
             return "Other", "e-Transfer received", {
-                "kind": "transfer", "what": f"A {money(amt)} e-Transfer received on {short(iso_to_date(when))} carries no sender you have named.",
-                "default": "Other income"}
+                "kind": "transfer", "what": (f"A {money(amt)} e-Transfer received on {short(iso_to_date(when))} from {who.title()} — what is it?"
+                                              if who else f"A {money(amt)} e-Transfer received on {short(iso_to_date(when))} carries no sender you have named."),
+                "default": "Other income", **({"sender": who} if who else {}),
+                "facts": {"kind": "credit", "amount": amt, "date": when, "sender": who or None}}
         return "Transfer", "e-Transfer sent", {
             "kind": "transfer", "what": f"A {money(-amt)} e-Transfer sent on {short(iso_to_date(when))} went to someone you have not named.",
-            "default": "Transfer"}
+            "default": "Transfer", "facts": {"kind": "sent", "amount": -amt, "date": when, "to": sender_of(desc) or None}}
     if broker_n and (broker_n in dn or "WSINVESTMENT" in dn or "WSIMPLE" in dn):
         return "Transfer", f"Transfer {'to' if amt < 0 else 'from'} {ws.broker}", None
     if amt > 0 and ("PAYROLL" in dn or ("PAY" in dn and "DEPOSIT" in dn)):
@@ -345,7 +383,7 @@ def type_row(ws, acc, desc, amt, when, holder=None):
             "kind": "transfer",
             "what": f"A {money(abs(amt))} transfer {way} an account the register does not have, on "
                     f"{short(iso_to_date(when))} ({desc.strip()[:60]}).",
-            "default": "Transfer"}
+            "default": "Transfer", "facts": {"kind": "account", "amount": abs(amt), "date": when, "way": way, "desc": desc.strip()[:60]}}
     if amt < 0 and PAYMENT.search(d):
         return "Payment", "Payment — " + payee_of(desc).title(), None
     if "FEE" in dn:
@@ -900,7 +938,8 @@ def note_merchant(plan, key, cat, how, when, src, root=None):
         plan.new_merchants[key] = (cat, src)
         why = " The starter map of common chains suggests " + cat + "." if how == "starter" else ""
         item = {"kind": "merchant", "match": key, "what": f"{key}, seen for the first time.{why}",
-                "default": cat, "source": f"{src}, {short(iso_to_date(when))}"}
+                "default": cat, "source": f"{src}, {short(iso_to_date(when))}",
+                "facts": {"kind": "merchant", "merchant": key, "starter": cat if how == "starter" else None, "date": when}}
         # A model, only where every map missed and only if the owner set one (ai.py): its answer
         # is the question's suggestion, never the category — Other stays until the owner says.
         if how == "new" and root and ai.enabled(root):
@@ -1069,7 +1108,7 @@ def write_plan(ws, plan):
                 {"added": ws.today.isoformat(), "kind": d["kind"], **({"match": d["match"]} if d.get("match") else {}),
                  "what": d["what"], "default": d["default"], "source": d.get("source", ""), "status": "open",
                  # what confirm.py needs to act on the answer: a suggestion, and the row it lands on
-                 **{k: d[k] for k in ("suggest", "suggestBy", "row", "credit") if d.get(k)}})
+                 **{k: d[k] for k in ("suggest", "suggestBy", "row", "credit", "sender", "facts") if d.get(k)}})
         jsave(fd("decisions.json"), ws.decisions)
     os.makedirs(os.path.join(ws.root, "archive"), exist_ok=True)
     for src, dst in plan.archive:
@@ -1381,6 +1420,10 @@ def run(root, write=False, hand=None, balance=None, undo_last=False, say=None, l
     if undo_last:
         return undo(root, say=say)
     emit, lines = verbs.speaker(say, loud)
+    other = jlock.held_by_other(root) if write else None
+    if other:
+        emit(jlock.refusal(other), loud_line=True)
+        return verbs.result({"date": datetime.date.today().isoformat(), "written": False, "busy": other}, 1, lines)
     rc, summary = _import(root, write, hand or [], balance or {}, emit)
     return verbs.result(summary, rc, lines)
 
@@ -1422,7 +1465,7 @@ def _import(root, write, hand, balance, say):
     investing = any(x.get("role") == "grow" and (x.get("balance") or 0) > 0 for x in ws.reg.get("accounts", []))
     if "fire" not in pj and not investing and not any(d.get("kind") == "fire" and d.get("status") == "open"
                                                        for d in ws.decisions.get("decisions", [])):
-        plan.decisions.append({"kind": "fire", "default": "No",
+        plan.decisions.append({"kind": "fire", "default": "No", "facts": {"kind": "fire"},
                                "what": "Is retiring early (FIRE) something you are working toward? Yes or no; "
                                        "the FIRE pages show only for yes."})
 
