@@ -37,7 +37,7 @@ import ai  # noqa: E402  which model is set, for the settings card
 import categories  # noqa: E402
 import confirm  # noqa: E402  INCOMING: what money in from no named sender can be
 import preflight  # noqa: E402  names the files in inbox/
-from strings import t, months, js_strings  # noqa: E402
+from strings import t, months, js_strings, wizard_strings  # noqa: E402
 try:
     from parsers import support  # noqa: E402  each bank's own download path, in both languages
 except Exception:  # noqa: BLE001  a workspace without the parsers package still gets a panel
@@ -346,9 +346,16 @@ def render(base, root, st, q, rec, job, held, tool=None, lang="en"):
 
 
 # ---------------------------------------------------------------- the setup wizard
+def t_w(lang, key):
+    return wizard_strings(lang).get(key, key)
+
+
 def render_setup(base, root, st, job, tool=None, lang="en"):
     tpl = template(root, "setup.html")
-    fill = {"{{BASE}}": e(base), "{{STATE}}": json.dumps(st, ensure_ascii=False).replace("</", "<\\/"),
+    fill = {"{{BASE}}": e(base), "{{LANG}}": e(lang), "{{OTHER_LANG}}": "zh" if lang == "en" else "en",
+            "{{W_TITLE}}": e(t_w(lang, "w_title")), "{{W_LANG}}": e(t_w(lang, "w_lang")),
+            "{{STATE}}": json.dumps(st, ensure_ascii=False).replace("</", "<\\/"),
+            "{{WS}}": json.dumps(wizard_strings(lang), ensure_ascii=False).replace("</", "<\\/"),
             "{{BUSY}}": tool_notice(lang, tool), "{{INBOX}}": e(os.path.join(root, "inbox")),
             "{{VERSION}}": e((tool or {}).get("version") or ""),
             "{{JOB}}": json.dumps(job, ensure_ascii=False).replace("</", "<\\/") if job else "null"}

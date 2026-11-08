@@ -34,7 +34,9 @@ field for a number) · 2 put them here · 3 import (look first, then import) · 
 questions · 5 done. A strip at the top lights the current step and one line says what to do
 next. Every sentence is in `scripts/strings.py`, English and Chinese; the page picks the
 language from `?lang=zh|en` (remembered in .jade/settings.json), else profile.json `lang`, else
-English, and the header has the switch. The setup wizard is still English only.
+English, and the header has the switch. The setup wizard reads its words from the same table
+(`W` in `scripts/strings.py`) and switches the same way; the draft's own sentences are not shown
+— the wizard says each question in its own words with the draft's figure in it.
 
 What the panel can do today (1b + 1c): show what is left to bring (the rows `status.py`
 draws); take files dropped onto it into `inbox/` under their own names, named by preflight at

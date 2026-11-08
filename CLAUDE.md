@@ -217,7 +217,7 @@ workspace), and every launch compares the folder's tool copy with the app's — 
 copy* on the panel when they differ, no writes when the folder's data is a newer shape. Inside
 the app the binary doubles as the interpreter for the core's own subprocess calls. Unsigned
 until an Apple Developer identity is passed to the build. **The setup as screens** (step 2): while a folder still holds the demo, `/panel` is the
-wizard — the setup skill's interview in six screens, drafted by `setup/scripts/wizard.py` from
+wizard — the setup skill's interview in six screens, in English or Chinese like the panel, drafted by `setup/scripts/wizard.py` from
 `propose.py`'s draft and written back into `setup-answers.json`, then scaffold, rebuild, first
 import; the selftest's *local app setup* check builds the same workspace through the app and
 through `wizard.py --apply` and expects identical `findata/`. **A model, by choice** (steps 3–4): `ai.py` in the
