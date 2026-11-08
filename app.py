@@ -135,18 +135,26 @@ def ask_choice(text, buttons):
 
 
 def make_workspace(dest):
-    """A new workspace in an empty (or new) folder: the tool's copy and the demo's data, the way a
-    fresh clone has them — the setup replaces the demo with the owner's own. sync.py does the
-    copying; it never touches a folder that already has findata/."""
+    """A new workspace in an empty (or new) folder: the tool's copy and no one's data. findata/
+    holds one file, profile.json, saying which shape the data will take and that the folder is
+    not set up yet (`blank`, with `demo` — the word every gate already reads as "nobody's");
+    the setup writes the rest from the owner's own files. The demo owner stays in the app and
+    on the website, never in somebody's folder (decided 2026-11-08, user 001). sync.py does the
+    copying; it never touches a folder that already has findata/ data in it."""
+    import json
     import sync
     os.makedirs(dest, exist_ok=True)
     if os.listdir(dest) and not is_workspace(dest):
         raise SystemExit(f"✗ {dest} is not empty and not a Jade Toad folder; choose an empty one")
-    if not os.path.isdir(os.path.join(dest, "findata")):
-        shutil.copytree(os.path.join(TOOL, "findata"), os.path.join(dest, "findata"))
+    prof = os.path.join(dest, "findata", "register", "profile.json")
+    if not os.path.exists(prof):
+        os.makedirs(os.path.dirname(prof), exist_ok=True)
+        os.makedirs(os.path.join(dest, "dashboards"), exist_ok=True)
+        with open(prof, "w", encoding="utf-8") as f:
+            json.dump({"schema": sync.tool_schema(), "demo": True, "blank": True}, f, indent=2)
+            f.write("\n")
     sync.main(["sync.py", dest])
     return dest
-
 
 def find_root(p):
     import fetch

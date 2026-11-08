@@ -519,8 +519,11 @@ def clear_demo(root):
             gone.append(f)
     if gone:
         print(f"  − demo statements cleared from archive/: {len(gone)} file(s)")
-    shutil.copyfile(OWNER_STUB, os.path.join(root, "OWNER.md"))
-    print("  → OWNER.md: an empty one, yours to fill (the demo owner's notes are gone)")
+    owner = os.path.join(root, "OWNER.md")
+    had_notes = os.path.exists(owner) and open(owner, "rb").read() != open(OWNER_STUB, "rb").read()
+    shutil.copyfile(OWNER_STUB, owner)
+    # a folder the app made never had the demo owner's notes in it (2026-11-08)
+    print("  → OWNER.md: an empty one, yours to fill" + (" (the demo owner's notes are gone)" if had_notes else ""))
 
 
 def keep_private(root, today):

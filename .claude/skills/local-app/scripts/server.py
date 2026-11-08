@@ -519,8 +519,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         try:
             if path == "/":
                 p = app.dashboard()
-                if not p:
-                    return self._send(200, panel.no_dashboard(app.base), "text/html; charset=utf-8")
+                if not p:   # nothing built yet (a folder just made): the setup is the way in
+                    return self._send(302, b"", extra=(("Location", app.base + "/panel"),))
                 return self._send(200, open(p, "rb").read())
             if path == "/panel" and app.is_demo():
                 return self._send(200, panel.render_setup(app.base, app.root, app.do_setup_state(),

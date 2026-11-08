@@ -6,14 +6,15 @@
     python3 build/build.py --no-dmg             # skip the .dmg / .zip
 
 What goes in: app.py as the entry, the tool's copy exactly as tools/sync.py copies it into a
-workspace (SYNCED — the skills, templates, tools, tests, the governing documents) and the demo's
-findata/, so *Make one* on first launch has something to show. The interpreter is PyInstaller's
+workspace (SYNCED — the skills, templates, tools, tests, the governing documents), and
+nothing else: *Make one* starts a folder holding only the tool and a profile.json that says
+it is not set up yet, and the setup writes the owner's own data. The interpreter is PyInstaller's
 (one folder, not one file: the core runs its own scripts as subprocesses, and app.py doubles as
 the interpreter for them). pypdf and, on macOS, ocrmac and the Vision bindings come along.
 
-What never goes in: a workspace. The build refuses unless findata/ is the demo (profile.json
-`demo: true`), and it adds no inbox/, archive/, .private/, product/ or feedback/ — the same
-lines the privacy guard draws for a commit.
+What never goes in: a workspace. The build refuses to run from a checkout whose findata/ is not
+the demo (profile.json `demo: true`), a sign it is someone's folder, and it adds no inbox/,
+archive/, .private/, product/ or feedback/: the same lines the privacy guard draws for a commit.
 
 Signing: without --sign the app is ad-hoc signed, which runs on this Mac and asks the next Mac
 to System Settings → Privacy & Security → Open Anyway once (macOS 14 and earlier: right-click → Open). With --sign (a Developer ID Application identity) it is signed with
@@ -36,7 +37,8 @@ sys.path.insert(0, HERE)   # dmg_art.py, the disk image window
 import sync  # noqa: E402  SYNCED: the one list of what the tool is
 
 NAME = "Jade Toad"
-DATA_EXTRA = ("findata", "LICENSE", "README.md")   # beside SYNCED: the demo, and what a reader expects
+DATA_EXTRA = ("LICENSE", "README.md")   # beside SYNCED: what a reader expects. No findata/: Make one
+# starts a folder with no one's data in it (2026-11-08), so the demo owner has no reason to ship
 EXCLUDE_DIRS = {"__pycache__", ".DS_Store"}
 
 
@@ -45,7 +47,7 @@ def die(msg):
 
 
 def guard():
-    """Never an owner's data: the bundled findata/ has to be the demo's."""
+    """Never built from an owner's folder: the checkout's findata/ has to be the demo's."""
     for p in ("findata/register/profile.json", "findata/profile.json"):
         fp = os.path.join(TOOL, p)
         if os.path.exists(fp):

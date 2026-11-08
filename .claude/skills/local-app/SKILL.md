@@ -15,7 +15,7 @@ python3 app.py
 ```
 
 That is the whole instruction — or, packaged, a double-click: `python3 build/build.py` makes
-`dist/Jade Toad.app` (a folder with Python, the tool and the demo inside; `build/build.py` says
+`dist/Jade Toad.app` (a folder with Python and the tool inside, no data; `build/build.py` says
 what goes in and what never does). The packaged app asks for the workspace folder on its first
 launch — *Open a folder* or *Make one* — and remembers it in the system's application-support
 folder, never in the workspace; `--choose` asks again. On every launch it compares the folder's
@@ -52,7 +52,8 @@ rows with no ledger; the register's copy follows); read such a balance off a pho
 (`ocr.py`: Apple Vision on this computer, the amounts ranked by the account's `capture` line,
 offered as pills, never written until tapped; the image is kept under .jade/shots/); open the
 inbox folder; and show the last import's result. **A fresh folder gets the
-setup as screens** (step 2, 2026-11-06): while `findata/` is still the demo's, `/panel` draws the
+setup as screens** (step 2, 2026-11-06): while `findata/` is not set up (the demo's in a clone, or the blank one *Make one* writes:
+no data, profile.json marked `blank`), `/panel` draws the
 wizard instead — Files · Accounts · Money in and out · Goal · Day · Build — from
 `setup/scripts/wizard.py`, which drafts the screens with `propose.py` from the files dropped
 and, on *Build it*, writes `setup-answers.json` in the skill's own shape, runs the scaffold, the
@@ -87,6 +88,6 @@ panel says so and the amount is typed.
   browser reloads the static file.
 - Logs: the app.log file under .jade/log/ in the workspace, nothing in the repository (both are gitignored).
 - **The build carries no workspace.** `build/build.py` refuses a checkout whose `findata/` is
-  not the demo's, and bundles only what `tools/sync.py` copies plus the demo. Without `--sign`
+  not the demo's, and bundles only what `tools/sync.py` copies. Without `--sign`
   it is ad-hoc signed (this Mac runs it; another asks for System Settings → Privacy & Security → Open Anyway once); a public
   download needs `--sign` with a Developer ID and `--notarize`.

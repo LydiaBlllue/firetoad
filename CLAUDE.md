@@ -218,13 +218,13 @@ script, and the panel follows. Two verbs came with the panel and serve this chat
 ledger, by register key, the register's copy following (D14, D20), refused for an account with
 a ledger (D7) or a loan (D23) — and **`ocr.py`** reads a phone screenshot with Apple Vision on
 this computer and ranks its amounts by the account's `capture` line; it offers, never writes.
-**Packaged** (1d, `build/build.py` → `dist/Jade Toad.app`, PyInstaller, one folder, the demo
-inside and never a workspace), the same `app.py` is the entry: the first launch asks for the
-folder or makes one (remembered in the system's application-support folder, outside the
+**Packaged** (1d, `build/build.py` → `dist/Jade Toad.app`, PyInstaller, one folder, the tool
+and never anyone's data), the same `app.py` is the entry: the first launch asks for the
+folder or makes one — a made one holds the tool and a profile.json marked `blank`, no demo data (remembered in the system's application-support folder, outside the
 workspace), and every launch compares the folder's tool copy with the app's — *Refresh the
 copy* on the panel when they differ, no writes when the folder's data is a newer shape. Inside
 the app the binary doubles as the interpreter for the core's own subprocess calls. Unsigned
-until an Apple Developer identity is passed to the build. **The setup as screens** (step 2): while a folder still holds the demo, `/panel` is the
+until an Apple Developer identity is passed to the build. **The setup as screens** (step 2): while a folder is not set up (the demo's, or blank), `/panel` is the
 wizard — the setup skill's interview in six screens, in English or Chinese like the panel, drafted by `setup/scripts/wizard.py` from
 `propose.py`'s draft and written back into `setup-answers.json`, then scaffold, rebuild, first
 import; the selftest's *local app setup* check builds the same workspace through the app and

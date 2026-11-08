@@ -430,8 +430,3 @@ def render_setup(base, root, st, job, tool=None, lang="en"):
         tpl = tpl.replace(k, v)
     return tpl
 
-
-def no_dashboard(base):
-    return (f'<!doctype html><meta charset="utf-8"><title>Jade Toad</title>'
-            f'<p style="font-family:system-ui;padding:40px">No dashboard is built yet. '
-            f'<a href="{e(base)}/panel">Open the panel</a> and import a month.</p>')

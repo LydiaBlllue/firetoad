@@ -7,6 +7,11 @@
   languages on the first launch; `docs/install.md` (and the Chinese page) walks the first launch
   on macOS 15 and on macOS 14 and earlier, with the words each dialog uses, and says why macOS
   asks; README and the release notes point there instead of saying it three different ways.
+- **A new folder holds no one's data** (2026-11-08, user 001): *Make one* used to fill the
+  folder with the demo owner's accounts until the setup replaced them; it now writes only the
+  tool and a profile.json that says the folder is not set up yet, so the wizard starts on an
+  empty folder and the first data in it is yours. Before the setup, the dashboard's address
+  opens the wizard. The app no longer carries the demo's data at all.
 - **The arrow** (2026-11-08, user 001): opening the disk image shows the window most Mac
   downloads have — the app on the left, the Applications folder on the right, an arrow between
   them and "drag Jade Toad onto Applications" under it in both languages, the first-launch note

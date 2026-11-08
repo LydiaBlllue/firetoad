@@ -2463,9 +2463,12 @@ def local_app_setup_check(root, base):
     card statements uploaded, the screens drafted, the answers posted the way the wizard posts
     them (a name, the everyday figure confirmed, everything else skipped), the workspace built and
     the first month imported — and findata/ identical to the same answers applied through
-    wizard.py on the command line. The wizard shows instead of the panel while the folder is the
-    demo's, and the panel once it is not."""
-    import io, uuid, urllib.request, urllib.error
+    wizard.py on the command line. The wizard shows instead of the panel while the folder is not
+    set up, and the panel once it is. The app's door starts where a new owner starts, in a folder
+    *Make one* made (2026-11-08: the tool and a blank profile.json, no demo data); the command
+    line's starts from the demo, as a clone does — so the two starting points have to end the same,
+    and the demo owner may not survive into the made folder anywhere."""
+    import contextlib, importlib.util, io, uuid, urllib.request, urllib.error
     if not demo_like(root):
         return []
     srv = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "local-app", "scripts", "server.py"))
@@ -2485,7 +2488,16 @@ def local_app_setup_check(root, base):
                 os.remove(os.path.join(ws, "inbox", f))
         copies[door] = (ws, two)
     bad = []
-    ws, two = copies["api"]
+    _, two = copies["api"]
+    ws = os.path.join(base, "wiz_made")
+    spec = importlib.util.spec_from_file_location("jade_app", os.path.join(copies["api"][0], "app.py"))
+    jade_app = importlib.util.module_from_spec(spec); spec.loader.exec_module(jade_app)
+    with contextlib.redirect_stdout(io.StringIO()):
+        jade_app.make_workspace(ws)
+    made = sorted(os.path.relpath(os.path.join(d, f), ws) for d, _, fs in os.walk(os.path.join(ws, "findata")) for f in fs)
+    if made != [os.path.join("findata", "register", "profile.json")]:
+        bad.append("Make one left more than a profile.json in findata/: " + ", ".join(made[:4]))
+    demo_owner = json.load(open(layout.path(copies["api"][0], "profile.json"), encoding="utf-8")).get("owner") or ""
     proc = subprocess.Popen([sys.executable, srv, ".", "--port", "0"], cwd=ws, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     answers = None
     try:
@@ -2519,7 +2531,10 @@ def local_app_setup_check(root, base):
             return out.getvalue(), {"Content-Type": f"multipart/form-data; boundary={b}"}
         st, body = req("GET", tok + "/panel")
         if st != 200 or b"make this folder yours" not in body or b'id="step3"' in body:
-            bad.append(f"a demo folder did not get the wizard page ({st})")
+            bad.append(f"a made folder did not get the wizard page ({st})")
+        st, body = req("GET", tok + "/")   # nothing built yet: the dashboard's address is the wizard
+        if st != 200 or b"make this folder yours" not in body:
+            bad.append(f"the dashboard's address before the setup did not lead to the wizard ({st})")
         for mm in two:
             d, h = form({"file": (os.path.basename(mm["file"]), open(mm["file"], "rb").read())})
             st, body = req("POST", tok + "/api/inbox", d, h)
@@ -2611,6 +2626,13 @@ def local_app_setup_check(root, base):
         bad.append(f"profile.json after the wizard: {prof.get('owner')!r}, born {prof.get('born')!r}, demo {prof.get('demo')!r}")
     out = run("check_data.py", ["."], ws)
     bad += [l.strip()[:120] for l in out.splitlines() if l.strip().startswith("✗")][:2]
+    if demo_owner:
+        # findata/ and the page; archive/ holds the uploaded originals, whoever's name is printed on them
+        held = [os.path.relpath(os.path.join(d, f), ws) for top in ("findata", "dashboards")
+                for d, _, fs in os.walk(os.path.join(ws, top)) for f in fs
+                if demo_owner.encode() in open(os.path.join(d, f), "rb").read()]
+        if held:
+            bad.append("the demo owner reached the made folder: " + ", ".join(held[:3]))
     # the same answers through the verb on the command line
     ws2, two2 = copies["cli"]
     for mm in two2:
@@ -2625,7 +2647,7 @@ def local_app_setup_check(root, base):
         bad.append("the wizard's two doors left different files: " + ", ".join(diff[:6]))
     if bad:
         return ["  ✗ local app setup: " + x for x in bad[:6]]
-    return [f"  ✓ local app setup: two statements uploaded, the screens drafted, the answers posted, the workspace built and the first "
+    return [f"  ✓ local app setup: a folder made by Make one (a profile.json and no data), its dashboard's address the wizard; two statements uploaded, the screens drafted, the answers posted, the workspace built and the first "
             f"month imported through the app; findata/ identical to wizard.py on the command line ({len(a)} files); the panel took over; "
             f"the questions answered in the browser, saved and closed, and a filed merchant refiled"]
 
@@ -2747,13 +2769,15 @@ def merchant_key_of(note):
 
 
 def findata_digest(ws):
-    """findata/ and archive/ as hashes, but for the seconds an import records and the prices a run
-    may or may not have fetched — what two doors have to agree on."""
+    """findata/ and archive/ as hashes, but for the seconds an import records, the prices and the
+    historical returns a run may or may not have fetched (prices.py; a made folder has none until
+    its first import, a clone carries the repository's), and an empty placeholder — what two
+    doors have to agree on."""
     out = {}
     for top in ("findata", "archive"):
         for dp, _, fs in os.walk(os.path.join(ws, top)):
             for f in fs:
-                if f == "prices.json":
+                if f in ("prices.json", "returns.json", ".gitkeep"):
                     continue
                 data = open(os.path.join(dp, f), "rb").read()
                 if f == "imports.json":
