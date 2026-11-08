@@ -3,11 +3,25 @@
 What is coming, said as what you will be able to do. These are aims, not promises; what has
 already shipped is in [`CHANGELOG.md`](CHANGELOG.md).
 
-## Next — 1.0.3
+## Next — 1.0.3 — a panel you can read without knowing the tool
 
-- **A signed download.** The app without a Claude plan shipped in 1.0.2 unsigned, so a Mac
-  asks for right-click → Open once; a Developer ID signs and notarises it, and a Windows build
-  follows.
+Structure before features (decided 2026-11-08). Already on the branch: the questions answered a
+card at a time and saved as you go, a merchant filed wrong changed from a list, a sender you
+have answered for once never asked again, a desktop layout. Still to come in 1.0.3:
+
+- **The import's report in your words.** Step 3 shows what happened — files read, purchases
+  filed, questions raised, anything to look at — as a short card in English or Chinese, instead
+  of the program's own lines.
+- **Every question in your language.** The questions are stored as facts (the amount, the date,
+  who sent it, the merchant) and the panel says them in the language you chose; today the
+  sentence itself is stored, in English.
+- **Category names you can read.** The fifteen categories keep their English keys in the data
+  and get a Chinese name on screen.
+- **A signed download.** A Developer ID signs and notarises the app, so a Mac opens it without
+  the right-click; a Windows build follows.
+
+## 1.0.4
+
 - **More banks and brokers**: TD, Scotiabank, CIBC, Tangerine, Simplii and EQ Bank confirmed on
   real files, and the first brokers beyond Wealthsimple. What is read today:
   [Supported banks and brokers](docs/banks.md).

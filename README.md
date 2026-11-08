@@ -11,19 +11,31 @@
 **[Open the live demo →](https://lydiablllue.github.io/jade-toad/)** a made-up owner's page,
 nothing to install.
 
-Once a month you drop your bank statements into a folder and say *"update dashboards"*. Claude
-Code reads them, checks that every statement adds up, files every purchase and rebuilds one HTML
-page: what you spent, what you own, how far you are from FIRE. No bank login, no server.
+Once a month you drop your bank statements into a folder. The tool reads them, checks that
+every statement adds up, files every purchase and rebuilds one HTML page: what you spent, what
+you own, how far you are from FIRE. No bank login, no server, no account anywhere.
 
 ![The Home page](docs/screens/home.png)
+
+## Two ways in — pick one
+
+| | **The app** — no Claude plan | **Claude Code** |
+|---|---|---|
+| What it is | `Jade Toad.app` on a Mac: your folder in your browser — the setup as seven screens, the month as five steps, in English or Chinese | the same folder, driven in the chat of the Claude desktop app |
+| You need | a Mac and the download from the [releases page](https://github.com/lydiablllue/jade-toad/releases) (not signed yet: right-click → *Open* the first time) | a Claude plan that includes Claude Code (Pro, Max, Team or Enterprise), the Claude desktop app, Python 3 |
+| Best when | your bank is one the tool reads (RBC, BMO, or any bank's OFX download) and your broker is Wealthsimple | a statement no parser reads, a bank's CSV to map, anything held abroad, a loan to a friend, a question in words |
+
+Both run the very same code, on your computer only, and the same checks hold both to the same
+result. Start with one; the other is always there.
+
+![The monthly panel in the app](docs/screens/panel.png)
 
 ## What you need
 
 | | |
 |---|---|
-| **Claude plan** | Pro, Max, Team or Enterprise. The free plan does not include Claude Code. Nothing else to pay for — **or no plan at all**: see *Without Claude* below |
-| **Claude desktop app** | On a **Mac or Windows** computer, using its **Code** tab, not Chat. Claude Code comes with it |
-| **Python 3 and pypdf** | Setup checks for them and gives you the one command if one is missing |
+| **One of the two ways in** | the app (a Mac), or a Claude plan with the Claude desktop app on Mac or Windows — the table above. Nothing else to pay for |
+| **Python 3 and pypdf** | Inside the app already. For Claude Code, setup checks for them and gives you the one command if one is missing |
 | **Your statements** | Last month's PDFs. A single credit card is enough to start |
 | **A screen** | The page needs a window at least 800px wide; a phone shows screenshots only |
 
@@ -45,12 +57,25 @@ every account at once); the questions take five to eight minutes, most answers p
 build and the first import take a second; then five to ten minutes of saying which category
 each new merchant is.
 
+**With the app**
+
+1. **Download `Jade Toad.app`** from the [releases page](https://github.com/lydiablllue/jade-toad/releases), open the disk image, drag the
+   app to Applications. The first time, right-click → *Open* (it is not signed yet).
+2. **Open it and choose *Make one***, in an empty folder of your choice. Your browser opens on the
+   setup.
+3. **Drop last month's files** onto the second screen, filenames untouched.
+4. **Walk the screens** — your name, each account and what it is for, the month's money in and
+   out (pre-filled from the files), one question about FIRE, your import day — and press *Build
+   it*. Skip a question and it shows *Not set*, never a made-up number.
+
+**With Claude Code**
+
 1. **Install the [Claude desktop app](https://claude.com/download)** and sign in.
 2. **Download this folder** (*Code → Download ZIP*) and unzip it anywhere on your computer.
 3. **Open the app's Code tab and choose that folder.**
 4. **Drop last month's files into `inbox/`**, filenames untouched.
 5. **Say "set this up".** It reads your files, drafts your accounts and plan, and asks only what
-   the files cannot say. Skip a question and it shows *Not set*, never a made-up number.
+   the files cannot say.
 
 ## Each month
 
@@ -59,16 +84,16 @@ statements into `inbox/` and say **"update dashboards"**. You get a short
 report and any questions a program cannot answer, like a merchant it has not seen. In the app
 (below) the same month is the panel's five steps.
 
-## Without Claude
+## The app, in more detail
 
-There is a second way in that needs no Claude plan. **Jade Toad.app** — a disk image for macOS
-on the releases page, or `python3 app.py` in this folder with Python 3 and pypdf installed —
-opens your folder in your browser. The first launch asks where your folder is, or makes one and
-walks you through the setup in six screens; every month after that, a panel of five steps: get
-this month's files, put them here, import, answer a few questions, done. English or Chinese,
-switched in the header. It runs the very code Claude Code runs, on your computer only, and the
-same checks hold both doors to the same result. The build is not signed yet, so the first
-launch on a Mac is right-click → *Open*.
+**Jade Toad.app** — the disk image on the [releases page](https://github.com/lydiablllue/jade-toad/releases), or `python3 app.py` in this
+folder with Python 3 and pypdf installed — opens your folder in your browser. The first launch
+asks where your folder is, or makes one and walks you through the setup in seven screens; every
+month after that, a panel of five steps: get this month's files, put them here, import, answer
+a few questions, done. Each answer is saved as you give it, so you can stop and come back; a
+merchant filed wrong is changed from the list under the questions. English or Chinese, switched
+in the header. The build is not signed yet, so the first launch on a Mac is right-click → *Open*;
+Windows has no build yet (`python3 app.py` works there).
 
 A model is optional and **off by default**. Turned on in the panel's settings — with your own
 key to an OpenAI-compatible service or Anthropic, or Ollama on this computer — it is asked one
@@ -88,6 +113,8 @@ the screens do not cover (anything held abroad, a loan to a friend, your investi
 - **A statement a parser reads never goes to Anthropic.** What Claude does read is the import's
   summary, a merchant it has not seen, and your answers, the way anything you say in Claude Code does.
 - **It stays out of git**: setup keeps your data out of commits, and a guard refuses one that would carry it.
+- **A model is never on unless you turn it on.** On, it sees a merchant name and the fifteen
+  category names, nothing else, and every exchange is logged in your folder.
 
 **Your numbers**
 
