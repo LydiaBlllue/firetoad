@@ -16,7 +16,7 @@ Which files Jade Toad reads, institution by institution. Every file has to recon
 |---|:---:|:---:|:---:|
 | [RBC](#rbc) | ✓ | ✓ | ✓ |
 | [BMO](#bmo) | ✓ | ✓ Chequing, savings, US-dollar accounts · ○ Mastercard | ✓ |
-| [TD](#td) | — | ○ | ○ |
+| [TD](#td) | — | ✓ Chequing, US-dollar chequing · ○ Savings, Visa | ✓ Chequing · ○ Visa |
 | [Scotiabank](#scotiabank) | — | ○ | ○ |
 | [CIBC](#cibc) | — | ○ | ○ |
 | [Tangerine](#tangerine) | — | ○ | ○ |
@@ -66,8 +66,10 @@ Which files Jade Toad reads, institution by institution. Every file has to recon
 
 **Recommended**: **OFX** first; the CSV if the OFX will not read.
 
-- ○ OFX / QFX download · Chequing, savings, Visa: EasyWeb → Download transactions → Quicken or Money
-- ○ CSV download · Chequing, savings, Visa: EasyWeb → Download transactions → Spreadsheet (accountactivity.csv) — Chequing has a balance column; check against it.
+- ✓ OFX / QFX download · Chequing, US-dollar chequing: EasyWeb → Download transactions → Quicken or Money — Carries the account's currency and TD's own balance.
+- ○ OFX / QFX download · Savings, Visa: EasyWeb → Download transactions → Quicken or Money
+- ✓ CSV download · Chequing: EasyWeb → Download transactions → Spreadsheet (accountactivity.csv) — Has a balance column, checked row by row. No currency in it: a US-dollar account is asked. Prefer OFX.
+- ○ CSV download · Visa: EasyWeb → the card → Download transactions → Spreadsheet — Same columns as chequing by report, dates MM/DD/YYYY; no real file read yet.
 
 ### Scotiabank
 

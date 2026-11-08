@@ -72,6 +72,8 @@ def screens(draft, today):
                          "id": a.get("id"), "cur": a.get("cur"), "balance": a.get("balance"), "asof": a.get("asof"),
                          "role": a.get("role"), "seenAs": a.get("seenAs"),
                          "needsBalance": a.get("balance") is None,
+                         # A bank's CSV names no currency (an OFX does): the owner says which.
+                         "askCur": (a.get("doc") or {}).get("parser") == "csv",
                          "doc": (a.get("doc") or {}).get("file"), "liability": a.get("kind") in scaffold.DEBT_KINDS})
     plan = draft.get("plan") or {}
     closes = [int((a.get("doc") or {}).get("closes")) for a in draft.get("accounts") or []
@@ -157,6 +159,8 @@ def merge(draft, answers, today):
         if row.get("role") in dict((k, l) for k, l, _ in ROLES) and acc.get("kind") not in scaffold.DEBT_KINDS:
             acc["role"] = row["role"]
             acc["reach"] = REACH_OF_ROLE.get(row["role"], acc.get("reach") or "today")
+        if row.get("cur") in ("CAD", "USD") and (acc.get("doc") or {}).get("parser") == "csv":
+            acc["cur"] = row["cur"]
         bal = _num(row.get("balance"))
         if bal is not None and acc.get("balance") is None:
             acc["balance"] = bal

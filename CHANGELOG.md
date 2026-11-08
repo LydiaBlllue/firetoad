@@ -2,6 +2,12 @@
 
 ## 1.0.2 — unreleased
 
+- **TD chequing is confirmed** (2026-11-07): a real TD download, OFX and CSV, read and
+  reconciled — the OFX to TD's own balance, the CSV row by row. The banks page says so; TD
+  savings and the Visa stay expected until a file of theirs is read. A bank's CSV names no
+  currency, so setup now asks it for every account read from one — a choice of Canadian or US
+  dollars on the accounts screen, and in the question the interview asks — instead of filing a
+  US-dollar account as Canadian.
 - **A second way in, beside Claude** (2026-11-06, ROADMAP 2.0.0 step 1b): `python3 app.py`
   serves the dashboard and a monthly panel on `127.0.0.1` — Bring · Import · Questions · Result —
   through the scripts' own `run()`s, so a month done by tapping in the browser is the month the
