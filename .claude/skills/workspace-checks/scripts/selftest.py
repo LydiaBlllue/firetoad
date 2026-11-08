@@ -2533,21 +2533,77 @@ def local_app_setup_check(root, base):
         answers = {"owner": "Sam Lee", "born": "", "importDay": sc["day"]["suggest"], "accounts": [], "added": [],
                    "money": {"takeHome": "", "invest": "", "everyday": sc["money"]["everyday"].get("suggest") or "",
                              "planBase": "", "committed": [], "pensions": []}, "goal": ""}
-        st, body = req("POST", tok + "/api/setup", {"answers": answers})
-        job = {}
-        if st == 202:
+        def wait_job():
+            job = {}
             for _ in range(900):
                 st2, jj = req("GET", tok + "/api/job")
                 job = jj.get("data") or {}
                 if job.get("done"):
                     break
                 time.sleep(0.5)
+            return job
+        st, body = req("POST", tok + "/api/setup", {"answers": answers})
+        job = wait_job() if st == 202 else {}
         res = job.get("result") or {}
         if st != 202 or not res.get("written") or not (res.get("import") or {}).get("written"):
             bad.append(f"POST /api/setup: {st}, " + " | ".join(job.get("lines", [])[-2:])[:200])
         st, body = req("GET", tok + "/panel")
         if st != 200 or b'id="step3"' not in body or b"make this folder yours" in body:
             bad.append("after the build the panel did not take over from the wizard")
+        pre_digest = findata_digest(ws)   # the two doors are compared as built, before any answer
+        # step 4 as the owner works it (2026-11-07): one card answered is written at once, the
+        # Save confirms the rest, a filed merchant can be refiled — driven in a real browser when
+        # the page checker's Playwright is here, otherwise through the same API the page calls
+        st, qq = req("GET", tok + "/api/questions")
+        items = (qq.get("data") or {}).get("items") or []
+        first = next((i for i in items if i.get("kind") == "merchant" and i.get("id") is not None), None)
+        if first:
+            cat = "Travel" if first.get("default") != "Travel" else "Dining"
+            try:
+                from playwright.sync_api import sync_playwright
+            except ImportError:
+                sync_playwright = None
+            if sync_playwright:
+                with sync_playwright() as pw:
+                    br = pw.chromium.launch(); pg = br.new_page()
+                    errs = []; pg.on("pageerror", lambda e_: errs.append(str(e_)))
+                    pg.goto(origin + tok + "/panel"); pg.wait_for_selector("#step4")
+                    # accept every suggestion, answer the first card if there is one, save
+                    acc = pg.locator("#qsug .btn.primary")
+                    if acc.count():
+                        acc.first.click()
+                    card = pg.locator("#qdeck .cq .pl.big")
+                    if card.count():
+                        card.first.click()
+                    pg.wait_for_timeout(1500)
+                    pg.locator("#save").click()
+                    pg.wait_for_selector("#qdeck .cq, #step4 .foot", timeout=120000)
+                    pg.wait_for_timeout(2500)
+                    br.close()
+                if errs:
+                    bad.append("step 4 raised in the browser: " + errs[0][:120])
+            else:
+                st, body = req("POST", tok + "/api/answers", {"set": {f"id:{first['id']}": cat}, "ok": False})
+                job = wait_job() if st == 202 else {}
+                if st != 202 or (job.get("result") or {}).get("closed") != 1:
+                    bad.append(f"a single answer by id was not written ({st}, {(job.get('result') or {}).get('closed')})")
+                st, body = req("POST", tok + "/api/answers", {"set": {}, "ok": True})
+                job = wait_job() if st == 202 else {}
+            st, qq2 = req("GET", tok + "/api/questions")
+            left = [i for i in ((qq2.get("data") or {}).get("items") or []) if i.get("kind") == "merchant"]
+            if left:
+                bad.append(f"{len(left)} merchant question(s) still open after Save")
+            st, ms = req("GET", tok + "/api/merchants")
+            ms = ms.get("data") or []
+            if not ms:
+                bad.append("no filed merchants listed after the answers")
+            else:
+                m0 = ms[0]; to = "Travel" if m0["category"] != "Travel" else "Dining"
+                st, body = req("POST", tok + "/api/refile", {"match": m0["match"], "category": to})
+                job = wait_job() if st == 202 else {}
+                res = job.get("result") or {}
+                if st != 202 or not res.get("written") or res.get("changed") != m0["seen"]:
+                    bad.append(f"refiling {m0['match']} moved {res.get('changed')} rows, expected {m0['seen']}")
     finally:
         proc.kill(); proc.wait()
     prof = json.load(open(layout.path(ws, "profile.json"), encoding="utf-8"))
@@ -2563,14 +2619,15 @@ def local_app_setup_check(root, base):
     r = subprocess.run([sys.executable, wiz, ".", "--apply", ap, "--write"], cwd=ws2, capture_output=True, text=True, timeout=600)
     if r.returncode not in (0, 2):
         bad.append(f"wizard.py --apply exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:])[:160])
-    a, b = findata_digest(ws), findata_digest(ws2)
+    a, b = pre_digest, findata_digest(ws2)
     diff = sorted(k for k in set(a) | set(b) if a.get(k) != b.get(k))
     if diff:
         bad.append("the wizard's two doors left different files: " + ", ".join(diff[:6]))
     if bad:
         return ["  ✗ local app setup: " + x for x in bad[:6]]
     return [f"  ✓ local app setup: two statements uploaded, the screens drafted, the answers posted, the workspace built and the first "
-            f"month imported through the app; findata/ identical to wizard.py on the command line ({len(a)} files); the panel took over"]
+            f"month imported through the app; findata/ identical to wizard.py on the command line ({len(a)} files); the panel took over; "
+            f"the questions answered in the browser, saved and closed, and a filed merchant refiled"]
 
 
 def ai_sidecar_check(root, base):

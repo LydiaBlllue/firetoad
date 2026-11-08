@@ -38,6 +38,11 @@ English, and the header has the switch. The setup wizard reads its words from th
 (`W` in `scripts/strings.py`) and switches the same way; the draft's own sentences are not shown
 — the wizard says each question in its own words with the draft's figure in it.
 
+Step 4 writes each answer as it is given (`POST /api/answers` with `ok: false`, the item named
+by its `id:` in decisions.json), so a closed tab loses nothing; Save confirms the rest. The
+merchants already filed are listed under it and any can be refiled (`confirm.py --refile
+"MERCHANT=Category" --write` does the same from this chat).
+
 What the panel can do today (1b + 1c): show what is left to bring (the rows `status.py`
 draws); take files dropped onto it into `inbox/` under their own names, named by preflight at
 once (nothing is parsed until Import); run the import as a dry run and then for real with its

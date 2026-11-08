@@ -230,10 +230,32 @@ def step4(lang, q):
     if not items:
         return f'<p class="foot">{e(t(lang, "q_none"))}</p>'
     # the page draws this step from {{QDATA}}; the markup here is the frame it fills
-    return (f'<p class="q-intro">{e(t(lang, "q_intro"))}</p>'
+    return (f'<p class="q-intro">{e(t(lang, "q_intro"))} {e(t(lang, "q_resume"))}</p>'
             f'<div id="qmoney"></div><div id="qsug"></div><div id="qdeck"></div>'
             f'<div class="act"><button type="button" class="btn primary" id="save">{e(t(lang, "save_answers"))}</button>'
             f'<span class="hint">{e(t(lang, "unanswered_keep"))}</span></div>')
+
+
+def merchants_list(lang, root):
+    """The merchants already filed, biggest first, each with a change link (confirm.refile)."""
+    try:
+        rows = confirm.merchants(root)
+    except Exception:  # noqa: BLE001
+        rows = []
+    if not rows:
+        return f'<details class="more" id="mlist"><summary>{e(t(lang, "m_title", n=0))}</summary><p class="foot">{e(t(lang, "m_none"))}</p></details>'
+    cats = list(categories.CATEGORIES)
+    out = [f'<details class="more" id="mlist"><summary>{e(t(lang, "m_title", n=len(rows)))}</summary><p class="qs">{e(t(lang, "m_intro"))}</p>']
+    for i, m in enumerate(rows):
+        hide = ' style="display:none"' if i >= 20 else ""
+        opts = "".join(f'<option value="{e(c)}"{" selected" if c == m["category"] else ""}>{e(c)}</option>' for c in cats)
+        out.append(f'<div class="sug mrow" data-match="{e(m["match"])}"{hide}><span class="m">{e(m["match"])}</span>'
+                   f'<span class="a">{e(t(lang, "q_meta", amount="$" + format(m["amount"], ",.0f"), n=m["seen"]))}</span>'
+                   f'<select class="mcat">{opts}</select><span class="hint mmsg"></span></div>')
+    if len(rows) > 20:
+        out.append(f'<button type="button" class="lnk hint" id="mmore">{e(t(lang, "m_more", n=len(rows)))}</button>')
+    out.append('</details>')
+    return "".join(out)
 
 
 def step4_legacy(lang, q):
@@ -359,7 +381,8 @@ def render(base, root, st, q, rec, job, held, tool=None, lang="en"):
             "{{OTHER_LANG}}": "zh" if lang == "en" else "en",
             "{{LEAD}}": e(t(lang, lead_key, **kw)), "{{STRIP}}": strip(lang, cur), "{{CUR}}": str(cur),
             "{{S1}}": e(t(lang, "s1")), "{{S2}}": e(t(lang, "s2")), "{{S3}}": e(t(lang, "s3")), "{{S4}}": e(t(lang, "s4")), "{{S5}}": e(t(lang, "s5")),
-            "{{STEP1}}": step1(lang, st), "{{STEP2}}": step2(lang, st, root), "{{STEP4}}": step4(lang, q), "{{STEP5}}": step5(lang, rec, base),
+            "{{STEP1}}": step1(lang, st), "{{STEP2}}": step2(lang, st, root), "{{STEP4}}": step4(lang, q) + merchants_list(lang, root),
+            "{{STEP5}}": step5(lang, rec, base),
             "{{DRY}}": e(t(lang, "dry")), "{{GO}}": e(t(lang, "go")), "{{DRY_HINT}}": e(t(lang, "dry_hint")), "{{UNDO}}": e(t(lang, "undo")),
             "{{BUSY}}": busy, "{{NQ}}": str(nq), "{{AI}}": ai_card(lang, root), "{{AI_TITLE}}": e(t(lang, "ai_title")),
             "{{SETTINGS}}": e(t(lang, "settings")),

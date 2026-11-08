@@ -18,6 +18,12 @@
   the amount and the count, the likeliest categories first and "Other" last, skip or leave the
   rest, and the share of spending still in Other falling as you go. A card slides away when
   answered (120 ms, none for anyone who asked their system for less motion).
+- **Answers that survive a closed tab, and a way to change one** (2026-11-07): each answer is
+  written the moment it is given (one at a time, by the question's own id, so the numbering
+  cannot drift); Save at the end only confirms what was left. Under the questions, the merchants
+  already filed, biggest first, each with its category to change — every purchase of it moves,
+  past and future (`confirm.py --refile`). The selftest answers the questions in a real browser
+  after the wizard builds, saves, and refiles a merchant.
 
 ## 1.0.2 — 2026-11-07
 

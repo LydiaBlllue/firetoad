@@ -128,6 +128,8 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
 .sug .lnk{font-size:11.5px;color:var(--muted)}
 .sug.open{flex-wrap:wrap}
 .sug .pills{width:100%}
+.mrow select{font:inherit;font-size:12px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--ink)}
+.mrow .mmsg{white-space:nowrap}
 .deck{position:relative;margin-top:6px}
 .cq{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:0 1px 2px rgba(11,11,11,.04);transition:transform .12s ease-out,opacity .12s ease-out}
 .cq.out{transform:translateX(-36px);opacity:0}
@@ -239,6 +241,22 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
   // ---- step 4: the open questions, drawn here from Q
   var Q = {{QDATA}};
   var answers = {};            // n -> the answer chosen (merchants, money questions, accepted suggestions)
+  var pending = {};            // id -> answer not yet written
+  var saving = false, saveMsg = null;
+  // each answer is written as it is given (one job at a time, so they queue); the Save at the
+  // end confirms whatever is left as filed and reloads
+  function flush(){
+    if (saving) return;
+    var ids = Object.keys(pending); if (!ids.length) return;
+    var set = {}; ids.forEach(function(k){ set[k] = pending[k]; }); pending = {};
+    saving = true; if (saveMsg) saveMsg.textContent = T.q_saving_one;
+    api('POST', '/api/answers', {set: set, ok: false}).then(function(r){
+      if (!r.ok) { if (r.status === 409) { Object.assign(pending, set); setTimeout(function(){ saving = false; flush(); }, 1200); return; } saving = false; if (saveMsg) saveMsg.textContent = T.q_save_failed; return; }
+      var wait = function(){ api('GET', '/api/job').then(function(j){ if (j.ok && j.data && j.data.done) { saving = false; if (saveMsg) saveMsg.textContent = T.q_saved_one; flush(); } else setTimeout(wait, 400); }); };
+      wait();
+    }).catch(function(){ saving = false; Object.assign(pending, set); setTimeout(flush, 2000); });
+  }
+  function keep(it, c){ answers[it.n] = c; if (it.id != null) { pending['id:' + it.id] = c; flush(); } }
   var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function fmtS(s, o){ return String(s).replace(/\{(\w+)\}/g, function(_, k){ return o[k] == null ? '' : o[k]; }); }
   function money(v){ return '$' + Number(v || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}); }
@@ -278,7 +296,7 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
         var d = el('div', 'q'); d.setAttribute('data-n', it.n);
         d.appendChild(el('div', 'qt', '<b>' + it.n + '.</b> ' + esc(it.what)));
         d.appendChild(el('div', 'qs', esc(T.filed_as) + ' <b>' + esc(it.default) + '</b>' + (it.suggest ? ' · ' + esc(T.suggested) + ' <b>' + esc(it.suggest) + '</b>' : '')));
-        if (it.choices.length) d.appendChild(pills(it, it.suggest || it.default, false, function(c){ answers[it.n] = c; })); else d.appendChild(el('div', 'qs', esc(T.in_ledger)));
+        if (it.choices.length) d.appendChild(pills(it, it.suggest || it.default, false, function(c){ keep(it, c); })); else d.appendChild(el('div', 'qs', esc(T.in_ledger)));
         qm.appendChild(d);
       });
     }
@@ -299,12 +317,12 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
         ch.onclick = function(){
           if (row.classList.contains('open')) return;
           row.classList.add('open');
-          row.appendChild(pills(it, answers[it.n] || to, false, function(c){ answers[it.n] = c; toEl.innerHTML = '→ ' + esc(c); }));
+          row.appendChild(pills(it, answers[it.n] || to, false, function(c){ keep(it, c); toEl.innerHTML = '→ ' + esc(c); }));
         };
         row.appendChild(m); row.appendChild(a); row.appendChild(toEl); row.appendChild(ch); list.appendChild(row);
       });
       accBtn.onclick = function(){
-        sugQ.forEach(function(it){ if (!answers[it.n]) answers[it.n] = it.suggest || it.default; });
+        sugQ.forEach(function(it){ if (!answers[it.n]) keep(it, it.suggest || it.default); });
         accBtn.disabled = true; accMsg.textContent = T.q_accepted;
         if (!reduced) { list.style.transition = 'opacity .12s'; list.style.opacity = '.55'; } else list.style.opacity = '.55';
       };
@@ -338,8 +356,9 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
         f.appendChild(skip); f.appendChild(rest); f.appendChild(back); c.appendChild(f);
         return c;
       }
+      saveMsg = el('span', 'hint'); share.appendChild(saveMsg);
       function answer(it, ch){
-        if (ch) { answers[it.n] = ch; if (it.default === 'Other' && ch !== 'Other') otherNow = Math.max(0, otherNow - (it.amount || 0)); }
+        if (ch) { keep(it, ch); if (it.default === 'Other' && ch !== 'Other') otherNow = Math.max(0, otherNow - (it.amount || 0)); }
         idx++; next();
       }
       function next(back){
@@ -359,15 +378,29 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
   }
   var save = $('save');
   if (save) save.onclick = function(){
-    var set = {};
-    Object.keys(answers).forEach(function(n){ if (answers[n]) set[n] = answers[n]; });
+    var set = {}; Object.keys(pending).forEach(function(k){ set[k] = pending[k]; }); pending = {};
     $('qerr').textContent = '';
-    start('/api/answers', {set: set}, T.saving, function(job){
+    var go2 = function(){ start('/api/answers', {set: set, ok: true}, T.saving, function(job){
       if (job.error || (job.result && job.result.rc)) { $('qerr').textContent = T.not_saved; return; }
       ihint.textContent = T.saved_rebuilt;
       setTimeout(function(){ location.reload(); }, 1200);
-    });
+    }); };
+    var waitIdle = function(){ if (saving) setTimeout(waitIdle, 300); else go2(); }; waitIdle();
   };
+  // merchants already filed: change one, every purchase of it follows
+  document.querySelectorAll('.mrow .mcat').forEach(function(sel){
+    sel.onchange = function(){
+      var row = sel.closest('.mrow'), msg = row.querySelector('.mmsg'); msg.textContent = T.q_saving_one;
+      var post = function(){ api('POST', '/api/refile', {match: row.getAttribute('data-match'), category: sel.value}).then(function(r){
+        if (!r.ok) { if (r.status === 409) { setTimeout(post, 1200); return; } msg.textContent = r.error && r.error.text || 'failed'; return; }
+        var wait = function(){ api('GET', '/api/job').then(function(j){ if (j.ok && j.data && j.data.done) { var res = j.data.result || {}; msg.textContent = j.data.error || !res.written ? T.q_save_failed : fmtS(T.m_moved, {n: res.changed}); } else setTimeout(wait, 400); }); };
+        wait();
+      }); };
+      post();
+    };
+  });
+  var mm = $('mmore');
+  if (mm) mm.onclick = function(){ document.querySelectorAll('.mrow').forEach(function(r){ r.style.display = ''; }); mm.remove(); };
   var drop = $('drop'), dropped = $('dropped'), pick = $('pick');
   function upload(files){
     if (!files || !files.length) return;

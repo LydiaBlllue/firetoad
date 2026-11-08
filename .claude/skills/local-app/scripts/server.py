@@ -31,7 +31,10 @@ Routes (every API answer is {"ok": bool, "data" | "error": …, "took": seconds}
   GET  /api/status         status.run()                 the panel's rows
   GET  /api/questions      confirm.run()                the open items, numbered as confirm sees them
   POST /api/import         update.run(write=…)          starts the import as a job; lines on /api/events
-  POST /api/answers        confirm.run(write, ok, sets) {"set": {"<n>": "<answer>"}}; rebuilds
+  POST /api/answers        confirm.run(write, ok, sets) {"set": {"id:<n>": "<answer>"}, "ok": bool}; ok false
+                                                        writes only the answers given (a card at a time); rebuilds
+  GET  /api/merchants      confirm.merchants()          every merchant already filed, biggest first
+  POST /api/refile         confirm.refile(match, cat)   a filed merchant into another category; rebuilds
   POST /api/undo           update.undo()                the last write back
   POST /api/inbox          (multipart)                  files dropped on the panel, saved to inbox/ under
                                                         their own names and named by preflight; nothing parsed
@@ -276,13 +279,23 @@ class App:
     def do_undo(self):
         return self.start_job("undo", True, lambda say: verbs.public(update.undo(self.root, say=say)))
 
-    def do_answers(self, sets):
-        """The questions card's Save answers: every selection at once, confirm's way (n=answer)."""
+    def do_answers(self, sets, ok=True):
+        """Answers, confirm's way (id:<n>=answer). With ok, every other open item is confirmed as
+        filed — the Save at the end; without, only the answers given are written — one card at a
+        time, so a closed tab loses nothing."""
         if not isinstance(sets, dict):
             raise ValueError("set has to be an object of {n: answer}")
         args = [f"{n}={v}" for n, v in sets.items() if str(v).strip()]
+        if not args and not ok:
+            raise ValueError("nothing to save")
         return self.start_job("answers", True,
-                              lambda say: verbs.public(confirm.run(self.root, write=True, ok=True, sets=args, say=say)))
+                              lambda say: verbs.public(confirm.run(self.root, write=True, ok=bool(ok), sets=args, say=say)))
+
+    def do_refile(self, match, category):
+        if not match or not category:
+            raise ValueError("merchant and category are needed")
+        return self.start_job("refile", True,
+                              lambda say: verbs.public(confirm.refile(self.root, str(match).upper(), str(category), write=True, say=say)))
 
     def do_balance(self, key, amount, asof):
         if not key or amount in (None, ""):
@@ -557,6 +570,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self._json(200, True, app.do_status(), t0)
             if path == "/api/questions":
                 return self._json(200, True, app.do_questions(), t0)
+            if path == "/api/merchants":
+                return self._json(200, True, confirm.merchants(app.root), t0)
             if path == "/api/job":
                 return self._json(200, True, app.job.public() if app.job else None, t0)
             if path == "/api/tool":
@@ -613,7 +628,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             elif path == "/api/undo":
                 job, busy = app.do_undo()
             elif path == "/api/answers":
-                job, busy = app.do_answers(body.get("set") or {})
+                job, busy = app.do_answers(body.get("set") or {}, body.get("ok", True))
+            elif path == "/api/refile":
+                job, busy = app.do_refile(body.get("match"), body.get("category"))
             elif path == "/api/balance":
                 job, busy = app.do_balance(body.get("key"), body.get("amount"), body.get("asof"))
             elif path == "/api/inbox":
