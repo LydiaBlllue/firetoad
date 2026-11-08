@@ -70,6 +70,8 @@ ul.files li:first-child{border-top:0}
 table.cm{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
 table.cm td{padding:3px 4px 3px 0}
 table.cm input{width:100%}
+  .need{border:1px solid var(--bad,#b3261e);border-radius:10px;padding:12px 14px;margin:8px 0 14px}
+  .need b{display:block;margin-bottom:6px}
 </style>
 </head>
 <body data-base="{{BASE}}">
@@ -89,7 +91,7 @@ table.cm input{width:100%}
   var W = {{WS}};
   var INBOX = "{{INBOX}}";
   var A = {owner: '', born: '', importDay: '', accounts: [], added: [], money: {committed: [], pensions: []}, goal: ''};
-  var NAMES = [W.w_s1, W.w_s2, W.w_s3, W.w_s4, W.w_s5, W.w_s6, W.w_s7];
+  var NAMES = [W.w_s2, W.w_s3, W.w_s4, W.w_s5, W.w_s6, W.w_s7];
   var step = 0;
   var $ = function(id){ return document.getElementById(id); };
   function fmt(s, o){ return String(s).replace(/\{(\w+)\}/g, function(_, k){ return o[k] == null ? '' : o[k]; }); }
@@ -126,21 +128,18 @@ table.cm input{width:100%}
     var card = el('div', 'card'); sc.appendChild(card);
     var scr = S.screens;
     if (step === 0) {
-      card.appendChild(el('h2', null, esc(W.w_ready_h)));
-      card.appendChild(el('p', 'q', esc(W.w_ready_q)));
-      var R = S.ready, ul = el('ul', 'files');
-      ul.appendChild(el('li', R.python && R.python.ok ? 'ok' : 'bad', (R.python && R.python.ok ? '✓ ' : '✗ ') + esc(R.python && R.python.ok ? fmt(W.w_py_ok, {v: R.python.version}) : fmt(W.w_py_old, {v: R.python ? R.python.version : '?', min: R.python ? R.python.min : ''}))));
-      if (R.pdf && R.pdf.ok) ul.appendChild(el('li', 'ok', '✓ ' + esc(W.w_pdf_ok)));
-      else ul.appendChild(el('li', 'bad', '✗ ' + esc(W.w_pdf_missing) + '<pre class="log mono" style="margin-top:6px">' + esc(R.pdf && R.pdf.command || '') + '</pre>'));
-      var fk = R.files ? Object.keys(R.files.kinds || {}).map(function(k){ return R.files.kinds[k] + ' ' + k; }).join(', ') : '';
-      ul.appendChild(el('li', R.files && R.files.n ? 'ok' : 'hint', (R.files && R.files.n ? '✓ ' : '· ') + esc(R.files && R.files.n ? fmt(W.w_files_n, {n: R.files.n, kinds: fk}) : W.w_files_0)));
-      card.appendChild(ul);
-      var ok = S.ready.rc === 0;
-      card.appendChild(el('p', ok ? 'ok' : 'bad', esc(ok ? W.w_ready_ok : W.w_ready_no)));
-      nav(card, false, ok ? function(){ step = 1; draw(); } : null);
-    } else if (step === 1) {
       card.appendChild(el('h2', null, esc(W.w_files_h)));
-      if (S.ready && S.ready.rc === 0) card.appendChild(el('p', 'hint', '✓ ' + esc(W.w_all_in) + ' ' + esc(W.w_how_long)));
+      var R = S.ready || {}, ok = !S.ready || S.ready.rc === 0;
+      if (!ok) {
+        var need = el('div', 'need');
+        need.appendChild(el('b', null, esc(W.w_need_h)));
+        if (R.python && !R.python.ok) need.appendChild(el('div', 'bad', '✗ ' + esc(fmt(W.w_py_old, {v: R.python.version, min: R.python.min}))));
+        if (R.pdf && !R.pdf.ok) need.appendChild(el('div', 'bad', '✗ ' + esc(W.w_pdf_missing) + '<pre class="log mono" style="margin-top:6px">' + esc(R.pdf.command || '') + '</pre>'));
+        if (!(R.python && !R.python.ok) && !(R.pdf && !R.pdf.ok)) (R.lines || []).filter(function(l){ return l.indexOf('✗') >= 0; }).forEach(function(l){ need.appendChild(el('div', 'bad mono', esc(l.trim()))); });
+        need.appendChild(el('div', 'hint', esc(W.w_need_then)));
+        card.appendChild(need);
+      }
+      card.appendChild(el('p', 'hint', esc(W.w_how_long)));
       card.appendChild(el('p', 'q', esc(W.w_files_q)));
       var drop = el('div', 'drop', '<b>' + esc(W.w_drop) + '</b><span><label class="lnk">' + esc(W.w_or_choose) + '<input type="file" multiple hidden id="pick"></label></span><small>' + esc(INBOX) + '</small>');
       card.appendChild(drop);
@@ -167,8 +166,8 @@ table.cm input{width:100%}
       document.addEventListener('drop', function(e){ e.preventDefault(); });
       drop.querySelector('#pick').onchange = function(ev){ upload(ev.target.files); ev.target.value = ''; };
       if (scr) card.appendChild(el('p', 'ok', esc(fmt(W.w_drafted, {n: scr.accounts.rows.length}))));
-      nav(card, true, scr ? function(){ step = 2; draw(); } : null);
-    } else if (step === 2) {
+      nav(card, false, scr && ok ? function(){ step = 1; draw(); } : null);
+    } else if (step === 1) {
       card.appendChild(el('h2', null, esc(W.w_acc_h)));
       var own = field(card, esc(W.w_name_l) + (scr.owner.suggest ? esc(fmt(W.w_name_says, {who: scr.owner.suggest})) : ''), text(A.owner || scr.owner.suggest || '', W.w_name_ph));
       var born = field(card, esc(W.w_born_l), text(A.born, W.w_born_ph, 'amt'));
@@ -226,9 +225,9 @@ table.cm input{width:100%}
       nav(card, true, function(){
         A.owner = own.value; A.born = born.value;
         if (!A.owner.trim()) { own.focus(); own.style.borderColor = 'var(--bad)'; return; }
-        step = 3; draw();
+        step = 2; draw();
       });
-    } else if (step === 3) {
+    } else if (step === 2) {
       var m = scr.money;
       card.appendChild(el('h2', null, esc(W.w_money_h)));
       card.appendChild(el('p', 'q', esc(W.w_money_q)));
@@ -258,9 +257,9 @@ table.cm input{width:100%}
       var pb = field(card, esc(W.w_planbase), text(A.money.planBase != null ? A.money.planBase : (m.planBase.suggest || ''), W.w_amonth, 'amt')); pb.inputMode = 'decimal';
       nav(card, true, function(){
         A.money.takeHome = th.value; A.money.invest = inv.value; A.money.everyday = ev.value; A.money.imputedRent = rent.value; A.money.planBase = pb.value;
-        step = 4; draw();
+        step = 3; draw();
       });
-    } else if (step === 4) {
+    } else if (step === 3) {
       card.appendChild(el('h2', null, esc(W.w_goal_h)));
       card.appendChild(el('p', 'q', esc(W.w_goal_q)));
       var pills = el('div', 'pills');
@@ -281,13 +280,13 @@ table.cm input{width:100%}
         var td2 = el('td'); var fr = text(p.from || '', W.w_from_age, 'amt'); fr.inputMode = 'numeric'; fr.oninput = function(){ p.from = fr.value; }; td2.appendChild(fr); tr.appendChild(td2);
         pbox.appendChild(t);
       });
-      nav(card, true, function(){ step = 5; draw(); });
-    } else if (step === 5) {
+      nav(card, true, function(){ step = 4; draw(); });
+    } else if (step === 4) {
       card.appendChild(el('h2', null, esc(W.w_day_h)));
       card.appendChild(el('p', 'q', esc(W.w_day_q) + ' ' + esc(scr.day.closes.length ? fmt(W.w_day_closes, {days: scr.day.closes.join(', ')}) : W.w_day_default)));
       var d = field(card, esc(W.w_day_l), text(A.importDay || scr.day.suggest, '', 'amt')); d.inputMode = 'numeric';
-      nav(card, true, function(){ A.importDay = d.value; step = 6; draw(); });
-    } else if (step === 6) {
+      nav(card, true, function(){ A.importDay = d.value; step = 5; draw(); });
+    } else if (step === 5) {
       card.appendChild(el('h2', null, esc(W.w_build_h)));
       card.appendChild(el('p', 'q', esc(W.w_build_q)));
       var added = A.added.filter(function(x){ return x.inst && x.name; }).length;
@@ -308,7 +307,7 @@ table.cm input{width:100%}
       }
       var log = el('pre', 'log'); log.style.display = 'none'; card.appendChild(log);
       var hint = el('p', 'hint', esc(W.w_build_hint)); card.appendChild(hint);
-      var a = el('div', 'act'); var b = el('button', 'btn', esc(W.w_back)); b.type = 'button'; b.onclick = function(){ step = 5; draw(); }; a.appendChild(b);
+      var a = el('div', 'act'); var b = el('button', 'btn', esc(W.w_back)); b.type = 'button'; b.onclick = function(){ step = 4; draw(); }; a.appendChild(b);
       var go = el('button', 'btn primary', esc(W.w_build_it)); go.type = 'button'; a.appendChild(go); card.appendChild(a);
       go.onclick = function(){
         go.disabled = true; b.disabled = true; hint.textContent = W.w_building; log.style.display = 'block'; log.textContent = '';
@@ -335,8 +334,7 @@ table.cm input{width:100%}
       };
     }
   }
-  if (JOB && !JOB.done && JOB.verb === 'setup') { step = 6; }
-  else if (S.ready && S.ready.rc === 0) { step = 1; }   // everything is in: straight to the files (Back still shows the check)
+  if (JOB && !JOB.done && JOB.verb === 'setup') { step = 5; }
   draw();
   setInterval(function(){ api('GET', '/api/ping').catch(function(){}); }, 30000);
 })();

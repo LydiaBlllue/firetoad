@@ -23,8 +23,9 @@
   in your language, with the program's own lines under a fold; every question is stored as its
   facts (the amount, the date, who sent it, the merchant) and said by the panel in your language,
   the English sentence kept for the chat; the fifteen categories have Chinese names on screen
-  (the keys in the data stay English); the wizard's first screen says in three lines what is
-  installed and what is not, with the one command when something is missing.
+  (the keys in the data stay English); the wizard lost its first screen — the environment
+  check appears on the Files screen only when something is missing, naming it with the one
+  command, and Next stays shut until it is there (six screens now).
 - **Structure, not features** (2026-11-08, user 001): the panel is a desktop page now — two
   columns from 1000px, what you do on the left, what the program does on the right, one column
   below that; the dashboard's header says how many answers wait and, when the app serves the

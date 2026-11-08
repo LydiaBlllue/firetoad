@@ -21,7 +21,7 @@ you own, how far you are from FIRE. No bank login, no server, no account anywher
 
 | | **The app** — no Claude plan | **Claude Code** |
 |---|---|---|
-| What it is | `Jade Toad.app` on a Mac: your folder in your browser — the setup as seven screens, the month as five steps, in English or Chinese | the same folder, driven in the chat of the Claude desktop app |
+| What it is | `Jade Toad.app` on a Mac: your folder in your browser — the setup as six screens, the month as five steps, in English or Chinese | the same folder, driven in the chat of the Claude desktop app |
 | You need | a Mac and the download from the [releases page](https://github.com/lydiablllue/jade-toad/releases) (not signed yet: right-click → *Open* the first time) | a Claude plan that includes Claude Code (Pro, Max, Team or Enterprise), the Claude desktop app, Python 3 |
 | Best when | your bank is one the tool reads (RBC, BMO, or any bank's OFX download) and your broker is Wealthsimple | a statement no parser reads, a bank's CSV to map, anything held abroad, a loan to a friend, a question in words |
 
@@ -88,7 +88,7 @@ report and any questions a program cannot answer, like a merchant it has not see
 
 **Jade Toad.app** — the disk image on the [releases page](https://github.com/lydiablllue/jade-toad/releases), or `python3 app.py` in this
 folder with Python 3 and pypdf installed — opens your folder in your browser. The first launch
-asks where your folder is, or makes one and walks you through the setup in seven screens; every
+asks where your folder is, or makes one and walks you through the setup in six screens; every
 month after that, a panel of five steps: get this month's files, put them here, import, answer
 a few questions, done. Each answer is saved as you give it, so you can stop and come back; a
 merchant filed wrong is changed from the list under the questions. English or Chinese, switched

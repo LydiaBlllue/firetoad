@@ -53,7 +53,7 @@ rows with no ledger; the register's copy follows); read such a balance off a pho
 offered as pills, never written until tapped; the image is kept under .jade/shots/); open the
 inbox folder; and show the last import's result. **A fresh folder gets the
 setup as screens** (step 2, 2026-11-06): while `findata/` is still the demo's, `/panel` draws the
-wizard instead — Ready · Files · Accounts · Money in and out · Goal · Day · Build — from
+wizard instead — Files · Accounts · Money in and out · Goal · Day · Build — from
 `setup/scripts/wizard.py`, which drafts the screens with `propose.py` from the files dropped
 and, on *Build it*, writes `setup-answers.json` in the skill's own shape, runs the scaffold, the
 rebuild and the first import. A question skipped stays unanswered (the skill's rule); what the

@@ -2,7 +2,7 @@
 """wizard.py — the setup as screens: what each one shows, and what the answers become.
 
 The setup skill is an interview in chat; the local app has no chat. This is the same setup
-with the questions laid out as screens — Ready · Files · Accounts · Money in and out · Goal ·
+with the questions laid out as screens — Files · Accounts · Money in and out · Goal ·
 Day · Build — in the order the skill asks them, drawn from the draft propose.py makes of the
 first files, and written back into the draft's own shape, so the scaffold runs on exactly the
 answers file the skill would have produced. Nothing here invents a question: every screen is a
