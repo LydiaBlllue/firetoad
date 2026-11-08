@@ -53,6 +53,7 @@ SYNCED = [
     "docs/pipeline.svg",
     "docs/hero.png",
     "docs/banks.md",      # the banks page, written from parsers/support.py (S9)
+    "docs/install.md",    # README links it; the Chinese one is in docs/zh
     "docs/logo.svg",
     "docs/zh",            # the Chinese guide is the tool's, like README; screens/ stays the demo's
     ".gitignore",         # not for git: check_design's S4 reads it to skip files an owner writes

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.4 — unreleased
+
+- **How to open the download, where you will see it** (2026-11-08, user 001). The disk image
+  now shows the app, the Applications folder to drag it onto, and a one-page note in both
+  languages on the first launch; `docs/install.md` (and the Chinese page) walks the first launch
+  on macOS 15 and on macOS 14 and earlier, with the words each dialog uses, and says why macOS
+  asks; README and the release notes point there instead of saying it three different ways.
+
 ## 1.0.3 — 2026-11-08 — a panel you can read without knowing the tool
 
 Structure before features (user 001, 2026-11-08): nothing new to learn, less to know. The

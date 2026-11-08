@@ -172,7 +172,18 @@ def build(args):
             dmg = os.path.join(dist, f"JadeToad-{ver}.dmg")
             if os.path.exists(dmg):
                 os.remove(dmg)
-            run(["hdiutil", "create", "-volname", NAME, "-srcfolder", out, "-ov", "-format", "UDZO", dmg])
+            # the disk image shows three things: the app, the Applications folder to drag it onto,
+            # and a one-page note on the first launch (build/dmg/), in both languages
+            stage_dir = os.path.join(dist, "dmg-stage")
+            shutil.rmtree(stage_dir, ignore_errors=True)
+            os.makedirs(stage_dir)
+            shutil.copytree(out, os.path.join(stage_dir, os.path.basename(out)), symlinks=True)
+            os.symlink("/Applications", os.path.join(stage_dir, "Applications"))
+            for f in os.listdir(os.path.join(HERE, "dmg")):
+                if not f.startswith("."):
+                    shutil.copy(os.path.join(HERE, "dmg", f), stage_dir)
+            run(["hdiutil", "create", "-volname", NAME, "-srcfolder", stage_dir, "-ov", "-format", "UDZO", dmg])
+            shutil.rmtree(stage_dir, ignore_errors=True)
             if args.sign:
                 run(["codesign", "--force", "--timestamp", "--sign", args.sign, dmg])
             if args.notarize:

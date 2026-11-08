@@ -22,7 +22,7 @@ you own, how far you are from FIRE. No bank login, no server, no account anywher
 | | **The app** — no Claude plan | **Claude Code** |
 |---|---|---|
 | What it is | `Jade Toad.app` on a Mac: your folder in your browser — the setup as six screens, the month as five steps, in English or Chinese | the same folder, driven in the chat of the Claude desktop app |
-| You need | a Mac and the download from the [releases page](https://github.com/lydiablllue/jade-toad/releases) (not signed yet: the first launch is one visit to System Settings → Privacy & Security → *Open Anyway*) | a Claude plan that includes Claude Code (Pro, Max, Team or Enterprise), the Claude desktop app, Python 3 |
+| You need | a Mac and the download from the [releases page](https://github.com/lydiablllue/jade-toad/releases) (not signed yet: the first launch takes one extra step — [how to open it](docs/install.md)) | a Claude plan that includes Claude Code (Pro, Max, Team or Enterprise), the Claude desktop app, Python 3 |
 | Best when | your bank is one the tool reads (RBC, BMO, or any bank's OFX download) and your broker is Wealthsimple | a statement no parser reads, a bank's CSV to map, anything held abroad, a loan to a friend, a question in words |
 
 Both run the very same code, on your computer only, and the same checks hold both to the same
@@ -60,9 +60,9 @@ each new merchant is.
 **With the app**
 
 1. **Download `Jade Toad.app`** from the [releases page](https://github.com/lydiablllue/jade-toad/releases), open the disk image, drag the
-   app to Applications. The first time, macOS says it cannot verify the app: close that, open
-   *System Settings → Privacy & Security*, scroll down and click *Open Anyway* (it is not signed
-   yet; on macOS 14 and earlier, right-click → *Open* is enough).
+   app to Applications. The first launch takes one extra step because the download is not
+   signed yet: **[how to open it](docs/install.md)** (System Settings → Privacy & Security →
+   *Open Anyway*; on macOS 14 and earlier, right-click → *Open*).
 2. **Open it and choose *Make one***, in an empty folder of your choice. Your browser opens on the
    setup.
 3. **Drop last month's files** onto the second screen, filenames untouched.
@@ -94,8 +94,8 @@ asks where your folder is, or makes one and walks you through the setup in six s
 month after that, a panel of five steps: get this month's files, put them here, import, answer
 a few questions, done. Each answer is saved as you give it, so you can stop and come back; a
 merchant filed wrong is changed from the list under the questions. English or Chinese, switched
-in the header. The build is not signed yet, so the first launch on a Mac is one visit to *System
-Settings → Privacy & Security → Open Anyway*; Windows has no build yet (`python3 app.py` works there).
+in the header. The build is not signed yet, so the first launch on a Mac takes [one extra
+step](docs/install.md); Windows has no build yet (`python3 app.py` works there).
 
 A model is optional and **off by default**. Turned on in the panel's settings — with your own
 key to an OpenAI-compatible service or Anthropic, or Ollama on this computer — it is asked one
@@ -142,6 +142,7 @@ the screens do not cover (anything held abroad, a loan to a friend, your investi
   checkers that keep the numbers honest.
 <!-- LINT:FAULTS n=65 -->
   Four checkers hold every figure to its source; a selftest plants 65 faults to prove they still catch them.
+- **[Installing the app](docs/install.md)**: the download, the first launch on each macOS, and why it asks.
 - **[Supported banks and brokers](docs/banks.md)**: which to use, which banks' files are read, which are confirmed on a real
   one, and how to download each.
 - **[Roadmap](ROADMAP.md)** and **[Changelog](CHANGELOG.md)**.
