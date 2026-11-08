@@ -276,6 +276,9 @@ W = {
     "w_nothing": {"en": "nothing to report", "zh": "没有要报告的"},
     # 2 files
     "w_files_h": {"en": "Last month's files", "zh": "上个月的文件"},
+    "w_all_in": {"en": "Python and the PDF reader are in; the first screen was skipped.", "zh": "Python 和 PDF 读取器都在，第一屏跳过了。"},
+    "w_how_long": {"en": "How long: getting last month's files from each bank's website is the slow part, five to ten minutes a bank; the screens here five to eight minutes; the build a second; then five to ten minutes of merchant categories. One bank and a broker: twenty to thirty minutes.",
+                   "zh": "要多久：去银行网站下载上个月的文件最花时间，一家 5–10 分钟；这里的几屏 5–8 分钟；生成 1 秒；然后 5–10 分钟给商户归类。一家银行加一家券商：20–30 分钟。"},
     "w_files_q": {"en": "Drop the statements, the broker's holdings and activities exports, a screenshot of anything held abroad — with the banks' own filenames. They are the draft, and the first import.",
                   "zh": "把银行对账单、券商的持仓和交易导出、境外账户的截图放进来——文件名保持银行给的样子。它们既是草稿的来源，也是第一次导入。"},
     "w_drop": {"en": "Drop files here", "zh": "把文件拖到这里"}, "w_or_choose": {"en": "or choose files", "zh": "或选择文件"},

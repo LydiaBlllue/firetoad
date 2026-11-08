@@ -140,6 +140,7 @@ table.cm input{width:100%}
       nav(card, false, ok ? function(){ step = 1; draw(); } : null);
     } else if (step === 1) {
       card.appendChild(el('h2', null, esc(W.w_files_h)));
+      if (S.ready && S.ready.rc === 0) card.appendChild(el('p', 'hint', '✓ ' + esc(W.w_all_in) + ' ' + esc(W.w_how_long)));
       card.appendChild(el('p', 'q', esc(W.w_files_q)));
       var drop = el('div', 'drop', '<b>' + esc(W.w_drop) + '</b><span><label class="lnk">' + esc(W.w_or_choose) + '<input type="file" multiple hidden id="pick"></label></span><small>' + esc(INBOX) + '</small>');
       card.appendChild(drop);
@@ -335,6 +336,7 @@ table.cm input{width:100%}
     }
   }
   if (JOB && !JOB.done && JOB.verb === 'setup') { step = 6; }
+  else if (S.ready && S.ready.rc === 0) { step = 1; }   // everything is in: straight to the files (Back still shows the check)
   draw();
   setInterval(function(){ api('GET', '/api/ping').catch(function(){}); }, 30000);
 })();
