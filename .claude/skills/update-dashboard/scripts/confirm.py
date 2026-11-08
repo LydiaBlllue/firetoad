@@ -62,11 +62,16 @@ def run(root, write=False, ok=False, sets=(), say=None):
     merchants = jload(fd("merchants.json"), {"merchants": []})
     table = {e["match"]: e for e in merchants.get("merchants", [])}
     spend = csv_rows(fd("spending.csv"))
-    count = {}
+    count, total = {}, {}
     for r in spend:
         if float(r["amount"]) > 0:
             k = merchant_key(r["note"])
             count[k] = count.get(k, 0) + 1
+            total[k] = round(total.get(k, 0.0) + float(r["amount"]), 2)
+    # what the whole of spending and its Other come to: the panel shows how much each answer moves
+    spend_total = round(sum(float(r["amount"]) for r in spend if float(r["amount"]) > 0), 2)
+    other_total = round(sum(float(r["amount"]) for r in spend if float(r["amount"]) > 0 and r.get("category") == "Other"), 2)
+    res.update(spendTotal=spend_total, otherTotal=other_total)
 
     # Questions about money first, then merchants by how often they appear: the first rows settle the most.
     items.sort(key=lambda d: count.get(merchant_of(d), 0) * -1 if d.get("kind") == "merchant" else -10 ** 6)
@@ -82,12 +87,17 @@ def run(root, write=False, ok=False, sets=(), say=None):
             else "fits better" if d.get("suggest") else ("first time" if k else d.get("kind", ""))
         emit(f"  {i:>3}  {what[:38]:<38} {str(d.get('default'))[:14]:<14} {str(d.get('suggest') or '')[:14]:<14} "
              f"{count.get(k, '') if k else '':>4}  {why}")
+        # the one category other entries with the same first word carry, if one: the owner's own
+        # earlier answer for the brand, offered first (update.categorise's "brand" rule, for the panel)
+        first = k.split()[0] if k else ""
+        kin = {e["category"] for kk, e in table.items() if first and kk.split()[0] == first and kk != k}
         res["items"].append({"n": i, "kind": d.get("kind"), "what": what, "default": d.get("default"),
                              "suggest": d.get("suggest"), "seen": count.get(k, 0) if k else None, "why": why,
                              # what the item can be answered with (the panel's pills, local-app/panel.py):
                              # money in from no named sender, or a transfer out that may be spending
                              "credit": bool(d.get("credit")), "spent": bool(d.get("row")),
-                             "suggestBy": d.get("suggestBy")})
+                             "suggestBy": d.get("suggestBy"),
+                             "amount": total.get(k) if k else None, "brand": kin.pop() if len(kin) == 1 else None})
 
     # what the owner said
     want, bad = {}, res["bad"]

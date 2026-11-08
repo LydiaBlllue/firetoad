@@ -211,7 +211,32 @@ def choices_for(item):
     return []
 
 
+def qdata(q):
+    """What step 4 draws: every open item with its choices, and the spending totals the Other
+    share is computed from. The page groups them — money first, then the merchants with a
+    suggestion, then the unknown ones as cards by amount."""
+    items = []
+    for it in (q or {}).get("items") or []:
+        d = dict(it)
+        d["choices"] = choices_for(it)
+        if it.get("credit") and d.get("suggest"):
+            d["suggest"] = confirm.INCOMING.get(d["suggest"], d["suggest"])
+        items.append(d)
+    return {"items": items, "spendTotal": (q or {}).get("spendTotal") or 0, "otherTotal": (q or {}).get("otherTotal") or 0}
+
+
 def step4(lang, q):
+    items = (q or {}).get("items") or []
+    if not items:
+        return f'<p class="foot">{e(t(lang, "q_none"))}</p>'
+    # the page draws this step from {{QDATA}}; the markup here is the frame it fills
+    return (f'<p class="q-intro">{e(t(lang, "q_intro"))}</p>'
+            f'<div id="qmoney"></div><div id="qsug"></div><div id="qdeck"></div>'
+            f'<div class="act"><button type="button" class="btn primary" id="save">{e(t(lang, "save_answers"))}</button>'
+            f'<span class="hint">{e(t(lang, "unanswered_keep"))}</span></div>')
+
+
+def step4_legacy(lang, q):
     items = (q or {}).get("items") or []
     if not items:
         return f'<p class="foot">{e(t(lang, "q_none"))}</p>'
@@ -339,6 +364,7 @@ def render(base, root, st, q, rec, job, held, tool=None, lang="en"):
             "{{BUSY}}": busy, "{{NQ}}": str(nq), "{{AI}}": ai_card(lang, root), "{{AI_TITLE}}": e(t(lang, "ai_title")),
             "{{SETTINGS}}": e(t(lang, "settings")),
             "{{JS}}": json.dumps(js_strings(lang), ensure_ascii=False).replace("</", "<\\/"),
+            "{{QDATA}}": json.dumps(qdata(q), ensure_ascii=False).replace("</", "<\\/"),
             "{{VERSION}}": e((tool or {}).get("version") or "")}
     for k, v in fill.items():
         tpl = tpl.replace(k, v)

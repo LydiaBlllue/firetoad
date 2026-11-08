@@ -12,6 +12,12 @@
   the answer on those accounts; a setup from an OFX or CSV download no longer crashes on its
   closing day ("any time"); the everyday figure drafted from a download spanning months is one
   month's — the last full one — not the whole span. Both paths now build the same workspace.
+- **Answering the merchants, redone** (2026-11-07, user 001): the money questions first; the
+  merchants with a suggestion (a known chain, a model's guess) as one list with *Accept all*,
+  each still changeable; the merchants nobody knows one card at a time, biggest first, with
+  the amount and the count, the likeliest categories first and "Other" last, skip or leave the
+  rest, and the share of spending still in Other falling as you go. A card slides away when
+  answered (120 ms, none for anyone who asked their system for less motion).
 
 ## 1.0.2 — 2026-11-07
 
