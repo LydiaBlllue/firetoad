@@ -5,6 +5,12 @@ already shipped is in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Next — 1.0.2
 
+- **Without a Claude plan**: a double-clickable app that opens your folder in your browser —
+  the setup as six screens, the month as five steps, in English or Chinese — running the same
+  code Claude Code runs, on your computer only. A model is optional and off by default; when
+  on, it is asked one thing (which category an unknown merchant is) and answers with a
+  suggestion you confirm. Claude Code stays the other way in. Built and on the branch; signed
+  for download once there is a developer certificate.
 - **More banks and brokers**: TD, Scotiabank, CIBC, Tangerine, Simplii and EQ Bank confirmed on
   real files, and the first brokers beyond Wealthsimple. What is read today:
   [Supported banks and brokers](docs/banks.md).
@@ -17,9 +23,8 @@ already shipped is in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Being considered
 
-- **Without the desktop app.** Setup and the monthly update need Claude Code on a computer
-  today. A way to use it from the web or a phone is considered only if your statements can still
-  stay in your own hands.
+- **From the web or a phone.** The app above still needs a computer. A way to use it from the
+  web or a phone is considered only if your statements can still stay in your own hands.
 
 ## Version numbers
 
