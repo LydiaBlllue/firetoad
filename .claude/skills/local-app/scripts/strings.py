@@ -195,8 +195,8 @@ W = {
     "w_back": {"en": "Back", "zh": "上一步"}, "w_next": {"en": "Next", "zh": "下一步"},
     # 1 ready
     "w_ready_h": {"en": "Is this computer ready?", "zh": "这台电脑准备好了吗？"},
-    "w_ready_q": {"en": "Python and the PDF reader, checked before anything is asked. About twenty minutes with last month's files at hand.",
-                  "zh": "先检查 Python 和 PDF 读取器，再开始问问题。手边有上个月的文件的话，大约二十分钟。"},
+    "w_ready_q": {"en": "Python and the PDF reader, checked before anything is asked. How long this takes: getting last month's files from each bank's website is the slow part, five to ten minutes a bank (one OFX download covers every account at once); the screens here take five to eight minutes, most answers are pre-filled; building and the first import take a second; then five to ten minutes of saying which category each new merchant is. One bank and a broker: twenty to thirty minutes. Every month after: the downloads, then two or three minutes on the panel.",
+                  "zh": "先检查 Python 和 PDF 读取器，再开始问问题。要多久：去每家银行网站下载上个月的文件最花时间，一家 5–10 分钟（OFX 一次下载就包含全部账户）；这里的几屏 5–8 分钟，多数已经预填；生成和首次导入 1 秒；然后 5–10 分钟给新商户归类。一家银行加一家券商：20–30 分钟。以后每个月：下载文件，再在面板上点 2–3 分钟。"},
     "w_ready_ok": {"en": "✓ ready", "zh": "✓ 准备好了"},
     "w_ready_no": {"en": "✗ not yet — install what it names, then reload this page", "zh": "✗ 还没有——装上它点名的东西，然后刷新这一页"},
     "w_nothing": {"en": "nothing to report", "zh": "没有要报告的"},

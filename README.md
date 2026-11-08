@@ -39,7 +39,11 @@ net worth.
 
 ## Get started
 
-About twenty minutes.
+Twenty to thirty minutes for one bank and a broker; add five to ten for each further bank. The
+slow part is downloading last month's files from each bank's website (an OFX download covers
+every account at once); the questions take five to eight minutes, most answers pre-filled; the
+build and the first import take a second; then five to ten minutes of saying which category
+each new merchant is.
 
 1. **Install the [Claude desktop app](https://claude.com/download)** and sign in.
 2. **Download this folder** (*Code → Download ZIP*) and unzip it anywhere on your computer.
@@ -50,7 +54,8 @@ About twenty minutes.
 
 ## Each month
 
-Download the month's statements into `inbox/` and say **"update dashboards"**. You get a short
+About ten minutes: the downloads, then two or three minutes of questions. Download the month's
+statements into `inbox/` and say **"update dashboards"**. You get a short
 report and any questions a program cannot answer, like a merchant it has not seen. In the app
 (below) the same month is the panel's five steps.
 
