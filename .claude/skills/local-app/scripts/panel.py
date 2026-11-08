@@ -258,30 +258,6 @@ def merchants_list(lang, root):
     return "".join(out)
 
 
-def step4_legacy(lang, q):
-    items = (q or {}).get("items") or []
-    if not items:
-        return f'<p class="foot">{e(t(lang, "q_none"))}</p>'
-    out = [f'<p class="q-intro">{e(t(lang, "q_intro"))}</p>']
-    for it in items:
-        ch = choices_for(it)
-        sel = it.get("suggest") or it.get("default")
-        if it.get("credit"):
-            sel = confirm.INCOMING.get(sel, sel)
-        pills = "".join(f'<button type="button" class="pl{" sel" if c == sel else ""}" data-n="{it["n"]}" data-v="{e(c)}">{e(c)}</button>' for c in ch)
-        sug = ""
-        if it.get("suggest"):
-            sug_text = confirm.INCOMING.get(it["suggest"], it["suggest"]) if it.get("credit") else it["suggest"]
-            sug = f' · {e(t(lang, "suggested"))} <b>{e(sug_text)}</b>' + (f'<span class="dot" title="{e(t(lang, "model_dot"))}">●</span>' if it.get("suggestBy") == "model" else "")
-        seen = f' · {e(t(lang, "seen_n", n=it["seen"]))}' if it.get("seen") else ""
-        out.append(f'<div class="q" data-n="{it["n"]}"><div class="qt"><b>{it["n"]}.</b> {e(it.get("what"))}</div>'
-                   f'<div class="qs">{e(t(lang, "filed_as"))} <b>{e(it.get("default"))}</b>{sug}{seen}</div>'
-                   + (f'<div class="pills">{pills}</div>' if pills else f'<div class="qs">{e(t(lang, "in_ledger"))}</div>') + '</div>')
-    out.append(f'<div class="act"><button type="button" class="btn primary" id="save">{e(t(lang, "save_answers"))}</button>'
-               f'<span class="hint">{e(t(lang, "unanswered_keep"))}</span></div>')
-    return "".join(out)
-
-
 # ---------------------------------------------------------------- step 5
 def step5(lang, rec, base):
     if not rec:

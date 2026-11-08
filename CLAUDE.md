@@ -201,8 +201,11 @@ and each missing file's *how do I get it* read from `parsers/support.py` (2026-1
 first version's four internal names left the owner not knowing what to do). The server
 (`local-app/scripts/server.py`) holds **no financial logic**: each route is one call into a
 script's `run()` — `status`, `update`, `update.undo`, `confirm` — and the import still rebuilds
-through `rebuild.py`; the browser reloads the file. One lock file (`.jade.lock`) makes it one
-writer at a time, and its log is `.jade/log/` (both ignored by git). The selftest's *local app*
+through `rebuild.py`; the browser reloads the file. One lock file (`.jade.lock`, `jlock.py` in the
+update-dashboard scripts) makes it one writer at a time **through either door** — the app takes
+it around every verb, and `update`, `confirm` and `balance` refuse to write while another live
+process holds it — and its log is `.jade/log/` (both ignored by git). The dashboard's header
+counts the answers waiting and links to `/panel` when the app serves the page. The selftest's *local app*
 check imports the same month through `update.py --write` and through `POST /api/import` and
 expects identical `findata/` and `archive/`, with one statement uploaded and one balance typed
 through the app. Both doors are the same code, so a change to the import is made once, in the

@@ -30,6 +30,7 @@ import layout  # noqa: E402
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(HERE)), "workspace-checks", "scripts"))
 from check_data import merchant_key  # noqa: E402  the one definition
 import categories  # noqa: E402
+import jlock  # noqa: E402  one writer at a time, both doors
 import verbs  # noqa: E402
 from update import jload, jsave, csv_rows, sender_of  # noqa: E402
 
@@ -247,6 +248,9 @@ def run(root, write=False, ok=False, sets=(), say=None):
     if not write:
         emit("\n  nothing written. Say which to change, then run with --write --ok (and --set N=Category).")
         return verbs.result(res, 0, lines)
+    other = jlock.held_by_other(root)
+    if other:
+        emit(jlock.refusal(other)); return verbs.result(res, 1, lines)
 
     today = datetime.date.today().isoformat()
     changed, closed = 0, 0

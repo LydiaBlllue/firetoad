@@ -18,6 +18,11 @@
   the amount and the count, the likeliest categories first and "Other" last, skip or leave the
   rest, and the share of spending still in Other falling as you go. A card slides away when
   answered (120 ms, none for anyone who asked their system for less motion).
+- **Structure, not features** (2026-11-08, user 001): the panel is a desktop page now — two
+  columns from 1000px, what you do on the left, what the program does on the right, one column
+  below that; the dashboard's header says how many answers wait and, when the app serves the
+  page, links to the panel; the one-writer lock is the core's as well as the app's (`jlock.py`),
+  so an import started in the chat while the app imports is refused, and the other way round.
 - **Who sent it, answered once** (2026-11-07, user 001): an e-Transfer from a named sender is
   asked once — "from Alex Ng, what is it?" — and the answer becomes their rule in
   `senders.json`; the next one from them is typed and not asked. The rule used to live only in

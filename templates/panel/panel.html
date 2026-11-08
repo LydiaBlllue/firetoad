@@ -13,6 +13,15 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;font-size:14px;line-height:1.5;padding:24px 16px 64px}
 .wrap{max-width:600px;margin:0 auto}
+/* desktop first (the dashboard is a desktop page; this runs beside it): two columns from 1000px —
+   what you do on the left (get, put), what the program does on the right (import, answer, done) —
+   one column below that */
+@media (min-width:1000px){
+  .wrap{max-width:1000px}
+  .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+  .col{min-width:0}
+  .deck,.q-intro,#qmoney,#qsug{max-width:620px}
+}
 .brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:12px}
 .brand h1{font-size:19px;font-weight:700;letter-spacing:-.3px}
 .brand small{color:var(--muted);font-size:12px}
@@ -156,10 +165,11 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
   <p class="lead">{{LEAD}}</p>
   {{BUSY}}
 
+  <div class="cols"><div class="col">
   <div class="card" id="step1" data-step="1"><h2><span class="n">1</span>{{S1}}</h2>{{STEP1}}</div>
 
   <div class="card" id="step2" data-step="2"><h2><span class="n">2</span>{{S2}}</h2>{{STEP2}}</div>
-
+  </div><div class="col">
   <div class="card" id="step3" data-step="3"><h2><span class="n">3</span>{{S3}}</h2>
     <div class="act">
       <button type="button" class="btn primary big" id="dry">{{DRY}}</button>
@@ -174,6 +184,7 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
   <div class="card" id="step4" data-step="4"><h2><span class="n">4</span>{{S4}} <span class="muted">({{NQ}})</span></h2>{{STEP4}}<div class="err" id="qerr"></div></div>
 
   <div class="card" id="step5" data-step="5"><h2><span class="n">5</span>{{S5}}</h2>{{STEP5}}</div>
+  </div></div>
 
   <details class="settings"><summary>{{SETTINGS}} · {{AI_TITLE}}</summary>
     <div class="card" id="model" style="margin-top:10px">{{AI}}</div>

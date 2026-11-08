@@ -68,6 +68,7 @@ import preflight  # noqa: E402
 import seen_accounts  # noqa: E402
 import rebuild  # noqa: E402
 import verbs  # noqa: E402
+import jlock  # noqa: E402  one writer at a time, both doors
 import loans  # noqa: E402  what a borrower still owes (loans.py)
 import ai  # noqa: E402  a model, by choice, where the maps miss (ai.py; off unless the owner set one)
 sys.path.insert(0, CHECKS)
@@ -1417,6 +1418,10 @@ def run(root, write=False, hand=None, balance=None, undo_last=False, say=None, l
     if undo_last:
         return undo(root, say=say)
     emit, lines = verbs.speaker(say, loud)
+    other = jlock.held_by_other(root) if write else None
+    if other:
+        emit(jlock.refusal(other), loud_line=True)
+        return verbs.result({"date": datetime.date.today().isoformat(), "written": False, "busy": other}, 1, lines)
     rc, summary = _import(root, write, hand or [], balance or {}, emit)
     return verbs.result(summary, rc, lines)
 

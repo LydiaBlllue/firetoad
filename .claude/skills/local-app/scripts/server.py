@@ -84,6 +84,7 @@ import ai  # noqa: E402  a model, by choice
 import balance  # noqa: E402
 import confirm  # noqa: E402
 import fetch  # noqa: E402  find_root
+import jlock  # noqa: E402  one writer at a time, both doors
 import ocr  # noqa: E402
 import panel  # noqa: E402
 import preflight  # noqa: E402  names a dropped file
@@ -98,60 +99,30 @@ IDLE_EXIT = 300          # seconds without a ping before the server exits
 MAX_BODY = 1 << 20       # a JSON body larger than this is refused
 MAX_UPLOAD = 64 << 20    # and a multipart one larger than this (a month of statements is a few MB)
 IMAGES = (".png", ".jpg", ".jpeg", ".heic", ".webp")
-LOCK_NAME = ".jade.lock"
 
 log = logging.getLogger("jade.app")
 
 
 # ---------------------------------------------------------------- the lock
-def pid_alive(pid):
-    try:
-        os.kill(int(pid), 0)
-    except (OSError, ValueError, TypeError):
-        return False
-    return True
-
-
 class Lock:
-    """The one writer. A file in the workspace with pid, verb and time; taken with O_EXCL so two
-    processes cannot both think they have it. A lock whose pid is dead is stale and is taken over."""
+    """The one writer, shared with the core (jlock.py): the app takes it around every verb; an
+    import started elsewhere while it is held is refused by the core itself."""
 
     def __init__(self, root):
-        self.path = os.path.join(root, LOCK_NAME)
+        self.root = root
+        self.path = jlock.path(root)
 
     def holder(self):
-        try:
-            h = json.load(open(self.path, encoding="utf-8"))
-        except (OSError, ValueError):
-            return None
-        if not pid_alive(h.get("pid")):
-            try:
-                os.remove(self.path)
-            except OSError:
-                pass
-            return None
-        return h
+        return jlock.holder(self.root)
 
     def acquire(self, verb):
         """The verb now running under the lock, or None when this call took it."""
-        held = self.holder()
-        if held:
-            return held.get("verb") or "something"
-        try:
-            fd = os.open(self.path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
-        except FileExistsError:
-            held = self.holder()
-            return (held or {}).get("verb") or "something"
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
-            json.dump({"pid": os.getpid(), "verb": verb, "since": dt.datetime.now().isoformat(timespec="seconds")}, fh)
-        return None
+        if jlock.holder(self.root):            # the app's own earlier job still finishing, or another window
+            return (jlock.holder(self.root) or {}).get("verb") or "something"
+        return jlock.acquire(self.root, verb)
 
     def release(self):
-        try:
-            if (json.load(open(self.path, encoding="utf-8")) or {}).get("pid") == os.getpid():
-                os.remove(self.path)
-        except (OSError, ValueError):
-            pass
+        jlock.release(self.root)
 
 
 # ---------------------------------------------------------------- the job
@@ -213,7 +184,7 @@ class App:
         # two calls that re-read it and refresh it; None when started bare (server.py <ws>)
         self.tool = tool
         self.tool_hooks = tool_hooks or {}
-        self.lock = Lock(self.root)
+        self.lock = Lock(self.root)   # the same file the core's writers respect (jlock.py)
         self.job = None
         self.last_ping = time.monotonic()
         self.port = None
