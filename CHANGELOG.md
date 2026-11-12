@@ -2,6 +2,15 @@
 
 ## 1.0.4 — unreleased
 
+- **Jade Toad is FIRE Toad** (2026-11-12, user 001): the name says what it is for. In Chinese,
+  FIRE蛙. The app is `FIRE Toad.app` (bundle id `app.firetoad.local`), the download
+  `FIRE-Toad-<version>.dmg`, the repository `fire-toad` and the live demo
+  lydiablllue.github.io/fire-toad/ (the old demo address stops working; the old repository
+  address forwards). The first launch under the new name copies the settings the old one
+  remembered, so the same folder opens. Kept under the first name, because people's machines
+  already hold them: the `.jade/` folder and `.jade.lock` in a workspace, `JADE_AI_KEY`, the
+  Keychain entry a model's key is saved under, and the data guard's hook marker. The entries
+  below this one keep the name they were written under.
 - **How to open the download, where you will see it** (2026-11-08, user 001). The disk image
   now shows the app, the Applications folder to drag it onto, and a one-page note in both
   languages on the first launch; `docs/install.md` (and the Chinese page) walks the first launch

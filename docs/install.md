@@ -5,16 +5,16 @@ extra step. Every launch after that is a double-click. (中文：[安装说明](
 
 ## 1. Download and copy
 
-Open the [releases page](https://github.com/lydiablllue/jade-toad/releases), download
-`JadeToad-<version>.dmg`, double-click it and drag **Jade Toad** onto the **Applications**
+Open the [releases page](https://github.com/lydiablllue/fire-toad/releases), download
+`FIRE-Toad-<version>.dmg`, double-click it and drag **FIRE Toad** onto the **Applications**
 folder beside it. The disk image also holds a short note with these same steps.
 
 ## 2. The first launch
 
 **macOS 15 (Sequoia) and newer**
 
-1. Double-click Jade Toad in Applications. macOS says *"Jade Toad" Not Opened — Apple could not
-   verify "Jade Toad" is free of malware*. Click **Done** (not *Move to Trash*).
+1. Double-click FIRE Toad in Applications. macOS says *"FIRE Toad" Not Opened — Apple could not
+   verify "FIRE Toad" is free of malware*. Click **Done** (not *Move to Trash*).
 2. Open **System Settings → Privacy & Security** and scroll to the bottom. A line says *"Jade
    Toad" was blocked to protect your Mac*. Click **Open Anyway** and confirm with your password
    or Touch ID.
@@ -22,7 +22,7 @@ folder beside it. The disk image also holds a short note with these same steps.
 
 **macOS 14 (Sonoma) and earlier**
 
-1. In Applications, right-click (or Control-click) Jade Toad and choose **Open**.
+1. In Applications, right-click (or Control-click) FIRE Toad and choose **Open**.
 2. The dialog now has an **Open** button. Click it.
 
 If the dialog says the app is *damaged* instead, the download was interrupted: delete it and

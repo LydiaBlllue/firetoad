@@ -54,7 +54,7 @@ COLUMNS = {"stocks": "S&P 500 (includes dividends)", "cash": "3-month T.Bill",
 
 
 def get(url, body=None, text=False):
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (jade-toad prices.py)",
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (fire-toad prices.py)",
                                                "Content-Type": "application/json"},
                                  data=json.dumps(body).encode() if body else None)
     with urllib.request.urlopen(req, timeout=30) as r:

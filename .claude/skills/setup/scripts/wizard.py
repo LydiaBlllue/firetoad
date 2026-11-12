@@ -251,7 +251,7 @@ def apply(root, answers, write=False, say=None):
     a = merge(draft, answers or {}, today)
     res["answers"] = a
     if not a.get("owner"):
-        emit("  ✗ a name is needed: it is shown under the Jade Toad wordmark", loud_line=True)
+        emit("  ✗ a name is needed: it is shown under the FIRE Toad wordmark", loud_line=True)
         return verbs.result(res, 1, lines)
     emit(f"=== setup — {a['owner']}, {len(a.get('accounts') or [])} account(s), import day {a.get('importDay', 1)} ===")
     if not write:

@@ -22,7 +22,7 @@ WINDOW = {"size": (W, H), "icon_size": ICON}
 ICONS = {"app": APP, "apps": APPS, "note": NOTE}
 
 PAGE, INK2, MUTED, LINE, ACCENT = "#f9f9f7", "#52514e", "#75736d", "#e4e2dc", "#1a7a4a"
-LINES = ("Drag Jade Toad onto Applications", "把 Jade Toad 拖进 Applications")
+LINES = ("Drag FIRE Toad onto Applications", "把 FIRE Toad 拖进 Applications")
 FOOT = "First launch? Read this first  ·  第一次打开前先看这个"
 FONTS = ("/System/Library/Fonts/Hiragino Sans GB.ttc", "/System/Library/Fonts/STHeiti Medium.ttc",
          "/System/Library/Fonts/Supplemental/Arial Unicode.ttf")

@@ -446,7 +446,7 @@ def multipart(ctype, body):
 
 # ---------------------------------------------------------------- HTTP
 class Handler(http.server.BaseHTTPRequestHandler):
-    server_version = "JadeToad/1"
+    server_version = "FIRE-Toad/1"
     app = None  # set by serve()
 
     def log_message(self, fmt, *args):   # the access log is noise; failures are logged by the app
@@ -664,7 +664,7 @@ def main(argv):
     if not root:
         print("✗ no workspace here (looked upward for findata/ and dashboards/)")
         return 2
-    return serve(root, a.port, ready=lambda url, app: print(f"  Jade Toad is at {url}", flush=True))
+    return serve(root, a.port, ready=lambda url, app: print(f"  FIRE Toad is at {url}", flush=True))
 
 
 if __name__ == "__main__":

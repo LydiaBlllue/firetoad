@@ -24,7 +24,7 @@ import sys
 
 DATA = ("findata/", "inbox/", "archive/", "dashboards/", "decisions/", "OWNER.md", ".private/")
 PROFILES = ("findata/register/profile.json", "findata/profile.json")
-MARK = "# jade-toad data guard"
+MARK = "# jade-toad data guard"   # the product's first name, kept: installed hooks are found by it
 LINE = MARK + '\npython3 "$(git rev-parse --show-toplevel)/.claude/skills/setup/scripts/guard.py" || exit 1\n'
 
 

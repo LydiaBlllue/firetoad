@@ -1,6 +1,6 @@
 # Security and privacy
 
-Jade Toad's promise is that your statements and your numbers never leave your computer. A way
+FIRE Toad's promise is that your statements and your numbers never leave your computer. A way
 around that promise is the most serious kind of bug it can have.
 
 ## What to report

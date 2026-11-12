@@ -5,23 +5,23 @@
 
 ## 1. 下载并拷入
 
-打开[发布页](https://github.com/lydiablllue/jade-toad/releases)，下载
-`JadeToad-<版本>.dmg`，双击它，把 **Jade Toad** 拖到旁边的 **Applications（应用程序）**
+打开[发布页](https://github.com/lydiablllue/fire-toad/releases)，下载
+`FIRE-Toad-<版本>.dmg`，双击它，把 **FIRE Toad** 拖到旁边的 **Applications（应用程序）**
 文件夹上。磁盘映像里还有一份写着这几步的简短说明。
 
 ## 2. 第一次打开
 
 **macOS 15（Sequoia）及更新**
 
-1. 在「应用程序」里双击 Jade Toad。macOS 会说 *"Jade Toad"未打开——Apple 无法验证"Jade Toad"是否
+1. 在「应用程序」里双击 FIRE Toad。macOS 会说 *"FIRE Toad"未打开——Apple 无法验证"FIRE Toad"是否
    包含恶意软件*。点 **完成**（不要点「移到废纸篓」）。
-2. 打开 **系统设置 → 隐私与安全性**，拉到最底下，有一行 *已阻止"Jade Toad"以保护 Mac*。点
+2. 打开 **系统设置 → 隐私与安全性**，拉到最底下，有一行 *已阻止"FIRE Toad"以保护 Mac*。点
    **仍要打开**，输密码或 Touch ID 确认。
 3. 再弹一次对话框，点 **打开**。
 
 **macOS 14（Sonoma）及更早**
 
-1. 在「应用程序」里右键（或按住 Control 点）Jade Toad，选 **打开**。
+1. 在「应用程序」里右键（或按住 Control 点）FIRE Toad，选 **打开**。
 2. 这次对话框里有「打开」按钮，点它。
 
 如果对话框说应用*已损坏*，是下载没完成：删掉，重新下载磁盘映像。

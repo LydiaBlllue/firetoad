@@ -1,4 +1,4 @@
-# Jade Toad 是怎么工作的
+# FIRE Toad 是怎么工作的
 
 [README](../../README.zh.md) 背后的细节。
 

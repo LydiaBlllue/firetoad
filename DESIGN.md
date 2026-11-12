@@ -7,8 +7,8 @@
 
 ## 1. Brand and language
 
-- Title: **Jade Toad · `<owner>`**, the owner from `findata/register/profile.json`, never typed
-  into the markup. In the sidebar it is the product name, **Jade Toad**, with the owner's name in
+- Title: **FIRE Toad · `<owner>`**, the owner from `findata/register/profile.json`, never typed
+  into the markup. In the sidebar it is the product name, **FIRE Toad**, with the owner's name in
   small type beneath it.
 - Interface language: **English throughout** — labels, buttons, hints, empty states, every page.
 - Fifteen fixed spending categories in two groups, in English (FINANCE.md §3a,
@@ -320,7 +320,7 @@
   - **The two rules line up**: the sidebar wordmark and `.pghead` share `--headh:92px` and are
     both fixed-height with a bottom border, so both rules land on the same y on every page.
     Change the variable, never one side of it.
-- The top of the sidebar holds only the coin mark and **Jade Toad** with the owner's name
+- The top of the sidebar holds only the coin mark and **FIRE Toad** with the owner's name
   beneath (it clicks back to Home): flat colour, no gradients or shadows. No data date there —
   freshness belongs to Statements and the sidebar dots.
 - **A number in the page header is not repeated in the page**: no page has a Net worth card.

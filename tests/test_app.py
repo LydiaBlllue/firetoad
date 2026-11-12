@@ -8,6 +8,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 import _paths  # noqa: F401
 sys.path.insert(0, _paths.ROOT)
@@ -86,6 +87,22 @@ class Remembering(unittest.TestCase):
         p = app.settings_path()
         self.assertTrue(p.endswith(os.path.join(app.APP_NAME, "settings.json")))
         self.assertNotIn("findata", p)
+
+    def test_settings_under_the_old_name_come_along(self):
+        # renamed from Jade Toad (2026-11-12): the folder an owner chose has to keep opening
+        home = tempfile.mkdtemp(prefix="jt_home_")
+        try:
+            env = {"HOME": home, "XDG_CONFIG_HOME": os.path.join(home, ".config"), "APPDATA": os.path.join(home, "AppData")}
+            with mock.patch.dict(os.environ, env):
+                old = os.path.join(os.path.dirname(app.support_dir()), app.LEGACY_NAMES[0])
+                os.makedirs(old)
+                json.dump({"workspace": "/somewhere/mine"}, open(os.path.join(old, "settings.json"), "w"))
+                p = app.settings_path()
+                self.assertTrue(p.endswith(os.path.join(app.APP_NAME, "settings.json")))
+                self.assertEqual(json.load(open(p))["workspace"], "/somewhere/mine")
+                self.assertTrue(os.path.exists(os.path.join(old, "settings.json")))   # the old one stays
+        finally:
+            shutil.rmtree(home)
 
     def test_is_workspace_needs_both_folders(self):
         d = tempfile.mkdtemp(prefix="jt_ws_")

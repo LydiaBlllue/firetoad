@@ -1,6 +1,6 @@
 ---
 name: local-app
-description: Open Jade Toad in the browser without Claude — start the local app (python3 app.py), which serves the built dashboard and the monthly panel (Bring · Import · Questions · Result) on 127.0.0.1 and runs the same scripts the import skills run. Use when the owner says "open the app", "start the local app", 打开本地应用, 不用 Claude 打开面板, or asks how someone without a Claude plan runs their workspace.
+description: Open FIRE Toad in the browser without Claude — start the local app (python3 app.py), which serves the built dashboard and the monthly panel (Bring · Import · Questions · Result) on 127.0.0.1 and runs the same scripts the import skills run. Use when the owner says "open the app", "start the local app", 打开本地应用, 不用 Claude 打开面板, or asks how someone without a Claude plan runs their workspace.
 ---
 
 # The local app — the second door
@@ -15,7 +15,7 @@ python3 app.py
 ```
 
 That is the whole instruction — or, packaged, a double-click: `python3 build/build.py` makes
-`dist/Jade Toad.app` (a folder with Python and the tool inside, no data; `build/build.py` says
+`dist/FIRE Toad.app` (a folder with Python and the tool inside, no data; `build/build.py` says
 what goes in and what never does). The packaged app asks for the workspace folder on its first
 launch — *Open a folder* or *Make one* — and remembers it in the system's application-support
 folder, never in the workspace; `--choose` asks again. On every launch it compares the folder's
@@ -66,7 +66,7 @@ at exactly one place: a merchant that merchants.json, the earlier rows, the bran
 starter map all miss. It sends the merchant string and the fifteen category names, nothing
 else; the answer has to be one of the fifteen or it is dropped; it becomes the question's
 *suggestion* (a dot marks it on the panel) and never the filing — Other stays until the owner
-confirms. The key lives in the macOS Keychain (service "Jade Toad"), never in the workspace;
+confirms. The key lives in the macOS Keychain (service "Jade Toad", the product's first name, kept so a key already saved is still found), never in the workspace;
 the choice in .jade/settings.json; every exchange in .jade/log/ai.jsonl; one merchant costs
 one call (.jade/ai_cache.json). The same setting from this chat:
 `python3 .claude/skills/update-dashboard/scripts/ai.py . status | set <provider> … | off | test "<merchant>"`.

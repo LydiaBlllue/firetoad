@@ -392,7 +392,7 @@ def render(base, root, st, q, rec, job, held, tool=None, lang="en"):
     elif held:
         busy += f'<p class="busy">{e(t(lang, "held", verb=held.get("verb"), since=held.get("since")))}</p>'
     day = st.get("importDay")
-    fill = {"{{BASE}}": e(base), "{{LANG}}": e(lang), "{{TITLE}}": "Jade Toad",
+    fill = {"{{BASE}}": e(base), "{{LANG}}": e(lang), "{{TITLE}}": "FIRE Toad",
             "{{SUBTITLE}}": e(t(lang, "subtitle", date=st.get("today"))),
             "{{INTRO}}": e(t(lang, "intro")) + (f' <span class="muted">({e(t(lang, "import_day", day=day))})</span>' if day else ""),
             "{{OPEN_DASH}}": e(t(lang, "open_dash")), "{{LANG_OTHER}}": e(t(lang, "lang_other")),

@@ -4,11 +4,11 @@
   <img src="docs/hero.png" alt="" width="180">
 </p>
 
-# Jade Toad
+# FIRE Toad
 
 **Your money on one page, for working toward financial independence in Canada.**
 
-**[Open the live demo →](https://lydiablllue.github.io/jade-toad/)** a made-up owner's page,
+**[Open the live demo →](https://lydiablllue.github.io/fire-toad/)** a made-up owner's page,
 nothing to install.
 
 Once a month you drop your bank statements into a folder. The tool reads them, checks that
@@ -21,8 +21,8 @@ you own, how far you are from FIRE. No bank login, no server, no account anywher
 
 | | **The app** — no Claude plan | **Claude Code** |
 |---|---|---|
-| What it is | `Jade Toad.app` on a Mac: your folder in your browser — the setup as six screens, the month as five steps, in English or Chinese | the same folder, driven in the chat of the Claude desktop app |
-| You need | a Mac and the download from the [releases page](https://github.com/lydiablllue/jade-toad/releases) (not signed yet: the first launch takes one extra step — [how to open it](docs/install.md)) | a Claude plan that includes Claude Code (Pro, Max, Team or Enterprise), the Claude desktop app, Python 3 |
+| What it is | `FIRE Toad.app` on a Mac: your folder in your browser — the setup as six screens, the month as five steps, in English or Chinese | the same folder, driven in the chat of the Claude desktop app |
+| You need | a Mac and the download from the [releases page](https://github.com/lydiablllue/fire-toad/releases) (not signed yet: the first launch takes one extra step — [how to open it](docs/install.md)) | a Claude plan that includes Claude Code (Pro, Max, Team or Enterprise), the Claude desktop app, Python 3 |
 | Best when | your bank is one the tool reads (RBC, BMO, or any bank's OFX download) and your broker is Wealthsimple | a statement no parser reads, a bank's CSV to map, anything held abroad, a loan to a friend, a question in words |
 
 Both run the very same code, on your computer only, and the same checks hold both to the same
@@ -59,7 +59,7 @@ each new merchant is.
 
 **With the app**
 
-1. **Download `Jade Toad.app`** from the [releases page](https://github.com/lydiablllue/jade-toad/releases), open the disk image, drag the
+1. **Download `FIRE Toad.app`** from the [releases page](https://github.com/lydiablllue/fire-toad/releases), open the disk image, drag the
    app to Applications. The first launch takes one extra step because the download is not
    signed yet: **[how to open it](docs/install.md)** (System Settings → Privacy & Security →
    *Open Anyway*; on macOS 14 and earlier, right-click → *Open*).
@@ -88,7 +88,7 @@ report and any questions a program cannot answer, like a merchant it has not see
 
 ## The app, in more detail
 
-**Jade Toad.app** — the disk image on the [releases page](https://github.com/lydiablllue/jade-toad/releases), or `python3 app.py` in this
+**FIRE Toad.app** — the disk image on the [releases page](https://github.com/lydiablllue/fire-toad/releases), or `python3 app.py` in this
 folder with Python 3 and pypdf installed — opens your folder in your browser. The first launch
 asks where your folder is, or makes one and walks you through the setup in six screens; every
 month after that, a panel of five steps: get this month's files, put them here, import, answer

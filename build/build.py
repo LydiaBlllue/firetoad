@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """build.py — the double-clickable app: this tool, its Python and the demo, in one folder.
 
-    python3 build/build.py                      # dist/Jade Toad.app (macOS) or dist/Jade Toad/ (Windows, Linux)
+    python3 build/build.py                      # dist/FIRE Toad.app (macOS) or dist/FIRE Toad/ (Windows, Linux)
     python3 build/build.py --sign "Developer ID Application: …" --notarize <keychain profile>
     python3 build/build.py --no-dmg             # skip the .dmg / .zip
 
@@ -28,9 +28,9 @@ Signing for real, once per Mac:
   2. Xcode → Settings → Accounts → the Apple ID → Manage Certificates → + → Developer ID
      Application. `security find-identity -v -p codesigning` then lists it.
   3. An app-specific password (account.apple.com → Sign-In and Security), then
-     xcrun notarytool store-credentials jadetoad --apple-id <the Apple ID> --team-id <team>
-     which asks for that password and keeps it in the Keychain under the profile "jadetoad".
-  4. python3 build/build.py --sign "Developer ID Application: <name> (<team>)" --notarize jadetoad uv is used for
+     xcrun notarytool store-credentials firetoad --apple-id <the Apple ID> --team-id <team>
+     which asks for that password and keeps it in the Keychain under the profile "firetoad".
+  4. python3 build/build.py --sign "Developer ID Application: <name> (<team>)" --notarize firetoad uv is used for
 PyInstaller when it is installed (a pinned, modern Python); otherwise this interpreter's.
 """
 import argparse
@@ -47,7 +47,7 @@ sys.path.insert(0, os.path.join(TOOL, "tools"))
 sys.path.insert(0, HERE)   # dmg_art.py, the disk image window
 import sync  # noqa: E402  SYNCED: the one list of what the tool is
 
-NAME = "Jade Toad"
+NAME = "FIRE Toad"
 DATA_EXTRA = ("LICENSE", "README.md")   # beside SYNCED: what a reader expects. No findata/: Make one
 # starts a folder with no one's data in it (2026-11-08), so the demo owner has no reason to ship
 EXCLUDE_DIRS = {"__pycache__", ".DS_Store"}
@@ -154,7 +154,7 @@ def build(args):
     ]
     if sys.platform == "darwin":
         cmd += ["--collect-all", "ocrmac", "--hidden-import", "objc", "--hidden-import", "Vision", "--hidden-import", "Quartz",
-                "--hidden-import", "PIL", "--osx-bundle-identifier", "app.jadetoad.local"]
+                "--hidden-import", "PIL", "--osx-bundle-identifier", "app.firetoad.local"]
     icon = os.path.join(HERE, "icon.icns" if sys.platform == "darwin" else "icon.ico")
     if os.path.exists(icon):
         cmd += ["--icon", icon]
@@ -189,7 +189,7 @@ def build(args):
     ver = version()
     if not args.no_dmg:
         if sys.platform == "darwin":
-            dmg = os.path.join(dist, f"JadeToad-{ver}.dmg")
+            dmg = os.path.join(dist, f"FIRE-Toad-{ver}.dmg")
             if os.path.exists(dmg):
                 os.remove(dmg)
             make_dmg(out, dmg)
@@ -201,7 +201,7 @@ def build(args):
                 run(["spctl", "--assess", "--type", "open", "--context", "context:primary-signature", "-v", dmg])
             print(f"\n  ✓ {dmg}")
         else:
-            z = shutil.make_archive(os.path.join(dist, f"JadeToad-{ver}-{platform.system().lower()}"), "zip", dist, NAME)
+            z = shutil.make_archive(os.path.join(dist, f"FIRE-Toad-{ver}-{platform.system().lower()}"), "zip", dist, NAME)
             print(f"\n  ✓ {z}")
     how = ("  (notarised: any Mac opens it with a double-click)" if args.notarize else
            "  (hardened, ad-hoc: a local test of the signed build)" if args.sign == "-" else
@@ -288,7 +288,7 @@ def make_dmg(app, dmg):
     notes = [os.path.join(HERE, "dmg", f) for f in sorted(os.listdir(os.path.join(HERE, "dmg"))) if not f.startswith(".")]
     vol = os.path.join("/Volumes", NAME)
     if os.path.exists(vol):
-        # Finder is told the disk by name; a second one would be "Jade Toad 1" and the layout
+        # Finder is told the disk by name; a second one would be "FIRE Toad 1" and the layout
         # would land on whichever Finder found first
         sys.exit(f'  ✗ a disk named {NAME} is mounted: eject it first (Finder, or hdiutil detach "{vol}")')
     work = tempfile.mkdtemp(prefix="jade-dmg-")

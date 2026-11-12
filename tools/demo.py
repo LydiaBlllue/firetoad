@@ -429,7 +429,7 @@ def build(out):
 
     J("profile.json", OrderedDict([
         ("note", "Who this workspace belongs to. The FIRST thing to change when you make it yours: "
-                 "the name appears in the browser tab and under the Jade Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. Jade Toad itself is the product, not a setting."),
+                 "the name appears in the browser tab and under the FIRE Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. FIRE Toad itself is the product, not a setting."),
         ("schema", 18), ("demo", True), ("owner", P["name"]), ("born", 1994), ("importDay", 1)]))
     J("plan.json", OrderedDict([
         ("note", "Your planning assumptions. `planBase` is the monthly planning spend the FIRE target is built on (× 12 × 25); `skipMonths` are months excluded from every comparison, each with the reason the page shows. `retirement` holds the projection scenarios and the late-life care model; `descriptions` are your own one-liners under the net-worth parts (leave them out and the page describes each part from the register)."),

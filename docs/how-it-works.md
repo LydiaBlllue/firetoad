@@ -1,4 +1,4 @@
-# How Jade Toad works
+# How FIRE Toad works
 
 The detail behind the [README](../README.md).
 

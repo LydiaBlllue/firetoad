@@ -199,7 +199,7 @@ def build(a, today):
 
     out[layout.rel("profile.json")] = json.dumps({
         "note": "Who this workspace belongs to. The FIRST thing to change when you make it yours: "
-                "the name appears in the browser tab and under the Jade Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. Jade Toad itself is the product, not a setting.",
+                "the name appears in the browser tab and under the FIRE Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. FIRE Toad itself is the product, not a setting.",
         "schema": 18,
         "owner": a["owner"],
         # A question skipped is null, never a default that reads as a fact (2026-10-28, first

@@ -409,7 +409,7 @@ def propose(root, inbox):
     # --- the rest, which no file carries
     holder = holders.most_common(1)[0][0] if holders else None
     questions.insert(0, {"id": "owner", "q": (f"Your statements say {holder}. " if holder else "") +
-                                             "What name should show under Jade Toad?",
+                                             "What name should show under FIRE Toad?",
                          "suggest": holder.title() if holder else None})
     questions.insert(1, {"id": "born", "q": "Roughly what year were you born? (Only the retirement-age arithmetic uses it.)"})
     questions.insert(2, {"id": "accounts", "q": f"Is the accounts table right? Change a name, a kind, what an account is for, "

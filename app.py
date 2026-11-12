@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""app.py — Jade Toad without Claude: the dashboard and the monthly panel in your browser.
+"""app.py — FIRE Toad without Claude: the dashboard and the monthly panel in your browser.
 
     python3 app.py                # this folder's workspace, a free port, the browser opened
-    python3 app.py ~/JadeToad     # another workspace
+    python3 app.py ~/FireToad     # another workspace
     python3 app.py --choose       # ask for the folder again (it is remembered between launches)
     python3 app.py --no-browser   # print the address instead of opening it
 
@@ -13,7 +13,7 @@ Claude Code skills run; this is only the second door to it (ROADMAP 2.0.0;
 .claude/skills/local-app/scripts/server.py has the routes).
 
 Packaged (build/build.py makes a double-clickable app with Python inside), the same file is the
-app's entry: the first launch asks where your Jade Toad folder is — or makes one — and remembers
+app's entry: the first launch asks where your FIRE Toad folder is — or makes one — and remembers
 it in the system's application-support folder, never in the workspace. On every launch it
 compares the folder's copy of the tool with its own and offers to refresh the copy, so a folder
 used through both doors runs one version; a folder whose data is newer than the app is shown
@@ -33,7 +33,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FROZEN = bool(getattr(sys, "frozen", False))
 # where the tool's own copy lives: beside this file, or inside the packaged app
 TOOL = getattr(sys, "_MEIPASS", HERE) if FROZEN else HERE
-APP_NAME = "Jade Toad"
+APP_NAME = "FIRE Toad"
 
 
 def _run_script_mode():
@@ -73,8 +73,22 @@ def support_dir():
     return os.path.join(base, APP_NAME)
 
 
+LEGACY_NAMES = ("Jade Toad",)   # what the app was called before; its settings come along (2026-11-12)
+
+
 def settings_path():
-    return os.path.join(support_dir(), "settings.json")
+    """settings.json in this app's folder. The first launch under a new name finds the old
+    folder's settings and copies them over (the old ones stay), so the folder the owner chose
+    is still the one that opens."""
+    p = os.path.join(support_dir(), "settings.json")
+    if not os.path.exists(p):
+        for old in LEGACY_NAMES:
+            q = os.path.join(os.path.dirname(support_dir()), old, "settings.json")
+            if os.path.exists(q):
+                os.makedirs(os.path.dirname(p), exist_ok=True)
+                shutil.copyfile(q, p)
+                break
+    return p
 
 
 def load_settings():
@@ -145,7 +159,7 @@ def make_workspace(dest):
     import sync
     os.makedirs(dest, exist_ok=True)
     if os.listdir(dest) and not is_workspace(dest):
-        raise SystemExit(f"✗ {dest} is not empty and not a Jade Toad folder; choose an empty one")
+        raise SystemExit(f"✗ {dest} is not empty and not a FIRE Toad folder; choose an empty one")
     prof = os.path.join(dest, "findata", "register", "profile.json")
     if not os.path.exists(prof):
         os.makedirs(os.path.dirname(prof), exist_ok=True)
@@ -170,7 +184,7 @@ def choose_workspace(args):
             return ws
         if args.make:
             return make_workspace(os.path.abspath(args.root))
-        raise SystemExit(f"✗ {args.root} is not a Jade Toad workspace (no findata/ and dashboards/ in it or above it)")
+        raise SystemExit(f"✗ {args.root} is not a FIRE Toad workspace (no findata/ and dashboards/ in it or above it)")
     s = load_settings()
     if not args.choose:
         # `python3 app.py` inside a workspace means that workspace, whatever the packaged app
@@ -183,10 +197,10 @@ def choose_workspace(args):
         if is_workspace(s.get("workspace")):
             return s["workspace"]
     while True:
-        pick = ask_choice("Where is your Jade Toad folder?", ["Open a folder", "Make one", "Quit"])
+        pick = ask_choice("Where is your FIRE Toad folder?", ["Open a folder", "Make one", "Quit"])
         if pick in (None, "Quit"):
             return None
-        d = ask_folder("Choose your Jade Toad folder" if pick == "Open a folder" else "Choose an empty folder for Jade Toad")
+        d = ask_folder("Choose your FIRE Toad folder" if pick == "Open a folder" else "Choose an empty folder for FIRE Toad")
         if not d:
             return None
         if pick == "Make one":
@@ -194,7 +208,7 @@ def choose_workspace(args):
         ws = find_root(d)
         if ws:
             return ws
-        again = ask_choice(f"{d} has no findata/ and dashboards/. It is not a Jade Toad folder yet.",
+        again = ask_choice(f"{d} has no findata/ and dashboards/. It is not a FIRE Toad folder yet.",
                            ["Choose again", "Make one here", "Quit"])
         if again == "Make one here":
             return make_workspace(d)

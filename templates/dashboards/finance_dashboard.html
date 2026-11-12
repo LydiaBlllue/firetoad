@@ -4,7 +4,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2211%22%20r%3D%228.6%22%20fill%3D%22%23f0c649%22/%3E%3Cg%20fill%3D%22%230b0b0b%22%3E%3Cpath%20d%3D%22M11%2013.4c2.1%200%203.6%201.7%204%203.4.2%201.1-.4%201.9-1.6%201.9H8.6c-1.1%200-1.8-.8-1.5-1.9.4-1.7%201.9-3.4%203.9-3.4Z%22/%3E%3Ccircle%20cx%3D%2210.6%22%20cy%3D%2211.6%22%20r%3D%222.5%22/%3E%3Cpath%20d%3D%22M12.3%2010.2c1.4-1%203.3-1.2%204.7-.5.7.3.7%201.1.1%201.5-1.1.8-2.6%201.2-3.8.9-.9-.2-1.2-1.1-1-1.9Z%22/%3E%3C/g%3E%3C/svg%3E">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jade Toad</title>   <!-- becomes "Jade Toad · <owner>" on load -->
+<title>FIRE Toad</title>   <!-- becomes "FIRE Toad · <owner>" on load -->
 <style>
 :root{
   color-scheme: light;
@@ -350,7 +350,7 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
         <polyline points="50,63 38,63 30,73 20,73"/><polyline points="50,63 62,63 70,73 80,73"/>
       </g>
     </svg>
-    <span class="wm"><span id="brandText">Jade Toad</span><small id="brandOwner"></small></span>
+    <span class="wm"><span id="brandText">FIRE Toad</span><small id="brandOwner"></small></span>
   </button>
   <nav id="sideNav"></nav>
     <a id="toPanel" class="to-panel" href="panel" hidden>Monthly import →</a>
@@ -812,9 +812,9 @@ const CP = INVEST.counterparty || null;   // who pays money back, from cashflow.
 const VERSION = "1.0.3";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
 // The brand is data, not markup: it used to be typed into the <title>, the sidebar and the link
 // between the two dashboards, which is three places to miss when someone makes this theirs.
-// Jade Toad is the product; the owner's name is the instance. Both are shown, neither typed
+// FIRE Toad is the product; the owner's name is the instance. Both are shown, neither typed
 // into markup: the name comes from findata/profile.json (the owner, 2026-09-10).
-const PRODUCT = "Jade Toad";
+const PRODUCT = "FIRE Toad";
 document.title = PRODUCT + (PROFILE.owner ? " · " + PROFILE.owner : "");
 addEventListener("DOMContentLoaded", () => {
   const b = document.getElementById("brandText"); if(b) b.textContent = PRODUCT;
@@ -3369,7 +3369,7 @@ function headerLine(){
   const served = location.protocol.startsWith("http") && /\/t\/[^/]+\//.test(location.pathname);
   const waiting = !open ? "" : (served
     ? '<a class="hdr-wait" href="panel">' + open + " to confirm \u2192 the panel</a>"
-    : '<span class="hdr-wait">' + open + " to confirm \u2014 open Jade Toad, or say so in the chat</span>");
+    : '<span class="hdr-wait">' + open + " to confirm \u2014 open FIRE Toad, or say so in the chat</span>");
   return (req.length ? term("complete_to") + " " + dLong(req[0]) : "")
     + (req.length && last ? '<span class="gap"></span>' : "")
     + (last ? "Updated " + dLong(last) : "") + waiting;

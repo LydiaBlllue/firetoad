@@ -16,7 +16,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 INK, MUTED, PAGE, CARD, LINE = "#1c1c1a", "#6b6f6c", "#f9f9f7", "#fcfcfb", "#d8dcd9"
 BLUE, PURPLE, AMBER, RED = "#2a78d6", "#4a3aa7", "#c98500", "#d03b3b"
 
-# ---- 版式:三列(你 / Jade Toad / 页面)自上而下,四个阶段是横向色带 ----------------------
+# ---- 版式:三列(你 / FIRE Toad / 页面)自上而下,四个阶段是横向色带 ----------------------
 W = 1180
 GUTTER_L, LABEL_W = 20, 120          # 左侧阶段标签
 COL_X0, COL_W, COL_GAP = 170, 300, 30
@@ -25,7 +25,7 @@ ROW_GAP, PHASE_GAP, PHASE_PAD = 22, 28, 18
 FONT, LINE_H, PAD_V = 12.5, 16, 12
 
 COLS = [("you",  "你",           INK),
-        ("jr",   "Jade Toad",    PURPLE),
+        ("jr",   "FIRE Toad",    PURPLE),
         ("page", "页面",         BLUE)]
 
 # key, 标题, 副标题
