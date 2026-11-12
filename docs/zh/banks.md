@@ -16,7 +16,7 @@ FIRE Toad 能读哪些银行、券商的哪些文件。每个文件都要先核�
 |---|:---:|:---:|:---:|
 | [RBC](#rbc) | ✓ | ✓ | ✓ |
 | [BMO](#bmo) | ✓ | ✓ 支票、储蓄、美元账户 · ○ Mastercard | ✓ |
-| [TD](#td) | — | ○ | ○ |
+| [TD](#td) | — | ✓ 支票、美元支票 · ○ 储蓄、Visa | ✓ 支票 · ○ Visa |
 | [Scotiabank](#scotiabank) | — | ○ | ○ |
 | [CIBC](#cibc) | — | ○ | ○ |
 | [Tangerine](#tangerine) | — | ○ | ○ |
@@ -66,8 +66,10 @@ FIRE Toad 能读哪些银行、券商的哪些文件。每个文件都要先核�
 
 **推荐**：先用 **OFX**；读不了再用 CSV。
 
-- ○ OFX / QFX 下载 · 支票、储蓄、Visa：EasyWeb → Download transactions → Quicken 或 Money
-- ○ CSV 下载 · 支票、储蓄、Visa：EasyWeb → Download transactions → Spreadsheet（accountactivity.csv） — 支票文件有余额列，可以按它核对。
+- ✓ OFX / QFX 下载 · 支票、美元支票：EasyWeb → Download transactions → Quicken 或 Money — 文件里有币种和 TD 自己的余额。
+- ○ OFX / QFX 下载 · 储蓄、Visa：EasyWeb → Download transactions → Quicken 或 Money
+- ✓ CSV 下载 · 支票：EasyWeb → Download transactions → Spreadsheet（accountactivity.csv） — 有余额列，逐行核对。文件里没有币种：美元账户会问一次。优先用 OFX。
+- ○ CSV 下载 · Visa：EasyWeb → 信用卡 → Download transactions → Spreadsheet — 据说和支票同样的列，日期是 MM/DD/YYYY；还没读过真实文件。
 
 ### Scotiabank
 

@@ -193,6 +193,15 @@ table.cm input{width:100%}
           bl.oninput = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).balance = bl.value; };
           rw.appendChild(bl);
         }
+        if (r.askCur) {
+          var cs = el('div', 'pills'), cur = (A.accounts[r.i] || {}).cur || r.cur || 'CAD';
+          [['CAD', 'Canadian dollars'], ['USD', 'US dollars']].forEach(function(c){
+            var p = el('button', 'pl' + (c[0] === cur ? ' sel' : ''), esc(c[1]) + '<small>the download does not say which</small>'); p.type = 'button';
+            p.onclick = function(){ cs.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); p.classList.add('sel'); (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).cur = c[0]; };
+            cs.appendChild(p);
+          });
+          rw.appendChild(cs);
+        }
         if (!r.liability) {
           var pills = el('div', 'pills');
           scr.accounts.roles.forEach(function(ro){

@@ -456,7 +456,8 @@ def propose(root, inbox):
     for a in accounts:
         if a.get("doc", {}).get("csv"):
             questions.append({"id": f"csv:{a['name']}", "q": f"{a['inst']} download {a['doc']['file']}: is it a chequing account, a savings "
-                              f"account or a credit card (drafted as {a['kind']}), and what balance does your banking app show for it today?"})
+                              f"account or a credit card (drafted as {a['kind']}), in Canadian or US dollars (the file does not say; drafted as "
+                              f"{a['cur']}), and what balance does your banking app show for it today?"})
     if unknown or by_hand:
         questions.append({"id": "files", "q": "These files were not recognised: " + ", ".join(unknown + by_hand) +
                                               ". What are they?"})

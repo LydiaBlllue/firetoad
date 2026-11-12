@@ -43,8 +43,10 @@ PROFILES = {
     # TD, chequing and Visa: no header; date, description, money out, money in, balance. Chequing
     # dates have moved to YYYY-MM-DD, the Visa's are still MM/DD/YYYY, so the format is left to
     # each file. A card's balance column counts what is owed, the other way round from chequing.
+    # Confirmed 2026-11-07 on a real chequing download (a US-dollar account, YYYY-MM-DD, every
+    # balance following); the Visa's layout has not been seen.
     "td": {"label": "TD", "header": False, "date": 0, "description": 1, "out": 2, "in": 3, "balance": 4,
-           "columns": (5,), "verified": False},
+           "columns": (5,), "verified": True},
     # CIBC: no header, YYYY-MM-DD; chequing date, description, out, in (sometimes a fifth column);
     # a card's fifth column is its masked number, never a balance, so no balance is read.
     "cibc": {"label": "CIBC", "header": False, "date": 0, "dateFormat": "%Y-%m-%d", "description": 1,
