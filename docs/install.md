@@ -1,7 +1,7 @@
 # Installing the app on a Mac
 
-The download is not signed with an Apple developer identity yet, so the first launch takes one
-extra step. Every launch after that is a double-click. (中文：[安装说明](zh/install.md))
+The download is signed with a Developer ID and notarised by Apple, so it opens with a
+double-click. (中文：[安装说明](zh/install.md))
 
 ## 1. Download and copy
 
@@ -11,22 +11,13 @@ folder beside it. The disk image also holds a short note with these same steps.
 
 ## 2. The first launch
 
-**macOS 15 (Sequoia) and newer**
+Double-click FIRE Toad in Applications. macOS asks once: *"FIRE Toad" is an app downloaded from
+the Internet. Are you sure you want to open it?* Click **Open**. Every launch after that is a
+plain double-click. No network is needed: Apple's approval is stapled to the app itself.
 
-1. Double-click FIRE Toad in Applications. macOS says *"FIRE Toad" Not Opened — Apple could not
-   verify "FIRE Toad" is free of malware*. Click **Done** (not *Move to Trash*).
-2. Open **System Settings → Privacy & Security** and scroll to the bottom. A line says *"Jade
-   Toad" was blocked to protect your Mac*. Click **Open Anyway** and confirm with your password
-   or Touch ID.
-3. One more dialog asks again. Click **Open**.
-
-**macOS 14 (Sonoma) and earlier**
-
-1. In Applications, right-click (or Control-click) FIRE Toad and choose **Open**.
-2. The dialog now has an **Open** button. Click it.
-
-If the dialog says the app is *damaged* instead, the download was interrupted: delete it and
-download the disk image again.
+If the dialog says the app is *damaged*, the download was interrupted: delete it and download
+the disk image again. If macOS says it *could not verify* the app, you have a download from
+before 1.0.4, which was not signed: download the current one.
 
 ## 3. What happens next
 
@@ -35,10 +26,8 @@ keep documents; iCloud Drive is fine on a Mac). Your browser opens on the setup:
 starting with where to drop last month's statements — **[how long the first time takes](../README.md#get-started)**.
 Every later launch opens the same folder straight away.
 
-## Why the extra step
+## What the signature means
 
-macOS asks it of any app that has not been through Apple's notarisation, which needs a paid
-developer account. The roadmap's next version is the signed download; nothing else about the
-app changes with it. Until then the app is signed on the build machine only, and you can read
-exactly what it does: the whole of it is in this repository, and `build/build.py` is how the
-download is made.
+Apple checked the download for known malware and recorded who made it; it did not review what
+the app does. You can read that yourself: the whole of it is in this repository, and
+`build/build.py` is how the download is made.

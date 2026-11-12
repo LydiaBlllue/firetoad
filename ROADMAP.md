@@ -3,11 +3,9 @@
 What is coming, said as what you will be able to do. These are aims, not promises; what has
 already shipped is in [`CHANGELOG.md`](CHANGELOG.md).
 
-## Next — 1.0.4
+## Next — 1.1
 
-- **A signed download.** A Developer ID signs and notarises the app, so a Mac opens it without
-  the visit to System Settings; a Windows build follows. Waiting on the developer account
-  (decided 2026-11-08: 1.0.3 shipped without it rather than wait).
+- **A Windows build**, now that the Mac download is signed (1.0.4).
 - **More banks and brokers**: TD, Scotiabank, CIBC, Tangerine, Simplii and EQ Bank confirmed on
   real files, and the first brokers beyond Wealthsimple. What is read today:
   [Supported banks and brokers](docs/banks.md).

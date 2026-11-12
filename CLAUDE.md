@@ -223,8 +223,8 @@ and never anyone's data), the same `app.py` is the entry: the first launch asks 
 folder or makes one — a made one holds the tool and a profile.json marked `blank`, no demo data (remembered in the system's application-support folder, outside the
 workspace), and every launch compares the folder's tool copy with the app's — *Refresh the
 copy* on the panel when they differ, no writes when the folder's data is a newer shape. Inside
-the app the binary doubles as the interpreter for the core's own subprocess calls. Unsigned
-until an Apple Developer identity is passed to the build. **The setup as screens** (step 2): while a folder is not set up (the demo's, or blank), `/panel` is the
+the app the binary doubles as the interpreter for the core's own subprocess calls. Released
+builds are signed with a Developer ID and notarised (`build/build.py --sign … --notarize …`). **The setup as screens** (step 2): while a folder is not set up (the demo's, or blank), `/panel` is the
 wizard — the setup skill's interview in six screens, in English or Chinese like the panel, drafted by `setup/scripts/wizard.py` from
 `propose.py`'s draft and written back into `setup-answers.json`, then scaffold, rebuild, first
 import; the selftest's *local app setup* check builds the same workspace through the app and

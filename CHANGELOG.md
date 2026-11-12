@@ -2,6 +2,11 @@
 
 ## 1.0.4 — unreleased
 
+- **A signed download** (2026-11-12, user 001): `FIRE Toad.app` and its disk image are signed
+  with a Developer ID and notarised by Apple, each with its ticket stapled, so a Mac opens the
+  download with a double-click and no visit to System Settings, offline too. The install page,
+  both READMEs and the note in the disk image say so; the "Open Anyway" steps are gone.
+  The build uses `uv` for PyInstaller when it is installed, as it now is on the build machine.
 - **Jade Toad is FIRE Toad** (2026-11-12, user 001): the name says what it is for. In Chinese,
   FIRE蛙. The app is `FIRE Toad.app` (bundle id `app.firetoad.local`), the download
   `FIRE-Toad-<version>.dmg`, the repository `fire-toad` and the live demo

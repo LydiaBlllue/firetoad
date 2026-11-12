@@ -16,9 +16,8 @@ What never goes in: a workspace. The build refuses to run from a checkout whose 
 the demo (profile.json `demo: true`), a sign it is someone's folder, and it adds no inbox/,
 archive/, .private/, product/ or feedback/: the same lines the privacy guard draws for a commit.
 
-Signing: without --sign the app is ad-hoc signed, which runs on this Mac and asks the next Mac
-to System Settings → Privacy & Security → Open Anyway once (macOS 14 and earlier: right-click →
-Open). With --sign (a Developer ID Application identity) every library is signed inside out with
+Signing: a release is built with --sign and --notarize, so any Mac opens it with a double-click.
+Without --sign the app is ad-hoc signed: a local build that runs on this Mac only. With --sign (a Developer ID Application identity) every library is signed inside out with
 the hardened runtime, then the app with build/entitlements.plist; --sign - does the same ad hoc,
 a local test that the app still runs hardened. With --notarize (a notarytool keychain profile)
 the app is sent to Apple and stapled, then the disk image: what a public download needs.

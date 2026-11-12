@@ -1,21 +1,17 @@
-FIRE TOAD — HOW TO OPEN (the app is not signed yet; this is only the first time)
+FIRE TOAD — HOW TO OPEN
 
 1. Drag FIRE Toad onto the Applications folder beside it.
-2. Double-click it in Applications. macOS says it could not verify the app: click Done.
-3. Open System Settings → Privacy & Security, scroll to the bottom, click Open Anyway,
-   confirm with your password. Click Open in the last dialog.
-   macOS 14 and earlier: right-click the app → Open is enough.
-4. Choose "Make one" and pick an empty folder. Your browser opens on the setup.
+2. Double-click it in Applications. macOS asks once whether to open an app
+   downloaded from the internet: click Open.
+3. Choose "Make one" and pick an empty folder. Your browser opens on the setup.
 
 Full guide: https://github.com/lydiablllue/fire-toad/blob/main/docs/install.md
 
 
-FIRE TOAD — 打开方法（安装包还没签名；只有第一次这样）
+FIRE TOAD — 打开方法
 
 1. 把 FIRE Toad 拖到旁边的 Applications（应用程序）文件夹上。
-2. 在「应用程序」里双击它。macOS 说无法验证：点「完成」。
-3. 打开「系统设置 → 隐私与安全性」，拉到最底下，点「仍要打开」，输密码确认。
-   最后一个对话框点「打开」。macOS 14 及更早：右键应用 → 打开 即可。
-4. 选「Make one」，指定一个空文件夹。浏览器会打开建账向导。
+2. 在「应用程序」里双击它。macOS 会问一次是否打开从互联网下载的应用：点「打开」。
+3. 选「Make one」，指定一个空文件夹。浏览器会打开建账向导。
 
 完整说明：https://github.com/lydiablllue/fire-toad/blob/main/docs/zh/install.md
