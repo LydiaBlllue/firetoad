@@ -5,7 +5,7 @@
 
 ## 1. 下载并拷入
 
-打开[发布页](https://github.com/lydiablllue/fire-toad/releases)，下载
+打开[发布页](https://github.com/lydiablllue/firetoad/releases)，下载
 `FIRE-Toad-<版本>.dmg`，双击它，把 **FIRE Toad** 拖到旁边的 **Applications（应用程序）**
 文件夹上。磁盘映像里还有一份写着这几步的简短说明。
 

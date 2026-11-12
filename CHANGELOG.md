@@ -10,8 +10,8 @@
   The app's Info.plist now carries its version (it said 0.0.0, which Finder's Get Info showed).
 - **Jade Toad is FIRE Toad** (2026-11-12, user 001): the name says what it is for. In Chinese,
   FIRE蛙. The app is `FIRE Toad.app` (bundle id `app.firetoad.local`), the download
-  `FIRE-Toad-<version>.dmg`, the repository `fire-toad` and the live demo
-  lydiablllue.github.io/fire-toad/ (the old demo address stops working; the old repository
+  `FIRE-Toad-<version>.dmg`, the repository `firetoad` and the live demo
+  lydiablllue.github.io/firetoad/ (the old demo address stops working; the old repository
   address forwards). The first launch under the new name copies the settings the old one
   remembered, so the same folder opens. Kept under the first name, because people's machines
   already hold them: the `.jade/` folder and `.jade.lock` in a workspace, `JADE_AI_KEY`, the

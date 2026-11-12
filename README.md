@@ -8,7 +8,7 @@
 
 **Your money on one page, for working toward financial independence in Canada.**
 
-**[Open the live demo →](https://lydiablllue.github.io/fire-toad/)** a made-up owner's page,
+**[Open the live demo →](https://lydiablllue.github.io/firetoad/)** a made-up owner's page,
 nothing to install.
 
 Once a month you drop your bank statements into a folder. The tool reads them, checks that
@@ -22,7 +22,7 @@ you own, how far you are from FIRE. No bank login, no server, no account anywher
 | | **The app** — no Claude plan | **Claude Code** |
 |---|---|---|
 | What it is | `FIRE Toad.app` on a Mac: your folder in your browser — the setup as six screens, the month as five steps, in English or Chinese | the same folder, driven in the chat of the Claude desktop app |
-| You need | a Mac and the download from the [releases page](https://github.com/lydiablllue/fire-toad/releases) (signed and notarised by Apple: it opens with a double-click — [installing it](docs/install.md)) | a Claude plan that includes Claude Code (Pro, Max, Team or Enterprise), the Claude desktop app, Python 3 |
+| You need | a Mac and the download from the [releases page](https://github.com/lydiablllue/firetoad/releases) (signed and notarised by Apple: it opens with a double-click — [installing it](docs/install.md)) | a Claude plan that includes Claude Code (Pro, Max, Team or Enterprise), the Claude desktop app, Python 3 |
 | Best when | your bank is one the tool reads (RBC, BMO, or any bank's OFX download) and your broker is Wealthsimple | a statement no parser reads, a bank's CSV to map, anything held abroad, a loan to a friend, a question in words |
 
 Both run the very same code, on your computer only, and the same checks hold both to the same
@@ -59,7 +59,7 @@ each new merchant is.
 
 **With the app**
 
-1. **Download `FIRE Toad.app`** from the [releases page](https://github.com/lydiablllue/fire-toad/releases), open the disk image, drag the
+1. **Download `FIRE Toad.app`** from the [releases page](https://github.com/lydiablllue/firetoad/releases), open the disk image, drag the
    app to Applications. It is signed and notarised by Apple, so it opens with a double-click;
    macOS asks once whether to open an app downloaded from the internet: click *Open*
    ([installing it](docs/install.md)).
@@ -88,7 +88,7 @@ report and any questions a program cannot answer, like a merchant it has not see
 
 ## The app, in more detail
 
-**FIRE Toad.app** — the disk image on the [releases page](https://github.com/lydiablllue/fire-toad/releases), or `python3 app.py` in this
+**FIRE Toad.app** — the disk image on the [releases page](https://github.com/lydiablllue/firetoad/releases), or `python3 app.py` in this
 folder with Python 3 and pypdf installed — opens your folder in your browser. The first launch
 asks where your folder is, or makes one and walks you through the setup in six screens; every
 month after that, a panel of five steps: get this month's files, put them here, import, answer

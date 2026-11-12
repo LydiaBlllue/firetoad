@@ -5,7 +5,7 @@ FIRE TOAD — HOW TO OPEN
    downloaded from the internet: click Open.
 3. Choose "Make one" and pick an empty folder. Your browser opens on the setup.
 
-Full guide: https://github.com/lydiablllue/fire-toad/blob/main/docs/install.md
+Full guide: https://github.com/lydiablllue/firetoad/blob/main/docs/install.md
 
 
 FIRE TOAD — 打开方法
@@ -14,4 +14,4 @@ FIRE TOAD — 打开方法
 2. 在「应用程序」里双击它。macOS 会问一次是否打开从互联网下载的应用：点「打开」。
 3. 选「Make one」，指定一个空文件夹。浏览器会打开建账向导。
 
-完整说明：https://github.com/lydiablllue/fire-toad/blob/main/docs/zh/install.md
+完整说明：https://github.com/lydiablllue/firetoad/blob/main/docs/zh/install.md

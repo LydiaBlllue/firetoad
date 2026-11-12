@@ -5,7 +5,7 @@ double-click. (中文：[安装说明](zh/install.md))
 
 ## 1. Download and copy
 
-Open the [releases page](https://github.com/lydiablllue/fire-toad/releases), download
+Open the [releases page](https://github.com/lydiablllue/firetoad/releases), download
 `FIRE-Toad-<version>.dmg`, double-click it and drag **FIRE Toad** onto the **Applications**
 folder beside it. The disk image also holds a short note with these same steps.
 
