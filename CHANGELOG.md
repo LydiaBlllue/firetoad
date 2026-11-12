@@ -7,6 +7,7 @@
   download with a double-click and no visit to System Settings, offline too. The install page,
   both READMEs and the note in the disk image say so; the "Open Anyway" steps are gone.
   The build uses `uv` for PyInstaller when it is installed, as it now is on the build machine.
+  The app's Info.plist now carries its version (it said 0.0.0, which Finder's Get Info showed).
 - **Jade Toad is FIRE Toad** (2026-11-12, user 001): the name says what it is for. In Chinese,
   FIRE蛙. The app is `FIRE Toad.app` (bundle id `app.firetoad.local`), the download
   `FIRE-Toad-<version>.dmg`, the repository `fire-toad` and the live demo

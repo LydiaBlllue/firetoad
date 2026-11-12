@@ -79,6 +79,20 @@ def version():
     return m.group(1) if m else "0"
 
 
+def set_bundle_version(app, ver):
+    """PyInstaller writes 0.0.0 into Info.plist, which is what Finder's Get Info showed; the
+    app's version is the page's `const VERSION`, the same one the dmg is named after."""
+    import plistlib
+    p = os.path.join(app, "Contents", "Info.plist")
+    with open(p, "rb") as fh:
+        info = plistlib.load(fh)
+    info["CFBundleShortVersionString"] = ver
+    info["CFBundleVersion"] = ver
+    with open(p, "wb") as fh:
+        plistlib.dump(info, fh)
+    print(f"  Info.plist: version {ver}")
+
+
 def stage(work):
     """A clean copy of what goes in, so PyInstaller never sees the checkout's clutter."""
     src_root = os.path.join(work, "src")
@@ -172,6 +186,7 @@ def build(args):
 
     out = os.path.join(dist, NAME + ".app") if sys.platform == "darwin" else os.path.join(dist, NAME)
     if sys.platform == "darwin":
+        set_bundle_version(out, version())   # before signing: the signature seals Info.plist
         if args.sign:
             sign_app(out, args.sign)
         else:
