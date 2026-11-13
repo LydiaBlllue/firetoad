@@ -24,6 +24,10 @@
     chosen for you; you change only what is wrong, and what the choices mean is under the table.
     An account on a broker's export can be marked *Not mine*: it is left out of every figure and
     the export is still read.
+  - *The monthly import is one step at a time.* Four views under the same bar as the setup:
+    get the files (a table of what is still needed, the drop zone, what is in the folder),
+    import (the check runs by itself; one button), categorize (one item at a time, the
+    likeliest three answers and *More*), done. No folder path, no "see what would happen".
   - *An error you can report, and a log.* A run that stops opens a dialog over the page —
     nothing on the page moves — with *Try again*, *Copy report*, the error code
     (`FT-SETUP-KeyError`), the run's id and the log, one a line; a launch that fails shows the

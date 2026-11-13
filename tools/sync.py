@@ -138,6 +138,11 @@ def seam_text(rel, src, dst):
         return tool_text.replace(theirs, mine) if (mine and theirs) else tool_text
     if rel == ".gitignore":
         tool_lines = open(src, encoding="utf-8").read().splitlines()
+        cut = next((i for i, l in enumerate(tool_lines) if l.startswith(OWN_LINES)), None)
+        if cut is not None:      # the tool's side is itself a set-up folder (python3 app.py inside one)
+            tool_lines = tool_lines[:cut]
+            while tool_lines and not tool_lines[-1].strip():
+                tool_lines.pop()
         mine = open(dst, encoding="utf-8").read().splitlines()
         at = next((i for i, l in enumerate(mine) if l.startswith(OWN_LINES)), None)
         if at is None:

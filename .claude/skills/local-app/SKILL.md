@@ -27,7 +27,10 @@ app builds is shown and **not written to** until the app is updated. Inside the 
 fresh token in it, opens the panel in the system browser, and exits by itself five minutes after
 the last tab is closed. `--no-browser` prints the address only; `--port N` fixes the port.
 
-**The panel is five numbered steps in the owner's language** (2026-11-07, after the owner could
+**Since 2026-11-12 the panel shows one step at a time, four views** (get the files, import,
+categorize, done — `panel.py`'s docstring and DESIGN.md 6a; the description below is the
+five-step page it replaced, and its states are still the ones `current_step` knows).
+**The panel was five numbered steps in the owner's language** (2026-11-07, after the owner could
 not tell what the first version wanted): 1 get this month's files (one row per thing, a plain
 state — still missing · in inbox · up to date — and *How do I get it?* folded under each missing
 one: the bank's own download path from `parsers/support.py`, the app page for a screenshot, a

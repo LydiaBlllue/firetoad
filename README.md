@@ -21,7 +21,7 @@ you own, how far you are from FIRE. No bank login, no server, no account anywher
 
 | | **The app** — no Claude plan | **Claude Code** |
 |---|---|---|
-| What it is | `FIRE Toad.app` on a Mac: your folder in your browser — the setup as six screens, the month as five steps, in English or Chinese | the same folder, driven in the chat of the Claude desktop app |
+| What it is | `FIRE Toad.app` on a Mac: your folder in your browser — the setup as six screens, the month as four steps, in English or Chinese | the same folder, driven in the chat of the Claude desktop app |
 | You need | a Mac and the download from the [releases page](https://github.com/lydiablllue/firetoad/releases) (signed and notarised by Apple: it opens with a double-click — [installing it](docs/install.md)) | a Claude plan that includes Claude Code (Pro, Max, Team or Enterprise), the Claude desktop app, Python 3 |
 | Best when | your bank is one the tool reads (RBC, BMO, or any bank's OFX download) and your broker is Wealthsimple | a statement no parser reads, a bank's CSV to map, anything held abroad, a loan to a friend, a question in words |
 
@@ -84,16 +84,16 @@ each new merchant is.
 About ten minutes: the downloads, then two or three minutes of questions. Download the month's
 statements into `inbox/` and say **"update dashboards"**. You get a short
 report and any questions a program cannot answer, like a merchant it has not seen. In the app
-(below) the same month is the panel's five steps.
+(below) the same month is the panel's four steps.
 
 ## The app, in more detail
 
 **FIRE Toad.app** — the disk image on the [releases page](https://github.com/lydiablllue/firetoad/releases), or `python3 app.py` in this
 folder with Python 3 and pypdf installed — opens your folder in your browser. The first launch
 asks where your folder is, or makes one and walks you through the setup in six screens; every
-month after that, a panel of five steps: get this month's files, put them here, import, answer
-a few questions, done. Each answer is saved as you give it, so you can stop and come back; a
-merchant filed wrong is changed from the list under the questions. English or Chinese, switched
+month after that, a panel of four steps, one at a time: get this month's files, import,
+categorize what is left, done. Each answer is saved as you give it, so you can stop and come back; a
+merchant filed wrong is changed from the list under that step. English or Chinese, switched
 in the header. The Mac build is signed and notarised, so it [opens with a
 double-click](docs/install.md); Windows has no build yet (`python3 app.py` works there).
 

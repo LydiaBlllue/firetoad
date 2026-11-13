@@ -168,40 +168,74 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
 .share .bar{flex:1;height:4px;background:var(--grid);border-radius:2px;margin:0 10px;overflow:hidden}
 .share .bar i{display:block;height:100%;background:var(--warn);transition:width .12s ease-out}
 @media (prefers-reduced-motion: reduce){.cq,.share .bar i{transition:none !important}}
+/* one step at a time (2026-11-12): the setup's bar, one card, tables for what a step lists */
+.wrap{max-width:760px}
+.bars{display:flex;gap:4px;margin-bottom:14px}
+.bars a{flex:1;height:4px;border-radius:2px;background:var(--grid);display:block}
+.bars a.on{background:var(--ink)}
+.bars a.done{background:var(--ok)}
+.lead{font-size:13.5px;color:var(--ink-2);margin-bottom:12px;background:none;border:0;padding:0}
+.card.view{display:none}
+.card.view.show{display:block}
+.card.view h2{font-size:17px;font-weight:700;letter-spacing:-.2px;margin-bottom:4px}
+.card.view .q{font-size:13px;color:var(--ink-2);margin:2px 0 10px}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 10px}
+table.tbl th{text-align:left;font-size:11.5px;font-weight:600;color:var(--muted);padding:4px 10px 4px 0;border-bottom:1px solid var(--border)}
+table.tbl td{padding:6px 10px 6px 0;border-bottom:1px solid var(--border);vertical-align:top}
+table.tbl th:last-child,table.tbl td:last-child{text-align:right;padding-right:0}
+table.tbl tr.todo td:last-child{color:var(--warn);font-weight:600}
+table.tbl tr.ok td:last-child{color:var(--muted)}
+table.tbl tr.bad td:last-child{color:var(--bad);font-weight:600}
+table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--muted)}
+.drop small{display:block;font-size:11.5px;color:var(--muted);margin-top:4px}
+.drop .lnk{display:block}
+.bal{padding:8px 0;border-top:1px solid var(--border)}
+.bal b{font-size:13px}.bal small{display:block;font-size:11.5px;color:var(--muted)}
+.q-of{font-size:12.5px;color:var(--muted);margin:2px 0 8px}
+.cq .for{font-size:12.5px;color:var(--ink-2);margin-top:6px}
+.cq .foot2{justify-content:flex-start;gap:8px}
 </style>
 </head>
-<body data-base="{{BASE}}" data-cur="{{CUR}}">
+<body data-base="{{BASE}}" data-cur="{{CUR}}" data-view="{{VIEW}}" data-infolder="{{INFOLDER}}" data-stepof="{{STEP_OF}}">
 <div class="wrap">
   <div class="brand"><h1>{{TITLE}}</h1><small>{{SUBTITLE}}</small>
     <span class="r"><a href="{{BASE}}/panel?lang={{OTHER_LANG}}">{{LANG_OTHER}}</a><a href="{{BASE}}/" target="_blank" rel="noopener">{{OPEN_DASH}}</a></span></div>
-  <p class="intro">{{INTRO}}</p>
-  <div class="strip">{{STRIP}}</div>
-  <p class="lead">{{LEAD}}</p>
+  <div class="bars" id="bars">{{BARS}}</div>
+  <p class="lead" id="stepof"></p>
   {{BUSY}}
 
-  <div class="cols"><div class="col">
-  <div class="card" id="step1" data-step="1"><h2><span class="n">1</span>{{S1}}</h2>{{STEP1}}</div>
-
-  <div class="card" id="step2" data-step="2"><h2><span class="n">2</span>{{S2}}</h2>{{STEP2}}</div>
-  </div><div class="col">
-  <div class="card" id="step3" data-step="3"><h2><span class="n">3</span>{{S3}}</h2>
-    <div class="act">
-      <button type="button" class="btn primary big" id="dry">{{DRY}}</button>
-      <button type="button" class="btn primary big" id="go" style="display:none">{{GO}}</button>
-    </div>
-    <p class="hint" id="ihint">{{DRY_HINT}}</p>
-    <pre class="log" id="log"></pre>
-    <div class="err" id="ierr"></div>
-    <div class="act"><button type="button" class="lnk hint" id="undo">{{UNDO}}</button></div>
+  <!-- one view at a time (DESIGN.md 6a): the heading says the one thing to do. The ids step1…step5
+       are the five states the scripts know; a view holds one or two of them. -->
+  <div class="card view" data-view="1">
+    <h2>{{V1_H}}</h2><p class="q">{{V1_S}}</p>
+    <div id="step1">{{STEP1}}</div>
+    <div id="step2">{{STEP2}}</div>
+    {{V1_NEXT}}
+    {{BALANCES}}
   </div>
 
-  <div class="card" id="step4" data-step="4"><h2><span class="n">4</span>{{S4}} <span class="muted">({{NQ}})</span></h2>{{STEP4}}<div class="err" id="qerr"></div></div>
+  <div class="card view" data-view="2" id="step3">
+    <h2>{{V2_H}}</h2>
+    <p class="hint" id="ihint">{{DRY_HINT}}</p>
+    <pre class="log" id="log"></pre>
+    <div class="act">
+      <button type="button" class="btn primary big" id="go" style="display:none">{{GO}}</button>
+    </div>
+    <div class="err" id="ierr"></div>
+  </div>
 
-  <div class="card" id="step5" data-step="5"><h2><span class="n">5</span>{{S5}}</h2>{{STEP5}}</div>
-  </div></div>
+  <div class="card view" data-view="3" id="step4">
+    <h2>{{V3_H}}</h2>
+    {{STEP4}}<div class="err" id="qerr"></div>
+    {{FILED}}
+  </div>
 
-  <details class="settings"><summary>{{SETTINGS}}: {{AI_TITLE}}</summary>
-    <div class="card" id="model" style="margin-top:10px">{{AI}}</div>
+  <div class="card view" data-view="4" id="step5">
+    <h2>{{V4_H}}</h2>{{STEP5}}
+  </div>
+
+  <details class="settings"><summary>{{MORE}}</summary>
+    <div class="card" id="model" style="margin-top:10px"><h2>{{AI_TITLE}}</h2>{{AI}}</div>
   </details>
   <div class="ver">v{{VERSION}}</div>
 </div>
@@ -210,20 +244,27 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
   var base = document.body.getAttribute('data-base');
   var T = {{JS}};
   var $ = function(id){ return document.getElementById(id); };
-  var log = $('log'), dry = $('dry'), go = $('go'), undo = $('undo'), ihint = $('ihint'), ierr = $('ierr');
+  var log = $('log'), go = $('go'), undo = $('undo'), ihint = $('ihint'), ierr = $('ierr');
   var running = false;
   var cur = parseInt(document.body.getAttribute('data-cur'), 10) || 1;
-  document.querySelectorAll('.card[data-step]').forEach(function(c){
-    var n = parseInt(c.getAttribute('data-step'), 10);
-    if (n === cur) c.classList.add('on'); else if (n < cur) c.classList.add('done');
-  });
+  // one view at a time: the one the owner is at, or the one the bar was asked for
+  var at = parseInt(document.body.getAttribute('data-view'), 10) || 1, view = at;
+  var stepOf = document.body.getAttribute('data-stepof') || '';
+  function show(v){
+    view = v;
+    document.querySelectorAll('.card.view').forEach(function(c){ c.classList.toggle('show', parseInt(c.getAttribute('data-view'), 10) === v); });
+    document.querySelectorAll('#bars a').forEach(function(a){ var i = parseInt(a.getAttribute('data-go'), 10); a.className = i < v ? 'done' : (i === v ? 'on' : ''); });
+    $('stepof').textContent = stepOf.replace('{i}', v);
+    if (v === 2) autoDry();
+  }
+  document.querySelectorAll('[data-go]').forEach(function(a){ a.onclick = function(e){ e.preventDefault(); show(parseInt(a.getAttribute('data-go'), 10)); }; });
 
   function api(method, path, body){
     return fetch(base + path, {method: method, headers: body instanceof FormData ? {} : {'Content-Type': 'application/json'},
                                body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined)})
       .then(function(r){ return r.json().then(function(j){ j.status = r.status; return j; }); });
   }
-  function setBusy(on){ running = on; [dry, go, undo, $('save')].forEach(function(b){ if (b) b.disabled = on; }); }
+  function setBusy(on){ running = on; [go, undo, $('save')].forEach(function(b){ if (b) b.disabled = on; }); }
   // step 3's result as a card from the summary the import returns; its lines stay under a fold
   var rbox = document.createElement('div'); rbox.className = 'rcard'; log.parentNode.insertBefore(rbox, log);
   function resultCard(res, written, err){
@@ -299,7 +340,6 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
   function start(path, body, hint, onDone){
     if (running) return;
     ierr.textContent = ''; ihint.textContent = hint; setBusy(true);
-    $('step3').scrollIntoView({behavior: 'smooth', block: 'start'});
     api('POST', path, body).then(function(r){
       if (!r.ok) { setBusy(false); ierr.textContent = r.error && r.error.text || ('HTTP ' + r.status); return; }
       follow(function(job){
@@ -309,26 +349,31 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
       });
     }).catch(function(e){ setBusy(false); ierr.textContent = String(e); });
   }
-  dry.onclick = function(){
-    rbox.innerHTML = ''; log.parentNode === rbox && rbox.appendChild(log);
-    start('/api/import', {write: false}, T.dry_running, function(job){
+  // the look before the import runs by itself when this view opens: what will be added is shown
+  // as rows, and the one button is Import (2026-11-12: "See what would happen" then "Import
+  // now" was two presses and a paragraph for one decision)
+  var dried = false;
+  function autoDry(){
+    if (dried || running || !(parseInt(document.body.getAttribute('data-infolder'), 10) > 0)) return;
+    dried = true;
+    start('/api/import', {write: false}, T.dry_hint, function(job){
       var res = job.result || {};
       resultCard(res, false, job.error);
       if (job.error) { ihint.textContent = T.failed_lines; return; }
       if ((res.unknown || []).length || (res.stopped || []).length) { ihint.textContent = T.dry_stop; return; }
       if (!(res.files || []).length && !(res.counts && Object.keys(res.counts).length)) { ihint.textContent = T.dry_none; return; }
-      ihint.textContent = T.dry_plan; go.style.display = ''; dry.classList.remove('primary');
+      ihint.textContent = T.dry_plan; go.style.display = '';
     });
-  };
+  }
   go.onclick = function(){
     go.style.display = 'none';
     start('/api/import', {write: true}, T.go_running, function(job){
       resultCard(job.result || {}, true, job.error);
       ihint.textContent = job.error ? T.go_failed : T.go_done;
-      if (!job.error) setTimeout(function(){ location.reload(); }, 1800);
+      if (!job.error) setTimeout(function(){ goTo('after'); }, 1800);
     });
   };
-  undo.onclick = function(){
+  if (undo) undo.onclick = function(){
     if (!confirm(T.undo_q)) return;
     start('/api/undo', {}, T.undo_running, function(job){
       ihint.textContent = job.error || (job.result && job.result.undone == null) ? T.undo_none : T.undo_done;
@@ -367,7 +412,7 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
     // card "Other" is never the first choice (it is what skipping means), it goes last
     [it.brand, it.suggest, it.default].forEach(function(c){ if (c && c !== (big ? 'Other' : null) && order.indexOf(c) >= 0 && first.indexOf(c) < 0) first.push(c); });
     order = first.concat(order.filter(function(c){ return first.indexOf(c) < 0 && !(big && c === 'Other'); })).concat(big && order.indexOf('Other') >= 0 ? ['Other'] : []);
-    var limit = big ? 6 : order.length, more = null;
+    var limit = big ? (order.length <= 5 ? order.length : 3) : order.length, more = null;
     var lab = function(c){ return (it.labels && it.labels[c]) || (Q.catLabels && Q.catLabels[c]) || c; };
     order.forEach(function(c, i){
       var b = el('button', 'pl' + (big ? ' big' : '') + (c === selected ? ' sel' : ''), esc(lab(c))); b.type = 'button';
@@ -382,100 +427,53 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
     }
     return wrap;
   }
+  // One item at a time, money questions first, then merchants by amount: the name, what is
+  // known about it, the likeliest three answers and More. Each answer is written as it is
+  // given; Skip leaves the item as it is filed; Finish closes what is left and rebuilds.
   if (Q.items && Q.items.length) {
-    var moneyQ = Q.items.filter(function(i){ return i.kind !== 'merchant'; });
-    var sugQ = Q.items.filter(function(i){ return i.kind === 'merchant' && (i.suggest || i.why === 'starter map' || i.why === 'fits better' || i.why === 'was Subscription'); });
-    var unkQ = Q.items.filter(function(i){ return i.kind === 'merchant' && sugQ.indexOf(i) < 0; }).sort(function(a, b){ return (b.amount || 0) - (a.amount || 0); });
-    // money first
-    var qm = $('qmoney');
-    if (moneyQ.length) {
-      qm.appendChild(el('div', 'qh', esc(T.q_money_h)));
-      moneyQ.forEach(function(it){
-        var d = el('div', 'q'); d.setAttribute('data-n', it.n);
-        var L = function(c){ return (it.labels && it.labels[c]) || c; };
-        d.appendChild(el('div', 'qt', '<b>' + it.n + '.</b> ' + esc(it.text || it.what)));
-        d.appendChild(el('div', 'qs', esc(T.filed_as) + ' <b>' + esc(L(it.default)) + '</b>' + (it.suggest ? '<br>' + esc(T.suggested) + ' <b>' + esc(L(it.suggest)) + '</b>' : '')));
-        if (it.choices.length) d.appendChild(pills(it, it.suggest || it.default, false, function(c){ keep(it, c); })); else d.appendChild(el('div', 'qs', esc(T.in_ledger)));
-        qm.appendChild(d);
-      });
+    var deckItems = Q.items.filter(function(i){ return i.kind !== 'merchant'; })
+      .concat(Q.items.filter(function(i){ return i.kind === 'merchant'; }).sort(function(a, b){ return (b.amount || 0) - (a.amount || 0); }));
+    var qd = $('qdeck'), qof = $('qof'), qend = $('qend'), idx = 0, answered = 0;
+    var deck = el('div', 'deck'); qd.appendChild(deck);
+    saveMsg = el('span', 'hint');
+    function card(it){
+      var c = el('div', 'cq');
+      var L = function(x){ return (it.labels && it.labels[x]) || (Q.catLabels && Q.catLabels[x]) || x; };
+      c.appendChild(el('div', 'name', esc(it.kind === 'merchant' ? it.what : (it.text || it.what))));
+      var meta = [];
+      if (it.kind === 'merchant' && it.amount != null) meta.push(fmtS(T.q_meta, {amount: money(it.amount), n: it.seen || 0}).replace('(s)', (it.seen || 0) === 1 ? '' : 's'));
+      if (it.source) meta.push(it.source);
+      if (meta.length) c.appendChild(el('div', 'meta', meta.map(esc).join('<br>')));
+      if (it.brand) c.appendChild(el('div', 'brand', esc(fmtS(T.q_brand, {brand: it.what.split(' ')[0], cat: L(it.brand)}))));
+      if (it.default) c.appendChild(el('div', 'for', esc(T.filed_as) + ' <b>' + esc(L(it.default)) + '</b>'));
+      if (it.choices.length) c.appendChild(pills(it, answers[it.n] || null, true, function(ch){ answer(it, ch); }));
+      else c.appendChild(el('div', 'for', esc(T.in_ledger)));
+      var f = el('div', 'foot2');
+      var skip = el('button', 'btn sm', esc(it.choices.length ? T.q_skip : T.q_next)); skip.type = 'button'; skip.onclick = function(){ answer(it, null); };
+      f.appendChild(skip);
+      if (idx > 0) { var back = el('button', 'btn sm', esc(T.q_undo_card)); back.type = 'button'; back.onclick = function(){ idx = Math.max(0, idx - 1); next(true); }; f.appendChild(back); }
+      f.appendChild(saveMsg);
+      c.appendChild(f);
+      return c;
     }
-    // the suggestions, in one go
-    var qs = $('qsug');
-    if (sugQ.length) {
-      qs.appendChild(el('div', 'qh', esc(fmtS(T.q_sug_h, {n: sugQ.length}))));
-      qs.appendChild(el('p', 'qs', esc(T.q_sug_intro)));
-      var acc = el('div', 'act'); var accBtn = el('button', 'btn sm primary', esc(fmtS(T.q_accept_all, {n: sugQ.length}))); accBtn.type = 'button';
-      var accMsg = el('span', 'hint', ''); acc.appendChild(accBtn); acc.appendChild(accMsg); qs.appendChild(acc);
-      var list = el('div'); qs.appendChild(list);
-      sugQ.forEach(function(it){
-        var to = it.suggest || it.default;
-        var row = el('div', 'sug');
-        var m = el('span', 'm', esc(it.what)); var a = el('span', 'a', it.amount != null ? esc(fmtS(T.q_meta, {amount: money(it.amount), n: it.seen || 0})) : '');
-        var LL = function(c){ return (it.labels && it.labels[c]) || (Q.catLabels && Q.catLabels[c]) || c; };
-        var toEl = el('span', 'to', '→ ' + esc(LL(to)) + (it.suggestBy === 'model' ? '<span class="dot" title="' + esc(T.model_dot) + '">●</span>' : ''));
-        var ch = el('button', 'lnk', esc(T.q_change)); ch.type = 'button';
-        ch.onclick = function(){
-          if (row.classList.contains('open')) return;
-          row.classList.add('open');
-          row.appendChild(pills(it, answers[it.n] || to, false, function(c){ keep(it, c); toEl.innerHTML = '→ ' + esc(LL(c)); }));
-        };
-        row.appendChild(m); row.appendChild(a); row.appendChild(toEl); row.appendChild(ch); list.appendChild(row);
-      });
-      accBtn.onclick = function(){
-        sugQ.forEach(function(it){ if (!answers[it.n]) keep(it, it.suggest || it.default); });
-        accBtn.disabled = true; accMsg.textContent = T.q_accepted;
-        if (!reduced) { list.style.transition = 'opacity .12s'; list.style.opacity = '.55'; } else list.style.opacity = '.55';
+    function answer(it, ch){ if (ch) { if (!answers[it.n]) answered++; keep(it, ch); } idx++; next(); }
+    function next(back){
+      var old = deck.firstChild;
+      var draw = function(){
+        deck.innerHTML = '';
+        if (idx < deckItems.length) {
+          qof.textContent = fmtS(T.q_of, {i: idx + 1, n: deckItems.length}); qend.style.display = 'none';
+          var c = card(deckItems[idx]); if (!reduced) c.classList.add('in'); deck.appendChild(c);
+          if (!reduced) { requestAnimationFrame(function(){ requestAnimationFrame(function(){ c.classList.remove('in'); }); }); setTimeout(function(){ c.classList.remove('in'); }, 250); }
+        } else {
+          qof.textContent = T.q_cards_done;
+          deck.appendChild(el('p', 'foot', esc(fmtS(T.q_done_n, {n: answered}))));
+          qend.style.display = '';
+        }
       };
+      if (old && !reduced && !back) { old.classList.add('out'); setTimeout(draw, 130); } else draw();
     }
-    // the unknown merchants, one card at a time, biggest first
-    var qd = $('qdeck');
-    if (unkQ.length) {
-      qd.appendChild(el('div', 'qh', esc(fmtS(T.q_unknown_h, {n: unkQ.length}))));
-      qd.appendChild(el('p', 'qs', esc(T.q_unknown_intro)));
-      var share = el('div', 'share'); var shareNow = el('b'); var bar = el('div', 'bar', '<i></i>'); var shareAfter = el('span', 'hint'); share.appendChild(shareNow); share.appendChild(bar); share.appendChild(shareAfter); qd.appendChild(share);
-      var deck = el('div', 'deck'); qd.appendChild(deck);
-      var idx = 0, otherNow = Q.otherTotal || 0, total = Q.spendTotal || 1;
-      function pct(v){ return Math.round(v / total * 1000) / 10; }
-      function paintShare(){
-        shareNow.textContent = fmtS(T.q_other_now, {pct: pct(otherNow)});
-        bar.firstChild.style.width = Math.min(100, pct(otherNow)) + '%';
-        var it = unkQ[idx];
-        shareAfter.textContent = it ? fmtS(T.q_other_after, {pct: pct(Math.max(0, otherNow - (it.default === 'Other' ? (it.amount || 0) : 0)))}) + '\n' + fmtS(T.q_left, {n: unkQ.length - idx}) : T.q_cards_done;
-        shareAfter.style.whiteSpace = 'pre-line';
-      }
-      function card(it){
-        var c = el('div', 'cq');
-        c.appendChild(el('div', 'name', esc(it.what)));
-        c.appendChild(el('div', 'meta', (it.amount != null ? esc(fmtS(T.q_meta, {amount: money(it.amount), n: it.seen || 0}).replace('(s)', (it.seen || 0) === 1 ? '' : 's')) : '') + (it.source ? (it.amount != null ? '<br>' : '') + esc(it.source) : '')));
-        if (it.brand) c.appendChild(el('div', 'brand', esc(fmtS(T.q_brand, {brand: it.what.split(' ')[0], cat: (Q.catLabels && Q.catLabels[it.brand]) || it.brand}))));
-        c.appendChild(pills(it, null, true, function(ch){ answer(it, ch); }));
-        var f = el('div', 'foot2');
-        var skip = el('button', 'lnk', esc(T.q_skip)); skip.type = 'button'; skip.onclick = function(){ answer(it, null); };
-        var rest = el('button', 'lnk', esc(T.q_skip_all)); rest.type = 'button'; rest.onclick = function(){ idx = unkQ.length; next(); };
-        var back = el('button', 'lnk', esc(T.q_undo_card)); back.type = 'button'; back.style.visibility = idx > 0 ? '' : 'hidden';
-        back.onclick = function(){ idx = Math.max(0, idx - 1); var p = unkQ[idx]; if (answers[p.n] && answers[p.n] !== 'Other' && p.default === 'Other') otherNow += p.amount || 0; delete answers[p.n]; next(true); };
-        f.appendChild(skip); f.appendChild(rest); f.appendChild(back); c.appendChild(f);
-        return c;
-      }
-      saveMsg = el('span', 'hint'); share.appendChild(saveMsg);
-      function answer(it, ch){
-        if (ch) { keep(it, ch); if (it.default === 'Other' && ch !== 'Other') otherNow = Math.max(0, otherNow - (it.amount || 0)); }
-        idx++; next();
-      }
-      function next(back){
-        var old = deck.firstChild;
-        var draw = function(){
-          deck.innerHTML = '';
-          if (idx < unkQ.length) {
-            var c = card(unkQ[idx]); if (!reduced) c.classList.add('in'); deck.appendChild(c);
-            if (!reduced) requestAnimationFrame(function(){ requestAnimationFrame(function(){ c.classList.remove('in'); }); });
-          } else deck.appendChild(el('p', 'foot', esc(T.q_cards_done)));
-          paintShare();
-        };
-        if (old && !reduced && !back) { old.classList.add('out'); setTimeout(draw, 130); } else draw();
-      }
-      next();
-    }
+    next();
   }
   var save = $('save');
   if (save) save.onclick = function(){
@@ -483,8 +481,7 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
     $('qerr').textContent = '';
     var go2 = function(){ start('/api/answers', {set: set, ok: true}, T.saving, function(job){
       if (job.error || (job.result && job.result.rc)) { $('qerr').textContent = T.not_saved; return; }
-      ihint.textContent = T.saved_rebuilt;
-      setTimeout(function(){ location.reload(); }, 1200);
+      setTimeout(function(){ goTo('v4'); }, 1200);
     }); };
     var waitIdle = function(){ if (saving) setTimeout(waitIdle, 300); else go2(); }; waitIdle();
   };
@@ -611,6 +608,11 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
     });
   };
   setInterval(function(){ api('GET', '/api/ping').catch(function(){}); }, 30000);
+  // after an import the next thing is what it left to categorize, or Done — not the files again
+  function goTo(tag){ location.hash = tag; location.reload(); }
+  var asked = location.hash.replace('#', '');
+  if (asked) history.replaceState(null, '', location.pathname + location.search);
+  show(asked === 'after' ? ((Q.items || []).length ? 3 : 4) : (/^v[1-4]$/.test(asked) ? parseInt(asked.slice(1), 10) : at));
 })();
 </script>
 </body>
