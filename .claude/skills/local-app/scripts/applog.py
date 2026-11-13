@@ -16,8 +16,8 @@ traceback. It never records what a run printed: those lines carry amounts and me
 stay in the workspace. One megabyte, three files kept.
 
 **An error with a code.** A run that stops is said as `FT-<VERB>-<WHAT>` with the run's id:
-`FT-SETUP-KeyError (3fa9c1d2)`, `FT-IMPORT-STOPPED (…)`. The code names where and what, the id
-finds the run in the log. `report()` builds the block the panel shows and the owner copies:
+`FT-SETUP-KeyError`, run `3fa9c1d2`. The code names where and what, the run's id finds it in
+the log. `report()` builds the block the panel shows and the owner copies:
 the version, the system, the time, the code, one line of what happened, the run's own ✗ lines
 and where the log is.
 """
@@ -88,9 +88,10 @@ def report(verb, run_id, what, message, lines=(), version=None, now=None):
     c = code(verb, what)
     now = now or datetime.datetime.now()
     marked = [l.strip()[:300] for l in lines if "✗" in l][-10:]
-    text = "\n".join([f"{APP_NAME} {version or '?'} · {system()} · {now:%Y-%m-%d %H:%M}",
-                      f"Error {c} ({run_id})", message.strip()[:300]]
-                     + (["---"] + marked if marked else [])
+    # one fact a line, label then value: never facts strung on a dot (DESIGN.md 5b)
+    text = "\n".join([f"App: {APP_NAME} {version or '?'}", f"System: {system()}", f"Time: {now:%Y-%m-%d %H:%M}",
+                      f"Error code: {c}", f"Run: {run_id}", f"What happened: {message.strip()[:300]}"]
+                     + (["Lines:"] + marked if marked else [])
                      + [f"Log: {shown_path()}"])
     log.error("%s (%s): %s", c, run_id, message.strip()[:300])
     return {"code": c, "id": run_id, "message": message.strip()[:300], "text": text, "log": shown_path()}

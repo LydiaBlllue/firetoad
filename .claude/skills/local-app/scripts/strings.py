@@ -206,6 +206,7 @@ S = {
     "err_h": {"en": "That did not finish.", "zh": "没有完成。"},
     "err_copy": {"en": "Copy error", "zh": "复制错误信息"}, "err_copied": {"en": "Copied", "zh": "已复制"},
     "err_log": {"en": "Log", "zh": "日志"},
+    "err_code": {"en": "Error code", "zh": "错误代码"}, "err_run": {"en": "Run", "zh": "运行编号"},
     "err_start": {"en": "FIRE Toad could not start.\n\n{code}\n{message}", "zh": "FIRE Toad 没能启动。\n\n{code}\n{message}"},
     # — the app's first launch (app.py), before there is a folder: the system's language, one at a time
     "welcome": {"en": "Welcome to FIRE Toad. Everything it keeps is in one folder on this Mac.",
@@ -282,7 +283,7 @@ def js_strings(lang):
             "undo_done", "undo_none", "failed_lines", "saving", "saved_rebuilt", "not_saved", "saved", "already", "refused",
             "cands_note", "cands_none", "near", "date_read", "refresh_running", "refresh_done", "refresh_failed",
             "ai_on", "ai_off", "ai_nokey", "ai_try_q", "ai_asking", "ai_noanswer",
-            "err_h", "err_copy", "err_copied", "err_log")
+            "err_h", "err_copy", "err_copied", "err_log", "err_code", "err_run")
     return {k: t(lang, k) for k in keys}
 
 
@@ -381,9 +382,8 @@ W = {
     "w_build_q": {"en": "Check these, then build. Your files are read and your page is made.", "zh": "核对一下，然后生成。程序会读你的文件，做出你的页面。"},
     "w_born_is": {"en": ", born {y}", "zh": "，{y} 年生"},
     "w_sum_acc": {"en": "{n} account(s) from the files", "zh": "文件里的 {n} 个账户"}, "w_sum_added": {"en": " + {n} added", "zh": " + 手加 {n} 个"},
-    "w_sum_money": {"en": "take-home {a} · invest {b} · everyday {c} · {n} committed", "zh": "到手 {a} · 投资 {b} · 日常 {c} · 固定支出 {n} 项"},
     "w_not_set": {"en": "not set", "zh": "未设置"},
-    "w_sum_goal": {"en": "FIRE: {g} · import day {d}", "zh": "FIRE：{g} · 导入日 {d} 号"}, "w_skipped": {"en": "skipped", "zh": "跳过"},
+    "w_skipped": {"en": "skipped", "zh": "跳过"},
     "w_later": {"en": "You can add these later:", "zh": "这些可以以后再加："},
     "later_foreign": {"en": "Anything held in another currency.", "zh": "其他币种的账户。"},
     "later_counterparty": {"en": "Someone paying you back.", "zh": "有人在还你钱。"},
@@ -398,6 +398,7 @@ W = {
     "w_details": {"en": "Details", "zh": "详情"},
     "w_err_copy": {"en": "Copy error", "zh": "复制错误信息"}, "w_err_copied": {"en": "Copied", "zh": "已复制"},
     "w_err_log": {"en": "Log", "zh": "日志"},
+    "w_err_code": {"en": "Error code", "zh": "错误代码"}, "w_err_run": {"en": "Run", "zh": "运行编号"},
     "w_sum_name": {"en": "Name", "zh": "名字"}, "w_sum_born": {"en": "Born", "zh": "出生年"},
     "w_sum_accounts": {"en": "Accounts", "zh": "账户"}, "w_sum_take": {"en": "Take-home a month", "zh": "每月到手"},
     "w_sum_invest": {"en": "To the broker a month", "zh": "每月投资"}, "w_sum_every": {"en": "Everyday a month", "zh": "每月日常开销"},

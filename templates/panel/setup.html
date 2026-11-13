@@ -82,7 +82,8 @@ details.more summary{cursor:pointer}
 .errbox{border:1px solid #efc4c1;background:var(--bad-bg);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13px}
 .errbox b{display:block;color:var(--bad)}
 .errbox code{display:block;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;margin:4px 0;user-select:all;word-break:break-word}
-.errbox small{display:block;font-size:11.5px;color:var(--muted);margin-top:6px;word-break:break-all}
+.errkv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:12px;color:var(--muted);margin-top:8px}
+.errkv code{display:inline;margin:0;color:var(--ink-2)}
 .later{font-size:12px;color:var(--muted);margin-top:10px;border-top:1px solid var(--border);padding-top:8px}
 .ver{font-size:10.5px;color:var(--muted);letter-spacing:.04em;margin-top:18px;text-align:center}
 table.cm{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
@@ -152,8 +153,10 @@ table.cm input{width:100%}
   function errBox(rep, L){
     var box = el('div', 'errbox');
     box.appendChild(el('b', null, esc(L.h)));
-    box.appendChild(el('code', null, esc(rep.code + ' (' + rep.id + ')')));
     box.appendChild(el('div', null, esc(rep.message)));
+    var kv = el('div', 'errkv');
+    [[L.code, rep.code], [L.run, rep.id], [L.log, rep.log]].forEach(function(r){ kv.appendChild(el('span', null, esc(r[0]))); kv.appendChild(el('code', null, esc(r[1]))); });
+    box.appendChild(kv);
     var c = el('button', 'btn sm', esc(L.copy)); c.type = 'button'; c.style.marginTop = '8px';
     c.onclick = function(){
       function ok(){ c.textContent = L.copied; }
@@ -161,7 +164,6 @@ table.cm input{width:100%}
       function fallback(){ var ta = document.createElement('textarea'); ta.value = rep.text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); ok(); } catch (e) {} document.body.removeChild(ta); }
     };
     box.appendChild(c);
-    box.appendChild(el('small', null, esc(L.log + ': ' + rep.log)));
     return box;
   }
   function field(card, label, input){ var f = el('div', 'field'); f.appendChild(el('label', null, label)); f.appendChild(input); card.appendChild(f); return input; }
@@ -405,7 +407,7 @@ table.cm input{width:100%}
             if (j.error || !res.written) {
               hint.textContent = j.report ? '' : W.w_not_finished; more.open = true; go.disabled = false; b.disabled = false;
               var old = card.querySelector('.errbox'); if (old) old.remove();
-              if (j.report) card.insertBefore(errBox(j.report, {h: W.w_not_finished, copy: W.w_err_copy, copied: W.w_err_copied, log: W.w_err_log}), more);
+              if (j.report) card.insertBefore(errBox(j.report, {h: W.w_not_finished, copy: W.w_err_copy, copied: W.w_err_copied, log: W.w_err_log, code: W.w_err_code, run: W.w_err_run}), more);
               return;
             }
             // built: say so, then the one next thing — sort what the import could not file, when
