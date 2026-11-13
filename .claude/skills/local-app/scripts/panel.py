@@ -182,7 +182,7 @@ def drop_zone(lang, st, root):
     was read as right. No folder path on screen: nobody types it, and *Open the folder* shows it."""
     inbox = os.path.join(root, "inbox")
     names = sorted(n for n in (os.listdir(inbox) if os.path.isdir(inbox) else []) if not n.startswith(".") and n != "README.txt")
-    items = []
+    items, ready = [], 0
     if names:
         try:
             preflight.ROOT = root
@@ -195,6 +195,7 @@ def drop_zone(lang, st, root):
             except Exception:  # noqa: BLE001
                 label, note = None, ""
             if label:
+                ready += 1
                 items.append(f'<tr class="ok"><td>{e(n)}</td><td>{e(label)}</td></tr>')
             else:
                 items.append(f'<tr class="bad"><td>{e(n)}</td><td>{e(t(lang, "not_read"))}<small>{e(t(lang, "unnamed_fix"))}</small></td></tr>')
@@ -205,7 +206,7 @@ def drop_zone(lang, st, root):
         out += (f'<table class="tbl"><tr><th>{e(t(lang, "col_file"))}</th><th>{e(t(lang, "col_is"))}</th></tr>'
                 + "".join(items) + '</table>')
     out += f'<p class="foot"><button type="button" class="lnk" id="openinbox">{e(t(lang, "open_inbox"))}</button></p>'
-    return out, len(names)
+    return out, len(names), ready
 
 
 # ---------------------------------------------------------------- step 4
@@ -366,14 +367,19 @@ def current_step(st, q):
     unnamed = len(st.get("unnamed") or [])
     nq = len((q or {}).get("items") or [])
     inbox = st.get("inbox") or 0
-    if unnamed:
-        return 2, "lead_unnamed", {"n": unnamed}
-    if todo:
-        return 1, "lead_todo", {"n": todo}
-    if inbox:
+    # A file nobody can name stays in the folder and stops nothing (2026-11-12), so it must not
+    # hold the owner on the first view either (2026-11-13, user 001: six screenshots kept the
+    # panel on "get the files" with an "Import 6 files" button that had nothing to import).
+    # What can be done now comes first: files that can be read, then what is waiting to be
+    # categorized, then what is still to download.
+    if inbox - unnamed > 0:
         return 3, "lead_inbox", {}
     if nq:
         return 4, "lead_questions", {"n": nq}
+    if todo:
+        return 1, "lead_todo", {"n": todo}
+    if unnamed:
+        return 2, "lead_unnamed", {"n": unnamed}
     return 5, "lead_done", {}
 
 
@@ -417,29 +423,36 @@ def render(base, root, st, q, rec, job, held, tool=None, lang="en"):
     elif held:
         busy += f'<p class="busy">{e(t(lang, "held", verb=held.get("verb"), since=held.get("since")))}</p>'
     need_html, need, more = need_table(lang, st)
-    drop_html, in_folder = drop_zone(lang, st, root)
+    drop_html, in_folder, ready = drop_zone(lang, st, root)
     day = st.get("importDay")
     v1_h = t(lang, "v1_h") if need or in_folder else t(lang, "v1_none_h")
     v1_s = t(lang, "v1_s") if need else (t(lang, "v1_none_s") if not in_folder else "")
     if not need and not in_folder and day:
         need_html += f'<table class="tbl"><tr><td>{e(t(lang, "v1_day"))}</td><td>{e(str(day))}</td></tr></table>'
-    v2_h = (t(lang, "v2_h", n=in_folder).replace("(s)", "" if in_folder == 1 else "s")) if in_folder else t(lang, "v2_none_h")
+    v2_h = (t(lang, "v2_h", n=ready).replace("(s)", "" if ready == 1 else "s")) if ready else t(lang, "v2_none_h")
     what = waiting_words(lang, items)
     v3_h = t(lang, "v3_h_n", what=what) if items else t(lang, "v3_none_h")
+    # the way on is always a button under the view, never only the bar at the top: the files
+    # that can be read, else what is waiting to be categorized, else the page
+    if ready:
+        v1_next = f'<button type="button" class="btn primary" data-go="2">{e(v2_h)}</button>'
+    elif items:
+        v1_next = f'<button type="button" class="btn primary" data-go="3">{e(v3_h)}</button>'
+    else:
+        v1_next = f'<a class="btn primary" href="{e(base)}/" target="_blank">{e(t(lang, "open_dash"))}</a>'
     fill = {"{{BASE}}": e(base), "{{LANG}}": e(lang), "{{TITLE}}": "FIRE Toad",
             "{{SUBTITLE}}": e(t(lang, "subtitle")),
             "{{OPEN_DASH}}": e(t(lang, "open_dash")), "{{LANG_OTHER}}": e(t(lang, "lang_other")),
             "{{OTHER_LANG}}": "zh" if lang == "en" else "en",
-            "{{BARS}}": bars(view), "{{VIEW}}": str(view), "{{CUR}}": str(cur), "{{INFOLDER}}": str(in_folder),
+            "{{BARS}}": bars(view), "{{VIEW}}": str(view), "{{CUR}}": str(cur), "{{INFOLDER}}": str(ready),
             "{{STEP_OF}}": e(t(lang, "v_step", i="{i}", n=4)),
             "{{V1_H}}": e(v1_h), "{{V1_S}}": e(v1_s), "{{V2_H}}": e(v2_h), "{{V3_H}}": e(v3_h), "{{V4_H}}": e(t(lang, "v4_h")),
             "{{STEP1}}": need_html, "{{STEP2}}": drop_html, "{{BALANCES}}": more,
             # with files in the folder the way on is one button, whatever else is still to come
-            "{{V1_NEXT}}": (f'<div class="act"><button type="button" class="btn primary" data-go="2">{e(v2_h)}</button></div>'
-                            if in_folder else ""),
+            "{{V1_NEXT}}": f'<div class="act">{v1_next}</div>',
             "{{STEP4}}": step4(lang, q), "{{FILED}}": merchants_list(lang, root),
             "{{STEP5}}": step5(lang, rec, base),
-            "{{GO}}": e(t(lang, "go")), "{{DRY_HINT}}": e(t(lang, "dry_hint") if in_folder else t(lang, "dry_none")),
+            "{{GO}}": e(t(lang, "go")), "{{DRY_HINT}}": e(t(lang, "dry_hint") if ready else t(lang, "dry_none")),
             "{{BUSY}}": busy, "{{AI}}": ai_card(lang, root), "{{AI_TITLE}}": e(t(lang, "ai_title")),
             "{{SETTINGS}}": e(t(lang, "settings")), "{{MORE}}": e(t(lang, "more_h")),
             "{{JS}}": json.dumps(js_strings(lang), ensure_ascii=False).replace("</", "<\\/"),

@@ -53,6 +53,13 @@
     question — do you want to see when your investments could pay for your spending? — and
     only a yes brings the two optional lines (costs that start once work stops, government
     pensions).
+  - *The panel no longer waits on a file nobody can name.* Such a file stays in the folder, and
+    used to keep the panel on "get the files" with an *Import* button that counted it and had
+    nothing to import. The panel now opens on what can be done — readable files, else what is
+    waiting to be categorized, else what is still to download — the button counts only files
+    that can be read, every view ends with the button that goes on, and the setup's
+    *Categorize them* opens that view. The import day screen says the last day a statement
+    closes and the day after it, one fact a line; the goal screen says a blank is fine.
   - *An error you can report, and a log.* A run that stops opens a dialog over the page —
     nothing on the page moves — with *Try again*, *Copy report*, the error code
     (`FT-SETUP-KeyError`), the run's id and the log, one a line; a launch that fails shows the

@@ -400,10 +400,13 @@ W = {
     # 6 day
     "w_day_h": {"en": "Your import day", "zh": "你的导入日"},
     "w_day_q": {"en": "The day of the month you sit down with the new statements.", "zh": "每个月你坐下来处理新对账单的那一天。"},
-    "w_day_closes": {"en": "Your statements close on the {days}, so the day after the last one brings everything at once.",
-                     "zh": "你的对账单在每月 {days} 号出，最晚那份的次日来做，一次就能拿齐。"},
-    "w_day_default": {"en": "The 1st is the tool's default; any day works.", "zh": "默认是 1 号；哪天都行。"},
-    "w_day_l": {"en": "Day of the month (1–28)", "zh": "每月几号（1–28）"},
+    "w_day_last": {"en": "Your last statement closes", "zh": "最晚的一份对账单"},
+    "w_day_nth": {"en": "day {d} of each month", "zh": "每月 {d} 号结账"},
+    "w_day_after": {"en": "One day later, when every statement is out", "zh": "晚一天，所有对账单都出齐了"},
+    "w_day_default": {"en": "Any day works", "zh": "哪天都行"},
+    "w_day_l": {"en": "Import day (1–28)", "zh": "导入日（1–28）"},
+    "w_goal_blank": {"en": "Leave blank what you do not know. You can fill it in later.", "zh": "不知道的留空，以后可以再填。"},
+    "w_rent_eg": {"en": "For example rent, or insurance your job pays today", "zh": "比如房租，或现在由工作支付的保险"},
     # 7 build
     "w_build_h": {"en": "Build your page", "zh": "生成你的页面"},
     "w_build_q": {"en": "Check these, then build. Your files are read and your page is made.", "zh": "核对一下，然后生成。程序会读你的文件，做出你的页面。"},

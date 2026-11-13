@@ -429,9 +429,10 @@ table.cm input{width:100%}
         if (A.goal !== 'yes') { extra.appendChild(el('p', 'hint', esc(W.w_goal_hint))); return; }
         extra.appendChild(el('p', 'hint', esc(W.w_goal_means)));
         var qa = el('div', 'qa', '<b>' + esc(W.w_goal_more) + '</b>');
+        qa.appendChild(el('p', 'hint', esc(W.w_goal_blank)));
         var tb = el('table', 'acc money');
         var r1 = el('tr'), a1 = el('td'), a2 = el('td', 'num');
-        a1.appendChild(el('span', null, esc(W.w_rent)));
+        a1.appendChild(el('span', null, esc(W.w_rent))); a1.appendChild(el('small', null, esc(W.w_rent_eg)));
         var rent = text(A.money.imputedRent || '', W.w_amonth, 'amt'); rent.inputMode = 'decimal'; rent.oninput = function(){ A.money.imputedRent = rent.value; };
         a2.appendChild(rent); r1.appendChild(a1); r1.appendChild(a2); tb.appendChild(r1);
         if (!A.money.pensions.length) A.money.pensions = [{name: 'CPP'}, {name: 'OAS'}];
@@ -458,8 +459,20 @@ table.cm input{width:100%}
       });
     } else if (step === 4) {
       card.appendChild(el('h2', null, esc(W.w_day_h)));
-      card.appendChild(el('p', 'q', esc(W.w_day_q) + ' ' + esc(scr.day.closes.length ? fmt(W.w_day_closes, {days: scr.day.closes.join(', ')}) : W.w_day_default)));
-      var d = field(card, esc(W.w_day_l), text(A.importDay || scr.day.suggest, '', 'amt')); d.inputMode = 'numeric';
+      // One fact a line (2026-11-13, user 001: "the 5, 5, 20, 23, 23, 23, 19, 19" left her asking
+      // where the 24 came from): the last day a statement closes, then the day after it, filled in.
+      card.appendChild(el('p', 'q', esc(W.w_day_q)));
+      var dt = el('table', 'acc money'); card.appendChild(dt);
+      var last = scr.day.closes.length ? Math.max.apply(null, scr.day.closes) : 0;
+      if (last) {
+        var lr = el('tr'), l1 = el('td'), l2 = el('td', 'num');
+        l1.appendChild(el('span', null, esc(W.w_day_last))); l2.textContent = fmt(W.w_day_nth, {d: last});
+        lr.appendChild(l1); lr.appendChild(l2); dt.appendChild(lr);
+      }
+      var dr = el('tr'), d1 = el('td'), d2 = el('td', 'num');
+      d1.appendChild(el('span', null, esc(W.w_day_l))); d1.appendChild(el('small', null, esc(last ? W.w_day_after : W.w_day_default)));
+      var d = text(A.importDay || scr.day.suggest, '', 'amt'); d.inputMode = 'numeric'; d2.appendChild(d);
+      dr.appendChild(d1); dr.appendChild(d2); dt.appendChild(dr);
       nav(card, true, function(){ A.importDay = d.value; step = 5; draw(); });
     } else if (step === 5) {
       card.appendChild(el('h2', null, esc(W.w_build_h)));
@@ -535,7 +548,7 @@ table.cm input{width:100%}
             api('GET', '/api/questions').then(function(q){
               var items = (q.ok && q.data && q.data.items) || [], what = waiting(items);
               var open = el('a', 'btn' + (what ? '' : ' primary'), esc(W.w_open_dash)); open.href = base + '/'; open.target = '_blank';
-              var pan = el('a', 'btn' + (what ? ' primary' : ''), esc(what ? W.w_sort_go : W.w_panel)); pan.href = base + '/panel';
+              var pan = el('a', 'btn' + (what ? ' primary' : ''), esc(what ? W.w_sort_go : W.w_panel)); pan.href = base + '/panel' + (what ? '#v3' : '');
               if (what) { done.appendChild(el('small', null, esc(fmt(W.w_sort_n, {what: what})))); a.appendChild(pan); a.appendChild(open); }
               else { a.appendChild(open); a.appendChild(pan); }
             });
