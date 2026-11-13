@@ -245,7 +245,10 @@ def merge(draft, answers, today):
         plan["committed"] = committed
     rent = _num(m.get("imputedRent"))
     if rent:
+        # asked in general words — monthly costs that begin once work stops — not as one
+        # owner's rent (2026-11-12): the flow keeps its key, and is named for what it is
         plan["imputedRent"] = int(round(rent))
+        plan["laterName"] = "Costs that start later"
     goal = (answers.get("goal") or "").lower()
     if goal in ("yes", "no"):
         plan["fire"] = {"goal": goal == "yes", "asked": today}

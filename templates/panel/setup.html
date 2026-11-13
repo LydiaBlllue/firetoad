@@ -25,6 +25,13 @@ table.acc td input[type=text]{width:100%;max-width:240px;font-weight:600;border-
 table.acc td input[type=text]:hover,table.acc td input[type=text]:focus{border-color:var(--border);background:#fff}
 table.acc td.num input.amt{width:110px;max-width:110px;font-weight:400;border-color:var(--border);background:#fff;text-align:right}
 table.acc select{min-width:150px}
+table.acc.money td.num{white-space:nowrap}
+table.acc.money td.num input.amt{font-weight:400}
+table.acc.money td input[type=text]{font-weight:400}
+table.acc.money tr.sum td{border-bottom:0;border-top:1px solid var(--ink);padding-top:10px}
+table.acc.money tr.sum td.num b{font-size:16px}
+table.acc.money small.warn{color:var(--warn)}
+table.acc.money small.bad{color:var(--bad)}
 table.acc .fixed{color:var(--ink-2)}
 .kv.wide{grid-template-columns:auto 1fr;max-width:none}
 .kv.wide span:nth-child(even){text-align:left}
@@ -201,11 +208,6 @@ table.cm input{width:100%}
   function field(card, label, input){ var f = el('div', 'field'); f.appendChild(el('label', null, label)); f.appendChild(input); card.appendChild(f); return input; }
   function text(val, ph, cls){ var i = el('input', cls || null); i.type = 'text'; i.value = val == null ? '' : val; if (ph) i.placeholder = ph; return i; }
   // the draft's suggestions come with numbers; the sentences are ours, in the owner's language
-  function payAsk(m){
-    if (m.takeHome.suggest) return fmt(W.w_take_sug, {per: money(m.takeHome.suggest / 2), sum: money(m.takeHome.suggest)});
-    return W.w_take_none;
-  }
-
   function draw(){
     steps();
     var sc = $('screen'); sc.innerHTML = '';
@@ -335,65 +337,118 @@ table.cm input{width:100%}
         step = 2; draw();
       });
     } else if (step === 2) {
+      // Three amounts, each filled in from the files, and what is left for everyday worked out:
+      // the owner does no sums (2026-11-12, user 001 — take-home, investing and everyday were
+      // three boxes that had to add up, with a warning when they did not). Nothing here is one
+      // owner's case: what starts after work stops is asked on the next screen, of those who
+      // want that tracked.
       var m = scr.money;
       card.appendChild(el('h2', null, esc(W.w_money_h)));
       card.appendChild(el('p', 'q', esc(W.w_money_q)));
-      var th = field(card, esc(payAsk(m)), text(A.money.takeHome != null ? A.money.takeHome : (m.takeHome.suggest || ''), W.w_amonth, 'amt'));
-      var inv = field(card, esc(W.w_invest), text(A.money.invest != null ? A.money.invest : (m.invest.suggest || ''), W.w_amonth, 'amt'));
-      var evLabel = m.everyday.suggest ? fmt(W.w_everyday_sug, {sug: money(m.everyday.suggest)}) : W.w_everyday;
-      var ev = field(card, esc(evLabel), text(A.money.everyday != null ? A.money.everyday : (m.everyday.suggest || ''), W.w_amonth, 'amt'));
-      [th, inv, ev].forEach(function(i){ i.inputMode = 'decimal'; });
-      card.appendChild(el('p', 'q', esc(W.w_committed)));
-      var cbox = el('div'); card.appendChild(cbox);
-      function drawCommitted(){
-        cbox.innerHTML = '';
-        A.money.committed.forEach(function(c, k){
-          var t = el('table', 'cm'); var tr = el('tr'); t.appendChild(tr);
-          var td1 = el('td'); var n = text(c.name || '', W.w_committed_ph); n.oninput = function(){ c.name = n.value; }; td1.appendChild(n); tr.appendChild(td1);
-          var td2 = el('td'); var am = text(c.amount || '', W.w_amonth, 'amt'); am.inputMode = 'decimal'; am.oninput = function(){ c.amount = am.value; }; td2.appendChild(am); tr.appendChild(td2);
-          var td3 = el('td'); var s = el('select'); [['keep', W.w_keep], ['drop', W.w_ends]].forEach(function(o){ var op = el('option', null, esc(o[1])); op.value = o[0]; if ((c.afterFire === false ? 'drop' : 'keep') === o[0]) op.selected = true; s.appendChild(op); });
-          s.onchange = function(){ c.afterFire = s.value === 'keep'; }; td3.appendChild(s); tr.appendChild(td3);
-          var td4 = el('td'); var rm = el('button', 'btn sm', '×'); rm.type = 'button'; rm.onclick = function(){ A.money.committed.splice(k, 1); drawCommitted(); }; td4.appendChild(rm); tr.appendChild(td4);
-          cbox.appendChild(t);
+      var tb = el('table', 'acc money'); card.appendChild(tb);
+      function mrow(label, hint, input){
+        var tr = el('tr'), c1 = el('td'), c2 = el('td', 'num');
+        c1.appendChild(el('span', null, esc(label))); if (hint) c1.appendChild(el('small', null, esc(hint)));
+        c2.appendChild(input); tr.appendChild(c1); tr.appendChild(c2); tb.appendChild(tr); return tr;
+      }
+      function amt(v){ var x = text(v == null ? '' : v, W.w_amonth, 'amt'); x.inputMode = 'decimal'; return x; }
+      var th = amt(A.money.takeHome != null ? A.money.takeHome : (m.takeHome.suggest || ''));
+      mrow(W.w_take, m.takeHome.suggest ? fmt(W.w_take_hint, {per: money(m.takeHome.suggest / 2)}) : W.w_take_nohint, th);
+      var fixedAt = tb.rows.length;
+      function drawFixed(){
+        while (tb.rows.length > fixedAt && tb.rows[fixedAt].getAttribute('data-fixed')) tb.deleteRow(fixedAt);
+        var before = tb.rows[fixedAt] || null;
+        A.money.committed.forEach(function(c, n){
+          var tr = el('tr'); tr.setAttribute('data-fixed', '1');
+          var c1 = el('td'), c2 = el('td', 'num');
+          var nm = text(c.name || '', W.w_committed_ph); nm.oninput = function(){ c.name = nm.value; calc(); }; c1.appendChild(nm);
+          var am = amt(c.amount || ''); am.oninput = function(){ c.amount = am.value; calc(); }; c2.appendChild(am);
+          var rm = el('button', 'lnk', '×'); rm.type = 'button'; rm.setAttribute('aria-label', 'remove'); rm.style.marginLeft = '6px';
+          rm.onclick = function(){ A.money.committed.splice(n, 1); drawFixed(); calc(); }; c2.appendChild(rm);
+          tr.appendChild(c1); tr.appendChild(c2); tb.insertBefore(tr, before);
         });
-        var add = el('button', 'btn sm', esc(W.w_add_one)); add.type = 'button'; add.onclick = function(){ A.money.committed.push({afterFire: true}); drawCommitted(); };
-        cbox.appendChild(add);
+        var tr = el('tr'); tr.setAttribute('data-fixed', '1');
+        var c1 = el('td'), c2 = el('td', 'num');
+        c1.appendChild(el('span', null, esc(W.w_committed)));
+        if (!A.money.committed.length) c1.appendChild(el('small', null, esc(W.w_none_found)));
+        var add = el('button', 'btn sm', esc(W.w_add_one)); add.type = 'button';
+        add.onclick = function(){ A.money.committed.push({afterFire: true}); drawFixed(); calc(); }; c2.appendChild(add);
+        tr.appendChild(c1); tr.appendChild(c2); tb.insertBefore(tr, before);
       }
-      drawCommitted();
-      var rent = field(card, esc(W.w_rent), text(A.money.imputedRent || '', W.w_amonth, 'amt')); rent.inputMode = 'decimal';
-      var pb = field(card, esc(W.w_planbase), text(A.money.planBase != null ? A.money.planBase : (m.planBase.suggest || ''), W.w_amonth, 'amt')); pb.inputMode = 'decimal';
-      var gapEl = el('p', 'busy'); gapEl.style.display = 'none'; card.appendChild(gapEl);
-      function showGap(){
-        A.money.takeHome = th.value; A.money.invest = inv.value; A.money.everyday = ev.value;
-        var g = planGap(); gapEl.textContent = g; gapEl.style.display = g ? 'block' : 'none';
+      var inv = amt(A.money.invest != null ? A.money.invest : (m.invest.suggest || ''));
+      mrow(W.w_invest, m.invest.suggest ? W.w_from_files : W.w_none_found, inv);
+      // what is left: worked out when there is a pay to work it out from; asked only when there is none
+      var leftVal = el('b'), leftHint = el('small'), ev = amt(A.money.everyday != null ? A.money.everyday : (m.everyday.suggest || ''));
+      var leftTr = el('tr', 'sum'), l1 = el('td'), l2 = el('td', 'num');
+      l1.appendChild(el('span', null, '<b>' + esc(W.w_left) + '</b>')); l1.appendChild(leftHint);
+      l2.appendChild(leftVal); l2.appendChild(ev); leftTr.appendChild(l1); leftTr.appendChild(l2); tb.appendChild(leftTr);
+      drawFixed();
+      function num(v){ var x = parseFloat(String(v == null ? '' : v).replace(/[$,\s]/g, '')); return isNaN(x) ? 0 : x; }
+      function calc(){
+        var pay = num(th.value), fixed = 0;
+        A.money.committed.forEach(function(c){ if (c.name && c.amount) fixed += num(c.amount); });
+        var left = pay - fixed - num(inv.value), sug = m.everyday.suggest;
+        leftHint.className = '';
+        if (pay) {
+          ev.style.display = 'none'; leftVal.style.display = '';
+          leftVal.textContent = (left < 0 ? '-$' : '$') + Math.abs(Math.round(left)).toLocaleString();
+          if (left < 0) { leftHint.textContent = W.w_left_neg; leftHint.className = 'bad'; }
+          else if (sug && left < sug) { leftHint.textContent = fmt(W.w_left_short, {sug: whole(sug)}); leftHint.className = 'warn'; }
+          else leftHint.textContent = sug ? fmt(W.w_left_cards, {sug: whole(sug)}) : '';
+        } else {
+          ev.style.display = ''; leftVal.style.display = 'none';
+          leftHint.textContent = sug ? fmt(W.w_left_cards, {sug: whole(sug)}) : '';
+        }
+        return pay ? Math.max(0, Math.round(left)) : ev.value;
       }
-      [th, inv, ev].forEach(function(x){ x.addEventListener('input', showGap); }); showGap();
+      function whole(v){ return '$' + Math.round(+v).toLocaleString(); }
+      [th, inv, ev].forEach(function(x){ x.addEventListener('input', calc); }); calc();
       nav(card, true, function(){
-        A.money.takeHome = th.value; A.money.invest = inv.value; A.money.everyday = ev.value; A.money.imputedRent = rent.value; A.money.planBase = pb.value;
+        A.money.takeHome = th.value; A.money.invest = inv.value; A.money.everyday = String(calc());
+        // the planning figure starts from what the cards really spent when the files say, else from the everyday amount
+        if (A.money.planBase == null) A.money.planBase = m.planBase.suggest || A.money.everyday;
         step = 3; draw();
       });
     } else if (step === 3) {
+      // One plain question — no "retiring early", which the arithmetic never defines: the target
+      // is spending x 12 x 25 and the day is when investments reach it (2026-11-12). What only
+      // matters to someone who says yes is asked only then.
       card.appendChild(el('h2', null, esc(W.w_goal_h)));
       card.appendChild(el('p', 'q', esc(W.w_goal_q)));
       var pills = el('div', 'pills');
-      [['yes', W.w_yes], ['no', W.w_no], ['', W.w_skip]].forEach(function(o){
-        var p = el('button', 'pl' + (A.goal === o[0] ? ' sel' : ''), esc(o[1])); p.type = 'button';
-        p.onclick = function(){ pills.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); p.classList.add('sel'); A.goal = o[0]; };
+      var extra = el('div');
+      function drawExtra(){
+        extra.innerHTML = '';
+        if (A.goal !== 'yes') { extra.appendChild(el('p', 'hint', esc(W.w_goal_hint))); return; }
+        extra.appendChild(el('p', 'hint', esc(W.w_goal_means)));
+        var qa = el('div', 'qa', '<b>' + esc(W.w_goal_more) + '</b>');
+        var tb = el('table', 'acc money');
+        var r1 = el('tr'), a1 = el('td'), a2 = el('td', 'num');
+        a1.appendChild(el('span', null, esc(W.w_rent)));
+        var rent = text(A.money.imputedRent || '', W.w_amonth, 'amt'); rent.inputMode = 'decimal'; rent.oninput = function(){ A.money.imputedRent = rent.value; };
+        a2.appendChild(rent); r1.appendChild(a1); r1.appendChild(a2); tb.appendChild(r1);
+        if (!A.money.pensions.length) A.money.pensions = [{name: 'CPP'}, {name: 'OAS'}];
+        var r0 = el('tr'), b0 = el('td'); b0.colSpan = 2; b0.appendChild(el('small', null, esc(W.w_pens_q))); r0.appendChild(b0); tb.appendChild(r0);
+        A.money.pensions.forEach(function(p){
+          var tr = el('tr'), c1 = el('td'), c2 = el('td', 'num');
+          c1.appendChild(el('span', null, esc(p.name)));
+          var mo = text(p.monthly || '', W.w_amonth, 'amt'); mo.inputMode = 'decimal'; mo.oninput = function(){ p.monthly = mo.value; };
+          var fr = text(p.from || '', W.w_from_age, 'amt'); fr.inputMode = 'numeric'; fr.style.marginLeft = '6px'; fr.oninput = function(){ p.from = fr.value; };
+          c2.appendChild(mo); c2.appendChild(fr); tr.appendChild(c1); tr.appendChild(c2); tb.appendChild(tr);
+        });
+        qa.appendChild(tb); extra.appendChild(qa);
+      }
+      [['yes', W.w_yes], ['', W.w_skip]].forEach(function(o){
+        var on = (A.goal === 'yes') === (o[0] === 'yes');
+        var p = el('button', 'pl' + (on ? ' sel' : ''), esc(o[1])); p.type = 'button';
+        p.onclick = function(){ pills.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); p.classList.add('sel'); A.goal = o[0]; drawExtra(); };
         pills.appendChild(p);
       });
-      card.appendChild(pills);
-      card.appendChild(el('p', 'hint', esc(W.w_goal_hint)));
-      card.appendChild(el('p', 'q', esc(W.w_pens_q)));
-      var pbox = el('div'); card.appendChild(pbox);
-      if (!A.money.pensions.length) A.money.pensions = [{name: 'CPP'}, {name: 'OAS'}];
-      A.money.pensions.forEach(function(p){
-        var t = el('table', 'cm'); var tr = el('tr'); t.appendChild(tr);
-        tr.appendChild(el('td', null, esc(p.name)));
-        var td = el('td'); var mo = text(p.monthly || '', W.w_amonth, 'amt'); mo.inputMode = 'decimal'; mo.oninput = function(){ p.monthly = mo.value; }; td.appendChild(mo); tr.appendChild(td);
-        var td2 = el('td'); var fr = text(p.from || '', W.w_from_age, 'amt'); fr.inputMode = 'numeric'; fr.oninput = function(){ p.from = fr.value; }; td2.appendChild(fr); tr.appendChild(td2);
-        pbox.appendChild(t);
+      card.appendChild(pills); card.appendChild(extra); drawExtra();
+      nav(card, true, function(){
+        if (A.goal !== 'yes') { A.money.imputedRent = ''; A.money.pensions = []; }
+        step = 4; draw();
       });
-      nav(card, true, function(){ step = 4; draw(); });
     } else if (step === 4) {
       card.appendChild(el('h2', null, esc(W.w_day_h)));
       card.appendChild(el('p', 'q', esc(W.w_day_q) + ' ' + esc(scr.day.closes.length ? fmt(W.w_day_closes, {days: scr.day.closes.join(', ')}) : W.w_day_default)));

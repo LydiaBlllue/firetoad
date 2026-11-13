@@ -36,6 +36,12 @@
     said; everything else is imported. One screenshot among 28 files had left a first import
     undone while the setup said the page was ready; the setup now says so when its first import
     did not write, and no longer asks for screenshots it cannot use yet.
+  - *The setup does the sums.* Step 3 shows take-home, fixed costs and what goes to the broker,
+    each filled in from the files, and works out what is left for everyday; the boxes for a
+    planning figure and for "rent you do not pay today" are gone. Step 4 asks one plain
+    question — do you want to see when your investments could pay for your spending? — and
+    only a yes brings the two optional lines (costs that start once work stops, government
+    pensions).
   - *An error you can report, and a log.* A run that stops opens a dialog over the page —
     nothing on the page moves — with *Try again*, *Copy report*, the error code
     (`FT-SETUP-KeyError`), the run's id and the log, one a line; a launch that fails shows the

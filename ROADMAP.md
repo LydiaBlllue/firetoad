@@ -12,6 +12,10 @@ already shipped is in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## 2.0.0
 
+- **Income that needs no work, of every kind.** Rent from a property, royalties, a pension, an
+  annuity: each counts toward the day work becomes optional, beside what your investments can
+  pay. The goal becomes "income that needs no work covers your spending", not "the portfolio
+  reaches a number"; a property is counted by its rent or by its value, never both.
 - **Make it yours**: funds you name for what you are saving toward, and big purchases tracked on
   their own if you want them.
 - **A faster page and a sturdier store for your data**, still only on your own computer.

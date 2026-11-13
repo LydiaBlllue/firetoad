@@ -377,7 +377,7 @@ def build(a, today):
                  **({"note": c["note"]} if c.get("note") else {})}
                 for c in (plan.get("committed") or [])
             ] + ([
-                {"key": "rent-after-fire", "kind": "committed", "name": "Rent",
+                {"key": "rent-after-fire", "kind": "committed", "name": plan.get("laterName") or "Rent",
                  "amount": int(plan.get("imputedRent", 0)), "starts": "fire", "afterFire": "keep",
                  "note": "Not paid today. Part of the planning figure from the day FIRE begins."}
             ] if int(plan.get("imputedRent", 0) or 0) else []) + [
