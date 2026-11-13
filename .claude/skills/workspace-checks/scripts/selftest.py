@@ -1342,8 +1342,14 @@ def card_only_setup_check(root, base):
     if json.load(open(layout.path(ws, "profile.json"), encoding="utf-8")).get("born") is not None:
         say.append("a skipped birth year was written as a number")
     waiting = [d for d in json.load(open(layout.path(ws, "decisions.json"), encoding="utf-8"))["decisions"] if d.get("kind") == "merchant"]
-    if not waiting or not all(d.get("match") for d in waiting):
-        say.append("the first import's merchants are not waiting to be confirmed by name")
+    # a chain the starter map knows is filed and not asked (2026-11-12), so nothing may be waiting
+    # here; what does wait is asked by the merchant's name, and no purchase of a known chain is Other
+    if not all(d.get("match") for d in waiting):
+        say.append("a merchant of the first import is waiting without its name")
+    import csv as _csv
+    rows = list(_csv.DictReader(open(layout.path(ws, "spending.csv"), encoding="utf-8")))
+    if not rows or all(r.get("category") == "Other" for r in rows):
+        say.append("the first import filed every purchase as Other: the starter map was not used")
     if say:
         return ["  ✗ card-only setup: " + "; ".join(say)]
     return [f"  ✓ card-only setup, end to end: two statements, the questions skipped, draft → scaffold → import clean, {len(waiting)} merchants waiting as one list"]
@@ -1375,8 +1381,8 @@ def starter_check(root, base):
         got.append((cat, how))
     asked = {d["what"].split(",")[0]: d["default"] for d in plan.decisions}
     want = [("Dining", "starter"), ("Dining", "starter"), ("Other", "new"), ("Grocery", "hit")]
-    if got == want and asked == {"TIM HORTONS OTTAWA": "Dining", "UBER* EATS": "Dining", "LIGHTHOUSE PUBLICATION": "Other"} and not bad:
-        return [f"  ✓ starter map: {len(pats)} chains, none suggesting Subscription; a known chain filed as suggested and still asked, the workspace's own entry first, a stranger Other"]
+    if got == want and asked == {"LIGHTHOUSE PUBLICATION": "Other"} and len(plan.judged) == 2 and not bad:
+        return [f"  ✓ starter map: {len(pats)} chains, none suggesting Subscription; a known chain filed as suggested, said and not asked, the workspace's own entry first, only a stranger asked"]
     return [f"  ✗ starter map: got {got}, asked {asked}" + (f"; patterns outside the seven categories or Subscription: {bad}" if bad else "")]
 
 

@@ -934,15 +934,20 @@ def note_merchant(plan, key, cat, how, when, src, root=None):
     plan.cat_used[key] = cat
     f, l = plan.merchant_dates.get(key, (when, when))
     plan.merchant_dates[key] = (min(f, when), max(l, when))
-    if how in ("new", "starter") and key not in plan.new_merchants:
+    if how == "starter" and key not in plan.new_merchants:
+        # a chain the starter map knows is filed, said once, and not asked: a first setup that
+        # ended with 27 questions had 13 of these in it, each already answered (2026-11-12, user
+        # 001). The owner changes one from the merchant list, like any other.
         plan.new_merchants[key] = (cat, src)
-        why = " The starter map of common chains suggests " + cat + "." if how == "starter" else ""
-        item = {"kind": "merchant", "match": key, "what": f"{key}, seen for the first time.{why}",
+        plan.judged.append(f"Filed {key} as {cat}, a common chain.")
+    elif how == "new" and key not in plan.new_merchants:
+        plan.new_merchants[key] = (cat, src)
+        item = {"kind": "merchant", "match": key, "what": f"{key}, seen for the first time.",
                 "default": cat, "source": f"{src}, {short(iso_to_date(when))}",
-                "facts": {"kind": "merchant", "merchant": key, "starter": cat if how == "starter" else None, "date": when}}
+                "facts": {"kind": "merchant", "merchant": key, "starter": None, "date": when}}
         # A model, only where every map missed and only if the owner set one (ai.py): its answer
         # is the question's suggestion, never the category — Other stays until the owner says.
-        if how == "new" and root and ai.enabled(root):
+        if root and ai.enabled(root):
             sug, by = ai.categorise(root, key)
             if sug and sug != cat:
                 item["suggest"], item["suggestBy"] = sug, "model"

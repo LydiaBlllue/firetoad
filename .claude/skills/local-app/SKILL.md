@@ -20,7 +20,8 @@ what goes in and what never does). The packaged app asks for the workspace folde
 launch — *Open my folder* or *Create my folder* (made in Documents as FIRE Toad) — and remembers it in the system's application-support
 folder, never in the workspace; `--choose` asks again. On every launch it compares the folder's
 copy of the tool with its own (`app.py` `tool_state`, sync.py's rules): a folder that differs
-gets a *Refresh the copy* button on the panel, a folder whose data is a newer shape than the
+is brought up to the app's version by the packaged app itself, silently (it never touches data; run
+as `python3 app.py` it is an *Update* button on the panel), a folder whose data is a newer shape than the
 app builds is shown and **not written to** until the app is updated. Inside the app there is no
 `python3`: the app's own binary runs the core's scripts when the core calls them. It picks a free port on `127.0.0.1`, prints an address with a
 fresh token in it, opens the panel in the system browser, and exits by itself five minutes after

@@ -221,6 +221,11 @@ def merge(draft, answers, today):
     goal = (answers.get("goal") or "").lower()
     if goal in ("yes", "no"):
         plan["fire"] = {"goal": goal == "yes", "asked": today}
+    else:
+        # skipped on the screen is "no for now", as the screen says and PRODUCT.md decides. Left
+        # out, the page read "never asked" and showed FIRE to anyone with money invested, and the
+        # first import asked the same question again (2026-11-12, user 001)
+        plan["fire"] = {"goal": False, "asked": today, "skipped": True}
     pens = []
     for p in m.get("pensions") or []:
         mo, fr = _num(p.get("monthly")), _num(p.get("from"))

@@ -263,13 +263,7 @@ def tool_state(ws):
     rules, read without copying anything."""
     import sync
     have, want = sync.workspace_schema(ws), sync.tool_schema()
-    changed = []
-    for rel in sync.SYNCED:
-        if rel == "FINANCE.md":
-            continue   # the seam: its figures table is the workspace's own and always differs
-        src, dst = os.path.join(TOOL, rel), os.path.join(ws, rel)
-        if os.path.exists(src) and sync.differs(src, dst):
-            changed.append(rel)
+    changed = sync.pending(ws)     # the sync's own rules, the two seams included
     if have is not None and want is not None and have > want:
         state = "newer"
     elif have is not None and want is not None and have < want:
@@ -372,18 +366,71 @@ def main(argv):
         remember(root)
     import server
     tool = tool_state(root)
+    if FROZEN and tool["state"] == "differs":
+        # the packaged app brings the folder's copy of the tool up to its own version by itself:
+        # it never touches data, and the owner of an app has no way to judge "refresh the copy"
+        # (2026-11-12, user 001: a folder made by the build before showed "differs in 6 places").
+        # A newer or older data shape is still said on the panel, and nothing is written.
+        refresh_tool(root)
+        tool = tool_state(root)
+    here = {}
 
     def ready(url, app):
+        here["url"] = url
         print(f"  {APP_NAME} · {root}\n  {url}\n  (closes by itself five minutes after the last tab is closed; Ctrl-C stops it now)", flush=True)
         if tool["state"] != "same":
             print(f"  the folder's copy of the tool: {tool['state']}" + (f" ({len(tool['changed'])} files)" if tool["changed"] else ""), flush=True)
         if not a.no_browser:
             webbrowser.open(url)
-    try:
+
+    def serve():
         return server.serve(root, a.port, ready=ready, tool=tool,
                             tool_hooks={"state": lambda: tool_state(root), "refresh": lambda: refresh_tool(root)})
+
+    def reopen():
+        server.log.info("opened again: the panel")
+        if here.get("url") and not a.no_browser:
+            webbrowser.open(here["url"])
+    try:
+        return run_as_mac_app(serve, reopen) if FROZEN and sys.platform == "darwin" else serve()
     except KeyboardInterrupt:
         return 0
+
+
+def run_as_mac_app(serve, reopen):
+    """The packaged app on macOS answers the Dock: the server runs on a thread and the main thread
+    runs the system's event loop, so opening the app again while it is running opens the panel
+    again, and Quit in the Dock quits. Without the loop a second double-click only brought a
+    windowless process forward — nothing happened, and it took Force Quit to start over
+    (2026-11-12, user 001). When the server stops (five idle minutes) the app quits. Without
+    PyObjC the server runs as before."""
+    try:
+        from AppKit import NSApplication, NSObject
+        from PyObjCTools import AppHelper
+    except ImportError:
+        return serve()
+    import threading
+    rc = {}
+
+    class Delegate(NSObject):
+        def applicationShouldHandleReopen_hasVisibleWindows_(self, app, visible):
+            reopen()
+            return False
+
+    def work():
+        try:
+            rc["rc"] = serve()
+        except BaseException as e:           # the app must not outlive its server
+            rc["rc"] = 1
+            print(f"  ✗ {type(e).__name__}: {e}", flush=True)
+        AppHelper.callAfter(NSApplication.sharedApplication().terminate_, None)
+
+    nsapp = NSApplication.sharedApplication()
+    delegate = Delegate.alloc().init()
+    nsapp.setDelegate_(delegate)
+    threading.Thread(target=work, name="jade-serve", daemon=True).start()
+    AppHelper.runEventLoop()                 # returns at terminate
+    return rc.get("rc", 0)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,25 @@
 
 ## 1.0.4 — unreleased
 
+- **From the first full run on a fresh account** (2026-11-12, user 001, on her own statements):
+  - *Opened again, it opens.* The app answers the Dock: opening it while it is running shows
+    the panel again, and Quit quits. Before, a second double-click did nothing and only Force
+    Quit let it start over.
+  - *The folder keeps up by itself.* The app brings the folder's copy of the tool to its own
+    version on launch and says nothing; "this folder's copy of the tool differs in 6 places" is
+    gone. A sync no longer drops the lines the setup added to `.gitignore`.
+  - *Skipped means no.* Skipping the early-retirement question no longer shows the FIRE pages to
+    anyone with money invested, and the first import no longer asks it again.
+  - *A chain the starter map knows is filed, not asked.* Three months of the demo's statements
+    went from 12 questions to 2. What is left is counted by what it is — "3 merchants and 2
+    transfers to sort" — on the page's header and at the end of the setup, which now sends you
+    to sort them before the dashboard.
+  - *The setup reads as a list, not a paragraph.* Screen 1 asks for the last 1–3 months, with
+    what to bring one per line and "How long?" answered in a small table; the last screen shows
+    your answers as rows, warns when the plan asks more than the pay, and folds what the run
+    printed under *Details*. The rules are DESIGN.md 6a.
+  - The yearly-returns fetch says "the source has answered its limit for today" where it said
+    `KeyError: 'series'`.
 - **One double-click, and a folder nobody has to choose** (2026-11-12, user 001, from the
   first run on a fresh account). The disk image shows the app alone: double-clicked there, it
   copies itself into Applications (~/Applications on an account that is not an administrator),

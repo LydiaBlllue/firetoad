@@ -461,6 +461,33 @@ What breaks is **how much fits on one screen**.
 - **No footer disclaimer**, and no long redundant explanatory sentences.
 - Explanatory text appears only where it is needed, within one line, in small grey type.
 
+## 6a. Screens the owner acts on
+
+The panel, the setup and the first-launch dialogs are instructions, and 5b and 6 hold there too.
+Eight rules (2026-11-12, user 001: the setup's first screen ran a question, its answer, a list
+and an instruction together in two paragraphs, and could not be read):
+
+1. **One thing to do per screen, and the heading says it**, verb first: `Bring your last 1–3
+   months`, not `Last month's files`.
+2. **At most one sentence under the heading**, fifteen words or twenty-five Chinese characters:
+   the one thing needed to do it.
+3. **Three or more things are a list**, one per line — never strung on commas or semicolons.
+4. **A question and its answer are apart.** The question is a small heading; the answer is two
+   columns, the item left and the value right, a total on its own last row. Never an answer
+   inside a sentence.
+5. **Numbers are written as numbers**: `5–10 min`, not `five to ten minutes`.
+6. **No reasons, no background, no word of the tool's own** on screen: draft, import record,
+   copy of the tool, register, schema. What the owner cannot use is cut.
+7. **A message appears only when the owner can do something about it**, and is always the same
+   three parts: what happened, in one sentence; the one thing to do, as one button; what will
+   not happen (`Your data stays as it is`), in one sentence.
+8. **Blocks of text stand apart**: at most two sentences in a block, space between blocks, small
+   grey type for explanation and never under 12px.
+
+What a run printed is never the screen: it is folded under *Details* and opened only when the run
+did not finish. A count always says what it counts: `3 merchants and 2 transfers to sort`, never
+`5 to confirm`.
+
 ## 7. Principles for presenting data
 
 - **The view starts at a year the owner chooses**; earlier history stays in `findata/` but does

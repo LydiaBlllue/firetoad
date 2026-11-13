@@ -74,12 +74,30 @@ class ToolState(unittest.TestCase):
         json.dump({"schema": 17}, open(os.path.join(self.ws, "findata", "register", "profile.json"), "w"))
         self.assertEqual(app.tool_state(self.ws)["state"], "migrate")
 
-    def test_finance_md_never_counts(self):
-        # its figures table is the workspace's own, so it always differs and is never a reason to refresh
+    def test_finance_md_counts_for_its_prose_never_for_its_figures(self):
+        # the figures table is the workspace's own; the prose around it is the tool's
         self.copy_in()
-        open(os.path.join(self.tool, "FINANCE.md"), "w").write("tool prose\n")
-        open(os.path.join(self.ws, "FINANCE.md"), "w").write("my figures\n")
+        fig = "<!-- LINT:FIGURES -->\n| net | {} |\n<!-- LINT:FIGURES:END -->\n"
+        open(os.path.join(self.tool, "FINANCE.md"), "w").write("tool prose\n" + fig.format(1))
+        open(os.path.join(self.ws, "FINANCE.md"), "w").write("tool prose\n" + fig.format(999))
         self.assertEqual(app.tool_state(self.ws)["state"], "same")
+        open(os.path.join(self.ws, "FINANCE.md"), "w").write("older prose\n" + fig.format(999))
+        self.assertEqual(app.tool_state(self.ws)["changed"], ["FINANCE.md"])
+
+    def test_the_setups_lines_in_gitignore_are_the_owners(self):
+        # setup adds a block that keeps the owner's data out of a remote: not a difference, and a
+        # sync keeps it (it used to copy the tool's file over it)
+        self.copy_in()
+        open(os.path.join(self.tool, ".gitignore"), "w").write(".DS_Store\n# findata/\n")
+        open(os.path.join(self.ws, ".gitignore"), "w").write(
+            ".DS_Store\n\n" + sync.OWN_LINES + " (setup, 2026-11-12): never in a remote.\nfindata/\n")
+        self.assertEqual(app.tool_state(self.ws)["state"], "same")
+        open(os.path.join(self.tool, ".gitignore"), "w").write(".DS_Store\n*.tmp\n# findata/\n")
+        self.assertEqual(app.tool_state(self.ws)["changed"], [".gitignore"])
+        new = sync.seam_text(".gitignore", os.path.join(self.tool, ".gitignore"), os.path.join(self.ws, ".gitignore"))
+        self.assertIn("*.tmp\n", new)
+        self.assertTrue(new.endswith("findata/\n"))
+        self.assertNotIn("# findata/", new)
 
 
 class Remembering(unittest.TestCase):

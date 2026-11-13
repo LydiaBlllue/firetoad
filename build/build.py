@@ -167,6 +167,7 @@ def build(args):
     ]
     if sys.platform == "darwin":
         cmd += ["--collect-all", "ocrmac", "--hidden-import", "objc", "--hidden-import", "Vision", "--hidden-import", "Quartz",
+                "--hidden-import", "AppKit", "--hidden-import", "PyObjCTools.AppHelper",   # app.py run_as_mac_app
                 "--hidden-import", "PIL", "--osx-bundle-identifier", "app.firetoad.local"]
     icon = os.path.join(HERE, "icon.icns" if sys.platform == "darwin" else "icon.ico")
     if os.path.exists(icon):

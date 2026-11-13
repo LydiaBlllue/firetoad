@@ -97,7 +97,12 @@ def fetch_returns():
     dec = {}
     for a in range(first - 1, last + 1, 10):      # ten years a request is what BLS allows unregistered
         j = get(BLS, {"seriesid": [CPI], "startyear": str(a), "endyear": str(min(a + 9, last))})
-        for o in j["Results"]["series"][0]["data"]:
+        series = (j.get("Results") or {}).get("series")
+        if not series:
+            # unregistered, BLS answers 25 requests a day and then sends a message instead of
+            # data: three setups in one afternoon used them up (2026-11-12, user 001)
+            raise RuntimeError("the inflation source has answered its limit for today")
+        for o in series[0]["data"]:
             if o["period"] == "M12":
                 dec[int(o["year"])] = float(o["value"])
     return [[y, years[y]["stocks"], years[y]["cash"], years[y]["bonds"], years[y]["gold"],
@@ -116,7 +121,8 @@ def refresh_returns(root, write, if_needed, today):
     try:
         years = fetch_returns()
     except Exception as e:
-        print(f"  ✗ yearly returns not refreshed ({type(e).__name__}: {e}); the last ones stay"); return 1
+        why = str(e) if isinstance(e, RuntimeError) else f"{type(e).__name__}: {e}"
+        print(f"  ✗ yearly returns not refreshed ({why}); the last ones stay, the next import tries again"); return 1
     if len(years) < 50:
         print(f"  ✗ yearly returns not refreshed: only {len(years)} years came back; the last ones stay"); return 1
     out = {"asof": today.isoformat(),

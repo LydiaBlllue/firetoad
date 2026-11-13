@@ -65,6 +65,20 @@ pre.log{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f3
 ul.files{list-style:none;font-size:12.5px;margin-top:8px}
 ul.files li{padding:3px 0;border-top:1px solid var(--border)}
 ul.files li:first-child{border-top:0}
+ul.bring{list-style:none;font-size:13px;margin:8px 0 2px}
+ul.bring li{padding:2px 0}
+ul.bring li::before{content:"\2022";color:var(--muted);display:inline-block;width:14px}
+.qa{margin-top:14px;font-size:12px;color:var(--muted)}
+.qa b{display:block;font-weight:600;color:var(--ink-2);margin-bottom:3px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:2px 16px;max-width:340px}
+.kv span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums}
+.kv .sum{color:var(--ink);border-top:1px solid var(--border);padding-top:3px;margin-top:2px}
+.kv.big{font-size:13px;color:var(--ink);max-width:420px;gap:5px 16px;margin:8px 0 4px}
+.kv.big span:nth-child(odd){color:var(--ink-2)}
+details.more{margin-top:10px;font-size:12px;color:var(--muted)}
+details.more summary{cursor:pointer}
+.ready{font-size:14px;font-weight:600;margin-top:12px}
+.ready small{display:block;font-weight:400;font-size:13px;color:var(--ink-2);margin-top:2px}
 .later{font-size:12px;color:var(--muted);margin-top:10px;border-top:1px solid var(--border);padding-top:8px}
 .ver{font-size:10.5px;color:var(--muted);letter-spacing:.04em;margin-top:18px;text-align:center}
 table.cm{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
@@ -114,6 +128,21 @@ table.cm input{width:100%}
     if (next) { var n = el('button', 'btn primary', esc(nextLabel || W.w_next)); n.type = 'button'; n.onclick = next; a.appendChild(n); }
     card.appendChild(a);
   }
+  // what is waiting, by what it is: "3 merchants and 2 transfers", never a bare number
+  function waiting(items){
+    var n = {merchant: 0, transfer: 0, other: 0};
+    items.forEach(function(d){ n[d.kind === 'merchant' ? 'merchant' : (d.kind === 'transfer' ? 'transfer' : 'other')]++; });
+    var parts = [];
+    function say(s, k){ if (k) parts.push(fmt(s, {n: k}).replace('(s)', k === 1 ? '' : 's')); }
+    say(W.w_n_merchant, n.merchant); say(W.w_n_transfer, n.transfer); say(W.w_n_other, n.other);
+    return parts.join(W.w_and);
+  }
+  // the plan against the pay, said where the numbers are typed (the checker's D13, on screen)
+  function planGap(){
+    var pay = +A.money.takeHome || 0, ask = (+A.money.invest || 0) + (+A.money.everyday || 0);
+    A.money.committed.forEach(function(c){ if (c.name && c.amount) ask += +c.amount || 0; });
+    return pay && ask > pay ? fmt(W.w_over, {ask: money(ask), pay: money(pay), gap: money(ask - pay)}) : '';
+  }
   function field(card, label, input){ var f = el('div', 'field'); f.appendChild(el('label', null, label)); f.appendChild(input); card.appendChild(f); return input; }
   function text(val, ph, cls){ var i = el('input', cls || null); i.type = 'text'; i.value = val == null ? '' : val; if (ph) i.placeholder = ph; return i; }
   // the draft's suggestions come with numbers; the sentences are ours, in the owner's language
@@ -139,8 +168,10 @@ table.cm input{width:100%}
         need.appendChild(el('div', 'hint', esc(W.w_need_then)));
         card.appendChild(need);
       }
-      card.appendChild(el('p', 'hint', esc(W.w_how_long)));
       card.appendChild(el('p', 'q', esc(W.w_files_q)));
+      var bring = el('ul', 'bring');
+      [W.w_files_1, W.w_files_2, W.w_files_3].forEach(function(x){ bring.appendChild(el('li', null, esc(x))); });
+      card.appendChild(bring);
       var drop = el('div', 'drop', '<b>' + esc(W.w_drop) + '</b><span><label class="lnk">' + esc(W.w_or_choose) + '<input type="file" multiple hidden id="pick"></label></span><small>' + esc(INBOX) + '</small>');
       card.appendChild(drop);
       var ul = el('ul', 'files');
@@ -148,6 +179,12 @@ table.cm input{width:100%}
       if (!(S.files || []).length) ul.appendChild(el('li', 'hint', esc(W.w_none_yet)));
       card.appendChild(ul);
       var msg = el('div', 'hint'); card.appendChild(msg);
+      var qa = el('div', 'qa', '<b>' + esc(W.w_how_long) + '</b>');
+      var kv = el('div', 'kv');
+      [[W.w_long_1, W.w_long_1v], [W.w_long_2, W.w_long_2v], [W.w_long_3, W.w_long_3v]].forEach(function(r){
+        kv.appendChild(el('span', null, esc(r[0]))); kv.appendChild(el('span', null, esc(r[1]))); });
+      kv.appendChild(el('span', 'sum', esc(W.w_long_sum))); kv.appendChild(el('span', 'sum', esc(W.w_long_sumv)));
+      qa.appendChild(kv);
       function upload(files){
         if (!files || !files.length) return;
         var fd = new FormData();
@@ -167,6 +204,7 @@ table.cm input{width:100%}
       drop.querySelector('#pick').onchange = function(ev){ upload(ev.target.files); ev.target.value = ''; };
       if (scr) card.appendChild(el('p', 'ok', esc(fmt(W.w_drafted, {n: scr.accounts.rows.length}))));
       nav(card, false, scr && ok ? function(){ step = 1; draw(); } : null);
+      card.appendChild(qa);
     } else if (step === 1) {
       card.appendChild(el('h2', null, esc(W.w_acc_h)));
       var own = field(card, esc(W.w_name_l) + (scr.owner.suggest ? esc(fmt(W.w_name_says, {who: scr.owner.suggest})) : ''), text(A.owner || scr.owner.suggest || '', W.w_name_ph));
@@ -255,6 +293,12 @@ table.cm input{width:100%}
       drawCommitted();
       var rent = field(card, esc(W.w_rent), text(A.money.imputedRent || '', W.w_amonth, 'amt')); rent.inputMode = 'decimal';
       var pb = field(card, esc(W.w_planbase), text(A.money.planBase != null ? A.money.planBase : (m.planBase.suggest || ''), W.w_amonth, 'amt')); pb.inputMode = 'decimal';
+      var gapEl = el('p', 'busy'); gapEl.style.display = 'none'; card.appendChild(gapEl);
+      function showGap(){
+        A.money.takeHome = th.value; A.money.invest = inv.value; A.money.everyday = ev.value;
+        var g = planGap(); gapEl.textContent = g; gapEl.style.display = g ? 'block' : 'none';
+      }
+      [th, inv, ev].forEach(function(x){ x.addEventListener('input', showGap); }); showGap();
       nav(card, true, function(){
         A.money.takeHome = th.value; A.money.invest = inv.value; A.money.everyday = ev.value; A.money.imputedRent = rent.value; A.money.planBase = pb.value;
         step = 3; draw();
@@ -290,27 +334,39 @@ table.cm input{width:100%}
       card.appendChild(el('h2', null, esc(W.w_build_h)));
       card.appendChild(el('p', 'q', esc(W.w_build_q)));
       var added = A.added.filter(function(x){ return x.inst && x.name; }).length;
-      var sum = el('ul', 'files');
-      sum.appendChild(el('li', null, '<b>' + esc(A.owner) + '</b>' + (A.born ? esc(fmt(W.w_born_is, {y: A.born})) : '')));
-      sum.appendChild(el('li', null, esc(fmt(W.w_sum_acc, {n: scr.accounts.rows.length})) + (added ? esc(fmt(W.w_sum_added, {n: added})) : '')));
-      sum.appendChild(el('li', null, esc(fmt(W.w_sum_money, {a: A.money.takeHome || W.w_not_set, b: A.money.invest || W.w_not_set, c: A.money.everyday || W.w_not_set, n: A.money.committed.filter(function(c){ return c.name && c.amount; }).length}))));
-      sum.appendChild(el('li', null, esc(fmt(W.w_sum_goal, {g: A.goal === 'yes' ? W.w_yes : (A.goal === 'no' ? W.w_no : W.w_skipped), d: A.importDay || scr.day.suggest}))));
+      var sum = el('div', 'kv big');
+      function line(k, v){ sum.appendChild(el('span', null, esc(k))); sum.appendChild(el('span', null, esc(v == null || v === '' ? W.w_not_set : v))); }
+      var fixed = A.money.committed.filter(function(c){ return c.name && c.amount; });
+      line(W.w_sum_name, A.owner);
+      line(W.w_sum_born, A.born);
+      line(W.w_sum_accounts, String(scr.accounts.rows.length + added));
+      function whole(v){ return v ? '$' + Math.round(+v).toLocaleString() : ''; }
+      line(W.w_sum_take, whole(A.money.takeHome));
+      line(W.w_sum_invest, whole(A.money.invest));
+      line(W.w_sum_every, whole(A.money.everyday));
+      line(W.w_sum_fixed, String(fixed.length));
+      line(W.w_sum_fire, A.goal === 'yes' ? W.w_yes : (A.goal === 'no' ? W.w_no : W.w_skipped));
+      line(W.w_sum_day, String(A.importDay || scr.day.suggest));
       card.appendChild(sum);
+      var over = planGap(); if (over) card.appendChild(el('p', 'busy', esc(over)));
       if (scr.later && scr.later.length) {
         var lt = el('div', 'later', '<b>' + esc(W.w_later) + '</b>');
         scr.later.forEach(function(x){
           var key = 'later_' + x.id.split(':')[0];
           var line = W[key] ? W[key] + (x.id.indexOf(':') > 0 ? ' ' + x.id.split(':').slice(1).join(':') : '') : x.q;
-          lt.appendChild(el('div', null, '· ' + esc(line)));
+          lt.appendChild(el('div', null, '\u2022 ' + esc(line)));
         });
         card.appendChild(lt);
       }
-      var log = el('pre', 'log'); log.style.display = 'none'; card.appendChild(log);
       var hint = el('p', 'hint', esc(W.w_build_hint)); card.appendChild(hint);
+      // what the run printed is for whoever has to find out why it stopped, not for the owner:
+      // folded, and opened only when it did not finish (2026-11-12, user 001)
+      var more = el('details', 'more', '<summary>' + esc(W.w_details) + '</summary>'); more.style.display = 'none';
+      var log = el('pre', 'log'); more.appendChild(log); card.appendChild(more);
       var a = el('div', 'act'); var b = el('button', 'btn', esc(W.w_back)); b.type = 'button'; b.onclick = function(){ step = 4; draw(); }; a.appendChild(b);
       var go = el('button', 'btn primary', esc(W.w_build_it)); go.type = 'button'; a.appendChild(go); card.appendChild(a);
       go.onclick = function(){
-        go.disabled = true; b.disabled = true; hint.textContent = W.w_building; log.style.display = 'block'; log.textContent = '';
+        go.disabled = true; b.disabled = true; hint.textContent = W.w_building; more.style.display = 'block'; log.textContent = '';
         var answers = {owner: A.owner, born: A.born, importDay: A.importDay || scr.day.suggest,
                        accounts: Object.keys(A.accounts).map(function(k){ return A.accounts[k]; }).filter(Boolean),
                        added: A.added.filter(function(x){ return x.inst && x.name; }),
@@ -325,10 +381,19 @@ table.cm input{width:100%}
           es.addEventListener('done', function(ev){
             es.close(); var j = {}; try { j = JSON.parse(ev.data); } catch (e) {}
             var res = j.result || {};
-            if (j.error || !res.written) { hint.textContent = W.w_not_finished; go.disabled = false; b.disabled = false; return; }
-            hint.innerHTML = '<span class="ok">' + esc(W.w_built) + '</span>';
-            var open = el('a', 'btn primary', esc(W.w_open_dash)); open.href = base + '/'; open.target = '_blank'; a.appendChild(open);
-            var pan = el('a', 'btn', esc(W.w_panel)); pan.href = base + '/panel'; a.appendChild(pan);
+            if (j.error || !res.written) { hint.textContent = W.w_not_finished; more.open = true; go.disabled = false; b.disabled = false; return; }
+            // built: say so, then the one next thing — sort what the import could not file, when
+            // there is any, before the page; else the page (2026-11-12: the setup used to end on
+            // the dashboard with 27 answers waiting and nothing saying what they were)
+            hint.textContent = ''; go.style.display = 'none'; b.style.display = 'none';
+            var done = el('div', 'ready ok', '\u2713 ' + esc(W.w_built)); card.insertBefore(done, a);
+            api('GET', '/api/questions').then(function(q){
+              var items = (q.ok && q.data && q.data.items) || [], what = waiting(items);
+              var open = el('a', 'btn' + (what ? '' : ' primary'), esc(W.w_open_dash)); open.href = base + '/'; open.target = '_blank';
+              var pan = el('a', 'btn' + (what ? ' primary' : ''), esc(what ? W.w_sort_go : W.w_panel)); pan.href = base + '/panel';
+              if (what) { done.appendChild(el('small', null, esc(fmt(W.w_sort_n, {what: what})))); a.appendChild(pan); a.appendChild(open); }
+              else { a.appendChild(open); a.appendChild(pan); }
+            });
           });
         }).catch(function(e){ hint.textContent = String(e); go.disabled = false; b.disabled = false; });
       };
