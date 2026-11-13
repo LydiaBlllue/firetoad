@@ -28,6 +28,10 @@
     get the files (a table of what is still needed, the drop zone, what is in the folder),
     import (the check runs by itself; one button), categorize (one item at a time, the
     likeliest three answers and *More*), done. No folder path, no "see what would happen".
+  - *A transfer asks whose account it is.* Money out to an account not listed opens on *My own
+    account* and *I spent it* (a category only then), not on Groceries, Dining, Housing. *My own
+    account* answers every transfer with that account, in or out, and is remembered
+    (`senders.json` `ownAccounts`): the next import types it and does not ask.
   - *An error you can report, and a log.* A run that stops opens a dialog over the page —
     nothing on the page moves — with *Try again*, *Copy report*, the error code
     (`FT-SETUP-KeyError`), the run's id and the log, one a line; a launch that fails shows the

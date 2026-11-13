@@ -189,6 +189,10 @@ class Workspace:
         # owner used to keep in prose, as data both doors read (2026-11-07)
         self.senders = [s for s in (jload(fd("senders.json"), {}) or {}).get("senders", [])
                         if s.get("match") and s.get("type") in SENDER_LABEL]
+        # accounts elsewhere the owner has said are their own, by the number a statement prints
+        # for them: a transfer to or from one is typed and not asked again (2026-11-12)
+        self.own_elsewhere = {str(x.get("match")) for x in (jload(fd("senders.json"), {}) or {}).get("ownAccounts", [])
+                              if x.get("match")}
         flows = self.funds.get("plan", {}).get("flows", [])
         self.rent = [f["amount"] for f in flows if f.get("kind") == "committed"]
         self.cards = [a for a in self.accounts if a.get("kind") == "Credit card"]
@@ -298,6 +302,16 @@ CASH = re.compile(r"\bATM\b|\bABM\b|CASH\s*WITHDRAWAL|\bW/D\b")
 OTHER_ACCOUNT = re.compile(r"TRANSFER|\bTFR\b|\bWIRE\b|\bDRAFT\b")
 
 
+def other_account(desc, acc):
+    """The number a statement prints for the account on the other side of a transfer, or None:
+    the last run of three or more digits in the description that is not this account's own
+    ("OnlineTransfer,TF0006#4471-9032" seen from …471 → 9032; "Online Banking transfer - 7082"
+    → 7082). What a transfer to an account outside the register is known by."""
+    own = digits((acc or {}).get("id"))
+    runs = [g for g in re.findall(r"\d{3,}", desc or "") if not (own and (own in g or g in own))]
+    return runs[-1] if runs else None
+
+
 def type_row(ws, acc, desc, amt, when, holder=None):
     """(type, label, ask) for one ledger row. `ask` is a decisions.json item when the row was
     typed by default rather than by evidence; None otherwise. Blank type means: a program cannot
@@ -379,11 +393,16 @@ def type_row(ws, acc, desc, amt, when, holder=None):
         # Money to or from an account the register does not have: the owner's own elsewhere,
         # most likely, but only they can say -- a large one could as well be pay or a gift.
         way = "to" if amt < 0 else "from"
+        other = other_account(desc, acc)
+        if other and other in getattr(ws, "own_elsewhere", ()):
+            # an account the owner has already said is their own: the rule, not the question
+            return "Transfer", f"Transfer {way} your own account …{other[-4:]}", None
         return "Transfer", f"Transfer {way} an account not in the register", {
             "kind": "transfer",
             "what": f"A {money(abs(amt))} transfer {way} an account the register does not have, on "
                     f"{short(iso_to_date(when))} ({desc.strip()[:60]}).",
-            "default": "Transfer", "facts": {"kind": "account", "amount": abs(amt), "date": when, "way": way, "desc": desc.strip()[:60]}}
+            "default": "Transfer", "facts": {"kind": "account", "amount": abs(amt), "date": when, "way": way,
+                                             "desc": desc.strip()[:60], "other": other}}
     if amt < 0 and PAYMENT.search(d):
         return "Payment", "Payment — " + payee_of(desc).title(), None
     if "FEE" in dn:

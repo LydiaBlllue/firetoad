@@ -446,7 +446,20 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
       if (meta.length) c.appendChild(el('div', 'meta', meta.map(esc).join('<br>')));
       if (it.brand) c.appendChild(el('div', 'brand', esc(fmtS(T.q_brand, {brand: it.what.split(' ')[0], cat: L(it.brand)}))));
       if (it.default) c.appendChild(el('div', 'for', esc(T.filed_as) + ' <b>' + esc(L(it.default)) + '</b>'));
-      if (it.choices.length) c.appendChild(pills(it, answers[it.n] || null, true, function(ch){ answer(it, ch); }));
+      if (it.kind === 'transfer' && it.spent && !it.credit) {
+        // money out to an account not listed: first whose it is — "My own account" keeps it a
+        // transfer and answers every transfer with that account — and a category only if it
+        // was spent (2026-11-12: it used to open on Groceries, Dining, Housing)
+        var two = el('div', 'pills');
+        var own = el('button', 'pl big', esc(T.own_account)); own.type = 'button'; own.onclick = function(){ answer(it, 'Transfer'); };
+        var sp = el('button', 'pl big', esc(T.spent_it)); sp.type = 'button';
+        sp.onclick = function(){
+          two.remove();
+          c.insertBefore(el('div', 'for', esc(T.spent_on)), f);
+          c.insertBefore(pills(it, null, true, function(ch){ answer(it, ch); }), f);
+        };
+        two.appendChild(own); two.appendChild(sp); c.appendChild(two);
+      } else if (it.choices.length) c.appendChild(pills(it, answers[it.n] || null, true, function(ch){ answer(it, ch); }));
       else c.appendChild(el('div', 'for', esc(T.in_ledger)));
       var f = el('div', 'foot2');
       var skip = el('button', 'btn sm', esc(it.choices.length ? T.q_skip : T.q_next)); skip.type = 'button'; skip.onclick = function(){ answer(it, null); };
@@ -456,7 +469,17 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
       c.appendChild(f);
       return c;
     }
-    function answer(it, ch){ if (ch) { if (!answers[it.n]) answered++; keep(it, ch); } idx++; next(); }
+    function answer(it, ch){
+      if (ch) { if (!answers[it.n]) answered++; keep(it, ch); }
+      // "my own account" answers every transfer with that account (confirm.py does the same in
+      // the data): their cards are not shown again
+      var other = it.facts && it.facts.other;
+      if (ch === 'Transfer' && it.kind === 'transfer' && other) deckItems.forEach(function(x){
+        if (x !== it && x.kind === 'transfer' && x.facts && x.facts.other === other && !answers[x.n]) { answers[x.n] = 'Transfer'; x.auto = true; answered++; }
+      });
+      idx++; while (idx < deckItems.length && deckItems[idx].auto) idx++;
+      next();
+    }
     function next(back){
       var old = deck.firstChild;
       var draw = function(){

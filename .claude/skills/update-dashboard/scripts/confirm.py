@@ -65,6 +65,25 @@ def _file_merchant(k, ans, table, merchants, spend):
     return changed
 
 
+OWN = "Transfer"     # the answer "my own money, moved" to a transfer out: it stays a transfer
+
+
+def remember_own_account(root, other, today):
+    """An account elsewhere the owner said is their own, kept by the number the statement prints
+    for it (register/senders.json `ownAccounts`): the next transfer to or from it is typed and
+    not asked. Said once, for every month after."""
+    other = str(other or "").strip()
+    if not other:
+        return False
+    p = layout.path(os.path.abspath(root), "senders.json")
+    sj = jload(p, {}) or {}
+    rows = sj.setdefault("ownAccounts", [])
+    if not any(str(x.get("match")) == other for x in rows):
+        rows.append({"match": other, "asof": today})
+        jsave(p, sj)
+    return True
+
+
 def remember_sender(root, who, t, today):
     """A named sender's answer, kept as their rule in register/senders.json, so the next
     e-Transfer from them is typed and not asked (the rule the owner used to keep in prose).
@@ -231,6 +250,11 @@ def run(root, write=False, ok=False, sets=(), say=None):
             else:
                 want[idx] = t
             continue
+        if (idx is not None and 0 <= idx < len(items) and items[idx].get("kind") == "transfer" and items[idx].get("row")
+                and said.lower() in ("transfer", "own money", "my own account", "own")):
+            # a transfer out that was the owner's own money moving: it stays a transfer
+            want[idx] = OWN
+            continue
         if cat is None:
             bad.append(f"--set {s!r}: the category has to be one of {', '.join(categories.CATEGORIES)}")
         elif idx is None or not (0 <= idx < len(items)):
@@ -255,11 +279,21 @@ def run(root, write=False, ok=False, sets=(), say=None):
 
     today = datetime.date.today().isoformat()
     changed, closed = 0, 0
+    # "my own account", said of one transfer, answers every open one to or from the same
+    # account, in or out, and is remembered for the imports to come: asked once (2026-11-12,
+    # user 001 — $0.02, $733.98 and $252.44 to her own accounts were three questions)
+    own_said = {(d.get("facts") or {}).get("other") for i, d in enumerate(items)
+                if want.get(i) == OWN and d.get("kind") == "transfer" and (d.get("facts") or {}).get("other")}
+    for other in own_said:
+        remember_own_account(root, other, today)
+        for j, d in enumerate(items):
+            if j not in want and d.get("kind") == "transfer" and (d.get("facts") or {}).get("other") == other:
+                want[j] = OWN
     for i, d in enumerate(items):
         if i not in want and not ok:
             continue
         ans = want.get(i, d.get("suggest") or d.get("default"))
-        if d.get("kind") == "transfer" and i in want and d.get("row"):
+        if d.get("kind") == "transfer" and i in want and d.get("row") and ans != OWN:
             # spent after all: the ledger row stays a transfer out, and the money is spending
             r = d["row"]
             spend.append({"date": r["date"], "amount": f"{float(r['amount']):.2f}", "currency": r.get("cur", "CAD"),
