@@ -100,6 +100,7 @@ MAX_BODY = 1 << 20       # a JSON body larger than this is refused
 MAX_UPLOAD = 64 << 20    # and a multipart one larger than this (a month of statements is a few MB)
 IMAGES = (".png", ".jpg", ".jpeg", ".heic", ".webp")
 
+import applog  # noqa: E402  the system log and the error an owner can copy
 log = logging.getLogger("jade.app")
 
 
@@ -134,7 +135,7 @@ class Job:
     def __init__(self, verb, write):
         self.id = secrets.token_hex(4)
         self.verb, self.write = verb, write
-        self.lines, self.result, self.error = [], None, None
+        self.lines, self.result, self.error, self.report = [], None, None, None
         self.done = threading.Event()
         self.started = time.monotonic()
         self.waiters = []
@@ -172,6 +173,8 @@ class Job:
             out["result"] = self.result
         if self.error is not None:
             out["error"] = self.error
+        if self.report is not None:
+            out["report"] = self.report     # applog.report: a code, one line, the text to copy
         return out
 
 
@@ -225,12 +228,25 @@ class App:
         job = Job(verb, write)
         self.job = job
 
+        version = (self.tool or {}).get("version")
+
         def go():
+            log.info("%s started (%s)%s", verb, job.id, "" if write else ", a look only")
             try:
-                job.finish(result=fn(job.say))
+                result = fn(job.say)
+                # a setup that ended by itself without building is a failure the owner has to be
+                # able to report: a code, and the line that says why. (An import that writes
+                # nothing is often right — nothing new, or a file to name first — and says so.)
+                if verb == "setup" and write and isinstance(result, dict) and result.get("written") is False:
+                    why = next((l.strip() for l in job.lines if "✗" in l), "The run ended without writing anything.")
+                    job.report = applog.report(verb, job.id, "STOPPED", why, job.lines, version)
+                else:
+                    log.info("%s finished (%s)", verb, job.id)
+                job.finish(result=result)
             except BaseException as e:  # a core failure reaches the panel whole, never a dead page
-                log.exception("%s failed", verb)
+                log.exception("%s failed (%s)", verb, job.id)
                 job.say(f"  ✗ {type(e).__name__}: {e}", loud_line=True)
+                job.report = applog.report(verb, job.id, type(e).__name__, f"{type(e).__name__}: {e}", job.lines, version)
                 job.finish(error={"type": type(e).__name__, "text": str(e)})
             finally:
                 self.lock.release()

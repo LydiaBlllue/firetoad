@@ -485,7 +485,10 @@ and an instruction together in two paragraphs, and could not be read):
    grey type for explanation and never under 12px.
 
 What a run printed is never the screen: it is folded under *Details* and opened only when the run
-did not finish. A count always says what it counts: `3 merchants and 2 transfers to sort`, never
+did not finish. A run that did not finish shows one box: *That did not finish*, a code the
+owner can quote (`FT-SETUP-KeyError (3fa9c1d2)`: the verb, what stopped it, the run's id), one
+line of what happened, a *Copy error* button that copies the whole report, and where the log is
+(`applog.py`). A count always says what it counts: `3 merchants and 2 transfers to categorize`, never
 `5 to confirm`.
 
 ## 7. Principles for presenting data

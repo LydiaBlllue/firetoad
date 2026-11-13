@@ -18,7 +18,7 @@ LANGS = ("en", "zh")
 S = {
     # — header
     "subtitle": {"en": "This month's import · {date}", "zh": "本月导入 · {date}"},
-    "intro": {"en": "Once a month: get the files, put them here, import, sort what is left. The highlighted step is where you are.", "zh": "每个月：拿到文件 → 放进来 → 导入 → 整理剩下的。高亮的那一步就是你现在该做的。"},
+    "intro": {"en": "Once a month: get the files, put them here, import, categorize what is left. The highlighted step is where you are.", "zh": "每个月：拿到文件 → 放进来 → 导入 → 给剩下的归类。高亮的那一步就是你现在该做的。"},
     "open_dash": {"en": "Open the dashboard ↗", "zh": "打开仪表盘 ↗"},
     "lang_other": {"en": "中文", "zh": "English"},
     "import_day": {"en": "your import day is the {day}", "zh": "你的导入日是每月 {day} 号"},
@@ -26,7 +26,7 @@ S = {
     "s1": {"en": "Get this month's files", "zh": "拿到这个月的文件"},
     "s2": {"en": "Put them here", "zh": "放进来"},
     "s3": {"en": "Import", "zh": "导入"},
-    "s4": {"en": "Sort what is left", "zh": "整理剩下的"},
+    "s4": {"en": "Categorize what is left", "zh": "给剩下的归类"},
     "s5": {"en": "Done", "zh": "完成"},
     "lead_todo": {"en": "{n} thing(s) still to get — the rows marked “still missing” below say what and how.",
                   "zh": "还有 {n} 样没拿到——下面标着「还缺」的行写了是什么、怎么拿。"},
@@ -138,7 +138,7 @@ S = {
     "opt_Paid back": {"en": "Paid back", "zh": "还款"}, "opt_Yes": {"en": "Yes", "zh": "是"}, "opt_No": {"en": "No", "zh": "不是"},
     # — step 4
     "q_intro": {"en": "The import filed everything it could. Tap an answer on each of these, then save once.", "zh": "能归类的都已归好。下面这些每条点一个答案，最后保存一次。"},
-    "q_none": {"en": "Nothing to sort. Anything the next import cannot file appears here.", "zh": "没有要整理的。下次导入归不了类的会出现在这里。"},
+    "q_none": {"en": "Nothing to categorize. Anything the next import cannot file appears here.", "zh": "没有要归类的。下次导入归不了类的会出现在这里。"},
     "filed_as": {"en": "for now:", "zh": "现在记为："},
     "suggested": {"en": "suggested:", "zh": "建议："},
     "seen_n": {"en": "seen {n}×", "zh": "出现 {n} 次"},
@@ -202,6 +202,11 @@ S = {
     "ai_asking": {"en": "asking…", "zh": "正在问…"},
     "ai_noanswer": {"en": "no usable answer ({how}) — .jade/log/ai.jsonl has the exchange", "zh": "没有可用的回答（{how}）——.jade/log/ai.jsonl 里有往来记录"},
     "settings": {"en": "Settings", "zh": "设置"},
+    # — a run that stopped: a code, one line, the text to copy (applog.report), where the log is
+    "err_h": {"en": "That did not finish.", "zh": "没有完成。"},
+    "err_copy": {"en": "Copy error", "zh": "复制错误信息"}, "err_copied": {"en": "Copied", "zh": "已复制"},
+    "err_log": {"en": "Log", "zh": "日志"},
+    "err_start": {"en": "FIRE Toad could not start.\n\n{code}\n{message}", "zh": "FIRE Toad 没能启动。\n\n{code}\n{message}"},
     # — the app's first launch (app.py), before there is a folder: the system's language, one at a time
     "welcome": {"en": "Welcome to FIRE Toad. Everything it keeps is in one folder on this Mac.",
                 "zh": "欢迎使用 FIRE Toad。它的所有内容都放在这台 Mac 上的一个文件夹里。"},
@@ -276,7 +281,8 @@ def js_strings(lang):
             "dry_running", "dry_none", "dry_stop", "dry_plan", "go_running", "go_done", "go_failed", "undo_q", "undo_running",
             "undo_done", "undo_none", "failed_lines", "saving", "saved_rebuilt", "not_saved", "saved", "already", "refused",
             "cands_note", "cands_none", "near", "date_read", "refresh_running", "refresh_done", "refresh_failed",
-            "ai_on", "ai_off", "ai_nokey", "ai_try_q", "ai_asking", "ai_noanswer")
+            "ai_on", "ai_off", "ai_nokey", "ai_try_q", "ai_asking", "ai_noanswer",
+            "err_h", "err_copy", "err_copied", "err_log")
     return {k: t(lang, k) for k in keys}
 
 
@@ -303,7 +309,7 @@ W = {
     "w_files_3": {"en": "Screenshots of accounts abroad", "zh": "境外账户的截图"},
     "w_long_1": {"en": "Download from each bank", "zh": "从每家银行下载"}, "w_long_1v": {"en": "5–10 min", "zh": "5–10 分钟"},
     "w_long_2": {"en": "These six screens", "zh": "这里的六屏"}, "w_long_2v": {"en": "5–8 min", "zh": "5–8 分钟"},
-    "w_long_3": {"en": "Sort what is left", "zh": "整理剩下的"}, "w_long_3v": {"en": "5–10 min", "zh": "5–10 分钟"},
+    "w_long_3": {"en": "Categorize what is left", "zh": "给剩下的归类"}, "w_long_3v": {"en": "5–10 min", "zh": "5–10 分钟"},
     "w_long_sum": {"en": "One bank and a broker", "zh": "一家银行加一家券商"}, "w_long_sumv": {"en": "20–30 min", "zh": "20–30 分钟"},
     "w_drop": {"en": "Drop files here", "zh": "把文件拖到这里"}, "w_or_choose": {"en": "or choose files", "zh": "或选择文件"},
     "w_none_yet": {"en": "nothing yet", "zh": "还没有文件"},
@@ -386,10 +392,12 @@ W = {
     "w_build_hint": {"en": "It takes about a minute.", "zh": "大约一分钟。"},
     "w_building": {"en": "Building your page…", "zh": "正在生成你的页面…"},
     "w_build_it": {"en": "Build it", "zh": "开始生成"},
-    "w_not_finished": {"en": "That did not finish. Open Details to see why.", "zh": "没有完成。点开「详情」看原因。"},
+    "w_not_finished": {"en": "That did not finish.", "zh": "没有完成。"},
     "w_built": {"en": "Your page is ready.", "zh": "你的页面好了。"},
     "w_open_dash": {"en": "Open the dashboard", "zh": "打开仪表盘"}, "w_panel": {"en": "Monthly import", "zh": "月度导入"},
     "w_details": {"en": "Details", "zh": "详情"},
+    "w_err_copy": {"en": "Copy error", "zh": "复制错误信息"}, "w_err_copied": {"en": "Copied", "zh": "已复制"},
+    "w_err_log": {"en": "Log", "zh": "日志"},
     "w_sum_name": {"en": "Name", "zh": "名字"}, "w_sum_born": {"en": "Born", "zh": "出生年"},
     "w_sum_accounts": {"en": "Accounts", "zh": "账户"}, "w_sum_take": {"en": "Take-home a month", "zh": "每月到手"},
     "w_sum_invest": {"en": "To the broker a month", "zh": "每月投资"}, "w_sum_every": {"en": "Everyday a month", "zh": "每月日常开销"},
@@ -397,8 +405,8 @@ W = {
     "w_sum_day": {"en": "Import day", "zh": "导入日"},
     "w_over": {"en": "This plan asks for {ask} a month and take-home is {pay}. The {gap} gap would come from savings.",
                "zh": "这个计划每月要 {ask}，到手是 {pay}。差的 {gap} 要从存款里出。"},
-    "w_sort_n": {"en": "{what} to sort first.", "zh": "先整理：{what}。"},
-    "w_sort_go": {"en": "Sort them", "zh": "去整理"},
+    "w_sort_n": {"en": "{what} to categorize first.", "zh": "先归类：{what}。"},
+    "w_sort_go": {"en": "Categorize them", "zh": "去归类"},
     "w_n_merchant": {"en": "{n} merchant(s)", "zh": "{n} 个商户"}, "w_n_transfer": {"en": "{n} transfer(s)", "zh": "{n} 笔转账"},
     "w_n_other": {"en": "{n} question(s)", "zh": "{n} 个问题"}, "w_and": {"en": " and ", "zh": "、"},
     "w_lang": {"en": "中文", "zh": "English"},

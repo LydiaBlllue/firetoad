@@ -79,6 +79,10 @@ details.how p{font-size:12.5px;color:var(--ink-2);background:var(--pill);border-
 .hint{font-size:12px;color:var(--muted)}
 pre.log{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f3f2ee;border-radius:8px;padding:10px 12px;margin-top:10px;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;display:none}
 pre.log.on{display:block}
+.errbox{border:1px solid #efc4c1;background:var(--bad-bg);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13px}
+.errbox b{display:block;color:var(--bad)}
+.errbox code{display:block;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;margin:4px 0;user-select:all;word-break:break-word}
+.errbox small{display:block;font-size:11.5px;color:var(--muted);margin-top:6px;word-break:break-all}
 .rcard{margin-top:8px}
 .rcard .kv .v{text-align:right;max-width:70%;white-space:normal;word-break:break-word}
 .q-intro{font-size:12.5px;color:var(--ink-2);margin-bottom:6px}
@@ -240,6 +244,23 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
     if (err) rbox.appendChild(el('div', 'nt bad', '<span class="ic">✗</span>' + esc(err.text || err)));
     var d = el('details', 'more'); d.appendChild(el('summary', null, esc(T.r_raw))); d.appendChild(log); rbox.appendChild(d);
   }
+  // a run that stopped: what happened in one line, its code to quote, one button that copies
+  // the whole report (applog.report), and where the log is (DESIGN.md 6a, rule 7)
+  function errBox(rep, L){
+    var box = el('div', 'errbox');
+    box.appendChild(el('b', null, esc(L.h)));
+    box.appendChild(el('code', null, esc(rep.code + ' (' + rep.id + ')')));
+    box.appendChild(el('div', null, esc(rep.message)));
+    var c = el('button', 'btn sm', esc(L.copy)); c.type = 'button'; c.style.marginTop = '8px';
+    c.onclick = function(){
+      function ok(){ c.textContent = L.copied; }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(rep.text).then(ok, fallback); else fallback();
+      function fallback(){ var ta = document.createElement('textarea'); ta.value = rep.text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); ok(); } catch (e) {} document.body.removeChild(ta); }
+    };
+    box.appendChild(c);
+    box.appendChild(el('small', null, esc(L.log + ': ' + rep.log)));
+    return box;
+  }
   function follow(onDone){
     log.textContent = ''; log.classList.add('on');
     var es = new EventSource(base + '/api/events');
@@ -253,7 +274,11 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
     $('step3').scrollIntoView({behavior: 'smooth', block: 'start'});
     api('POST', path, body).then(function(r){
       if (!r.ok) { setBusy(false); ierr.textContent = r.error && r.error.text || ('HTTP ' + r.status); return; }
-      follow(function(job){ setBusy(false); onDone(job); });
+      follow(function(job){
+        setBusy(false);
+        if (job.report) ierr.appendChild(errBox(job.report, {h: T.err_h, copy: T.err_copy, copied: T.err_copied, log: T.err_log}));
+        onDone(job);
+      });
     }).catch(function(e){ setBusy(false); ierr.textContent = String(e); });
   }
   dry.onclick = function(){

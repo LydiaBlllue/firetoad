@@ -351,17 +351,24 @@ def main(argv):
     ap.add_argument("--forget", action="store_true", help="do not remember this folder for next time")
     ap.add_argument("--eject", help=argparse.SUPPRESS)   # the disk image this copy was installed from
     a = ap.parse_args(argv)
+    import applog
+    slog = applog.setup(tool_version(), FROZEN)
     installed = install_from_disk_image()
     if installed:
         here = bundle_path()
         vol = os.path.dirname(here) if here.startswith("/Volumes/") else os.path.join("/Volumes", APP_NAME)
+        slog.info("installed itself into %s from the disk image; opening that copy", os.path.dirname(installed))
         subprocess.run(["open", "-n", installed, "--args", "--eject", vol])
         return 0
+    if bundle_path() and bundle_path().startswith("/Volumes/"):
+        slog.warning("running from the disk image: it could not be copied into Applications")
     eject_later(a.eject)
     root = choose_workspace(a)
     if not root:
+        slog.info("no folder chosen; quit")
         return 2
     root = os.path.abspath(root)
+    slog.info("folder: %s", root)
     if not a.forget:
         remember(root)
     import server
@@ -371,8 +378,13 @@ def main(argv):
         # it never touches data, and the owner of an app has no way to judge "refresh the copy"
         # (2026-11-12, user 001: a folder made by the build before showed "differs in 6 places").
         # A newer or older data shape is still said on the panel, and nothing is written.
-        refresh_tool(root)
+        slog.info("the folder's copy of the tool is behind (%d places): updating it", len(tool["changed"]))
+        rc, out = refresh_tool(root)
         tool = tool_state(root)
+        if tool["state"] != "same":
+            slog.error("%s: the folder's copy could not be updated (exit %s)", applog.code("update", "STOPPED"), rc)
+    elif tool["state"] != "same":
+        slog.info("the folder's copy of the tool: %s", tool["state"])
     here = {}
 
     def ready(url, app):
@@ -388,7 +400,7 @@ def main(argv):
                             tool_hooks={"state": lambda: tool_state(root), "refresh": lambda: refresh_tool(root)})
 
     def reopen():
-        server.log.info("opened again: the panel")
+        server.log.info("opened again: the panel")   # (the Dock, or a double-click while running)
         if here.get("url") and not a.no_browser:
             webbrowser.open(here["url"])
     try:
@@ -433,5 +445,31 @@ def run_as_mac_app(serve, reopen):
     return rc.get("rc", 0)
 
 
+def start_failed(e):
+    """A launch that raised: its code and traceback in the system log, and — packaged, on macOS,
+    where there is no terminal to read — a dialog that says the code and offers to copy it."""
+    import datetime
+    import traceback
+    try:
+        import applog
+        applog.setup(tool_version(), FROZEN)
+        rep = applog.report("start", datetime.datetime.now().strftime("%H%M%S"), type(e).__name__,
+                            f"{type(e).__name__}: {e}", version=tool_version())
+        applog.log.error("".join(traceback.format_exception(type(e), e, e.__traceback__)).rstrip())
+    except Exception:
+        rep = {"code": "FT-START-" + type(e).__name__, "text": f"{type(e).__name__}: {e}", "message": str(e)}
+    print("  ✗ " + rep["text"].replace("\n", "\n    "), flush=True)
+    if FROZEN and sys.platform == "darwin":
+        from strings import t, system_lang
+        lang = system_lang()
+        copy = t(lang, "err_copy")
+        if ask_choice(t(lang, "err_start", code=rep["code"], message=rep["message"]), [copy, t(lang, "quit")]) == copy:
+            subprocess.run(["pbcopy"], input=rep["text"].encode("utf-8"))
+    return 1
+
+
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except Exception as e:           # SystemExit and KeyboardInterrupt pass through
+        sys.exit(start_failed(e))

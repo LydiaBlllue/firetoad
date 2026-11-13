@@ -13,12 +13,17 @@
     anyone with money invested, and the first import no longer asks it again.
   - *A chain the starter map knows is filed, not asked.* Three months of the demo's statements
     went from 12 questions to 2. What is left is counted by what it is — "3 merchants and 2
-    transfers to sort" — on the page's header and at the end of the setup, which now sends you
-    to sort them before the dashboard.
+    transfers to categorize" — on the page's header and at the end of the setup, which now sends you
+    to categorize them before the dashboard.
   - *The setup reads as a list, not a paragraph.* Screen 1 asks for the last 1–3 months, with
     what to bring one per line and "How long?" answered in a small table; the last screen shows
     your answers as rows, warns when the plan asks more than the pay, and folds what the run
     printed under *Details*. The rules are DESIGN.md 6a.
+  - *An error you can report, and a log.* A run that stops shows a code
+    (`FT-SETUP-KeyError (3fa9c1d2)`), one line of what happened and a *Copy error* button; a
+    launch that fails shows the same in a dialog. The app keeps its own log from the first line
+    of a launch, at `~/Library/Logs/FIRE Toad/firetoad.log` (Console shows it): what it did
+    and every failure with its code — never what a run printed, which carries amounts.
   - The yearly-returns fetch says "the source has answered its limit for today" where it said
     `KeyError: 'series'`.
 - **One double-click, and a folder nobody has to choose** (2026-11-12, user 001, from the
