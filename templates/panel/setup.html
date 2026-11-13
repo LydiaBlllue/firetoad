@@ -549,6 +549,8 @@ table.cm input{width:100%}
               var items = (q.ok && q.data && q.data.items) || [], what = waiting(items);
               var open = el('a', 'btn' + (what ? '' : ' primary'), esc(W.w_open_dash)); open.href = base + '/'; open.target = '_blank';
               var pan = el('a', 'btn' + (what ? ' primary' : ''), esc(what ? W.w_sort_go : W.w_panel)); pan.href = base + '/panel' + (what ? '#v3' : '');
+              // this screen IS /panel: a link to /panel#v3 only moves the fragment and nothing reloads (2026-11-13)
+              pan.onclick = function(ev){ ev.preventDefault(); location.hash = what ? 'v3' : ''; location.reload(); };
               if (what) { done.appendChild(el('small', null, esc(fmt(W.w_sort_n, {what: what})))); a.appendChild(pan); a.appendChild(open); }
               else { a.appendChild(open); a.appendChild(pan); }
             });
