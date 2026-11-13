@@ -1,6 +1,6 @@
 # Changelog
 
-## After 1.0.4 — unreleased
+## 1.0.4 — unreleased
 
 - **The sidebar follows the way to FIRE** (2026-11-13, user 001). The pages are grouped by how
   far along you are, not by topic: *Get started* (Accounts, This month, Year, Income & chequing,
@@ -10,9 +10,6 @@
   every old link still lands; Money in & out, Plan, Investing and Monthly import are no longer
   group names. Setup, the monthly import and the dashboard had each been sorting the product a
   different way.
-
-## 1.0.4 — unreleased
-
 - **From the first full run on a fresh account** (2026-11-12, user 001, on her own statements):
   - *Opened again, it opens.* The app answers the Dock: opening it while it is running shows
     the panel again, and Quit quits. Before, a second double-click did nothing and only Force
