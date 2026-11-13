@@ -36,9 +36,12 @@
     said; everything else is imported. One screenshot among 28 files had left a first import
     undone while the setup said the page was ready; the setup now says so when its first import
     did not write, and no longer asks for screenshots it cannot use yet.
-  - *The setup does the sums.* Step 3 shows take-home, fixed costs and what goes to the broker,
-    each filled in from the files, and works out what is left for everyday; the boxes for a
-    planning figure and for "rent you do not pay today" are gone. Step 4 asks one plain
+  - *The setup does the sums.* Step 3 shows take-home, fixed costs and everyday spending, each
+    filled in from the files, and works out two lines: what is kept each month, and its share
+    of take-home pay. They read the same whether money is moved out first or kept after
+    spending, so nobody is asked which they do; the transfer to the broker is a row only when
+    the files show one. The boxes for a planning figure and for "rent you do not pay today"
+    are gone. Step 4 asks one plain
     question — do you want to see when your investments could pay for your spending? — and
     only a yes brings the two optional lines (costs that start once work stops, government
     pensions).

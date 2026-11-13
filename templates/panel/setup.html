@@ -375,36 +375,43 @@ table.cm input{width:100%}
         add.onclick = function(){ A.money.committed.push({afterFire: true}); drawFixed(); calc(); }; c2.appendChild(add);
         tr.appendChild(c1); tr.appendChild(c2); tb.insertBefore(tr, before);
       }
-      var inv = amt(A.money.invest != null ? A.money.invest : (m.invest.suggest || ''));
-      mrow(W.w_invest, m.invest.suggest ? W.w_from_files : W.w_none_found, inv);
-      // what is left: worked out when there is a pay to work it out from; asked only when there is none
-      var leftVal = el('b'), leftHint = el('small'), ev = amt(A.money.everyday != null ? A.money.everyday : (m.everyday.suggest || ''));
-      var leftTr = el('tr', 'sum'), l1 = el('td'), l2 = el('td', 'num');
-      l1.appendChild(el('span', null, '<b>' + esc(W.w_left) + '</b>')); l1.appendChild(leftHint);
-      l2.appendChild(leftVal); l2.appendChild(ev); leftTr.appendChild(l1); leftTr.appendChild(l2); tb.appendChild(leftTr);
+      // What is kept and its share of the pay: the same two lines whether the owner moves money
+      // out first or spends first and keeps the rest, so nobody is asked which they are
+      // (2026-11-13, user 001). Everyday spending is what the cards spent; the transfer to the
+      // broker is a row only when the files show one, and it is a part of what is kept.
+      var ev = amt(A.money.everyday != null ? A.money.everyday : (m.everyday.suggest || ''));
+      mrow(W.w_spend, m.everyday.suggest ? fmt(W.w_left_cards, {sug: whole(m.everyday.suggest)}) : W.w_none_found, ev);
+      var keptVal = el('b'), keptHint = el('small'), rateVal = el('span');
+      var keptTr = el('tr', 'sum'), k1 = el('td'), k2 = el('td', 'num');
+      k1.appendChild(el('span', null, '<b>' + esc(W.w_kept) + '</b>')); k1.appendChild(keptHint);
+      k2.appendChild(keptVal); keptTr.appendChild(k1); keptTr.appendChild(k2); tb.appendChild(keptTr);
+      var rateTr = el('tr'), r1 = el('td'), r2 = el('td', 'num');
+      r1.appendChild(el('span', null, esc(W.w_rate))); r2.appendChild(rateVal);
+      rateTr.appendChild(r1); rateTr.appendChild(r2); tb.appendChild(rateTr);
+      var hasInv = !!(m.invest.suggest || +A.money.invest);
+      var inv = amt(A.money.invest != null ? A.money.invest : (m.invest.suggest || '')), invHint = null;
+      if (hasInv) invHint = mrow(W.w_invest_of, W.w_from_files, inv).querySelector('small');
       drawFixed();
       function num(v){ var x = parseFloat(String(v == null ? '' : v).replace(/[$,\s]/g, '')); return isNaN(x) ? 0 : x; }
       function calc(){
         var pay = num(th.value), fixed = 0;
         A.money.committed.forEach(function(c){ if (c.name && c.amount) fixed += num(c.amount); });
-        var left = pay - fixed - num(inv.value), sug = m.everyday.suggest;
-        leftHint.className = '';
-        if (pay) {
-          ev.style.display = 'none'; leftVal.style.display = '';
-          leftVal.textContent = (left < 0 ? '-$' : '$') + Math.abs(Math.round(left)).toLocaleString();
-          if (left < 0) { leftHint.textContent = W.w_left_neg; leftHint.className = 'bad'; }
-          else if (sug && left < sug) { leftHint.textContent = fmt(W.w_left_short, {sug: whole(sug)}); leftHint.className = 'warn'; }
-          else leftHint.textContent = sug ? fmt(W.w_left_cards, {sug: whole(sug)}) : '';
-        } else {
-          ev.style.display = ''; leftVal.style.display = 'none';
-          leftHint.textContent = sug ? fmt(W.w_left_cards, {sug: whole(sug)}) : '';
+        var kept = pay - fixed - num(ev.value);
+        keptHint.className = ''; keptHint.textContent = '';
+        if (pay && String(ev.value).trim()) {
+          keptVal.textContent = (kept < 0 ? '-$' : '$') + Math.abs(Math.round(kept)).toLocaleString();
+          rateVal.textContent = Math.round(kept / pay * 100) + '%';
+          if (kept < 0) { keptHint.textContent = W.w_kept_neg; keptHint.className = 'bad'; }
+        } else { keptVal.textContent = '—'; rateVal.textContent = '—'; }
+        if (invHint) {
+          var over = pay && num(inv.value) > Math.max(kept, 0);
+          invHint.textContent = over ? W.w_invest_over : W.w_from_files; invHint.className = over ? 'warn' : '';
         }
-        return pay ? Math.max(0, Math.round(left)) : ev.value;
       }
       function whole(v){ return '$' + Math.round(+v).toLocaleString(); }
       [th, inv, ev].forEach(function(x){ x.addEventListener('input', calc); }); calc();
       nav(card, true, function(){
-        A.money.takeHome = th.value; A.money.invest = inv.value; A.money.everyday = String(calc());
+        A.money.takeHome = th.value; A.money.invest = hasInv ? inv.value : ''; A.money.everyday = ev.value;
         // the planning figure starts from what the cards really spent when the files say, else from the everyday amount
         if (A.money.planBase == null) A.money.planBase = m.planBase.suggest || A.money.everyday;
         step = 3; draw();
