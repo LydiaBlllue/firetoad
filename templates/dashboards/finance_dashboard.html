@@ -68,7 +68,7 @@ body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system
 .ph-r .s{font-size:11.5px;color:var(--muted);margin-top:1px}
 .hdr-line{cursor:pointer}.hdr-line:hover,.hdr-line:focus-visible{color:var(--ink-2)}
 /* what waits for an answer: its own line, so a long header never pushes the page sideways (R2) */
-.hdr-wait{display:block;color:var(--ink);font-weight:600;margin-top:2px;white-space:normal;max-width:300px;margin-left:auto}a.hdr-wait{text-decoration:underline dotted}
+.hdr-wait{display:block;color:var(--ink);font-weight:600;margin-top:2px}a.hdr-wait{text-decoration:underline dotted}
 .num{font-variant-numeric:tabular-nums}
 h1{font-size:21px;font-weight:700;letter-spacing:-.2px}
 .subtitle{color:var(--muted);font-size:13px;margin-top:2px}
@@ -3365,18 +3365,13 @@ function headerLine(){
   // what still waits for an answer, and where to answer it: the panel when the local app serves
   // this page (its address carries /t/<token>/, and "panel" beside it is the panel), the app or
   // the chat when the file was opened from disk (2026-11-07)
-  // said by what it is — "3 merchants and 2 transfers to categorize" — never a bare count: "27 to
-  // confirm" left the owner asking 27 of what (2026-11-12, user 001)
-  const openItems = (DECISIONS || []).filter(d => d.status === "open");
-  const open = openItems.length;
-  const nOf = k => openItems.filter(d => (d.kind === "merchant" ? "merchant" : d.kind === "transfer" ? "transfer" : "other") === k).length;
-  const parts = [["merchant", "merchant"], ["transfer", "transfer"], ["other", "question"]]
-    .map(([k, w]) => [nOf(k), w]).filter(([n]) => n).map(([n, w]) => n + " " + w + (n === 1 ? "" : "s"));
-  const what = parts.length > 1 ? parts.slice(0, -1).join(", ") + " and " + parts[parts.length - 1] : (parts[0] || "");
+  // the count says what is to be done with it: "27 to confirm" left the owner asking 27 of
+  // what (2026-11-12, user 001). One short line, as before: what each one is, is the panel's to say
+  const open = (DECISIONS || []).filter(d => d.status === "open").length;
   const served = location.protocol.startsWith("http") && /\/t\/[^/]+\//.test(location.pathname);
   const waiting = !open ? "" : (served
-    ? '<a class="hdr-wait" href="panel">' + what + " to categorize \u2192</a>"
-    : '<span class="hdr-wait">' + what + " to categorize \u2014 open FIRE Toad</span>");
+    ? '<a class="hdr-wait" href="panel">' + open + " to categorize \u2192</a>"
+    : '<span class="hdr-wait">' + open + " to categorize \u2014 open FIRE Toad</span>");
   return (req.length ? term("complete_to") + " " + dLong(req[0]) : "")
     + (req.length && last ? '<span class="gap"></span>' : "")
     + (last ? "Updated " + dLong(last) : "") + waiting;

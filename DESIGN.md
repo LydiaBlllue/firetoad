@@ -488,8 +488,10 @@ What a run printed is never the screen: it is folded under *Details* and opened 
 did not finish. A run that did not finish shows one box: *That did not finish*, a code the
 owner can quote (`FT-SETUP-KeyError (3fa9c1d2)`: the verb, what stopped it, the run's id), one
 line of what happened, a *Copy error* button that copies the whole report, and where the log is
-(`applog.py`). A count always says what it counts: `3 merchants and 2 transfers to categorize`, never
-`5 to confirm`.
+(`applog.py`). A count says what it counts or what is to be done with it: `3 merchants and 2 transfers to
+categorize` where there is room (the setup's last screen), `5 to categorize` in the dashboard's
+header, which keeps its one short line — never `5 to confirm`. **These screens never change the
+dashboard's layout**: the error box, the lists and the tables above are the panel's and the setup's.
 
 ## 7. Principles for presenting data
 

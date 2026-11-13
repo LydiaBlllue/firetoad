@@ -13,8 +13,9 @@
     anyone with money invested, and the first import no longer asks it again.
   - *A chain the starter map knows is filed, not asked.* Three months of the demo's statements
     went from 12 questions to 2. What is left is counted by what it is — "3 merchants and 2
-    transfers to categorize" — on the page's header and at the end of the setup, which now sends you
-    to categorize them before the dashboard.
+    transfers to categorize" — at the end of the setup, which now sends you to categorize them
+    before the dashboard; the page's header says "5 to categorize" on its one line, its layout
+    as it was.
   - *The setup reads as a list, not a paragraph.* Screen 1 asks for the last 1–3 months, with
     what to bring one per line and "How long?" answered in a small table; the last screen shows
     your answers as rows, warns when the plan asks more than the pay, and folds what the run
