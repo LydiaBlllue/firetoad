@@ -140,6 +140,7 @@ def ask_choice(text, buttons):
     """One question with two or three buttons; the button's text comes back. macOS has a dialog;
     elsewhere the first button is taken, which is always the safe one."""
     if sys.platform == "darwin":
+        text = text.replace("\\", "\\\\").replace('"', '\\"')   # a folder's name can hold a quote
         bl = ", ".join(f'"{b}"' for b in buttons)
         r = subprocess.run(["osascript", "-e", f'button returned of (display dialog "{text}" buttons {{{bl}}} '
                                                f'default button "{buttons[0]}" with title "{APP_NAME}")'],
@@ -148,18 +149,42 @@ def ask_choice(text, buttons):
     return buttons[0]
 
 
+def new_folder(parent=None):
+    """Where *Create my folder* puts the folder: Documents/FIRE Toad. A name already taken by
+    something else becomes FIRE Toad 2, 3, … — never someone's own folder written into. An
+    existing FIRE Toad folder or an empty one is used as it is. The owner picks no folder, so
+    there is no wrong one to pick (2026-11-12, user 001: a picker let her choose Documents)."""
+    parent = parent or os.path.join(os.path.expanduser("~"), "Documents")
+    base = os.path.join(parent, APP_NAME)
+    p, n = base, 2
+    while os.path.exists(p) and not (os.path.isdir(p) and (is_workspace(p) or not os.listdir(p))):
+        p, n = f"{base} {n}", n + 1
+    return p
+
+
+def tell(text):
+    """A line the owner sees without having to click it: a notification on macOS, stdout
+    elsewhere."""
+    print("  " + text, flush=True)
+    if sys.platform == "darwin":
+        t = text.replace("\\", "\\\\").replace('"', '\\"')
+        subprocess.run(["osascript", "-e", f'display notification "{t}" with title "{APP_NAME}"'],
+                       capture_output=True)
+
+
 def make_workspace(dest):
     """A new workspace in an empty (or new) folder: the tool's copy and no one's data. findata/
     holds one file, profile.json, saying which shape the data will take and that the folder is
     not set up yet (`blank`, with `demo` — the word every gate already reads as "nobody's");
     the setup writes the rest from the owner's own files. The demo owner stays in the app and
     on the website, never in somebody's folder (decided 2026-11-08, user 001). sync.py does the
-    copying; it never touches a folder that already has findata/ data in it."""
+    copying; it never touches a folder that already has findata/ data in it. A folder that
+    holds other things gets a FIRE Toad folder inside it instead of an error."""
     import json
     import sync
+    if os.path.isdir(dest) and os.listdir(dest) and not is_workspace(dest):
+        dest = new_folder(dest)
     os.makedirs(dest, exist_ok=True)
-    if os.listdir(dest) and not is_workspace(dest):
-        raise SystemExit(f"✗ {dest} is not empty and not a FIRE Toad folder; choose an empty one")
     prof = os.path.join(dest, "findata", "register", "profile.json")
     if not os.path.exists(prof):
         os.makedirs(os.path.dirname(prof), exist_ok=True)
@@ -177,7 +202,7 @@ def find_root(p):
 
 def choose_workspace(args):
     """The folder to serve, in order: the argument, the remembered one, the folder this file is
-    in (when not packaged), then a dialog — open one, or make one."""
+    in (when not packaged), then a dialog — open my folder, or create it in Documents."""
     if args.root:
         ws = find_root(args.root)
         if ws:
@@ -196,24 +221,31 @@ def choose_workspace(args):
                 return ws
         if is_workspace(s.get("workspace")):
             return s["workspace"]
+    pick = ask_choice(WELCOME, [CREATE, OPEN, QUIT])
     while True:
-        pick = ask_choice("Where is your FIRE Toad folder?", ["Open a folder", "Make one", "Quit"])
-        if pick in (None, "Quit"):
+        if pick == CREATE:
+            ws = make_workspace(new_folder())
+            tell(f"Your folder: {ws.replace(os.path.expanduser('~'), '~', 1)} · 你的文件夹")
+            return ws
+        if pick != OPEN:
             return None
-        d = ask_folder("Choose your FIRE Toad folder" if pick == "Open a folder" else "Choose an empty folder for FIRE Toad")
+        d = ask_folder("Choose your FIRE Toad folder · 选择你的 FIRE Toad 文件夹")
         if not d:
             return None
-        if pick == "Make one":
-            return make_workspace(d)
         ws = find_root(d)
         if ws:
             return ws
-        again = ask_choice(f"{d} has no findata/ and dashboards/. It is not a FIRE Toad folder yet.",
-                           ["Choose again", "Make one here", "Quit"])
-        if again == "Make one here":
-            return make_workspace(d)
-        if again != "Choose again":
-            return None
+        pick = ask_choice(f"This is not a FIRE Toad folder: {d}\n\n这不是 FIRE Toad 文件夹。",
+                          [OPEN_AGAIN, CREATE, QUIT])
+        if pick == OPEN_AGAIN:
+            pick = OPEN
+
+
+# the first launch's question, in both languages: no "Make one" (what is "one"? 2026-11-12, user 001)
+WELCOME = ("Welcome to FIRE Toad. Everything it keeps is in one folder on this Mac.\n\n"
+           "欢迎使用 FIRE Toad。它的所有内容都放在这台 Mac 上的一个文件夹里。")
+CREATE, OPEN, OPEN_AGAIN, QUIT = ("Create my folder · 新建文件夹", "Open my folder · 打开文件夹",
+                                  "Choose again · 重新选择", "Quit · 退出")
 
 
 # ---------------------------------------------------------------- the tool's copy
@@ -258,6 +290,65 @@ def refresh_tool(ws):
     return r.returncode, r.stdout + r.stderr
 
 
+# ---------------------------------------------------------------- installing itself
+def bundle_path():
+    """The .app this binary runs in, or None outside a packaged macOS app."""
+    if not (FROZEN and sys.platform == "darwin"):
+        return None
+    app = os.path.abspath(os.path.join(os.path.dirname(sys.executable), "..", ".."))
+    return app if app.endswith(".app") else None
+
+
+def install_from_disk_image(app=None, apps_dir=None, volumes="/Volumes"):
+    """Double-clicked inside the disk image, the app copies itself into Applications, opens the
+    copy and quits, and the copy ejects the disk image: one double-click, no drag, and no second
+    double-click in Applications (2026-11-12, user 001). Nothing runs when a file is dragged, so
+    the disk image asks for a double-click instead.
+
+    macOS may run an app opened from a downloaded disk image from a random read-only place (App
+    Translocation), so the original is looked for on the mounted disk by name. Applications when
+    this user may write there, else ~/Applications (a Standard account). The copy's quarantine
+    flag is cleared: macOS has just checked this notarised app and the owner said Open, and the
+    copy is the same signed bundle. Returns the copy's path, or None when there is nothing to do
+    or the copy failed (the app then simply runs from where it is)."""
+    app = app or bundle_path()
+    if not app:
+        return None
+    if app.startswith(volumes.rstrip("/") + "/"):
+        src = app
+    elif "/AppTranslocation/" in app:
+        src = os.path.join(volumes, APP_NAME, APP_NAME + ".app")
+        if not os.path.isdir(src):
+            return None
+    else:
+        return None
+    if apps_dir is None:
+        apps_dir = "/Applications" if os.access("/Applications", os.W_OK) else os.path.expanduser("~/Applications")
+    dest = os.path.join(apps_dir, APP_NAME + ".app")
+    tmp = dest + ".installing"
+    try:
+        os.makedirs(apps_dir, exist_ok=True)
+        shutil.rmtree(tmp, ignore_errors=True)
+        subprocess.run(["ditto", src, tmp], check=True, capture_output=True)
+        subprocess.run(["xattr", "-dr", "com.apple.quarantine", tmp], capture_output=True)
+        if os.path.exists(dest):
+            shutil.rmtree(dest)                  # an older version: replaced, never two
+        os.rename(tmp, dest)
+    except (OSError, subprocess.CalledProcessError) as e:
+        shutil.rmtree(tmp, ignore_errors=True)
+        print(f"  · not installed into {apps_dir} ({e}); running from the disk image", flush=True)
+        return None
+    return dest
+
+
+def eject_later(vol):
+    """Eject the disk image the app was installed from, once the copy in it has quit. Only a
+    mounted volume under /Volumes, passed as an argument, never into a shell string."""
+    if vol and vol.startswith("/Volumes/") and os.path.isdir(vol):
+        subprocess.Popen(["/bin/sh", "-c", 'sleep 3; hdiutil detach -quiet "$1"', "sh", vol],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
+
 # ---------------------------------------------------------------- main
 def main(argv):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -267,7 +358,15 @@ def main(argv):
     ap.add_argument("--choose", action="store_true", help="ask for the folder even when one is remembered")
     ap.add_argument("--make", action="store_true", help="with a folder: make a new workspace there")
     ap.add_argument("--forget", action="store_true", help="do not remember this folder for next time")
+    ap.add_argument("--eject", help=argparse.SUPPRESS)   # the disk image this copy was installed from
     a = ap.parse_args(argv)
+    installed = install_from_disk_image()
+    if installed:
+        here = bundle_path()
+        vol = os.path.dirname(here) if here.startswith("/Volumes/") else os.path.join("/Volumes", APP_NAME)
+        subprocess.run(["open", "-n", installed, "--args", "--eject", vol])
+        return 0
+    eject_later(a.eject)
     root = choose_workspace(a)
     if not root:
         return 2

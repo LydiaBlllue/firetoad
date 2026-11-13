@@ -2465,7 +2465,7 @@ def local_app_setup_check(root, base):
     the first month imported — and findata/ identical to the same answers applied through
     wizard.py on the command line. The wizard shows instead of the panel while the folder is not
     set up, and the panel once it is. The app's door starts where a new owner starts, in a folder
-    *Make one* made (2026-11-08: the tool and a blank profile.json, no demo data); the command
+    *Create my folder* made (2026-11-08: the tool and a blank profile.json, no demo data); the command
     line's starts from the demo, as a clone does — so the two starting points have to end the same,
     and the demo owner may not survive into the made folder anywhere."""
     import contextlib, importlib.util, io, uuid, urllib.request, urllib.error
@@ -2496,7 +2496,7 @@ def local_app_setup_check(root, base):
         jade_app.make_workspace(ws)
     made = sorted(os.path.relpath(os.path.join(d, f), ws) for d, _, fs in os.walk(os.path.join(ws, "findata")) for f in fs)
     if made != [os.path.join("findata", "register", "profile.json")]:
-        bad.append("Make one left more than a profile.json in findata/: " + ", ".join(made[:4]))
+        bad.append("Create my folder left more than a profile.json in findata/: " + ", ".join(made[:4]))
     demo_owner = json.load(open(layout.path(copies["api"][0], "profile.json"), encoding="utf-8")).get("owner") or ""
     proc = subprocess.Popen([sys.executable, srv, ".", "--port", "0"], cwd=ws, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     answers = None
@@ -2647,7 +2647,7 @@ def local_app_setup_check(root, base):
         bad.append("the wizard's two doors left different files: " + ", ".join(diff[:6]))
     if bad:
         return ["  ✗ local app setup: " + x for x in bad[:6]]
-    return [f"  ✓ local app setup: a folder made by Make one (a profile.json and no data), its dashboard's address the wizard; two statements uploaded, the screens drafted, the answers posted, the workspace built and the first "
+    return [f"  ✓ local app setup: a folder made by Create my folder (a profile.json and no data), its dashboard's address the wizard; two statements uploaded, the screens drafted, the answers posted, the workspace built and the first "
             f"month imported through the app; findata/ identical to wizard.py on the command line ({len(a)} files); the panel took over; "
             f"the questions answered in the browser, saved and closed, and a filed merchant refiled"]
 

@@ -2,6 +2,14 @@
 
 ## 1.0.4 — unreleased
 
+- **One double-click, and a folder nobody has to choose** (2026-11-12, user 001, from the
+  first run on a fresh account). The disk image shows the app alone: double-clicked there, it
+  copies itself into Applications (~/Applications on an account that is not an administrator),
+  opens from there and ejects the disk image, so there is no drag and no second double-click.
+  The first launch asks *Create my folder* or *Open my folder*, in English and Chinese, instead
+  of "Make one" (one what?) and a folder picker: the folder is made in Documents as FIRE Toad,
+  FIRE Toad 2 when that name belongs to something else, and a notification says where. A folder
+  picked that already holds other things gets a FIRE Toad folder inside it instead of an error.
 - **A signed download** (2026-11-12, user 001): `FIRE Toad.app` and its disk image are signed
   with a Developer ID and notarised by Apple, each with its ticket stapled, so a Mac opens the
   download with a double-click and no visit to System Settings, offline too. The install page,

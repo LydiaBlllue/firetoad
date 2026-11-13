@@ -116,5 +116,95 @@ class Remembering(unittest.TestCase):
             shutil.rmtree(d)
 
 
+class CreateMyFolder(unittest.TestCase):
+    """*Create my folder* picks no folder from the owner, so it can never pick a wrong one."""
+    def setUp(self):
+        self.docs = tempfile.mkdtemp(prefix="jt_docs_")
+
+    def tearDown(self):
+        shutil.rmtree(self.docs)
+
+    def test_it_is_documents_fire_toad(self):
+        self.assertEqual(app.new_folder(self.docs), os.path.join(self.docs, app.APP_NAME))
+
+    def test_an_empty_folder_of_that_name_is_used(self):
+        os.makedirs(os.path.join(self.docs, app.APP_NAME))
+        self.assertEqual(app.new_folder(self.docs), os.path.join(self.docs, app.APP_NAME))
+
+    def test_an_existing_fire_toad_folder_is_used(self):
+        mini_ws(os.path.join(self.docs, app.APP_NAME))
+        self.assertEqual(app.new_folder(self.docs), os.path.join(self.docs, app.APP_NAME))
+
+    def test_someone_elses_folder_of_that_name_is_left_alone(self):
+        os.makedirs(os.path.join(self.docs, app.APP_NAME))
+        open(os.path.join(self.docs, app.APP_NAME, "notes.txt"), "w").write("mine\n")
+        open(os.path.join(self.docs, app.APP_NAME + " 2"), "w").write("a file, not a folder\n")
+        self.assertEqual(app.new_folder(self.docs), os.path.join(self.docs, app.APP_NAME + " 3"))
+
+    def test_a_full_folder_gets_a_fire_toad_folder_inside_not_an_error(self):
+        open(os.path.join(self.docs, "notes.txt"), "w").write("mine\n")
+        with mock.patch.object(sync, "main", lambda argv: 0):
+            made = app.make_workspace(self.docs)
+        self.assertEqual(made, os.path.join(self.docs, app.APP_NAME))
+        self.assertTrue(os.path.exists(os.path.join(made, "findata", "register", "profile.json")))
+        self.assertEqual(sorted(os.listdir(self.docs)), [app.APP_NAME, "notes.txt"])
+
+
+class InstallFromDiskImage(unittest.TestCase):
+    """Double-clicked in the disk image, the app copies itself into Applications; anywhere else it
+    does nothing."""
+    def setUp(self):
+        self.base = tempfile.mkdtemp(prefix="jt_inst_")
+        self.vols = os.path.join(self.base, "Volumes")
+        self.src = os.path.join(self.vols, app.APP_NAME, app.APP_NAME + ".app")
+        os.makedirs(os.path.join(self.src, "Contents", "MacOS"))
+        open(os.path.join(self.src, "Contents", "MacOS", app.APP_NAME), "w").write("new\n")
+        self.apps = os.path.join(self.base, "Applications")
+
+    def tearDown(self):
+        shutil.rmtree(self.base)
+
+    def run_from(self, where):
+        return app.install_from_disk_image(app=where, apps_dir=self.apps, volumes=self.vols)
+
+    def exe(self, bundle):
+        return open(os.path.join(bundle, "Contents", "MacOS", app.APP_NAME)).read()
+
+    @unittest.skipUnless(sys.platform == "darwin", "ditto is macOS's")
+    def test_from_the_disk_image_it_lands_in_applications(self):
+        dest = self.run_from(self.src)
+        self.assertEqual(dest, os.path.join(self.apps, app.APP_NAME + ".app"))
+        self.assertEqual(self.exe(dest), "new\n")
+        self.assertEqual(os.listdir(self.apps), [app.APP_NAME + ".app"])   # no .installing left
+
+    @unittest.skipUnless(sys.platform == "darwin", "ditto is macOS's")
+    def test_translocated_it_finds_the_original_on_the_disk(self):
+        dest = self.run_from("/private/var/folders/xx/AppTranslocation/ABC/d/" + app.APP_NAME + ".app")
+        self.assertEqual(self.exe(dest), "new\n")
+
+    @unittest.skipUnless(sys.platform == "darwin", "ditto is macOS's")
+    def test_an_older_version_is_replaced_not_kept_beside(self):
+        old = os.path.join(self.apps, app.APP_NAME + ".app", "Contents", "MacOS")
+        os.makedirs(old)
+        open(os.path.join(old, app.APP_NAME), "w").write("old\n")
+        open(os.path.join(old, "stale"), "w").write("x\n")
+        dest = self.run_from(self.src)
+        self.assertEqual(self.exe(dest), "new\n")
+        self.assertFalse(os.path.exists(os.path.join(dest, "Contents", "MacOS", "stale")))
+
+    def test_from_applications_it_does_nothing(self):
+        self.assertIsNone(self.run_from("/Applications/" + app.APP_NAME + ".app"))
+        self.assertFalse(os.path.exists(self.apps))
+
+    def test_outside_a_packaged_app_it_does_nothing(self):
+        self.assertIsNone(app.install_from_disk_image())   # tests run as python, not frozen
+
+    def test_eject_never_touches_anything_outside_volumes(self):
+        with mock.patch.object(app.subprocess, "Popen") as p:
+            app.eject_later("/private/tmp/somewhere")
+            app.eject_later(None)
+        p.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()

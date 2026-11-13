@@ -1,17 +1,22 @@
 FIRE TOAD — HOW TO OPEN
 
-1. Drag FIRE Toad onto the Applications folder beside it.
-2. Double-click it in Applications. macOS asks once whether to open an app
+1. Double-click FIRE Toad in this window. macOS asks once whether to open an app
    downloaded from the internet: click Open.
-3. Choose "Make one" and pick an empty folder. Your browser opens on the setup.
+2. FIRE Toad copies itself into Applications, opens, and closes this window.
+3. Click "Create my folder". It is made in Documents, as "FIRE Toad".
+   Your browser opens on the setup.
+
+Next time, open FIRE Toad from Applications or Launchpad.
 
 Full guide: https://github.com/lydiablllue/firetoad/blob/main/docs/install.md
 
 
 FIRE TOAD — 打开方法
 
-1. 把 FIRE Toad 拖到旁边的 Applications（应用程序）文件夹上。
-2. 在「应用程序」里双击它。macOS 会问一次是否打开从互联网下载的应用：点「打开」。
-3. 选「Make one」，指定一个空文件夹。浏览器会打开建账向导。
+1. 在这个窗口里双击 FIRE Toad。macOS 会问一次是否打开从互联网下载的应用：点「打开」。
+2. FIRE Toad 会把自己拷进「应用程序」，自动打开，并关掉这个窗口。
+3. 点「新建文件夹」。它会建在「文稿」里，名字是「FIRE Toad」。浏览器会打开建账向导。
+
+以后从「应用程序」或启动台打开 FIRE Toad。
 
 完整说明：https://github.com/lydiablllue/firetoad/blob/main/docs/zh/install.md

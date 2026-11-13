@@ -17,7 +17,7 @@ python3 app.py
 That is the whole instruction — or, packaged, a double-click: `python3 build/build.py` makes
 `dist/FIRE Toad.app` (a folder with Python and the tool inside, no data; `build/build.py` says
 what goes in and what never does). The packaged app asks for the workspace folder on its first
-launch — *Open a folder* or *Make one* — and remembers it in the system's application-support
+launch — *Open my folder* or *Create my folder* (made in Documents as FIRE Toad) — and remembers it in the system's application-support
 folder, never in the workspace; `--choose` asks again. On every launch it compares the folder's
 copy of the tool with its own (`app.py` `tool_state`, sync.py's rules): a folder that differs
 gets a *Refresh the copy* button on the panel, a folder whose data is a newer shape than the
@@ -52,7 +52,7 @@ rows with no ledger; the register's copy follows); read such a balance off a pho
 (`ocr.py`: Apple Vision on this computer, the amounts ranked by the account's `capture` line,
 offered as pills, never written until tapped; the image is kept under .jade/shots/); open the
 inbox folder; and show the last import's result. **A fresh folder gets the
-setup as screens** (step 2, 2026-11-06): while `findata/` is not set up (the demo's in a clone, or the blank one *Make one* writes:
+setup as screens** (step 2, 2026-11-06): while `findata/` is not set up (the demo's in a clone, or the blank one *Create my folder* writes:
 no data, profile.json marked `blank`), `/panel` draws the
 wizard instead — Files · Accounts · Money in and out · Goal · Day · Build — from
 `setup/scripts/wizard.py`, which drafts the screens with `propose.py` from the files dropped

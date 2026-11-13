@@ -7,7 +7,7 @@
 
 What goes in: app.py as the entry, the tool's copy exactly as tools/sync.py copies it into a
 workspace (SYNCED — the skills, templates, tools, tests, the governing documents), and
-nothing else: *Make one* starts a folder holding only the tool and a profile.json that says
+nothing else: *Create my folder* starts a folder holding only the tool and a profile.json that says
 it is not set up yet, and the setup writes the owner's own data. The interpreter is PyInstaller's
 (one folder, not one file: the core runs its own scripts as subprocesses, and app.py doubles as
 the interpreter for them). pypdf and, on macOS, ocrmac and the Vision bindings come along.
@@ -47,7 +47,7 @@ sys.path.insert(0, HERE)   # dmg_art.py, the disk image window
 import sync  # noqa: E402  SYNCED: the one list of what the tool is
 
 NAME = "FIRE Toad"
-DATA_EXTRA = ("LICENSE", "README.md")   # beside SYNCED: what a reader expects. No findata/: Make one
+DATA_EXTRA = ("LICENSE", "README.md")   # beside SYNCED: what a reader expects. No findata/: Create my folder
 # starts a folder with no one's data in it (2026-11-08), so the demo owner has no reason to ship
 EXCLUDE_DIRS = {"__pycache__", ".DS_Store"}
 
@@ -193,7 +193,7 @@ def build(args):
             run(["codesign", "--force", "--deep", "--sign", "-", out])
         run(["codesign", "--verify", "--deep", "--strict", out])
         if args.notarize:
-            # the app first, its ticket stapled to it: once dragged out of the disk image it
+            # the app first, its ticket stapled to it: once copied out of the disk image it
             # carries its own proof and opens with no network (the dmg's ticket stays on the dmg)
             z = os.path.join(dist, NAME + ".zip")
             run(["ditto", "-c", "-k", "--keepParent", out, z])
@@ -289,9 +289,10 @@ def notarize(path, profile):
 
 
 def make_dmg(app, dmg):
-    """The disk image a person opens: the app on the left, the Applications folder on the right,
-    an arrow between them and the instruction in both languages under it (build/dmg_art.py),
-    the first-launch note at the foot (build/dmg/).
+    """The disk image a person opens: the app in the middle and the instruction in both
+    languages under it — double-click, and the app installs itself (app.py
+    install_from_disk_image) — with the note at the foot (build/dmg_art.py, build/dmg/). No
+    Applications folder to drag onto: a drag runs nothing and left a second double-click.
 
     Finder lays the window out itself: a writable image is mounted, AppleScript tells Finder the
     background, the icon size and where each icon sits, and the image is then compressed. A
@@ -309,7 +310,6 @@ def make_dmg(app, dmg):
     stage_dir = os.path.join(work, "stage")
     os.makedirs(stage_dir)
     shutil.copytree(app, os.path.join(stage_dir, os.path.basename(app)), symlinks=True)
-    os.symlink("/Applications", os.path.join(stage_dir, "Applications"))
     for f in notes:
         shutil.copy(f, stage_dir)
     laid_out = False
@@ -326,7 +326,7 @@ def make_dmg(app, dmg):
              "-format", "UDRW", "-ov", rw])
         run(["hdiutil", "attach", "-quiet", "-nobrowse", "-noautoopen", rw])
         w, h = dmg_art.WINDOW["size"]
-        place = [(os.path.basename(app), dmg_art.ICONS["app"]), ("Applications", dmg_art.ICONS["apps"])]
+        place = [(os.path.basename(app), dmg_art.ICONS["app"])]
         place += [(os.path.basename(f), dmg_art.ICONS["note"]) for f in notes]
         where = "\n".join(f'    set position of item "{n}" of container window to {{{x}, {y}}}' for n, (x, y) in place)
         script = f"""tell application "Finder"

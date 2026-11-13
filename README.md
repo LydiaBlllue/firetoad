@@ -59,11 +59,11 @@ each new merchant is.
 
 **With the app**
 
-1. **Download `FIRE Toad.app`** from the [releases page](https://github.com/lydiablllue/firetoad/releases), open the disk image, drag the
-   app to Applications. It is signed and notarised by Apple, so it opens with a double-click;
-   macOS asks once whether to open an app downloaded from the internet: click *Open*
-   ([installing it](docs/install.md)).
-2. **Open it and choose *Make one***, in an empty folder of your choice. Your browser opens on the
+1. **Download `FIRE Toad.app`** from the [releases page](https://github.com/lydiablllue/firetoad/releases), open the disk image and
+   double-click the app in it: it installs itself into Applications and opens. It is signed and
+   notarised by Apple; macOS asks once whether to open an app downloaded from the internet:
+   click *Open* ([installing it](docs/install.md)).
+2. **Click *Create my folder***: it is made for you in Documents. Your browser opens on the
    setup.
 3. **Drop last month's files** onto the second screen, filenames untouched.
 4. **Walk the screens** — your name, each account and what it is for, the month's money in and
