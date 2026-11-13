@@ -201,7 +201,7 @@ def drop_zone(lang, st, root):
                 items.append(f'<tr class="bad"><td>{e(n)}</td><td>{e(t(lang, "not_read"))}<small>{e(t(lang, "unnamed_fix"))}</small></td></tr>')
     out = (f'<div class="drop" id="drop"><b>{e(t(lang, "drop"))}</b>'
            f'<label class="lnk">{e(t(lang, "or_choose"))}<input type="file" multiple hidden id="pick"></label>'
-           f'<small>{e(t(lang, "none_waiting"))}</small><div class="dropped" id="dropped"></div></div>')
+           f'<small>{e(t(lang, "none_waiting" if st.get("screenshots") else "none_waiting_files"))}</small><div class="dropped" id="dropped"></div></div>')
     if items:
         out += (f'<table class="tbl"><tr><th>{e(t(lang, "col_file"))}</th><th>{e(t(lang, "col_is"))}</th></tr>'
                 + "".join(items) + '</table>')
@@ -453,7 +453,7 @@ def render(base, root, st, q, rec, job, held, tool=None, lang="en"):
             "{{STEP4}}": step4(lang, q), "{{FILED}}": merchants_list(lang, root),
             "{{STEP5}}": step5(lang, rec, base),
             "{{GO}}": e(t(lang, "go")), "{{DRY_HINT}}": e(t(lang, "dry_hint") if ready else t(lang, "dry_none")),
-            "{{BUSY}}": busy, "{{AI}}": ai_card(lang, root), "{{AI_TITLE}}": e(t(lang, "ai_title")),
+            "{{BUSY}}": busy,
             "{{SETTINGS}}": e(t(lang, "settings")), "{{MORE}}": e(t(lang, "more_h")),
             "{{JS}}": json.dumps(js_strings(lang), ensure_ascii=False).replace("</", "<\\/"),
             "{{QDATA}}": json.dumps(qdata(q, lang), ensure_ascii=False).replace("</", "<\\/"),

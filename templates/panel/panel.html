@@ -234,9 +234,9 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
     <h2>{{V4_H}}</h2>{{STEP5}}
   </div>
 
-  <details class="settings"><summary>{{MORE}}</summary>
-    <div class="card" id="model" style="margin-top:10px"><h2>{{AI_TITLE}}</h2>{{AI}}</div>
-  </details>
+  <!-- The model setting is not on the panel (2026-11-13, user 001): three developer fields in a
+       drawer of their own, never tried against a real service, and no design. `ai.py . set`
+       still sets it; it comes back when it has been designed. -->
   <div class="ver">v{{VERSION}}</div>
 </div>
 <script>

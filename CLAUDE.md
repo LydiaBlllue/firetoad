@@ -231,7 +231,7 @@ wizard — the setup skill's interview in six screens, in English or Chinese lik
 import; the selftest's *local app setup* check builds the same workspace through the app and
 through `wizard.py --apply` and expects identical `findata/`. **A model, by choice** (steps 3–4): `ai.py` in the
 update-dashboard scripts, off unless the owner sets a provider (OpenAI-compatible, Anthropic,
-or Ollama on this computer) on the panel's last card or with `ai.py . set`; asked at one place
+or Ollama on this computer) with `ai.py . set` — its card left the panel on 2026-11-13, until it is designed; asked at one place
 only — a merchant every map misses, in `note_merchant` — with the merchant string and the
 fifteen category names and nothing else; its answer is validated against the fifteen, written
 as the question's `suggest` with `suggestBy: model`, never as the category (Other stays until

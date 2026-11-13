@@ -78,6 +78,7 @@ S = {
     "open_inbox": {"en": "Open the folder", "zh": "打开文件夹"},
     "waiting": {"en": "In the folder", "zh": "已放进来的文件"},
     "none_waiting": {"en": "A PDF statement, a CSV export or a screenshot.", "zh": "PDF 对账单、CSV 导出或截图都可以。"},
+    "none_waiting_files": {"en": "A PDF statement or a CSV export.", "zh": "PDF 对账单或 CSV 导出。"},
     "unnamed": {"en": "not recognised — {why}", "zh": "认不出 — {why}"},
     "unnamed_fix": {"en": "It stays in the folder and is not imported.", "zh": "它留在文件夹里，不会被导入。"},
     "saved": {"en": "saved", "zh": "已保存"},

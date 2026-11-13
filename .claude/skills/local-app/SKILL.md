@@ -63,7 +63,7 @@ wizard instead — Files · Accounts · Money in and out · Goal · Day · Build
 and, on *Build it*, writes `setup-answers.json` in the skill's own shape, runs the scaffold, the
 rebuild and the first import. A question skipped stays unanswered (the skill's rule); what the
 screens do not cover (anything abroad, a counterparty, the buckets, a CSV or OFX nobody could
-name) is listed on the last screen as left for the chat. **A model, by choice** (steps 3 and 4, 2026-11-06): the panel's last card is one setting —
+name) is listed on the last screen as left for the chat. **A model, by choice** (steps 3 and 4, 2026-11-06): one setting, set with `ai.py . set` (its card left the panel on 2026-11-13, until it is designed) —
 Off · With my own key (an OpenAI-compatible service, or Anthropic) · On this computer (Ollama).
 Off is the default and means not one call. On, `ai.py` in the update-dashboard scripts is asked
 at exactly one place: a merchant that merchants.json, the earlier rows, the brand and the

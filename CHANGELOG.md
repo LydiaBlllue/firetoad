@@ -60,6 +60,9 @@
     that can be read, every view ends with the button that goes on, and the setup's
     *Categorize them* opens that view. The import day screen says the last day a statement
     closes and the day after it, one fact a line; the goal screen says a blank is fine.
+  - *The model setting left the panel.* Its card — a service address, a model name and a key,
+    in a drawer of its own — was never tried against a real service and never designed. It is
+    off as before; `ai.py . set` still sets it. It comes back when it has a design.
   - *An error you can report, and a log.* A run that stops opens a dialog over the page —
     nothing on the page moves — with *Try again*, *Copy report*, the error code
     (`FT-SETUP-KeyError`), the run's id and the log, one a line; a launch that fails shows the
