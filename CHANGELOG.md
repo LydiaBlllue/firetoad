@@ -20,6 +20,10 @@
     what to bring one per line and "How long?" answered in a small table; the last screen shows
     your answers as rows, warns when the plan asks more than the pay, and folds what the run
     printed under *Details*. The rules are DESIGN.md 6a.
+  - *The accounts are a table, already filled in.* One account a row with what it is used for
+    chosen for you; you change only what is wrong, and what the choices mean is under the table.
+    An account on a broker's export can be marked *Not mine*: it is left out of every figure and
+    the export is still read.
   - *An error you can report, and a log.* A run that stops opens a dialog over the page —
     nothing on the page moves — with *Try again*, *Copy report*, the error code
     (`FT-SETUP-KeyError`), the run's id and the log, one a line; a launch that fails shows the

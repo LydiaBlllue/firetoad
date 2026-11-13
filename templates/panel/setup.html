@@ -15,13 +15,19 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;font-size:14px;line-height:1.5;padding:28px 16px 64px}
 .wrap{max-width:760px;margin:0 auto}
-/* a wizard reads one screen at a time, so one column; on a desktop the accounts screen — the long
-   one — lays its account cards two abreast */
-@media (min-width:1000px){
-  .acc-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
-  .acc-grid .row{border-top:1px solid var(--border)}
-  .acc-grid .row:nth-child(-n+2){border-top:0}
-}
+/* the accounts screen is one table: an account a row, its use already chosen */
+table.acc{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 4px}
+table.acc th{text-align:left;font-size:11.5px;font-weight:600;color:var(--muted);padding:4px 10px 4px 0;border-bottom:1px solid var(--border)}
+table.acc td{padding:7px 10px 7px 0;border-bottom:1px solid var(--border);vertical-align:top}
+table.acc th:nth-child(2),table.acc td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.acc td small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+table.acc td input[type=text]{width:100%;max-width:240px;font-weight:600;border-color:transparent;background:transparent;padding:2px 4px;margin-left:-4px}
+table.acc td input[type=text]:hover,table.acc td input[type=text]:focus{border-color:var(--border);background:#fff}
+table.acc td.num input.amt{width:110px;max-width:110px;font-weight:400;border-color:var(--border);background:#fff;text-align:right}
+table.acc select{min-width:150px}
+table.acc .fixed{color:var(--ink-2)}
+.kv.wide{grid-template-columns:auto 1fr;max-width:none}
+.kv.wide span:nth-child(even){text-align:left}
 .brand{display:flex;align-items:baseline;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:14px}
 .brand h1{font-size:19px;font-weight:700;letter-spacing:-.3px}
 .brand small{color:var(--muted);font-size:12px}
@@ -264,35 +270,48 @@ table.cm input{width:100%}
         var inp = field(card, esc(fmt(W.w_ofx_q, {file: o.file})), text(A.ofx[o.file] || '', W.w_ofx_ph));
         inp.oninput = function(){ A.ofx[o.file] = inp.value; };
       });
+      // one table, one account a row, every answer already filled in: the owner changes only
+      // what is wrong (2026-11-12, user 001: eighteen accounts each showed four choices, as if
+      // each had to be answered). What the choices mean is a question of its own, under the table.
       card.appendChild(el('p', 'q', esc(W.w_acc_q)));
-      var grid = el('div', 'acc-grid'); card.appendChild(grid);
+      var tb = el('table', 'acc'); card.appendChild(tb);
+      var hd = el('tr'); [W.w_col_acc, W.w_col_bal, W.w_col_for].forEach(function(x){ hd.appendChild(el('th', null, esc(x))); }); tb.appendChild(hd);
+      var canDisown = false;
       scr.accounts.rows.forEach(function(r){
-        var row = el('div', 'row');
-        var rw = el('div', 'rw');
-        var sel = (A.accounts[r.i] || {}).role || r.role;
-        rw.appendChild(el('b', null, esc(r.inst === 'OFX' ? ((A.ofx && Object.values(A.ofx)[0]) || '?') : r.inst) + ' ' + esc(r.kind) + (r.id && r.id !== '—' ? ' ' + esc(r.id) : '')));
-        rw.appendChild(el('span', 'wh', r.balance != null ? money(r.balance) + ' ' + esc(fmt(W.w_on_date, {d: r.asof})) : esc(W.w_no_balance)));
-        if (r.doc) rw.appendChild(el('span', 'wh', esc(r.doc)));
-        var nm = text((A.accounts[r.i] || {}).name || r.name, W.w_call_it); nm.style.marginTop = '5px';
+        var tr = el('tr'); tb.appendChild(tr);
+        var c1 = el('td'), c2 = el('td', 'num'), c3 = el('td');
+        var nm = text((A.accounts[r.i] || {}).name || r.name, W.w_call_it);
         nm.oninput = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).name = nm.value; };
-        rw.appendChild(nm);
+        c1.appendChild(nm);
+        c1.appendChild(el('small', null, esc(r.inst === 'OFX' ? ((A.ofx && Object.values(A.ofx)[0]) || '?') : r.inst) + ' ' + esc(r.kind) + (r.id && r.id !== '—' ? ' ' + esc(r.id) : '')));
         if (r.needsBalance) {
-          var bl = text((A.accounts[r.i] || {}).balance || '', W.w_bal_ph, 'amt'); bl.inputMode = 'decimal'; bl.style.marginTop = '5px';
+          var bl = text((A.accounts[r.i] || {}).balance || '', W.w_bal_ph, 'amt'); bl.inputMode = 'decimal';
           bl.oninput = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).balance = bl.value; };
-          rw.appendChild(bl);
+          c2.appendChild(bl); c2.appendChild(el('small', null, esc(W.w_no_balance)));
+        } else {
+          c2.appendChild(el('span', null, money(r.balance)));
+          c2.appendChild(el('small', null, esc(r.asof || '')));
         }
-        if (!r.liability) {
-          var pills = el('div', 'pills');
-          scr.accounts.roles.forEach(function(ro){
-            var p = el('button', 'pl' + (ro.key === sel ? ' sel' : ''), esc(W['role_' + ro.key] || ro.label) + '<small>' + esc(W['role_' + ro.key + '_why'] || ro.why) + '</small>'); p.type = 'button';
-            p.onclick = function(){ pills.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); p.classList.add('sel'); (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).role = ro.key; };
-            pills.appendChild(p);
-          });
-          rw.appendChild(pills);
-        } else rw.appendChild(el('span', 'wh', esc(W.w_debt)));
-        row.appendChild(rw); grid.appendChild(row);
+        if (r.liability) c3.appendChild(el('span', 'fixed', esc(W.w_debt)));
+        else {
+          var sel = el('select'), cur = (A.accounts[r.i] || {}).role || r.role;
+          var opts = scr.accounts.roles.map(function(ro){ return ro.key; });
+          if (r.canDisown) { opts.push('not-mine'); canDisown = true; }
+          opts.forEach(function(k){ var o = el('option', null, esc(W['role_' + k] || k)); o.value = k; if (k === cur) o.selected = true; sel.appendChild(o); });
+          sel.onchange = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).role = sel.value; };
+          c3.appendChild(sel);
+        }
+        tr.appendChild(c1); tr.appendChild(c2); tr.appendChild(c3);
       });
-      card.appendChild(el('p', 'q', esc(W.w_missing) + esc(W.w_missing_tail)));
+      var qa2 = el('div', 'qa', '<b>' + esc(W.w_roles_h) + '</b>');
+      var kv2 = el('div', 'kv wide');
+      scr.accounts.roles.map(function(ro){ return ro.key; }).concat(canDisown ? ['not-mine'] : []).forEach(function(k){
+        kv2.appendChild(el('span', null, esc(W['role_' + k] || k))); kv2.appendChild(el('span', null, esc(W['role_' + k + '_why'] || '')));
+      });
+      if (scr.accounts.rows.some(function(r){ return r.liability; })) { kv2.appendChild(el('span', null, esc(W.w_debt))); kv2.appendChild(el('span', null, esc(W.role_debt_why))); }
+      qa2.appendChild(kv2); card.appendChild(qa2);
+      card.appendChild(el('p', 'q', '<b>' + esc(W.w_missing) + '</b>'));
+      card.appendChild(el('p', 'hint', esc(W.w_missing_tail)));
       var addBox = el('div'); card.appendChild(addBox);
       function drawAdded(){
         addBox.innerHTML = '';
