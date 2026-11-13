@@ -15,7 +15,7 @@ python3 app.py
 ```
 
 That is the whole instruction — or, packaged, a double-click: `python3 build/build.py` makes
-`dist/FIRE Toad.app` (a folder with Python and the tool inside, no data; `build/build.py` says
+`dist/FIRE Toad.app` (a folder with Python and the tool inside, no data; the build script (build/build.py, in the repository only) says
 what goes in and what never does). The packaged app asks for the workspace folder on its first
 launch — *Open my folder* or *Create my folder* (made in Documents as FIRE Toad) — and remembers it in the system's application-support
 folder, never in the workspace; `--choose` asks again. On every launch it compares the folder's
@@ -91,7 +91,7 @@ panel says so and the amount is typed.
 - **It never edits the page.** The import rebuilds through `rebuild.py` as it always did; the
   browser reloads the static file.
 - Logs: the app.log file under .jade/log/ in the workspace, nothing in the repository (both are gitignored).
-- **The build carries no workspace.** `build/build.py` refuses a checkout whose `findata/` is
+- **The build carries no workspace.** The build script refuses a checkout whose `findata/` is
   not the demo's, and bundles only what `tools/sync.py` copies. Without `--sign`
   it is ad-hoc signed (this Mac runs it; another asks for System Settings → Privacy & Security → Open Anyway once); a public
   download needs `--sign` with a Developer ID and `--notarize` (the build's own help lists the
