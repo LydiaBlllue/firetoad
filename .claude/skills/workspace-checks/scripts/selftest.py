@@ -82,8 +82,8 @@ def rules_seen(out):
 def m_readme_path(r):
     edit(r, "README.md", lambda s: s.replace("(docs/how-it-works.md)", "(docs/how-it-works_MOVED.md)"))
 def m_design_pages(r):
-    # The Monthly import row's first page swapped for one that does not exist, whatever the row lists.
-    edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Monthly import \| )[^·|]+·", r"\1Insights ·", s, count=1))
+    # The Stay on track row's first page swapped for one that does not exist, whatever the row lists.
+    edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Stay on track \| )[^·|]+·", r"\1Insights ·", s, count=1))
 def m_hand_card(r):
     # a stat card written by hand beside StatCard: the copy that drifts
     edit(r, main_dash(r), lambda s: s.replace('StatCard("Spent in "+viewYear, numx(fmt(spent), [], "After refunds."))',
@@ -150,7 +150,7 @@ def m_nav_marker_gone(r):
 def m_readme_sidebar(r):
     # the "·" list under the marker is what a reader is shown; it has to match the real sidebar
     edit(r, "README.md",
-         lambda s: s.replace(" · Plan · Investing · ", " · Plan · Investingg · ", 1))
+         lambda s: s.replace(" · Set a goal · Stay on track · ", " · Set a goal · Stay on trackk · ", 1))
 def m_figures_end_gone(r):
     edit(r, "FINANCE.md", lambda s: s.replace("<!-- LINT:FIGURES:END -->", "", 1))
 

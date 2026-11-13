@@ -827,31 +827,35 @@ addEventListener("DOMContentLoaded", () => {
 });
 
 const NAV = [
-  // Ordered the way someone starting out reads it (1.0.1, decided 2026-11-02): what came in and
-  // went out, then the plan, then investing, which only someone who invests sees. Page keys never
-  // change, so an old link or a saved state still lands.
-  // Accounts sits with Home: both answer "what do I have, and where is it" (1.0.1, 2026-11-05).
-  {sec:"",          items:[{k:"home",  n:"Home",             t:"Home",                 d:""},
-                           {k:"acct",  n:"Accounts",         t:"Accounts",             d:""}]},
-  {sec:"Money in & out", items:[{k:"cat", n:"This month",    t:"This month",           d:""},
+  // Grouped by how far along the owner is, not by topic (2026-11-13, user 001): getting started,
+  // setting a goal, staying on track, and after FIRE. Until then the groups were topics (money in
+  // and out, plan, investing, monthly import), while setup, the import and the knowledge path each
+  // sorted the product another way. Page keys never change, so an old link or a saved state
+  // still lands. Home belongs to no stage: everyone opens on it.
+  {sec:"",          items:[{k:"home",  n:"Home",             t:"Home",                 d:""}]},
+  // Get started: where the money is and where it went.
+  {sec:"Get started", items:[{k:"acct", n:"Accounts",        t:"Accounts",             d:""},
+                           {k:"cat",   n:"This month",       t:"This month",           d:""},
                            {k:"trends",n:"Year",             t:"The year",             d:""},
                            {k:"income",n:"Income & chequing",t:"Income and chequing", d:""},
                            {k:"subs",  n:"Subscriptions",    t:"Subscriptions",        d:""},
-                           {k:"base",  n:"Monthly spending", t:"Monthly spending",     d:""}]},
-  {sec:"Plan",      items:[{k:"budget",n:"Budget",           t:"Budget",               d:""},
-                           {k:"safe",  n:"Safety net",       t:"Safety net",           d:""},
-                           {k:"fire",  n:"FIRE",             t:"FIRE",                 d:""},
-                           {k:"coast", n:"Drawdown & care",  t:"Drawdown and care",    d:""}]},
-  {sec:"Investing", items:[{k:"port",  n:"Portfolio",        t:"Portfolio",            d:""},
+                           {k:"base",  n:"Monthly spending", t:"Monthly spending",     d:""},
+                           {k:"safe",  n:"Safety net",       t:"Safety net",           d:""}]},
+  // Set a goal: how much is needed, and how far off it is.
+  {sec:"Set a goal", items:[{k:"fire", n:"FIRE",             t:"FIRE",                 d:""}]},
+  // Stay on track: the monthly plan and the investments, month after month.
+  {sec:"Stay on track", items:[{k:"budget",n:"Budget",       t:"Budget",               d:""},
+                           {k:"port",  n:"Portfolio",        t:"Portfolio",            d:""},
                            {k:"perf",  n:"Performance",      t:"Performance",          d:""},
                            {k:"hold",  n:"Holdings",         t:"Holdings",             d:""},
                            {k:"wsinc", n:"Investment income",t:"Investment income",    d:""}]},
-  // The monthly import's two pages: what each update changed, and which statements are in.
-  {sec:"Monthly import", items:[{k:"upd", n:"Updates",       t:"Updates",              d:""},
-                           {k:"src",   n:"Statements",       t:"Statements",           d:""}]},
-  // The Glossary is a reference: on its own at the foot of the sidebar, under the pages still
-  // waiting for their data.
-  {sec:"",          items:[{k:"gloss", n:"Glossary",         t:"Glossary",             d:""}]}
+  // After FIRE: living on it.
+  {sec:"After FIRE", items:[{k:"coast",n:"Drawdown & care",  t:"Drawdown and care",    d:""}]},
+  // Records and reference, for every stage, at the foot of the sidebar under the pages still
+  // waiting for their data: what each update changed, which statements are in, and the Glossary.
+  {sec:"",          items:[{k:"upd",   n:"Updates",          t:"Updates",              d:""},
+                           {k:"src",   n:"Statements",       t:"Statements",           d:""},
+                           {k:"gloss", n:"Glossary",         t:"Glossary",             d:""}]}
 ];
 const PAGES = NAV.flatMap(g => g.items);
 const PILL_PAGES = ["cat"];                          // driven by the month cursor
@@ -915,7 +919,7 @@ function drawNav(){
     if(gi === NAV.length - 1) return fold + '<div class="grp foot">' + g.items.map(btn).join("") + '</div>';
     const items = g.items.filter(i => !waitsFor(i.k));
     if(!items.length) return "";
-    // A page with no section of its own after the first (Accounts) stands apart from the one above.
+    // A group with no heading after the first stands apart from the one above.
     const head = !g.sec ? '' : '<div class="sec">'+g.sec+'</div>';
     return head + '<div class="grp'+(!g.sec && gi > 0 ? " solo" : "")+'">' + items.map(btn).join("") + '</div>';
   }).join("");

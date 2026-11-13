@@ -149,7 +149,7 @@ the screens do not cover (anything held abroad, a loan to a friend, your investi
 
 <!-- LINT:NAV main=18/4 minwidth=800 -->
 The page is 18 pages in 4 sidebar groups —
-Home · Accounts · Money in & out · Plan · Investing · Monthly import · Glossary
+Home · Get started · Set a goal · Stay on track · After FIRE · Updates · Statements · Glossary
 — desktop only, at least 800px wide.
 
 MIT licence: see [`LICENSE`](LICENSE).

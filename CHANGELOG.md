@@ -1,5 +1,16 @@
 # Changelog
 
+## After 1.0.4 — unreleased
+
+- **The sidebar follows the way to FIRE** (2026-11-13, user 001). The pages are grouped by how
+  far along you are, not by topic: *Get started* (Accounts, This month, Year, Income & chequing,
+  Subscriptions, Monthly spending, Safety net), *Set a goal* (FIRE), *Stay on track* (Budget and
+  the four investing pages), *After FIRE* (Drawdown & care). Home stays on top; Updates,
+  Statements and the Glossary sit at the foot, for every stage. No page is added or removed and
+  every old link still lands; Money in & out, Plan, Investing and Monthly import are no longer
+  group names. Setup, the monthly import and the dashboard had each been sorting the product a
+  different way.
+
 ## 1.0.4 — unreleased
 
 - **From the first full run on a fresh account** (2026-11-12, user 001, on her own statements):

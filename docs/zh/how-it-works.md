@@ -7,22 +7,22 @@
 | 分组 | 页面 | 回答什么 |
 |---|---|---|
 | — | Home | 你现在在哪儿，值多少 |
-| — | Accounts | 钱放在哪些地方 |
-| Money in & out | This month | 这个月还能花多少，钱花到哪了 |
+| Get started | Accounts | 钱放在哪些地方 |
+| | This month | 这个月还能花多少，钱花到哪了 |
 | | Year | 这一年按分类、按月怎么样 |
 | | Income & chequing | 收入从哪来，留下了多少，支票账户的每一笔 |
 | | Subscriptions | 哪些在重复扣钱、一年多少、下一笔什么时候 |
 | | Monthly spending | 平常一个月花多少，计划用的是哪个数 |
-| Plan | Budget | 每份工资做什么用，基金里有多少 |
 | | Safety net | 没有工资的话，今天能动用的钱能撑几个月 |
-| | FIRE | 离目标还有多远，哪年到 |
-| | Drawdown & care | 钱够不够用（含养老护理），历史上多少段真实年份里撑得住 |
-| Investing | Portfolio | 投了多少，按币种、资产类别、分组怎么分布 |
+| Set a goal | FIRE | 离目标还有多远，哪年到 |
+| Stay on track | Budget | 每份工资做什么用，基金里有多少 |
+| | Portfolio | 投了多少，按币种、资产类别、分组怎么分布 |
 | | Performance | 和同一天买入一只基准基金相比表现如何 |
 | | Holdings | 每个持仓，按角色或按账户 |
 | | Investment income | 不卖任何东西，投资组合付给你多少，哪只持仓什么时候付 |
-| Monthly import | Updates | 每次更新改了什么 |
-| | Statements | 哪份对账单哪个月到了，还缺什么 |
+| After FIRE | Drawdown & care | 钱够不够用（含养老护理），历史上多少段真实年份里撑得住 |
+| — | Updates | 每次更新改了什么 |
+| — | Statements | 哪份对账单哪个月到了，还缺什么 |
 | — | Glossary | 每个金融术语，以及页面自己起的每个词 |
 
 ## 每个月实际怎么走
@@ -33,7 +33,7 @@
    由它的解析器读取，必须和对账单自己的合计对平才允许写入；消费按商户归类；页面重建；原件移进
    `archive/`。Claude 只读脚本的摘要，把程序决定不了的事拿来问你 —— 没见过的商户、解析器读不了的
    对账单 —— 然后给你一份简短的报告：变了什么、注意到什么、替你做了哪些判断、哪些要你拍板。
-3. **打开页面。** Monthly import → Statements 是一张打卡表，哪个月缺了哪份文件一眼可见。
+3. **打开页面。** Statements 是一张打卡表，哪个月缺了哪份文件一眼可见。
 
 Emma 每月要丢五份文件：BMO 三份 PDF（支票、储蓄、MasterCard）、Wealthsimple 两份导出。你的是你注册表里写的那些。
 
@@ -119,7 +119,7 @@ tools/        demo 数据、迁移脚本、同步进工作区
 —— 是它的一个实例。`tools/sync.py <workspace>` 把技能、模板和纲领文件复制进去，不碰任何属于你
 的东西；工具的数据形状比你的文件夹新时，`tools/migrate.py <workspace>` 会一步一步把文件夹迁上来。
 
-页面共 17 页、5 个侧栏分组 ——
-Home · Accounts · Spending · Income · Investing · Plan · Monthly import · Glossary
+页面共 18 页、4 个侧栏分组 ——
+Home · Get started · Set a goal · Stay on track · After FIRE · Updates · Statements · Glossary
 —— 仅桌面，窗口至少 800px 宽。
 </details>

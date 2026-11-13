@@ -73,16 +73,20 @@
     the window — a wide screen got a tall chart and text larger than the page's, and a laptop
     screen got the chart below the fold.
 - **One left sidebar** (`aside.side`, 210px, sticky) beside `main.main`, rendered from the `NAV`
-  constant. Home sits above the sections under no heading.
+  constant. Home sits above the sections under no heading. **The four sections are the four
+  stages**, in order: *Get started* (where the money is and where it went), *Set a goal* (how
+  much is needed), *Stay on track* (the monthly plan and the investments), *After FIRE* (living
+  on it). A new page goes in the stage whose question it answers.
   - **A new page is one entry in `NAV` plus one `<section data-pg="key" hidden>`**, nothing
     else; `setPage()` is driven entirely by `NAV`.
-  - **Every group is open.** No section folds away; Monthly import is listed like the others. The one
+  - **Every group is open.** No section folds away. The one
     fold is **Waiting for data**, above the Glossary: a page whose data has not arrived yet
     (`WAITS` — Income without a chequing ledger, Investing and FIRE with nothing invested) is
     listed there with what it waits for, closed by default, and returns to its section by itself
     the day the data arrives. A workspace with only a credit card is then a complete product.
-  - **The Glossary is on its own at the foot**, below Monthly import and above the version,
-    under no heading: it is a reference for reading the page.
+  - **Updates, Statements and the Glossary sit at the foot**, above the version, under no
+    heading: what each update changed, which statements are in, and a reference for reading the
+    page. None of them belongs to a stage.
   - **Dots**: `pageFlags()` hangs a 6px dot on a sidebar entry when its page has something on
     it — amber `#c98500` = look at this, red `#d03b3b` = a rule is broken or something is due.
     A new rule is wired into it.
@@ -101,18 +105,18 @@
   Statements) say so on their line. In 2.0 the two become the component library's Card and Table.
 
 <!-- LINT:PAGES pages=18 sections=4 -->
-- **The pages**: 18 pages under 4 sidebar sections, ordered the way someone starting out reads them (1.0.1). **Lint rule S4 checks this table against
+- **The pages**: 18 pages under 4 sidebar sections, **one per stage of the way to FIRE** (2026-11-13, user 001: grouped by how far along the owner is, not by topic; until then the sections were Money in & out, Plan, Investing and Monthly import). **Lint rule S4 checks this table against
   `NAV`**, so changing the navigation means changing this table too — and the page count, the
   sidebar list and the minimum width stated in `README.md`, and every path the README hands the
   reader:
   | Section | Pages |
   |---|---|
-  | — | Home (four cards, net worth in one card, net worth over time) · Accounts |
-  | Money in & out | This month · Year · Income & chequing · Subscriptions · Monthly spending |
-  | Plan | Budget · Safety net · FIRE · Drawdown & care |
-  | Investing | Portfolio · Performance · Holdings · Investment income |
-  | Monthly import | Updates · Statements |
-  | — | Glossary, at the foot of the sidebar, under the pages still waiting for their data |
+  | — | Home (four cards, net worth in one card, net worth over time). It belongs to no stage |
+  | Get started | Accounts · This month · Year · Income & chequing · Subscriptions · Monthly spending · Safety net |
+  | Set a goal | FIRE |
+  | Stay on track | Budget · Portfolio · Performance · Holdings · Investment income |
+  | After FIRE | Drawdown & care |
+  | — | Updates, Statements and the Glossary: records and reference for every stage, at the foot of the sidebar, under the pages still waiting for their data |
 
   **What a page waits for** (`WAITS`): Income and Safety net a chequing statement; Portfolio,
   Performance and Holdings a broker's holdings; Investment income a broker's activity; FIRE a FIRE

@@ -120,7 +120,7 @@ Claude Code 仍是另一扇门：对话、解析器读不了的对账单、向�
 
 <!-- LINT:NAV main=18/4 minwidth=800 -->
 页面共 18 页、4 个侧栏分组 ——
-Home · Accounts · Money in & out · Plan · Investing · Monthly import · Glossary
+Home · Get started · Set a goal · Stay on track · After FIRE · Updates · Statements · Glossary
 —— 仅桌面端，至少 800px 宽。
 
 MIT 许可：见 [`LICENSE`](LICENSE)。
