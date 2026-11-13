@@ -134,7 +134,7 @@ S = {
     "qs_fire": {"en": "Is retiring early (FIRE) something you are working toward? The FIRE pages show only for yes.", "zh": "提前退休（FIRE）是你在努力的方向吗？FIRE 页面只在「是」时出现。"},
     "opt_Pay": {"en": "Pay", "zh": "工资"}, "opt_Family or gift": {"en": "Family or gift", "zh": "家人或礼物"},
     "opt_Other income": {"en": "Other income", "zh": "其他收入"}, "opt_Own money": {"en": "Own money", "zh": "自己的钱"},
-    "opt_Paid back": {"en": "Paid back", "zh": "还款"}, "opt_Yes": {"en": "Yes", "zh": "是"}, "opt_No": {"en": "No", "zh": "不是"},
+    "opt_Paid back": {"en": "Paid back", "zh": "还款"}, "opt_Transfer": {"en": "Transfer", "zh": "转账"}, "opt_Yes": {"en": "Yes", "zh": "是"}, "opt_No": {"en": "No", "zh": "不是"},
     # — step 4
     "q_intro": {"en": "The import filed everything it could. Tap an answer on each of these, then save once.", "zh": "能归类的都已归好。下面这些每条点一个答案，最后保存一次。"},
     "q_none": {"en": "Nothing to categorize. Anything the next import cannot file appears here.", "zh": "没有要归类的。下次导入归不了类的会出现在这里。"},
@@ -359,6 +359,8 @@ W = {
                 "zh": "{file} 是银行下载的文件，里面只有账号没有银行名。它来自哪家银行？"},
     "w_ofx_ph": {"en": "the bank's name, e.g. RBC", "zh": "银行名，例如 RBC"},
     "w_inst_ph": {"en": "bank or broker", "zh": "银行或券商"}, "w_balance_ph": {"en": "balance", "zh": "余额"},
+    # what kind of account, as the bank calls it; the name itself stays the bank's
+    "kind_Chequing": {"en": "Chequing", "zh": "支票"}, "kind_Savings": {"en": "Savings", "zh": "储蓄"}, "kind_Money market": {"en": "Money market", "zh": "货币市场"}, "kind_Credit card": {"en": "Credit card", "zh": "信用卡"}, "kind_Line of credit": {"en": "Line of credit", "zh": "信用额度"}, "kind_Loan": {"en": "Loan", "zh": "贷款"}, "kind_Mortgage": {"en": "Mortgage", "zh": "房贷"}, "kind_Investment": {"en": "Investment", "zh": "投资"}, "kind_TFSA": {"en": "TFSA", "zh": "TFSA"}, "kind_RRSP": {"en": "RRSP", "zh": "RRSP"}, "kind_FHSA": {"en": "FHSA", "zh": "FHSA"}, "kind_Non-registered": {"en": "Non-registered", "zh": "非注册"}, "kind_Crypto": {"en": "Crypto", "zh": "加密货币"}, "kind_Brokerage": {"en": "Brokerage", "zh": "券商"},
     "w_col_acc": {"en": "Account", "zh": "账户"}, "w_col_bal": {"en": "Balance", "zh": "余额"}, "w_col_for": {"en": "Used for", "zh": "用途"},
     "w_roles_h": {"en": "What do these mean?", "zh": "这些是什么意思？"},
     "role_not-mine": {"en": "Not mine", "zh": "不是我的"}, "role_not-mine_why": {"en": "someone else's money: left out of every figure", "zh": "别人的钱：不算进任何数字"},

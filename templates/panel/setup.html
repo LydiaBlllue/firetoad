@@ -227,7 +227,7 @@ table.cm input{width:100%}
       var bring = el('ul', 'bring');
       [W.w_files_1, W.w_files_2, W.w_files_3].forEach(function(x){ bring.appendChild(el('li', null, esc(x))); });
       card.appendChild(bring);
-      var drop = el('div', 'drop', '<b>' + esc(W.w_drop) + '</b><span><label class="lnk">' + esc(W.w_or_choose) + '<input type="file" multiple hidden id="pick"></label></span><small>' + esc(INBOX) + '</small>');
+      var drop = el('div', 'drop', '<b>' + esc(W.w_drop) + '</b><span><label class="lnk">' + esc(W.w_or_choose) + '<input type="file" multiple hidden id="pick"></label></span>');
       card.appendChild(drop);
       var ul = el('ul', 'files');
       (S.files || []).forEach(function(f){ ul.appendChild(el('li', null, esc(f))); });
@@ -283,7 +283,7 @@ table.cm input{width:100%}
         var nm = text((A.accounts[r.i] || {}).name || r.name, W.w_call_it);
         nm.oninput = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).name = nm.value; };
         c1.appendChild(nm);
-        c1.appendChild(el('small', null, esc(r.inst === 'OFX' ? ((A.ofx && Object.values(A.ofx)[0]) || '?') : r.inst) + ' ' + esc(r.kind) + (r.id && r.id !== '—' ? ' ' + esc(r.id) : '')));
+        c1.appendChild(el('small', null, esc(r.inst === 'OFX' ? ((A.ofx && Object.values(A.ofx)[0]) || '?') : r.inst) + ' ' + esc(W['kind_' + r.kind] || r.kind) + (r.id && r.id !== '—' ? ' ' + esc(r.id) : '')));
         if (r.needsBalance) {
           var bl = text((A.accounts[r.i] || {}).balance || '', W.w_bal_ph, 'amt'); bl.inputMode = 'decimal';
           bl.oninput = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).balance = bl.value; };
@@ -320,7 +320,7 @@ table.cm input{width:100%}
           [['inst', W.w_inst_ph], ['name', W.w_call_it], ['balance', W.w_balance_ph]].forEach(function(f){
             var td = el('td'); var i = text(x[f[0]] || '', f[1]); i.oninput = function(){ x[f[0]] = i.value; }; td.appendChild(i); tr.appendChild(td);
           });
-          var td = el('td'); var s = el('select'); scr.accounts.kinds.forEach(function(k2){ var o = el('option', null, esc(k2)); o.value = k2; if (k2 === (x.kind || 'Savings')) o.selected = true; s.appendChild(o); });
+          var td = el('td'); var s = el('select'); scr.accounts.kinds.forEach(function(k2){ var o = el('option', null, esc(W['kind_' + k2] || k2)); o.value = k2; if (k2 === (x.kind || 'Savings')) o.selected = true; s.appendChild(o); });
           s.onchange = function(){ x.kind = s.value; }; td.appendChild(s); tr.appendChild(td);
           var td2 = el('td'); var rm = el('button', 'btn sm', '×'); rm.type = 'button'; rm.onclick = function(){ A.added.splice(k, 1); drawAdded(); }; td2.appendChild(rm); tr.appendChild(td2);
           addBox.appendChild(t);
