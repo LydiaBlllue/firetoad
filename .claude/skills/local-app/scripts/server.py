@@ -238,7 +238,8 @@ class App:
                 # a setup that ended by itself without building is a failure the owner has to be
                 # able to report: a code, and the line that says why. (An import that writes
                 # nothing is often right — nothing new, or a file to name first — and says so.)
-                if verb == "setup" and write and isinstance(result, dict) and result.get("written") is False:
+                if verb == "setup" and write and isinstance(result, dict) and (
+                        result.get("written") is False or result.get("imported") is False):
                     why = next((l.strip() for l in job.lines if "✗" in l), "The run ended without writing anything.")
                     job.report = applog.report(verb, job.id, "STOPPED", why, job.lines, version)
                 else:
@@ -262,7 +263,7 @@ class App:
 
     def do_import(self, write):
         return self.start_job("import", bool(write),
-                              lambda say: verbs.public(update.run(self.root, write=bool(write), say=say, loud=say)))
+                              lambda say: verbs.public(update.run(self.root, write=bool(write), say=say, loud=say, leave_unnamed=True)))
 
     def do_undo(self):
         return self.start_job("undo", True, lambda say: verbs.public(update.undo(self.root, say=say)))

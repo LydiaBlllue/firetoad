@@ -306,9 +306,13 @@ def apply(root, answers, write=False, say=None):
     import update  # noqa: E402
     res["rebuild"] = verbs.public(rebuild.run(root, write=True, say=emit))
     emit("")
-    r2 = update.run(root, write=True, say=emit, loud=emit)
+    # the first import leaves a file it cannot name in the folder and imports the rest (the
+    # app's way, update.run); `imported` says whether it wrote, so the screen never calls a
+    # page ready that holds none of the files
+    r2 = update.run(root, write=True, say=emit, loud=emit, leave_unnamed=True)
     res["import"] = verbs.public(r2)
     res["written"] = True
+    res["imported"] = r2["rc"] in (0, 2)
     return verbs.result(res, r2["rc"] if r2["rc"] in (0, 2) else r2["rc"], lines)
 
 

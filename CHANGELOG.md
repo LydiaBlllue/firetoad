@@ -32,6 +32,10 @@
     account* and *I spent it* (a category only then), not on Groceries, Dining, Housing. *My own
     account* answers every transfer with that account, in or out, and is remembered
     (`senders.json` `ownAccounts`): the next import types it and does not ask.
+  - *A file nobody can name no longer stops the app's import.* It is left in the folder and
+    said; everything else is imported. One screenshot among 28 files had left a first import
+    undone while the setup said the page was ready; the setup now says so when its first import
+    did not write, and no longer asks for screenshots it cannot use yet.
   - *An error you can report, and a log.* A run that stops opens a dialog over the page —
     nothing on the page moves — with *Try again*, *Copy report*, the error code
     (`FT-SETUP-KeyError`), the run's id and the log, one a line; a launch that fails shows the

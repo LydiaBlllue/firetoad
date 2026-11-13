@@ -225,7 +225,7 @@ table.cm input{width:100%}
       }
       card.appendChild(el('p', 'q', esc(W.w_files_q)));
       var bring = el('ul', 'bring');
-      [W.w_files_1, W.w_files_2, W.w_files_3].forEach(function(x){ bring.appendChild(el('li', null, esc(x))); });
+      [W.w_files_1, W.w_files_2].forEach(function(x){ bring.appendChild(el('li', null, esc(x))); });
       card.appendChild(bring);
       var drop = el('div', 'drop', '<b>' + esc(W.w_drop) + '</b><span><label class="lnk">' + esc(W.w_or_choose) + '<input type="file" multiple hidden id="pick"></label></span>');
       card.appendChild(drop);
@@ -434,6 +434,7 @@ table.cm input{width:100%}
       var log = el('pre', 'log'); more.appendChild(log); card.appendChild(more);
       var a = el('div', 'act'); var b = el('button', 'btn', esc(W.w_back)); b.type = 'button'; b.onclick = function(){ step = 4; draw(); }; a.appendChild(b);
       var go = el('button', 'btn primary', esc(W.w_build_it)); go.type = 'button'; a.appendChild(go); card.appendChild(a);
+      var DL = {h: W.w_not_finished, stopped_h: W.w_err_stopped_h, safe: W.w_err_safe, try_: W.w_err_try, copy: W.w_err_copy, copied: W.w_err_copied, close: W.w_err_close, code: W.w_err_code, run: W.w_err_run, log: W.w_err_log, show: W.w_err_show, details: W.w_err_details};
       go.onclick = function(){
         go.disabled = true; b.disabled = true; hint.textContent = W.w_building; log.textContent = '';
         var answers = {owner: A.owner, born: A.born, importDay: A.importDay || scr.day.suggest,
@@ -452,7 +453,16 @@ table.cm input{width:100%}
             var res = j.result || {};
             if (j.error || !res.written) {
               hint.textContent = W.w_not_finished; go.disabled = false; b.disabled = false;
-              if (j.report) errDialog(j.report, {h: W.w_not_finished, stopped_h: W.w_err_stopped_h, safe: W.w_err_safe, try_: W.w_err_try, copy: W.w_err_copy, copied: W.w_err_copied, close: W.w_err_close, code: W.w_err_code, run: W.w_err_run, log: W.w_err_log, show: W.w_err_show, details: W.w_err_details}, j.lines, function(){ go.click(); });
+              if (j.report) errDialog(j.report, DL, j.lines, function(){ go.click(); });
+              return;
+            }
+            if (res.imported === false) {
+              // the folder is set up but its first import stopped: never "your page is ready" over
+              // a page with none of the files in it. The files are still there; the monthly
+              // import is where they are imported from now on.
+              hint.textContent = W.w_not_finished; go.style.display = 'none'; b.style.display = 'none';
+              if (j.report) errDialog(j.report, DL, j.lines, null);
+              var pan0 = el('a', 'btn primary', esc(W.w_panel)); pan0.href = base + '/panel'; a.appendChild(pan0);
               return;
             }
             // built: say so, then the one next thing — sort what the import could not file, when

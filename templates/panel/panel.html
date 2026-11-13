@@ -277,13 +277,13 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
     Object.keys(counts).forEach(function(k){ var key = 'c_' + k; cs.push(T[key] ? fmtS(T[key], {n: counts[k]}) : counts[k] + ' ' + k); });
     if (cs.length) rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(T.r_counts) + '</span><span class="v">' + cs.map(esc).join('<br>') + '</span>'));
     var notes = [];
-    if ((res.unknown || []).length) notes.push(['bad', fmtS(T.r_unknown, {n: res.unknown.length}) + ': ' + res.unknown.map(function(u){ return u[0]; }).join(', ')]);
+    if ((res.unknown || []).length) rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(fmtS(T.r_unknown, {n: res.unknown.length})) + '</span><span class="v">' + res.unknown.map(function(u){ return esc(u[0]); }).join('<br>') + '</span>'));
     if ((res.stopped || []).length) notes.push(['bad', T.r_stopped + ': ' + res.stopped.join('; ')]);
     if ((res.by_hand || []).length) notes.push(['warn', fmtS(T.r_by_hand, {n: res.by_hand.length}) + ': ' + res.by_hand.map(function(u){ return u[0]; }).join(', ')]);
     if ((res.untyped || []).length) notes.push(['warn', fmtS(T.r_untyped, {n: res.untyped.length})]);
     if ((res.asked || []).length) notes.push(['ok', fmtS(T.r_asked, {n: res.asked.length})]);
     notes.forEach(function(n){ rbox.appendChild(el('div', 'nt ' + n[0], '<span class="ic">' + (n[0] === 'ok' ? '✓' : '!') + '</span>' + esc(n[1]))); });
-    if (!written && ((res.unknown || []).length || (res.stopped || []).length)) rbox.appendChild(el('p', 'hint', esc(T.r_nothing_written)));
+    if (!written && (res.stopped || []).length) rbox.appendChild(el('p', 'hint', esc(T.r_nothing_written)));
     if (written) {
       (res.changed || []).forEach(function(c){ rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(c.label) + '</span><span class="v">' + esc(c.from) + ' → ' + esc(c.to) + '</span>')); });
       (res.noticed || []).forEach(function(n){ rbox.appendChild(el('div', 'nt ' + (n.sev || 'ok'), '<span class="ic">' + (n.sev === 'ok' ? '✓' : '!') + '</span>' + esc(n.text))); });
@@ -360,7 +360,7 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
       var res = job.result || {};
       resultCard(res, false, job.error);
       if (job.error) { ihint.textContent = T.failed_lines; return; }
-      if ((res.unknown || []).length || (res.stopped || []).length) { ihint.textContent = T.dry_stop; return; }
+      if ((res.stopped || []).length) { ihint.textContent = T.dry_stop; return; }
       if (!(res.files || []).length && !(res.counts && Object.keys(res.counts).length)) { ihint.textContent = T.dry_none; return; }
       ihint.textContent = T.dry_plan; go.style.display = '';
     });

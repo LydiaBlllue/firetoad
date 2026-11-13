@@ -1435,11 +1435,17 @@ def _script(script, args, root):
 
 
 # ---------------------------------------------------------------- run / main
-def run(root, write=False, hand=None, balance=None, undo_last=False, say=None, loud=None):
+def run(root, write=False, hand=None, balance=None, undo_last=False, say=None, loud=None, leave_unnamed=False):
     """The import (verbs.py). `hand` is the list of transcriptions --hand reads from its file;
     `balance` is {account key: amount} for a download with no running balance; `undo_last` is
     --undo. Returns the summary --json prints, plus rc and lines. `loud` receives the lines that
-    reach the terminal even in --json mode (a refusal, a failure)."""
+    reach the terminal even in --json mode (a refusal, a failure).
+
+    `leave_unnamed` is the local app's way with a file nobody can name: in the chat the run
+    stops and Claude asks; in the app there is nobody to ask, so the file is left in the folder,
+    said, and everything that can be named is imported. Nothing is guessed either way. Without
+    it one screenshot in the folder left a whole first import undone, and the setup said the
+    page was ready (2026-11-12, user 001: 28 files, 6 screenshots, nothing imported)."""
     root = os.path.abspath(root)
     if undo_last:
         return undo(root, say=say)
@@ -1448,11 +1454,11 @@ def run(root, write=False, hand=None, balance=None, undo_last=False, say=None, l
     if other:
         emit(jlock.refusal(other), loud_line=True)
         return verbs.result({"date": datetime.date.today().isoformat(), "written": False, "busy": other}, 1, lines)
-    rc, summary = _import(root, write, hand or [], balance or {}, emit)
+    rc, summary = _import(root, write, hand or [], balance or {}, emit, leave_unnamed)
     return verbs.result(summary, rc, lines)
 
 
-def _import(root, write, hand, balance, say):
+def _import(root, write, hand, balance, say, leave_unnamed=False):
     """(rc, summary) — the import itself, printing through `say`."""
     ws = Workspace(root)
     plan = Plan()
@@ -1513,8 +1519,12 @@ def _import(root, write, hand, balance, say):
     for src, d, desc, amt in plan.credits:
         say(f"  · credit not filed: {src} {d} {desc[:40]!r} {amt:,.2f}")
 
-    stop = plan.unknown or plan.stopped
-    if plan.unknown:
+    stop = plan.stopped or (plan.unknown and not leave_unnamed)
+    if plan.unknown and leave_unnamed:
+        say("\n  --- left in the folder: files nobody can name ---")
+        for name, note in plan.unknown:
+            say(f"  · {name}: {note}")
+    elif plan.unknown:
         say("\n  --- STOP: files nobody can name ---")
         for name, note in plan.unknown:
             say(f"  ✗ {name}: {note}")
@@ -1524,7 +1534,7 @@ def _import(root, write, hand, balance, say):
             say(f"  ✗ {s}")
     summary.update(files=plan.files, by_hand=plan.by_hand, unknown=plan.unknown, stopped=plan.stopped,
                    untyped=plan.untyped, asked=[d["what"] for d in plan.decisions], judged=plan.judged,
-                   credits=plan.credits, counts=dict(plan.counts))
+                   credits=plan.credits, counts=dict(plan.counts), left=bool(plan.unknown and leave_unnamed))
     if stop:
         say("\n  Nothing written. Ask the owner, then run again.")
         return 1, summary
