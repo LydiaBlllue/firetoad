@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FIRE Toad · {{SUBTITLE}}</title>
+<title>FIRE Toad: {{SUBTITLE}}</title>
 <style>
 /* The dashboard's tokens (templates/dashboards/finance_dashboard.html :root), so the panel reads
    as the same product. Sized for a phone screen. Five numbered steps; the current one is lit. */
@@ -79,11 +79,18 @@ details.how p{font-size:12.5px;color:var(--ink-2);background:var(--pill);border-
 .hint{font-size:12px;color:var(--muted)}
 pre.log{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f3f2ee;border-radius:8px;padding:10px 12px;margin-top:10px;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow:auto;display:none}
 pre.log.on{display:block}
-.errbox{border:1px solid #efc4c1;background:var(--bad-bg);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13px}
-.errbox b{display:block;color:var(--bad)}
-.errbox code{display:block;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;margin:4px 0;user-select:all;word-break:break-word}
-.errkv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:12px;color:var(--muted);margin-top:8px}
-.errkv code{display:inline;margin:0;color:var(--ink-2)}
+/* a run that stopped is said in a dialog over the page: nothing on the page moves (DESIGN.md 6a) */
+.dlg-back{position:fixed;inset:0;background:rgba(11,11,11,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlg{background:var(--surface);border-radius:12px;padding:18px 20px;max-width:480px;width:100%;max-height:90vh;overflow:auto;border-top:4px solid var(--bad)}
+.dlg.stopped{border-top-color:var(--warn)}
+.dlg h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.dlg p{font-size:13px;color:var(--ink-2);margin-bottom:4px}
+.dlg .dlg-act{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 12px}
+.dlg .errkv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12px;color:var(--muted);align-items:baseline}
+.dlg .errkv code{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink-2);word-break:break-all;user-select:all}
+.dlg details{margin-top:10px;font-size:12px;color:var(--muted)}
+.dlg details summary{cursor:pointer}
+.dlg pre{font:11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f3f2ee;border-radius:8px;padding:8px 10px;margin-top:6px;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto}
 .rcard{margin-top:8px}
 .rcard .kv .v{text-align:right;max-width:70%;white-space:normal;word-break:break-word}
 .q-intro{font-size:12.5px;color:var(--ink-2);margin-bottom:6px}
@@ -193,7 +200,7 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
   <div class="card" id="step5" data-step="5"><h2><span class="n">5</span>{{S5}}</h2>{{STEP5}}</div>
   </div></div>
 
-  <details class="settings"><summary>{{SETTINGS}} · {{AI_TITLE}}</summary>
+  <details class="settings"><summary>{{SETTINGS}}: {{AI_TITLE}}</summary>
     <div class="card" id="model" style="margin-top:10px">{{AI}}</div>
   </details>
   <div class="ver">v{{VERSION}}</div>
@@ -224,10 +231,10 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
     if (!res) return;
     var h = el('div', 'qh', esc(written ? T.r_done_h : T.r_dry_h)); rbox.appendChild(h);
     var files = res.files || [];
-    rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(T.r_files) + '</span><span class="v">' + (files.length ? esc(files.join(' · ')) : esc(T.r_none_read)) + '</span>'));
+    rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(T.r_files) + '</span><span class="v">' + (files.length ? files.map(esc).join('<br>') : esc(T.r_none_read)) + '</span>'));
     var counts = res.counts || {}, cs = [];
     Object.keys(counts).forEach(function(k){ var key = 'c_' + k; cs.push(T[key] ? fmtS(T[key], {n: counts[k]}) : counts[k] + ' ' + k); });
-    if (cs.length) rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(T.r_counts) + '</span><span class="v">' + esc(cs.join(' · ')) + '</span>'));
+    if (cs.length) rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(T.r_counts) + '</span><span class="v">' + cs.map(esc).join('<br>') + '</span>'));
     var notes = [];
     if ((res.unknown || []).length) notes.push(['bad', fmtS(T.r_unknown, {n: res.unknown.length}) + ': ' + res.unknown.map(function(u){ return u[0]; }).join(', ')]);
     if ((res.stopped || []).length) notes.push(['bad', T.r_stopped + ': ' + res.stopped.join('; ')]);
@@ -245,23 +252,42 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
     if (err) rbox.appendChild(el('div', 'nt bad', '<span class="ic">✗</span>' + esc(err.text || err)));
     var d = el('details', 'more'); d.appendChild(el('summary', null, esc(T.r_raw))); d.appendChild(log); rbox.appendChild(d);
   }
-  // a run that stopped: what happened in one line, its code to quote, one button that copies
-  // the whole report (applog.report), and where the log is (DESIGN.md 6a, rule 7)
-  function errBox(rep, L){
-    var box = el('div', 'errbox');
-    box.appendChild(el('b', null, esc(L.h)));
-    box.appendChild(el('div', null, esc(rep.message)));
-    var kv = el('div', 'errkv');
-    [[L.code, rep.code], [L.run, rep.id], [L.log, rep.log]].forEach(function(r){ kv.appendChild(el('span', null, esc(r[0]))); kv.appendChild(el('code', null, esc(r[1]))); });
-    box.appendChild(kv);
-    var c = el('button', 'btn sm', esc(L.copy)); c.type = 'button'; c.style.marginTop = '8px';
+  // A run that stopped, in a dialog over the page so nothing on the page moves. Two kinds
+  // (applog.report): the program stopped on purpose and its own sentence says why (amber: the
+  // owner can usually put it right and try again), or it broke (red: try again, or copy the
+  // report). One fact a line: what happened, then the code, the run and the log as rows.
+  function errDialog(rep, L, lines, retry){
+    var old = document.getElementById('errdlg'); if (old) old.remove();
+    var back = el('div', 'dlg-back'); back.id = 'errdlg';
+    var box = el('div', 'dlg' + (rep.kind === 'stopped' ? ' stopped' : ''));
+    box.setAttribute('role', 'alertdialog'); box.setAttribute('aria-modal', 'true');
+    function close(){ back.remove(); document.removeEventListener('keydown', onKey); }
+    function onKey(e){ if (e.key === 'Escape') close(); }
+    box.appendChild(el('h3', null, esc(rep.kind === 'stopped' ? L.stopped_h : L.h)));
+    if (rep.kind === 'stopped') box.appendChild(el('p', null, esc(rep.message)));
+    box.appendChild(el('p', null, esc(L.safe)));
+    var act = el('div', 'dlg-act');
+    if (retry) { var r = el('button', 'btn primary', esc(L.try_)); r.type = 'button'; r.onclick = function(){ close(); retry(); }; act.appendChild(r); }
+    var c = el('button', 'btn', esc(L.copy)); c.type = 'button';
     c.onclick = function(){
       function ok(){ c.textContent = L.copied; }
+      function fallback(){ var ta = document.createElement('textarea'); ta.value = rep.text; box.appendChild(ta); ta.select(); try { document.execCommand('copy'); ok(); } catch (e) {} box.removeChild(ta); }
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(rep.text).then(ok, fallback); else fallback();
-      function fallback(){ var ta = document.createElement('textarea'); ta.value = rep.text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); ok(); } catch (e) {} document.body.removeChild(ta); }
     };
-    box.appendChild(c);
-    return box;
+    act.appendChild(c);
+    var x = el('button', 'btn', esc(L.close)); x.type = 'button'; x.onclick = close; act.appendChild(x);
+    box.appendChild(act);
+    var kv = el('div', 'errkv');
+    [[L.code, rep.code], [L.run, rep.id]].forEach(function(r){ kv.appendChild(el('span', null, esc(r[0]))); kv.appendChild(el('code', null, esc(r[1]))); });
+    kv.appendChild(el('span', null, esc(L.log)));
+    var lg = el('span'); lg.appendChild(el('code', null, esc(rep.log))); lg.appendChild(document.createTextNode(' '));
+    var show = el('button', 'lnk', esc(L.show)); show.type = 'button'; show.onclick = function(){ api('POST', '/api/open-log', {}).catch(function(){}); };
+    lg.appendChild(show); kv.appendChild(lg);
+    box.appendChild(kv);
+    if (lines && lines.length) { var d = el('details', null, '<summary>' + esc(L.details) + '</summary>'); d.appendChild(el('pre', null, esc(lines.join('\n')))); box.appendChild(d); }
+    back.appendChild(box); document.body.appendChild(back);
+    document.addEventListener('keydown', onKey);
+    (retry ? act.firstChild : c).focus();
   }
   function follow(onDone){
     log.textContent = ''; log.classList.add('on');
@@ -278,7 +304,7 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
       if (!r.ok) { setBusy(false); ierr.textContent = r.error && r.error.text || ('HTTP ' + r.status); return; }
       follow(function(job){
         setBusy(false);
-        if (job.report) ierr.appendChild(errBox(job.report, {h: T.err_h, copy: T.err_copy, copied: T.err_copied, log: T.err_log, code: T.err_code, run: T.err_run}));
+        if (job.report) errDialog(job.report, {h: T.err_h, stopped_h: T.err_stopped_h, safe: T.err_safe, try_: T.err_try, copy: T.err_copy, copied: T.err_copied, close: T.err_close, code: T.err_code, run: T.err_run, log: T.err_log, show: T.err_show, details: T.err_details}, job.lines, null);
         onDone(job);
       });
     }).catch(function(e){ setBusy(false); ierr.textContent = String(e); });
@@ -368,7 +394,7 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
         var d = el('div', 'q'); d.setAttribute('data-n', it.n);
         var L = function(c){ return (it.labels && it.labels[c]) || c; };
         d.appendChild(el('div', 'qt', '<b>' + it.n + '.</b> ' + esc(it.text || it.what)));
-        d.appendChild(el('div', 'qs', esc(T.filed_as) + ' <b>' + esc(L(it.default)) + '</b>' + (it.suggest ? ' · ' + esc(T.suggested) + ' <b>' + esc(L(it.suggest)) + '</b>' : '')));
+        d.appendChild(el('div', 'qs', esc(T.filed_as) + ' <b>' + esc(L(it.default)) + '</b>' + (it.suggest ? '<br>' + esc(T.suggested) + ' <b>' + esc(L(it.suggest)) + '</b>' : '')));
         if (it.choices.length) d.appendChild(pills(it, it.suggest || it.default, false, function(c){ keep(it, c); })); else d.appendChild(el('div', 'qs', esc(T.in_ledger)));
         qm.appendChild(d);
       });
@@ -414,12 +440,13 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
         shareNow.textContent = fmtS(T.q_other_now, {pct: pct(otherNow)});
         bar.firstChild.style.width = Math.min(100, pct(otherNow)) + '%';
         var it = unkQ[idx];
-        shareAfter.textContent = it ? fmtS(T.q_other_after, {pct: pct(Math.max(0, otherNow - (it.default === 'Other' ? (it.amount || 0) : 0)))}) + ' · ' + fmtS(T.q_left, {n: unkQ.length - idx}) : T.q_cards_done;
+        shareAfter.textContent = it ? fmtS(T.q_other_after, {pct: pct(Math.max(0, otherNow - (it.default === 'Other' ? (it.amount || 0) : 0)))}) + '\n' + fmtS(T.q_left, {n: unkQ.length - idx}) : T.q_cards_done;
+        shareAfter.style.whiteSpace = 'pre-line';
       }
       function card(it){
         var c = el('div', 'cq');
         c.appendChild(el('div', 'name', esc(it.what)));
-        c.appendChild(el('div', 'meta', (it.amount != null ? esc(fmtS(T.q_meta, {amount: money(it.amount), n: it.seen || 0})) : '') + (it.source ? ' · ' + esc(it.source) : '')));
+        c.appendChild(el('div', 'meta', (it.amount != null ? esc(fmtS(T.q_meta, {amount: money(it.amount), n: it.seen || 0}).replace('(s)', (it.seen || 0) === 1 ? '' : 's')) : '') + (it.source ? (it.amount != null ? '<br>' : '') + esc(it.source) : '')));
         if (it.brand) c.appendChild(el('div', 'brand', esc(fmtS(T.q_brand, {brand: it.what.split(' ')[0], cat: (Q.catLabels && Q.catLabels[it.brand]) || it.brand}))));
         c.appendChild(pills(it, null, true, function(ch){ answer(it, ch); }));
         var f = el('div', 'foot2');
@@ -488,7 +515,8 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
         var d = document.createElement('div');
         d.className = f.state === 'refused' ? 'no' : '';
         var word = f.state === 'saved' ? T.saved : (f.state === 'already there' ? T.already : T.refused);
-        d.textContent = f.name + ' — ' + word + (f.label ? ' · ' + f.label : (f.why || f.note ? ' · ' + (f.why || f.note) : ''));
+        d.textContent = f.name + '\n' + word + (f.label ? ': ' + f.label : (f.why || f.note ? ': ' + (f.why || f.note) : ''));
+        d.style.whiteSpace = 'pre-line';
         dropped.appendChild(d);
       });
       if (r.data.some(function(f){ return f.state === 'saved'; })) setTimeout(function(){ location.reload(); }, 1600);
@@ -536,7 +564,8 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
         amt.value = d.candidates[0].amount.toFixed(2);
         if (d.dates && d.dates.length) asof.value = d.dates[0];
         var n = document.createElement('span'); n.className = 'note';
-        n.textContent = T.cands_note + (d.dates && d.dates.length ? ' · ' + T.date_read + ' ' + d.dates[0] : '');
+        n.textContent = T.cands_note + (d.dates && d.dates.length ? '\n' + T.date_read + ' ' + d.dates[0] : '');
+        n.style.whiteSpace = 'pre-line';
         cands.appendChild(n);
       }).catch(function(e){ cands.innerHTML = '<span class="note">' + e + '</span>'; });
       inp.value = '';
@@ -560,7 +589,7 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
       api('POST', '/api/ai', body).then(function(r){
         if (!r.ok) { $('aimsg').textContent = r.error && r.error.text || 'failed'; return; }
         $('aikey').value = '';
-        $('aimsg').textContent = r.data.enabled ? T.ai_on + ' · ' + r.data.provider + ' · ' + r.data.model : (r.data.provider === 'none' ? T.ai_off : T.ai_nokey);
+        $('aimsg').textContent = r.data.enabled ? T.ai_on + ': ' + r.data.provider + ', ' + r.data.model : (r.data.provider === 'none' ? T.ai_off : T.ai_nokey);
         $('aitest').disabled = !r.data.enabled;
       }).catch(function(e){ $('aimsg').textContent = String(e); });
     };

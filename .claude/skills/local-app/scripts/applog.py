@@ -94,4 +94,7 @@ def report(verb, run_id, what, message, lines=(), version=None, now=None):
                      + (["Lines:"] + marked if marked else [])
                      + [f"Log: {shown_path()}"])
     log.error("%s (%s): %s", c, run_id, message.strip()[:300])
-    return {"code": c, "id": run_id, "message": message.strip()[:300], "text": text, "log": shown_path()}
+    # two kinds, and the screen treats them apart: the program stopped on purpose and its own
+    # sentence says why (`stopped` — something the owner can usually put right), or it broke
+    return {"code": c, "id": run_id, "message": message.strip().lstrip("✗ ").strip()[:300], "text": text, "log": shown_path(),
+            "kind": "stopped" if what == "STOPPED" else "broke"}

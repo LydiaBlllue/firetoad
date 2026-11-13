@@ -17,7 +17,7 @@ LANGS = ("en", "zh")
 
 S = {
     # — header
-    "subtitle": {"en": "This month's import · {date}", "zh": "本月导入 · {date}"},
+    "subtitle": {"en": "This month's import", "zh": "本月导入"},
     "intro": {"en": "Once a month: get the files, put them here, import, categorize what is left. The highlighted step is where you are.", "zh": "每个月：拿到文件 → 放进来 → 导入 → 给剩下的归类。高亮的那一步就是你现在该做的。"},
     "open_dash": {"en": "Open the dashboard ↗", "zh": "打开仪表盘 ↗"},
     "lang_other": {"en": "中文", "zh": "English"},
@@ -50,7 +50,7 @@ S = {
     "missing": {"en": "{doc}: {n} missing ({months})", "zh": "{doc}：缺 {n} 份（{months}）"},
     "doc_ok": {"en": "{doc}: up to date", "zh": "{doc}：已是最新"},
     "doc_inbox": {"en": "{doc}: in inbox", "zh": "{doc}：已放进来"},
-    "export_line": {"en": "{what} export · newest {asof}", "zh": "{what} 导出 · 最新到 {asof}"},
+    "export_line": {"en": "{what} export (newest {asof})", "zh": "{what} 导出（最新到 {asof}）"},
     "how": {"en": "How do I get it?", "zh": "怎么拿？"},
     "how_bank_generic": {"en": "Sign in to {bank} online banking → Statements → download last month's PDF. Keep the file name the bank gives it, then drop it in step 2.",
                          "zh": "登录 {bank} 网银 → 对账单（Statements）→ 下载上个月的 PDF。文件名别改，然后在第 2 步放进来。"},
@@ -154,7 +154,7 @@ S = {
     "q_unknown_h": {"en": "Merchants nobody knows ({n}), biggest first", "zh": "没人认识的商户（{n}），按金额从大到小"},
     "q_unknown_intro": {"en": "One at a time. Tap a category, or skip — a skipped one stays Other and is asked again if it comes back.",
                         "zh": "一次一个。点一个类别，或者跳过——跳过的先记「其他」，下次再出现再问。"},
-    "q_meta": {"en": "{amount} · {n}×", "zh": "{amount} · {n} 次"},
+    "q_meta": {"en": "{amount} in {n} purchase(s)", "zh": "{n} 笔，共 {amount}"},
     "q_skip": {"en": "Skip — leave it Other", "zh": "跳过，先记「其他」"},
     "q_skip_all": {"en": "Leave the rest Other", "zh": "其余都先记「其他」"},
     "q_other_now": {"en": "Other is {pct}% of spending", "zh": "「其他」现在占支出 {pct}%"},
@@ -204,9 +204,10 @@ S = {
     "settings": {"en": "Settings", "zh": "设置"},
     # — a run that stopped: a code, one line, the text to copy (applog.report), where the log is
     "err_h": {"en": "That did not finish.", "zh": "没有完成。"},
-    "err_copy": {"en": "Copy error", "zh": "复制错误信息"}, "err_copied": {"en": "Copied", "zh": "已复制"},
+    "err_copy": {"en": "Copy report", "zh": "复制报告"}, "err_copied": {"en": "Copied", "zh": "已复制"},
     "err_log": {"en": "Log", "zh": "日志"},
     "err_code": {"en": "Error code", "zh": "错误代码"}, "err_run": {"en": "Run", "zh": "运行编号"},
+    "err_safe": {"en": "Your files are still in the folder.", "zh": "你的文件还在文件夹里。"}, "err_stopped_h": {"en": "The program stopped here.", "zh": "程序在这里停下了。"}, "err_try": {"en": "Try again", "zh": "再试一次"}, "err_close": {"en": "Close", "zh": "关闭"}, "err_show": {"en": "Show log", "zh": "显示日志"}, "err_details": {"en": "Details", "zh": "详情"},
     "err_start": {"en": "FIRE Toad could not start.\n\n{code}\n{message}", "zh": "FIRE Toad 没能启动。\n\n{code}\n{message}"},
     # — the app's first launch (app.py), before there is a folder: the system's language, one at a time
     "welcome": {"en": "Welcome to FIRE Toad. Everything it keeps is in one folder on this Mac.",
@@ -283,14 +284,15 @@ def js_strings(lang):
             "undo_done", "undo_none", "failed_lines", "saving", "saved_rebuilt", "not_saved", "saved", "already", "refused",
             "cands_note", "cands_none", "near", "date_read", "refresh_running", "refresh_done", "refresh_failed",
             "ai_on", "ai_off", "ai_nokey", "ai_try_q", "ai_asking", "ai_noanswer",
-            "err_h", "err_copy", "err_copied", "err_log", "err_code", "err_run")
+            "err_h", "err_copy", "err_copied", "err_log", "err_code", "err_run", "err_safe", "err_stopped_h",
+            "err_try", "err_close", "err_show", "err_details")
     return {k: t(lang, k) for k in keys}
 
 
 # ---------------------------------------------------------------- the setup wizard
 W = {
-    "w_title": {"en": "Setup · make this folder yours", "zh": "建账 · 把这个文件夹变成你的"},
-    "w_step": {"en": "Step {i} of {n} · {name}", "zh": "第 {i} 步，共 {n} 步 · {name}"},
+    "w_title": {"en": "Set up your folder", "zh": "建账"},
+    "w_step": {"en": "Step {i} of {n}: {name}", "zh": "第 {i} 步，共 {n} 步：{name}"},
     "w_s2": {"en": "Files", "zh": "文件"}, "w_s3": {"en": "Accounts", "zh": "账户"},
     "w_s4": {"en": "Money in and out", "zh": "收支"}, "w_s5": {"en": "Goal", "zh": "目标"}, "w_s6": {"en": "Day", "zh": "导入日"},
     "w_s7": {"en": "Build", "zh": "生成"},
@@ -396,9 +398,11 @@ W = {
     "w_built": {"en": "Your page is ready.", "zh": "你的页面好了。"},
     "w_open_dash": {"en": "Open the dashboard", "zh": "打开仪表盘"}, "w_panel": {"en": "Monthly import", "zh": "月度导入"},
     "w_details": {"en": "Details", "zh": "详情"},
-    "w_err_copy": {"en": "Copy error", "zh": "复制错误信息"}, "w_err_copied": {"en": "Copied", "zh": "已复制"},
+    "w_on_date": {"en": "on {d}", "zh": "（{d}）"},
+    "w_err_copy": {"en": "Copy report", "zh": "复制报告"}, "w_err_copied": {"en": "Copied", "zh": "已复制"},
     "w_err_log": {"en": "Log", "zh": "日志"},
     "w_err_code": {"en": "Error code", "zh": "错误代码"}, "w_err_run": {"en": "Run", "zh": "运行编号"},
+    "w_err_safe": {"en": "Your files are still in the folder.", "zh": "你的文件还在文件夹里。"}, "w_err_stopped_h": {"en": "The program stopped here.", "zh": "程序在这里停下了。"}, "w_err_try": {"en": "Try again", "zh": "再试一次"}, "w_err_close": {"en": "Close", "zh": "关闭"}, "w_err_show": {"en": "Show log", "zh": "显示日志"}, "w_err_details": {"en": "Details", "zh": "详情"},
     "w_sum_name": {"en": "Name", "zh": "名字"}, "w_sum_born": {"en": "Born", "zh": "出生年"},
     "w_sum_accounts": {"en": "Accounts", "zh": "账户"}, "w_sum_take": {"en": "Take-home a month", "zh": "每月到手"},
     "w_sum_invest": {"en": "To the broker a month", "zh": "每月投资"}, "w_sum_every": {"en": "Everyday a month", "zh": "每月日常开销"},

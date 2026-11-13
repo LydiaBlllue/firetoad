@@ -485,10 +485,14 @@ and an instruction together in two paragraphs, and could not be read):
    grey type for explanation and never under 12px.
 
 What a run printed is never the screen: it is folded under *Details* and opened only when the run
-did not finish. A run that did not finish shows one box: *That did not finish*, a code the
-owner can quote (`FT-SETUP-KeyError (3fa9c1d2)`: the verb, what stopped it, the run's id), one
-line of what happened, a *Copy error* button that copies the whole report, and where the log is
-(`applog.py`). A count says what it counts or what is to be done with it: `3 merchants and 2 transfers to
+did not finish. **Nothing a screen says may move what is already on it**: a run that
+did not finish is said in a dialog over the page, never in a box pushed into it. The dialog has
+two kinds (`applog.py`): *the program stopped here* (amber), with the program's own sentence for
+why — something the owner can usually put right — and *that did not finish* (red), when it broke.
+Both carry: one line that the files are still there, *Try again*, *Copy report*, *Close*, then
+the error code, the run and the log as rows (`FT-SETUP-KeyError`, `3fa9c1d2`), *Show log*, and
+the run's lines under *Details*. One fact a line; nothing joined with a dot, here or on any
+other screen. A count says what it counts or what is to be done with it: `3 merchants and 2 transfers to
 categorize` where there is room (the setup's last screen), `5 to categorize` in the dashboard's
 header, which keeps its one short line — never `5 to confirm`. **These screens never change the
 dashboard's layout**: the error box, the lists and the tables above are the panel's and the setup's.

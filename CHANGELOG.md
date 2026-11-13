@@ -20,9 +20,10 @@
     what to bring one per line and "How long?" answered in a small table; the last screen shows
     your answers as rows, warns when the plan asks more than the pay, and folds what the run
     printed under *Details*. The rules are DESIGN.md 6a.
-  - *An error you can report, and a log.* A run that stops shows a code
-    (`FT-SETUP-KeyError (3fa9c1d2)`), one line of what happened and a *Copy error* button; a
-    launch that fails shows the same in a dialog. The app keeps its own log from the first line
+  - *An error you can report, and a log.* A run that stops opens a dialog over the page —
+    nothing on the page moves — with *Try again*, *Copy report*, the error code
+    (`FT-SETUP-KeyError`), the run's id and the log, one a line; a launch that fails shows the
+    same in a system dialog. The panel and the setup no longer join facts with a dot anywhere. The app keeps its own log from the first line
     of a launch, at `~/Library/Logs/FIRE Toad/firetoad.log` (Console shows it): what it did
     and every failure with its code — never what a run printed, which carries amounts.
   - The yearly-returns fetch says "the source has answered its limit for today" where it said

@@ -2447,7 +2447,7 @@ def local_app_check(root, base):
         st, body = req("GET", tok + "/panel")
         # a demo folder (this staged copy) gets the setup wizard on /panel; an owner's gets the panel
         # a demo folder (this staged copy) gets the setup wizard on /panel; an owner's gets the five steps
-        if st != 200 or not any(x in body for x in (b'id="step4"', b"make this folder yours")):
+        if st != 200 or not any(x in body for x in (b'id="step4"', b'data-page="setup"')):
             bad.append(f"GET /panel answered {st}")
     finally:
         proc.kill(); proc.wait()
@@ -2536,10 +2536,10 @@ def local_app_setup_check(root, base):
             out.write(f"--{b}--\r\n".encode())
             return out.getvalue(), {"Content-Type": f"multipart/form-data; boundary={b}"}
         st, body = req("GET", tok + "/panel")
-        if st != 200 or b"make this folder yours" not in body or b'id="step3"' in body:
+        if st != 200 or b'data-page="setup"' not in body or b'id="step3"' in body:
             bad.append(f"a made folder did not get the wizard page ({st})")
         st, body = req("GET", tok + "/")   # nothing built yet: the dashboard's address is the wizard
-        if st != 200 or b"make this folder yours" not in body:
+        if st != 200 or b'data-page="setup"' not in body:
             bad.append(f"the dashboard's address before the setup did not lead to the wizard ({st})")
         for mm in two:
             d, h = form({"file": (os.path.basename(mm["file"]), open(mm["file"], "rb").read())})
@@ -2569,7 +2569,7 @@ def local_app_setup_check(root, base):
         if st != 202 or not res.get("written") or not (res.get("import") or {}).get("written"):
             bad.append(f"POST /api/setup: {st}, " + " | ".join(job.get("lines", [])[-2:])[:200])
         st, body = req("GET", tok + "/panel")
-        if st != 200 or b'id="step3"' not in body or b"make this folder yours" in body:
+        if st != 200 or b'id="step3"' not in body or b'data-page="setup"' in body:
             bad.append("after the build the panel did not take over from the wizard")
         pre_digest = findata_digest(ws)   # the two doors are compared as built, before any answer
         # step 4 as the owner works it (2026-11-07): one card answered is written at once, the

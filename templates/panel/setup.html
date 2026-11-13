@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FIRE Toad · {{W_TITLE}}</title>
+<title>FIRE Toad: {{W_TITLE}}</title>
 <style>
 /* The setup wizard: the setup skill's interview as screens, in the dashboard's tokens
    (templates/dashboards/finance_dashboard.html :root). Shown instead of the monthly panel while
@@ -79,11 +79,18 @@ details.more{margin-top:10px;font-size:12px;color:var(--muted)}
 details.more summary{cursor:pointer}
 .ready{font-size:14px;font-weight:600;margin-top:12px}
 .ready small{display:block;font-weight:400;font-size:13px;color:var(--ink-2);margin-top:2px}
-.errbox{border:1px solid #efc4c1;background:var(--bad-bg);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13px}
-.errbox b{display:block;color:var(--bad)}
-.errbox code{display:block;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;margin:4px 0;user-select:all;word-break:break-word}
-.errkv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:12px;color:var(--muted);margin-top:8px}
-.errkv code{display:inline;margin:0;color:var(--ink-2)}
+/* a run that stopped is said in a dialog over the page: nothing on the page moves (DESIGN.md 6a) */
+.dlg-back{position:fixed;inset:0;background:rgba(11,11,11,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlg{background:var(--surface);border-radius:12px;padding:18px 20px;max-width:480px;width:100%;max-height:90vh;overflow:auto;border-top:4px solid var(--bad)}
+.dlg.stopped{border-top-color:var(--warn)}
+.dlg h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.dlg p{font-size:13px;color:var(--ink-2);margin-bottom:4px}
+.dlg .dlg-act{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 12px}
+.dlg .errkv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12px;color:var(--muted);align-items:baseline}
+.dlg .errkv code{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink-2);word-break:break-all;user-select:all}
+.dlg details{margin-top:10px;font-size:12px;color:var(--muted)}
+.dlg details summary{cursor:pointer}
+.dlg pre{font:11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f3f2ee;border-radius:8px;padding:8px 10px;margin-top:6px;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto}
 .later{font-size:12px;color:var(--muted);margin-top:10px;border-top:1px solid var(--border);padding-top:8px}
 .ver{font-size:10.5px;color:var(--muted);letter-spacing:.04em;margin-top:18px;text-align:center}
 table.cm{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
@@ -94,7 +101,7 @@ table.cm input{width:100%}
 </style>
 </head>
 <body data-base="{{BASE}}">
-<div class="wrap">
+<div class="wrap" data-page="setup">
   <div class="brand"><h1>FIRE Toad</h1><small>{{W_TITLE}}</small><a href="{{BASE}}/panel?lang={{OTHER_LANG}}">{{W_LANG}}</a></div>
   {{BUSY}}
   <div class="steps" id="steps"></div>
@@ -148,23 +155,42 @@ table.cm input{width:100%}
     A.money.committed.forEach(function(c){ if (c.name && c.amount) ask += +c.amount || 0; });
     return pay && ask > pay ? fmt(W.w_over, {ask: money(ask), pay: money(pay), gap: money(ask - pay)}) : '';
   }
-  // a run that stopped: what happened in one line, its code to quote, one button that copies
-  // the whole report (applog.report), and where the log is (DESIGN.md 6a, rule 7)
-  function errBox(rep, L){
-    var box = el('div', 'errbox');
-    box.appendChild(el('b', null, esc(L.h)));
-    box.appendChild(el('div', null, esc(rep.message)));
-    var kv = el('div', 'errkv');
-    [[L.code, rep.code], [L.run, rep.id], [L.log, rep.log]].forEach(function(r){ kv.appendChild(el('span', null, esc(r[0]))); kv.appendChild(el('code', null, esc(r[1]))); });
-    box.appendChild(kv);
-    var c = el('button', 'btn sm', esc(L.copy)); c.type = 'button'; c.style.marginTop = '8px';
+  // A run that stopped, in a dialog over the page so nothing on the page moves. Two kinds
+  // (applog.report): the program stopped on purpose and its own sentence says why (amber: the
+  // owner can usually put it right and try again), or it broke (red: try again, or copy the
+  // report). One fact a line: what happened, then the code, the run and the log as rows.
+  function errDialog(rep, L, lines, retry){
+    var old = document.getElementById('errdlg'); if (old) old.remove();
+    var back = el('div', 'dlg-back'); back.id = 'errdlg';
+    var box = el('div', 'dlg' + (rep.kind === 'stopped' ? ' stopped' : ''));
+    box.setAttribute('role', 'alertdialog'); box.setAttribute('aria-modal', 'true');
+    function close(){ back.remove(); document.removeEventListener('keydown', onKey); }
+    function onKey(e){ if (e.key === 'Escape') close(); }
+    box.appendChild(el('h3', null, esc(rep.kind === 'stopped' ? L.stopped_h : L.h)));
+    if (rep.kind === 'stopped') box.appendChild(el('p', null, esc(rep.message)));
+    box.appendChild(el('p', null, esc(L.safe)));
+    var act = el('div', 'dlg-act');
+    if (retry) { var r = el('button', 'btn primary', esc(L.try_)); r.type = 'button'; r.onclick = function(){ close(); retry(); }; act.appendChild(r); }
+    var c = el('button', 'btn', esc(L.copy)); c.type = 'button';
     c.onclick = function(){
       function ok(){ c.textContent = L.copied; }
+      function fallback(){ var ta = document.createElement('textarea'); ta.value = rep.text; box.appendChild(ta); ta.select(); try { document.execCommand('copy'); ok(); } catch (e) {} box.removeChild(ta); }
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(rep.text).then(ok, fallback); else fallback();
-      function fallback(){ var ta = document.createElement('textarea'); ta.value = rep.text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); ok(); } catch (e) {} document.body.removeChild(ta); }
     };
-    box.appendChild(c);
-    return box;
+    act.appendChild(c);
+    var x = el('button', 'btn', esc(L.close)); x.type = 'button'; x.onclick = close; act.appendChild(x);
+    box.appendChild(act);
+    var kv = el('div', 'errkv');
+    [[L.code, rep.code], [L.run, rep.id]].forEach(function(r){ kv.appendChild(el('span', null, esc(r[0]))); kv.appendChild(el('code', null, esc(r[1]))); });
+    kv.appendChild(el('span', null, esc(L.log)));
+    var lg = el('span'); lg.appendChild(el('code', null, esc(rep.log))); lg.appendChild(document.createTextNode(' '));
+    var show = el('button', 'lnk', esc(L.show)); show.type = 'button'; show.onclick = function(){ api('POST', '/api/open-log', {}).catch(function(){}); };
+    lg.appendChild(show); kv.appendChild(lg);
+    box.appendChild(kv);
+    if (lines && lines.length) { var d = el('details', null, '<summary>' + esc(L.details) + '</summary>'); d.appendChild(el('pre', null, esc(lines.join('\n')))); box.appendChild(d); }
+    back.appendChild(box); document.body.appendChild(back);
+    document.addEventListener('keydown', onKey);
+    (retry ? act.firstChild : c).focus();
   }
   function field(card, label, input){ var f = el('div', 'field'); f.appendChild(el('label', null, label)); f.appendChild(input); card.appendChild(f); return input; }
   function text(val, ph, cls){ var i = el('input', cls || null); i.type = 'text'; i.value = val == null ? '' : val; if (ph) i.placeholder = ph; return i; }
@@ -244,8 +270,9 @@ table.cm input{width:100%}
         var row = el('div', 'row');
         var rw = el('div', 'rw');
         var sel = (A.accounts[r.i] || {}).role || r.role;
-        rw.appendChild(el('b', null, esc(r.inst === 'OFX' ? ((A.ofx && Object.values(A.ofx)[0]) || '?') : r.inst) + ' · ' + esc(r.kind) + (r.id && r.id !== '—' ? ' ' + esc(r.id) : '')));
-        rw.appendChild(el('span', 'wh', (r.balance != null ? money(r.balance) + ' · ' + esc(r.asof) : esc(W.w_no_balance)) + (r.doc ? ' · ' + esc(r.doc) : '')));
+        rw.appendChild(el('b', null, esc(r.inst === 'OFX' ? ((A.ofx && Object.values(A.ofx)[0]) || '?') : r.inst) + ' ' + esc(r.kind) + (r.id && r.id !== '—' ? ' ' + esc(r.id) : '')));
+        rw.appendChild(el('span', 'wh', r.balance != null ? money(r.balance) + ' ' + esc(fmt(W.w_on_date, {d: r.asof})) : esc(W.w_no_balance)));
+        if (r.doc) rw.appendChild(el('span', 'wh', esc(r.doc)));
         var nm = text((A.accounts[r.i] || {}).name || r.name, W.w_call_it); nm.style.marginTop = '5px';
         nm.oninput = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).name = nm.value; };
         rw.appendChild(nm);
@@ -389,7 +416,7 @@ table.cm input{width:100%}
       var a = el('div', 'act'); var b = el('button', 'btn', esc(W.w_back)); b.type = 'button'; b.onclick = function(){ step = 4; draw(); }; a.appendChild(b);
       var go = el('button', 'btn primary', esc(W.w_build_it)); go.type = 'button'; a.appendChild(go); card.appendChild(a);
       go.onclick = function(){
-        go.disabled = true; b.disabled = true; hint.textContent = W.w_building; more.style.display = 'block'; log.textContent = '';
+        go.disabled = true; b.disabled = true; hint.textContent = W.w_building; log.textContent = '';
         var answers = {owner: A.owner, born: A.born, importDay: A.importDay || scr.day.suggest,
                        accounts: Object.keys(A.accounts).map(function(k){ return A.accounts[k]; }).filter(Boolean),
                        added: A.added.filter(function(x){ return x.inst && x.name; }),
@@ -405,9 +432,8 @@ table.cm input{width:100%}
             es.close(); var j = {}; try { j = JSON.parse(ev.data); } catch (e) {}
             var res = j.result || {};
             if (j.error || !res.written) {
-              hint.textContent = j.report ? '' : W.w_not_finished; more.open = true; go.disabled = false; b.disabled = false;
-              var old = card.querySelector('.errbox'); if (old) old.remove();
-              if (j.report) card.insertBefore(errBox(j.report, {h: W.w_not_finished, copy: W.w_err_copy, copied: W.w_err_copied, log: W.w_err_log, code: W.w_err_code, run: W.w_err_run}), more);
+              hint.textContent = W.w_not_finished; go.disabled = false; b.disabled = false;
+              if (j.report) errDialog(j.report, {h: W.w_not_finished, stopped_h: W.w_err_stopped_h, safe: W.w_err_safe, try_: W.w_err_try, copy: W.w_err_copy, copied: W.w_err_copied, close: W.w_err_close, code: W.w_err_code, run: W.w_err_run, log: W.w_err_log, show: W.w_err_show, details: W.w_err_details}, j.lines, function(){ go.click(); });
               return;
             }
             // built: say so, then the one next thing — sort what the import could not file, when

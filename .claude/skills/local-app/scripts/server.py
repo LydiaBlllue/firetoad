@@ -43,6 +43,7 @@ Routes (every API answer is {"ok": bool, "data" | "error": …, "took": seconds}
                                                         screenshot, ranked by the account's capture line —
                                                         candidates only; the image is kept under .jade/shots/
   POST /api/open-inbox     —                            opens the inbox folder in the file manager
+  POST /api/open-log       —                            shows the app's log in the file manager
   GET  /api/setup          wizard.state()               the setup screens, drafted from inbox/ (demo folders)
   POST /api/setup          wizard.apply(answers, write) the answers file, scaffold, rebuild, first import (a job)
   GET  /api/ai             ai.status()                  which model is set, and whether a key is stored (never the key)
@@ -347,6 +348,17 @@ class App:
             subprocess.Popen(["xdg-open", inbox])
         return {"inbox": inbox}
 
+    def open_log(self):
+        """The app's log, shown in the file manager: a fixed command, the log's own path, no shell."""
+        p = applog.log_path()
+        if sys.platform == "darwin":
+            subprocess.Popen(["open", "-R", p] if os.path.exists(p) else ["open", os.path.dirname(p)])
+        elif sys.platform.startswith("win"):
+            os.startfile(os.path.dirname(p))  # noqa: S606  (Windows only)
+        else:
+            subprocess.Popen(["xdg-open", os.path.dirname(p)])
+        return {"log": applog.shown_path()}
+
     def do_ai(self, body):
         prov = body.get("provider") or "none"
         if prov == "none":
@@ -630,6 +642,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self._json(200, True, app.do_ocr((body.get("fields") or {}).get("key"), files[0][0], files[0][1]), t0)
             elif path == "/api/open-inbox":
                 return self._json(200, True, app.open_inbox(), t0)
+            elif path == "/api/open-log":
+                return self._json(200, True, app.open_log(), t0)
             elif path == "/api/sync":
                 job, busy = app.do_sync()
             elif path == "/api/setup":
