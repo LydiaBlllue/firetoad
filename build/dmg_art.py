@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """dmg_art.py — the picture behind the disk image's window: the app in the middle, the
-instruction under it in English and Chinese, and a pointer to the note at the foot. No
+instruction under it in English (the image cannot know the system's language), and a pointer to the note at the foot. No
 Applications folder and no arrow since 2026-11-12: a drag runs nothing, so it left the owner one
 more double-click in Applications; a double-click here installs the app and opens it (app.py).
 
@@ -23,8 +23,8 @@ WINDOW = {"size": (W, H), "icon_size": ICON}
 ICONS = {"app": APP, "note": NOTE}
 
 PAGE, INK2, MUTED, LINE, ACCENT = "#f9f9f7", "#52514e", "#75736d", "#e4e2dc", "#1a7a4a"
-LINES = ("Double-click FIRE Toad: it installs itself and opens", "双击 FIRE Toad：自动安装并打开")
-FOOT = "Need help? Read this  ·  需要帮助？看这个"
+LINES = ("Double-click FIRE Toad: it installs itself and opens",)
+FOOT = "Need help? Read this"
 FONTS = ("/System/Library/Fonts/Hiragino Sans GB.ttc", "/System/Library/Fonts/STHeiti Medium.ttc",
          "/System/Library/Fonts/Supplemental/Arial Unicode.ttf")
 

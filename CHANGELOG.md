@@ -6,6 +6,8 @@
   first run on a fresh account). The disk image shows the app alone: double-clicked there, it
   copies itself into Applications (~/Applications on an account that is not an administrator),
   opens from there and ejects the disk image, so there is no drag and no second double-click.
+  The disk image's window and its note are in English only: a picture cannot follow the
+  system's language, and two languages at once read as clutter.
   The first launch asks *Create my folder* or *Open my folder* in the system's language (Chinese
   or English, one at a time; the panel too, until a language is chosen there), instead of
   "Make one" (one what?) and a folder picker: the folder is made in Documents as FIRE Toad,
