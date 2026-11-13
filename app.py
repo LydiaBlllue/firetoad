@@ -221,31 +221,28 @@ def choose_workspace(args):
                 return ws
         if is_workspace(s.get("workspace")):
             return s["workspace"]
-    pick = ask_choice(WELCOME, [CREATE, OPEN, QUIT])
+    # the first launch's question, in the system's language (strings.py): no "Make one" — one
+    # what? — and not two languages at once (2026-11-12, user 001)
+    from strings import t, system_lang
+    lang = system_lang()
+    create, open_, again, quit_ = (t(lang, k) for k in ("create_folder", "open_folder", "choose_again", "quit"))
+    pick = ask_choice(t(lang, "welcome"), [create, open_, quit_])
     while True:
-        if pick == CREATE:
+        if pick == create:
             ws = make_workspace(new_folder())
-            tell(f"Your folder: {ws.replace(os.path.expanduser('~'), '~', 1)} · 你的文件夹")
+            tell(t(lang, "your_folder", path=ws.replace(os.path.expanduser("~"), "~", 1)))
             return ws
-        if pick != OPEN:
+        if pick != open_:
             return None
-        d = ask_folder("Choose your FIRE Toad folder · 选择你的 FIRE Toad 文件夹")
+        d = ask_folder(t(lang, "choose_prompt"))
         if not d:
             return None
         ws = find_root(d)
         if ws:
             return ws
-        pick = ask_choice(f"This is not a FIRE Toad folder: {d}\n\n这不是 FIRE Toad 文件夹。",
-                          [OPEN_AGAIN, CREATE, QUIT])
-        if pick == OPEN_AGAIN:
-            pick = OPEN
-
-
-# the first launch's question, in both languages: no "Make one" (what is "one"? 2026-11-12, user 001)
-WELCOME = ("Welcome to FIRE Toad. Everything it keeps is in one folder on this Mac.\n\n"
-           "欢迎使用 FIRE Toad。它的所有内容都放在这台 Mac 上的一个文件夹里。")
-CREATE, OPEN, OPEN_AGAIN, QUIT = ("Create my folder · 新建文件夹", "Open my folder · 打开文件夹",
-                                  "Choose again · 重新选择", "Quit · 退出")
+        pick = ask_choice(t(lang, "not_a_folder", path=d), [again, create, quit_])
+        if pick == again:
+            pick = open_
 
 
 # ---------------------------------------------------------------- the tool's copy

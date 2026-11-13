@@ -3,7 +3,7 @@
 The dashboard is English (DESIGN.md); the panel is instructions, and instructions are read in
 the owner's language. So each string lives here once per language, the page picks one at
 render time (`?lang=zh` on the panel, remembered in .jade/settings.json; before that, profile.json
-`lang`; before that, English), and nothing in panel.py or the template carries a sentence of its
+`lang`; before that, the system's language — `system_lang()`), and nothing in panel.py or the template carries a sentence of its
 own. A string says what to DO, in plain words: never a file name where a bank's name will do,
 never a tool's word (ledger, register, reconcile) where the owner's will do.
 
@@ -207,10 +207,42 @@ S = {
     "ai_asking": {"en": "asking…", "zh": "正在问…"},
     "ai_noanswer": {"en": "no usable answer ({how}) — .jade/log/ai.jsonl has the exchange", "zh": "没有可用的回答（{how}）——.jade/log/ai.jsonl 里有往来记录"},
     "settings": {"en": "Settings", "zh": "设置"},
+    # — the app's first launch (app.py), before there is a folder: the system's language, one at a time
+    "welcome": {"en": "Welcome to FIRE Toad. Everything it keeps is in one folder on this Mac.",
+                "zh": "欢迎使用 FIRE Toad。它的所有内容都放在这台 Mac 上的一个文件夹里。"},
+    "create_folder": {"en": "Create my folder", "zh": "新建文件夹"},
+    "open_folder": {"en": "Open my folder", "zh": "打开文件夹"},
+    "choose_again": {"en": "Choose again", "zh": "重新选择"},
+    "quit": {"en": "Quit", "zh": "退出"},
+    "choose_prompt": {"en": "Choose your FIRE Toad folder", "zh": "选择你的 FIRE Toad 文件夹"},
+    "not_a_folder": {"en": "This is not a FIRE Toad folder: {path}", "zh": "这不是 FIRE Toad 文件夹：{path}"},
+    "your_folder": {"en": "Your folder: {path}", "zh": "你的文件夹：{path}"},
 }
 
 MONTHS = {"en": ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
           "zh": tuple(f"{i} 月" for i in range(1, 13))}
+
+
+def system_lang():
+    """The system's own language, `zh` or `en`: what the first launch speaks before there is a
+    folder, and the panel's when nothing was chosen yet (2026-11-12, user 001: not both at
+    once). macOS keeps the order of preferred languages in AppleLanguages; elsewhere the locale."""
+    import re
+    import subprocess
+    import sys
+    first = ""
+    if sys.platform == "darwin":
+        try:
+            out = subprocess.run(["defaults", "read", "-g", "AppleLanguages"], capture_output=True, text=True).stdout
+            m = re.search(r"[A-Za-z]{2}[\w-]*", out)   # ("zh-Hans-CA", "en-CA") → zh-Hans-CA
+            first = m.group(0) if m else ""
+        except OSError:
+            pass
+    if not first:
+        import locale
+        import os
+        first = os.environ.get("LC_ALL") or os.environ.get("LANG") or (locale.getlocale()[0] or "")
+    return "zh" if first.lower().startswith("zh") else "en"
 
 
 def t(lang, key, **kw):

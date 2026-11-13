@@ -355,7 +355,7 @@ class App:
 
     def lang(self, q=None):
         """The panel's language: ?lang= on the request (remembered in .jade/settings.json),
-        else the remembered one, else profile.json `lang`, else English (strings.py)."""
+        else the remembered one, else profile.json `lang`, else the system's (strings.py)."""
         want = (q or {}).get("lang", [None])[0]
         sp = os.path.join(self.root, ".jade", "settings.json")
         try:
@@ -374,7 +374,8 @@ class App:
                 return prof["lang"]
         except (OSError, ValueError):
             pass
-        return "en"
+        import strings
+        return strings.system_lang()
 
     def is_demo(self):
         return wizard.is_demo(self.root)

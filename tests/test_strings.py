@@ -43,5 +43,32 @@ class Lookup(unittest.TestCase):
         self.assertEqual(strings.months("zh", ["2026-01"]), "1 月")
 
 
+
+class SystemLanguage(unittest.TestCase):
+    """The first launch speaks the system's first language, Chinese or English, never both."""
+    def lang_for(self, out):
+        from unittest import mock
+        import subprocess
+        with mock.patch.object(sys, "platform", "darwin"), \
+             mock.patch.object(subprocess, "run", return_value=subprocess.CompletedProcess([], 0, out, "")):
+            return strings.system_lang()
+
+    def test_chinese_first_is_chinese(self):
+        self.assertEqual(self.lang_for('(\n    "zh-Hans-CA",\n    "en-CA"\n)'), "zh")
+
+    def test_english_first_is_english_even_with_chinese_after(self):
+        self.assertEqual(self.lang_for('(\n    "en-CA",\n    "zh-Hans-CA"\n)'), "en")
+
+    def test_another_language_first_is_english(self):
+        self.assertEqual(self.lang_for('(\n    "fr-CA",\n    "zh-Hant"\n)'), "en")
+
+    def test_the_launcher_has_one_language_per_string(self):
+        for k in ("welcome", "create_folder", "open_folder", "choose_again", "quit", "choose_prompt",
+                  "not_a_folder", "your_folder"):
+            self.assertNotIn("·", strings.t("en", k), k)
+            self.assertFalse(re.search(r"[\u4e00-\u9fff]", strings.t("en", k)), k)
+            self.assertTrue(re.search(r"[\u4e00-\u9fff]", strings.t("zh", k)), k)
+
+
 if __name__ == "__main__":
     unittest.main()
