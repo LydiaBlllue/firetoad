@@ -2,6 +2,11 @@
 
 ## 1.0.4 — unreleased
 
+- **One roadmap** (2026-11-13, user 001): ROADMAP.md says what is coming in the order it is
+  planned — next, after that, 2.0.0, being considered — instead of by version number, and now
+  carries what two separate plans each had: a setup that ends on a finished page, the savings
+  rate and the working years it means, a guide to what to do next every month, income that
+  needs no work, more banks, a Windows build, the page in Chinese.
 - **The sidebar follows the way to FIRE** (2026-11-13, user 001). The pages are grouped by how
   far along you are, not by topic: *Get started* (Accounts, This month, Year, Income & chequing,
   Subscriptions, Monthly spending, Emergency fund), *Set a goal* (FIRE), *Stay on track* (Budget and
