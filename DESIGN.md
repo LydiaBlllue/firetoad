@@ -112,13 +112,13 @@
   | Section | Pages |
   |---|---|
   | — | Home (four cards, net worth in one card, net worth over time). It belongs to no stage |
-  | Get started | Accounts · This month · Year · Income & chequing · Subscriptions · Monthly spending · Safety net |
+  | Get started | Accounts · This month · Year · Income & chequing · Subscriptions · Monthly spending · Emergency fund |
   | Set a goal | FIRE |
   | Stay on track | Budget · Portfolio · Performance · Holdings · Investment income |
   | After FIRE | Drawdown & care |
   | — | Updates, Statements and the Glossary: records and reference for every stage, at the foot of the sidebar, under the pages still waiting for their data |
 
-  **What a page waits for** (`WAITS`): Income and Safety net a chequing statement; Portfolio,
+  **What a page waits for** (`WAITS`): Income and Emergency fund a chequing statement; Portfolio,
   Performance and Holdings a broker's holdings; Investment income a broker's activity; FIRE a FIRE
   goal; Drawdown & care a FIRE goal and something invested. A page that waits is folded under
   *Waiting for data*, saying what it waits for, and comes back by itself.
@@ -205,7 +205,7 @@
 
 ### Plan
 
-- **Safety net** (1.0.1): three cards — Months covered, The money, A usual month — each
+- **Emergency fund** (1.0.1): three cards — Months covered, The money, A usual month — each
   opening its sum, then where the money is and what is owed on no asset. No band, colour or
   target; money abroad only in the line under Months covered (FINANCE.md §8d).
 
@@ -241,7 +241,7 @@
   early it ran out), and a note that this is American history and the stretches overlap. Only
   the years of taking money out are replayed; the first day's pot is the steady path's.
 - **One name for a month's spending** (2026-11-05, the owner): **A usual month** is the average of
-  up to twelve full months, unusual ones left out — on Monthly spending, Safety net, Investment
+  up to twelve full months, unusual ones left out — on Monthly spending, Emergency fund, Investment
   income and This month's comparison. *Spent a month in <year>* (Year) is only that year's
   average and says so; the **Planning figure** is the one the FIRE target is built on.
 - **Monthly spending** (was Spending baseline): *A usual month* on top, then the planning figure against what is really spent, with a 12-month bar

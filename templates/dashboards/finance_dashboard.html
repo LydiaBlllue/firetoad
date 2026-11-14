@@ -840,7 +840,7 @@ const NAV = [
                            {k:"income",n:"Income & chequing",t:"Income and chequing", d:""},
                            {k:"subs",  n:"Subscriptions",    t:"Subscriptions",        d:""},
                            {k:"base",  n:"Monthly spending", t:"Monthly spending",     d:""},
-                           {k:"safe",  n:"Safety net",       t:"Safety net",           d:""}]},
+                           {k:"safe",  n:"Emergency fund",       t:"Emergency fund",           d:""}]},
   // Set a goal: how much is needed, and how far off it is.
   {sec:"Set a goal", items:[{k:"fire", n:"FIRE",             t:"FIRE",                 d:""}]},
   // Stay on track: the monthly plan and the investments, month after month.
@@ -1047,7 +1047,6 @@ const GLOSSARY = {
   card_interest:  {w:"card interest", pos:"noun", def:"What a credit card charges on a balance not paid off. Paying the whole statement balance by the due date means no interest on purchases; leaving part of it unpaid is what starts it.", not:"A fee, such as an annual fee, which is charged whatever you pay."},
   cpp:            {w:"CPP", pos:"noun", def:"Canada Pension Plan: a monthly pension for life, paid for by the contributions taken from your pay. What you will get depends on how long and how much you contributed; your My Service Canada account shows an estimate.", also:["oas"]},
   oas:            {w:"OAS", pos:"noun", def:"Old Age Security: a monthly pension from 65 for people who have lived in Canada long enough after 18, whatever they earned. A full pension needs 40 years of residence; fewer years give part of it, and a high income in retirement reduces it.", also:["cpp"]},
-  emergency_fund: {w:"emergency fund", pos:"noun", def:"Money kept where you can reach it at once, to live on if the paycheque stops or a large bill arrives. A common guide is three to six months of spending.", also:["safety_net"]},
   long_term_care: {w:"long-term care", pos:"noun", def:"Help with daily living in later life, at home or in a facility, usually paid for privately."},
   // Words this page coined
   for_fire:       {own:1, w:"For FIRE", pos:"on this page", def:"Money whose job is to grow until you stop working. FIRE progress is measured on it.", also:["portfolio","fire"]},
@@ -1070,7 +1069,7 @@ const GLOSSARY = {
   committed:      {own:1, w:"committed payment", pos:"on this page", def:"A payment made every month before anything is chosen, such as rent, a mortgage or a loan.", also:["planning_figure"]},
   fund:           {own:1, w:"fund", pos:"on this page", def:"A name you put on part of the money in one of your accounts, for something you are saving toward. Nothing is moved: the money stays where it is, and the plan can add to it each month.", also:["unallocated"]},
   unallocated:    {own:1, w:"Unallocated", pos:"on this page", def:"What is left of take-home pay once every line of the plan is paid. It stays where the paycheque landed.", also:["everyday"]},
-  safety_net:     {own:1, w:"Safety net", pos:"on this page", def:"The money you could live on today without a paycheque, and how many months it would last.", also:["months_covered","emergency_fund"]},
+  safety_net:     {own:1, w:"Emergency fund", pos:"on this page", def:"Money you can reach at once, to live on if the paycheque stops or a large bill arrives. This page shows how much you have and how many months it would last. A common guide is three to six months of spending.", also:["months_covered","spendable_today"]},
   usual_month:    {own:1, w:"A usual month", pos:"on this page", def:"What a month usually costs you: everything spent, averaged over your last full months, up to twelve, leaving out months you marked as unusual. A yearly charge counts as a twelfth each month.", also:["months_covered","planning_figure"]},
   months_covered: {own:1, w:"Months covered", pos:"on this page", def:"How many months of your usual spending the money you can reach today would pay for, after what you owe on no asset.", f:"(spendable today − what you owe on no asset) ÷ a usual month", also:["safety_net","spendable_today"]},
   complete_to:    {own:1, w:"Complete to", pos:"on this page", def:"The day every account’s numbers are in up to. After it, some accounts are still waiting for their next statement."},
@@ -1420,7 +1419,7 @@ function renderHome(){
       if(waitsFor("safe")) return null;
       const s = safetyCalc();
       return s.months === null ? null : card(term("months_covered", "Months covered"),
-        numx(monthsTxt(s.months), [["The money", fmt(s.money)], ["A usual month", fmt(s.cost)]], "From the Safety net page."), "Without a paycheque");
+        numx(monthsTxt(s.months), [["The money", fmt(s.money)], ["A usual month", fmt(s.cost)]], "From the Emergency fund page."), "Without a paycheque");
     },
     kept: () => {
       const cfy = (INVEST.cashflow || []).filter(m => m.ym.startsWith(yr));
@@ -1969,7 +1968,7 @@ function catMedian(cat, ym){
 // spread over its twelve months, averaged over the full months before `ym` — up to twelve, the
 // months set aside as unusual left out. Big months are in it, because they happen. Unlike the
 // planning figure's calibration it keeps the categories that end before FIRE: today they are
-// still paid. Safety net, Investment income, This month and Monthly spending all read this.
+// still paid. Emergency fund, Investment income, This month and Monthly spending all read this.
 function usualMonthAt(ym){
   const win = usableMonths().filter(m => m < ym).slice(-12)
     .map(m => cmpOf(m).reduce((s, e) => s + e.amount, 0)).filter(v => v > 0);
@@ -2237,7 +2236,7 @@ function cardInterest(){
           charging: Object.values(newest).some(r => r.v > 0)};
 }
 
-// ===== Safety net (1.0.1): how long the money would last without a paycheque =====
+// ===== Emergency fund (1.0.1): how long the money would last without a paycheque =====
 // months covered = (Spendable today − what is owed on no asset) ÷ a usual month. The money is
 // Home's own "Spendable today" row, so the two pages cannot disagree; investments are never in
 // it, and money abroad is a line of its own. A usual month is the monthly spending average plus the

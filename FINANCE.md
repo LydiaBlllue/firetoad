@@ -318,13 +318,13 @@ Mapping today's `feeds` onto the axes: Portfolio → asset · grow · today (reg
 accounts: costs); Earmarked → asset · set-aside · spoken; Bank cash → asset · buffer · today;
 Debts → liability; a foreign-currency account → asset · abroad, role per account.
 
-### 8d. The FIRE goal, the Safety net and card interest (1.0.1)
+### 8d. The FIRE goal, the Emergency fund and card interest (1.0.1)
 
 - **The FIRE goal is a declaration**: `plan.json` `fire` `{goal, asked}`. Setup asks once, in plain
   words, whether retiring early is something they are working toward; skipped leaves it out. It
   changes by saying so. Never answered reads as yes for someone with money invested, so no page
   an investor had disappears, and as no otherwise; the next import asks once.
-- **Safety net**, how long the money would last without a paycheque:
+- **Emergency fund**, how long the money would last without a paycheque:
 
   > **months covered = (Spendable today − what is invested in it − what is owed on no asset) ÷ a usual month**
 

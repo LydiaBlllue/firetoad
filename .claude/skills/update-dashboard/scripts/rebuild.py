@@ -722,7 +722,7 @@ def derive(d):
                                "accts": part_accounts(role, where, part_value(role, where))})
     out["REACH"] = [{"k": lab, "r": r, "v": by_reach[r], "c": c, "d": desc.get("reach", {}).get(lab, generic_reach[lab])}
                     for r, lab, c in REACH_ROWS if r in reach_present]
-    # The Safety net (FINANCE.md §8d): the money it counts is Home's own "Spendable today" row,
+    # The Emergency fund (FINANCE.md §8d): the money it counts is Home's own "Spendable today" row,
     # less what is owed on no asset, so the two pages cannot disagree. Money abroad is a line of
     # its own and investments are never in it. What a month costs is the page's: the spending
     # baseline, measured there, plus the repayments the plan pays today.

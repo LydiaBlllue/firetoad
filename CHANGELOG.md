@@ -4,7 +4,7 @@
 
 - **The sidebar follows the way to FIRE** (2026-11-13, user 001). The pages are grouped by how
   far along you are, not by topic: *Get started* (Accounts, This month, Year, Income & chequing,
-  Subscriptions, Monthly spending, Safety net), *Set a goal* (FIRE), *Stay on track* (Budget and
+  Subscriptions, Monthly spending, Emergency fund), *Set a goal* (FIRE), *Stay on track* (Budget and
   the four investing pages), *After FIRE* (Drawdown & care). Home stays on top; Updates,
   Statements and the Glossary sit at the foot, for every stage. No page is added or removed and
   every old link still lands; Money in & out, Plan, Investing and Monthly import are no longer
@@ -60,6 +60,8 @@
     that can be read, every view ends with the button that goes on, and the setup's
     *Categorize them* opens that view. The import day screen says the last day a statement
     closes and the day after it, one fact a line; the goal screen says a blank is fine.
+  - *Safety net is now Emergency fund.* The name most people already use for it. The page and
+    its numbers are the same; the glossary keeps one entry for it instead of two.
   - *The model setting left the panel.* Its card — a service address, a model name and a key,
     in a drawer of its own — was never tried against a real service and never designed. It is
     off as before; `ai.py . set` still sets it. It comes back when it has a design.

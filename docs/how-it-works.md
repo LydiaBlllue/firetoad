@@ -13,7 +13,7 @@ The detail behind the [README](../README.md).
 | | Income & chequing | What came in, by source, how much of it you kept, and every row in chequing |
 | | Subscriptions | What repeats, what it costs a year, what is due next |
 | | Monthly spending | A usual month, and the figure your plan is built on |
-| | Safety net | How many months the money you can reach today would last without a paycheque |
+| | Emergency fund | How many months the money you can reach today would last without a paycheque |
 | Set a goal | FIRE | How far the portfolio is from the target, and when it gets there |
 | Stay on track | Budget | What each paycheque is for, and what the funds hold |
 | | Portfolio | What is invested, by currency, by kind of asset and by bucket |
