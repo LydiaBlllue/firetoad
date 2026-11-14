@@ -2,6 +2,9 @@
 
 ## 1.0.4 — unreleased
 
+- **The roadmap you read is the release roadmap** (2026-11-13, user 001): the file is
+  RELEASE-ROADMAP.md, where it was ROADMAP.md, so it reads as what it is, the plan of what is
+  released next. A sync removes the old file from a folder once the new one is there.
 - **The sidebar follows the way to FIRE** (2026-11-13, user 001). The pages are grouped by how
   far along you are, not by topic: *Get started* (Accounts, This month, Year, Income & chequing,
   Subscriptions, Monthly spending, Emergency fund), *Set a goal* (FIRE), *Stay on track* (Budget and

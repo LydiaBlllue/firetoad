@@ -145,7 +145,7 @@ the screens do not cover (anything held abroad, a loan to a friend, your investi
 - **[Installing the app](docs/install.md)**: the download, the first launch, and what to do if macOS still asks.
 - **[Supported banks and brokers](docs/banks.md)**: which to use, which banks' files are read, which are confirmed on a real
   one, and how to download each.
-- **[Roadmap](ROADMAP.md)** and **[Changelog](CHANGELOG.md)**.
+- **[Release roadmap](RELEASE-ROADMAP.md)** and **[Changelog](CHANGELOG.md)**.
 
 <!-- LINT:NAV main=18/4 minwidth=800 -->
 The page is 18 pages in 4 sidebar groups —

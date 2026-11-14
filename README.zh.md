@@ -116,7 +116,7 @@ Claude Code 仍是另一扇门：对话、解析器读不了的对账单、向�
   四个检查器让每个数字都对得上来源；selftest 埋下 62 个问题，证明它们还抓得到。
 - **[安装应用](docs/zh/install.md)**：下载、第一次打开、macOS 仍然拦着时怎么办。
 - **[支持的银行和券商](docs/zh/banks.md)**：能读哪些银行、券商的哪些文件、该用哪种、哪些已用真实文件确认、每种怎么下载。
-- **[路线图](ROADMAP.md)** 和 **[更新记录](CHANGELOG.md)**。
+- **[发布路线图](RELEASE-ROADMAP.md)** 和 **[更新记录](CHANGELOG.md)**。
 
 <!-- LINT:NAV main=18/4 minwidth=800 -->
 页面共 18 页、4 个侧栏分组 ——
