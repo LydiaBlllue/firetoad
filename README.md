@@ -4,11 +4,11 @@
   <img src="docs/hero.png" alt="" width="180">
 </p>
 
-# Jade Toad
+# FIRE Toad
 
 **Your money on one page, for working toward financial independence in Canada.**
 
-**[Open the live demo →](https://lydiablllue.github.io/jade-toad/)** a made-up owner's page,
+**[Open the live demo →](https://lydiablllue.github.io/firetoad/)** a made-up owner's page,
 nothing to install.
 
 Once a month you drop your bank statements into a folder. The tool reads them, checks that
@@ -21,8 +21,8 @@ you own, how far you are from FIRE. No bank login, no server, no account anywher
 
 | | **The app** — no Claude plan | **Claude Code** |
 |---|---|---|
-| What it is | `Jade Toad.app` on a Mac: your folder in your browser — the setup as six screens, the month as five steps, in English or Chinese | the same folder, driven in the chat of the Claude desktop app |
-| You need | a Mac and the download from the [releases page](https://github.com/lydiablllue/jade-toad/releases) (not signed yet: the first launch is one visit to System Settings → Privacy & Security → *Open Anyway*) | a Claude plan that includes Claude Code (Pro, Max, Team or Enterprise), the Claude desktop app, Python 3 |
+| What it is | `FIRE Toad.app` on a Mac: your folder in your browser — the setup as six screens, the month as four steps, in English or Chinese | the same folder, driven in the chat of the Claude desktop app |
+| You need | a Mac and the download from the [releases page](https://github.com/lydiablllue/firetoad/releases) (signed and notarised by Apple: it opens with a double-click — [installing it](docs/install.md)) | a Claude plan that includes Claude Code (Pro, Max, Team or Enterprise), the Claude desktop app, Python 3 |
 | Best when | your bank is one the tool reads (RBC, BMO, or any bank's OFX download) and your broker is Wealthsimple | a statement no parser reads, a bank's CSV to map, anything held abroad, a loan to a friend, a question in words |
 
 Both run the very same code, on your computer only, and the same checks hold both to the same
@@ -59,11 +59,11 @@ each new merchant is.
 
 **With the app**
 
-1. **Download `Jade Toad.app`** from the [releases page](https://github.com/lydiablllue/jade-toad/releases), open the disk image, drag the
-   app to Applications. The first time, macOS says it cannot verify the app: close that, open
-   *System Settings → Privacy & Security*, scroll down and click *Open Anyway* (it is not signed
-   yet; on macOS 14 and earlier, right-click → *Open* is enough).
-2. **Open it and choose *Make one***, in an empty folder of your choice. Your browser opens on the
+1. **Download `FIRE Toad.app`** from the [releases page](https://github.com/lydiablllue/firetoad/releases), open the disk image and
+   double-click the app in it: it installs itself into Applications and opens. It is signed and
+   notarised by Apple; macOS asks once whether to open an app downloaded from the internet:
+   click *Open* ([installing it](docs/install.md)).
+2. **Click *Create my folder***: it is made for you in Documents. Your browser opens on the
    setup.
 3. **Drop last month's files** onto the second screen, filenames untouched.
 4. **Walk the screens** — your name, each account and what it is for, the month's money in and
@@ -84,18 +84,18 @@ each new merchant is.
 About ten minutes: the downloads, then two or three minutes of questions. Download the month's
 statements into `inbox/` and say **"update dashboards"**. You get a short
 report and any questions a program cannot answer, like a merchant it has not seen. In the app
-(below) the same month is the panel's five steps.
+(below) the same month is the panel's four steps.
 
 ## The app, in more detail
 
-**Jade Toad.app** — the disk image on the [releases page](https://github.com/lydiablllue/jade-toad/releases), or `python3 app.py` in this
+**FIRE Toad.app** — the disk image on the [releases page](https://github.com/lydiablllue/firetoad/releases), or `python3 app.py` in this
 folder with Python 3 and pypdf installed — opens your folder in your browser. The first launch
 asks where your folder is, or makes one and walks you through the setup in six screens; every
-month after that, a panel of five steps: get this month's files, put them here, import, answer
-a few questions, done. Each answer is saved as you give it, so you can stop and come back; a
-merchant filed wrong is changed from the list under the questions. English or Chinese, switched
-in the header. The build is not signed yet, so the first launch on a Mac is one visit to *System
-Settings → Privacy & Security → Open Anyway*; Windows has no build yet (`python3 app.py` works there).
+month after that, a panel of four steps, one at a time: get this month's files, import,
+categorize what is left, done. Each answer is saved as you give it, so you can stop and come back; a
+merchant filed wrong is changed from the list under that step. English or Chinese, switched
+in the header. The Mac build is signed and notarised, so it [opens with a
+double-click](docs/install.md); Windows has no build yet (`python3 app.py` works there).
 
 A model is optional and **off by default**. Turned on in the panel's settings — with your own
 key to an OpenAI-compatible service or Anthropic, or Ollama on this computer — it is asked one
@@ -142,13 +142,14 @@ the screens do not cover (anything held abroad, a loan to a friend, your investi
   checkers that keep the numbers honest.
 <!-- LINT:FAULTS n=65 -->
   Four checkers hold every figure to its source; a selftest plants 65 faults to prove they still catch them.
+- **[Installing the app](docs/install.md)**: the download, the first launch, and what to do if macOS still asks.
 - **[Supported banks and brokers](docs/banks.md)**: which to use, which banks' files are read, which are confirmed on a real
   one, and how to download each.
 - **[Roadmap](ROADMAP.md)** and **[Changelog](CHANGELOG.md)**.
 
 <!-- LINT:NAV main=18/4 minwidth=800 -->
 The page is 18 pages in 4 sidebar groups —
-Home · Accounts · Money in & out · Plan · Investing · Monthly import · Glossary
+Home · Get started · Set a goal · Stay on track · After FIRE · Updates · Statements · Glossary
 — desktop only, at least 800px wide.
 
 MIT licence: see [`LICENSE`](LICENSE).

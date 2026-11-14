@@ -1,4 +1,4 @@
-# Jade Toad — how this workspace works
+# FIRE Toad — how this workspace works
 
 A personal-finance workspace run by Claude Code. You maintain one thing here: the **dashboard**
 (`dashboards/finance_dashboard.html` — an older workspace may still call it
@@ -62,7 +62,7 @@ The rest of `findata/`, and what each carries:
 | each account's ledger CSV | date, description, amount, balance, statement, **`type`**, `label` — the balance chain must close (D1), and `type` is the classification the page shows |
 | `holdings_latest.csv`, `ws_activities.csv` | the broker's exports |
 | `banks.json` | one balance and one as-of date per bank account |
-| `profile.json` | the owner (shown under the Jade Toad wordmark and in the tab), the year of birth, the import day |
+| `profile.json` | the owner (shown under the FIRE Toad wordmark and in the tab), the year of birth, the import day |
 | `funds.json` | the monthly plan as **flows** — `income`, `committed` (rent, a mortgage, a loan), `saving` (to the broker), `everyday`, each with an amount and, where it applies, `until`, `afterFire`, `pays`, `starts`, `to`; and `funds`, the owner's own funds, each a label on money in one account |
 | `plan.json` | planning spend, months excluded from comparisons, deposits into the broker that were gifts (`brokerGifts`), the retirement assumptions, the owner's one-line descriptions of the net-worth parts |
 | `rules.json` | the investing buckets and their target bands, the owner's theses (`notes`) and `checkpoints`, `assetClass` — what each ETF holds (stocks / bonds / cash / gold / crypto), the one thing the broker's export cannot say — and `principles`, the owner's high-level rules, each naming a check the Investing overview runs today (with `placement`, which account each holding belongs in) |
@@ -190,12 +190,12 @@ report template are all in that file. **Do not work from memory.**
 
 ## The second door: the local app
 
-**`python3 app.py` is Jade Toad without Claude** (2026-11-06, ROADMAP 2.0.0 step 1b). It
+**`python3 app.py` is FIRE Toad without Claude** (2026-11-06, ROADMAP 2.0.0 step 1b). It
 starts a standard-library HTTP server on `127.0.0.1` with a per-launch token in the path, opens
 the system browser, and serves two things: the built dashboard, as the static file it is, and
-the **panel** (`templates/panel/panel.html`, filled by `local-app/scripts/panel.py`) — five
-numbered steps, *get the files · put them here · import · answer · done*, with the current one
-lit and a line saying what to do next; every sentence from `local-app/scripts/strings.py` in
+the **panel** (`templates/panel/panel.html`, filled by `local-app/scripts/panel.py`) — one
+step at a time under a four-part bar, *get the files, import, categorize, done*, each a heading
+that says the one thing to do and its content as a table (DESIGN.md 6a); every sentence from `local-app/scripts/strings.py` in
 English and Chinese (`?lang=`, remembered in `.jade/settings.json`, else profile.json `lang`),
 and each missing file's *how do I get it* read from `parsers/support.py` (2026-11-07, after the
 first version's four internal names left the owner not knowing what to do). Every question the
@@ -218,19 +218,20 @@ script, and the panel follows. Two verbs came with the panel and serve this chat
 ledger, by register key, the register's copy following (D14, D20), refused for an account with
 a ledger (D7) or a loan (D23) — and **`ocr.py`** reads a phone screenshot with Apple Vision on
 this computer and ranks its amounts by the account's `capture` line; it offers, never writes.
-**Packaged** (1d, `build/build.py` → `dist/Jade Toad.app`, PyInstaller, one folder, the demo
-inside and never a workspace), the same `app.py` is the entry: the first launch asks for the
-folder or makes one (remembered in the system's application-support folder, outside the
-workspace), and every launch compares the folder's tool copy with the app's — *Refresh the
-copy* on the panel when they differ, no writes when the folder's data is a newer shape. Inside
-the app the binary doubles as the interpreter for the core's own subprocess calls. Unsigned
-until an Apple Developer identity is passed to the build. **The setup as screens** (step 2): while a folder still holds the demo, `/panel` is the
+**Packaged** (1d, `build/build.py` → `dist/FIRE Toad.app`, PyInstaller, one folder, the tool
+and never anyone's data), the same `app.py` is the entry: the first launch asks for the
+folder or makes one — a made one holds the tool and a profile.json marked `blank`, no demo data (remembered in the system's application-support folder, outside the
+workspace), and every launch compares the folder's tool copy with the app's (`sync.pending`, the sync's own
+rules) — the packaged app brings the copy up to its own version by itself, without a word, since
+that never touches data; no writes, and a line on the panel, when the folder's data is a newer shape. Inside
+the app the binary doubles as the interpreter for the core's own subprocess calls. Released
+builds are signed with a Developer ID and notarised (`build/build.py --sign … --notarize …`). **The setup as screens** (step 2): while a folder is not set up (the demo's, or blank), `/panel` is the
 wizard — the setup skill's interview in six screens, in English or Chinese like the panel, drafted by `setup/scripts/wizard.py` from
 `propose.py`'s draft and written back into `setup-answers.json`, then scaffold, rebuild, first
 import; the selftest's *local app setup* check builds the same workspace through the app and
 through `wizard.py --apply` and expects identical `findata/`. **A model, by choice** (steps 3–4): `ai.py` in the
 update-dashboard scripts, off unless the owner sets a provider (OpenAI-compatible, Anthropic,
-or Ollama on this computer) on the panel's last card or with `ai.py . set`; asked at one place
+or Ollama on this computer) with `ai.py . set` — its card left the panel on 2026-11-13, until it is designed; asked at one place
 only — a merchant every map misses, in `note_merchant` — with the merchant string and the
 fifteen category names and nothing else; its answer is validated against the fifteen, written
 as the question's `suggest` with `suggestBy: model`, never as the category (Other stays until

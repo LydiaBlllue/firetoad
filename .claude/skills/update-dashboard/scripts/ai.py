@@ -14,7 +14,8 @@ string and the category names: no amount, no date, no account.
     python3 .claude/skills/update-dashboard/scripts/ai.py . test "STARBUCKS 1234 TORONTO"
 
 Where things live: the choice (provider, base URL, model) in .jade/settings.json in the
-workspace, gitignored and never synced; the key in the macOS Keychain (service "Jade Toad"),
+workspace, gitignored and never synced; the key in the macOS Keychain (service "Jade Toad": the
+product's first name, kept when it became FIRE Toad so a key already saved is still found),
 or the JADE_AI_KEY environment variable, or — elsewhere — .jade/ai.key with owner-only
 permissions; every call in .jade/log/ai.jsonl with what was sent, so the owner can read it back;
 an answer already given in .jade/ai_cache.json, so one merchant costs one call.
@@ -39,7 +40,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from categories import CATEGORIES  # noqa: E402
 
-SERVICE = "Jade Toad"
+SERVICE = "Jade Toad"   # not renamed with the product (2026-11-12): saved keys live under it
 PROVIDERS = {
     "openai": {"label": "With my own key — an OpenAI-compatible service",
                "note": "OpenAI, DeepSeek, Qwen, Gemini's OpenAI endpoint, Groq, OpenRouter… a paid tier: a free one may train on what you send",

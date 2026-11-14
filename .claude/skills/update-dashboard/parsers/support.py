@@ -140,10 +140,10 @@ INSTITUTIONS += [(b, "broker", BALANCE_ONLY) for b in OTHER_BROKERS]
 
 TITLE = ("Supported banks and brokers", "支持的银行和券商")
 INTRO = (
-    "Which files Jade Toad reads, institution by institution. Every file has to reconcile before it is "
+    "Which files FIRE Toad reads, institution by institution. Every file has to reconcile before it is "
     "let in: a statement to the totals it prints, an OFX download to the bank's own balance, a CSV to "
     "its balances or to the balance your app shows.",
-    "Jade Toad 能读哪些银行、券商的哪些文件。每个文件都要先核对通过才收进来：对账单要对上它印的合计，"
+    "FIRE Toad 能读哪些银行、券商的哪些文件。每个文件都要先核对通过才收进来：对账单要对上它印的合计，"
     "OFX 要对上银行给的余额，CSV 要对上文件里的余额或 app 上的余额。")
 GUIDE_HEAD = ("Which to use", "用哪种")
 GUIDE = (

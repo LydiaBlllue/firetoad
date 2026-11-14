@@ -189,6 +189,10 @@ class Workspace:
         # owner used to keep in prose, as data both doors read (2026-11-07)
         self.senders = [s for s in (jload(fd("senders.json"), {}) or {}).get("senders", [])
                         if s.get("match") and s.get("type") in SENDER_LABEL]
+        # accounts elsewhere the owner has said are their own, by the number a statement prints
+        # for them: a transfer to or from one is typed and not asked again (2026-11-12)
+        self.own_elsewhere = {str(x.get("match")) for x in (jload(fd("senders.json"), {}) or {}).get("ownAccounts", [])
+                              if x.get("match")}
         flows = self.funds.get("plan", {}).get("flows", [])
         self.rent = [f["amount"] for f in flows if f.get("kind") == "committed"]
         self.cards = [a for a in self.accounts if a.get("kind") == "Credit card"]
@@ -298,6 +302,16 @@ CASH = re.compile(r"\bATM\b|\bABM\b|CASH\s*WITHDRAWAL|\bW/D\b")
 OTHER_ACCOUNT = re.compile(r"TRANSFER|\bTFR\b|\bWIRE\b|\bDRAFT\b")
 
 
+def other_account(desc, acc):
+    """The number a statement prints for the account on the other side of a transfer, or None:
+    the last run of three or more digits in the description that is not this account's own
+    ("OnlineTransfer,TF0006#4471-9032" seen from …471 → 9032; "Online Banking transfer - 7082"
+    → 7082). What a transfer to an account outside the register is known by."""
+    own = digits((acc or {}).get("id"))
+    runs = [g for g in re.findall(r"\d{3,}", desc or "") if not (own and (own in g or g in own))]
+    return runs[-1] if runs else None
+
+
 def type_row(ws, acc, desc, amt, when, holder=None):
     """(type, label, ask) for one ledger row. `ask` is a decisions.json item when the row was
     typed by default rather than by evidence; None otherwise. Blank type means: a program cannot
@@ -379,11 +393,16 @@ def type_row(ws, acc, desc, amt, when, holder=None):
         # Money to or from an account the register does not have: the owner's own elsewhere,
         # most likely, but only they can say -- a large one could as well be pay or a gift.
         way = "to" if amt < 0 else "from"
+        other = other_account(desc, acc)
+        if other and other in getattr(ws, "own_elsewhere", ()):
+            # an account the owner has already said is their own: the rule, not the question
+            return "Transfer", f"Transfer {way} your own account …{other[-4:]}", None
         return "Transfer", f"Transfer {way} an account not in the register", {
             "kind": "transfer",
             "what": f"A {money(abs(amt))} transfer {way} an account the register does not have, on "
                     f"{short(iso_to_date(when))} ({desc.strip()[:60]}).",
-            "default": "Transfer", "facts": {"kind": "account", "amount": abs(amt), "date": when, "way": way, "desc": desc.strip()[:60]}}
+            "default": "Transfer", "facts": {"kind": "account", "amount": abs(amt), "date": when, "way": way,
+                                             "desc": desc.strip()[:60], "other": other}}
     if amt < 0 and PAYMENT.search(d):
         return "Payment", "Payment — " + payee_of(desc).title(), None
     if "FEE" in dn:
@@ -934,15 +953,20 @@ def note_merchant(plan, key, cat, how, when, src, root=None):
     plan.cat_used[key] = cat
     f, l = plan.merchant_dates.get(key, (when, when))
     plan.merchant_dates[key] = (min(f, when), max(l, when))
-    if how in ("new", "starter") and key not in plan.new_merchants:
+    if how == "starter" and key not in plan.new_merchants:
+        # a chain the starter map knows is filed, said once, and not asked: a first setup that
+        # ended with 27 questions had 13 of these in it, each already answered (2026-11-12, user
+        # 001). The owner changes one from the merchant list, like any other.
         plan.new_merchants[key] = (cat, src)
-        why = " The starter map of common chains suggests " + cat + "." if how == "starter" else ""
-        item = {"kind": "merchant", "match": key, "what": f"{key}, seen for the first time.{why}",
+        plan.judged.append(f"Filed {key} as {cat}, a common chain.")
+    elif how == "new" and key not in plan.new_merchants:
+        plan.new_merchants[key] = (cat, src)
+        item = {"kind": "merchant", "match": key, "what": f"{key}, seen for the first time.",
                 "default": cat, "source": f"{src}, {short(iso_to_date(when))}",
-                "facts": {"kind": "merchant", "merchant": key, "starter": cat if how == "starter" else None, "date": when}}
+                "facts": {"kind": "merchant", "merchant": key, "starter": None, "date": when}}
         # A model, only where every map missed and only if the owner set one (ai.py): its answer
         # is the question's suggestion, never the category — Other stays until the owner says.
-        if how == "new" and root and ai.enabled(root):
+        if root and ai.enabled(root):
             sug, by = ai.categorise(root, key)
             if sug and sug != cat:
                 item["suggest"], item["suggestBy"] = sug, "model"
@@ -1411,11 +1435,17 @@ def _script(script, args, root):
 
 
 # ---------------------------------------------------------------- run / main
-def run(root, write=False, hand=None, balance=None, undo_last=False, say=None, loud=None):
+def run(root, write=False, hand=None, balance=None, undo_last=False, say=None, loud=None, leave_unnamed=False):
     """The import (verbs.py). `hand` is the list of transcriptions --hand reads from its file;
     `balance` is {account key: amount} for a download with no running balance; `undo_last` is
     --undo. Returns the summary --json prints, plus rc and lines. `loud` receives the lines that
-    reach the terminal even in --json mode (a refusal, a failure)."""
+    reach the terminal even in --json mode (a refusal, a failure).
+
+    `leave_unnamed` is the local app's way with a file nobody can name: in the chat the run
+    stops and Claude asks; in the app there is nobody to ask, so the file is left in the folder,
+    said, and everything that can be named is imported. Nothing is guessed either way. Without
+    it one screenshot in the folder left a whole first import undone, and the setup said the
+    page was ready (2026-11-12, user 001: 28 files, 6 screenshots, nothing imported)."""
     root = os.path.abspath(root)
     if undo_last:
         return undo(root, say=say)
@@ -1424,11 +1454,11 @@ def run(root, write=False, hand=None, balance=None, undo_last=False, say=None, l
     if other:
         emit(jlock.refusal(other), loud_line=True)
         return verbs.result({"date": datetime.date.today().isoformat(), "written": False, "busy": other}, 1, lines)
-    rc, summary = _import(root, write, hand or [], balance or {}, emit)
+    rc, summary = _import(root, write, hand or [], balance or {}, emit, leave_unnamed)
     return verbs.result(summary, rc, lines)
 
 
-def _import(root, write, hand, balance, say):
+def _import(root, write, hand, balance, say, leave_unnamed=False):
     """(rc, summary) — the import itself, printing through `say`."""
     ws = Workspace(root)
     plan = Plan()
@@ -1489,8 +1519,12 @@ def _import(root, write, hand, balance, say):
     for src, d, desc, amt in plan.credits:
         say(f"  · credit not filed: {src} {d} {desc[:40]!r} {amt:,.2f}")
 
-    stop = plan.unknown or plan.stopped
-    if plan.unknown:
+    stop = plan.stopped or (plan.unknown and not leave_unnamed)
+    if plan.unknown and leave_unnamed:
+        say("\n  --- left in the folder: files nobody can name ---")
+        for name, note in plan.unknown:
+            say(f"  · {name}: {note}")
+    elif plan.unknown:
         say("\n  --- STOP: files nobody can name ---")
         for name, note in plan.unknown:
             say(f"  ✗ {name}: {note}")
@@ -1500,7 +1534,7 @@ def _import(root, write, hand, balance, say):
             say(f"  ✗ {s}")
     summary.update(files=plan.files, by_hand=plan.by_hand, unknown=plan.unknown, stopped=plan.stopped,
                    untyped=plan.untyped, asked=[d["what"] for d in plan.decisions], judged=plan.judged,
-                   credits=plan.credits, counts=dict(plan.counts))
+                   credits=plan.credits, counts=dict(plan.counts), left=bool(plan.unknown and leave_unnamed))
     if stop:
         say("\n  Nothing written. Ask the owner, then run again.")
         return 1, summary

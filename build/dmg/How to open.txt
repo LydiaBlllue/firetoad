@@ -1,0 +1,11 @@
+FIRE TOAD — HOW TO OPEN
+
+1. Double-click FIRE Toad in this window. macOS asks once whether to open an app
+   downloaded from the internet: click Open.
+2. FIRE Toad copies itself into Applications, opens, and closes this window.
+3. Click "Create my folder". It is made in Documents, as "FIRE Toad".
+   Your browser opens on the setup.
+
+Next time, open FIRE Toad from Applications or Launchpad.
+
+Full guide: https://github.com/lydiablllue/firetoad/blob/main/docs/install.md

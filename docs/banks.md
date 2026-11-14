@@ -1,6 +1,6 @@
 # Supported banks and brokers
 
-Which files Jade Toad reads, institution by institution. Every file has to reconcile before it is let in: a statement to the totals it prints, an OFX download to the bank's own balance, a CSV to its balances or to the balance your app shows.
+Which files FIRE Toad reads, institution by institution. Every file has to reconcile before it is let in: a statement to the totals it prints, an OFX download to the bank's own balance, a CSV to its balances or to the balance your app shows.
 
 ## Which to use
 

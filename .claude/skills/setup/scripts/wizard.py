@@ -42,6 +42,19 @@ REACH_OF_ROLE = {"buffer": "today", "set-aside": "spoken", "none": "locked"}
 IGNORE = {"README.txt", ".gitkeep", ".DS_Store"}
 
 
+NOT_MINE = "not-mine"
+
+
+def can_disown(acc):
+    """Only an account read off a broker's export, which lists every account the login can see:
+    it has a number, and the only file it comes on is that shared export. A bank account with
+    its own statement cannot be left out this way — its file would arrive every month with
+    nowhere to go."""
+    doc = acc.get("doc") or {}
+    return bool(acc.get("id")) and acc.get("id") != "—" and acc.get("kind") in scaffold.INVEST_KINDS \
+        and (not doc or doc.get("into") in ("holdings_latest.csv", "ws_activities.csv"))
+
+
 def inbox_files(root):
     d = os.path.join(root, "inbox")
     return sorted(n for n in (os.listdir(d) if os.path.isdir(d) else []) if n not in IGNORE and not n.startswith("."))
@@ -72,7 +85,10 @@ def screens(draft, today):
                          "id": a.get("id"), "cur": a.get("cur"), "balance": a.get("balance"), "asof": a.get("asof"),
                          "role": a.get("role"), "seenAs": a.get("seenAs"),
                          "needsBalance": a.get("balance") is None,
-                         "doc": (a.get("doc") or {}).get("file"), "liability": a.get("kind") in scaffold.DEBT_KINDS})
+                         "doc": (a.get("doc") or {}).get("file"), "liability": a.get("kind") in scaffold.DEBT_KINDS,
+                         # an account that came in on someone's export with no statement of its
+                         # own can be said to be somebody else's money (the register's notOwned)
+                         "canDisown": can_disown(a)})
     plan = draft.get("plan") or {}
     # an OFX download names its accounts by id, never the bank: the wizard asks the bank once per file
     ofx = []
@@ -167,6 +183,7 @@ def merge(draft, answers, today):
                 if (acc.get("doc") or {}).get("file") == f:
                     acc["doc"]["ep"] = bank
     # accounts: a role per row, a name an owner changes, a balance the exports do not carry
+    not_mine = []
     for row in answers.get("accounts") or []:
         i = row.get("i")
         if not isinstance(i, int) or i >= len(a.get("accounts") or []):
@@ -174,6 +191,9 @@ def merge(draft, answers, today):
         acc = a["accounts"][i]
         if row.get("name", "").strip():
             acc["name"] = row["name"].strip()
+        if row.get("role") == NOT_MINE and can_disown(acc):
+            not_mine.append(i)
+            continue
         if row.get("role") in dict((k, l) for k, l, _ in ROLES) and acc.get("kind") not in scaffold.DEBT_KINDS:
             acc["role"] = row["role"]
             acc["reach"] = REACH_OF_ROLE.get(row["role"], acc.get("reach") or "today")
@@ -181,6 +201,14 @@ def merge(draft, answers, today):
         if bal is not None and acc.get("balance") is None:
             acc["balance"] = bal
             acc["asof"] = row.get("asof") or acc.get("asof") or today
+    # "not mine": named in notOwned, so no figure counts it and the export that carries it is
+    # still read (2026-11-12, user 001: an account held for someone else was in net worth because
+    # the setup had no way to say so). The row stays in the draft — it may be the one that carries
+    # the export's document — and scaffold.py leaves it out of the register.
+    for i in not_mine:
+        acc = a["accounts"][i]
+        a.setdefault("notOwned", []).append({"id": acc["id"], "name": acc.get("name"), "inst": acc.get("inst"),
+                                             "why": f"{today} setup: not the owner's money", "asof": today})
     # accounts the files do not show: the owner's word, with the balance they read off the app
     for row in answers.get("added") or []:
         if not (row.get("inst") or "").strip() or not (row.get("name") or "").strip():
@@ -217,10 +245,18 @@ def merge(draft, answers, today):
         plan["committed"] = committed
     rent = _num(m.get("imputedRent"))
     if rent:
+        # asked in general words — monthly costs that begin once work stops — not as one
+        # owner's rent (2026-11-12): the flow keeps its key, and is named for what it is
         plan["imputedRent"] = int(round(rent))
+        plan["laterName"] = "Costs that start later"
     goal = (answers.get("goal") or "").lower()
     if goal in ("yes", "no"):
         plan["fire"] = {"goal": goal == "yes", "asked": today}
+    else:
+        # skipped on the screen is "no for now", as the screen says and PRODUCT.md decides. Left
+        # out, the page read "never asked" and showed FIRE to anyone with money invested, and the
+        # first import asked the same question again (2026-11-12, user 001)
+        plan["fire"] = {"goal": False, "asked": today, "skipped": True}
     pens = []
     for p in m.get("pensions") or []:
         mo, fr = _num(p.get("monthly")), _num(p.get("from"))
@@ -251,7 +287,7 @@ def apply(root, answers, write=False, say=None):
     a = merge(draft, answers or {}, today)
     res["answers"] = a
     if not a.get("owner"):
-        emit("  ✗ a name is needed: it is shown under the Jade Toad wordmark", loud_line=True)
+        emit("  ✗ a name is needed: it is shown under the FIRE Toad wordmark", loud_line=True)
         return verbs.result(res, 1, lines)
     emit(f"=== setup — {a['owner']}, {len(a.get('accounts') or [])} account(s), import day {a.get('importDay', 1)} ===")
     if not write:
@@ -273,9 +309,13 @@ def apply(root, answers, write=False, say=None):
     import update  # noqa: E402
     res["rebuild"] = verbs.public(rebuild.run(root, write=True, say=emit))
     emit("")
-    r2 = update.run(root, write=True, say=emit, loud=emit)
+    # the first import leaves a file it cannot name in the folder and imports the rest (the
+    # app's way, update.run); `imported` says whether it wrote, so the screen never calls a
+    # page ready that holds none of the files
+    r2 = update.run(root, write=True, say=emit, loud=emit, leave_unnamed=True)
     res["import"] = verbs.public(r2)
     res["written"] = True
+    res["imported"] = r2["rc"] in (0, 2)
     return verbs.result(res, r2["rc"] if r2["rc"] in (0, 2) else r2["rc"], lines)
 
 

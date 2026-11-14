@@ -1,5 +1,134 @@
 # Changelog
 
+## 1.0.4 — unreleased
+
+- **The sidebar follows the way to FIRE** (2026-11-13, user 001). The pages are grouped by how
+  far along you are, not by topic: *Get started* (Accounts, This month, Year, Income & chequing,
+  Subscriptions, Monthly spending, Emergency fund), *Set a goal* (FIRE), *Stay on track* (Budget and
+  the four investing pages), *After FIRE* (Drawdown & care). Home stays on top; Updates,
+  Statements and the Glossary sit at the foot, for every stage. No page is added or removed and
+  every old link still lands; Money in & out, Plan, Investing and Monthly import are no longer
+  group names. Setup, the monthly import and the dashboard had each been sorting the product a
+  different way.
+- **From the first full run on a fresh account** (2026-11-12, user 001, on her own statements):
+  - *Opened again, it opens.* The app answers the Dock: opening it while it is running shows
+    the panel again, and Quit quits. Before, a second double-click did nothing and only Force
+    Quit let it start over.
+  - *The folder keeps up by itself.* The app brings the folder's copy of the tool to its own
+    version on launch and says nothing; "this folder's copy of the tool differs in 6 places" is
+    gone. A sync no longer drops the lines the setup added to `.gitignore`.
+  - *Skipped means no.* Skipping the early-retirement question no longer shows the FIRE pages to
+    anyone with money invested, and the first import no longer asks it again.
+  - *A chain the starter map knows is filed, not asked.* Three months of the demo's statements
+    went from 12 questions to 2. What is left is counted by what it is — "3 merchants and 2
+    transfers to categorize" — at the end of the setup, which now sends you to categorize them
+    before the dashboard; the page's header says "5 to categorize" on its one line, its layout
+    as it was.
+  - *The setup reads as a list, not a paragraph.* Screen 1 asks for the last 1–3 months, with
+    what to bring one per line and "How long?" answered in a small table; the last screen shows
+    your answers as rows, warns when the plan asks more than the pay, and folds what the run
+    printed under *Details*. The rules are DESIGN.md 6a.
+  - *The accounts are a table, already filled in.* One account a row with what it is used for
+    chosen for you; you change only what is wrong, and what the choices mean is under the table.
+    An account on a broker's export can be marked *Not mine*: it is left out of every figure and
+    the export is still read.
+  - *The monthly import is one step at a time.* Four views under the same bar as the setup:
+    get the files (a table of what is still needed, the drop zone, what is in the folder),
+    import (the check runs by itself; one button), categorize (one item at a time, the
+    likeliest three answers and *More*), done. No folder path, no "see what would happen".
+  - *A transfer asks whose account it is.* Money out to an account not listed opens on *My own
+    account* and *I spent it* (a category only then), not on Groceries, Dining, Housing. *My own
+    account* answers every transfer with that account, in or out, and is remembered
+    (`senders.json` `ownAccounts`): the next import types it and does not ask.
+  - *A file nobody can name no longer stops the app's import.* It is left in the folder and
+    said; everything else is imported. One screenshot among 28 files had left a first import
+    undone while the setup said the page was ready; the setup now says so when its first import
+    did not write, and no longer asks for screenshots it cannot use yet.
+  - *The setup does the sums.* Step 3 shows take-home, fixed costs and everyday spending, each
+    filled in from the files, and works out two lines: what is kept each month, and its share
+    of take-home pay. They read the same whether money is moved out first or kept after
+    spending, so nobody is asked which they do; the transfer to the broker is a row only when
+    the files show one. The boxes for a planning figure and for "rent you do not pay today"
+    are gone. Step 4 asks one plain
+    question — do you want to see when your investments could pay for your spending? — and
+    only a yes brings the two optional lines (costs that start once work stops, government
+    pensions).
+  - *The panel no longer waits on a file nobody can name.* Such a file stays in the folder, and
+    used to keep the panel on "get the files" with an *Import* button that counted it and had
+    nothing to import. The panel now opens on what can be done — readable files, else what is
+    waiting to be categorized, else what is still to download — the button counts only files
+    that can be read, every view ends with the button that goes on, and the setup's
+    *Categorize them* opens that view. The import day screen says the last day a statement
+    closes and the day after it, one fact a line; the goal screen says a blank is fine.
+  - *Safety net is now Emergency fund.* The name most people already use for it. The page and
+    its numbers are the same; the glossary keeps one entry for it instead of two.
+  - *"Spent in October" is now "Total spent in October".* On Home, This month and The year: the
+    card is everything bought, bills included, and its name now says so.
+  - *"Take-home pay" is now "Income a month".* Income is not always a paycheque, so the setup,
+    Budget, This month and Emergency fund say income: "Where the income went", "How each
+    month's income is split", "Without income". How the figure is worked out is unchanged.
+  - *The model setting left the panel.* Its card — a service address, a model name and a key,
+    in a drawer of its own — was never tried against a real service and never designed. It is
+    off as before; `ai.py . set` still sets it. It comes back when it has a design.
+  - *An error you can report, and a log.* A run that stops opens a dialog over the page —
+    nothing on the page moves — with *Try again*, *Copy report*, the error code
+    (`FT-SETUP-KeyError`), the run's id and the log, one a line; a launch that fails shows the
+    same in a system dialog. The panel and the setup no longer join facts with a dot anywhere. The app keeps its own log from the first line
+    of a launch, at `~/Library/Logs/FIRE Toad/firetoad.log` (Console shows it): what it did
+    and every failure with its code — never what a run printed, which carries amounts.
+  - The yearly-returns fetch says "the source has answered its limit for today" where it said
+    `KeyError: 'series'`.
+- **One double-click, and a folder nobody has to choose** (2026-11-12, user 001, from the
+  first run on a fresh account). The disk image shows the app alone: double-clicked there, it
+  copies itself into Applications (~/Applications on an account that is not an administrator),
+  opens from there and ejects the disk image, so there is no drag and no second double-click.
+  The disk image's window and its note are in English only: a picture cannot follow the
+  system's language, and two languages at once read as clutter.
+  The first launch asks *Create my folder* or *Open my folder* in the system's language (Chinese
+  or English, one at a time; the panel too, until a language is chosen there), instead of
+  "Make one" (one what?) and a folder picker: the folder is made in Documents as FIRE Toad,
+  FIRE Toad 2 when that name belongs to something else, and a notification says where. A folder
+  picked that already holds other things gets a FIRE Toad folder inside it instead of an error.
+- **A signed download** (2026-11-12, user 001): `FIRE Toad.app` and its disk image are signed
+  with a Developer ID and notarised by Apple, each with its ticket stapled, so a Mac opens the
+  download with a double-click and no visit to System Settings, offline too. The install page,
+  both READMEs and the note in the disk image say so; the "Open Anyway" steps are gone.
+  The build uses `uv` for PyInstaller when it is installed, as it now is on the build machine.
+  The app's Info.plist now carries its version (it said 0.0.0, which Finder's Get Info showed).
+- **Jade Toad is FIRE Toad** (2026-11-12, user 001): the name says what it is for. In Chinese,
+  FIRE蛙. The app is `FIRE Toad.app` (bundle id `app.firetoad.local`), the download
+  `FIRE-Toad-<version>.dmg`, the repository `firetoad` and the live demo
+  lydiablllue.github.io/firetoad/ (the old demo address stops working; the old repository
+  address forwards). The first launch under the new name copies the settings the old one
+  remembered, so the same folder opens. Kept under the first name, because people's machines
+  already hold them: the `.jade/` folder and `.jade.lock` in a workspace, `JADE_AI_KEY`, the
+  Keychain entry a model's key is saved under, and the data guard's hook marker. The entries
+  below this one keep the name they were written under.
+- **How to open the download, where you will see it** (2026-11-08, user 001). The disk image
+  now shows the app, the Applications folder to drag it onto, and a one-page note in both
+  languages on the first launch; `docs/install.md` (and the Chinese page) walks the first launch
+  on macOS 15 and on macOS 14 and earlier, with the words each dialog uses, and says why macOS
+  asks; README and the release notes point there instead of saying it three different ways.
+- **The signed build, ready for a Developer ID** (2026-11-08, user 001): `build/build.py --sign`
+  now signs every one of the app's libraries on its own with the hardened runtime, then the
+  bundled Python framework, then the app; `--deep` had left most of them unsigned, which
+  notarisation refuses. The entitlements file did not parse (a `--` inside an XML comment), so a
+  signed build could not have succeeded at all. `--notarize` sends the app, staples it, then the
+  disk image, and stops with Apple's log when the answer is not Accepted. `--sign -` runs the
+  same path ad hoc: the app, hardened, makes a folder, builds and imports a month and reads a
+  screenshot. What is left is the Developer ID itself; the build's own help says the four steps.
+- **A new folder holds no one's data** (2026-11-08, user 001): *Make one* used to fill the
+  folder with the demo owner's accounts until the setup replaced them; it now writes only the
+  tool and a profile.json that says the folder is not set up yet, so the wizard starts on an
+  empty folder and the first data in it is yours. Before the setup, the dashboard's address
+  opens the wizard. The app no longer carries the demo's data at all.
+- **The arrow** (2026-11-08, user 001): opening the disk image shows the window most Mac
+  downloads have — the app on the left, the Applications folder on the right, an arrow between
+  them and "drag Jade Toad onto Applications" under it in both languages, the first-launch note
+  below. Finder lays it out at build time (`build/dmg_art.py` draws the picture and holds the
+  window's geometry); a layout written without Finder came out blank on macOS 26. The build
+  refuses while another disk of the same name is mounted, which is what silently broke it.
+
 ## 1.0.3 — 2026-11-08 — a panel you can read without knowing the tool
 
 Structure before features (user 001, 2026-11-08): nothing new to learn, less to know. The

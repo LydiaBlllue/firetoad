@@ -16,7 +16,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 INK, MUTED, PAGE, CARD, LINE = "#1c1c1a", "#6b6f6c", "#f9f9f7", "#fcfcfb", "#d8dcd9"
 BLUE, PURPLE, AMBER, RED = "#2a78d6", "#4a3aa7", "#c98500", "#d03b3b"
 
-# ---- 版式:三列(你 / Jade Toad / 页面)自上而下,四个阶段是横向色带 ----------------------
+# ---- 版式:三列(你 / FIRE Toad / 页面)自上而下,四个阶段是横向色带 ----------------------
 W = 1180
 GUTTER_L, LABEL_W = 20, 120          # 左侧阶段标签
 COL_X0, COL_W, COL_GAP = 170, 300, 30
@@ -25,7 +25,7 @@ ROW_GAP, PHASE_GAP, PHASE_PAD = 22, 28, 18
 FONT, LINE_H, PAD_V = 12.5, 16, 12
 
 COLS = [("you",  "你",           INK),
-        ("jr",   "Jade Toad",    PURPLE),
+        ("jr",   "FIRE Toad",    PURPLE),
         ("page", "页面",         BLUE)]
 
 # key, 标题, 副标题
@@ -52,7 +52,7 @@ NODES = [
  ("m_drop", "month",0,"you","从各银行下载本月对账单和导出,丢进 inbox/。",False),
  ("m_say",  "month",1,"you","说「update dashboards」。",False),
  ("m_run",  "month",1,"jr","一条本地命令做完:认出每份文件、按内容查重 → 解析器逐份读,对平了才写 → 商户分类 → 写数据 → 重建页面 → 归档原件。模型只看摘要。",False),
- ("m_report","month",2,"page","Monthly import → Updates 就是报告:变了什么 · 问你什么 · 注意到什么 · 替你决定了什么 · 收到哪些文件。页头一句话:数据到哪、缺什么、几项待答。",False),
+ ("m_report","month",2,"page","Updates 就是报告:变了什么 · 问你什么 · 注意到什么 · 替你决定了什么 · 收到哪些文件。页头一句话:数据到哪、缺什么、几项待答。",False),
  ("m_read", "month",2,"you","读报告;回答待确认项:新商户、没有署名的 e-Transfer、解析器读不了的文件。",False),
  ("m_file", "month",3,"jr","一句话即归档:答案写回商户表和账本的类型列,页面重建。",False),
 

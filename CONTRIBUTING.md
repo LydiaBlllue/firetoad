@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for trying Jade Toad. It is a small personal project, so the most useful thing you
+Thank you for trying FIRE Toad. It is a small personal project, so the most useful thing you
 can send is what happened when you used it.
 
 ## Reporting a problem or an idea

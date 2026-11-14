@@ -1,6 +1,6 @@
 ---
 name: local-app
-description: Open Jade Toad in the browser without Claude — start the local app (python3 app.py), which serves the built dashboard and the monthly panel (Bring · Import · Questions · Result) on 127.0.0.1 and runs the same scripts the import skills run. Use when the owner says "open the app", "start the local app", 打开本地应用, 不用 Claude 打开面板, or asks how someone without a Claude plan runs their workspace.
+description: Open FIRE Toad in the browser without Claude — start the local app (python3 app.py), which serves the built dashboard and the monthly panel (Bring · Import · Questions · Result) on 127.0.0.1 and runs the same scripts the import skills run. Use when the owner says "open the app", "start the local app", 打开本地应用, 不用 Claude 打开面板, or asks how someone without a Claude plan runs their workspace.
 ---
 
 # The local app — the second door
@@ -15,18 +15,22 @@ python3 app.py
 ```
 
 That is the whole instruction — or, packaged, a double-click: `python3 build/build.py` makes
-`dist/Jade Toad.app` (a folder with Python, the tool and the demo inside; `build/build.py` says
+`dist/FIRE Toad.app` (a folder with Python and the tool inside, no data; the build script (build/build.py, in the repository only) says
 what goes in and what never does). The packaged app asks for the workspace folder on its first
-launch — *Open a folder* or *Make one* — and remembers it in the system's application-support
+launch — *Open my folder* or *Create my folder* (made in Documents as FIRE Toad) — and remembers it in the system's application-support
 folder, never in the workspace; `--choose` asks again. On every launch it compares the folder's
 copy of the tool with its own (`app.py` `tool_state`, sync.py's rules): a folder that differs
-gets a *Refresh the copy* button on the panel, a folder whose data is a newer shape than the
+is brought up to the app's version by the packaged app itself, silently (it never touches data; run
+as `python3 app.py` it is an *Update* button on the panel), a folder whose data is a newer shape than the
 app builds is shown and **not written to** until the app is updated. Inside the app there is no
 `python3`: the app's own binary runs the core's scripts when the core calls them. It picks a free port on `127.0.0.1`, prints an address with a
 fresh token in it, opens the panel in the system browser, and exits by itself five minutes after
 the last tab is closed. `--no-browser` prints the address only; `--port N` fixes the port.
 
-**The panel is five numbered steps in the owner's language** (2026-11-07, after the owner could
+**Since 2026-11-12 the panel shows one step at a time, four views** (get the files, import,
+categorize, done — `panel.py`'s docstring and DESIGN.md 6a; the description below is the
+five-step page it replaced, and its states are still the ones `current_step` knows).
+**The panel was five numbered steps in the owner's language** (2026-11-07, after the owner could
 not tell what the first version wanted): 1 get this month's files (one row per thing, a plain
 state — still missing · in inbox · up to date — and *How do I get it?* folded under each missing
 one: the bank's own download path from `parsers/support.py`, the app page for a screenshot, a
@@ -52,20 +56,21 @@ rows with no ledger; the register's copy follows); read such a balance off a pho
 (`ocr.py`: Apple Vision on this computer, the amounts ranked by the account's `capture` line,
 offered as pills, never written until tapped; the image is kept under .jade/shots/); open the
 inbox folder; and show the last import's result. **A fresh folder gets the
-setup as screens** (step 2, 2026-11-06): while `findata/` is still the demo's, `/panel` draws the
+setup as screens** (step 2, 2026-11-06): while `findata/` is not set up (the demo's in a clone, or the blank one *Create my folder* writes:
+no data, profile.json marked `blank`), `/panel` draws the
 wizard instead — Files · Accounts · Money in and out · Goal · Day · Build — from
 `setup/scripts/wizard.py`, which drafts the screens with `propose.py` from the files dropped
 and, on *Build it*, writes `setup-answers.json` in the skill's own shape, runs the scaffold, the
 rebuild and the first import. A question skipped stays unanswered (the skill's rule); what the
 screens do not cover (anything abroad, a counterparty, the buckets, a CSV or OFX nobody could
-name) is listed on the last screen as left for the chat. **A model, by choice** (steps 3 and 4, 2026-11-06): the panel's last card is one setting —
+name) is listed on the last screen as left for the chat. **A model, by choice** (steps 3 and 4, 2026-11-06): one setting, set with `ai.py . set` (its card left the panel on 2026-11-13, until it is designed) —
 Off · With my own key (an OpenAI-compatible service, or Anthropic) · On this computer (Ollama).
 Off is the default and means not one call. On, `ai.py` in the update-dashboard scripts is asked
 at exactly one place: a merchant that merchants.json, the earlier rows, the brand and the
 starter map all miss. It sends the merchant string and the fifteen category names, nothing
 else; the answer has to be one of the fifteen or it is dropped; it becomes the question's
 *suggestion* (a dot marks it on the panel) and never the filing — Other stays until the owner
-confirms. The key lives in the macOS Keychain (service "Jade Toad"), never in the workspace;
+confirms. The key lives in the macOS Keychain (service "Jade Toad", the product's first name, kept so a key already saved is still found), never in the workspace;
 the choice in .jade/settings.json; every exchange in .jade/log/ai.jsonl; one merchant costs
 one call (.jade/ai_cache.json). The same setting from this chat:
 `python3 .claude/skills/update-dashboard/scripts/ai.py . status | set <provider> … | off | test "<merchant>"`.
@@ -86,7 +91,8 @@ panel says so and the amount is typed.
 - **It never edits the page.** The import rebuilds through `rebuild.py` as it always did; the
   browser reloads the static file.
 - Logs: the app.log file under .jade/log/ in the workspace, nothing in the repository (both are gitignored).
-- **The build carries no workspace.** `build/build.py` refuses a checkout whose `findata/` is
-  not the demo's, and bundles only what `tools/sync.py` copies plus the demo. Without `--sign`
+- **The build carries no workspace.** The build script refuses a checkout whose `findata/` is
+  not the demo's, and bundles only what `tools/sync.py` copies. Without `--sign`
   it is ad-hoc signed (this Mac runs it; another asks for System Settings → Privacy & Security → Open Anyway once); a public
-  download needs `--sign` with a Developer ID and `--notarize`.
+  download needs `--sign` with a Developer ID and `--notarize` (the build's own help lists the
+  four steps to get them); `--sign -` tests the hardened, signed path on this Mac.

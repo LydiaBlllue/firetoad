@@ -43,6 +43,7 @@ Routes (every API answer is {"ok": bool, "data" | "error": …, "took": seconds}
                                                         screenshot, ranked by the account's capture line —
                                                         candidates only; the image is kept under .jade/shots/
   POST /api/open-inbox     —                            opens the inbox folder in the file manager
+  POST /api/open-log       —                            shows the app's log in the file manager
   GET  /api/setup          wizard.state()               the setup screens, drafted from inbox/ (demo folders)
   POST /api/setup          wizard.apply(answers, write) the answers file, scaffold, rebuild, first import (a job)
   GET  /api/ai             ai.status()                  which model is set, and whether a key is stored (never the key)
@@ -100,6 +101,7 @@ MAX_BODY = 1 << 20       # a JSON body larger than this is refused
 MAX_UPLOAD = 64 << 20    # and a multipart one larger than this (a month of statements is a few MB)
 IMAGES = (".png", ".jpg", ".jpeg", ".heic", ".webp")
 
+import applog  # noqa: E402  the system log and the error an owner can copy
 log = logging.getLogger("jade.app")
 
 
@@ -134,7 +136,7 @@ class Job:
     def __init__(self, verb, write):
         self.id = secrets.token_hex(4)
         self.verb, self.write = verb, write
-        self.lines, self.result, self.error = [], None, None
+        self.lines, self.result, self.error, self.report = [], None, None, None
         self.done = threading.Event()
         self.started = time.monotonic()
         self.waiters = []
@@ -172,6 +174,8 @@ class Job:
             out["result"] = self.result
         if self.error is not None:
             out["error"] = self.error
+        if self.report is not None:
+            out["report"] = self.report     # applog.report: a code, one line, the text to copy
         return out
 
 
@@ -225,12 +229,26 @@ class App:
         job = Job(verb, write)
         self.job = job
 
+        version = (self.tool or {}).get("version")
+
         def go():
+            log.info("%s started (%s)%s", verb, job.id, "" if write else ", a look only")
             try:
-                job.finish(result=fn(job.say))
+                result = fn(job.say)
+                # a setup that ended by itself without building is a failure the owner has to be
+                # able to report: a code, and the line that says why. (An import that writes
+                # nothing is often right — nothing new, or a file to name first — and says so.)
+                if verb == "setup" and write and isinstance(result, dict) and (
+                        result.get("written") is False or result.get("imported") is False):
+                    why = next((l.strip() for l in job.lines if "✗" in l), "The run ended without writing anything.")
+                    job.report = applog.report(verb, job.id, "STOPPED", why, job.lines, version)
+                else:
+                    log.info("%s finished (%s)", verb, job.id)
+                job.finish(result=result)
             except BaseException as e:  # a core failure reaches the panel whole, never a dead page
-                log.exception("%s failed", verb)
+                log.exception("%s failed (%s)", verb, job.id)
                 job.say(f"  ✗ {type(e).__name__}: {e}", loud_line=True)
+                job.report = applog.report(verb, job.id, type(e).__name__, f"{type(e).__name__}: {e}", job.lines, version)
                 job.finish(error={"type": type(e).__name__, "text": str(e)})
             finally:
                 self.lock.release()
@@ -245,7 +263,7 @@ class App:
 
     def do_import(self, write):
         return self.start_job("import", bool(write),
-                              lambda say: verbs.public(update.run(self.root, write=bool(write), say=say, loud=say)))
+                              lambda say: verbs.public(update.run(self.root, write=bool(write), say=say, loud=say, leave_unnamed=True)))
 
     def do_undo(self):
         return self.start_job("undo", True, lambda say: verbs.public(update.undo(self.root, say=say)))
@@ -331,6 +349,17 @@ class App:
             subprocess.Popen(["xdg-open", inbox])
         return {"inbox": inbox}
 
+    def open_log(self):
+        """The app's log, shown in the file manager: a fixed command, the log's own path, no shell."""
+        p = applog.log_path()
+        if sys.platform == "darwin":
+            subprocess.Popen(["open", "-R", p] if os.path.exists(p) else ["open", os.path.dirname(p)])
+        elif sys.platform.startswith("win"):
+            os.startfile(os.path.dirname(p))  # noqa: S606  (Windows only)
+        else:
+            subprocess.Popen(["xdg-open", os.path.dirname(p)])
+        return {"log": applog.shown_path()}
+
     def do_ai(self, body):
         prov = body.get("provider") or "none"
         if prov == "none":
@@ -355,7 +384,7 @@ class App:
 
     def lang(self, q=None):
         """The panel's language: ?lang= on the request (remembered in .jade/settings.json),
-        else the remembered one, else profile.json `lang`, else English (strings.py)."""
+        else the remembered one, else profile.json `lang`, else the system's (strings.py)."""
         want = (q or {}).get("lang", [None])[0]
         sp = os.path.join(self.root, ".jade", "settings.json")
         try:
@@ -374,7 +403,8 @@ class App:
                 return prof["lang"]
         except (OSError, ValueError):
             pass
-        return "en"
+        import strings
+        return strings.system_lang()
 
     def is_demo(self):
         return wizard.is_demo(self.root)
@@ -446,7 +476,7 @@ def multipart(ctype, body):
 
 # ---------------------------------------------------------------- HTTP
 class Handler(http.server.BaseHTTPRequestHandler):
-    server_version = "JadeToad/1"
+    server_version = "FIRE-Toad/1"
     app = None  # set by serve()
 
     def log_message(self, fmt, *args):   # the access log is noise; failures are logged by the app
@@ -519,8 +549,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         try:
             if path == "/":
                 p = app.dashboard()
-                if not p:
-                    return self._send(200, panel.no_dashboard(app.base), "text/html; charset=utf-8")
+                if not p:   # nothing built yet (a folder just made): the setup is the way in
+                    return self._send(302, b"", extra=(("Location", app.base + "/panel"),))
                 return self._send(200, open(p, "rb").read())
             if path == "/panel" and app.is_demo():
                 return self._send(200, panel.render_setup(app.base, app.root, app.do_setup_state(),
@@ -613,6 +643,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 return self._json(200, True, app.do_ocr((body.get("fields") or {}).get("key"), files[0][0], files[0][1]), t0)
             elif path == "/api/open-inbox":
                 return self._json(200, True, app.open_inbox(), t0)
+            elif path == "/api/open-log":
+                return self._json(200, True, app.open_log(), t0)
             elif path == "/api/sync":
                 job, busy = app.do_sync()
             elif path == "/api/setup":
@@ -664,7 +696,7 @@ def main(argv):
     if not root:
         print("✗ no workspace here (looked upward for findata/ and dashboards/)")
         return 2
-    return serve(root, a.port, ready=lambda url, app: print(f"  Jade Toad is at {url}", flush=True))
+    return serve(root, a.port, ready=lambda url, app: print(f"  FIRE Toad is at {url}", flush=True))
 
 
 if __name__ == "__main__":

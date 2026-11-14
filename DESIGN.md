@@ -7,8 +7,8 @@
 
 ## 1. Brand and language
 
-- Title: **Jade Toad · `<owner>`**, the owner from `findata/register/profile.json`, never typed
-  into the markup. In the sidebar it is the product name, **Jade Toad**, with the owner's name in
+- Title: **FIRE Toad · `<owner>`**, the owner from `findata/register/profile.json`, never typed
+  into the markup. In the sidebar it is the product name, **FIRE Toad**, with the owner's name in
   small type beneath it.
 - Interface language: **English throughout** — labels, buttons, hints, empty states, every page.
 - Fifteen fixed spending categories in two groups, in English (FINANCE.md §3a,
@@ -73,16 +73,20 @@
     the window — a wide screen got a tall chart and text larger than the page's, and a laptop
     screen got the chart below the fold.
 - **One left sidebar** (`aside.side`, 210px, sticky) beside `main.main`, rendered from the `NAV`
-  constant. Home sits above the sections under no heading.
+  constant. Home sits above the sections under no heading. **The four sections are the four
+  stages**, in order: *Get started* (where the money is and where it went), *Set a goal* (how
+  much is needed), *Stay on track* (the monthly plan and the investments), *After FIRE* (living
+  on it). A new page goes in the stage whose question it answers.
   - **A new page is one entry in `NAV` plus one `<section data-pg="key" hidden>`**, nothing
     else; `setPage()` is driven entirely by `NAV`.
-  - **Every group is open.** No section folds away; Monthly import is listed like the others. The one
+  - **Every group is open.** No section folds away. The one
     fold is **Waiting for data**, above the Glossary: a page whose data has not arrived yet
     (`WAITS` — Income without a chequing ledger, Investing and FIRE with nothing invested) is
     listed there with what it waits for, closed by default, and returns to its section by itself
     the day the data arrives. A workspace with only a credit card is then a complete product.
-  - **The Glossary is on its own at the foot**, below Monthly import and above the version,
-    under no heading: it is a reference for reading the page.
+  - **Updates, Statements and the Glossary sit at the foot**, above the version, under no
+    heading: what each update changed, which statements are in, and a reference for reading the
+    page. None of them belongs to a stage.
   - **Dots**: `pageFlags()` hangs a 6px dot on a sidebar entry when its page has something on
     it — amber `#c98500` = look at this, red `#d03b3b` = a rule is broken or something is due.
     A new rule is wired into it.
@@ -101,20 +105,20 @@
   Statements) say so on their line. In 2.0 the two become the component library's Card and Table.
 
 <!-- LINT:PAGES pages=18 sections=4 -->
-- **The pages**: 18 pages under 4 sidebar sections, ordered the way someone starting out reads them (1.0.1). **Lint rule S4 checks this table against
+- **The pages**: 18 pages under 4 sidebar sections, **one per stage of the way to FIRE** (2026-11-13, user 001: grouped by how far along the owner is, not by topic; until then the sections were Money in & out, Plan, Investing and Monthly import). **Lint rule S4 checks this table against
   `NAV`**, so changing the navigation means changing this table too — and the page count, the
   sidebar list and the minimum width stated in `README.md`, and every path the README hands the
   reader:
   | Section | Pages |
   |---|---|
-  | — | Home (four cards, net worth in one card, net worth over time) · Accounts |
-  | Money in & out | This month · Year · Income & chequing · Subscriptions · Monthly spending |
-  | Plan | Budget · Safety net · FIRE · Drawdown & care |
-  | Investing | Portfolio · Performance · Holdings · Investment income |
-  | Monthly import | Updates · Statements |
-  | — | Glossary, at the foot of the sidebar, under the pages still waiting for their data |
+  | — | Home (four cards, net worth in one card, net worth over time). It belongs to no stage |
+  | Get started | Accounts · This month · Year · Income & chequing · Subscriptions · Monthly spending · Emergency fund |
+  | Set a goal | FIRE |
+  | Stay on track | Budget · Portfolio · Performance · Holdings · Investment income |
+  | After FIRE | Drawdown & care |
+  | — | Updates, Statements and the Glossary: records and reference for every stage, at the foot of the sidebar, under the pages still waiting for their data |
 
-  **What a page waits for** (`WAITS`): Income and Safety net a chequing statement; Portfolio,
+  **What a page waits for** (`WAITS`): Income and Emergency fund a chequing statement; Portfolio,
   Performance and Holdings a broker's holdings; Investment income a broker's activity; FIRE a FIRE
   goal; Drawdown & care a FIRE goal and something invested. A page that waits is folded under
   *Waiting for data*, saying what it waits for, and comes back by itself.
@@ -133,12 +137,12 @@
   projected, from two months on. It is not the FIRE chart, which follows the portfolio to a target.
 - **Four stat cards**, chosen by two signals, something invested and a FIRE goal (1.0.1). Invested
   with a goal: **Portfolio** (with its dry-powder share), **FIRE progress** (with the on-track
-  year), **Invested in \<month\>** (pay-yourself-first, from the broker's record), **Spent in
+  year), **Invested in \<month\>** (pay-yourself-first, from the broker's record), **Total spent in
   \<month\>** (the month's whole spending, bills & housing and everyday beneath it; today's month
   once it has a purchase, otherwise the newest one the statements reach. What is left of Everyday
   is This month's to say, 2026-11-03). Invested, no goal: Portfolio · Invested. A goal, nothing
   invested: FIRE progress. The rest fill from one list, in order, taking only a card with a
-  number: Card interest (only when a statement charged some) · Spent in \<month\> · Months covered ·
+  number: Card interest (only when a statement charged some) · Total spent in \<month\> · Months covered ·
   Kept this year · A year of subscriptions · Biggest category. So no owner sees an empty card.
 - **Net worth in one card, cut both ways at once**: one row per `role`, cash split by where it
   is — For FIRE / Set aside / Cash / Cash in \<abroad\> / Owed to you / Other assets (only for
@@ -156,7 +160,7 @@
 - **This month** — the month on the cursor, all of it: **Everyday** (the headline: the
   everyday less this month's everyday spending, no categories, a track bar with an even-pace
   marker for the current month only); three stat cards (spent, split into the parts that month has, biggest category, against a usual
-  month); **Where the paycheque went** (the plan as flows, each marked planned, and titled for the plan rather than the paycheque when it asks for more than take-home; the everyday amount fanning out into that
+  month); **Where the income went** (the plan as flows, each marked planned, and titled for the plan rather than the paycheque when it asks for more than take-home; the everyday amount fanning out into that
   month's categories — refunds a source coming in, an overspend a second source from savings, so every band is its real size and the total is Everyday's); the category
   list and the line-by-line of the chosen category.
 - **Year** — the year pills, the yearly stat cards, "What stands out" and the year by category
@@ -201,14 +205,14 @@
 
 ### Plan
 
-- **Safety net** (1.0.1): three cards — Months covered, The money, A usual month — each
+- **Emergency fund** (1.0.1): three cards — Months covered, The money, A usual month — each
   opening its sum, then where the money is and what is owed on no asset. No band, colour or
   target; money abroad only in the line under Months covered (FINANCE.md §8d).
 
 - **Budget** follows no time: the plan, no category caps. Below the split, a Funds card appears
   only when the owner has a fund: each one's set-aside amount against its goal, what the plan adds,
   and when that pace reaches the goal.
-  - **How each paycheque is split**: one stacked bar cutting take-home into the committed
+  - **How each month's income is split**: one stacked bar cutting take-home into the committed
     payments (one segment each) / Invest / Everyday / Unallocated, with one
     line per part beneath it. Take-home, Invest and Everyday are sums of `funds.json`
     `plan.flows`, derived at load; Unallocated is what nothing names and stays where the
@@ -237,7 +241,7 @@
   early it ran out), and a note that this is American history and the stretches overlap. Only
   the years of taking money out are replayed; the first day's pot is the steady path's.
 - **One name for a month's spending** (2026-11-05, the owner): **A usual month** is the average of
-  up to twelve full months, unusual ones left out — on Monthly spending, Safety net, Investment
+  up to twelve full months, unusual ones left out — on Monthly spending, Emergency fund, Investment
   income and This month's comparison. *Spent a month in <year>* (Year) is only that year's
   average and says so; the **Planning figure** is the one the FIRE target is built on.
 - **Monthly spending** (was Spending baseline): *A usual month* on top, then the planning figure against what is really spent, with a 12-month bar
@@ -320,7 +324,7 @@
   - **The two rules line up**: the sidebar wordmark and `.pghead` share `--headh:92px` and are
     both fixed-height with a bottom border, so both rules land on the same y on every page.
     Change the variable, never one side of it.
-- The top of the sidebar holds only the coin mark and **Jade Toad** with the owner's name
+- The top of the sidebar holds only the coin mark and **FIRE Toad** with the owner's name
   beneath (it clicks back to Home): flat colour, no gradients or shadows. No data date there —
   freshness belongs to Statements and the sidebar dots.
 - **A number in the page header is not repeated in the page**: no page has a Net worth card.
@@ -367,7 +371,7 @@ these jobs is deleted, not shortened.
 
 | line | job | rule |
 |---|---|---|
-| **label** | names the thing | a noun phrase of at most four words: `Net worth`, `Spent in Oct`. No verb, no sentence, no colon, no "your". |
+| **label** | names the thing | a noun phrase of at most four words: `Net worth`, `Total spent in Oct`. No verb, no sentence, no colon, no "your". |
 | **value** | answers it | one number with its unit; `$838 of $1,300` is still one number. |
 | **status** | the one fact the value cannot show | optional; at most seven words, one fact, no `·`, never a restatement of the label, never where a number came from. `On track for May 2039`, `Both transfers landed`. |
 
@@ -460,6 +464,42 @@ What breaks is **how much fits on one screen**.
 
 - **No footer disclaimer**, and no long redundant explanatory sentences.
 - Explanatory text appears only where it is needed, within one line, in small grey type.
+
+## 6a. Screens the owner acts on
+
+The panel, the setup and the first-launch dialogs are instructions, and 5b and 6 hold there too.
+Eight rules (2026-11-12, user 001: the setup's first screen ran a question, its answer, a list
+and an instruction together in two paragraphs, and could not be read):
+
+1. **One thing to do per screen, and the heading says it**, verb first: `Bring your last 1–3
+   months`, not `Last month's files`.
+2. **At most one sentence under the heading**, fifteen words or twenty-five Chinese characters:
+   the one thing needed to do it.
+3. **Three or more things are a list**, one per line — never strung on commas or semicolons.
+4. **A question and its answer are apart.** The question is a small heading; the answer is two
+   columns, the item left and the value right, a total on its own last row. Never an answer
+   inside a sentence.
+5. **Numbers are written as numbers**: `5–10 min`, not `five to ten minutes`.
+6. **No reasons, no background, no word of the tool's own** on screen: draft, import record,
+   copy of the tool, register, schema. What the owner cannot use is cut.
+7. **A message appears only when the owner can do something about it**, and is always the same
+   three parts: what happened, in one sentence; the one thing to do, as one button; what will
+   not happen (`Your data stays as it is`), in one sentence.
+8. **Blocks of text stand apart**: at most two sentences in a block, space between blocks, small
+   grey type for explanation and never under 12px.
+
+What a run printed is never the screen: it is folded under *Details* and opened only when the run
+did not finish. **Nothing a screen says may move what is already on it**: a run that
+did not finish is said in a dialog over the page, never in a box pushed into it. The dialog has
+two kinds (`applog.py`): *the program stopped here* (amber), with the program's own sentence for
+why — something the owner can usually put right — and *that did not finish* (red), when it broke.
+Both carry: one line that the files are still there, *Try again*, *Copy report*, *Close*, then
+the error code, the run and the log as rows (`FT-SETUP-KeyError`, `3fa9c1d2`), *Show log*, and
+the run's lines under *Details*. One fact a line; nothing joined with a dot, here or on any
+other screen. A count says what it counts or what is to be done with it: `3 merchants and 2 transfers to
+categorize` where there is room (the setup's last screen), `5 to categorize` in the dashboard's
+header, which keeps its one short line — never `5 to confirm`. **These screens never change the
+dashboard's layout**: the error box, the lists and the tables above are the panel's and the setup's.
 
 ## 7. Principles for presenting data
 

@@ -199,7 +199,7 @@ def build(a, today):
 
     out[layout.rel("profile.json")] = json.dumps({
         "note": "Who this workspace belongs to. The FIRST thing to change when you make it yours: "
-                "the name appears in the browser tab and under the Jade Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. Jade Toad itself is the product, not a setting.",
+                "the name appears in the browser tab and under the FIRE Toad wordmark in the sidebar, and it is read from here so it is never typed into the HTML. FIRE Toad itself is the product, not a setting.",
         "schema": 18,
         "owner": a["owner"],
         # A question skipped is null, never a default that reads as a fact (2026-10-28, first
@@ -291,6 +291,15 @@ def build(a, today):
     name_to_key = {a["name"]: a["key"] for a in accounts}
     for d in documents:
         d["covers"] = [name_to_key.get(c, c) for c in d["covers"]]
+    # An account the owner said is not theirs (the answers' `notOwned`, by number) leaves the
+    # register here, after the documents are made: its row may be the one that carried the
+    # broker's export, and the export still has to arrive for the accounts that are theirs.
+    others = {x.get("id") for x in a.get("notOwned") or []}
+    if others:
+        gone = {x["key"] for x in accounts if x.get("id") in others}
+        accounts[:] = [x for x in accounts if x.get("id") not in others]
+        for d in documents:
+            d["covers"] = [c for c in d["covers"] if c not in gone]
     # Accounts abroad arrive as screenshots of an app, not as statements. One document covers them
     # all, so preflight has something to name a screenshot by (2026-09-12: without it, the first
     # import after setup stopped on two screenshots it could not place).
@@ -324,6 +333,7 @@ def build(a, today):
                      "and `asof` are COPIES of the source files; change the source, not this. "
                      "`key` is the stable join — an account with no number has id \"—\".",
         "accounts": accounts,
+        **({"notOwned": a["notOwned"]} if a.get("notOwned") else {}),   # held there, not the owner's: in no figure
         "gaps": a.get("gaps", []),
         "documents": documents,
         "archive_note": "Processed originals live in archive/, named <date processed>_<original>.",
@@ -367,7 +377,7 @@ def build(a, today):
                  **({"note": c["note"]} if c.get("note") else {})}
                 for c in (plan.get("committed") or [])
             ] + ([
-                {"key": "rent-after-fire", "kind": "committed", "name": "Rent",
+                {"key": "rent-after-fire", "kind": "committed", "name": plan.get("laterName") or "Rent",
                  "amount": int(plan.get("imputedRent", 0)), "starts": "fire", "afterFire": "keep",
                  "note": "Not paid today. Part of the planning figure from the day FIRE begins."}
             ] if int(plan.get("imputedRent", 0) or 0) else []) + [
@@ -519,8 +529,11 @@ def clear_demo(root):
             gone.append(f)
     if gone:
         print(f"  − demo statements cleared from archive/: {len(gone)} file(s)")
-    shutil.copyfile(OWNER_STUB, os.path.join(root, "OWNER.md"))
-    print("  → OWNER.md: an empty one, yours to fill (the demo owner's notes are gone)")
+    owner = os.path.join(root, "OWNER.md")
+    had_notes = os.path.exists(owner) and open(owner, "rb").read() != open(OWNER_STUB, "rb").read()
+    shutil.copyfile(OWNER_STUB, owner)
+    # a folder the app made never had the demo owner's notes in it (2026-11-08)
+    print("  → OWNER.md: an empty one, yours to fill" + (" (the demo owner's notes are gone)" if had_notes else ""))
 
 
 def keep_private(root, today):

@@ -157,8 +157,8 @@ the drafts. When you hand over, name what is still Not set and that saying the n
 
 ### 1 · Who this belongs to
 
-- Their name. It is shown under the Jade Toad wordmark in the sidebar and in the browser tab;
-  Jade Toad is the product and is not a setting.
+- Their name. It is shown under the FIRE Toad wordmark in the sidebar and in the browser tab;
+  FIRE Toad is the product and is not a setting.
 - Roughly what year they were born. It is used for the retirement-age arithmetic, nothing else.
 
 ### 2 · The accounts

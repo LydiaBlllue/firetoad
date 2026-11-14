@@ -335,10 +335,10 @@ def propose(root, inbox):
         plan["takeHome"] = round(per * 2)
         plan["takeHomeNote"] = f"Payroll of {money(per)}, twice a month."
         src("plan.takeHome", f"{len(pay_amounts)} payroll deposit(s) of {money(per)} on {accounts[payroll_key]['inst']} {accounts[payroll_key]['name']} — assumed twice a month")
-        questions.append({"id": "pay", "q": f"Your payroll deposit is {money(per)}. Paid twice a month — take-home {money(per * 2)} a month?",
+        questions.append({"id": "pay", "q": f"Your payroll deposit is {money(per)}. Paid twice a month — income {money(per * 2)} a month?",
                           "suggest": plan["takeHome"]})
     else:
-        questions.append({"id": "pay", "q": "No payroll deposit in these statements. What is your take-home pay a month?"})
+        questions.append({"id": "pay", "q": "No payroll deposit in these statements. What is your income a month?"})
     if activities:
         dep = collections.defaultdict(list)
         for r in activities[1]:
@@ -409,7 +409,7 @@ def propose(root, inbox):
     # --- the rest, which no file carries
     holder = holders.most_common(1)[0][0] if holders else None
     questions.insert(0, {"id": "owner", "q": (f"Your statements say {holder}. " if holder else "") +
-                                             "What name should show under Jade Toad?",
+                                             "What name should show under FIRE Toad?",
                          "suggest": holder.title() if holder else None})
     questions.insert(1, {"id": "born", "q": "Roughly what year were you born? (Only the retirement-age arithmetic uses it.)"})
     questions.insert(2, {"id": "accounts", "q": f"Is the accounts table right? Change a name, a kind, what an account is for, "

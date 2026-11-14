@@ -1,4 +1,4 @@
-# How Jade Toad works
+# How FIRE Toad works
 
 The detail behind the [README](../README.md).
 
@@ -7,22 +7,22 @@ The detail behind the [README](../README.md).
 | Section | Page | What it answers |
 |---|---|---|
 | — | Home | Where you stand, and what you are worth |
-| — | Accounts | Every place the money sits |
-| Money in & out | This month | How much is still free to spend, and where the money went |
+| Get started | Accounts | Every place the money sits |
+| | This month | How much is still free to spend, and where the money went |
 | | Year | How the year went, by category and month by month |
 | | Income & chequing | What came in, by source, how much of it you kept, and every row in chequing |
 | | Subscriptions | What repeats, what it costs a year, what is due next |
 | | Monthly spending | A usual month, and the figure your plan is built on |
-| Plan | Budget | What each paycheque is for, and what the funds hold |
-| | Safety net | How many months the money you can reach today would last without a paycheque |
-| | FIRE | How far the portfolio is from the target, and when it gets there |
-| | Drawdown & care | Whether the money lasts, care included, and in how many real stretches of history it would have |
-| Investing | Portfolio | What is invested, by currency, by kind of asset and by bucket |
+| | Emergency fund | How many months the money you can reach today would last without income |
+| Set a goal | FIRE | How far the portfolio is from the target, and when it gets there |
+| Stay on track | Budget | What each month's income is for, and what the funds hold |
+| | Portfolio | What is invested, by currency, by kind of asset and by bucket |
 | | Performance | How it did against one benchmark fund bought on the same days |
 | | Holdings | Every position, by role or by account |
 | | Investment income | What the portfolio paid you before you sold anything, and which holding pays when |
-| Monthly import | Updates | What each update changed |
-| | Statements | Which statement arrived which month, and what is missing |
+| After FIRE | Drawdown & care | Whether the money lasts, care included, and in how many real stretches of history it would have |
+| — | Updates | What each update changed |
+| — | Statements | Which statement arrived which month, and what is missing |
 | — | Glossary | Every finance term, and every word the page coined |
 
 ## Who it is for
@@ -48,7 +48,7 @@ The detail behind the [README](../README.md).
    to you what a program cannot decide — a merchant it has not seen, a statement no parser could
    read — and you get a short report: what changed, what was noticed, what was decided without
    asking, what needs your word.
-3. **Open the page.** Monthly import → Statements shows which month got which file, so a gap is
+3. **Open the page.** Statements shows which month got which file, so a gap is
    visible at a glance.
 
 For Emma the monthly drop is five files: three BMO PDFs (chequing, savings, MasterCard) and two
@@ -140,7 +140,7 @@ the templates and the governing documents into it and touches nothing that is yo
 tool's data shape moves ahead of your folder, `tools/migrate.py <workspace>` brings the folder
 up one step at a time.
 
-The page is 17 pages in 5 sidebar groups —
-Home · Accounts · Spending · Income · Investing · Plan · Monthly import · Glossary
+The page is 18 pages in 4 sidebar groups —
+Home · Get started · Set a goal · Stay on track · After FIRE · Updates · Statements · Glossary
 — desktop only, at least 800px wide.
 </details>

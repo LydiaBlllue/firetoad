@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jade Toad · {{W_TITLE}}</title>
+<title>FIRE Toad: {{W_TITLE}}</title>
 <style>
 /* The setup wizard: the setup skill's interview as screens, in the dashboard's tokens
    (templates/dashboards/finance_dashboard.html :root). Shown instead of the monthly panel while
@@ -15,13 +15,26 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;font-size:14px;line-height:1.5;padding:28px 16px 64px}
 .wrap{max-width:760px;margin:0 auto}
-/* a wizard reads one screen at a time, so one column; on a desktop the accounts screen — the long
-   one — lays its account cards two abreast */
-@media (min-width:1000px){
-  .acc-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
-  .acc-grid .row{border-top:1px solid var(--border)}
-  .acc-grid .row:nth-child(-n+2){border-top:0}
-}
+/* the accounts screen is one table: an account a row, its use already chosen */
+table.acc{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 4px}
+table.acc th{text-align:left;font-size:11.5px;font-weight:600;color:var(--muted);padding:4px 10px 4px 0;border-bottom:1px solid var(--border)}
+table.acc td{padding:7px 10px 7px 0;border-bottom:1px solid var(--border);vertical-align:top}
+table.acc th:nth-child(2),table.acc td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.acc td small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+table.acc td input[type=text]{width:100%;max-width:240px;font-weight:600;border-color:transparent;background:transparent;padding:2px 4px;margin-left:-4px}
+table.acc td input[type=text]:hover,table.acc td input[type=text]:focus{border-color:var(--border);background:#fff}
+table.acc td.num input.amt{width:110px;max-width:110px;font-weight:400;border-color:var(--border);background:#fff;text-align:right}
+table.acc select{min-width:150px}
+table.acc.money td.num{white-space:nowrap}
+table.acc.money td.num input.amt{font-weight:400}
+table.acc.money td input[type=text]{font-weight:400}
+table.acc.money tr.sum td{border-bottom:0;border-top:1px solid var(--ink);padding-top:10px}
+table.acc.money tr.sum td.num b{font-size:16px}
+table.acc.money small.warn{color:var(--warn)}
+table.acc.money small.bad{color:var(--bad)}
+table.acc .fixed{color:var(--ink-2)}
+.kv.wide{grid-template-columns:auto 1fr;max-width:none}
+.kv.wide span:nth-child(even){text-align:left}
 .brand{display:flex;align-items:baseline;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:14px}
 .brand h1{font-size:19px;font-weight:700;letter-spacing:-.3px}
 .brand small{color:var(--muted);font-size:12px}
@@ -65,6 +78,32 @@ pre.log{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f3
 ul.files{list-style:none;font-size:12.5px;margin-top:8px}
 ul.files li{padding:3px 0;border-top:1px solid var(--border)}
 ul.files li:first-child{border-top:0}
+ul.bring{list-style:none;font-size:13px;margin:8px 0 2px}
+ul.bring li{padding:2px 0}
+ul.bring li::before{content:"\2022";color:var(--muted);display:inline-block;width:14px}
+.qa{margin-top:14px;font-size:12px;color:var(--muted)}
+.qa b{display:block;font-weight:600;color:var(--ink-2);margin-bottom:3px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:2px 16px;max-width:340px}
+.kv span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums}
+.kv .sum{color:var(--ink);border-top:1px solid var(--border);padding-top:3px;margin-top:2px}
+.kv.big{font-size:13px;color:var(--ink);max-width:420px;gap:5px 16px;margin:8px 0 4px}
+.kv.big span:nth-child(odd){color:var(--ink-2)}
+details.more{margin-top:10px;font-size:12px;color:var(--muted)}
+details.more summary{cursor:pointer}
+.ready{font-size:14px;font-weight:600;margin-top:12px}
+.ready small{display:block;font-weight:400;font-size:13px;color:var(--ink-2);margin-top:2px}
+/* a run that stopped is said in a dialog over the page: nothing on the page moves (DESIGN.md 6a) */
+.dlg-back{position:fixed;inset:0;background:rgba(11,11,11,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dlg{background:var(--surface);border-radius:12px;padding:18px 20px;max-width:480px;width:100%;max-height:90vh;overflow:auto;border-top:4px solid var(--bad)}
+.dlg.stopped{border-top-color:var(--warn)}
+.dlg h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.dlg p{font-size:13px;color:var(--ink-2);margin-bottom:4px}
+.dlg .dlg-act{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 12px}
+.dlg .errkv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12px;color:var(--muted);align-items:baseline}
+.dlg .errkv code{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink-2);word-break:break-all;user-select:all}
+.dlg details{margin-top:10px;font-size:12px;color:var(--muted)}
+.dlg details summary{cursor:pointer}
+.dlg pre{font:11.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;background:#f3f2ee;border-radius:8px;padding:8px 10px;margin-top:6px;white-space:pre-wrap;word-break:break-word;max-height:220px;overflow:auto}
 .later{font-size:12px;color:var(--muted);margin-top:10px;border-top:1px solid var(--border);padding-top:8px}
 .ver{font-size:10.5px;color:var(--muted);letter-spacing:.04em;margin-top:18px;text-align:center}
 table.cm{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
@@ -75,8 +114,8 @@ table.cm input{width:100%}
 </style>
 </head>
 <body data-base="{{BASE}}">
-<div class="wrap">
-  <div class="brand"><h1>Jade Toad</h1><small>{{W_TITLE}}</small><a href="{{BASE}}/panel?lang={{OTHER_LANG}}">{{W_LANG}}</a></div>
+<div class="wrap" data-page="setup">
+  <div class="brand"><h1>FIRE Toad</h1><small>{{W_TITLE}}</small><a href="{{BASE}}/panel?lang={{OTHER_LANG}}">{{W_LANG}}</a></div>
   {{BUSY}}
   <div class="steps" id="steps"></div>
   <p class="lead" id="lead"></p>
@@ -114,14 +153,61 @@ table.cm input{width:100%}
     if (next) { var n = el('button', 'btn primary', esc(nextLabel || W.w_next)); n.type = 'button'; n.onclick = next; a.appendChild(n); }
     card.appendChild(a);
   }
+  // what is waiting, by what it is: "3 merchants and 2 transfers", never a bare number
+  function waiting(items){
+    var n = {merchant: 0, transfer: 0, other: 0};
+    items.forEach(function(d){ n[d.kind === 'merchant' ? 'merchant' : (d.kind === 'transfer' ? 'transfer' : 'other')]++; });
+    var parts = [];
+    function say(s, k){ if (k) parts.push(fmt(s, {n: k}).replace('(s)', k === 1 ? '' : 's')); }
+    say(W.w_n_merchant, n.merchant); say(W.w_n_transfer, n.transfer); say(W.w_n_other, n.other);
+    return parts.join(W.w_and);
+  }
+  // the plan against the pay, said where the numbers are typed (the checker's D13, on screen)
+  function planGap(){
+    var pay = +A.money.takeHome || 0, ask = (+A.money.invest || 0) + (+A.money.everyday || 0);
+    A.money.committed.forEach(function(c){ if (c.name && c.amount) ask += +c.amount || 0; });
+    return pay && ask > pay ? fmt(W.w_over, {ask: money(ask), pay: money(pay), gap: money(ask - pay)}) : '';
+  }
+  // A run that stopped, in a dialog over the page so nothing on the page moves. Two kinds
+  // (applog.report): the program stopped on purpose and its own sentence says why (amber: the
+  // owner can usually put it right and try again), or it broke (red: try again, or copy the
+  // report). One fact a line: what happened, then the code, the run and the log as rows.
+  function errDialog(rep, L, lines, retry){
+    var old = document.getElementById('errdlg'); if (old) old.remove();
+    var back = el('div', 'dlg-back'); back.id = 'errdlg';
+    var box = el('div', 'dlg' + (rep.kind === 'stopped' ? ' stopped' : ''));
+    box.setAttribute('role', 'alertdialog'); box.setAttribute('aria-modal', 'true');
+    function close(){ back.remove(); document.removeEventListener('keydown', onKey); }
+    function onKey(e){ if (e.key === 'Escape') close(); }
+    box.appendChild(el('h3', null, esc(rep.kind === 'stopped' ? L.stopped_h : L.h)));
+    if (rep.kind === 'stopped') box.appendChild(el('p', null, esc(rep.message)));
+    box.appendChild(el('p', null, esc(L.safe)));
+    var act = el('div', 'dlg-act');
+    if (retry) { var r = el('button', 'btn primary', esc(L.try_)); r.type = 'button'; r.onclick = function(){ close(); retry(); }; act.appendChild(r); }
+    var c = el('button', 'btn', esc(L.copy)); c.type = 'button';
+    c.onclick = function(){
+      function ok(){ c.textContent = L.copied; }
+      function fallback(){ var ta = document.createElement('textarea'); ta.value = rep.text; box.appendChild(ta); ta.select(); try { document.execCommand('copy'); ok(); } catch (e) {} box.removeChild(ta); }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(rep.text).then(ok, fallback); else fallback();
+    };
+    act.appendChild(c);
+    var x = el('button', 'btn', esc(L.close)); x.type = 'button'; x.onclick = close; act.appendChild(x);
+    box.appendChild(act);
+    var kv = el('div', 'errkv');
+    [[L.code, rep.code], [L.run, rep.id]].forEach(function(r){ kv.appendChild(el('span', null, esc(r[0]))); kv.appendChild(el('code', null, esc(r[1]))); });
+    kv.appendChild(el('span', null, esc(L.log)));
+    var lg = el('span'); lg.appendChild(el('code', null, esc(rep.log))); lg.appendChild(document.createTextNode(' '));
+    var show = el('button', 'lnk', esc(L.show)); show.type = 'button'; show.onclick = function(){ api('POST', '/api/open-log', {}).catch(function(){}); };
+    lg.appendChild(show); kv.appendChild(lg);
+    box.appendChild(kv);
+    if (lines && lines.length) { var d = el('details', null, '<summary>' + esc(L.details) + '</summary>'); d.appendChild(el('pre', null, esc(lines.join('\n')))); box.appendChild(d); }
+    back.appendChild(box); document.body.appendChild(back);
+    document.addEventListener('keydown', onKey);
+    (retry ? act.firstChild : c).focus();
+  }
   function field(card, label, input){ var f = el('div', 'field'); f.appendChild(el('label', null, label)); f.appendChild(input); card.appendChild(f); return input; }
   function text(val, ph, cls){ var i = el('input', cls || null); i.type = 'text'; i.value = val == null ? '' : val; if (ph) i.placeholder = ph; return i; }
   // the draft's suggestions come with numbers; the sentences are ours, in the owner's language
-  function payAsk(m){
-    if (m.takeHome.suggest) return fmt(W.w_take_sug, {per: money(m.takeHome.suggest / 2), sum: money(m.takeHome.suggest)});
-    return W.w_take_none;
-  }
-
   function draw(){
     steps();
     var sc = $('screen'); sc.innerHTML = '';
@@ -139,15 +225,23 @@ table.cm input{width:100%}
         need.appendChild(el('div', 'hint', esc(W.w_need_then)));
         card.appendChild(need);
       }
-      card.appendChild(el('p', 'hint', esc(W.w_how_long)));
       card.appendChild(el('p', 'q', esc(W.w_files_q)));
-      var drop = el('div', 'drop', '<b>' + esc(W.w_drop) + '</b><span><label class="lnk">' + esc(W.w_or_choose) + '<input type="file" multiple hidden id="pick"></label></span><small>' + esc(INBOX) + '</small>');
+      var bring = el('ul', 'bring');
+      [W.w_files_1, W.w_files_2].forEach(function(x){ bring.appendChild(el('li', null, esc(x))); });
+      card.appendChild(bring);
+      var drop = el('div', 'drop', '<b>' + esc(W.w_drop) + '</b><span><label class="lnk">' + esc(W.w_or_choose) + '<input type="file" multiple hidden id="pick"></label></span>');
       card.appendChild(drop);
       var ul = el('ul', 'files');
       (S.files || []).forEach(function(f){ ul.appendChild(el('li', null, esc(f))); });
       if (!(S.files || []).length) ul.appendChild(el('li', 'hint', esc(W.w_none_yet)));
       card.appendChild(ul);
       var msg = el('div', 'hint'); card.appendChild(msg);
+      var qa = el('div', 'qa', '<b>' + esc(W.w_how_long) + '</b>');
+      var kv = el('div', 'kv');
+      [[W.w_long_1, W.w_long_1v], [W.w_long_2, W.w_long_2v], [W.w_long_3, W.w_long_3v]].forEach(function(r){
+        kv.appendChild(el('span', null, esc(r[0]))); kv.appendChild(el('span', null, esc(r[1]))); });
+      kv.appendChild(el('span', 'sum', esc(W.w_long_sum))); kv.appendChild(el('span', 'sum', esc(W.w_long_sumv)));
+      qa.appendChild(kv);
       function upload(files){
         if (!files || !files.length) return;
         var fd = new FormData();
@@ -167,6 +261,7 @@ table.cm input{width:100%}
       drop.querySelector('#pick').onchange = function(ev){ upload(ev.target.files); ev.target.value = ''; };
       if (scr) card.appendChild(el('p', 'ok', esc(fmt(W.w_drafted, {n: scr.accounts.rows.length}))));
       nav(card, false, scr && ok ? function(){ step = 1; draw(); } : null);
+      card.appendChild(qa);
     } else if (step === 1) {
       card.appendChild(el('h2', null, esc(W.w_acc_h)));
       var own = field(card, esc(W.w_name_l) + (scr.owner.suggest ? esc(fmt(W.w_name_says, {who: scr.owner.suggest})) : ''), text(A.owner || scr.owner.suggest || '', W.w_name_ph));
@@ -177,34 +272,48 @@ table.cm input{width:100%}
         var inp = field(card, esc(fmt(W.w_ofx_q, {file: o.file})), text(A.ofx[o.file] || '', W.w_ofx_ph));
         inp.oninput = function(){ A.ofx[o.file] = inp.value; };
       });
+      // one table, one account a row, every answer already filled in: the owner changes only
+      // what is wrong (2026-11-12, user 001: eighteen accounts each showed four choices, as if
+      // each had to be answered). What the choices mean is a question of its own, under the table.
       card.appendChild(el('p', 'q', esc(W.w_acc_q)));
-      var grid = el('div', 'acc-grid'); card.appendChild(grid);
+      var tb = el('table', 'acc'); card.appendChild(tb);
+      var hd = el('tr'); [W.w_col_acc, W.w_col_bal, W.w_col_for].forEach(function(x){ hd.appendChild(el('th', null, esc(x))); }); tb.appendChild(hd);
+      var canDisown = false;
       scr.accounts.rows.forEach(function(r){
-        var row = el('div', 'row');
-        var rw = el('div', 'rw');
-        var sel = (A.accounts[r.i] || {}).role || r.role;
-        rw.appendChild(el('b', null, esc(r.inst === 'OFX' ? ((A.ofx && Object.values(A.ofx)[0]) || '?') : r.inst) + ' · ' + esc(r.kind) + (r.id && r.id !== '—' ? ' ' + esc(r.id) : '')));
-        rw.appendChild(el('span', 'wh', (r.balance != null ? money(r.balance) + ' · ' + esc(r.asof) : esc(W.w_no_balance)) + (r.doc ? ' · ' + esc(r.doc) : '')));
-        var nm = text((A.accounts[r.i] || {}).name || r.name, W.w_call_it); nm.style.marginTop = '5px';
+        var tr = el('tr'); tb.appendChild(tr);
+        var c1 = el('td'), c2 = el('td', 'num'), c3 = el('td');
+        var nm = text((A.accounts[r.i] || {}).name || r.name, W.w_call_it);
         nm.oninput = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).name = nm.value; };
-        rw.appendChild(nm);
+        c1.appendChild(nm);
+        c1.appendChild(el('small', null, esc(r.inst === 'OFX' ? ((A.ofx && Object.values(A.ofx)[0]) || '?') : r.inst) + ' ' + esc(W['kind_' + r.kind] || r.kind) + (r.id && r.id !== '—' ? ' ' + esc(r.id) : '')));
         if (r.needsBalance) {
-          var bl = text((A.accounts[r.i] || {}).balance || '', W.w_bal_ph, 'amt'); bl.inputMode = 'decimal'; bl.style.marginTop = '5px';
+          var bl = text((A.accounts[r.i] || {}).balance || '', W.w_bal_ph, 'amt'); bl.inputMode = 'decimal';
           bl.oninput = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).balance = bl.value; };
-          rw.appendChild(bl);
+          c2.appendChild(bl); c2.appendChild(el('small', null, esc(W.w_no_balance)));
+        } else {
+          c2.appendChild(el('span', null, money(r.balance)));
+          c2.appendChild(el('small', null, esc(r.asof || '')));
         }
-        if (!r.liability) {
-          var pills = el('div', 'pills');
-          scr.accounts.roles.forEach(function(ro){
-            var p = el('button', 'pl' + (ro.key === sel ? ' sel' : ''), esc(W['role_' + ro.key] || ro.label) + '<small>' + esc(W['role_' + ro.key + '_why'] || ro.why) + '</small>'); p.type = 'button';
-            p.onclick = function(){ pills.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); p.classList.add('sel'); (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).role = ro.key; };
-            pills.appendChild(p);
-          });
-          rw.appendChild(pills);
-        } else rw.appendChild(el('span', 'wh', esc(W.w_debt)));
-        row.appendChild(rw); grid.appendChild(row);
+        if (r.liability) c3.appendChild(el('span', 'fixed', esc(W.w_debt)));
+        else {
+          var sel = el('select'), cur = (A.accounts[r.i] || {}).role || r.role;
+          var opts = scr.accounts.roles.map(function(ro){ return ro.key; });
+          if (r.canDisown) { opts.push('not-mine'); canDisown = true; }
+          opts.forEach(function(k){ var o = el('option', null, esc(W['role_' + k] || k)); o.value = k; if (k === cur) o.selected = true; sel.appendChild(o); });
+          sel.onchange = function(){ (A.accounts[r.i] = A.accounts[r.i] || {i: r.i}).role = sel.value; };
+          c3.appendChild(sel);
+        }
+        tr.appendChild(c1); tr.appendChild(c2); tr.appendChild(c3);
       });
-      card.appendChild(el('p', 'q', esc(W.w_missing) + esc(W.w_missing_tail)));
+      var qa2 = el('div', 'qa', '<b>' + esc(W.w_roles_h) + '</b>');
+      var kv2 = el('div', 'kv wide');
+      scr.accounts.roles.map(function(ro){ return ro.key; }).concat(canDisown ? ['not-mine'] : []).forEach(function(k){
+        kv2.appendChild(el('span', null, esc(W['role_' + k] || k))); kv2.appendChild(el('span', null, esc(W['role_' + k + '_why'] || '')));
+      });
+      if (scr.accounts.rows.some(function(r){ return r.liability; })) { kv2.appendChild(el('span', null, esc(W.w_debt))); kv2.appendChild(el('span', null, esc(W.role_debt_why))); }
+      qa2.appendChild(kv2); card.appendChild(qa2);
+      card.appendChild(el('p', 'q', '<b>' + esc(W.w_missing) + '</b>'));
+      card.appendChild(el('p', 'hint', esc(W.w_missing_tail)));
       var addBox = el('div'); card.appendChild(addBox);
       function drawAdded(){
         addBox.innerHTML = '';
@@ -213,7 +322,7 @@ table.cm input{width:100%}
           [['inst', W.w_inst_ph], ['name', W.w_call_it], ['balance', W.w_balance_ph]].forEach(function(f){
             var td = el('td'); var i = text(x[f[0]] || '', f[1]); i.oninput = function(){ x[f[0]] = i.value; }; td.appendChild(i); tr.appendChild(td);
           });
-          var td = el('td'); var s = el('select'); scr.accounts.kinds.forEach(function(k2){ var o = el('option', null, esc(k2)); o.value = k2; if (k2 === (x.kind || 'Savings')) o.selected = true; s.appendChild(o); });
+          var td = el('td'); var s = el('select'); scr.accounts.kinds.forEach(function(k2){ var o = el('option', null, esc(W['kind_' + k2] || k2)); o.value = k2; if (k2 === (x.kind || 'Savings')) o.selected = true; s.appendChild(o); });
           s.onchange = function(){ x.kind = s.value; }; td.appendChild(s); tr.appendChild(td);
           var td2 = el('td'); var rm = el('button', 'btn sm', '×'); rm.type = 'button'; rm.onclick = function(){ A.added.splice(k, 1); drawAdded(); }; td2.appendChild(rm); tr.appendChild(td2);
           addBox.appendChild(t);
@@ -228,89 +337,181 @@ table.cm input{width:100%}
         step = 2; draw();
       });
     } else if (step === 2) {
+      // Three amounts, each filled in from the files, and what is left for everyday worked out:
+      // the owner does no sums (2026-11-12, user 001 — take-home, investing and everyday were
+      // three boxes that had to add up, with a warning when they did not). Nothing here is one
+      // owner's case: what starts after work stops is asked on the next screen, of those who
+      // want that tracked.
       var m = scr.money;
       card.appendChild(el('h2', null, esc(W.w_money_h)));
       card.appendChild(el('p', 'q', esc(W.w_money_q)));
-      var th = field(card, esc(payAsk(m)), text(A.money.takeHome != null ? A.money.takeHome : (m.takeHome.suggest || ''), W.w_amonth, 'amt'));
-      var inv = field(card, esc(W.w_invest), text(A.money.invest != null ? A.money.invest : (m.invest.suggest || ''), W.w_amonth, 'amt'));
-      var evLabel = m.everyday.suggest ? fmt(W.w_everyday_sug, {sug: money(m.everyday.suggest)}) : W.w_everyday;
-      var ev = field(card, esc(evLabel), text(A.money.everyday != null ? A.money.everyday : (m.everyday.suggest || ''), W.w_amonth, 'amt'));
-      [th, inv, ev].forEach(function(i){ i.inputMode = 'decimal'; });
-      card.appendChild(el('p', 'q', esc(W.w_committed)));
-      var cbox = el('div'); card.appendChild(cbox);
-      function drawCommitted(){
-        cbox.innerHTML = '';
-        A.money.committed.forEach(function(c, k){
-          var t = el('table', 'cm'); var tr = el('tr'); t.appendChild(tr);
-          var td1 = el('td'); var n = text(c.name || '', W.w_committed_ph); n.oninput = function(){ c.name = n.value; }; td1.appendChild(n); tr.appendChild(td1);
-          var td2 = el('td'); var am = text(c.amount || '', W.w_amonth, 'amt'); am.inputMode = 'decimal'; am.oninput = function(){ c.amount = am.value; }; td2.appendChild(am); tr.appendChild(td2);
-          var td3 = el('td'); var s = el('select'); [['keep', W.w_keep], ['drop', W.w_ends]].forEach(function(o){ var op = el('option', null, esc(o[1])); op.value = o[0]; if ((c.afterFire === false ? 'drop' : 'keep') === o[0]) op.selected = true; s.appendChild(op); });
-          s.onchange = function(){ c.afterFire = s.value === 'keep'; }; td3.appendChild(s); tr.appendChild(td3);
-          var td4 = el('td'); var rm = el('button', 'btn sm', '×'); rm.type = 'button'; rm.onclick = function(){ A.money.committed.splice(k, 1); drawCommitted(); }; td4.appendChild(rm); tr.appendChild(td4);
-          cbox.appendChild(t);
-        });
-        var add = el('button', 'btn sm', esc(W.w_add_one)); add.type = 'button'; add.onclick = function(){ A.money.committed.push({afterFire: true}); drawCommitted(); };
-        cbox.appendChild(add);
+      var tb = el('table', 'acc money'); card.appendChild(tb);
+      function mrow(label, hint, input){
+        var tr = el('tr'), c1 = el('td'), c2 = el('td', 'num');
+        c1.appendChild(el('span', null, esc(label))); if (hint) c1.appendChild(el('small', null, esc(hint)));
+        c2.appendChild(input); tr.appendChild(c1); tr.appendChild(c2); tb.appendChild(tr); return tr;
       }
-      drawCommitted();
-      var rent = field(card, esc(W.w_rent), text(A.money.imputedRent || '', W.w_amonth, 'amt')); rent.inputMode = 'decimal';
-      var pb = field(card, esc(W.w_planbase), text(A.money.planBase != null ? A.money.planBase : (m.planBase.suggest || ''), W.w_amonth, 'amt')); pb.inputMode = 'decimal';
+      function amt(v){ var x = text(v == null ? '' : v, W.w_amonth, 'amt'); x.inputMode = 'decimal'; return x; }
+      var th = amt(A.money.takeHome != null ? A.money.takeHome : (m.takeHome.suggest || ''));
+      mrow(W.w_take, m.takeHome.suggest ? fmt(W.w_take_hint, {per: money(m.takeHome.suggest / 2)}) : W.w_take_nohint, th);
+      var fixedAt = tb.rows.length;
+      function drawFixed(){
+        while (tb.rows.length > fixedAt && tb.rows[fixedAt].getAttribute('data-fixed')) tb.deleteRow(fixedAt);
+        var before = tb.rows[fixedAt] || null;
+        A.money.committed.forEach(function(c, n){
+          var tr = el('tr'); tr.setAttribute('data-fixed', '1');
+          var c1 = el('td'), c2 = el('td', 'num');
+          var nm = text(c.name || '', W.w_committed_ph); nm.oninput = function(){ c.name = nm.value; calc(); }; c1.appendChild(nm);
+          var am = amt(c.amount || ''); am.oninput = function(){ c.amount = am.value; calc(); }; c2.appendChild(am);
+          var rm = el('button', 'lnk', '×'); rm.type = 'button'; rm.setAttribute('aria-label', 'remove'); rm.style.marginLeft = '6px';
+          rm.onclick = function(){ A.money.committed.splice(n, 1); drawFixed(); calc(); }; c2.appendChild(rm);
+          tr.appendChild(c1); tr.appendChild(c2); tb.insertBefore(tr, before);
+        });
+        var tr = el('tr'); tr.setAttribute('data-fixed', '1');
+        var c1 = el('td'), c2 = el('td', 'num');
+        c1.appendChild(el('span', null, esc(W.w_committed)));
+        if (!A.money.committed.length) c1.appendChild(el('small', null, esc(W.w_none_found)));
+        var add = el('button', 'btn sm', esc(W.w_add_one)); add.type = 'button';
+        add.onclick = function(){ A.money.committed.push({afterFire: true}); drawFixed(); calc(); }; c2.appendChild(add);
+        tr.appendChild(c1); tr.appendChild(c2); tb.insertBefore(tr, before);
+      }
+      // What is kept and its share of the pay: the same two lines whether the owner moves money
+      // out first or spends first and keeps the rest, so nobody is asked which they are
+      // (2026-11-13, user 001). Everyday spending is what the cards spent; the transfer to the
+      // broker is a row only when the files show one, and it is a part of what is kept.
+      var ev = amt(A.money.everyday != null ? A.money.everyday : (m.everyday.suggest || ''));
+      mrow(W.w_spend, m.everyday.suggest ? fmt(W.w_left_cards, {sug: whole(m.everyday.suggest)}) : W.w_none_found, ev);
+      var keptVal = el('b'), keptHint = el('small'), rateVal = el('span');
+      var keptTr = el('tr', 'sum'), k1 = el('td'), k2 = el('td', 'num');
+      k1.appendChild(el('span', null, '<b>' + esc(W.w_kept) + '</b>')); k1.appendChild(keptHint);
+      k2.appendChild(keptVal); keptTr.appendChild(k1); keptTr.appendChild(k2); tb.appendChild(keptTr);
+      var rateTr = el('tr'), r1 = el('td'), r2 = el('td', 'num');
+      r1.appendChild(el('span', null, esc(W.w_rate))); r2.appendChild(rateVal);
+      rateTr.appendChild(r1); rateTr.appendChild(r2); tb.appendChild(rateTr);
+      var hasInv = !!(m.invest.suggest || +A.money.invest);
+      var inv = amt(A.money.invest != null ? A.money.invest : (m.invest.suggest || '')), invHint = null;
+      if (hasInv) invHint = mrow(W.w_invest_of, W.w_from_files, inv).querySelector('small');
+      drawFixed();
+      function num(v){ var x = parseFloat(String(v == null ? '' : v).replace(/[$,\s]/g, '')); return isNaN(x) ? 0 : x; }
+      function calc(){
+        var pay = num(th.value), fixed = 0;
+        A.money.committed.forEach(function(c){ if (c.name && c.amount) fixed += num(c.amount); });
+        var kept = pay - fixed - num(ev.value);
+        keptHint.className = ''; keptHint.textContent = '';
+        if (pay && String(ev.value).trim()) {
+          keptVal.textContent = (kept < 0 ? '-$' : '$') + Math.abs(Math.round(kept)).toLocaleString();
+          rateVal.textContent = Math.round(kept / pay * 100) + '%';
+          if (kept < 0) { keptHint.textContent = W.w_kept_neg; keptHint.className = 'bad'; }
+        } else { keptVal.textContent = '—'; rateVal.textContent = '—'; }
+        if (invHint) {
+          var over = pay && num(inv.value) > Math.max(kept, 0);
+          invHint.textContent = over ? W.w_invest_over : W.w_from_files; invHint.className = over ? 'warn' : '';
+        }
+      }
+      function whole(v){ return '$' + Math.round(+v).toLocaleString(); }
+      [th, inv, ev].forEach(function(x){ x.addEventListener('input', calc); }); calc();
       nav(card, true, function(){
-        A.money.takeHome = th.value; A.money.invest = inv.value; A.money.everyday = ev.value; A.money.imputedRent = rent.value; A.money.planBase = pb.value;
+        A.money.takeHome = th.value; A.money.invest = hasInv ? inv.value : ''; A.money.everyday = ev.value;
+        // the planning figure starts from what the cards really spent when the files say, else from the everyday amount
+        if (A.money.planBase == null) A.money.planBase = m.planBase.suggest || A.money.everyday;
         step = 3; draw();
       });
     } else if (step === 3) {
+      // One plain question — no "retiring early", which the arithmetic never defines: the target
+      // is spending x 12 x 25 and the day is when investments reach it (2026-11-12). What only
+      // matters to someone who says yes is asked only then.
       card.appendChild(el('h2', null, esc(W.w_goal_h)));
       card.appendChild(el('p', 'q', esc(W.w_goal_q)));
       var pills = el('div', 'pills');
-      [['yes', W.w_yes], ['no', W.w_no], ['', W.w_skip]].forEach(function(o){
-        var p = el('button', 'pl' + (A.goal === o[0] ? ' sel' : ''), esc(o[1])); p.type = 'button';
-        p.onclick = function(){ pills.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); p.classList.add('sel'); A.goal = o[0]; };
+      var extra = el('div');
+      function drawExtra(){
+        extra.innerHTML = '';
+        if (A.goal !== 'yes') { extra.appendChild(el('p', 'hint', esc(W.w_goal_hint))); return; }
+        extra.appendChild(el('p', 'hint', esc(W.w_goal_means)));
+        var qa = el('div', 'qa', '<b>' + esc(W.w_goal_more) + '</b>');
+        qa.appendChild(el('p', 'hint', esc(W.w_goal_blank)));
+        var tb = el('table', 'acc money');
+        var r1 = el('tr'), a1 = el('td'), a2 = el('td', 'num');
+        a1.appendChild(el('span', null, esc(W.w_rent))); a1.appendChild(el('small', null, esc(W.w_rent_eg)));
+        var rent = text(A.money.imputedRent || '', W.w_amonth, 'amt'); rent.inputMode = 'decimal'; rent.oninput = function(){ A.money.imputedRent = rent.value; };
+        a2.appendChild(rent); r1.appendChild(a1); r1.appendChild(a2); tb.appendChild(r1);
+        if (!A.money.pensions.length) A.money.pensions = [{name: 'CPP'}, {name: 'OAS'}];
+        var r0 = el('tr'), b0 = el('td'); b0.colSpan = 2; b0.appendChild(el('small', null, esc(W.w_pens_q))); r0.appendChild(b0); tb.appendChild(r0);
+        A.money.pensions.forEach(function(p){
+          var tr = el('tr'), c1 = el('td'), c2 = el('td', 'num');
+          c1.appendChild(el('span', null, esc(p.name)));
+          var mo = text(p.monthly || '', W.w_amonth, 'amt'); mo.inputMode = 'decimal'; mo.oninput = function(){ p.monthly = mo.value; };
+          var fr = text(p.from || '', W.w_from_age, 'amt'); fr.inputMode = 'numeric'; fr.style.marginLeft = '6px'; fr.oninput = function(){ p.from = fr.value; };
+          c2.appendChild(mo); c2.appendChild(fr); tr.appendChild(c1); tr.appendChild(c2); tb.appendChild(tr);
+        });
+        qa.appendChild(tb); extra.appendChild(qa);
+      }
+      [['yes', W.w_yes], ['', W.w_skip]].forEach(function(o){
+        var on = (A.goal === 'yes') === (o[0] === 'yes');
+        var p = el('button', 'pl' + (on ? ' sel' : ''), esc(o[1])); p.type = 'button';
+        p.onclick = function(){ pills.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); p.classList.add('sel'); A.goal = o[0]; drawExtra(); };
         pills.appendChild(p);
       });
-      card.appendChild(pills);
-      card.appendChild(el('p', 'hint', esc(W.w_goal_hint)));
-      card.appendChild(el('p', 'q', esc(W.w_pens_q)));
-      var pbox = el('div'); card.appendChild(pbox);
-      if (!A.money.pensions.length) A.money.pensions = [{name: 'CPP'}, {name: 'OAS'}];
-      A.money.pensions.forEach(function(p){
-        var t = el('table', 'cm'); var tr = el('tr'); t.appendChild(tr);
-        tr.appendChild(el('td', null, esc(p.name)));
-        var td = el('td'); var mo = text(p.monthly || '', W.w_amonth, 'amt'); mo.inputMode = 'decimal'; mo.oninput = function(){ p.monthly = mo.value; }; td.appendChild(mo); tr.appendChild(td);
-        var td2 = el('td'); var fr = text(p.from || '', W.w_from_age, 'amt'); fr.inputMode = 'numeric'; fr.oninput = function(){ p.from = fr.value; }; td2.appendChild(fr); tr.appendChild(td2);
-        pbox.appendChild(t);
+      card.appendChild(pills); card.appendChild(extra); drawExtra();
+      nav(card, true, function(){
+        if (A.goal !== 'yes') { A.money.imputedRent = ''; A.money.pensions = []; }
+        step = 4; draw();
       });
-      nav(card, true, function(){ step = 4; draw(); });
     } else if (step === 4) {
       card.appendChild(el('h2', null, esc(W.w_day_h)));
-      card.appendChild(el('p', 'q', esc(W.w_day_q) + ' ' + esc(scr.day.closes.length ? fmt(W.w_day_closes, {days: scr.day.closes.join(', ')}) : W.w_day_default)));
-      var d = field(card, esc(W.w_day_l), text(A.importDay || scr.day.suggest, '', 'amt')); d.inputMode = 'numeric';
+      // One fact a line (2026-11-13, user 001: "the 5, 5, 20, 23, 23, 23, 19, 19" left her asking
+      // where the 24 came from): the last day a statement closes, then the day after it, filled in.
+      card.appendChild(el('p', 'q', esc(W.w_day_q)));
+      var dt = el('table', 'acc money'); card.appendChild(dt);
+      var last = scr.day.closes.length ? Math.max.apply(null, scr.day.closes) : 0;
+      if (last) {
+        var lr = el('tr'), l1 = el('td'), l2 = el('td', 'num');
+        l1.appendChild(el('span', null, esc(W.w_day_last))); l2.textContent = fmt(W.w_day_nth, {d: last});
+        lr.appendChild(l1); lr.appendChild(l2); dt.appendChild(lr);
+      }
+      var dr = el('tr'), d1 = el('td'), d2 = el('td', 'num');
+      d1.appendChild(el('span', null, esc(W.w_day_l))); d1.appendChild(el('small', null, esc(last ? W.w_day_after : W.w_day_default)));
+      var d = text(A.importDay || scr.day.suggest, '', 'amt'); d.inputMode = 'numeric'; d2.appendChild(d);
+      dr.appendChild(d1); dr.appendChild(d2); dt.appendChild(dr);
       nav(card, true, function(){ A.importDay = d.value; step = 5; draw(); });
     } else if (step === 5) {
       card.appendChild(el('h2', null, esc(W.w_build_h)));
       card.appendChild(el('p', 'q', esc(W.w_build_q)));
       var added = A.added.filter(function(x){ return x.inst && x.name; }).length;
-      var sum = el('ul', 'files');
-      sum.appendChild(el('li', null, '<b>' + esc(A.owner) + '</b>' + (A.born ? esc(fmt(W.w_born_is, {y: A.born})) : '')));
-      sum.appendChild(el('li', null, esc(fmt(W.w_sum_acc, {n: scr.accounts.rows.length})) + (added ? esc(fmt(W.w_sum_added, {n: added})) : '')));
-      sum.appendChild(el('li', null, esc(fmt(W.w_sum_money, {a: A.money.takeHome || W.w_not_set, b: A.money.invest || W.w_not_set, c: A.money.everyday || W.w_not_set, n: A.money.committed.filter(function(c){ return c.name && c.amount; }).length}))));
-      sum.appendChild(el('li', null, esc(fmt(W.w_sum_goal, {g: A.goal === 'yes' ? W.w_yes : (A.goal === 'no' ? W.w_no : W.w_skipped), d: A.importDay || scr.day.suggest}))));
+      var sum = el('div', 'kv big');
+      function line(k, v){ sum.appendChild(el('span', null, esc(k))); sum.appendChild(el('span', null, esc(v == null || v === '' ? W.w_not_set : v))); }
+      var fixed = A.money.committed.filter(function(c){ return c.name && c.amount; });
+      line(W.w_sum_name, A.owner);
+      line(W.w_sum_born, A.born);
+      line(W.w_sum_accounts, String(scr.accounts.rows.length + added));
+      function whole(v){ return v ? '$' + Math.round(+v).toLocaleString() : ''; }
+      line(W.w_sum_take, whole(A.money.takeHome));
+      line(W.w_sum_invest, whole(A.money.invest));
+      line(W.w_sum_every, whole(A.money.everyday));
+      line(W.w_sum_fixed, String(fixed.length));
+      line(W.w_sum_fire, A.goal === 'yes' ? W.w_yes : (A.goal === 'no' ? W.w_no : W.w_skipped));
+      line(W.w_sum_day, String(A.importDay || scr.day.suggest));
       card.appendChild(sum);
+      var over = planGap(); if (over) card.appendChild(el('p', 'busy', esc(over)));
       if (scr.later && scr.later.length) {
         var lt = el('div', 'later', '<b>' + esc(W.w_later) + '</b>');
         scr.later.forEach(function(x){
           var key = 'later_' + x.id.split(':')[0];
           var line = W[key] ? W[key] + (x.id.indexOf(':') > 0 ? ' ' + x.id.split(':').slice(1).join(':') : '') : x.q;
-          lt.appendChild(el('div', null, '· ' + esc(line)));
+          lt.appendChild(el('div', null, '\u2022 ' + esc(line)));
         });
         card.appendChild(lt);
       }
-      var log = el('pre', 'log'); log.style.display = 'none'; card.appendChild(log);
       var hint = el('p', 'hint', esc(W.w_build_hint)); card.appendChild(hint);
+      // what the run printed is for whoever has to find out why it stopped, not for the owner:
+      // folded, and opened only when it did not finish (2026-11-12, user 001)
+      var more = el('details', 'more', '<summary>' + esc(W.w_details) + '</summary>'); more.style.display = 'none';
+      var log = el('pre', 'log'); more.appendChild(log); card.appendChild(more);
       var a = el('div', 'act'); var b = el('button', 'btn', esc(W.w_back)); b.type = 'button'; b.onclick = function(){ step = 4; draw(); }; a.appendChild(b);
       var go = el('button', 'btn primary', esc(W.w_build_it)); go.type = 'button'; a.appendChild(go); card.appendChild(a);
+      var DL = {h: W.w_not_finished, stopped_h: W.w_err_stopped_h, safe: W.w_err_safe, try_: W.w_err_try, copy: W.w_err_copy, copied: W.w_err_copied, close: W.w_err_close, code: W.w_err_code, run: W.w_err_run, log: W.w_err_log, show: W.w_err_show, details: W.w_err_details};
       go.onclick = function(){
-        go.disabled = true; b.disabled = true; hint.textContent = W.w_building; log.style.display = 'block'; log.textContent = '';
+        go.disabled = true; b.disabled = true; hint.textContent = W.w_building; log.textContent = '';
         var answers = {owner: A.owner, born: A.born, importDay: A.importDay || scr.day.suggest,
                        accounts: Object.keys(A.accounts).map(function(k){ return A.accounts[k]; }).filter(Boolean),
                        added: A.added.filter(function(x){ return x.inst && x.name; }),
@@ -325,10 +526,34 @@ table.cm input{width:100%}
           es.addEventListener('done', function(ev){
             es.close(); var j = {}; try { j = JSON.parse(ev.data); } catch (e) {}
             var res = j.result || {};
-            if (j.error || !res.written) { hint.textContent = W.w_not_finished; go.disabled = false; b.disabled = false; return; }
-            hint.innerHTML = '<span class="ok">' + esc(W.w_built) + '</span>';
-            var open = el('a', 'btn primary', esc(W.w_open_dash)); open.href = base + '/'; open.target = '_blank'; a.appendChild(open);
-            var pan = el('a', 'btn', esc(W.w_panel)); pan.href = base + '/panel'; a.appendChild(pan);
+            if (j.error || !res.written) {
+              hint.textContent = W.w_not_finished; go.disabled = false; b.disabled = false;
+              if (j.report) errDialog(j.report, DL, j.lines, function(){ go.click(); });
+              return;
+            }
+            if (res.imported === false) {
+              // the folder is set up but its first import stopped: never "your page is ready" over
+              // a page with none of the files in it. The files are still there; the monthly
+              // import is where they are imported from now on.
+              hint.textContent = W.w_not_finished; go.style.display = 'none'; b.style.display = 'none';
+              if (j.report) errDialog(j.report, DL, j.lines, null);
+              var pan0 = el('a', 'btn primary', esc(W.w_panel)); pan0.href = base + '/panel'; a.appendChild(pan0);
+              return;
+            }
+            // built: say so, then the one next thing — sort what the import could not file, when
+            // there is any, before the page; else the page (2026-11-12: the setup used to end on
+            // the dashboard with 27 answers waiting and nothing saying what they were)
+            hint.textContent = ''; go.style.display = 'none'; b.style.display = 'none';
+            var done = el('div', 'ready ok', '\u2713 ' + esc(W.w_built)); card.insertBefore(done, a);
+            api('GET', '/api/questions').then(function(q){
+              var items = (q.ok && q.data && q.data.items) || [], what = waiting(items);
+              var open = el('a', 'btn' + (what ? '' : ' primary'), esc(W.w_open_dash)); open.href = base + '/'; open.target = '_blank';
+              var pan = el('a', 'btn' + (what ? ' primary' : ''), esc(what ? W.w_sort_go : W.w_panel)); pan.href = base + '/panel' + (what ? '#v3' : '');
+              // this screen IS /panel: a link to /panel#v3 only moves the fragment and nothing reloads (2026-11-13)
+              pan.onclick = function(ev){ ev.preventDefault(); location.hash = what ? 'v3' : ''; location.reload(); };
+              if (what) { done.appendChild(el('small', null, esc(fmt(W.w_sort_n, {what: what})))); a.appendChild(pan); a.appendChild(open); }
+              else { a.appendChild(open); a.appendChild(pan); }
+            });
           });
         }).catch(function(e){ hint.textContent = String(e); go.disabled = false; b.disabled = false; });
       };

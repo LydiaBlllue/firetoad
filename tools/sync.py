@@ -53,6 +53,7 @@ SYNCED = [
     "docs/pipeline.svg",
     "docs/hero.png",
     "docs/banks.md",      # the banks page, written from parsers/support.py (S9)
+    "docs/install.md",    # README links it; the Chinese one is in docs/zh
     "docs/logo.svg",
     "docs/zh",            # the Chinese guide is the tool's, like README; screens/ stays the demo's
     ".gitignore",         # not for git: check_design's S4 reads it to skip files an owner writes
@@ -117,6 +118,56 @@ def differs(a, b):
         return bool(cmp.left_only or cmp.right_only or cmp.diff_files) or \
             any(differs(os.path.join(a, d), os.path.join(b, d)) for d in cmp.common_dirs)
     return not (os.path.exists(b) and filecmp.cmp(a, b, shallow=False))
+
+
+OWN_LINES = "# Your own data from here on"     # scaffold.py keep_private writes the block under it
+
+
+def seam_text(rel, src, dst):
+    """The two files with a seam, as the sync would write them, or None for any other file.
+    FINANCE.md: the tool's prose around the workspace's own figures table. .gitignore: the tool's
+    lines, then the block the setup added to keep the owner's data out of a remote — a sync used
+    to copy the tool's file over it and drop that block, and the app, comparing whole files,
+    said a folder it had just set up "differs" (2026-11-12)."""
+    if not os.path.exists(dst):
+        return None
+    if rel == "FINANCE.md":
+        tool_text = open(src, encoding="utf-8").read()
+        mine = figures_block(open(dst, encoding="utf-8").read())
+        theirs = figures_block(tool_text)
+        return tool_text.replace(theirs, mine) if (mine and theirs) else tool_text
+    if rel == ".gitignore":
+        tool_lines = open(src, encoding="utf-8").read().splitlines()
+        cut = next((i for i, l in enumerate(tool_lines) if l.startswith(OWN_LINES)), None)
+        if cut is not None:      # the tool's side is itself a set-up folder (python3 app.py inside one)
+            tool_lines = tool_lines[:cut]
+            while tool_lines and not tool_lines[-1].strip():
+                tool_lines.pop()
+        mine = open(dst, encoding="utf-8").read().splitlines()
+        at = next((i for i, l in enumerate(mine) if l.startswith(OWN_LINES)), None)
+        if at is None:
+            return "\n".join(tool_lines) + "\n"
+        own = mine[at:]
+        taken = {"# " + l.strip() for l in own if l.strip() and not l.startswith("#")}
+        return "\n".join([l for l in tool_lines if l.strip() not in taken] + [""] + own).lstrip("\n") + "\n"
+    return None
+
+
+def pending(ws):
+    """What a sync would change in this workspace, without changing it: the app's question
+    "is the folder's copy the app's?" asked with the sync's own rules, seams included."""
+    out = []
+    for rel in SYNCED:
+        src, dst = os.path.join(TOOL, rel), os.path.join(ws, rel)
+        if not os.path.exists(src):
+            continue
+        new_text = seam_text(rel, src, dst)
+        if new_text is not None:
+            if new_text != open(dst, encoding="utf-8").read():
+                out.append(rel)
+        elif differs(src, dst):
+            out.append(rel)
+    return out
 
 
 def figures_block(text):
@@ -186,12 +237,8 @@ def main(argv):
         src, dst = os.path.join(TOOL, rel), os.path.join(ws, rel)
         if not os.path.exists(src):
             print(f"  ⚠ the tool has no {rel}"); continue
-        if rel == "FINANCE.md" and os.path.exists(dst):
-            # the seam: the tool's prose around the workspace's own figures table
-            tool_text = open(src, encoding="utf-8").read()
-            mine = figures_block(open(dst, encoding="utf-8").read())
-            theirs = figures_block(tool_text)
-            new_text = tool_text.replace(theirs, mine) if (mine and theirs) else tool_text
+        new_text = seam_text(rel, src, dst)
+        if new_text is not None:
             if new_text != open(dst, encoding="utf-8").read():
                 changed.append(rel)
                 if not check:

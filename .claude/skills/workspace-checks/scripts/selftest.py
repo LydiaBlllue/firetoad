@@ -82,11 +82,11 @@ def rules_seen(out):
 def m_readme_path(r):
     edit(r, "README.md", lambda s: s.replace("(docs/how-it-works.md)", "(docs/how-it-works_MOVED.md)"))
 def m_design_pages(r):
-    # The Monthly import row's first page swapped for one that does not exist, whatever the row lists.
-    edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Monthly import \| )[^·|]+·", r"\1Insights ·", s, count=1))
+    # The Stay on track row's first page swapped for one that does not exist, whatever the row lists.
+    edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Stay on track \| )[^·|]+·", r"\1Insights ·", s, count=1))
 def m_hand_card(r):
     # a stat card written by hand beside StatCard: the copy that drifts
-    edit(r, main_dash(r), lambda s: s.replace('StatCard("Spent in "+viewYear, numx(fmt(spent), [], "After refunds."))',
+    edit(r, main_dash(r), lambda s: s.replace('StatCard("Total spent in "+viewYear, numx(fmt(spent), [], "After refunds."))',
          "'<div class=\"card\"><div class=\"lab\">Spent</div><div class=\"big num\">'+fmt(spent)+'</div></div>'", 1))
 def m_nav_orphan(r):
     edit(r, main_dash(r),
@@ -150,7 +150,7 @@ def m_nav_marker_gone(r):
 def m_readme_sidebar(r):
     # the "·" list under the marker is what a reader is shown; it has to match the real sidebar
     edit(r, "README.md",
-         lambda s: s.replace(" · Plan · Investing · ", " · Plan · Investingg · ", 1))
+         lambda s: s.replace(" · Set a goal · Stay on track · ", " · Set a goal · Stay on trackk · ", 1))
 def m_figures_end_gone(r):
     edit(r, "FINANCE.md", lambda s: s.replace("<!-- LINT:FIGURES:END -->", "", 1))
 
@@ -1342,8 +1342,14 @@ def card_only_setup_check(root, base):
     if json.load(open(layout.path(ws, "profile.json"), encoding="utf-8")).get("born") is not None:
         say.append("a skipped birth year was written as a number")
     waiting = [d for d in json.load(open(layout.path(ws, "decisions.json"), encoding="utf-8"))["decisions"] if d.get("kind") == "merchant"]
-    if not waiting or not all(d.get("match") for d in waiting):
-        say.append("the first import's merchants are not waiting to be confirmed by name")
+    # a chain the starter map knows is filed and not asked (2026-11-12), so nothing may be waiting
+    # here; what does wait is asked by the merchant's name, and no purchase of a known chain is Other
+    if not all(d.get("match") for d in waiting):
+        say.append("a merchant of the first import is waiting without its name")
+    import csv as _csv
+    rows = list(_csv.DictReader(open(layout.path(ws, "spending.csv"), encoding="utf-8")))
+    if not rows or all(r.get("category") == "Other" for r in rows):
+        say.append("the first import filed every purchase as Other: the starter map was not used")
     if say:
         return ["  ✗ card-only setup: " + "; ".join(say)]
     return [f"  ✓ card-only setup, end to end: two statements, the questions skipped, draft → scaffold → import clean, {len(waiting)} merchants waiting as one list"]
@@ -1375,8 +1381,8 @@ def starter_check(root, base):
         got.append((cat, how))
     asked = {d["what"].split(",")[0]: d["default"] for d in plan.decisions}
     want = [("Dining", "starter"), ("Dining", "starter"), ("Other", "new"), ("Grocery", "hit")]
-    if got == want and asked == {"TIM HORTONS OTTAWA": "Dining", "UBER* EATS": "Dining", "LIGHTHOUSE PUBLICATION": "Other"} and not bad:
-        return [f"  ✓ starter map: {len(pats)} chains, none suggesting Subscription; a known chain filed as suggested and still asked, the workspace's own entry first, a stranger Other"]
+    if got == want and asked == {"LIGHTHOUSE PUBLICATION": "Other"} and len(plan.judged) == 2 and not bad:
+        return [f"  ✓ starter map: {len(pats)} chains, none suggesting Subscription; a known chain filed as suggested, said and not asked, the workspace's own entry first, only a stranger asked"]
     return [f"  ✗ starter map: got {got}, asked {asked}" + (f"; patterns outside the seven categories or Subscription: {bad}" if bad else "")]
 
 
@@ -2441,7 +2447,7 @@ def local_app_check(root, base):
         st, body = req("GET", tok + "/panel")
         # a demo folder (this staged copy) gets the setup wizard on /panel; an owner's gets the panel
         # a demo folder (this staged copy) gets the setup wizard on /panel; an owner's gets the five steps
-        if st != 200 or not any(x in body for x in (b'id="step4"', b"make this folder yours")):
+        if st != 200 or not any(x in body for x in (b'id="step4"', b'data-page="setup"')):
             bad.append(f"GET /panel answered {st}")
     finally:
         proc.kill(); proc.wait()
@@ -2463,9 +2469,12 @@ def local_app_setup_check(root, base):
     card statements uploaded, the screens drafted, the answers posted the way the wizard posts
     them (a name, the everyday figure confirmed, everything else skipped), the workspace built and
     the first month imported — and findata/ identical to the same answers applied through
-    wizard.py on the command line. The wizard shows instead of the panel while the folder is the
-    demo's, and the panel once it is not."""
-    import io, uuid, urllib.request, urllib.error
+    wizard.py on the command line. The wizard shows instead of the panel while the folder is not
+    set up, and the panel once it is. The app's door starts where a new owner starts, in a folder
+    *Create my folder* made (2026-11-08: the tool and a blank profile.json, no demo data); the command
+    line's starts from the demo, as a clone does — so the two starting points have to end the same,
+    and the demo owner may not survive into the made folder anywhere."""
+    import contextlib, importlib.util, io, uuid, urllib.request, urllib.error
     if not demo_like(root):
         return []
     srv = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "local-app", "scripts", "server.py"))
@@ -2485,7 +2494,16 @@ def local_app_setup_check(root, base):
                 os.remove(os.path.join(ws, "inbox", f))
         copies[door] = (ws, two)
     bad = []
-    ws, two = copies["api"]
+    _, two = copies["api"]
+    ws = os.path.join(base, "wiz_made")
+    spec = importlib.util.spec_from_file_location("jade_app", os.path.join(copies["api"][0], "app.py"))
+    jade_app = importlib.util.module_from_spec(spec); spec.loader.exec_module(jade_app)
+    with contextlib.redirect_stdout(io.StringIO()):
+        jade_app.make_workspace(ws)
+    made = sorted(os.path.relpath(os.path.join(d, f), ws) for d, _, fs in os.walk(os.path.join(ws, "findata")) for f in fs)
+    if made != [os.path.join("findata", "register", "profile.json")]:
+        bad.append("Create my folder left more than a profile.json in findata/: " + ", ".join(made[:4]))
+    demo_owner = json.load(open(layout.path(copies["api"][0], "profile.json"), encoding="utf-8")).get("owner") or ""
     proc = subprocess.Popen([sys.executable, srv, ".", "--port", "0"], cwd=ws, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     answers = None
     try:
@@ -2518,8 +2536,11 @@ def local_app_setup_check(root, base):
             out.write(f"--{b}--\r\n".encode())
             return out.getvalue(), {"Content-Type": f"multipart/form-data; boundary={b}"}
         st, body = req("GET", tok + "/panel")
-        if st != 200 or b"make this folder yours" not in body or b'id="step3"' in body:
-            bad.append(f"a demo folder did not get the wizard page ({st})")
+        if st != 200 or b'data-page="setup"' not in body or b'id="step3"' in body:
+            bad.append(f"a made folder did not get the wizard page ({st})")
+        st, body = req("GET", tok + "/")   # nothing built yet: the dashboard's address is the wizard
+        if st != 200 or b'data-page="setup"' not in body:
+            bad.append(f"the dashboard's address before the setup did not lead to the wizard ({st})")
         for mm in two:
             d, h = form({"file": (os.path.basename(mm["file"]), open(mm["file"], "rb").read())})
             st, body = req("POST", tok + "/api/inbox", d, h)
@@ -2548,7 +2569,7 @@ def local_app_setup_check(root, base):
         if st != 202 or not res.get("written") or not (res.get("import") or {}).get("written"):
             bad.append(f"POST /api/setup: {st}, " + " | ".join(job.get("lines", [])[-2:])[:200])
         st, body = req("GET", tok + "/panel")
-        if st != 200 or b'id="step3"' not in body or b"make this folder yours" in body:
+        if st != 200 or b'id="step3"' not in body or b'data-page="setup"' in body:
             bad.append("after the build the panel did not take over from the wizard")
         pre_digest = findata_digest(ws)   # the two doors are compared as built, before any answer
         # step 4 as the owner works it (2026-11-07): one card answered is written at once, the
@@ -2611,6 +2632,13 @@ def local_app_setup_check(root, base):
         bad.append(f"profile.json after the wizard: {prof.get('owner')!r}, born {prof.get('born')!r}, demo {prof.get('demo')!r}")
     out = run("check_data.py", ["."], ws)
     bad += [l.strip()[:120] for l in out.splitlines() if l.strip().startswith("✗")][:2]
+    if demo_owner:
+        # findata/ and the page; archive/ holds the uploaded originals, whoever's name is printed on them
+        held = [os.path.relpath(os.path.join(d, f), ws) for top in ("findata", "dashboards")
+                for d, _, fs in os.walk(os.path.join(ws, top)) for f in fs
+                if demo_owner.encode() in open(os.path.join(d, f), "rb").read()]
+        if held:
+            bad.append("the demo owner reached the made folder: " + ", ".join(held[:3]))
     # the same answers through the verb on the command line
     ws2, two2 = copies["cli"]
     for mm in two2:
@@ -2625,7 +2653,7 @@ def local_app_setup_check(root, base):
         bad.append("the wizard's two doors left different files: " + ", ".join(diff[:6]))
     if bad:
         return ["  ✗ local app setup: " + x for x in bad[:6]]
-    return [f"  ✓ local app setup: two statements uploaded, the screens drafted, the answers posted, the workspace built and the first "
+    return [f"  ✓ local app setup: a folder made by Create my folder (a profile.json and no data), its dashboard's address the wizard; two statements uploaded, the screens drafted, the answers posted, the workspace built and the first "
             f"month imported through the app; findata/ identical to wizard.py on the command line ({len(a)} files); the panel took over; "
             f"the questions answered in the browser, saved and closed, and a filed merchant refiled"]
 
@@ -2747,13 +2775,15 @@ def merchant_key_of(note):
 
 
 def findata_digest(ws):
-    """findata/ and archive/ as hashes, but for the seconds an import records and the prices a run
-    may or may not have fetched — what two doors have to agree on."""
+    """findata/ and archive/ as hashes, but for the seconds an import records, the prices and the
+    historical returns a run may or may not have fetched (prices.py; a made folder has none until
+    its first import, a clone carries the repository's), and an empty placeholder — what two
+    doors have to agree on."""
     out = {}
     for top in ("findata", "archive"):
         for dp, _, fs in os.walk(os.path.join(ws, top)):
             for f in fs:
-                if f == "prices.json":
+                if f in ("prices.json", "returns.json", ".gitkeep"):
                     continue
                 data = open(os.path.join(dp, f), "rb").read()
                 if f == "imports.json":

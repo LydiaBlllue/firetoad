@@ -6,7 +6,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Jade Toad · demo</title>
+<title>FIRE Toad · demo</title>
 <script>
   if (matchMedia('(min-width: 800px)').matches) location.replace('dashboard.html' + location.hash);
 </script>
@@ -41,7 +41,7 @@
 </head>
 <body>
 <main>
-  <header><img src="logo.svg" alt=""><h1>Jade Toad <span id="cn"></span></h1></header>
+  <header><img src="logo.svg" alt=""><h1>FIRE Toad <span id="cn"></span></h1></header>
   <p class="tag" id="tag"></p>
 
   <div class="card">
@@ -60,30 +60,30 @@
 <script>
   const zh = /^zh/i.test(navigator.language || '');
   const T = zh ? {
-    lang: 'zh-CN', cn: '· 玉蟾',
+    lang: 'zh-CN', cn: '· FIRE蛙',
     tag: '你的钱，一页看完，一组检查器保证数字是真的。',
     notice: '这是一位虚构用户的完整页面。它为电脑屏幕设计，在手机上先看下面的截图；完整的 demo 请在电脑上打开。',
     send: '发到电脑上打开', copied: '链接已复制，在电脑浏览器里粘贴打开。', open: '仍然在手机上打开',
-    repo: 'GitHub 上的 Jade Toad →',
+    repo: 'GitHub 上的 FIRE Toad →',
     shots: [
       ['home', 'Home', '净值放在一张卡里，每一行是这部分钱的用途，色条按多容易拿到上色。'],
       ['spending', 'Spending', '这个月按分类拆开；一年按月看；订阅，以及接下来 30 天要扣的。'],
       ['plan', 'Plan', '离 FIRE 目标还有多远、哪年到；开始取钱以后钱够不够用，用 1928 年以来的真实年份重放。'],
       ['portfolio', 'Investing', '持有什么、按币种和资产类别怎么分布；和「当初买一只基金」相比表现如何。'],
-      ['sources', 'Accounts · Monthly import', '每个账户；每次更新改了什么；哪份对账单哪个月到了。'],
+      ['sources', 'Accounts · Updates · Statements', '每个账户；每次更新改了什么；哪份对账单哪个月到了。'],
     ],
   } : {
     lang: 'en', cn: '',
     tag: 'Your money, on one page, kept honest by a set of checkers.',
     notice: "This is a made-up owner's full page. It is built for a computer screen, so on a phone here are the screenshots; open the demo on a computer to click through it.",
     send: 'Send to a computer', copied: 'Link copied — paste it into a browser on your computer.', open: 'Open it here anyway',
-    repo: 'Jade Toad on GitHub →',
+    repo: 'FIRE Toad on GitHub →',
     shots: [
       ['home', 'Home', 'Net worth in one card: a row for what each part is for, its bar coloured by how easily you could reach it.'],
       ['spending', 'Spending', 'This month by category; the year month by month; subscriptions, with what is due in the next 30 days.'],
       ['plan', 'Plan', 'How far the portfolio is from the FIRE target and when it gets there; whether the money lasts, replayed through real years since 1928.'],
       ['portfolio', 'Investing', 'What you hold, by currency and kind of asset; how it did against one fund you could have bought instead.'],
-      ['sources', 'Accounts · Monthly import', 'Every account; what each update changed; which statement arrived which month.'],
+      ['sources', 'Accounts · Updates · Statements', 'Every account; what each update changed; which statement arrived which month.'],
     ],
   };
   document.documentElement.lang = T.lang;
@@ -98,7 +98,7 @@
   const url = location.href.split('#')[0].replace(/index\.html$/, '');
   document.getElementById('send').addEventListener('click', async () => {
     try {
-      if (navigator.share) { await navigator.share({ title: 'Jade Toad', url }); return; }
+      if (navigator.share) { await navigator.share({ title: 'FIRE Toad', url }); return; }
       await navigator.clipboard.writeText(url);
       document.getElementById('done').textContent = T.copied;
     } catch (e) { /* the share sheet was closed */ }
