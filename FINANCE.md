@@ -324,7 +324,7 @@ Debts → liability; a foreign-currency account → asset · abroad, role per ac
   words, whether retiring early is something they are working toward; skipped leaves it out. It
   changes by saying so. Never answered reads as yes for someone with money invested, so no page
   an investor had disappears, and as no otherwise; the next import asks once.
-- **Emergency fund**, how long the money would last without a paycheque:
+- **Emergency fund**, how long the money would last without income:
 
   > **months covered = (Spendable today − what is invested in it − what is owed on no asset) ÷ a usual month**
 

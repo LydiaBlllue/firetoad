@@ -335,10 +335,10 @@ def propose(root, inbox):
         plan["takeHome"] = round(per * 2)
         plan["takeHomeNote"] = f"Payroll of {money(per)}, twice a month."
         src("plan.takeHome", f"{len(pay_amounts)} payroll deposit(s) of {money(per)} on {accounts[payroll_key]['inst']} {accounts[payroll_key]['name']} — assumed twice a month")
-        questions.append({"id": "pay", "q": f"Your payroll deposit is {money(per)}. Paid twice a month — take-home {money(per * 2)} a month?",
+        questions.append({"id": "pay", "q": f"Your payroll deposit is {money(per)}. Paid twice a month — income {money(per * 2)} a month?",
                           "suggest": plan["takeHome"]})
     else:
-        questions.append({"id": "pay", "q": "No payroll deposit in these statements. What is your take-home pay a month?"})
+        questions.append({"id": "pay", "q": "No payroll deposit in these statements. What is your income a month?"})
     if activities:
         dep = collections.defaultdict(list)
         for r in activities[1]:

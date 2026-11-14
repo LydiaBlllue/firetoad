@@ -13,7 +13,7 @@
 | | Income & chequing | 收入从哪来，留下了多少，支票账户的每一笔 |
 | | Subscriptions | 哪些在重复扣钱、一年多少、下一笔什么时候 |
 | | Monthly spending | 平常一个月花多少，计划用的是哪个数 |
-| | Emergency fund | 没有工资的话，今天能动用的钱能撑几个月 |
+| | Emergency fund | 没有收入的话，今天能动用的钱能撑几个月 |
 | Set a goal | FIRE | 离目标还有多远，哪年到 |
 | Stay on track | Budget | 每份工资做什么用，基金里有多少 |
 | | Portfolio | 投了多少，按币种、资产类别、分组怎么分布 |

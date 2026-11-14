@@ -160,7 +160,7 @@
 - **This month** — the month on the cursor, all of it: **Everyday** (the headline: the
   everyday less this month's everyday spending, no categories, a track bar with an even-pace
   marker for the current month only); three stat cards (spent, split into the parts that month has, biggest category, against a usual
-  month); **Where the paycheque went** (the plan as flows, each marked planned, and titled for the plan rather than the paycheque when it asks for more than take-home; the everyday amount fanning out into that
+  month); **Where the income went** (the plan as flows, each marked planned, and titled for the plan rather than the paycheque when it asks for more than take-home; the everyday amount fanning out into that
   month's categories — refunds a source coming in, an overspend a second source from savings, so every band is its real size and the total is Everyday's); the category
   list and the line-by-line of the chosen category.
 - **Year** — the year pills, the yearly stat cards, "What stands out" and the year by category
@@ -212,7 +212,7 @@
 - **Budget** follows no time: the plan, no category caps. Below the split, a Funds card appears
   only when the owner has a fund: each one's set-aside amount against its goal, what the plan adds,
   and when that pace reaches the goal.
-  - **How each paycheque is split**: one stacked bar cutting take-home into the committed
+  - **How each month's income is split**: one stacked bar cutting take-home into the committed
     payments (one segment each) / Invest / Everyday / Unallocated, with one
     line per part beneath it. Take-home, Invest and Everyday are sums of `funds.json`
     `plan.flows`, derived at load; Unallocated is what nothing names and stays where the

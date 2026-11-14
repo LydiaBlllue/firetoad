@@ -64,6 +64,9 @@
     its numbers are the same; the glossary keeps one entry for it instead of two.
   - *"Spent in October" is now "Total spent in October".* On Home, This month and The year: the
     card is everything bought, bills included, and its name now says so.
+  - *"Take-home pay" is now "Income a month".* Income is not always a paycheque, so the setup,
+    Budget, This month and Emergency fund say income: "Where the income went", "How each
+    month's income is split", "Without income". How the figure is worked out is unchanged.
   - *The model setting left the panel.* Its card — a service address, a model name and a key,
     in a drawer of its own — was never tried against a real service and never designed. It is
     off as before; `ai.py . set` still sets it. It comes back when it has a design.

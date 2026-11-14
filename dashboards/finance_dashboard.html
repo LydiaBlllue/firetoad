@@ -410,8 +410,8 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
   </div>
   <div class="grid-stats" id="catStats"></div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab" id="flowLab">Where the paycheque went</div>
-    <svg id="flowSvg" class="flow" role="img" aria-label="How take-home pay splits, and where everyday money went"></svg>
+    <div class="lab" id="flowLab">Where the income went</div>
+    <svg id="flowSvg" class="flow" role="img" aria-label="How income splits, and where everyday money went"></svg>
     <div class="cap" id="flowCap"></div>
   </div>
   <div class="cat-split" id="catSplit">
@@ -459,7 +459,7 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <section data-pg="budget" hidden>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab" id="splitLab">How each paycheque is split</div>
+    <div class="lab" id="splitLab">How each month's income is split</div>
     <div class="split" id="splitBar"></div>
     <div id="splitRows"></div>
     <div id="splitNote"></div>
@@ -1068,8 +1068,8 @@ const GLOSSARY = {
   everyday:       {own:1, w:"Everyday", pos:"on this page", def:"The amount you set each month for day-to-day spending. Inside it, no purchase needs a reason. Bills and housing are not in it.", also:["pay_yourself_first"]},
   committed:      {own:1, w:"committed payment", pos:"on this page", def:"A payment made every month before anything is chosen, such as rent, a mortgage or a loan.", also:["planning_figure"]},
   fund:           {own:1, w:"fund", pos:"on this page", def:"A name you put on part of the money in one of your accounts, for something you are saving toward. Nothing is moved: the money stays where it is, and the plan can add to it each month.", also:["unallocated"]},
-  unallocated:    {own:1, w:"Unallocated", pos:"on this page", def:"What is left of take-home pay once every line of the plan is paid. It stays where the paycheque landed.", also:["everyday"]},
-  safety_net:     {own:1, w:"Emergency fund", pos:"on this page", def:"Money you can reach at once, to live on if the paycheque stops or a large bill arrives. This page shows how much you have and how many months it would last. A common guide is three to six months of spending.", also:["months_covered","spendable_today"]},
+  unallocated:    {own:1, w:"Unallocated", pos:"on this page", def:"What is left of income once every line of the plan is paid. It stays where the income landed.", also:["everyday"]},
+  safety_net:     {own:1, w:"Emergency fund", pos:"on this page", def:"Money you can reach at once, to live on if your income stops or a large bill arrives. This page shows how much you have and how many months it would last. A common guide is three to six months of spending.", also:["months_covered","spendable_today"]},
   usual_month:    {own:1, w:"A usual month", pos:"on this page", def:"What a month usually costs you: everything spent, averaged over your last full months, up to twelve, leaving out months you marked as unusual. A yearly charge counts as a twelfth each month.", also:["months_covered","planning_figure"]},
   months_covered: {own:1, w:"Months covered", pos:"on this page", def:"How many months of your usual spending the money you can reach today would pay for, after what you owe on no asset.", f:"(spendable today − what you owe on no asset) ÷ a usual month", also:["safety_net","spendable_today"]},
   complete_to:    {own:1, w:"Complete to", pos:"on this page", def:"The day every account’s numbers are in up to. After it, some accounts are still waiting for their next statement."},
@@ -1419,7 +1419,7 @@ function renderHome(){
       if(waitsFor("safe")) return null;
       const s = safetyCalc();
       return s.months === null ? null : card(term("months_covered", "Months covered"),
-        numx(monthsTxt(s.months), [["The money", fmt(s.money)], ["A usual month", fmt(s.cost)]], "From the Emergency fund page."), "Without a paycheque");
+        numx(monthsTxt(s.months), [["The money", fmt(s.money)], ["A usual month", fmt(s.cost)]], "From the Emergency fund page."), "Without income");
     },
     kept: () => {
       const cfy = (INVEST.cashflow || []).filter(m => m.ym.startsWith(yr));
@@ -1526,7 +1526,7 @@ PLAN.takeHomeNote = (FLOWS.find(f => f.kind === "income") || {}).note || "";
 // questions showed take-home pay of $0 and a birth year of 1990 as if they were facts (2026-10-28,
 // first user). Wherever one of these would be shown, the page says Not set and how to set it.
 // Read at render time: PLAN_BASE_DEFAULT and BORN are declared further down.
-const UNSET_HOW = {takeHome:"your take-home pay", invest:"what goes to investing each month",
+const UNSET_HOW = {takeHome:"your income a month", invest:"what goes to investing each month",
   everyday:"your everyday amount", planBase:"the monthly spending to plan FIRE on",
   born:"the year you were born"};
 const unset = k =>
@@ -1603,7 +1603,7 @@ function planAlloc(){
   ]));
 }
 const UNALLOC = v => ({k:"Unallocated", v, c:"var(--pill)", pk:null, tm:"unallocated",
-    d:"Nothing in the plan names this. It stays where the paycheque landed."});
+    d:"Nothing in the plan names this. It stays where the income landed."});
 
 // Each fund: what is set aside, what the plan adds, and when the goal is reached at that pace.
 // "Set aside" is the owner's own figure with its date: nothing is moved into a fund, so no
@@ -1639,16 +1639,16 @@ function renderSplit(){
   const rest = PLAN.takeHome - used;
   const segs = alloc.filter(a => a.v > 0).concat(rest > 0 ? [UNALLOC(rest)] : []);
   const denom = Math.max(used, PLAN.takeHome);
-  $("splitLab").textContent = PLAN.takeHome > 0 || unset("takeHome") ? "How each paycheque is split" : "How each month is planned";
+  $("splitLab").textContent = PLAN.takeHome > 0 || unset("takeHome") ? "How each month's income is split" : "How each month is planned";
   $("splitBar").innerHTML = segs.map(a =>
     '<div style="width:' + pc(a.v, denom) + '%;background:' + a.c + '" data-k="' + a.k + '"></div>').join("");
   $("splitBar").querySelectorAll("div[data-k]").forEach(el => {
     const a = segs.find(x => x.k === el.dataset.k);
-    hoverable(el, a.k + "<br>" + fmt(a.v) + " a month<br>" + Math.round(pc(a.v, PLAN.takeHome)) + "% of take-home");
+    hoverable(el, a.k + "<br>" + fmt(a.v) + " a month<br>" + Math.round(pc(a.v, PLAN.takeHome)) + "% of income");
   });
   const rows = alloc.concat(rest > 0 ? [UNALLOC(rest)] : []);
   $("splitRows").innerHTML = metaList(
-    [["Take-home pay", unset("takeHome") ? notSet("takeHome") : numx(fmt(PLAN.takeHome), [], PLAN.takeHomeNote)]].concat(
+    [["Income a month", unset("takeHome") ? notSet("takeHome") : numx(fmt(PLAN.takeHome), [], PLAN.takeHomeNote)]].concat(
     rows.map(a => ['<span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'
         + a.c + ';margin-right:7px;vertical-align:middle"></span>' + (a.tm ? term(a.tm, a.k) : a.k),
       a.pk ? '<span class="bud-edit num" data-pk="' + a.pk + '">' + (a.v === 0 && unset(a.pk === "everyday" ? "everyday" : a.pk === "invm" ? "invest" : "") ? '<span class="unset">Not set</span>' : fmt(a.v)) + '</span>' : numx(fmt(a.v), [], a.d)]))
@@ -1658,7 +1658,7 @@ function renderSplit(){
     (used > PLAN.takeHome && !unset("takeHome")
       ? noteBox(PLAN.takeHome === 0
           ? "No pay comes in on this plan, so the <b>" + fmt(used) + "</b> a month comes from savings."
-          : "This split asks for <b>" + fmt(used) + "</b> a month against take-home pay of <b>"
+          : "This split asks for <b>" + fmt(used) + "</b> a month against income of <b>"
             + fmt(PLAN.takeHome) + "</b>. The <b>" + fmt(used - PLAN.takeHome)
             + "</b> gap comes from savings; lower Everyday or the investing transfer to close it.")
       : "")
@@ -1680,7 +1680,7 @@ function drawFlow(){
   const alloc = planAlloc(), used = alloc.reduce((s,a) => s + a.v, 0), rest = PLAN.takeHome - used;
   // A plan above take-home is not a paycheque being split, so the chart does not call it one.
   const short = rest < 0;
-  $("flowLab").textContent = short ? "Where the plan sends the money" : ym ? "Where the paycheque went" : "Where the paycheque goes";
+  $("flowLab").textContent = short ? "Where the plan sends the money" : ym ? "Where the income went" : "Where the income goes";
   const segs = alloc.filter(a => a.v > 0).concat(rest > 0 ? [UNALLOC(rest)] : []);
   const ev = ym ? monthOf(ym).filter(inEveryday) : [];
   const net = CATS.map(c => ({k:c.k, n:c.n, c:c.c, v:ev.filter(e => e.category === c.k).reduce((s,e) => s + e.amount, 0)}));
@@ -1689,7 +1689,7 @@ function drawFlow(){
   const gross = byCat.reduce((s,c) => s + c.v, 0), spent = gross - back;
   const everydayNode = segs.find(a => a.pk === "everyday");
   const over = everydayNode && spent > EVERYDAY ? spent - EVERYDAY : 0;
-  const left = [{k:short ? "Planned" : "Take-home", v:Math.max(PLAN.takeHome, used), c:"var(--ink)"}];
+  const left = [{k:short ? "Planned" : "Income", v:Math.max(PLAN.takeHome, used), c:"var(--ink)"}];
   if(everydayNode && back > 0.5) left.push({k:"Refunds", v:back, c:"#9a9890", tip:"Refunds that came back in " + ymFull(ym)});
   if(over) left.push({k:"From savings", v:over, c:"#c98500",
                       tip:fmt(over) + " over Everyday in " + ymFull(ym)});
@@ -1744,7 +1744,7 @@ function drawFlow(){
   const cats = right.filter(n => !n.rest).map(n => n.k);
   svg.querySelectorAll("path.hit").forEach((p, i) => p.onclick = () => pickCat(cats[i]));
   svg.querySelectorAll("text.hit").forEach(t => t.onclick = () => pickCat(t.dataset.k));
-  $("flowCap").innerHTML = [short ? "The plan asks for " + fmt(used) + " a month against take-home pay of " + fmt(PLAN.takeHome) : "",
+  $("flowCap").innerHTML = [short ? "The plan asks for " + fmt(used) + " a month against income of " + fmt(PLAN.takeHome) : "",
     a && over ? "Over Everyday by " + fmt(over) : ""].filter(Boolean).join(" · ");
 }
 function pickCat(k){
