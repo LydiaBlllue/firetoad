@@ -92,7 +92,7 @@
     A new rule is wired into it.
   - The month pills appear only on `PILL_PAGES`, the year pills only on `YEAR_PAGES`.
   - The foot of the sidebar carries the tool version (`VERSION`) in muted 10.5px. MAJOR.MINOR.PATCH,
-    by the rule in ROADMAP.md, Version numbers: a patch needs only a sync, a minor also a migration, a
+    by the rule in RELEASE-ROADMAP.md, Version numbers: a patch needs only a sync, a minor also a migration, a
     major a change of technology.
 - **One page, one question, one kind of time**: a page follows the month cursor, the year cursor
   or no time at all, never half of each; a thing is judged in one place, and Home only

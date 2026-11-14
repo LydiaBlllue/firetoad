@@ -2,7 +2,10 @@
 
 ## 1.0.4 — unreleased
 
-- **One roadmap** (2026-11-13, user 001): ROADMAP.md says what is coming in the order it is
+- **The roadmap you read is the release roadmap** (2026-11-13, user 001): the file is
+  RELEASE-ROADMAP.md, where it was ROADMAP.md, so it reads as what it is, the plan of what is
+  released next. A sync removes the old file from a folder once the new one is there.
+- **One roadmap** (2026-11-13, user 001): it says what is coming in the order it is
   planned — next, after that, 2.0.0, being considered — instead of by version number, and now
   carries what two separate plans each had: a setup that ends on a finished page, the savings
   rate and the working years it means, a guide to what to do next every month, income that

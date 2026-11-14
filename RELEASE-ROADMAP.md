@@ -1,4 +1,4 @@
-# Roadmap
+# Release roadmap
 
 What is coming, said as what you will be able to do, in the order it is planned. These are aims,
 not promises; what has already shipped is in [`CHANGELOG.md`](CHANGELOG.md).
