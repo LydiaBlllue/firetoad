@@ -18,6 +18,7 @@
   --c-fees:#1f3f74; --c-education:#b07ad6; --c-rest:#a8a69e;
   --c-other:#4a3aa7;   /* the plan's own parts (DESIGN.md §3), not a category */
   --bar:#2a78d6; --bar-dim:#9ec5f4;
+  --rng-ok:#0f6e56; --rng-fill:#cfeee2; --rng-low:#854f0b;   /* the owner's own range (Emergency fund) */
   --headh:92px;   /* sidebar wordmark and page header share this so their rules line up */
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -108,6 +109,25 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .say b{font-weight:700}
 .note-box{max-width:900px;display:flex;gap:8px;align-items:flex-start;background:#fdf6e6;border:1px solid #f0dfb4;border-radius:8px;padding:8px 10px;margin:8px 0 0;font-size:12.5px;line-height:1.45;color:#6b5417}
 .note-box .sym{font-weight:700;color:#c98500;flex-shrink:0}
+/* Settings (FINANCE.md §8e): a row is a name, one line of what it is, and the control */
+.set-grp{margin-top:18px}
+.set-grp:first-child{margin-top:0}
+.set-row{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:12px 0;border-top:1px solid var(--grid)}
+.set-row .n{font-weight:600}
+.set-row .why{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.set-ctl{text-align:right;white-space:nowrap;flex-shrink:0;font-size:13px;color:var(--ink-2)}
+.set-in{font:inherit;font-size:14px;padding:5px 9px;margin:0 4px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.set-in:disabled{background:var(--pill);color:var(--muted)}
+.set-in.w-m{width:62px}.set-in.w-c{width:112px}
+.set-meta{font-size:11.5px;color:var(--muted);margin-top:4px}
+.set-meta button{font:inherit;color:var(--bar);background:none;border:0;cursor:pointer;padding:0}
+.rng{position:relative;height:50px;margin:22px 0 2px}
+.rng .track{position:absolute;left:0;right:0;top:10px;height:12px;border-radius:6px;background:var(--pill)}
+.rng .band{position:absolute;top:10px;height:12px;background:var(--rng-fill);border-left:2px solid var(--rng-ok);border-right:2px solid var(--rng-ok)}
+.rng .you{position:absolute;top:3px;width:3px;height:26px;background:var(--ink);transform:translateX(-50%)}
+.rng .you span{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);font-size:11.5px;font-weight:600;white-space:nowrap}
+.rng .tk{position:absolute;top:30px;transform:translateX(-50%);font-size:11px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13px;padding:9px 14px;border-radius:8px;z-index:50;max-width:560px}
 .ctl{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)}
 .ctl:last-of-type{border-bottom:0}
 .ctl .cl{font-size:12px;color:var(--muted);width:112px;flex-shrink:0}
@@ -588,7 +608,13 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <section data-pg="safe" hidden>
   <div class="grid-stats" id="safeStats"></div>
+  <div class="card" id="safeRange" style="margin-bottom:10px"></div>
   <div class="card" id="safeAccts"></div>
+</section>
+
+<section data-pg="set" hidden>
+  <div id="setNote"></div>
+  <div class="card" id="setList"></div>
 </section>
 
 <section data-pg="upd" hidden>
@@ -706,8 +732,8 @@ const stNum = (k, dflt) => {
 };
 let trajView = ST.traj && ST.traj !== "fire" ? Number(ST.traj) || "fire" : "fire";   // the FIRE chart's span: years ahead, or to the target
 function saveState(){
-  const st = {traj:trajView, p:curPage, ym:viewYM, base:PLAN_BASE, stop:stopAge, draw:drawAge,
-              care:careAge, ltc:ltcAge, home:ltcTier, everyday:EVERYDAY, invm:INVM};
+  const st = {traj:trajView, p:curPage, ym:viewYM, stop:stopAge, draw:drawAge,
+              care:careAge, ltc:ltcAge, home:ltcTier};
   Object.entries(stBuilt).forEach(([k,v]) => { st["of_"+k] = v; });
   try{ localStorage.setItem("ly_state", JSON.stringify(st)); }catch(e){}
   try{ history.replaceState(null, "", "#" + Object.entries(st)
@@ -852,10 +878,12 @@ const NAV = [
   // After FIRE: living on it.
   {sec:"After FIRE", items:[{k:"coast",n:"Drawdown & care",  t:"Drawdown and care",    d:""}]},
   // Records and reference, for every stage, at the foot of the sidebar under the pages still
-  // waiting for their data: what each update changed, which statements are in, and the Glossary.
+  // waiting for their data: what each update changed, which statements are in, the Glossary, and
+  // Settings — the numbers that are the owner's to choose.
   {sec:"",          items:[{k:"upd",   n:"Updates",          t:"Updates",              d:""},
                            {k:"src",   n:"Statements",       t:"Statements",           d:""},
-                           {k:"gloss", n:"Glossary",         t:"Glossary",             d:""}]}
+                           {k:"gloss", n:"Glossary",         t:"Glossary",             d:""},
+                           {k:"set",   n:"Settings",         t:"Settings",             d:"The numbers that are yours to choose. A change is saved as you make it."}]}
 ];
 const PAGES = NAV.flatMap(g => g.items);
 const PILL_PAGES = ["cat"];                          // driven by the month cursor
@@ -1225,6 +1253,7 @@ function render(){
   renderIncChart();
   renderCatPage();
   renderSafety();
+  renderSettings();
   renderSubs();
   renderYear();
   renderAlwYear();
@@ -1538,10 +1567,10 @@ const unset = k =>
 const notSet = k => numx('<span class="unset">Not set</span>', [], "Never given. Say "+UNSET_HOW[k]+" to set it.");
 const COMMITTED     = FLOWS.filter(f => f.kind === "committed" && flowNow(f));
 const COMMITTED_NOW = COMMITTED.reduce((s, f) => s + f.amount, 0);
-// Editable in the page, same caveat as PLAN_BASE: an edit rides in the hash and this browser,
-// not in the file. Tell Claude the number and it goes into funds.json, where a rebuild keeps it.
-let EVERYDAY  = stNum("everyday", PLAN.everyday);
-let INVM = stNum("invm", PLAN.invest);
+// Editable in the page. Since 1.0.5 an edit is a setting (FINANCE.md §8e): it is written to
+// funds.json through the local app as it is made, never kept in this browser.
+let EVERYDAY  = PLAN.everyday;
+let INVM = PLAN.invest;
 
 const everydayOf = ym => monthOf(ym).filter(inEveryday).reduce((s,e) => s + e.amount, 0);
 const monthsBetween = (a,b) => { const [y1,m1] = a.split("-").map(Number), [y2,m2] = b.split("-").map(Number); return (y2-y1)*12 + (m2-m1); };
@@ -1755,7 +1784,10 @@ function pickCat(k){
 // One editor for the plan numbers. Same behaviour as the old cap editor: click, type,
 // Enter or blur to keep, Esc to drop.
 function wirePlanEdits(){
-  document.querySelectorAll('.bud-edit[data-pk]').forEach(el => el.onclick = () => {
+  document.querySelectorAll('.bud-edit[data-pk]').forEach(el => {
+    const why = cantChange(el.dataset.pk === "everyday" ? "everyday" : "invest");
+    if(why){ el.classList.remove("bud-edit"); el.title = why; return; }
+    el.onclick = () => {
     const k = el.dataset.pk;
     const cur = k === "everyday" ? EVERYDAY : INVM;
     const inp = document.createElement("input");
@@ -1767,15 +1799,12 @@ function wirePlanEdits(){
     const commit = () => {
       if(done) return; done = true;
       const v = Number(inp.value);
-      if(isFinite(v) && v >= 0){
-        if(k === "everyday") EVERYDAY = v; else INVM = v;
-        saveState();
-      }
-      renderPlan(); drawNav(); renderInsights();
+      if(isFinite(v) && v >= 0 && v !== cur) changeSetting(k === "everyday" ? "everyday" : "invest", v);
+      else renderPlan();
     };
     inp.addEventListener("blur", commit);
     inp.onkeydown = e => { if(e.key === "Enter") commit(); if(e.key === "Escape"){ done = true; renderPlan(); } };
-  });
+  }; });
 }
 
 // ===== Month by Month: full-period stacked bars (click a legend chip to isolate one category) =====
@@ -1969,11 +1998,10 @@ function catMedian(cat, ym){
 // months set aside as unusual left out. Big months are in it, because they happen. Unlike the
 // planning figure's calibration it keeps the categories that end before FIRE: today they are
 // still paid. Emergency fund, Investment income, This month and Monthly spending all read this.
-function usualMonthAt(ym){
-  const win = usableMonths().filter(m => m < ym).slice(-12)
-    .map(m => cmpOf(m).reduce((s, e) => s + e.amount, 0)).filter(v => v > 0);
-  return win.length >= 3 ? {v: win.reduce((s, v) => s + v, 0) / win.length, n: win.length} : null;
-}
+// Computed at build time since 1.0.5 (usual.py), one answer per month the page can be turned to,
+// so the page and everything outside it read the same number.
+const USUAL = {};
+const usualMonthAt = ym => USUAL[ym] || null;
 const usualMonth = () => usualMonthAt(TODAY.slice(0, 7));
 function monthMedian(ym){
   const win = catWindow(ym);
@@ -2240,25 +2268,134 @@ function cardInterest(){
 // months covered = (Spendable today − what is owed on no asset) ÷ a usual month. The money is
 // Home's own "Spendable today" row, so the two pages cannot disagree; investments are never in
 // it, and money abroad is a line of its own. A usual month is the monthly spending average plus the
-// repayments the plan pays today: rent and bills paid today are in the spending already. It
-// judges nothing: no band, no colour, no target (FINANCE.md §8d).
+// repayments the plan pays today: rent and bills paid today are in the spending already. The
+// range it is held against is the owner's own (SETTINGS `emergency`, FINANCE.md §8d, §8e): the
+// page says below, inside or above it, and never what to do about it.
 const SAFETY = {};
+// The numbers that are the owner's to choose, each with its value now (settings.py, FINANCE.md §8e).
+const SETTINGS = [];
+// ===== Settings (1.0.5) =====
+// One value, in the data. A change is shown at once and handed to the local app, which writes
+// it, rebuilds and answers; then the page is loaded again, so what it shows is what the files
+// say. A page opened as a file has nothing to write for it and only shows the values. The demo
+// is nobody's data, so there a change is shown and not kept.
+const SET = Object.fromEntries(SETTINGS.map(r => [r.key, r]));
+const SET_MODE = location.protocol.startsWith("http") && /\/t\/[^/]+\//.test(location.pathname) ? "save" : PROFILE.demo ? "demo" : "read";
+const SET_STAGE = Object.fromEntries(["start", "goal", "track", "after"].map((k, i) => [k, (NAV.filter(g => g.sec)[i] || {}).sec || ""]));
+const sameVal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+// Why this number cannot be changed here, or "" when it can.
+function cantChange(k){
+  const r = SET[k];
+  if(!r) return "";
+  if(r.locked) return "Made of several lines of your plan";
+  return SET_MODE === "read" ? "Open this page with the FIRE Toad app to change it" : "";
+}
+function toast(msg){
+  document.querySelectorAll(".toast").forEach(el => el.remove());
+  const el = document.createElement("div"); el.className = "toast"; el.textContent = msg;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 6000);
+}
+function applySetting(k, v){
+  SET[k].v = v;
+  if(k === "planBase") PLAN_BASE = v; else if(k === "everyday") EVERYDAY = v; else if(k === "invest") INVM = v;
+}
+let setQueue = Promise.resolve(), setPending = 0, setSaved = false;
+// Loaded again only when every change has been answered and nothing is being typed: a page
+// loaded while a second change is still being written would show the value from before it.
+function reloadWhenIdle(){
+  if(setPending || !setSaved) return;
+  const a = document.activeElement;
+  if(a && a.tagName === "INPUT"){ setTimeout(reloadWhenIdle, 400); return; }
+  location.reload();
+}
+function changeSetting(k, v, reset){
+  const r = SET[k];
+  if(!r || cantChange(k)) return;
+  const was = {v: r.v, isDef: r.isDef, changed: r.changed};
+  if(reset) v = r.def;
+  if(sameVal(v, was.v) && !reset){ render(); return; }
+  applySetting(k, v);
+  r.isDef = r.def !== null && sameVal(v, r.def);
+  r.changed = reset ? null : new Date().toLocaleDateString("en-CA");
+  render();
+  if(SET_MODE !== "save") return;
+  // one at a time: a second change waits for the first, so the app never answers "busy" to its own page
+  setPending++;
+  setQueue = setQueue.then(() => fetch("api/setting", {method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(reset ? {key: k, reset: true} : {key: k, value: v})})
+      .then(res => res.json().then(j => { if(!res.ok || !j.ok) throw j.error || {}; }))
+      .then(() => { setSaved = true; })
+      .catch(e => {
+        applySetting(k, was.v); r.isDef = was.isDef; r.changed = was.changed; render();
+        toast(e.type === "Busy" ? "Not saved: an import is running. Change it again when the import is done."
+            : "Not saved" + (e.text ? ": " + e.text : ". The app did not answer."));
+      })
+      .then(() => { setPending--; reloadWhenIdle(); }));
+}
+const setShow = (r, v) => v === null ? "Not set" : r.kind === "months" ? v[0] + " to " + v[1] + " months" : r.kind === "day" ? "the " + ordinal(v) : fmt(v);
+function setControl(r){
+  if(r.locked) return '<span class="num">' + setShow(r, r.v) + '</span>';
+  const inp = (i, v, cls, more) => '<input class="set-in '+cls+'" type="number" data-sk="'+r.key+'" data-si="'+i+'" value="'+(v === null ? "" : v)
+    + '" min="'+r.min+'" max="'+r.max+'" '+more+(cantChange(r.key) ? " disabled" : "")+' aria-label="'+r.n+'">';
+  if(r.kind === "months") return inp(0, r.v[0], "w-m", 'step="1"') + "to" + inp(1, r.v[1], "w-m", 'step="1"') + "months";
+  if(r.kind === "day") return "Day" + inp(0, r.v, "w-m", 'step="1"');
+  return "$" + inp(0, r.v, "w-c", 'step="50" placeholder="Not set"');
+}
+function setMeta(r){
+  if(r.locked) return cantChange(r.key);
+  const parts = [];
+  if(r.changed && !r.isDef) parts.push("Changed " + dLong(r.changed));
+  if(r.def !== null && !r.isDef && !cantChange(r.key)) parts.push('<button data-sreset="'+r.key+'">Back to ' + setShow(r, r.def) + '</button>');
+  return parts.join(" \u00b7 ");
+}
+// The controls of one setting, wherever they are drawn: the Settings page and the number's own page.
+function wireSettings(root){
+  root.querySelectorAll("input.set-in").forEach(inp => inp.onchange = () => {
+    const r = SET[inp.dataset.sk], n = Number(inp.value);
+    if(inp.value === "" || !isFinite(n) || n < r.min || n > r.max || (r.kind !== "money" && n !== Math.round(n))){ render(); return; }
+    if(r.kind !== "months"){ changeSetting(r.key, n); return; }
+    // the end that was typed stays; the other one follows it rather than refusing
+    const v = r.v.slice(); v[Number(inp.dataset.si)] = n;
+    if(v[0] > v[1]) v[1 - Number(inp.dataset.si)] = n;
+    if(v[1] <= 0){ render(); return; }
+    changeSetting(r.key, v);
+  });
+  root.querySelectorAll("[data-sreset]").forEach(b => b.onclick = () => changeSetting(b.dataset.sreset, null, true));
+}
+function renderSettings(){
+  $("setNote").innerHTML = SET_MODE === "read" ? noteBox("These numbers can be read here, not changed. Open this page with the FIRE Toad app to change them.")
+    : SET_MODE === "demo" ? noteBox("This is the demo: a change here is shown and not kept.") : "";
+  $("setNote").style.marginBottom = SET_MODE === "save" ? "0" : "10px";
+  $("setList").innerHTML = Object.keys(SET_STAGE).map(st => {
+    const rows = SETTINGS.filter(r => r.stage === st);
+    return rows.length ? '<div class="set-grp"><div class="lab">' + SET_STAGE[st] + '</div>' + rows.map(r => {
+      const meta = setMeta(r);
+      return '<div class="set-row"><div><div class="n">' + r.n + '</div><div class="why">' + r.why + '</div></div>'
+        + '<div class="set-ctl">' + setControl(r) + (meta ? '<div class="set-meta">' + meta + '</div>' : "") + '</div></div>';
+    }).join("") + '</div>' : "";
+  }).join("");
+  wireSettings($("setList"));
+}
+// Where the months covered sit against the owner's own range (settings.py emergency_state).
+const RANGE_SAYS = {below: "Below your range", inside: "Inside your range", above: "Above your range"};
+const rangeState = (months, band) => months === null || !band ? null : months < band[0] ? "below" : months > band[1] ? "above" : "inside";
 function safetyCalc(){
-  const S = SAFETY, money = (S.today || 0) - (S.invested || 0) - (S.unsecured || 0);
-  const um = usualMonth(), cost = um ? um.v + (S.repay || 0) : null;
-  return {money, cost, months: cost ? Math.max(0, money / cost) : null,
-          abroadMonths: cost && S.abroad > 0 ? Math.max(0, (money + S.abroad) / cost) : null};
+  // the money, what a month costs and the months covered are worked out at build time (usual.py)
+  const S = SAFETY, n = k => S[k] === undefined ? null : S[k];
+  return {money: S.money || 0, cost: n("cost"), months: n("months"), abroadMonths: n("abroadMonths")};
 }
 const monthsTxt = m => (Math.round(m * 10) / 10).toFixed(1);
 function renderSafety(){
   const S = SAFETY, c = safetyCalc();
   const card = StatCard;
+  const er = SET.emergency, band = er ? er.v : null, state = rangeState(c.months, band);
   const costRows = [["Spending", usualMonth() ? fmt(usualMonth().v) : "\u2014"]].concat((S.repayRows || []).map(r => [r.n, fmt(r.v)]));
   $("safeStats").innerHTML =
     card(term("months_covered", "Months covered"),
       c.months === null ? "\u2014" : numx(monthsTxt(c.months), [["The money", fmt(c.money)], ["A usual month", fmt(c.cost)]], "The money \u00f7 a usual month.", false),
       c.months === null ? "Needs three full months of spending to know a usual month."
-        : c.abroadMonths !== null ? "With money abroad, " + monthsTxt(c.abroadMonths) + " months" : "") +
+        : [state ? '<b style="color:var(--'+(state === "below" ? "rng-low" : state === "inside" ? "rng-ok" : "ink-2")+')">' + RANGE_SAYS[state] + '</b>' : "",
+           c.abroadMonths !== null ? "With money abroad, " + monthsTxt(c.abroadMonths) + " months" : ""].filter(Boolean).join("<br>")) +
     card("The money",
       numx(fmt(c.money), [[term("spendable_today", "Spendable today"), fmt(S.today || 0)]]
           .concat(S.invested ? [["Less what is invested", "\u2212"+fmt(S.invested)]] : [])
@@ -2268,6 +2405,23 @@ function renderSafety(){
     card(term("usual_month", "A usual month"),
       c.cost === null ? "\u2014" : numx(fmt(c.cost), costRows, "What you usually spend, plus the repayments your plan pays today. Rent and bills are already in the spending.", true),
       "");
+  // Your range: the owner's own months, where the money sits against them, and the one fact
+  // that follows — how much more reaches the lower end, or how much is beyond the upper one.
+  // Never what to do about it (FINANCE.md §8d).
+  $("safeRange").style.display = er ? "" : "none";
+  if(er){
+    const top = Math.max(12, Math.ceil((Math.max(band[1], c.months || 0) + 1) / 3) * 3), step = top <= 12 ? 3 : top <= 24 ? 6 : 12;
+    const x = m => (Math.min(m, top) / top * 100).toFixed(2) + "%";
+    const ticks = []; for(let m = 0; m <= top; m += step) ticks.push('<div class="tk" style="left:'+x(m)+'">'+m+'</div>');
+    const meta = setMeta(er), lock = cantChange("emergency");
+    $("safeRange").innerHTML = '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px"><div class="lab">Your range</div>'
+      + '<div class="set-ctl">' + setControl(er) + (meta ? '<div class="set-meta">' + meta + '</div>' : lock ? '<div class="set-meta">' + lock + '</div>' : "") + '</div></div>'
+      + '<div class="rng"><div class="track"></div><div class="band" style="left:'+x(band[0])+';width:'+((Math.min(band[1], top) - Math.min(band[0], top)) / top * 100).toFixed(2)+'%"></div>'
+      + (c.months === null ? "" : '<div class="you" style="left:'+x(c.months)+'"><span>You: '+monthsTxt(c.months)+'</span></div>') + ticks.join("") + '</div>'
+      + (state === "below" ? '<div class="cap">' + fmt(band[0] * c.cost - c.money) + " more reaches " + band[0] + " months.</div>"
+        : state === "above" ? '<div class="cap">' + fmt(c.money - band[1] * c.cost) + " is beyond " + band[1] + " months.</div>" : "");
+    wireSettings($("safeRange"));
+  }
   const row = a => '<div class="both-acct"><span>'+(a.i ? '<span class="i">'+a.i+'</span>' : "")+a.n+(a.cur ? '<span class="a">'+a.cur+'</span>' : "")+'</span><span class="v num">'+fmt(a.v)+'</span></div>';
   $("safeAccts").innerHTML = '<div class="lab">Where the money is</div>'
     + ((S.accts || []).length ? (S.accts || []).map(row).join("") : '<div class="empty">No account you could spend from today.</div>')
@@ -2357,8 +2511,7 @@ const RULES = {};
 
 const PLAN_BASE_DEFAULT = 0;
 const DRIFT_FLAG = 0.10;                  // measured vs planned gap that is worth flagging
-let PLAN_BASE = stNum("base", PLAN_BASE_DEFAULT || 0);
-const savePlanBase = saveState;
+let PLAN_BASE = PLAN_BASE_DEFAULT || 0;   // an edit is a setting (FINANCE.md §8e), saved as it is made
 // What the statements say the same figure would be, for comparison only.
 const measuredBase = () => baselineAvg ? baselineAvg + COMMITTED_KEEP : null;
 const baseDrift = () => { const m = measuredBase(); return m === null || !(PLAN_BASE > 0) ? null : (m - PLAN_BASE) / PLAN_BASE; };
@@ -2380,15 +2533,14 @@ function renderFire(){
     + fcard("Still to go", numx(fmt(gap), [["Target", fmt(target)], ["Portfolio", "\u2212"+fmt(PORTFOLIO)]], "", true))
     + fcard(term("fire_target", "Target"), numx(fmt(target), [[term("planning_figure", "Planning figure"), fmt(adjBase)+" a month"], ["A year of it", fmt(adjBase*12)], ["Times 25", fmt(target)]], "25 years of spending, from the 4% rule."));
   }
-  $("baseHero").innerHTML = '<span class="plan-edit num" id="planEdit" title="Click to change">'
+  const baseLock = cantChange("planBase");
+  $("baseHero").innerHTML = '<span class="'+(baseLock ? "" : "plan-edit ")+'num" id="planEdit" title="'+(baseLock || "Click to change")+'">'
     + (unset("planBase") ? '<span class="unset">Not set</span>' : fmt(PLAN_BASE)) + '</span> / mo';
-  // An edited figure lives in the browser, not in this file. Rebuilding the dashboard would
-  // silently drop back to the built-in default, and the numbers would move with no explanation.
-  // So say it out loud whenever the two differ.
+  // A change is saved as it is made (FINANCE.md §8e). Only the demo, which is nobody's data,
+  // shows a change it does not keep, and says so.
   $("baseLab").innerHTML = term("planning_figure", "Planning figure");
-  $("baseDrift").innerHTML = PLAN_BASE === (PLAN_BASE_DEFAULT || 0) ? "" : noteBox(
-    "Changed here to <b>"+fmt(PLAN_BASE)+"</b>; the plan still says "+(PLAN_BASE_DEFAULT === null ? "nothing" : fmt(PLAN_BASE_DEFAULT))
-    + ". It resets at the next update. Say the new number to keep it.");
+  $("baseDrift").innerHTML = SET_MODE !== "demo" || PLAN_BASE === (PLAN_BASE_DEFAULT || 0) ? "" : noteBox(
+    "Changed here to <b>"+fmt(PLAN_BASE)+"</b>. This is the demo, so the change is not kept.");
   const drift = baseDrift();
   const usedM = [...$("baseMonths").querySelectorAll(".bm-row span:first-child")].map(x => x.textContent.trim());
   const skipM = Object.keys(MONTH_SKIP).filter(m => MONTHS.includes(m));
@@ -2409,7 +2561,7 @@ function renderFire(){
     ? noteBox("Real spending is "+Math.round(Math.abs(drift)*100)+"% "+(drift > 0 ? "above" : "below")
         +" the planning figure. Setting it to "+fmt(measuredBase())+" would make the target "+fmt(measuredBase()*300)+".")
     : "");
-  $("planEdit").onclick = () => {
+  if(!baseLock) $("planEdit").onclick = () => {
     const inp = document.createElement("input");
     inp.type = "number"; inp.min = "1"; inp.step = "50"; inp.value = PLAN_BASE;
     inp.style.cssText = "width:130px;font:inherit;font-size:30px;font-weight:700;padding:0 6px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink)";
@@ -2419,8 +2571,8 @@ function renderFire(){
     const commit = () => {
       if(done) return; done = true;
       const v = Number(inp.value);
-      if(v > 0){ PLAN_BASE = v; savePlanBase(); }
-      renderFire(); renderHome();
+      if(v > 0 && v !== PLAN_BASE) changeSetting("planBase", v);
+      else { renderFire(); renderHome(); }
     };
     inp.onblur = commit;
     inp.onkeydown = e => { if(e.key === "Enter") commit(); if(e.key === "Escape"){ done = true; renderFire(); } };

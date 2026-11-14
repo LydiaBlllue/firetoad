@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.0.5 — unreleased
+
+- **Settings: the numbers that are yours to choose** (2026-11-14, user 001: someone wants three
+  months of emergency fund, someone six to nine). A new page at the foot of the sidebar lists
+  them — the emergency range, the import day, planning spend, take-home pay, what goes to the
+  broker, the everyday amount — and a change is saved as you make it: no save button, the day it
+  changed beside it, and a way back to the default. It needs the app; a page opened as a file
+  shows the numbers and does not change them. In a chat, `setting.py` is the same change.
+- **The Emergency fund has your range.** Three to six months until you say otherwise. The page
+  shows where your money stands against it — below, inside or above — and the one fact that
+  follows: how much more reaches the lower end, or how much is beyond the upper one. It never
+  says what to do with it.
+- **A change to a plan figure is kept.** Planning spend (Monthly spending) and the two plan
+  figures on Budget used to change only in the browser and reset at the next update. They are
+  settings now: changed on the page, written to your data.
+- *Under the page*: a usual month and the emergency fund's months are computed once, at build
+  time (`usual.py`), and the page is handed the result — every page reads as it did. `settings.py`
+  is the one table of adjustable numbers; D31 holds a stored value to its range.
+
 ## 1.0.4 — unreleased
 
 - **The sidebar follows the way to FIRE** (2026-11-13, user 001). The pages are grouped by how

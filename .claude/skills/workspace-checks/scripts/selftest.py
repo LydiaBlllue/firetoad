@@ -450,6 +450,9 @@ def m_chequing_no_spend_tag(r):
 def m_broker_gift_no_deposit(r):
     edit_json(r, layout.rel("plan.json"), lambda d: d.update(brokerGifts=[
         {"date": "2026-02-03", "amount": 12345.67, "currency": "CAD", "why": "planted"}]))
+def m_setting_out_of_range(r):
+    # The emergency range with its ends swapped, typed into the file past setting.py's own check.
+    edit_json(r, layout.rel("plan.json"), lambda d: d.update(emergency={"low": 9, "high": 3}))
 def m_decision_no_default(r):
     # An empty queue (an owner with nothing waiting) gets one item planted without its default;
     # this used to index [0] and crash the whole selftest in such a workspace (2026-09-10).
@@ -569,6 +572,7 @@ CASES = [
     ("R5", "a broken field leaves NaN on the page",         m_render_nan,         "render"),
     ("D29", "a gift declared in the broker with no such deposit", m_broker_gift_no_deposit, "find"),
     ("D30", "a chequing bill that never reached spending",  m_chequing_no_spend_tag, "find"),
+    ("D31", "a setting outside the range its row allows",   m_setting_out_of_range, "find"),
     ("R3", "a chart pinned to a fixed height",              m_render_chart_capped,"render"),
     ("R6", "the sidebar cannot scroll in a short window",   m_render_sidebar_stuck,"render"),
     ("R7", "Home shows a card with no number",              m_render_empty_card,  "render"),
@@ -2347,6 +2351,13 @@ def local_app_check(root, base):
                            capture_output=True, text=True, timeout=120)
         if r.returncode not in (0, 2):
             bad.append(f"balance.py exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:]))
+    # one of the owner's numbers, changed the same on both sides (FINANCE.md §8e)
+    stg = os.path.join(os.path.dirname(upd), "setting.py")
+    if os.path.exists(stg):
+        r = subprocess.run([sys.executable, stg, ".", "emergency", "6", "9", "--write"], cwd=copies["cli"],
+                           capture_output=True, text=True, timeout=120)
+        if r.returncode not in (0, 2):
+            bad.append(f"setting.py exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:]))
     # the first door
     r = subprocess.run([sys.executable, upd, ".", "--write"], cwd=copies["cli"], capture_output=True, text=True, timeout=300)
     if r.returncode != 0:
@@ -2434,6 +2445,14 @@ def local_app_check(root, base):
             st, body = req("POST", tok + "/api/ocr", data, hdr)
             if st != 200 or not (body.get("data") or {}).get("error"):
                 bad.append(f"POST /api/ocr with junk answered {st} without a reason")
+        if os.path.exists(stg):
+            st, body = req("POST", tok + "/api/setting", {"key": "emergency", "value": [9, 6]})
+            plan_now = json.load(open(layout.path(ws, "plan.json"), encoding="utf-8"))
+            if st != 400 or "emergency" in plan_now:
+                bad.append(f"a range with its ends swapped got {st} from POST /api/setting, not a refusal")
+            st, body = req("POST", tok + "/api/setting", {"key": "emergency", "value": [6, 9]})
+            if st != 200 or not (body.get("data") or {}).get("written"):
+                bad.append(f"POST /api/setting answered {st}: {str(body)[:120]}")
         st, body = req("POST", tok + "/api/import", {"write": True})
         if st != 202:
             bad.append(f"POST /api/import answered {st}: {str(body)[:120]}")
@@ -2460,7 +2479,7 @@ def local_app_check(root, base):
     if bad:
         return ["  ✗ local app: " + x for x in bad[:6]]
     return [f"  ✓ local app: the same month through update.py and through POST /api/import left identical findata/ and archive/ "
-            f"({len(a)} files), with one statement uploaded and one balance typed through the app; no token → 404, "
+            f"({len(a)} files), with one statement uploaded, one balance typed and one setting changed through the app; no token → 404, "
             f"another origin → 403, the lock held → 409, a screenshot that is no image answered with a reason"]
 
 

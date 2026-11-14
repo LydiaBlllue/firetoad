@@ -64,7 +64,7 @@ The rest of `findata/`, and what each carries:
 | `banks.json` | one balance and one as-of date per bank account |
 | `profile.json` | the owner (shown under the FIRE Toad wordmark and in the tab), the year of birth, the import day |
 | `funds.json` | the monthly plan as **flows** — `income`, `committed` (rent, a mortgage, a loan), `saving` (to the broker), `everyday`, each with an amount and, where it applies, `until`, `afterFire`, `pays`, `starts`, `to`; and `funds`, the owner's own funds, each a label on money in one account |
-| `plan.json` | planning spend, months excluded from comparisons, deposits into the broker that were gifts (`brokerGifts`), the retirement assumptions, the owner's one-line descriptions of the net-worth parts |
+| `plan.json` | planning spend, months excluded from comparisons, deposits into the broker that were gifts (`brokerGifts`), the retirement assumptions, the owner's one-line descriptions of the net-worth parts; and, since 1.0.5, the owner's settings that live nowhere else: `emergency` `{low, high}` (the months an emergency fund should cover, absent means three to six) and `changed` (the day each setting was last changed) |
 | `rules.json` | the investing buckets and their target bands, the owner's theses (`notes`) and `checkpoints`, `assetClass` — what each ETF holds (stocks / bonds / cash / gold / crypto), the one thing the broker's export cannot say — and `principles`, the owner's high-level rules, each naming a check the Investing overview runs today (with `placement`, which account each holding belongs in) |
 | `merchants.json` | merchant → category |
 | `senders.json` | who sends money by e-Transfer → what it is (Payroll / Gift / Other / Transfer / Repayment), answered once; the import types the next one by it and does not ask — the rule an owner used to keep in prose, as data both doors read (2026-11-07) |
@@ -218,6 +218,7 @@ script, and the panel follows. Two verbs came with the panel and serve this chat
 ledger, by register key, the register's copy following (D14, D20), refused for an account with
 a ledger (D7) or a loan (D23) — and **`ocr.py`** reads a phone screenshot with Apple Vision on
 this computer and ranks its amounts by the account's `capture` line; it offers, never writes.
+**`setting.py`** (1.0.5) changes one of the numbers that are the owner's to choose — `settings.py` is the one table of them (FINANCE.md §8e): the emergency range, the import day, planning spend, take-home, what goes to the broker, the everyday amount. The dashboard's Settings page posts to it through the app (`POST /api/setting`, answered when the value is written and the page rebuilt); a chat calls the same script; a page opened as a file only shows the values. D31 holds every stored value to its row's range.
 **Packaged** (1d, `build/build.py` → `dist/FIRE Toad.app`, PyInstaller, one folder, the tool
 and never anyone's data), the same `app.py` is the entry: the first launch asks for the
 folder or makes one — a made one holds the tool and a profile.json marked `blank`, no demo data (remembered in the system's application-support folder, outside the
@@ -243,9 +244,9 @@ build and signing.
 
 ## Nothing in a dashboard is typed by hand
 
-<!-- LINT:CONSTS n=53 -->
+<!-- LINT:CONSTS n=55 -->
 `rebuild.py` builds the dashboard from `templates/dashboards/` and `findata/`, deriving
-**53 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CARD_INTEREST, CATS, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DEBT_ACCTS, DECISIONS, DOC_LATEST, FGN, FIRE_GOAL, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PENSIONS, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SAFETY, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
+**55 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CARD_INTEREST, CATS, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DEBT_ACCTS, DECISIONS, DOC_LATEST, FGN, FIRE_GOAL, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PENSIONS, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SAFETY, SCENARIOS, SETTINGS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, USUAL, WSDEP, WSINC. It compares without writing by default; `--write`
 applies, and it is idempotent. `--template DIR` writes the page with every constant emptied,
 which is what the template *is*: page code and nobody's numbers.
 
@@ -283,7 +284,7 @@ Three levels (2026-11-05, the owner: most checks are run when asked, not after e
 |---|---|---|
 | **① the money** — by itself | after any edit to `findata/` (the `PostToolUse` hook) and at the end of an import | `check_data.py . --money`: the `reconcile` and `rules` findings only. Under a second, **silent when clean** |
 | **② check the page** — 检查页面 | when the owner says so, and **before saying a change to the page, a template, DESIGN.md, README or the data's shape is done** | `checks.py . --level page`: check_data in full, check_design, check_render (widths, a short window, every kind of owner). About 20 seconds |
-| **③ check before a release** — 发版前检查 | when the owner says so, and before a release PR | `checks.py . --level release`: the unit tests in `tests/` (one per rule in a pure module — `flows.py`, `loans.py`, `categories.py`, `layout.py`, `clock.py`; standard-library `unittest`, see `tests/README.md`), level ② and the selftest |
+| **③ check before a release** — 发版前检查 | when the owner says so, and before a release PR | `checks.py . --level release`: the unit tests in `tests/` (one per rule in a pure module — `flows.py`, `loans.py`, `categories.py`, `layout.py`, `clock.py`, `settings.py`, `usual.py`; standard-library `unittest`, see `tests/README.md`), level ② and the selftest |
 
 ⚠ Level ② is manual for the owner, **not optional for you**: a change to the page is not done
 until it has run, and the reply says what it found.

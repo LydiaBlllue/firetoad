@@ -28,6 +28,8 @@ import layout                              # where each findata file lives (sche
 import loans                               # what a borrower still owes, read from the ledgers -- one place
 import categories                          # the spending categories and their groups -- one place
 import verbs                               # the shape run() returns, shared by every script a month goes through
+import usual                               # a usual month and the emergency fund's months -- computed once, here
+import settings                            # the numbers that are the owner's to choose -- one table
 
 MAIN_NAMES = ("ly_finance_dashboard.html", "finance_dashboard.html")   # an owner's copy, or the template's
 INV_NAME = "investment_dashboard.html"
@@ -743,6 +745,14 @@ def derive(d):
                      "repay": ft["repayNow"],
                      "repayRows": [{"n": f.get("name") or f.get("pays"), "v": f.get("amount") or 0}
                                    for f in ft["committedNow"] if f.get("pays")]}
+    # A usual month, as of every month the page can be turned to, and what the emergency fund
+    # comes to on today's (usual.py). Both were the page's own arithmetic until 1.0.5; computed
+    # here, a checker or a second front end reads the same numbers the page shows.
+    out["USUAL"] = usual.by_month(out["SPENDING"], out["STMT_END"], out["MONTH_SKIP"], today)
+    out["SAFETY"].update(usual.runway(by_reach["today"], inv_today, unsecured, by_reach["abroad"], ft["repayNow"],
+                                      out["USUAL"].get(today[:7])))
+    # The numbers that are the owner's to choose, each with its value now (settings.py).
+    out["SETTINGS"] = settings.rows({"plan.json": plan, "funds.json": d["funds"], "profile.json": prof})
     # What each card statement charged in interest (1.0.1): a fact the import keeps, one row per
     # statement, from the Interest total the statement prints. Never read off a merchant name.
     names = {a["key"]: a.get("label") or a.get("name") for a in accs}

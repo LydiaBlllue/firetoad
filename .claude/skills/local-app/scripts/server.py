@@ -39,6 +39,8 @@ Routes (every API answer is {"ok": bool, "data" | "error": …, "took": seconds}
   POST /api/inbox          (multipart)                  files dropped on the panel, saved to inbox/ under
                                                         their own names and named by preflight; nothing parsed
   POST /api/balance        balance.run(key, amount, asof, write) a balance no file carries; rebuilds
+  POST /api/setting        setting.run(key, value, reset, write) one of the owner's numbers (settings.py), from the
+                                                        dashboard's Settings page; answers when it is written
   POST /api/ocr            ocr.read(image, capture)     (multipart: key + image) the amounts Vision sees on a
                                                         screenshot, ranked by the account's capture line —
                                                         candidates only; the image is kept under .jade/shots/
@@ -90,6 +92,7 @@ import ocr  # noqa: E402
 import panel  # noqa: E402
 import preflight  # noqa: E402  names a dropped file
 import rebuild  # noqa: E402  MAIN_NAMES
+import setting  # noqa: E402  one of the owner's numbers, changed
 import status  # noqa: E402
 import update  # noqa: E402
 import verbs  # noqa: E402
@@ -291,6 +294,27 @@ class App:
             raise ValueError("key and amount are needed")
         return self.start_job("balance", True,
                               lambda say: verbs.public(balance.run(self.root, str(key), amount, asof=asof or None, write=True, say=say)))
+
+    def do_setting(self, key, value, reset=False):
+        """One of the owner's numbers, changed from the dashboard (FINANCE.md §8e). Unlike the
+        other writes it answers only when the value is written and the page rebuilt — a second or
+        two — because the page that asked has already shown the new number and needs to know
+        whether to keep it. Returns (result, busy): busy names what holds the lock."""
+        if not key:
+            raise ValueError("a setting's key is needed")
+        if self.job is not None and not self.job.done.is_set():
+            return None, self.job.verb
+        if self.tool and self.tool.get("state") == "newer":
+            return None, "nothing (this folder's data is newer than the app — update the app first)"
+        held = self.lock.acquire("setting")
+        if held:
+            return None, held
+        try:
+            res = setting.run(self.root, str(key), value, reset=bool(reset), write=True)
+        finally:
+            self.lock.release()
+        log.info("setting %s: %s", key, "written" if res.get("written") else "refused")
+        return res, None
 
     def save_inbox(self, parts):
         """Files dropped on the panel: into inbox/ under their own (base)names, then named the way
@@ -634,6 +658,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 job, busy = app.do_refile(body.get("match"), body.get("category"))
             elif path == "/api/balance":
                 job, busy = app.do_balance(body.get("key"), body.get("amount"), body.get("asof"))
+            elif path == "/api/setting":
+                res, busy = app.do_setting(body.get("key"), body.get("value"), body.get("reset", False))
+                if busy:
+                    return self._json(409, False, {"type": "Busy", "text": f"{busy} is running; wait for it", "verb": busy}, t0)
+                if not res.get("written"):
+                    why = next((l.strip().lstrip("✗ ").strip() for l in res["lines"] if "✗" in l), "not written")
+                    return self._json(400, False, {"type": "BadRequest", "text": why}, t0)
+                return self._json(200, True, verbs.public(res), t0)
             elif path == "/api/inbox":
                 return self._json(200, True, app.save_inbox(body.get("files") or []), t0)
             elif path == "/api/ocr":

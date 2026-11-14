@@ -334,8 +334,13 @@ Debts → liability; a foreign-currency account → asset · abroad, role per ac
   committed flows with `pays`, `flows.py` `repayNow`). Rent and bills paid today are in
   `spending.csv` already, so they are not added; `COMMITTED_KEEP` is not used, because it holds
   rent that starts only at FIRE. Money abroad is its own line, never in the headline. Below zero
-  is 0; without three closed months the page says so instead of a figure. It judges nothing: no
-  band, colour or target. The usual three to six months is the Glossary's *emergency fund*.
+  is 0; without three closed months the page says so instead of a figure. Both numbers are
+  computed at build time (`usual.py`), so the page and the checkers read the same ones.
+  **The range is the owner's** (1.0.5): `plan.json` `emergency` `{low, high}`, in months, three
+  to six until they say otherwise (§8e). The page says where the months covered sit against it:
+  below it, with how much more reaches the lower end; inside it, and nothing more; above it,
+  with how much is beyond the upper end. It states that and stops: it never says what to do
+  with money beyond the range, and it has no opinion on which range is right.
 - **Card interest** is a fact, never a verdict: the Interest total each card statement prints,
   which the card parsers already read to reconcile, kept one row per statement in
   `card_interest.csv` (0.00 included). Never read off a merchant name. The first import after
@@ -350,3 +355,23 @@ Debts → liability; a foreign-currency account → asset · abroad, role per ac
   the age each starts they pay part of what is taken out (spending and care), so the portfolio
   takes only the rest; a pension that starts before the drawdown does not add to the pot. The FIRE
   target is unchanged: it still has to carry the years before the pensions start.
+
+### 8e. The owner's settings (1.0.5)
+
+Some numbers are no statement's to state: how many months an emergency fund should cover, what a
+month is planned to cost, what goes to the broker, the day of the import. They are declarations,
+and `settings.py` is the one table of them — each row a key, where the value already lives in
+`findata/register/`, its kind, its legal range and, where one exists, a default.
+
+- **One value, in the data.** The page is handed the table with each value (`SETTINGS`). What a
+  setting is changed to is written to the register, never kept in the browser: a number that
+  lived only on one screen was a second source nothing else could read.
+- **Changed as it is made.** There is no draft and no save button. The page recomputes at once
+  and hands the value to the local app, which writes it through `setting.py` — the same script a
+  chat calls — under the one lock, rebuilds, and runs the money checks. The day goes beside it in
+  `plan.json` `changed`. A row with a default can go back to it, which removes the stored value.
+- **Read-only without the app.** A page opened as a file has nothing to write for it, so it
+  shows the values and says to open it with the app. It never keeps a change it cannot save.
+- **A sum is not one number.** A plan figure made of several flows (two paycheques) is shown and
+  not editable as one: which line a new total would change is the owner's to say.
+- D31 holds every stored value to the table's range.

@@ -84,9 +84,9 @@
     (`WAITS` — Income without a chequing ledger, Investing and FIRE with nothing invested) is
     listed there with what it waits for, closed by default, and returns to its section by itself
     the day the data arrives. A workspace with only a credit card is then a complete product.
-  - **Updates, Statements and the Glossary sit at the foot**, above the version, under no
-    heading: what each update changed, which statements are in, and a reference for reading the
-    page. None of them belongs to a stage.
+  - **Updates, Statements, the Glossary and Settings sit at the foot**, above the version, under
+    no heading: what each update changed, which statements are in, a reference for reading the
+    page, and the numbers that are the owner's to choose. None of them belongs to a stage.
   - **Dots**: `pageFlags()` hangs a 6px dot on a sidebar entry when its page has something on
     it — amber `#c98500` = look at this, red `#d03b3b` = a rule is broken or something is due.
     A new rule is wired into it.
@@ -104,8 +104,8 @@
   hand-aligned table heading written outside them; the two grouped tables not yet moved (Accounts,
   Statements) say so on their line. In 2.0 the two become the component library's Card and Table.
 
-<!-- LINT:PAGES pages=18 sections=4 -->
-- **The pages**: 18 pages under 4 sidebar sections, **one per stage of the way to FIRE** (2026-11-13, user 001: grouped by how far along the owner is, not by topic; until then the sections were Money in & out, Plan, Investing and Monthly import). **Lint rule S4 checks this table against
+<!-- LINT:PAGES pages=19 sections=4 -->
+- **The pages**: 19 pages under 4 sidebar sections, **one per stage of the way to FIRE** (2026-11-13, user 001: grouped by how far along the owner is, not by topic; until then the sections were Money in & out, Plan, Investing and Monthly import). **Lint rule S4 checks this table against
   `NAV`**, so changing the navigation means changing this table too — and the page count, the
   sidebar list and the minimum width stated in `README.md`, and every path the README hands the
   reader:
@@ -116,7 +116,7 @@
   | Set a goal | FIRE |
   | Stay on track | Budget · Portfolio · Performance · Holdings · Investment income |
   | After FIRE | Drawdown & care |
-  | — | Updates, Statements and the Glossary: records and reference for every stage, at the foot of the sidebar, under the pages still waiting for their data |
+  | — | Updates, Statements, the Glossary and Settings: records, reference and the owner's own numbers, for every stage, at the foot of the sidebar, under the pages still waiting for their data |
 
   **What a page waits for** (`WAITS`): Income and Emergency fund a chequing statement; Portfolio,
   Performance and Holdings a broker's holdings; Investment income a broker's activity; FIRE a FIRE
@@ -206,8 +206,13 @@
 ### Plan
 
 - **Emergency fund** (1.0.1): three cards — Months covered, The money, A usual month — each
-  opening its sum, then where the money is and what is owed on no asset. No band, colour or
-  target; money abroad only in the line under Months covered (FINANCE.md §8d).
+  opening its sum, then where the money is and what is owed on no asset; money abroad only in
+  the line under Months covered (FINANCE.md §8d). Since 1.0.5 a fourth block, **Your range**: the
+  owner's own months (three to six until changed), drawn as a band on one scale with a mark where
+  the money stands, and changeable in place. Under Months covered the page says *Below your
+  range*, *Inside your range* or *Above your range*; below, one line says how much more reaches
+  the lower end, above, how much is beyond the upper end. Nothing else: no advice on what to do
+  with it, and no colour beyond the one word.
 
 - **Budget** follows no time: the plan, no category caps. Below the split, a Funds card appears
   only when the owner has a fund: each one's set-aside amount against its goal, what the plan adds,
@@ -286,6 +291,23 @@
   shown — no card saying all is well. The source is `findata/register/accounts.json`, **a
   register, not a second set of books**.
 - **Statements**: the filing grid (§5c), and every source's date.
+
+### Settings
+
+- At the foot of the sidebar, in no group (1.0.5, FINANCE.md §8e): the numbers that are the
+  owner's to choose, one row each — its name, one line of what it is, and the control — grouped
+  under the four stage names. The rows are `settings.py`'s table; the page lists nothing itself.
+- **A change is saved as it is made.** No save button and no draft: the number shows at once,
+  the local app writes it, and the page loads again when every change has been answered and
+  nothing is being typed. A row that differs from its default says the day it was changed and
+  offers the way back; a refused or unsaved change puts the old number back and says why in one
+  line at the foot of the window.
+- **The same control on the number's own page.** The emergency range is changed on Emergency
+  fund, planning spend on Monthly spending, the two plan figures on Budget — one value, one
+  script, wherever it is typed.
+- **Opened as a file, the numbers are read, not changed**: the controls are greyed and one line
+  says to open the page with the app. The demo is nobody's data, so there a change is shown and
+  not kept, and the page says so.
 
 ### Glossary
 

@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from flows import totals as flow_totals, KINDS as FLOW_KINDS, unset as flow_unset   # the plan's sums, read once, there
 import layout                                                   # where each findata file lives
 import loans                                                    # what a borrower still owes, read once, there
+import settings                                                 # the numbers that are the owner's to choose, one table
 
 from categories import CATEGORIES as _CATS                       # the categories, defined once
 CATEGORIES = set(_CATS)
@@ -134,7 +135,7 @@ def check(root):
             "D3":"rules", "D6":"rules", "D10":"rules", "D13":"rules", "D14":"rules",
             "D11":"build", "D12":"build", "D17":"build", "T1":"build", "T2":"hygiene", "D15":"build", "D16":"conform",
             "D2":"hygiene", "D4":"hygiene", "D9":"hygiene", "D18":"hygiene",
-            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D29":"rules", "D30":"reconcile", "D25":"hygiene", "D26":"rules", "D27":"hygiene", "D28":"hygiene"}
+            "D19":"rules", "D20":"hygiene", "D21":"rules", "D22":"hygiene", "D23":"reconcile", "D24":"rules", "D29":"rules", "D30":"reconcile", "D31":"rules", "D25":"hygiene", "D26":"rules", "D27":"hygiene", "D28":"hygiene"}
     F = []          # (severity, rule, message, category)
     def err(r, m, cat=None):  F.append(("ERROR", r, m, cat or HOME.get(r, "rules")))
     def warn(r, m, cat=None): F.append(("WARN",  r, m, cat or HOME.get(r, "rules")))
@@ -217,6 +218,26 @@ def check(root):
                 err("D29", f"plan.json brokerGifts {g.get('date')}: counted {g.get('counted')} is not part of the deposit")
             if not g.get("why"):
                 err("D29", f"plan.json brokerGifts {g.get('date')}: no reason beside the value")
+
+    # -- D31 a setting the owner changed stays inside the range its row allows ----
+    # (settings.py, FINANCE.md §8e). setting.py refuses an illegal value; a file edited by hand
+    # has no such guard, and a range with its ends swapped would read as "always below".
+    sfiles = {}
+    for n in ("plan.json", "funds.json", "profile.json"):
+        sp = load(root, n)
+        sfiles[n] = json.load(open(sp, encoding="utf-8")) if sp else {}
+    for row in settings.TABLE:
+        if settings.locked(row["key"], sfiles):
+            continue
+        have = settings.stored(row["key"], sfiles)
+        if have is None:
+            continue
+        _v, why = settings.check(row["key"], have)
+        if why:
+            err("D31", f"{why} — the files say {have!r}")
+    for k in ((sfiles["plan.json"].get("changed") or {})):
+        if k not in settings.BY_KEY:
+            warn("D31", f"plan.json changed names {k!r}, which is not a setting", "hygiene")
 
     # -- spending.csv ---------------------------------------------------------
     p = load(root, "spending.csv")
