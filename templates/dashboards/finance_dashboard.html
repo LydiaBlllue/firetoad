@@ -1404,7 +1404,7 @@ function renderHome(){
       const ym = MONTHS.includes(curYM) ? curYM : MONTHS[MONTHS.length - 1];
       const es = monthOf(ym), total = es.reduce((s,e) => s + e.amount, 0), parts = monthParts(ym);
       const rows = [["Bills & housing", parts.bills], ["Everyday", parts.everyday]].filter(p => Math.abs(p[1]) > 0.005);
-      return card("Spent in "+ymLabel(ym),
+      return card("Total spent in "+ymLabel(ym),
         numx(fmt(total), rows.map(p => [p[0], fmt(p[1])]), es.length+" purchase"+(es.length === 1 ? "" : "s")+(ym > covEnd ? ", and the month is still open." : "."), true),
         rows.map(p => p[0]+" "+fmt(p[1])).join(" \u00b7 "));
     },
@@ -2018,7 +2018,7 @@ function renderCatPage(){
   const um = usualMonthAt(viewYM), usual = um ? um.v : null, diff = usual === null ? null : total - usual;
   const nWin = um ? um.n : 0;
   $("catStats").innerHTML =
-    card("Spent in "+ymLabel(viewYM), numx(fmt(total), partRows.map(p => [p[0], fmt(p[1])]), es.length+" purchase"+(es.length === 1 ? "" : "s")+" in "+rows.length+" categor"+(rows.length === 1 ? "y" : "ies")+"."),
+    card("Total spent in "+ymLabel(viewYM), numx(fmt(total), partRows.map(p => [p[0], fmt(p[1])]), es.length+" purchase"+(es.length === 1 ? "" : "s")+" in "+rows.length+" categor"+(rows.length === 1 ? "y" : "ies")+"."),
         partRows.map(p => p[0]+" "+fmt(p[1])).join(" \u00b7 "))
     + (rows.length ? card("Biggest category", catName(rows[0].k), fmt(rows[0].v)+", "+pct(rows[0].v)+"% of the month") : "")
     + card("Against a usual month",
@@ -2076,7 +2076,7 @@ function renderYr(){
 
   renderYearInsights();
   $("yrStats").innerHTML =
-    StatCard("Spent in "+viewYear, numx(fmt(spent), [], "After refunds.")) +
+    StatCard("Total spent in "+viewYear, numx(fmt(spent), [], "After refunds.")) +
     StatCard("Spent a month in "+viewYear, spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], "This year only, open months included. "+(usualMonth() ? "A usual month, from your last full months, is "+fmt(usualMonth().v)+"." : "")) : null) +
     (() => { const mt = spendMonths.map(m => ({m, v: monthTotal(m)})).sort((a,b) => b.v - a.v)[0];
              return StatCard("Biggest month", mt ? ymFull(mt.m) : null, mt ? fmt(mt.v) : "", {text: true}); })();

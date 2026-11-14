@@ -86,7 +86,7 @@ def m_design_pages(r):
     edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Stay on track \| )[^·|]+·", r"\1Insights ·", s, count=1))
 def m_hand_card(r):
     # a stat card written by hand beside StatCard: the copy that drifts
-    edit(r, main_dash(r), lambda s: s.replace('StatCard("Spent in "+viewYear, numx(fmt(spent), [], "After refunds."))',
+    edit(r, main_dash(r), lambda s: s.replace('StatCard("Total spent in "+viewYear, numx(fmt(spent), [], "After refunds."))',
          "'<div class=\"card\"><div class=\"lab\">Spent</div><div class=\"big num\">'+fmt(spent)+'</div></div>'", 1))
 def m_nav_orphan(r):
     edit(r, main_dash(r),

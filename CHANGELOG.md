@@ -62,6 +62,8 @@
     closes and the day after it, one fact a line; the goal screen says a blank is fine.
   - *Safety net is now Emergency fund.* The name most people already use for it. The page and
     its numbers are the same; the glossary keeps one entry for it instead of two.
+  - *"Spent in October" is now "Total spent in October".* On Home, This month and The year: the
+    card is everything bought, bills included, and its name now says so.
   - *The model setting left the panel.* Its card — a service address, a model name and a key,
     in a drawer of its own — was never tried against a real service and never designed. It is
     off as before; `ai.py . set` still sets it. It comes back when it has a design.
