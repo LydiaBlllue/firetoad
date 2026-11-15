@@ -222,8 +222,8 @@ S = {
     "not_read": {"en": "Not recognised", "zh": "没认出来"},
     # what helps a person remember (recall.py), "not sure" as an answer, and the line that says enough
     "q_sorted": {"en": "Sorted {pct}% of your spending", "zh": "已归类 {pct}% 的支出"},
-    "q_line": {"en": "{pct}% · enough", "zh": "{pct}% · 够了"},
-    "q_to_line": {"en": "{n} to go to the line", "zh": "离那条线还有 {n} 个"},
+    "q_line": {"en": "enough", "zh": "够了"},
+    "q_to_line": {"en": "{n} more, then that is enough", "zh": "再答 {n} 个就够了"},
     "q_lookup": {"en": "Look it up", "zh": "查一下"},
     "q_lookup_tip": {"en": "Searches the web for these words. Nothing else is sent.", "zh": "用这几个字在网上搜一下。别的什么都不发。"},
     "q_when": {"en": "When", "zh": "什么时候"},
