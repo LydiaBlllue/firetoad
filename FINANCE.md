@@ -355,6 +355,12 @@ Debts → liability; a foreign-currency account → asset · abroad, role per ac
   the age each starts they pay part of what is taken out (spending and care), so the portfolio
   takes only the rest; a pension that starts before the drawdown does not add to the pot. The FIRE
   target is unchanged: it still has to carry the years before the pensions start.
+- **When the money runs out** in the drawdown (1.0.5): the portfolio stays at nothing from that
+  month on — it is not a loan, and the plan assumes no borrowing. What it could not pay after
+  that is the **shortfall**: spending and care, less any pensions, month by month to the plan's
+  last year, added up in today's money. A plain sum: no interest, and no word on where the money
+  would come from. If the money runs out before care begins there is no "extra needed for care"
+  to state, only the age it ran out; the shortfall carries the rest.
 
 ### 8e. The owner's settings (1.0.5)
 

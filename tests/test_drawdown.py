@@ -62,7 +62,21 @@ class TheRun(unittest.TestCase):
         self.assertAlmostEqual(x, 4100 * 120, delta=4200)
 
     def test_money_that_lasts_has_no_last_age(self):
-        self.assertIsNone(run(p0=10 ** 9, draw=100, start=31)["dead"])
+        r = run(p0=10 ** 9, draw=100, start=31)
+        self.assertEqual((r["dead"], r["short"]), (None, 0))
+
+    def test_the_shortfall_is_what_was_still_to_pay_added_up(self):
+        # 1,200 pays twelve months of 100 from 31; the plan ends at 50, so 18 more years are short
+        r = run(p0=1200, draw=100, start=31)
+        self.assertEqual(r["short"], 100 * 12 * 18)
+
+    def test_the_month_it_runs_out_is_short_only_by_what_it_could_not_pay(self):
+        r = run(p0=1250, draw=100, start=31, life=33)
+        self.assertEqual(r["short"], 50 + 100 * 11)
+
+    def test_a_pension_makes_the_shortfall_smaller(self):
+        r = run(p0=1200, draw=100, start=31, pensions=[{"v": 40, "from": 40}])
+        self.assertEqual(r["short"], 100 * 12 * 8 + 60 * 12 * 10)
 
     def test_a_month_compounds_before_anything_moves(self):
         self.assertAlmostEqual(run(p0=1000, r=0.12, life=31)["series"][1], 1010)
@@ -117,9 +131,15 @@ class TheConstant(unittest.TestCase):
     def test_it_carries_the_ages_and_the_plan_at_them(self):
         f = dd.figures(500000, 3000, 1000, 0.05, [LTC], HOME, [], [], 1990, 95, "2026-01-01")
         self.assertEqual(f["at"], {"stop": 36, "draw": 55, "care": 80, "ltc": 88, "tier": 0})
-        self.assertEqual(sorted(f["now"]), ["atDraw", "atStop", "bt", "dead", "extra", "noCareDead", "stayHomeDead"])
+        self.assertEqual(sorted(f["now"]), ["atDraw", "atStop", "bt", "dead", "extra", "noCareDead", "short", "stayHomeDead"])
         self.assertEqual(f["now"]["atStop"], 500000)
         self.assertIsNone(f["now"]["bt"])
+
+    def test_money_gone_before_care_has_a_shortfall_and_no_extra_for_care(self):
+        f = dd.figures(1000, 3000, 0, 0.05, [LTC], HOME, [], [], 1990, 95, "2026-01-01")["now"]
+        self.assertLess(f["dead"], 80)
+        self.assertIsNone(f["extra"])
+        self.assertGreater(f["short"], 0)
 
 
 if __name__ == "__main__":

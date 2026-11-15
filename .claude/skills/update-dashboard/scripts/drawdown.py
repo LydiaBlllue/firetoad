@@ -3,7 +3,7 @@
 The Drawdown page lets the owner move four ages and a care tier and redraws as they move, so
 the page keeps these sums. But what the plan comes to at the ages it starts from was known only
 inside the browser. It is computed here, once, at those ages (the DRAWDOWN constant): how long
-the money lasts, what is there the day the drawing starts, how much more care would need, and
+the money lasts, what is short once it has run out, what is there the day the drawing starts, how much more care would need, and
 how many starting years on record the plan would have survived.
 
 check_render's R8 asks the built page for the same figures at the same ages and fails when they
@@ -52,18 +52,21 @@ def care_at(age, care_a, ltc_a, ltc, home, age_now):
 
 
 def run(p0, r, contrib, draw_m, stop_a, start_a, care_a, ltc_a, ltc, home, pensions, age_now, life_to):
-    """{series, dead}: the portfolio month by month to the plan's last year, and the age it
-    runs out (None when it does not). Once it runs out it is nothing in every month after."""
-    m, v, out, dead = r / 12, p0, [p0], None
+    """{series, dead, short}: the portfolio month by month to the plan's last year, the age it
+    runs out (None when it does not), and the shortfall — what was still to pay in the months
+    it could not pay, added up. Once it runs out it is nothing in every month after: a
+    portfolio is not a loan. The shortfall is a plain sum in today's money; it assumes nothing
+    about where that money would come from or what borrowing it would cost."""
+    m, v, out, dead, short = r / 12, p0, [p0], None, 0
     for i in range(1, (life_to - age_now) * 12 + 1):
         age = age_now + (i - 1) / 12
         v = v * (1 + m) + (contrib if age < stop_a else 0) \
             - take_out(age, (draw_m if age >= start_a else 0) + care_at(age, care_a, ltc_a, ltc, home, age_now), pensions)
         if v <= 0:
-            # spent is spent: it stays at nothing, it does not go on into a debt nobody lent
+            short += -v
             dead, v = (age_now + i / 12 if dead is None else dead), 0
         out.append(v)
-    return {"series": out, "dead": dead}
+    return {"series": out, "dead": dead, "short": short}
 
 
 def extra_needed(series, r, draw_m, care_a, ltc_a, ltc, home, pensions, age_now, life_to):
@@ -129,9 +132,12 @@ def now(at, portfolio, r, contrib, draw_m, tiers, home, pensions, years, age_now
     pick = lambda a: main["series"][js_round((a - age_now) * 12)] if 0 <= js_round((a - age_now) * 12) < len(main["series"]) else None
     at_draw = pick(at["draw"]) or 0
     bt = backtest(at_draw, draw_m, at["draw"], at["care"], ltc_a, ltc, home, pensions, years, age_now, life_to)
-    return {"dead": main["dead"], "atDraw": at_draw, "atStop": pick(at["stop"]) or portfolio,
+    # Money that runs out before care begins has no "extra for care": everything after it is
+    # the shortfall, and a lump for care alone would be a number about nothing.
+    broke_first = main["dead"] is not None and main["dead"] <= at["care"]
+    return {"dead": main["dead"], "short": main["short"], "atDraw": at_draw, "atStop": pick(at["stop"]) or portfolio,
             "noCareDead": go(None, None)["dead"], "stayHomeDead": go(at["care"], None)["dead"],
-            "extra": extra_needed(main["series"], r, draw_m, at["care"], ltc_a, ltc, home, pensions, age_now, life_to),
+            "extra": None if broke_first else extra_needed(main["series"], r, draw_m, at["care"], ltc_a, ltc, home, pensions, age_now, life_to),
             "bt": {k: bt[k] for k in ("ok", "n", "N", "from", "to")} if bt else None}
 
 

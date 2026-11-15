@@ -1074,6 +1074,7 @@ const GLOSSARY = {
   cpp:            {w:"CPP", pos:"noun", def:"Canada Pension Plan: a monthly pension for life, paid for by the contributions taken from your pay. What you will get depends on how long and how much you contributed; your My Service Canada account shows an estimate.", also:["oas"]},
   oas:            {w:"OAS", pos:"noun", def:"Old Age Security: a monthly pension from 65 for people who have lived in Canada long enough after 18, whatever they earned. A full pension needs 40 years of residence; fewer years give part of it, and a high income in retirement reduces it.", also:["cpp"]},
   long_term_care: {w:"long-term care", pos:"noun", def:"Help with daily living in later life, at home or in a facility, usually paid for privately."},
+  shortfall:      {w:"shortfall", pos:"noun", def:"What is still to pay after the money set aside for it has run out. It says how much is missing, not where it would come from.", also:["drawdown"]},
   // Words this page coined
   for_fire:       {own:1, w:"For FIRE", pos:"on this page", def:"Money whose job is to grow until you stop working. FIRE progress is measured on it.", also:["portfolio","fire"]},
   set_aside:      {own:1, w:"Set aside", pos:"on this page", def:"Money promised to a goal, such as a first home or a trip. It is left out of FIRE progress and out of dry powder.", also:["promised_to_a_goal"]},
@@ -2801,16 +2802,19 @@ const BOOKV = {"mv": 51290, "bv": 45922, "incomeYtd": 763};
 // DRAWDOWN.at is those ages, DRAWDOWN.now the plan at them. The page keeps the sums below to
 // redraw as an age is moved; drawNow(at) is those sums at given ages, and check_render's R8
 // fails when a freshly built page's drawNow(DRAWDOWN.at) is not DRAWDOWN.now.
-const DRAWDOWN = {"at": {"stop": 32, "draw": 55, "care": 80, "ltc": 88, "tier": 0}, "now": {"dead": 60.25, "atDraw": 161597.16497027813, "atStop": 51290, "noCareDead": 60.25, "stayHomeDead": 60.25, "extra": 1019075.515359873, "bt": {"ok": 0, "n": 59, "N": 40, "from": 1928, "to": 2025}}};
+const DRAWDOWN = {"at": {"stop": 32, "draw": 55, "care": 80, "ltc": 88, "tier": 0}, "now": {"dead": 60.25, "short": 1777440.6444244043, "atDraw": 161597.16497027813, "atStop": 51290, "noCareDead": 60.25, "stayHomeDead": 60.25, "extra": null, "bt": {"ok": 0, "n": 59, "N": 40, "from": 1928, "to": 2025}}};
+// Money that runs out before care begins: everything after it is the shortfall, so there is no
+// "extra for care" to state.
+const brokeBefore = (run, careA) => run.dead !== null && run.dead <= careA;
 function drawNow(a){
   if(!a || !BORN || !LTC_TIERS[a.tier]) return null;
   const ltc = LTC_TIERS[a.tier], drawM = PLAN_BASE, ltcA = a.ltc >= LIFE_TO ? null : a.ltc;
   const go = (careA, lA) => coastRun(PORTFOLIO, COAST_R, MONTHLY_CONTRIB, drawM, a.stop, a.draw, careA, lA, ltc);
   const run = go(a.care, ltcA), atDraw = run.series[Math.round((a.draw - AGE_NOW) * 12)] || 0;
   const bt = backtest(atDraw, drawM, a.draw, a.care, ltcA, ltc);
-  return {dead: run.dead, atDraw, atStop: run.series[Math.round((a.stop - AGE_NOW) * 12)] || PORTFOLIO,
+  return {dead: run.dead, short: run.short, atDraw, atStop: run.series[Math.round((a.stop - AGE_NOW) * 12)] || PORTFOLIO,
           noCareDead: go(null, null).dead, stayHomeDead: go(a.care, null).dead,
-          extra: extraNeeded(run, drawM, a.care, ltcA, ltc),
+          extra: brokeBefore(run, a.care) ? null : extraNeeded(run, drawM, a.care, ltcA, ltc),
           bt: bt ? {ok: bt.ok, n: bt.n, N: bt.N, from: bt.from, to: bt.to} : null};
 }
 const DRAW_AT = DRAWDOWN.at || {};
@@ -2862,14 +2866,15 @@ function careAt(age, careA, ltcA, ltc){
   return 0;
 }
 function coastRun(p0, r, contribM, drawM, stopA, startA, careA, ltcA, ltc){
-  const m = r/12, out = [p0]; let v = p0, dead = null;
+  const m = r/12, out = [p0]; let v = p0, dead = null, short = 0;
   for(let i=1; i<=(LIFE_TO-AGE_NOW)*12; i++){
     const age = AGE_NOW + (i-1)/12;
     v = v*(1+m) + (age < stopA ? contribM : 0) - takeOut(age, (age >= startA ? drawM : 0) + careAt(age, careA, ltcA, ltc));
-    if(v <= 0){ if(dead === null) dead = AGE_NOW + i/12; v = 0; }   // spent is spent: nothing, never below
+    // spent is spent: the portfolio stays at nothing, and what it could not pay adds to the shortfall
+    if(v <= 0){ short += -v; if(dead === null) dead = AGE_NOW + i/12; v = 0; }
     out.push(v);
   }
-  return {series:out, dead};
+  return {series:out, dead, short};
 }
 // Age at which today's money alone — no further contributions — reaches the FIRE target.
 function coastReachAge(p0, target, r){
@@ -2944,7 +2949,9 @@ function renderCoast(target, annualSpend){
     ["Highest rate", empty ? "\u2014" : atDraw >= annualSpend
       ? numx(peakR.toFixed(1)+"% at "+Math.floor(peakA), [], "Recomputed every month up to age "+(LIFE_TO-HORIZON)+"; the last "+HORIZON+" years are left out, when a high rate only means the pot is being spent as planned.")
       : "Never a year of spending", atDraw >= annualSpend && peakR > 4 && lasts ? "hi" : ""],
-    ["Lasts to "+LIFE_TO, empty ? "Nothing to draw from yet" : lasts ? "Yes" : "No, runs out at "+Math.floor(run.dead), lasts || empty ? "" : "hi"]
+    ["Lasts to "+LIFE_TO, empty ? "Nothing to draw from yet" : lasts ? "Yes" : "No, runs out at "+Math.floor(run.dead), lasts || empty ? "" : "hi"],
+    !lasts && !empty && run.short > 0 ? [term("shortfall", "Shortfall")+", "+Math.floor(run.dead)+" to "+LIFE_TO,
+      numx(fmt(run.short), [], "What is still to pay after the money has run out \u2014 spending and care, less any pensions \u2014 added up in today\u2019s money. It says how much is missing, not where it would come from."), "hi"] : null
   ].concat(PENSIONS.length
     ? PENSIONS.map(p => [term(p.k === "OAS" ? "oas" : p.k === "CPP" ? "cpp" : "", p.k)+" from "+p.from,
         numx(fmt(p.v)+" a month", [], "From "+(p.src || "your own statement")+(p.asof ? ", "+p.asof : "")+", in today\u2019s dollars. It pays part of what is taken out from that age.")])
@@ -2958,7 +2965,7 @@ function renderCoast(target, annualSpend){
     for(let a = careAge; a < LIFE_TO; a += 1/12) bill += careAt(a, careAge, ltcA, ltc);
     const noCareEnd = runNoCare.dead === null ? null : Math.floor(runNoCare.dead);
     const stayEnd   = runStayHome.dead === null ? null : Math.floor(runStayHome.dead);
-    const extra = extraNeeded(run, drawM, careAge, ltcA, ltc);
+    const early = brokeBefore(run, careAge), extra = early ? null : extraNeeded(run, drawM, careAge, ltcA, ltc);
     $("careMeta").innerHTML = metaList([
       [term("long_term_care", "Light care at home")+", from "+careAge, numx(fmt(atHome)+" a month", [["Today", fmt(HOME_CARE.v)], ["At "+careAge, fmt(atHome)]],
         HOME_CARE.d+". Rising "+(HOME_CARE.esc*100).toFixed(1)+"% a year above inflation.")],
@@ -2966,7 +2973,7 @@ function renderCoast(target, annualSpend){
         : ["Then "+ltc.k+", from "+ltcAge, numx(fmt(atLtc)+" a month", [["Today", fmt(ltc.v)], ["At "+ltcAge, fmt(atLtc)]],
             ltc.d+". Rising "+(ltc.esc*100).toFixed(1)+"% a year above inflation.")],
       ["Whole care bill, "+careAge+" to "+LIFE_TO, fmt(bill)],
-      ["Extra needed at "+careAge, extra === null ? "\u2014" : extra === 0 ? "None" : numx(fmt(extra), [], "The smallest lump at "+careAge+" that keeps the pot alive to "+LIFE_TO+"."), extra ? "hi" : ""],
+      ["Extra needed at "+careAge, early ? "The money runs out at "+Math.floor(run.dead)+", before care starts" : extra === null ? "\u2014" : extra === 0 ? "None" : numx(fmt(extra), [], "The smallest lump at "+careAge+" that keeps the pot alive to "+LIFE_TO+"."), extra ? "hi" : ""],
       ["Staying home throughout", empty ? "\u2014" : stayEnd === null ? "Lasts past "+LIFE_TO : "Runs out at "+stayEnd],
       ["With no paid care", empty ? "\u2014" : noCareEnd === null ? "Lasts past "+LIFE_TO : "Runs out at "+noCareEnd, "mut"]
     ]) + (ltcA === null ? "" : '<div class="cap" style="margin-top:8px">From '+ltcAge+' the care-home fee is charged on top of the whole planning figure, so the plan has more room after '+ltcAge+' than the chart shows.</div>');
