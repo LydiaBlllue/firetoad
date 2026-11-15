@@ -449,7 +449,7 @@ def render(base, root, st, q, rec, job, held, tool=None, lang="en", first=False)
     else:
         v1_next = f'<a class="btn primary" href="{e(base)}/" target="_blank">{e(t(lang, "open_dash"))}</a>'
     fill = {"{{BASE}}": e(base), "{{LANG}}": e(lang), "{{TITLE}}": "FIRE Toad",
-            "{{SUBTITLE}}": e(t(lang, "subtitle")),
+            "{{SUBTITLE}}": e(t_w(lang, "w_title") if first else t(lang, "subtitle")),
             "{{OPEN_DASH}}": e(t(lang, "open_dash")), "{{LANG_OTHER}}": e(t(lang, "lang_other")),
             "{{OTHER_LANG}}": "zh" if lang == "en" else "en",
             "{{BARS}}": bars(view), "{{VIEW}}": str(view), "{{CUR}}": str(cur), "{{INFOLDER}}": str(ready),

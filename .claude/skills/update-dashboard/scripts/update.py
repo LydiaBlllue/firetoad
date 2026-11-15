@@ -366,8 +366,13 @@ def type_row(ws, acc, desc, amt, when, holder=None):
         return "Transfer", "e-Transfer sent", {
             "kind": "transfer", "what": f"A {money(-amt)} e-Transfer sent on {short(iso_to_date(when))} went to someone you have not named.",
             "default": "Transfer", "facts": {"kind": "sent", "amount": -amt, "date": when, "to": sender_of(desc) or None}}
-    if broker_n and (broker_n in dn or "WSINVESTMENT" in dn or "WSIMPLE" in dn):
-        return "Transfer", f"Transfer {'to' if amt < 0 else 'from'} {ws.broker}", None
+    # Money to or from a broker is moved, not spent. A broker the statement names is enough, even
+    # before its own export is in the register: a first setup from bank statements alone used to
+    # file a twice-monthly deposit as a purchase, and then as a subscription (2026-11-15).
+    ws_named = "WSINVESTMENT" in dn or "WSIMPLE" in dn
+    if (broker_n and broker_n in dn) or ws_named:
+        to = ws.broker if broker_n and broker_n in dn else "Wealthsimple"
+        return "Transfer", f"Transfer {'to' if amt < 0 else 'from'} {to}", None
     if amt > 0 and ("PAYROLL" in dn or ("PAY" in dn and "DEPOSIT" in dn)):
         return "Payroll", "Payroll deposit", None
     for card in ws.cards:

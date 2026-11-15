@@ -6,6 +6,9 @@
   merchants or transfers to categorize, the setup goes straight on to them in the same window —
   "Last step: what the files could not say" — and the last answer opens the dashboard. The
   monthly import is not met until the first month.
+- **Money sent to Wealthsimple is a transfer, even before its export is in.** A first setup
+  from bank statements alone filed a twice-monthly deposit to the broker as a purchase, asked
+  you to categorize it, and counted it as a subscription.
 - **Your savings rate, and the years it takes** (Home). What work brought in less what was
   spent, over your last full months, and how many years of saving that is until the money
   covers twenty-five years of spending — shown as a range, 5% to 3% a year after inflation, with
