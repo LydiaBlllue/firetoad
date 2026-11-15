@@ -2866,7 +2866,7 @@ function coastRun(p0, r, contribM, drawM, stopA, startA, careA, ltcA, ltc){
   for(let i=1; i<=(LIFE_TO-AGE_NOW)*12; i++){
     const age = AGE_NOW + (i-1)/12;
     v = v*(1+m) + (age < stopA ? contribM : 0) - takeOut(age, (age >= startA ? drawM : 0) + careAt(age, careA, ltcA, ltc));
-    if(v <= 0 && dead === null){ dead = AGE_NOW + i/12; v = 0; }
+    if(v <= 0){ if(dead === null) dead = AGE_NOW + i/12; v = 0; }   // spent is spent: nothing, never below
     out.push(v);
   }
   return {series:out, dead};

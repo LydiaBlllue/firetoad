@@ -29,6 +29,10 @@
   survives are worked out at build time, at the ages the page starts from (`drawdown.py`). Those
   ages (55, 80, 88) were written into the page; the page reads them now. R8 holds the page's own
   sums to these as well.
+- **Money that has run out stays at nothing** (2026-11-15). In the drawdown, the months after
+  the portfolio ran out went on subtracting, so hovering the line showed a negative amount, and
+  for a plan whose money ran out before care began, "to be holding when care starts" included
+  filling that hole. A plan whose money lasts until care begins reads as it did.
 - **The roadmap you read is the release roadmap** (2026-11-13, user 001): the file is
   RELEASE-ROADMAP.md, where it was ROADMAP.md, so it reads as what it is, the plan of what is
   released next. A sync removes the old file from a folder once the new one is there.

@@ -53,14 +53,15 @@ def care_at(age, care_a, ltc_a, ltc, home, age_now):
 
 def run(p0, r, contrib, draw_m, stop_a, start_a, care_a, ltc_a, ltc, home, pensions, age_now, life_to):
     """{series, dead}: the portfolio month by month to the plan's last year, and the age it
-    runs out (None when it does not)."""
+    runs out (None when it does not). Once it runs out it is nothing in every month after."""
     m, v, out, dead = r / 12, p0, [p0], None
     for i in range(1, (life_to - age_now) * 12 + 1):
         age = age_now + (i - 1) / 12
         v = v * (1 + m) + (contrib if age < stop_a else 0) \
             - take_out(age, (draw_m if age >= start_a else 0) + care_at(age, care_a, ltc_a, ltc, home, age_now), pensions)
-        if v <= 0 and dead is None:
-            dead, v = age_now + i / 12, 0
+        if v <= 0:
+            # spent is spent: it stays at nothing, it does not go on into a debt nobody lent
+            dead, v = (age_now + i / 12 if dead is None else dead), 0
         out.append(v)
     return {"series": out, "dead": dead}
 

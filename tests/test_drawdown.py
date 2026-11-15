@@ -53,7 +53,13 @@ class TheRun(unittest.TestCase):
         r = run(p0=1200, draw=100, start=31)
         self.assertEqual(r["series"][12], 1200)
         self.assertEqual(r["dead"], 32)
-        self.assertEqual(r["series"][24], 0)        # the month it runs out is shown as nothing left
+        self.assertEqual(set(r["series"][24:]), {0})     # nothing left, in that month and every one after
+
+    def test_money_that_ran_out_before_care_is_not_a_hole_care_has_to_fill(self):
+        # nothing at 31; care from 40 for ten years with no growth costs the same lump as starting from nothing
+        s = run(p0=1200, draw=100, start=30)["series"]
+        x = dd.extra_needed(s, 0.0, 100, 40, None, LTC, HOME, None, 30, 50)
+        self.assertAlmostEqual(x, 4100 * 120, delta=4200)
 
     def test_money_that_lasts_has_no_last_age(self):
         self.assertIsNone(run(p0=10 ** 9, draw=100, start=31)["dead"])
