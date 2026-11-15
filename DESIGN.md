@@ -97,7 +97,13 @@
     answers the page's question; each section's detail is folded to one line that carries the
     section's name and what it comes to, opening in place (*Show all*); what the reader acts on
     — a slider, a field — is never folded; and a long table starts with its newest rows and
-    offers the rest. A reference page (the Glossary) is exempt and marked `ref`.
+    offers the rest. A reference page (the Glossary) is exempt and marked `ref`. Folding the detail is
+    usually enough to bring a page under the line, and then it needs no sections: Updates is one
+    line per update, the newest open, and inside it what was decided without asking, what was
+    asked and the files are each a line of their own; Statements folds *What arrives each month*
+    and *Still missing*; This month folds *Where the income went*; Year folds *Everyday, month by
+    month*; Investment income shows the eight holdings that paid the most and offers the rest.
+    A fold inside a fold sits one step in. R9 is an error since 1.0.5.
   - **Updates, Statements, the Glossary and Settings sit at the foot**, above the version, under
     no heading: what each update changed, which statements are in, a reference for reading the
     page, and the numbers that are the owner's to choose. None of them belongs to a stage.

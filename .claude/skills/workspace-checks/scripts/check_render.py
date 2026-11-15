@@ -276,8 +276,8 @@ def check(path):
     tall = [(p["k"], p["h"]) for p in res[WIDTHS[-1]]["pages"]
             if p["h"] > LONG * SHORT[0] and p["k"] in nav and not nav[p["k"]]["ref"] and not nav[p["k"]]["secs"]]
     for k, h in tall:
-        warn("R9", f"page '{nav[k]['n']}' is {h / SHORT[0]:.1f} screens long at {WIDTHS[-1]}px and lists no sections in the sidebar "
-                   f"— past {LONG} screens a page says what is further down (DESIGN.md §4)")
+        err("R9", f"page '{nav[k]['n']}' is {h / SHORT[0]:.1f} screens long at {WIDTHS[-1]}px and lists no sections in the sidebar "
+                   f"— past {LONG} screens a page says what is further down (DESIGN.md §4)", "conform")
     if nav and not tall:
         note("R9", f"every page past {LONG} screens lists its sections in the sidebar")
 
