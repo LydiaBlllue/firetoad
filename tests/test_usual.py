@@ -73,6 +73,60 @@ class AUsualMonth(unittest.TestCase):
         self.assertEqual(sorted(by), ["2025-04", "2025-05"])
 
 
+class WhatACategoryUsuallyCosts(unittest.TestCase):
+
+    def rows(self):
+        out = []
+        for m, food, fun in (("2025-01", 100, 0), ("2025-02", 300, 50), ("2025-03", 200, 0), ("2025-04", 400, 70)):
+            out.append(row(m + "-05", food, category="grocery"))
+            if fun:
+                out.append(row(m + "-06", fun, category="fun"))
+        return out
+
+    def test_it_is_the_median_of_the_months_before(self):
+        self.assertEqual(usual.medians(self.rows(), END, {}, "2025-04"), {"n": 3, "cats": {"grocery": 200}})
+
+    def test_an_even_window_takes_the_middle_two(self):
+        m = usual.medians(self.rows(), END, {}, "2025-05")
+        self.assertEqual((m["n"], m["cats"]["grocery"], m["cats"]["fun"]), (4, 250, 25))
+
+    def test_a_month_without_the_category_counts_as_nothing(self):
+        self.assertNotIn("fun", usual.medians(self.rows(), END, {}, "2025-04")["cats"])
+
+    def test_fewer_than_three_months_has_no_usual(self):
+        self.assertIsNone(usual.medians(self.rows(), END, {}, "2025-03"))
+
+
+class ThePlanningBaseline(unittest.TestCase):
+
+    def test_it_leaves_out_what_ends_before_fire(self):
+        rows = year([100, 100, 100]) + [row("2025-02-03", 900, category="education")]
+        b = usual.baseline(rows, END, {}, "2025-04-10", ["education"])
+        self.assertEqual((b["avg"], [r["v"] for r in b["rows"]]), (100, [100, 100, 100]))
+
+    def test_the_month_in_progress_is_not_in_it(self):
+        b = usual.baseline(year([100, 100, 100, 5000]), END, {}, "2025-04-10", [])
+        self.assertEqual((b["avg"], len(b["rows"])), (100, 3))
+
+    def test_fewer_than_three_months_lists_them_and_averages_nothing(self):
+        b = usual.baseline(year([100, 100]), END, {}, "2025-03-10", [])
+        self.assertEqual((b["avg"], len(b["rows"])), (None, 2))
+
+    def test_the_twelve_newest_months_that_had_spending(self):
+        b = usual.baseline(year([700, 0] + [100] * 12), {"card": "2026-02-28"}, {}, "2026-03-10", [])
+        self.assertEqual((b["avg"], len(b["rows"])), (100, 12))
+
+
+class TheConstant(unittest.TestCase):
+
+    def test_it_carries_the_three_parts(self):
+        u = usual.measured(year([100, 100, 100, 100]), END, {}, "2025-04-20", [])
+        self.assertEqual(sorted(u), ["base", "median", "month"])
+        self.assertEqual(sorted(u["month"]), ["2025-04", "2025-05"])
+        self.assertEqual(sorted(u["median"]), ["2025-04", "2025-05"])
+        self.assertEqual(u["base"]["avg"], 100)
+
+
 class TheEmergencyFund(unittest.TestCase):
 
     def test_months_covered_is_the_money_over_what_a_month_costs(self):

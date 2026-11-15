@@ -18,6 +18,12 @@
 - *Under the page*: a usual month and the emergency fund's months are computed once, at build
   time (`usual.py`), and the page is handed the result — every page reads as it did. `settings.py`
   is the one table of adjustable numbers; D31 holds a stored value to its range.
+- *More sums computed once* (2026-11-15): each category's usual month and the average the
+  planning figure is calibrated on (`usual.py`), and the FIRE target, progress, months to go at
+  each return and the coast age (`fire.py`) are worked out at build time; FINANCE.md's figures
+  table is written from the same numbers. The page keeps the FIRE sums to redraw while a number
+  is being changed, and a new check (R8) fails when the two stop agreeing. Every page reads as it
+  did.
 - **The roadmap you read is the release roadmap** (2026-11-13, user 001): the file is
   RELEASE-ROADMAP.md, where it was ROADMAP.md, so it reads as what it is, the plan of what is
   released next. A sync removes the old file from a folder once the new one is there.

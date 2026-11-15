@@ -30,6 +30,7 @@ import categories                          # the spending categories and their g
 import verbs                               # the shape run() returns, shared by every script a month goes through
 import usual                               # a usual month and the emergency fund's months -- computed once, here
 import settings                            # the numbers that are the owner's to choose -- one table
+import fire                                # the FIRE target, progress and months to go -- computed once, here
 
 MAIN_NAMES = ("ly_finance_dashboard.html", "finance_dashboard.html")   # an owner's copy, or the template's
 INV_NAME = "investment_dashboard.html"
@@ -748,9 +749,10 @@ def derive(d):
     # A usual month, as of every month the page can be turned to, and what the emergency fund
     # comes to on today's (usual.py). Both were the page's own arithmetic until 1.0.5; computed
     # here, a checker or a second front end reads the same numbers the page shows.
-    out["USUAL"] = usual.by_month(out["SPENDING"], out["STMT_END"], out["MONTH_SKIP"], today)
+    out["USUAL"] = usual.measured(out["SPENDING"], out["STMT_END"], out["MONTH_SKIP"], today,
+                                  [c["k"] for c in out["CATS"] if c.get("noFire")])
     out["SAFETY"].update(usual.runway(by_reach["today"], inv_today, unsecured, by_reach["abroad"], ft["repayNow"],
-                                      out["USUAL"].get(today[:7])))
+                                      out["USUAL"]["month"].get(today[:7])))
     # The numbers that are the owner's to choose, each with its value now (settings.py).
     out["SETTINGS"] = settings.rows({"plan.json": plan, "funds.json": d["funds"], "profile.json": prof})
     # What each card statement charged in interest (1.0.1): a fact the import keeps, one row per
@@ -794,6 +796,11 @@ def derive(d):
         "counterparty": next(({"name": doc["counterparty"]} for doc in d["accounts"].get("documents", [])
                               if doc.get("counterparty")), None),
     }
+    # The FIRE figures at the plan's own values (fire.py): the page shows them, the figures table
+    # in FINANCE.md is written from them, and check_render's R8 holds the page's own sums to them.
+    out["FIRE"] = fire.figures(out["INVEST"]["portfolio"], plan.get("planBase"), flow_totals(d["funds"]["plan"])["invest"],
+                               out["SCENARIOS"], out["HORIZON"], out["ANCHOR_Y"], today, out["COAST_R"],
+                               prof.get("born"), out["LIFE_TO"])
     out["FOREIGN"] = {"asof": fj["asof"], "currency": fj.get("currency"), "symbol": fj.get("symbol", ""),
                       "label": fgn_label, "total": round(fj["total"], 2), "cadPerUnit": rate_f,
                       # A fund row shows its code beside the name, the way the broker app does.
@@ -957,11 +964,11 @@ def sync_figures(root, out):
     fj, plan = out["FOREIGN"], out["FUNDS"]["plan"]
     nw = inv["netWorth"] + round(fj["total"] * fj["cadPerUnit"])
     port = inv["portfolio"]
-    tgt = (pb or 0) * 300
+    tgt, F = out["FIRE"]["target"], out["FIRE"]
     miss = flow_unset(plan)
     val = {"plan_base": f"${pb:,} /mo", "fire_target": f"${tgt:,}", "net_worth": f"${nw:,}",
            "portfolio": f"${port:,}",
-           "progress": f"{round(port / tgt * 100, 1) if tgt else 0}%", "gap": f"${tgt - port:,}",
+           "progress": f"{F['pct']}%", "gap": f"${F['gap']:,}",
            "invest_monthly": f"${flow_totals(plan)['invest']:,}", "everyday": f"${flow_totals(plan)['everyday']:,}",
            "dry_powder": f"{inv['dryPct']}%"} if pb is not None else None
     if val is None:

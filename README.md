@@ -140,8 +140,8 @@ the screens do not cover (anything held abroad, a loan to a friend, your investi
 
 - **[How it works](docs/how-it-works.md)**: every page, the monthly run, the folder, and the
   checkers that keep the numbers honest.
-<!-- LINT:FAULTS n=66 -->
-  Four checkers hold every figure to its source; a selftest plants 66 faults to prove they still catch them.
+<!-- LINT:FAULTS n=67 -->
+  Four checkers hold every figure to its source; a selftest plants 67 faults to prove they still catch them.
 - **[Installing the app](docs/install.md)**: the download, the first launch, and what to do if macOS still asks.
 - **[Supported banks and brokers](docs/banks.md)**: which to use, which banks' files are read, which are confirmed on a real
   one, and how to download each.

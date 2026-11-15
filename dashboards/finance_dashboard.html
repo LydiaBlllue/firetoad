@@ -701,7 +701,6 @@ const CCOL = Object.fromEntries(CATS.map(c=>[c.k,c.c]));
 const CGRP = Object.fromEntries(CATS.map(c=>[c.k,c.g]));
 const catName = k => (CATS.find(c => c.k === k) || {n:k}).n;
 const inEveryday = e => (CGRP[e.category] || "everyday") === "everyday";
-const inTarget    = e => !(CATS.find(c => c.k === e.category) || {}).noFire;
 const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const SUB_KEYS = [{"name": "Amazon Prime", "amount": 10.99, "months": 8}, {"name": "Apple", "amount": 3.99, "months": 8}, {"name": "Goodlife Fitness", "amount": 32.99, "months": 8}, {"name": "Koodo Mobile", "amount": 45.2, "months": 8}, {"name": "Netflix", "amount": 18.99, "months": 8}, {"name": "Oc Transpo", "amount": 135.0, "months": 8}, {"name": "Rogers Internet", "amount": 75.0, "months": 8}, {"name": "Spotify", "amount": 11.29, "months": 8}];
 
@@ -782,7 +781,6 @@ const ymNum = ym => Number(ym.slice(0,4)) * 12 + Number(ym.slice(5,7));
 const cmpOf = ym => monthOf(ym).filter(e => !e.yr).concat(
   SPENDING.filter(e => e.yr && e.currency === "CAD" && ymNum(ym) - ymNum(e.date) >= 0 && ymNum(ym) - ymNum(e.date) < 12)
           .map(e => Object.assign({}, e, {amount: e.amount / 12})));
-const monthTarget = ym => cmpOf(ym).filter(inTarget).reduce((s,e) => s + e.amount, 0);
 function ymShift(ym,d){let[y,m]=ym.split("-").map(Number);m+=d;if(m<1){m=12;y--}if(m>12){m=1;y++}return y+"-"+String(m).padStart(2,"0");}
 // Months from today as a label ("Aug 2039").
 const dTxt = m => { if(m === null) return "beyond 25y"; const [Y,M] = TODAY.slice(0,7).split("-").map(Number); const t = M-1+m, yy = Y + Math.floor(t/12); return MN[t%12]+" "+yy; };
@@ -1398,8 +1396,7 @@ function renderHome(){
   const invested = INVEST.portfolio;   // every account held to grow, the foreign funds included; 0 until the first holdings export
   // Four questions, one per section: is the money growing, how far along, did this month's rule
   // hold, and what the month cost. Net worth is the header line; "reach" is the table.
-  const pctP = Math.round(PORTFOLIO/target*1000)/10;
-  const crossP = crossMonth(project(PORTFOLIO, 0.05, 300), target);
+  const FN = fireNow(), pctP = FN.pct, crossP = FN.homeCross;
   const dep = (WSDEP||[]).slice(-1)[0] || null, half = FUNDS.plan.invest/2;
   const curYM = TODAY.slice(0,7);
   const gross = NWPARTS.reduce((a,r) => a + r.v, 0);
@@ -1980,16 +1977,9 @@ let catSel = null;
 //   last 12 -- because at ten years an all-time median would blend 2026 prices with 2036 ones
 //              and quietly stop meaning "typical". The window is named in the UI so it cannot
 //              drift without someone noticing.
-const CAT_WINDOW = 12;
-const catWindow = ym => usableMonths().filter(m => m < ym).slice(-CAT_WINDOW);
-function catMedian(cat, ym){
-  const win = catWindow(ym);
-  if(win.length < 3) return null;
-  const vs = win.map(m => cmpOf(m).filter(e => e.category === cat).reduce((s,e) => s + e.amount, 0));
-  vs.sort((a,b) => a - b);
-  const h = vs.length >> 1;
-  return vs.length % 2 ? vs[h] : (vs[h-1] + vs[h]) / 2;
-}
+// Worked out at build time since 1.0.5 (usual.py `medians`): USUAL.median[ym] is {n, cats}.
+const catUsual = ym => (USUAL.median || {})[ym] || null;
+function catMedian(cat, ym){ const u = catUsual(ym); return u ? (u.cats[cat] || 0) : null; }
 // A usual month, whole: the median of the monthly totals over the same window. Until
 // 2026-10-26 the card added up only the categories that ran over and let the ones that ran under
 // count for nothing, so it showed a gap no two figures on the page could produce.
@@ -2000,16 +1990,9 @@ function catMedian(cat, ym){
 // still paid. Emergency fund, Investment income, This month and Monthly spending all read this.
 // Computed at build time since 1.0.5 (usual.py), one answer per month the page can be turned to,
 // so the page and everything outside it read the same number.
-const USUAL = {"2026-04": {"v": 2713.9899999999993, "n": 3}, "2026-05": {"v": 2747.7224999999994, "n": 4}, "2026-06": {"v": 2735.9499999999994, "n": 5}, "2026-07": {"v": 2808.371666666666, "n": 6}, "2026-08": {"v": 2806.7928571428565, "n": 7}, "2026-09": {"v": 2806.7928571428565, "n": 7}, "2026-10": {"v": 2806.7928571428565, "n": 7}};
-const usualMonthAt = ym => USUAL[ym] || null;
+const USUAL = {"month": {"2026-04": {"v": 2713.9899999999993, "n": 3}, "2026-05": {"v": 2747.7224999999994, "n": 4}, "2026-06": {"v": 2735.9499999999994, "n": 5}, "2026-07": {"v": 2808.371666666666, "n": 6}, "2026-08": {"v": 2806.7928571428565, "n": 7}, "2026-09": {"v": 2806.7928571428565, "n": 7}, "2026-10": {"v": 2806.7928571428565, "n": 7}}, "median": {"2026-04": {"n": 3, "cats": {"Bills": 213.43, "Dining": 121.35, "Entertainment": 58.89, "Fees": 16.95, "Grocery": 435.69, "Health": 102.04000000000002, "Housing": 1450.0, "Other": 5.71, "Shopping": 156.70000000000002, "Transport": 152.98}}, "2026-05": {"n": 4, "cats": {"Bills": 210.23000000000002, "Dining": 116.575, "Entertainment": 74.94, "Fees": 16.95, "Grocery": 425.575, "Health": 101.02000000000001, "Housing": 1450.0, "Other": 9.68, "Shopping": 162.0, "Transport": 154.17000000000002}}, "2026-06": {"n": 5, "cats": {"Bills": 207.03, "Dining": 121.35, "Entertainment": 58.89, "Fees": 16.95, "Grocery": 435.69, "Health": 100.0, "Housing": 1450.0, "Other": 5.71, "Shopping": 156.70000000000002, "Transport": 155.36}}, "2026-07": {"n": 6, "cats": {"Bills": 210.23000000000002, "Dining": 119.37, "Entertainment": 46.58, "Fees": 16.95, "Grocery": 445.81499999999994, "Health": 93.16, "Housing": 1450.0, "Other": 2.855, "Shopping": 162.0, "Transport": 155.93}}, "2026-08": {"n": 7, "cats": {"Bills": 207.03, "Dining": 121.35, "Entertainment": 58.89, "Fees": 16.95, "Grocery": 455.93999999999994, "Health": 86.32000000000001, "Housing": 1450.0, "Shopping": 156.70000000000002, "Transport": 156.5}}, "2026-09": {"n": 7, "cats": {"Bills": 207.03, "Dining": 121.35, "Entertainment": 58.89, "Fees": 16.95, "Grocery": 455.93999999999994, "Health": 86.32000000000001, "Housing": 1450.0, "Shopping": 156.70000000000002, "Transport": 156.5}}, "2026-10": {"n": 7, "cats": {"Bills": 207.03, "Dining": 121.35, "Entertainment": 58.89, "Fees": 16.95, "Grocery": 455.93999999999994, "Health": 86.32000000000001, "Housing": 1450.0, "Shopping": 156.70000000000002, "Transport": 156.5}}}, "base": {"avg": 2806.7928571428565, "rows": [{"m": "2026-01", "v": 2693.2099999999996}, {"m": "2026-02", "v": 2698.459999999998}, {"m": "2026-03", "v": 2750.299999999999}, {"m": "2026-04", "v": 2848.9199999999996}, {"m": "2026-05", "v": 2688.859999999999}, {"m": "2026-06", "v": 3170.48}, {"m": "2026-07", "v": 2797.319999999999}]}};
+const usualMonthAt = ym => (USUAL.month || {})[ym] || null;
 const usualMonth = () => usualMonthAt(TODAY.slice(0, 7));
-function monthMedian(ym){
-  const win = catWindow(ym);
-  if(win.length < 3) return null;
-  const vs = win.map(m => cmpOf(m).reduce((s,e) => s + e.amount, 0)).sort((a,b) => a - b);
-  const h = vs.length >> 1;
-  return vs.length % 2 ? vs[h] : (vs[h-1] + vs[h]) / 2;
-}
 const TX_COLS = [
   {h:"Date", c: e => e.date.slice(5), m:1, nw:1},
   {h:"Description", c: e => e.note, a:"l", num:false},
@@ -2074,7 +2057,7 @@ function renderCatPage(){
   $("catCap").textContent = "";
 
   const sel = rows.find(r => r.k === catSel);
-  const win = catWindow(viewYM);
+  const win = {length: (catUsual(viewYM) || {n: 0}).n};
   $("catDetLab").textContent = sel ? catName(sel.k) : "Detail";
   $("catDetail").innerHTML = !sel
     ? '<div class="empty">Nothing to show for '+ymLabel(viewYM)+' '+viewYM.slice(0,4)+'.</div>'
@@ -2234,10 +2217,10 @@ function renderBaseline(){
   if(!MONTHS.length) $("baseChart").innerHTML = '<text x="470" y="130" text-anchor="middle" font-size="13" fill="var(--muted)">No closed months with records yet.</text>';
   // The average of up to twelve closed months: big months are in it, and early retirement pays
   // for those too. usableMonths never reaches a month a card has not reported.
-  const closed = TODAY.slice(0,7);
-  const vals = usableMonths().filter(m => m < closed).map(m => ({m, v:monthTarget(m)})).filter(x => x.v > 0).slice(-12);
+  // Worked out at build time since 1.0.5 (usual.py `baseline`): the months used and their average.
+  const vals = (USUAL.base || {}).rows || [];
   if(vals.length >= 3){
-    baselineAvg = vals.reduce((s,x) => s + x.v, 0) / vals.length;
+    baselineAvg = USUAL.base.avg;
     const um = usualMonth();
     $("baseStats").innerHTML = StatCard(term("usual_month", "A usual month"), um ? numx(fmt(um.v), [["Months", um.n]], "Everything spent, averaged over your last full months, unusual ones left out.") : null, um ? "From "+um.n+" full months" : "");
     $("baseMonths").innerHTML = vals.map(x =>
@@ -2522,9 +2505,7 @@ function renderFire(){
   }
   const I = INVEST;
   const adjBase = PLAN_BASE;
-  const target = adjBase * 12 * 25;   // 4% rule: annual spend × 25
-  const pct = Math.round(PORTFOLIO / target * 1000) / 10;
-  const gap = Math.round(target - PORTFOLIO);
+  const F = fireNow(), target = F.target, pct = F.pct, gap = F.gap;   // 4% rule: annual spend × 25
   const fcard = StatCard;
   if(!unset("planBase")){
   $("fireStats").innerHTML =
@@ -2604,6 +2585,18 @@ function renderFire(){
 const MONTHLY_CONTRIB = FUNDS.plan.invest;   // the pay-yourself-first amount, from funds.json
 const SCENARIOS = [{"r": 0.03, "c": "#9ec5f4", "n": "3% real"}, {"r": 0.05, "c": "#2a78d6", "n": "5% real"}, {"r": 0.07, "c": "#104281", "n": "7% real"}];
 const HORIZON = 25;
+// The FIRE figures at the plan's own values, worked out at build time (fire.py). The page keeps
+// the same sums below, because it redraws while a number is being changed; fireNow() is those
+// sums at the page's numbers now, and check_render's R8 fails when a freshly built page's
+// fireNow() is not FIRE.
+const FIRE = {"target": 885000, "pct": 5.8, "gap": 833710, "cross": [null, null, null], "homeCross": null, "coastAge": 90.374303347623};
+function fireNow(){
+  const target = PLAN_BASE * 12 * 25, months = HORIZON * 12 - mIdx(TODAY.slice(0, 7));
+  return {target, pct: target ? Math.round(PORTFOLIO / target * 1000) / 10 : 0, gap: Math.round(target - PORTFOLIO),
+          cross: SCENARIOS.map(s => crossMonth(project(PORTFOLIO, s.r, months), target)),
+          homeCross: crossMonth(project(PORTFOLIO, 0.05, 300), target),
+          coastAge: target > 0 && BORN ? coastReachAge(PORTFOLIO, target, COAST_R) : null};
+}
 function project(p0, r, months){        // monthly compounding + level contribution
   const m = r/12, out = [p0];
   let v = p0;

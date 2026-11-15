@@ -81,6 +81,23 @@ async () => {
 """
 
 
+# R8: the FIRE figures are worked out twice -- at build time (fire.py, the FIRE constant) and in
+# the page (fireNow(), which it needs to redraw while a number is being changed). A freshly
+# loaded page has changed nothing, so the two must be the same numbers.
+FIRE_PROBE = "() => typeof fireNow === 'function' && typeof FIRE === 'object' ? {page: fireNow(), built: FIRE} : null"
+
+
+def fire_differs(page, built):
+    """The keys on which the page's own FIRE figures are not the built ones."""
+    def same(a, b):
+        if isinstance(a, list) and isinstance(b, list):
+            return len(a) == len(b) and all(same(x, y) for x, y in zip(a, b))
+        if isinstance(a, (int, float)) and isinstance(b, (int, float)) and not isinstance(a, bool):
+            return abs(a - b) <= 1e-6 * max(1, abs(a), abs(b))
+        return a == b
+    return sorted(k for k in set(page) | set(built) if not same(page.get(k), built.get(k)))
+
+
 def probe(path):
     """Load the page once per width and return {width: result}. Import is inside the function
     so the missing-browser message is a sentence, not a traceback from the top of the file."""
@@ -95,6 +112,8 @@ def probe(path):
             pg.goto("file://" + os.path.abspath(path))
             pg.wait_for_timeout(400)
             out[w] = pg.evaluate(PROBE)
+            if w == WIDTHS[0]:
+                out[w]["fire"] = pg.evaluate(FIRE_PROBE)
             pg.close()
         b.close()
     return out, console
@@ -238,6 +257,17 @@ def check(path):
         note("R5", "no undefined / NaN / null in any rendered page", "build")
     for c in console:
         err("R1", f"console error — {c[:120]}")
+
+    # -- R8 the page's own FIRE sums are the ones the build computed ------------
+    fp = res[WIDTHS[0]].get("fire")
+    if fp and fp.get("built"):
+        off = fire_differs(fp["page"], fp["built"])
+        if off:
+            err("R8", "the page works out " + ", ".join(f"{k} = {fp['page'].get(k)}" for k in off[:3])
+                + "; the build says " + ", ".join(f"{fp['built'].get(k)}" for k in off[:3])
+                + " — fire.py and the page's fireNow() no longer agree", "build")
+        else:
+            note("R8", "the page's own FIRE figures are the ones the build computed", "build")
 
     base = res[WIDTHS[0]]
     reached = {p["k"] for p in base["pages"]}

@@ -484,6 +484,9 @@ def m_render_nan(r):
     # looking at "undefined".
     edit(r, main_dash(r),
          lambda s: re.sub(r'"netWorth":\s*-?[\d.]+,\s*', '', s, count=1))
+def m_render_fire_drift(r):
+    # The page's own FIRE sum changed and fire.py not: twenty-six years of spending, not twenty-five.
+    edit(r, main_dash(r), lambda s: s.replace("const target = PLAN_BASE * 12 * 25, months", "const target = PLAN_BASE * 12 * 26, months", 1))
 def m_render_sidebar_stuck(r):
     # the sidebar loses its own scroll: in a short window its foot is out of reach (2026-11-05)
     edit(r, main_dash(r), lambda s: s.replace(";max-height:calc(100vh - 38px);overflow-y:auto", "", 1))
@@ -576,6 +579,7 @@ CASES = [
     ("R3", "a chart pinned to a fixed height",              m_render_chart_capped,"render"),
     ("R6", "the sidebar cannot scroll in a short window",   m_render_sidebar_stuck,"render"),
     ("R7", "Home shows a card with no number",              m_render_empty_card,  "render"),
+    ("R8", "the page's FIRE sum drifts from the build's",   m_render_fire_drift,  "render"),
 ]
 
 
