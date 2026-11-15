@@ -84,6 +84,20 @@
     (`WAITS` — Income without a chequing ledger, Investing and FIRE with nothing invested) is
     listed there with what it waits for, closed by default, and returns to its section by itself
     the day the data arrives. A workspace with only a credit card is then a complete product.
+  - **A long page lists its sections under it** (1.0.5, user 001, after the way a session lists
+    its branches in Claude Code's sidebar). The current page, when it has sections
+    (`PAGE_SECS`), shows them indented under its name on one thin line down; the one in view is in
+    ink; clicking one goes there, and opens it if it is folded. A thin chevron beside the page
+    folds the list, and the same chevron beside a stage's name folds the stage — never the one
+    the current page is in. What is folded is remembered with the page's state. Only a page that
+    needs it has sections: today Income & chequing (*Income*, *Chequing*) and Drawdown & care
+    (*The money*, *Care*, *Would it have lasted?*) — each name is that section's own heading on
+    the page, never a second vocabulary.
+  - **Past a screen and a half, a page says what is further down** (R9). Its first screen
+    answers the page's question; each section's detail is folded to one line that carries the
+    section's name and what it comes to, opening in place (*Show all*); what the reader acts on
+    — a slider, a field — is never folded; and a long table starts with its newest rows and
+    offers the rest. A reference page (the Glossary) is exempt and marked `ref`.
   - **Updates, Statements, the Glossary and Settings sit at the foot**, above the version, under
     no heading: what each update changed, which statements are in, a reference for reading the
     page, and the numbers that are the owner's to choose. None of them belongs to a stage.

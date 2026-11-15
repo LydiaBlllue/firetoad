@@ -487,6 +487,10 @@ def m_render_nan(r):
 def m_render_fire_drift(r):
     # The page's own FIRE sum changed and fire.py not: twenty-six years of spending, not twenty-five.
     edit(r, main_dash(r), lambda s: s.replace("const target = PLAN_BASE * 12 * 25, months", "const target = PLAN_BASE * 12 * 26, months", 1))
+def m_render_long_page(r):
+    # The Glossary is thirteen screens and exempt as a reference page; without the mark it is
+    # a long page that lists no sections.
+    edit(r, main_dash(r), lambda s: s.replace('d:"", ref:1}', 'd:""}', 1))
 def m_render_sidebar_stuck(r):
     # the sidebar loses its own scroll: in a short window its foot is out of reach (2026-11-05)
     edit(r, main_dash(r), lambda s: s.replace(";max-height:calc(100vh - 38px);overflow-y:auto", "", 1))
@@ -580,6 +584,7 @@ CASES = [
     ("R6", "the sidebar cannot scroll in a short window",   m_render_sidebar_stuck,"render"),
     ("R7", "Home shows a card with no number",              m_render_empty_card,  "render"),
     ("R8", "the page's FIRE sum drifts from the build's",   m_render_fire_drift,  "render"),
+    ("R9", "a long page that lists no sections",            m_render_long_page,   "render"),
 ]
 
 

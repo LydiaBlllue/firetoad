@@ -56,6 +56,28 @@ body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system
 /* the open page in the fold reads like any open page: dim grey on the dark pill was unreadable (#37) */
 .side details.wait button.sel{color:#fff}
 .side details.wait button.sel small{color:rgba(255,255,255,.72)}
+/* A long page lists its sections under it (DESIGN.md §4): indented, on one line down, the one in
+   view in ink. A thin chevron folds them; the same chevron folds a stage. */
+.side .chev{width:9px;height:9px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
+.side .shut>.chev,.side .chev.shut{transform:rotate(-90deg)}
+.side .sec.tog{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none}
+.side .sec.tog:hover{color:var(--ink-2)}
+.side button .tw{margin-left:auto;display:flex;padding:3px;border-radius:4px}
+.side .subs{position:relative;margin:1px 0 3px 16px;padding-left:15px}
+.side .subs::before{content:"";position:absolute;left:0;top:0;bottom:13px;width:9px;border-left:1.5px solid #c9c7bf;border-bottom:1.5px solid #c9c7bf;border-bottom-left-radius:7px}
+.side .subs button{font-size:12.5px;height:26px;padding:0 8px;color:var(--ink-2);border-radius:6px}
+.side .subs button.on{color:var(--ink);font-weight:600}
+/* A section of a long page folded to one line: its name, what it comes to, and the way in. */
+details.fold{border-top:1px solid var(--grid);scroll-margin-top:16px}
+details.fold>summary{display:flex;align-items:center;gap:16px;padding:10px 0;cursor:pointer;list-style:none}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary .lab{width:170px;flex-shrink:0;margin:0}
+details.fold>summary .fv{flex:1;font-size:13.5px;min-width:0}
+details.fold>summary .fa{font-size:12.5px;color:var(--bar);white-space:nowrap}
+details.fold>summary .fa::before{content:"Show all"}
+details.fold[open]>summary .fa::before{content:"Hide"}
+details.fold>.fb{padding:0 0 14px}
+.anchor{scroll-margin-top:16px}
 .side button .dot-n{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-left:auto}
 .main{flex:1;min-width:0}
 .pghead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;height:var(--headh);
@@ -448,7 +470,7 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 </section>
 
 <section data-pg="income" hidden>
-  <div class="grid-stats" id="incStats"></div>
+  <div class="grid-stats anchor" id="secIncome"><div id="incStats" style="display:contents"></div></div>
   <div class="card" style="margin-bottom:10px"><div class="lab" id="yrIncLab">By source</div><div id="yrIncCats"></div></div>
   <div class="card">
     <div class="lab">Each month, by source</div>
@@ -456,7 +478,7 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
     <div class="year-legend" id="incLegend"></div>
     <div class="cap" id="incChartCap"></div>
   </div>
-  <div class="card" style="margin-top:10px">
+  <div class="card anchor" style="margin-top:10px" id="secChq">
     <div class="lab" id="chqLab">Every row in chequing</div>
     <div class="chq-ctl"><input type="search" id="chqQ" placeholder="Search by merchant or description" aria-label="Search chequing rows"><div class="pills" id="chqAcct"></div></div>
     <table class="dt" id="chqTable"></table>
@@ -566,7 +588,19 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <section data-pg="coast" hidden>
   <div class="card" style="margin-bottom:10px">
-    <div class="say" id="drawSay"></div>
+    <div class="say" id="drawSay" style="margin-bottom:10px"></div>
+    <details class="fold" id="secMoney"><summary><span class="lab">The money</span><span class="fv" id="sumMoney"></span><span class="fa"></span></summary>
+      <div class="fb"><div id="coastMeta"></div></div></details>
+    <details class="fold" id="secCare"><summary><span class="lab">Care</span><span class="fv" id="sumCare"></span><span class="fa"></span></summary>
+      <div class="fb"><div id="careMeta"></div></div></details>
+    <details class="fold" id="secLasted" style="border-bottom:1px solid var(--grid)"><summary><span class="lab" id="btLab">Would it have lasted?</span><span class="fv" id="sumLasted"></span><span class="fa"></span></summary>
+      <div class="fb">
+        <div class="grid-stats" id="btStats" style="margin:8px 0 4px"></div>
+        <svg class="year-svg" id="btChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="phase-key" id="btKey"></div>
+        <div id="btMeta"></div>
+        <div id="btNote"></div>
+      </div></details>
     <div style="margin:10px 0 2px">
       <div class="ctl"><span class="cl">Stop adding at</span><input type="range" id="stopAge" min="26" max="65" step="1"><span class="cv" id="stopAgeV"></span></div>
       <div class="ctl"><span class="cl">Start taking at</span><input type="range" id="drawAge" min="27" max="75" step="1"><span class="cv" id="drawAgeV"></span></div>
@@ -576,17 +610,7 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
     </div>
     <svg class="year-svg" id="coastChart" viewBox="0 0 940 300" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="phase-key" id="coastKey"></div>
-    <div id="coastMeta"></div>
-    <div id="careMeta" style="margin-top:10px"></div>
     <div id="coastNote"></div>
-  </div>
-  <div class="card" style="margin-bottom:10px">
-    <div class="lab" id="btLab">Would it have lasted? Every stretch since 1928</div>
-    <div class="grid-stats" id="btStats" style="margin:8px 0 4px"></div>
-    <svg class="year-svg" id="btChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
-    <div class="phase-key" id="btKey"></div>
-    <div id="btMeta"></div>
-    <div id="btNote"></div>
   </div>
 </section>
 
@@ -733,6 +757,7 @@ let trajView = ST.traj && ST.traj !== "fire" ? Number(ST.traj) || "fire" : "fire
 function saveState(){
   const st = {traj:trajView, p:curPage, ym:viewYM, stop:stopAge, draw:drawAge,
               care:careAge, ltc:ltcAge, home:ltcTier};
+  if(navShut.size) st.shut = [...navShut].join(",");
   Object.entries(stBuilt).forEach(([k,v]) => { st["of_"+k] = v; });
   try{ localStorage.setItem("ly_state", JSON.stringify(st)); }catch(e){}
   try{ history.replaceState(null, "", "#" + Object.entries(st)
@@ -880,10 +905,18 @@ const NAV = [
   // Settings — the numbers that are the owner's to choose.
   {sec:"",          items:[{k:"upd",   n:"Updates",          t:"Updates",              d:""},
                            {k:"src",   n:"Statements",       t:"Statements",           d:""},
-                           {k:"gloss", n:"Glossary",         t:"Glossary",             d:""},
+                           {k:"gloss", n:"Glossary",         t:"Glossary",             d:"", ref:1},
                            {k:"set",   n:"Settings",         t:"Settings",             d:"The numbers that are yours to choose. A change is saved as you make it."}]}
 ];
 const PAGES = NAV.flatMap(g => g.items);
+// The sections of a long page, listed under it in the sidebar (DESIGN.md §4): [the id of the
+// element on the page, the section's own heading]. Kept beside NAV, not in it, so NAV stays one
+// flat list of pages.
+const PAGE_SECS = {
+  income: [["secIncome", "Income"], ["secChq", "Chequing"]],
+  coast:  [["secMoney", "The money"], ["secCare", "Care"], ["secLasted", "Would it have lasted?"]]
+};
+PAGES.forEach(p => { p.secs = PAGE_SECS[p.k] || []; });
 const PILL_PAGES = ["cat"];                          // driven by the month cursor
 const YEAR_PAGES = ["cat","income","trends"];                 // driven by the year container
 let curPage = "home";   // real starting page is chosen at boot from ST.p
@@ -932,10 +965,19 @@ const WAITS = {
 };
 const waitsFor = k => WAITS[k] ? WAITS[k]() : "";
 let waitOpen = false;
+// What is folded in the sidebar: a stage ("g:<name>") or the current page's sections ("p:<key>").
+// Kept with the rest of the page's state, so a stage folded away stays folded.
+const navShut = new Set(String(ST.shut || "").split(",").filter(Boolean));
+const CHEV = '<svg class="chev" viewBox="0 0 10 10"><path d="M2 3.5 L5 6.5 L8 3.5"/></svg>';
 function drawNav(){
   const f = pageFlags();
+  // The current page, when it is long enough to have sections (PAGE_SECS), lists them under it.
+  const subs = i => i.k !== curPage || !(i.secs || []).length || navShut.has("p:"+i.k) ? ""
+    : '<div class="subs">' + i.secs.map(x => '<button class="sub" data-sec="'+x[0]+'"><span>'+x[1]+'</span></button>').join("") + '</div>';
   const btn = i => '<button data-k="'+i.k+'" class="'+(i.k===curPage?"sel":"")+'"><span>'+i.n+'</span>'
-    + (f[i.k] ? '<span class="dot-n" style="background:'+f[i.k]+'"></span>' : '') + '</button>';
+    + (f[i.k] ? '<span class="dot-n" style="background:'+f[i.k]+'"></span>' : '')
+    + (i.k === curPage && (i.secs || []).length ? '<span class="tw'+(navShut.has("p:"+i.k) ? " shut" : "")+'" data-tog="p:'+i.k+'" title="Sections of this page">'+CHEV+'</span>' : '')
+    + '</button>' + subs(i);
   const waiting = PAGES.filter(i => waitsFor(i.k));
   if(waiting.some(i => i.k === curPage)) waitOpen = true;
   const fold = !waiting.length ? "" : '<details class="wait"'+(waitOpen ? " open" : "")+'><summary class="sec">Waiting for data</summary>'
@@ -945,14 +987,52 @@ function drawNav(){
     if(gi === NAV.length - 1) return fold + '<div class="grp foot">' + g.items.map(btn).join("") + '</div>';
     const items = g.items.filter(i => !waitsFor(i.k));
     if(!items.length) return "";
+    // A stage folds to its heading; the one the current page is in never does.
+    const shut = g.sec && navShut.has("g:"+g.sec) && !items.some(i => i.k === curPage);
     // A group with no heading after the first stands apart from the one above.
-    const head = !g.sec ? '' : '<div class="sec">'+g.sec+'</div>';
-    return head + '<div class="grp'+(!g.sec && gi > 0 ? " solo" : "")+'">' + items.map(btn).join("") + '</div>';
+    const head = !g.sec ? '' : '<div class="sec tog'+(shut ? " shut" : "")+'" data-tog="g:'+g.sec+'">'+g.sec+CHEV+'</div>';
+    return head + (shut ? "" : '<div class="grp'+(!g.sec && gi > 0 ? " solo" : "")+'">' + items.map(btn).join("") + '</div>');
   }).join("");
   const det = $("sideNav").querySelector("details.wait");
   if(det) det.ontoggle = () => { waitOpen = det.open; };
-  $("sideNav").querySelectorAll("button").forEach(b => b.onclick = () => setPage(b.dataset.k));
+  $("sideNav").querySelectorAll("button[data-k]").forEach(b => b.onclick = () => setPage(b.dataset.k));
+  $("sideNav").querySelectorAll("[data-tog]").forEach(t => t.onclick = ev => {
+    ev.stopPropagation();
+    const k = t.dataset.tog; if(navShut.has(k)) navShut.delete(k); else navShut.add(k);
+    drawNav(); saveState();
+  });
+  $("sideNav").querySelectorAll("button.sub").forEach(b => b.onclick = () => {
+    const el = document.getElementById(b.dataset.sec); if(!el) return;
+    if(el.tagName === "DETAILS") el.open = true;       // a folded section opens when it is asked for by name
+    el.scrollIntoView({block: "start"});
+  });
+  markSection();
 }
+// The section in view. A section laid out down the page is in view once its top has passed the
+// upper part of the window; one folded to a line is in view only while it is open and on screen
+// (three folded lines sit together, and none of them is "where you are").
+function markSection(){
+  const subs = [...$("sideNav").querySelectorAll("button.sub")];
+  if(!subs.length) return;
+  let on = null;
+  const atFoot = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+  subs.forEach((b, i) => {
+    const el = document.getElementById(b.dataset.sec); if(!el) return;
+    const r = el.getBoundingClientRect(), line = window.innerHeight * 0.35;
+    if(el.tagName === "DETAILS"){ if(el.open && r.top < line && r.bottom > 80) on = b.dataset.sec; }
+    // at the foot of the page the last section is the one in view, however short the page
+    else if(i === 0 || r.top < line || (atFoot && r.top < window.innerHeight)) on = b.dataset.sec;
+  });
+  subs.forEach(b => b.classList.toggle("on", b.dataset.sec === on));
+}
+window.addEventListener("scroll", markSection, {passive: true});
+// A chart inside a folded section has no width until the section opens, so the page is drawn
+// again when one does.
+document.addEventListener("toggle", ev => {
+  if(!(ev.target.matches && ev.target.matches("details.fold"))) return;
+  if(ev.target.open) render();
+  markSection();
+}, true);
 // A page merged into another or taken off: an old link or saved state still lands.
 const MOVED = {tasks:"upd", todo:"upd", rules:"port"};
 function setPage(p){
@@ -2125,7 +2205,7 @@ function renderYr(){
 // Every typed row of every ledger in the year: transfers, fees and e-Transfers one row each, as
 // the import typed them. Search reads the label and the bank's own words; the pills pick one
 // account. The year follows the year pills, like the rest of the page.
-let chqAcct = "", chqQ = "", chqN = 60;
+let chqAcct = "", chqQ = "", chqN = 8;   // a long table starts with its newest rows; Show more brings the rest
 function renderChq(){
   const accts = [...new Set(CHEQUING.map(r => r.src))];
   $("chqAcct").innerHTML = accts.length > 1 ? ["", ...accts].map(a =>
@@ -2968,6 +3048,9 @@ function renderCoast(target, annualSpend){
     const atLtc  = ltcA === null ? null : careAt(ltcAge, careAge, ltcA, ltc);
     let bill = 0;
     for(let a = careAge; a < LIFE_TO; a += 1/12) bill += careAt(a, careAge, ltcA, ltc);
+    // The section's one line (DESIGN.md §4): what care comes to, before the rows that make it up.
+    $("sumCare").innerHTML = "<b>"+fmt(atHome)+"</b> a month from "+careAge
+      + (atLtc === null ? "" : " \u00b7 then "+fmt(atLtc)+" from "+ltcAge) + " \u00b7 whole bill <b>"+fmt(bill)+"</b>";
     const noCareEnd = runNoCare.dead === null ? null : Math.floor(runNoCare.dead);
     const stayEnd   = runStayHome.dead === null ? null : Math.floor(runStayHome.dead);
     const early = brokeBefore(run, careAge), extra = early ? null : extraNeeded(run, drawM, careAge, ltcA, ltc);
@@ -2997,6 +3080,12 @@ function renderCoast(target, annualSpend){
     + '<div class="cap" style="margin-top:6px">Every figure is in today\u2019s money, so the '+fmt(MONTHLY_CONTRIB)+' a month has to rise with inflation each year to stay on this line.</div>';
 
   const bt = backtest(atDraw, drawM, drawAge, careAge, ltcA, ltc);
+  $("sumMoney").innerHTML = empty ? "Nothing to draw from yet"
+    : (lasts ? "Lasts to <b>"+LIFE_TO+"</b>" : "Runs out at <b>"+Math.floor(run.dead)+"</b>"
+        + (run.short > 0 ? " \u00b7 shortfall <b>"+fmt(run.short)+"</b>" : ""))
+      + " \u00b7 pot at "+drawAge+" "+fmt(atDraw);
+  $("sumLasted").innerHTML = bt ? "Lasted to "+LIFE_TO+" in <b>"+bt.ok+" of "+bt.n+"</b> stretches since "+bt.from
+    : RET_HIST.years ? "Nothing to replay yet" : "No history on record yet";
   $("drawSay").innerHTML = empty
     ? "Nothing is invested yet, so at <b>"+drawAge+"</b> there is no pot to take "+fmt(annualSpend/12)+" a month from."
     : !lasts

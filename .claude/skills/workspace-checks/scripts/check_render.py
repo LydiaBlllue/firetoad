@@ -89,6 +89,14 @@ FIRE_PROBE = ("() => typeof fireNow === 'function' && typeof FIRE === 'object' ?
               "drawBuilt: typeof DRAWDOWN === 'object' && DRAWDOWN.now ? DRAWDOWN.now : null} : null")
 
 
+# R9: a page longer than a screen and a half lists its sections under it in the sidebar, so
+# the reader can see what is further down and get there (DESIGN.md §4). A reference page (the
+# Glossary) is meant to be long and is marked so in NAV. Measured at the widest window, where a
+# page is at its shortest.
+NAV_PROBE = "() => typeof PAGES === 'object' ? PAGES.map(p => ({k: p.k, n: p.n, ref: !!p.ref, secs: (p.secs || []).length})) : []"
+LONG = 1.5
+
+
 def fire_differs(page, built):
     """The keys on which the page's own FIRE figures are not the built ones."""
     def same(a, b):
@@ -118,6 +126,7 @@ def probe(path):
             out[w] = pg.evaluate(PROBE)
             if w == WIDTHS[0]:
                 out[w]["fire"] = pg.evaluate(FIRE_PROBE)
+                out[w]["nav"] = pg.evaluate(NAV_PROBE)
             pg.close()
         b.close()
     return out, console
@@ -261,6 +270,16 @@ def check(path):
         note("R5", "no undefined / NaN / null in any rendered page", "build")
     for c in console:
         err("R1", f"console error — {c[:120]}")
+
+    # -- R9 a long page lists its sections in the sidebar ------------------------
+    nav = {p["k"]: p for p in res[WIDTHS[0]].get("nav") or []}
+    tall = [(p["k"], p["h"]) for p in res[WIDTHS[-1]]["pages"]
+            if p["h"] > LONG * SHORT[0] and p["k"] in nav and not nav[p["k"]]["ref"] and not nav[p["k"]]["secs"]]
+    for k, h in tall:
+        warn("R9", f"page '{nav[k]['n']}' is {h / SHORT[0]:.1f} screens long at {WIDTHS[-1]}px and lists no sections in the sidebar "
+                   f"— past {LONG} screens a page says what is further down (DESIGN.md §4)")
+    if nav and not tall:
+        note("R9", f"every page past {LONG} screens lists its sections in the sidebar")
 
     # -- R8 the page's own FIRE sums are the ones the build computed ------------
     fp = res[WIDTHS[0]].get("fire")

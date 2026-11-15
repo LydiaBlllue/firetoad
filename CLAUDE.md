@@ -310,7 +310,8 @@ python3 .claude/skills/workspace-checks/scripts/checks.py . --level release
   each page drawing, Home's cards all carrying a number, and nothing in the sidebar that owner
   has no data for (R7). And the page's own FIRE sums — it keeps them to redraw while a number
   is being changed — and its drawdown at the ages it starts from are the ones `fire.py` and `drawdown.py` computed
-  at build time (R8). Needs
+  at build time (R8). And a page past a screen and a half lists its sections in
+  the sidebar (R9, a warning). Needs
   `pip3 install --user playwright && python3 -m playwright install chromium`.
 - `selftest.py` — the checker of the checkers. It plants specific faults in a copy of the
   workspace and asserts the matching rule fires for each; the count is in README's `LINT:FAULTS`.
