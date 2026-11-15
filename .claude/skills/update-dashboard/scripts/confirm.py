@@ -31,6 +31,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(HERE)), "workspa
 from check_data import merchant_key  # noqa: E402  the one definition
 import categories  # noqa: E402
 import jlock  # noqa: E402  one writer at a time, both doors
+import recall  # noqa: E402  what helps a person remember a charge
 import verbs  # noqa: E402
 from update import jload, jsave, csv_rows, sender_of  # noqa: E402
 
@@ -66,6 +67,42 @@ def _file_merchant(k, ans, table, merchants, spend):
 
 
 OWN = "Transfer"     # the answer "my own money, moved" to a transfer out: it stays a transfer
+# "I do not know what this was" is an answer (2026-11-15, user 001: "I cannot remember where this
+# money went"). A merchant is filed Other and marked so in merchants.json, so it is not asked
+# again and can be counted; a transfer or money in stays as the import typed it. Either way the
+# question is closed.
+UNSURE = "Not sure"
+UNSURE_SAID = ("not sure", "unsure", "i don't know", "i do not know", "不确定", "不知道")
+
+
+def _recall(d, k, spend, ledgers):
+    """What the rows say about one open item, for the owner's memory (recall.py): a merchant's
+    charges with their weekdays, its rhythm and what else was paid those days; for money moved,
+    what else moved in that account that day and whether another account shows the other end."""
+    if d.get("kind") == "merchant" and k:
+        mine = lambda r: merchant_key(r["note"]) == k
+        ch = recall.charges(spend, mine)
+        return {"rows": ch[-12:], "n": len(ch), "rhythm": recall.rhythm(ch),
+                "sameDays": recall.same_days(spend, ch, mine, lambda r: merchant_key(r["note"]))}
+    row = d.get("row") or d.get("credit")
+    if d.get("kind") == "transfer" and row and row.get("ledger"):
+        amt = float(row["amount"])
+        out = bool(d.get("row"))                       # money out is stored without its sign
+        return {"rows": [{"d": row["date"], "a": round(abs(amt), 2), "w": recall.weekday(row["date"])}], "n": 1,
+                "sameDay": recall.ledger_day(ledgers.get(row["ledger"], []), row["date"], skip=amt),
+                "match": recall.counterpart(ledgers, row["date"], -abs(amt) if out else abs(amt), row["ledger"]),
+                "ledger": row["ledger"]}
+    return None
+
+
+def _same_question(d):
+    """Money moved with no name on it, the same amount through the same account, is one
+    question however many times it happened."""
+    row = d.get("row") or d.get("credit")
+    f = d.get("facts") or {}
+    if d.get("kind") != "transfer" or not row or not row.get("ledger") or f.get("other") or f.get("to") or f.get("sender") or d.get("sender"):
+        return None
+    return ("out" if d.get("row") else "in", row["ledger"], round(abs(float(row["amount"])), 2))
 
 
 def remember_own_account(root, other, today):
@@ -195,6 +232,21 @@ def run(root, write=False, ok=False, sets=(), say=None):
     spend_total = round(sum(float(r["amount"]) for r in spend if float(r["amount"]) > 0), 2)
     other_total = round(sum(float(r["amount"]) for r in spend if float(r["amount"]) > 0 and r.get("category") == "Other"), 2)
     res.update(spendTotal=spend_total, otherTotal=other_total)
+    # for the panel: how often the owner uses each category (the order of its buttons — never the
+    # merchant's name), what the open merchants come to (the share still to sort), and what was
+    # answered "not sure"
+    use = {}
+    for r in spend:
+        if float(r["amount"]) > 0 and r.get("category") != "Other":
+            use[r["category"]] = use.get(r["category"], 0) + 1
+    unsure = [e["match"] for e in merchants.get("merchants", []) if e.get("unsure")]
+    res.update(catUse=use, unsure={"n": len(unsure), "total": round(sum(total.get(k, 0) for k in unsure), 2)},
+               openOther=round(sum(total.get(merchant_of(d), 0) for d in items if d.get("kind") == "merchant"), 2))
+    reg = jload(fd("accounts.json"), {"accounts": []})
+    ledgers = {a["ledger"]: csv_rows(fd(a["ledger"])) for a in reg.get("accounts", []) if a.get("ledger")}
+    ledger_name = {a["ledger"]: (a.get("label") or f"{a.get('inst', '')} {a.get('name', '')}".strip()) for a in reg.get("accounts", []) if a.get("ledger")}
+    same = recall.groups(items, _same_question)
+    group_of = {id(d): "g%d" % n for n, members in enumerate(same.values()) for d in members}
 
     # Questions about money first, then merchants by how often they appear: the first rows settle the most.
     items.sort(key=lambda d: count.get(merchant_of(d), 0) * -1 if d.get("kind") == "merchant" else -10 ** 6)
@@ -221,7 +273,11 @@ def run(root, write=False, ok=False, sets=(), say=None):
                              "credit": bool(d.get("credit")), "spent": bool(d.get("row")),
                              "suggestBy": d.get("suggestBy"),
                              "amount": total.get(k) if k else None, "brand": kin.pop() if len(kin) == 1 else None,
-                             "facts": d.get("facts"), "source": d.get("source")})
+                             "facts": d.get("facts"), "source": d.get("source"),
+                             "recall": _recall(d, k, spend, ledgers), "group": group_of.get(id(d))})
+        rc = res["items"][-1]["recall"]
+        if rc and rc.get("match"):
+            rc["match"]["name"] = ledger_name.get(rc["match"]["ledger"], rc["match"]["ledger"])
 
     # what the owner said
     want, bad = {}, res["bad"]
@@ -234,6 +290,12 @@ def run(root, write=False, ok=False, sets=(), say=None):
             idx = next((i for i, d in enumerate(items) if ids[id(d)] == int(who[3:])), None)
         else:
             idx = int(who) - 1 if who.isdigit() else next((i for i, d in enumerate(items) if merchant_of(d) == who.upper()), None)
+        if idx is not None and 0 <= idx < len(items) and said.lower() in UNSURE_SAID:
+            if items[idx].get("kind") in ("merchant", "transfer"):
+                want[idx] = UNSURE
+            else:
+                bad.append(f"--set {s!r}: #{idx + 1} is answered yes or no")
+            continue
         if idx is not None and 0 <= idx < len(items) and items[idx].get("kind") == "fire":
             # the FIRE goal is answered yes or no, and lands in plan.json
             yn = {"yes": "Yes", "y": "Yes", "no": "No", "n": "No"}.get(said.lower())
@@ -293,6 +355,13 @@ def run(root, write=False, ok=False, sets=(), say=None):
         if i not in want and not ok:
             continue
         ans = want.get(i, d.get("suggest") or d.get("default"))
+        if ans == UNSURE:
+            if d.get("kind") == "merchant":
+                changed += _file_merchant(merchant_of(d), "Other", table, merchants, spend)
+                table[merchant_of(d)]["unsure"] = today
+            d["answer"], d["resolved"], d["status"] = UNSURE, today, "confirmed"
+            closed += 1
+            continue
         if d.get("kind") == "transfer" and i in want and d.get("row") and ans != OWN:
             # spent after all: the ledger row stays a transfer out, and the money is spending
             r = d["row"]

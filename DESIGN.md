@@ -538,6 +538,21 @@ categorize` where there is room (the setup's last screen), `5 to categorize` in 
 header, which keeps its one short line — never `5 to confirm`. **These screens never change the
 dashboard's layout**: the error box, the lists and the tables above are the panel's and the setup's.
 
+**A question about a charge helps the owner remember it** (1.0.5, user 001: "I cannot remember
+where this money went"). One card at a time, and on it, from the rows and nothing else
+(`recall.py`): each charge's day with its weekday and amount; a rhythm when there is one, in one
+line (*every other week · on a Sat · about $140 each time*); what else was paid on those days;
+for money moved, what else moved in that account that day and whether another account shows the
+other end. *Look it up* searches the web for the merchant's words — only when pressed, only
+those words. The buttons are the brand's earlier answer and a suggestion first, then the
+categories the owner uses most, four shown and the rest under *More*: the order is the owner's
+habit, never read off the merchant's name. **Not sure is an answer**: it closes the question,
+is counted, and is not asked again. The same amount moved several times with no name on it is
+one card, and one answer covers them. **Progress is money, not a count**: the share of spending
+sorted, with a line at 95%; reaching it shows *That is enough*, what is left — the small
+merchants, what was answered not sure, the money questions — and the way on or out. A short
+list has no line and is simply gone through.
+
 ## 7. Principles for presenting data
 
 - **The view starts at a year the owner chooses**; earlier history stays in `findata/` but does

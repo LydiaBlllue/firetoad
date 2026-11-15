@@ -53,6 +53,14 @@
   version touches it, and a lock still held under the old name is still respected. The
   environment variable for a model's key is `FIRETOAD_AI_KEY`; the old name still works. Nothing
   an owner sees changes.
+- **Categorizing: less to recall, and "not sure" is an answer** (2026-11-15, user 001: "I cannot
+  remember where this money went"). A question about a merchant now shows each charge's day with
+  its weekday, a rhythm when there is one, and what else you paid that day; *Look it up*
+  searches the web for the merchant's words, only when you press it. Four likely categories
+  first, by what you use most. *Not sure* closes a question for good and is counted. The same
+  amount sent several times with no name on it is one question. Progress is the share of your
+  spending that is sorted: at 95% the page says that is enough and what is left can wait — on
+  one real first import that was 5 answers, where 58 questions were waiting.
 - **The roadmap you read is the release roadmap** (2026-11-13, user 001): the file is
   RELEASE-ROADMAP.md, where it was ROADMAP.md, so it reads as what it is, the plan of what is
   released next. A sync removes the old file from a folder once the new one is there.

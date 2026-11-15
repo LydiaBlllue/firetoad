@@ -161,6 +161,20 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
 .cq .meta{font-size:12.5px;color:var(--ink-2);margin-top:2px}
 .cq .brand{font-size:11.5px;color:#6250d6;margin-top:4px}
 .cq .pills{margin-top:10px}
+.cq .name .lk{float:right;font-size:12px;font-weight:500;letter-spacing:0;color:#2a78d6;text-decoration:none;margin-left:10px}
+.cq .pl.unsure{border-style:dashed;color:var(--ink-2)}
+.rc{margin-top:8px;font-size:12.5px}
+.rc .rl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:10px 0 3px}
+.rc .rr{display:flex;justify-content:space-between;padding:3px 0;border-top:1px solid var(--border);font-variant-numeric:tabular-nums}
+.rc .rn,.rc .rs{color:var(--ink-2);padding:3px 0}
+.rc .rh{font-weight:600;padding:4px 0;border-top:1px solid var(--border)}
+.prog{margin:2px 0 8px;font-size:12px;color:var(--ink-2)}
+.prog .pt{display:flex;justify-content:space-between}
+.prog .pt .ln{color:var(--ok)}
+.prog .pb{position:relative;height:6px;background:var(--grid);border-radius:3px;margin:4px 0 2px}
+.prog .pb i{display:block;height:100%;background:var(--ink);border-radius:3px}
+.prog .pb b{position:absolute;top:-4px;height:14px;border-left:2px dashed var(--ok)}
+.prog .pn{font-size:11px;color:var(--muted)}
 .cq .pl.big{padding:6px 13px;font-size:13px}
 .cq .foot2{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:11.5px;color:var(--muted);flex-wrap:wrap;gap:6px}
 .share{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--ink-2);margin:4px 0 2px}
@@ -411,8 +425,12 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
     // the likeliest first: the brand's earlier answer, a suggestion, the current filing — but on a
     // card "Other" is never the first choice (it is what skipping means), it goes last
     [it.brand, it.suggest, it.default].forEach(function(c){ if (c && c !== (big ? 'Other' : null) && order.indexOf(c) >= 0 && first.indexOf(c) < 0) first.push(c); });
-    order = first.concat(order.filter(function(c){ return first.indexOf(c) < 0 && !(big && c === 'Other'); })).concat(big && order.indexOf('Other') >= 0 ? ['Other'] : []);
-    var limit = big ? (order.length <= 5 ? order.length : 3) : order.length, more = null;
+    // then the categories the owner uses most — their own habit, never a guess from the merchant's name
+    var use = Q.catUse || {};
+    var rest = order.filter(function(c){ return first.indexOf(c) < 0 && !(big && c === 'Other'); });
+    if (big) rest = rest.map(function(c, i){ return [c, i]; }).sort(function(a, b){ return ((use[b[0]] || 0) - (use[a[0]] || 0)) || (a[1] - b[1]); }).map(function(x){ return x[0]; });
+    order = first.concat(rest).concat(big && order.indexOf('Other') >= 0 ? ['Other'] : []);
+    var limit = big ? (order.length <= 5 ? order.length : 4) : order.length, more = null;
     var lab = function(c){ return (it.labels && it.labels[c]) || (Q.catLabels && Q.catLabels[c]) || c; };
     order.forEach(function(c, i){
       var b = el('button', 'pl' + (big ? ' big' : '') + (c === selected ? ' sel' : ''), esc(lab(c))); b.type = 'button';
@@ -427,25 +445,116 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
     }
     return wrap;
   }
-  // One item at a time, money questions first, then merchants by amount: the name, what is
-  // known about it, the likeliest three answers and More. Each answer is written as it is
-  // given; Skip leaves the item as it is filed; Finish closes what is left and rebuilds.
+  // One question at a time, spending first: the merchants by amount until 95% of the spending
+  // is sorted, then a card that says so and offers what is left — money moved with no name on
+  // it (the same amount moved several times is one card) and the small merchants. Each card
+  // carries what the rows say that helps a person remember (recall.py): the days with their
+  // weekdays, a rhythm, what else was paid those days. Each answer is written as it is given;
+  // "Not sure" is an answer; Skip leaves the item as it is filed and it is asked again.
   if (Q.items && Q.items.length) {
-    var deckItems = Q.items.filter(function(i){ return i.kind !== 'merchant'; })
-      .concat(Q.items.filter(function(i){ return i.kind === 'merchant'; }).sort(function(a, b){ return (b.amount || 0) - (a.amount || 0); }));
+    var LINE = 0.95, LANG = document.documentElement.lang || 'en', WD = String(T.q_weekdays).split(',');
+    var dayS = function(d, w){ var x = new Date(d + 'T12:00:00'); return WD[w == null ? (x.getDay() + 6) % 7 : w] + ' ' + x.toLocaleDateString(LANG, {month: 'short', day: 'numeric'}); };
+    var money2 = function(v){ return '$' + Number(v || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); };
+    var merch = Q.items.filter(function(i){ return i.kind === 'merchant'; }).sort(function(a, b){ return (b.amount || 0) - (a.amount || 0); });
+    var firsts = Q.items.filter(function(i){ return i.kind === 'fire'; });
+    var byGroup = {}, moneyQ = [];
+    Q.items.forEach(function(i){
+      if (i.kind === 'merchant' || i.kind === 'fire') return;
+      if (i.group) { if (byGroup[i.group]) { byGroup[i.group].members.push(i); return; } byGroup[i.group] = i; i.members = [i]; }
+      moneyQ.push(i);
+    });
+    var spendT = Q.spendTotal || 0, openOther = Q.openOther || 0, unsure = {n: (Q.unsure || {}).n || 0, total: (Q.unsure || {}).total || 0};
+    var share = function(){ return spendT ? Math.max(0, Math.min(1, 1 - openOther / spendT)) : 1; };
+    // the merchants it takes to reach the line, biggest first; the rest are the small ones
+    var acc = openOther, toLine = 0;
+    merch.forEach(function(m){ if (spendT && 1 - acc / spendT < LINE) { toLine++; acc -= (m.amount || 0); } });
+    var bigM = merch.slice(0, toLine), smallM = merch.slice(toLine);
+    var ENOUGH = {kind: 'enough'};
+    // a short list is simply gone through; the line is for a first import's long one
+    var useLine = merch.length && (smallM.length + moneyQ.length) && Q.items.length > 6;
+    var deckItems = useLine ? firsts.concat(bigM, [ENOUGH]) : firsts.concat(merch, moneyQ);
     var qd = $('qdeck'), qof = $('qof'), qend = $('qend'), idx = 0, answered = 0;
+    var prog = el('div', 'prog'); qd.appendChild(prog);
     var deck = el('div', 'deck'); qd.appendChild(deck);
     saveMsg = el('span', 'hint');
+    function drawProg(){
+      if (!merch.length || !spendT) { prog.innerHTML = ''; return; }
+      var p = share(), left = bigM.filter(function(m){ return !m.counted; }).length;
+      prog.innerHTML = '<div class="pt"><span>' + esc(fmtS(T.q_sorted, {pct: Math.floor(p * 100)})) + '</span><span class="ln">' + esc(fmtS(T.q_line, {pct: Math.round(LINE * 100)})) + '</span></div>'
+        + '<div class="pb"><i style="width:' + (p * 100).toFixed(1) + '%"></i><b style="left:' + (LINE * 100) + '%"></b></div>'
+        + (useLine && left ? '<div class="pn">' + esc(fmtS(T.q_to_line, {n: left})) + '</div>' : '');
+    }
+    function recallBox(it){
+      var r = it.recall; if (!r) return null;
+      var b = el('div', 'rc');
+      var rows = it.members ? it.members.map(function(m){ return m.recall && m.recall.rows[0]; }).filter(Boolean) : (r.rows || []);
+      var n = it.members ? rows.length : (r.n || rows.length), show = rows.slice(-4);
+      if (show.length) {
+        b.appendChild(el('div', 'rl', esc(T.q_when)));
+        show.forEach(function(x){ b.appendChild(el('div', 'rr', '<span>' + esc(dayS(x.d, x.w)) + '</span><span>' + money2(x.a) + '</span>')); });
+        if (n > show.length) b.appendChild(el('div', 'rn', esc(fmtS(T.q_more_n, {n: n - show.length}))));
+      }
+      var rh = r.rhythm;
+      if (rh) {
+        var parts = [];
+        if (rh.every) parts.push(T['q_every_' + rh.every]);
+        if (rh.weekday != null) parts.push(fmtS(T.q_on_weekday, {day: WD[rh.weekday]}));
+        if (rh.when) parts.push(rh.when === 'start' ? T.q_month_start : T.q_month_end);
+        parts.push(rh.same ? T.q_same_amount : fmtS(T.q_about, {amount: money(rh.about)}));
+        b.appendChild(el('div', 'rh', esc(parts.join(' · '))));
+      }
+      if (r.sameDays && r.sameDays.length) {
+        b.appendChild(el('div', 'rl', esc(T.q_same_days)));
+        r.sameDays.forEach(function(x){ b.appendChild(el('div', 'rs', esc(dayS(x.d, x.w) + ': ' + x['with'].map(function(o){ return o.what + ' ' + money(o.a); }).join(', ')))); });
+      }
+      if (it.kind === 'transfer' && !it.members) {
+        b.appendChild(el('div', 'rl', esc(T.q_same_day_acct)));
+        b.appendChild(el('div', 'rs', esc((r.sameDay || []).length ? r.sameDay.map(function(o){ return o.what + ' ' + money(Math.abs(o.a)); }).join(', ') : T.q_nothing_else)));
+        if (r.match) b.appendChild(el('div', 'rs', esc(fmtS(T.q_match, {name: r.match.name || '', date: dayS(r.match.d)}))));
+      }
+      return b;
+    }
+    function enoughCard(){
+      var c = el('div', 'cq');
+      c.appendChild(el('div', 'name', esc(T.q_enough_h)));
+      c.appendChild(el('div', 'meta', esc(fmtS(T.q_enough_p, {pct: Math.floor(share() * 100)}))));
+      var left = smallM.filter(function(m){ return !m.counted; }), sum = 0; left.forEach(function(m){ sum += (m.amount || 0); });
+      var b = el('div', 'rc');
+      if (left.length) b.appendChild(el('div', 'rr', '<span>' + esc(fmtS(T.q_left_small, {n: left.length, amount: money(sum)}).replace('(s)', left.length === 1 ? '' : 's')) + '</span>'));
+      if (unsure.n) b.appendChild(el('div', 'rr', '<span>' + esc(fmtS(T.q_left_unsure, {n: unsure.n, amount: money(unsure.total)})) + '</span>'));
+      if (moneyQ.length) b.appendChild(el('div', 'rr', '<span>' + esc(fmtS(T.q_left_money, {n: moneyQ.length})) + '</span>'));
+      c.appendChild(b);
+      var f = el('div', 'pills');
+      var go = function(more){ deckItems = deckItems.concat(more); idx++; next(); };
+      var fin = el('button', 'pl big sel', esc(T.q_finish)); fin.type = 'button'; fin.onclick = function(){ idx = deckItems.length; next(); }; f.appendChild(fin);
+      if (moneyQ.length) { var m = el('button', 'pl big', esc(fmtS(T.q_do_money, {n: moneyQ.length}))); m.type = 'button'; m.onclick = function(){ go(moneyQ); }; f.appendChild(m); }
+      if (left.length) { var sm = el('button', 'pl big', esc(T.q_do_small)); sm.type = 'button'; sm.onclick = function(){ go(left.concat(moneyQ)); }; f.appendChild(sm); }
+      c.appendChild(f);
+      return c;
+    }
     function card(it){
+      if (it === ENOUGH) return enoughCard();
       var c = el('div', 'cq');
       var L = function(x){ return (it.labels && it.labels[x]) || (Q.catLabels && Q.catLabels[x]) || x; };
-      c.appendChild(el('div', 'name', esc(it.kind === 'merchant' ? it.what : (it.text || it.what))));
+      // the same amount moved several times is asked once, in one sentence about all of them
+      var gAmt = it.members && it.recall && it.recall.rows[0] ? it.recall.rows[0].a : null;
+      var name = el('div', 'name', esc(it.kind === 'merchant' ? it.what
+        : it.members ? fmtS(it.spent && !it.credit ? T.q_group_out : T.q_group_in, {amount: money2(gAmt), n: it.members.length}) : (it.text || it.what)));
+      if (it.kind === 'merchant') {
+        // the bank's words, looked up on the web — only when asked, and only these words
+        var a = el('a', 'lk', esc(T.q_lookup) + ' ↗'); a.href = 'https://duckduckgo.com/?q=' + encodeURIComponent(it.what);
+        a.target = '_blank'; a.rel = 'noopener noreferrer'; a.title = T.q_lookup_tip; name.appendChild(a);
+      }
+      c.appendChild(name);
       var meta = [];
       if (it.kind === 'merchant' && it.amount != null) meta.push(fmtS(T.q_meta, {amount: money(it.amount), n: it.seen || 0}).replace('(s)', (it.seen || 0) === 1 ? '' : 's'));
-      if (it.source) meta.push(it.source);
+      if (it.source && !it.members) meta.push(it.source);
       if (meta.length) c.appendChild(el('div', 'meta', meta.map(esc).join('<br>')));
+      var rb = recallBox(it); if (rb) c.appendChild(rb);
       if (it.brand) c.appendChild(el('div', 'brand', esc(fmtS(T.q_brand, {brand: it.what.split(' ')[0], cat: L(it.brand)}))));
-      if (it.default) c.appendChild(el('div', 'for', esc(T.filed_as) + ' <b>' + esc(L(it.default)) + '</b>'));
+      if (it.default && it.kind !== 'merchant') c.appendChild(el('div', 'for', esc(T.filed_as) + ' <b>' + esc(L(it.default)) + '</b>'));
+      var notSure = function(){ var u = el('button', 'pl big unsure', esc(T.q_unsure)); u.type = 'button'; u.onclick = function(){ answer(it, 'Not sure'); }; return u; };
+      var f = el('div', 'foot2');
       if (it.kind === 'transfer' && it.spent && !it.credit) {
         // money out to an account not listed: first whose it is — "My own account" keeps it a
         // transfer and answers every transfer with that account — and a category only if it
@@ -458,10 +567,13 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
           c.insertBefore(el('div', 'for', esc(T.spent_on)), f);
           c.insertBefore(pills(it, null, true, function(ch){ answer(it, ch); }), f);
         };
-        two.appendChild(own); two.appendChild(sp); c.appendChild(two);
-      } else if (it.choices.length) c.appendChild(pills(it, answers[it.n] || null, true, function(ch){ answer(it, ch); }));
-      else c.appendChild(el('div', 'for', esc(T.in_ledger)));
-      var f = el('div', 'foot2');
+        two.appendChild(own); two.appendChild(sp); two.appendChild(notSure()); c.appendChild(two);
+      } else if (it.choices.length) {
+        var ps = pills(it, answers[it.n] || null, true, function(ch){ answer(it, ch); });
+        if (it.kind === 'merchant' || it.kind === 'transfer') ps.appendChild(notSure());
+        c.appendChild(ps);
+      } else c.appendChild(el('div', 'for', esc(T.in_ledger)));
+      if (it.members) c.appendChild(el('div', 'for', esc(fmtS(T.q_one_answer, {n: it.members.length}))));
       var skip = el('button', 'btn sm', esc(it.choices.length ? T.q_skip : T.q_next)); skip.type = 'button'; skip.onclick = function(){ answer(it, null); };
       f.appendChild(skip);
       if (idx > 0) { var back = el('button', 'btn sm', esc(T.q_undo_card)); back.type = 'button'; back.onclick = function(){ idx = Math.max(0, idx - 1); next(true); }; f.appendChild(back); }
@@ -470,11 +582,18 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
       return c;
     }
     function answer(it, ch){
-      if (ch) { if (!answers[it.n]) answered++; keep(it, ch); }
+      if (ch) {
+        // one answer for the same amount moved several times: every one of them is written
+        (it.members || [it]).forEach(function(m){ if (!answers[m.n]) answered++; keep(m, ch); });
+        if (it.kind === 'merchant' && !it.counted) {
+          it.counted = true; openOther -= (it.amount || 0);
+          if (ch === 'Not sure') { unsure.n++; unsure.total += (it.amount || 0); }
+        }
+      }
       // "my own account" answers every transfer with that account (confirm.py does the same in
       // the data): their cards are not shown again
       var other = it.facts && it.facts.other;
-      if (ch === 'Transfer' && it.kind === 'transfer' && other) deckItems.forEach(function(x){
+      if (ch === 'Transfer' && it.kind === 'transfer' && other) deckItems.concat(moneyQ).forEach(function(x){
         if (x !== it && x.kind === 'transfer' && x.facts && x.facts.other === other && !answers[x.n]) { answers[x.n] = 'Transfer'; x.auto = true; answered++; }
       });
       idx++; while (idx < deckItems.length && deckItems[idx].auto) idx++;
@@ -483,10 +602,12 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
     function next(back){
       var old = deck.firstChild;
       var draw = function(){
-        deck.innerHTML = '';
+        deck.innerHTML = ''; drawProg();
         if (idx < deckItems.length) {
-          qof.textContent = fmtS(T.q_of, {i: idx + 1, n: deckItems.length}); qend.style.display = 'none';
-          var c = card(deckItems[idx]); if (!reduced) c.classList.add('in'); deck.appendChild(c);
+          var it = deckItems[idx];
+          qof.textContent = it === ENOUGH ? '' : fmtS(T.q_of, {i: idx + 1 - (deckItems.indexOf(ENOUGH) >= 0 && idx > deckItems.indexOf(ENOUGH) ? 1 : 0), n: deckItems.length - (deckItems.indexOf(ENOUGH) >= 0 ? 1 : 0)});
+          qend.style.display = 'none';
+          var c = card(it); if (!reduced) c.classList.add('in'); deck.appendChild(c);
           if (!reduced) { requestAnimationFrame(function(){ requestAnimationFrame(function(){ c.classList.remove('in'); }); }); setTimeout(function(){ c.classList.remove('in'); }, 250); }
         } else {
           qof.textContent = T.q_cards_done;

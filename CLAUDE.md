@@ -284,7 +284,7 @@ Three levels (2026-11-05, the owner: most checks are run when asked, not after e
 |---|---|---|
 | **① the money** — by itself | after any edit to `findata/` (the `PostToolUse` hook) and at the end of an import | `check_data.py . --money`: the `reconcile` and `rules` findings only. Under a second, **silent when clean** |
 | **② check the page** — 检查页面 | when the owner says so, and **before saying a change to the page, a template, DESIGN.md, README or the data's shape is done** | `checks.py . --level page`: check_data in full, check_design, check_render (widths, a short window, every kind of owner). About 20 seconds |
-| **③ check before a release** — 发版前检查 | when the owner says so, and before a release PR | `checks.py . --level release`: the unit tests in `tests/` (one per rule in a pure module — `flows.py`, `loans.py`, `categories.py`, `layout.py`, `clock.py`, `settings.py`, `usual.py`, `fire.py`, `drawdown.py`, `debts.py`; standard-library `unittest`, see `tests/README.md`), level ② and the selftest |
+| **③ check before a release** — 发版前检查 | when the owner says so, and before a release PR | `checks.py . --level release`: the unit tests in `tests/` (one per rule in a pure module — `flows.py`, `loans.py`, `categories.py`, `layout.py`, `clock.py`, `settings.py`, `usual.py`, `fire.py`, `drawdown.py`, `debts.py`, `recall.py`; standard-library `unittest`, see `tests/README.md`), level ② and the selftest |
 
 ⚠ Level ② is manual for the owner, **not optional for you**: a change to the page is not done
 until it has run, and the reply says what it found.
@@ -325,7 +325,9 @@ HTML files there (mock-ups, decision records) that were never meant to follow th
 Subscription because of the word "PUBLICATION" in it. It was a shop, and the charge was a
 notebook. Merchant strings are abbreviated and truncated; they cannot be read for meaning. So:
 look the merchant up in `merchants.json` first and reuse a hit — only a miss is a judgement, and
-every miss goes in the report for the owner to confirm. And **a subscription is a charge that
+every miss goes in the report for the owner to confirm. A question about a miss shows what the rows
+say — the days, a rhythm, the day's other charges (`recall.py`) — and orders its buttons by the
+owner's own habit, never by the name; *Not sure* is an answer, and closes it. And **a subscription is a charge that
 repeats**: since 2026-10-29 it is measured from the rows, not filed as a category, so a brand
 seen once can never be one, whatever the name suggests and whatever it cost.
 

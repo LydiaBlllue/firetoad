@@ -274,6 +274,10 @@ def qdata(q, lang="en"):
         d["labels"].update({x: option_label(lang, x) for x in (d.get("default"), d.get("suggest")) if x})
         items.append(d)
     return {"items": items, "spendTotal": (q or {}).get("spendTotal") or 0, "otherTotal": (q or {}).get("otherTotal") or 0,
+            # for the cards: the owner's own use of each category (the order of the buttons), what
+            # the open merchants come to (the share still to sort) and what was answered "not sure"
+            "catUse": (q or {}).get("catUse") or {}, "openOther": (q or {}).get("openOther") or 0,
+            "unsure": (q or {}).get("unsure") or {"n": 0, "total": 0},
             "catLabels": {c: categories.label(c, lang) for c in categories.CATEGORIES}}
 
 

@@ -149,6 +149,13 @@ Money that leaves and nobody has named is a transfer, outside the sum, until the
 The same words are used in the page, this file, the code and the register. A reader is never asked to learn these rules first: the page shows their own
 month split, and the definitions wait behind the question mark.
 
+- **Not sure is an answer** (1.0.5). A merchant the owner cannot place is filed Other and marked
+  `unsure` in `merchants.json`, so it is not asked again and can be counted apart from what was
+  never asked; money moved that the owner cannot place stays as the import typed it. Either way
+  the question in `decisions.json` is closed with the answer *Not sure*. Nothing is guessed in
+  its place: what helps the owner remember (`recall.py`) is the days, the rhythm and the day's
+  other charges, read from the rows — a rhythm is a fact, not a category.
+
 ## 3b. Guilt-free spending
 
 The monthly waterfall, from `funds.json`:
