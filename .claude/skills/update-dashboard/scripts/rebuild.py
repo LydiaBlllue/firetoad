@@ -32,6 +32,7 @@ import usual                               # a usual month and the emergency fun
 import settings                            # the numbers that are the owner's to choose -- one table
 import fire                                # the FIRE target, progress and months to go -- computed once, here
 import drawdown                            # living on the portfolio and late-life care, at the plan's own ages
+import debts as debt_rules                 # when a debt has to be paid: now, or over time
 
 MAIN_NAMES = ("ly_finance_dashboard.html", "finance_dashboard.html")   # an owner's copy, or the template's
 INV_NAME = "investment_dashboard.html"
@@ -737,13 +738,19 @@ def derive(d):
         return rows
     # A TFSA is spendable today, but it is invested: Spendable today less what in it is held to
     # grow, so the step from Home's row to this one is on the page.
-    unsecured = R_debt - secured
+    # What is taken off the money is what is due now (a card's bill). A debt paid over time is
+    # not taken off: its monthly payment is in what a month costs (debts.py, FINANCE.md §8d).
+    due_now, due_later = debt_rules.unsecured(liabs, by_key)
+    unsecured = round(sum(v for _, v in due_now))
     ft = flow_totals(d["funds"]["plan"])
+    paid = debt_rules.paid_by(d["funds"]["plan"].get("flows"))
     inv_today = round(sum(v for a, v in ca if a.get("reach") == "today" and a.get("role") == "grow"))
     out["SAFETY"] = {"today": by_reach["today"], "invested": inv_today, "abroad": by_reach["abroad"], "unsecured": unsecured,
                      "accts": listed([(a, v) for a, v in ca if a.get("reach") == "today" and a.get("role") != "grow"],
                                      by_reach["today"] - inv_today),
-                     "debts": listed([(a, v) for a, v in liabs if by_key.get(a.get("against") or "") is None], unsecured),
+                     "debts": listed(due_now, unsecured),
+                     # paid over time: listed, not subtracted; `paid` says the plan carries its payment
+                     "later": [dict(one_account(a, v), paid=a["key"] in paid) for a, v in sorted(due_later, key=lambda x: -x[1]) if round(v)],
                      "repay": ft["repayNow"],
                      "repayRows": [{"n": f.get("name") or f.get("pays"), "v": f.get("amount") or 0}
                                    for f in ft["committedNow"] if f.get("pays")]}

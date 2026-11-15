@@ -15,6 +15,7 @@ from flows import totals as flow_totals, KINDS as FLOW_KINDS, unset as flow_unse
 import layout                                                   # where each findata file lives
 import loans                                                    # what a borrower still owes, read once, there
 import settings                                                 # the numbers that are the owner's to choose, one table
+import debts                                                    # when a debt has to be paid: now, or over time
 
 from categories import CATEGORIES as _CATS                       # the categories, defined once
 CATEGORIES = set(_CATS)
@@ -884,6 +885,8 @@ def check(root):
                 for k in ("role", "reach"):
                     if a.get(k) is not None:
                         err("D19", f"{who}: a liability has no {k} — it is subtracted, not placed")
+                if a.get("due") is not None and a.get("due") not in debts.DUE:
+                    err("D19", f"{who}: due must be one of {', '.join(debts.DUE)}, not {a.get('due')!r}")
                 ag = a.get("against")
                 if ag is not None and (ag not in keys_ or side_of.get(ag) != "asset"):
                     err("D19", f"{who}: against names {ag!r}, which is not an asset in the register")
@@ -894,6 +897,8 @@ def check(root):
                     err("D19", f"{who}: reach must be one of {', '.join(REACHES)}, not {a.get('reach')!r}")
                 if a.get("against") is not None:
                     err("D19", f"{who}: only a liability sits against something")
+                if a.get("due") is not None:
+                    err("D19", f"{who}: only a liability is due — now, or later")
                 # Money lent is one thing on both axes: owed to you, back only as it is repaid.
                 if (a.get("role") == "owed") != (a.get("reach") == "lent"):
                     err("D19", f"{who}: role owed and reach lent go together — money lent is both")

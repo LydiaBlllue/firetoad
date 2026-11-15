@@ -206,7 +206,8 @@
 ### Plan
 
 - **Emergency fund** (1.0.1): three cards — Months covered, The money, A usual month — each
-  opening its sum, then where the money is and what is owed on no asset; money abroad only in
+  opening its sum, then where the money is, what is *Due now* (taken off the money) and what is
+  *Paid over time* (listed, not taken off: its payment is in a usual month); money abroad only in
   the line under Months covered (FINANCE.md §8d). Since 1.0.5 a fourth block, **Your range**: the
   owner's own months (three to six until changed), drawn as a band on one scale with a mark where
   the money stands, and changeable in place. Under Months covered the page says *Below your

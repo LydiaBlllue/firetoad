@@ -36,6 +36,11 @@
   still to pay from that age to the plan's last year — spending and care, less any pensions, in
   today's money, with nothing assumed about where it comes from. When the money runs out before
   care begins, *Extra needed* says so instead of a number that was mostly that gap.
+- **The Emergency fund no longer charges a loan twice** (2026-11-15, user 001). Every debt on
+  no asset was taken off the money in full, and its monthly payment was also counted in what a
+  month costs — so someone with a student loan larger than their cash read zero months. Only
+  what is *Due now* is taken off (a card's balance); a debt *Paid over time* is listed and left
+  in, because what leaves each month is its payment. A card-only owner's page reads as it did.
 - **The roadmap you read is the release roadmap** (2026-11-13, user 001): the file is
   RELEASE-ROADMAP.md, where it was ROADMAP.md, so it reads as what it is, the plan of what is
   released next. A sync removes the old file from a folder once the new one is there.

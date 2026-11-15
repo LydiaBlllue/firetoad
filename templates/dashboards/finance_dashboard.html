@@ -1098,7 +1098,7 @@ const GLOSSARY = {
   unallocated:    {own:1, w:"Unallocated", pos:"on this page", def:"What is left of income once every line of the plan is paid. It stays where the income landed.", also:["everyday"]},
   safety_net:     {own:1, w:"Emergency fund", pos:"on this page", def:"Money you can reach at once, to live on if your income stops or a large bill arrives. This page shows how much you have and how many months it would last. A common guide is three to six months of spending.", also:["months_covered","spendable_today"]},
   usual_month:    {own:1, w:"A usual month", pos:"on this page", def:"What a month usually costs you: everything spent, averaged over your last full months, up to twelve, leaving out months you marked as unusual. A yearly charge counts as a twelfth each month.", also:["months_covered","planning_figure"]},
-  months_covered: {own:1, w:"Months covered", pos:"on this page", def:"How many months of your usual spending the money you can reach today would pay for, after what you owe on no asset.", f:"(spendable today − what you owe on no asset) ÷ a usual month", also:["safety_net","spendable_today"]},
+  months_covered: {own:1, w:"Months covered", pos:"on this page", def:"How many months of your usual spending the money you can reach today would pay for, after what is due now. A debt paid over time is not taken off; its monthly payment is part of a usual month.", f:"(spendable today − what is due now) ÷ a usual month", also:["safety_net","spendable_today"]},
   complete_to:    {own:1, w:"Complete to", pos:"on this page", def:"The day every account’s numbers are in up to. After it, some accounts are still waiting for their next statement."},
 };
 // The register's axes in the page's own words (Home's net-worth card, the Accounts table).
@@ -2383,8 +2383,8 @@ function renderSafety(){
     card("The money",
       numx(fmt(c.money), [[term("spendable_today", "Spendable today"), fmt(S.today || 0)]]
           .concat(S.invested ? [["Less what is invested", "\u2212"+fmt(S.invested)]] : [])
-          .concat(S.unsecured ? [["Less what you owe", "\u2212"+fmt(S.unsecured)]] : []),
-        "What you could spend today, less what you owe that sits on no asset. Investments are not in it.", true),
+          .concat(S.unsecured ? [["Less what is due now", "\u2212"+fmt(S.unsecured)]] : []),
+        "What you could spend today, less what is due now. Investments are not in it, and a debt paid over time is not taken off: its payment is in a usual month.", true),
       S.abroad > 0 ? "Not counting " + fmt(S.abroad) + " " + term("held_abroad", "held abroad") : "") +
     card(term("usual_month", "A usual month"),
       c.cost === null ? "\u2014" : numx(fmt(c.cost), costRows, "What you usually spend, plus the repayments your plan pays today. Rent and bills are already in the spending.", true),
@@ -2409,7 +2409,12 @@ function renderSafety(){
   const row = a => '<div class="both-acct"><span>'+(a.i ? '<span class="i">'+a.i+'</span>' : "")+a.n+(a.cur ? '<span class="a">'+a.cur+'</span>' : "")+'</span><span class="v num">'+fmt(a.v)+'</span></div>';
   $("safeAccts").innerHTML = '<div class="lab">Where the money is</div>'
     + ((S.accts || []).length ? (S.accts || []).map(row).join("") : '<div class="empty">No account you could spend from today.</div>')
-    + ((S.debts || []).length ? '<div class="lab" style="margin-top:12px">What you owe on no asset</div>' + S.debts.map(row).join("") : "");
+    + ((S.debts || []).length ? '<div class="lab" style="margin-top:12px">Due now</div>' + S.debts.map(row).join("") : "")
+    // A debt paid over time is listed and not taken off the money: what leaves each month is its
+    // payment, and that is in what a month costs. One the plan carries no payment for says so.
+    + ((S.later || []).length ? '<div class="lab" style="margin-top:12px">Paid over time</div>'
+        + S.later.map(a => row(a.paid ? a : Object.assign({}, a, {cur: (a.cur ? a.cur + " \u00b7 " : "") + "no payment in your plan"}))).join("")
+        + '<div class="cap" style="margin-top:6px">Not taken off the money. What you pay each month is part of a usual month.</div>' : "");
 }
 
 const TREND_INC = "#2a78d6", TREND_SP = "#eb6834";

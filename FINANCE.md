@@ -326,10 +326,18 @@ Debts → liability; a foreign-currency account → asset · abroad, role per ac
   an investor had disappears, and as no otherwise; the next import asks once.
 - **Emergency fund**, how long the money would last without income:
 
-  > **months covered = (Spendable today − what is invested in it − what is owed on no asset) ÷ a usual month**
+  > **months covered = (Spendable today − what is invested in it − what is due now) ÷ a usual month**
 
   The money starts from Home's own *Spendable today* row, so the two pages cannot disagree, and
-  takes out what in it is invested (a TFSA can be spent today, but it is held to grow). **A usual
+  takes out what in it is invested (a TFSA can be spent today, but it is held to grow). **What is
+  due now** is the unsecured debt that has to be paid at once: a card's balance, which is this
+  month's bill. A debt **paid over time** — a loan, a line of credit — is not taken off (1.0.5):
+  what leaves each month is its payment, and that is in what a month costs. Taking the whole
+  balance off as well charged it twice, and read zero months for anyone who owed more than they
+  held in cash. Which one a debt is, is the register's `due` (`now` · `later`), defaulting from
+  its kind — a credit card is `now`, everything else `later` — and the owner's to change
+  (`debts.py`). A debt secured on an asset was never in this sum. The page lists the debts paid
+  over time beside the others, and says so of one the plan carries no payment for. **A usual
   month** = the average of up to twelve full months of spending (the Monthly spending page) + the repayments the plan pays today (active
   committed flows with `pays`, `flows.py` `repayNow`). Rent and bills paid today are in
   `spending.csv` already, so they are not added; `COMMITTED_KEEP` is not used, because it holds

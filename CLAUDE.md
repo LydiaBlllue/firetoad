@@ -122,7 +122,7 @@ Net worth used to be five words in `feeds` added up in `rebuild.py`, so every ne
 mortgage got a net worth with the loan in it and the house nowhere. Each account row is now a
 **balance item with five orthogonal axes**, and each derived total reads exactly one of them:
 
-- `side` — asset / liability → net worth = Σ assets − Σ liabilities
+- `side` — asset / liability → net worth = Σ assets − Σ liabilities; a liability may also say `due` (now / later, from its kind: a card is now) — the Emergency fund takes off only what is due now
 - `role` — grow / set-aside / buffer / owed / none → Portfolio is `grow`; net worth by purpose is one
   slice per role; `owed` is money lent (FINANCE.md §8a)
 - `reach` — today / costs / spoken / lent / locked / abroad → the reach table
@@ -284,7 +284,7 @@ Three levels (2026-11-05, the owner: most checks are run when asked, not after e
 |---|---|---|
 | **① the money** — by itself | after any edit to `findata/` (the `PostToolUse` hook) and at the end of an import | `check_data.py . --money`: the `reconcile` and `rules` findings only. Under a second, **silent when clean** |
 | **② check the page** — 检查页面 | when the owner says so, and **before saying a change to the page, a template, DESIGN.md, README or the data's shape is done** | `checks.py . --level page`: check_data in full, check_design, check_render (widths, a short window, every kind of owner). About 20 seconds |
-| **③ check before a release** — 发版前检查 | when the owner says so, and before a release PR | `checks.py . --level release`: the unit tests in `tests/` (one per rule in a pure module — `flows.py`, `loans.py`, `categories.py`, `layout.py`, `clock.py`, `settings.py`, `usual.py`, `fire.py`, `drawdown.py`; standard-library `unittest`, see `tests/README.md`), level ② and the selftest |
+| **③ check before a release** — 发版前检查 | when the owner says so, and before a release PR | `checks.py . --level release`: the unit tests in `tests/` (one per rule in a pure module — `flows.py`, `loans.py`, `categories.py`, `layout.py`, `clock.py`, `settings.py`, `usual.py`, `fire.py`, `drawdown.py`, `debts.py`; standard-library `unittest`, see `tests/README.md`), level ② and the selftest |
 
 ⚠ Level ② is manual for the owner, **not optional for you**: a change to the page is not done
 until it has run, and the reply says what it found.
