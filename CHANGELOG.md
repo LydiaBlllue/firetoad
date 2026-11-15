@@ -18,6 +18,9 @@
 - *Under the page*: a usual month and the emergency fund's months are computed once, at build
   time (`usual.py`), and the page is handed the result — every page reads as it did. `settings.py`
   is the one table of adjustable numbers; D31 holds a stored value to its range.
+- **The roadmap you read is the release roadmap** (2026-11-13, user 001): the file is
+  RELEASE-ROADMAP.md, where it was ROADMAP.md, so it reads as what it is, the plan of what is
+  released next. A sync removes the old file from a folder once the new one is there.
 
 ## 1.0.4 — unreleased
 

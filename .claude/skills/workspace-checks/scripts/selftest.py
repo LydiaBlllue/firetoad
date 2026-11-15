@@ -47,10 +47,10 @@ def stage(root, dst):
     # OWNER.md is optional (a workspace may not have written one yet); README names it.
     # .gitignore too: S4 exempts the files an owner writes and the tool deliberately does not ship
     # (setup-answers.json), and it learns which those are from there (2026-09-13).
-    # LICENSE, CHANGELOG.md, ROADMAP.md, CONTRIBUTING.md and SECURITY.md: README links to them,
+    # LICENSE, CHANGELOG.md, RELEASE-ROADMAP.md, CONTRIBUTING.md and SECURITY.md: README links to them,
     # and S4 resolves every link.
     # app.py too (2026-11-06): the local-app skill hands the reader `python3 app.py`, and S4 resolves it.
-    for f in ("CLAUDE.md", "DESIGN.md", "FINANCE.md", "README.md", "OWNER.md", ".gitignore", "LICENSE", "CHANGELOG.md", "ROADMAP.md",
+    for f in ("CLAUDE.md", "DESIGN.md", "FINANCE.md", "README.md", "OWNER.md", ".gitignore", "LICENSE", "CHANGELOG.md", "RELEASE-ROADMAP.md",
               "CONTRIBUTING.md", "SECURITY.md", "app.py"):
         if os.path.exists(os.path.join(root, f)):
             shutil.copy2(os.path.join(root, f), dst)
