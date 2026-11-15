@@ -586,7 +586,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if path == "/panel":
                 return self._send(200, panel.render(app.base, app.root, app.do_status(), app.do_questions(),
                                                     app.last_import(), app.job.public() if app.job else None,
-                                                    app.lock.holder(), app.tool, app.lang(q)),
+                                                    app.lock.holder(), app.tool, app.lang(q),
+                                                    first=(q.get("first", [""])[0] == "1")),
                                   extra=[("Content-Security-Policy",
                                           "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; "
                                           "connect-src 'self'; img-src data:; base-uri 'none'; form-action 'none'")])

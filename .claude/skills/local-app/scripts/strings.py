@@ -203,6 +203,7 @@ S = {
     "ai_noanswer": {"en": "no usable answer ({how}) — .firetoad/log/ai.jsonl has the exchange", "zh": "没有可用的回答（{how}）——.firetoad/log/ai.jsonl 里有往来记录"},
     "settings": {"en": "Settings", "zh": "设置"},
     # — the panel, one step at a time (2026-11-12): what each view is called and says
+    "first_last": {"en": "Last step: what the files could not say", "zh": "最后一步：文件里看不出来的"},
     "v_step": {"en": "Step {i} of {n}", "zh": "第 {i} 步，共 {n} 步"},
     "v1_h": {"en": "Get this month's files", "zh": "拿到这个月的文件"},
     "v1_s": {"en": "Download these from your bank, then drop them below.", "zh": "从银行下载这些文件，然后拖到下面。"},

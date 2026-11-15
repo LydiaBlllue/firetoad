@@ -412,11 +412,15 @@ def waiting_words(lang, items):
     return t_w(lang, "w_and").join(parts)
 
 
-def render(base, root, st, q, rec, job, held, tool=None, lang="en"):
+def render(base, root, st, q, rec, job, held, tool=None, lang="en", first=False):
     """The monthly panel, one step at a time (2026-11-12, user 001: four cards in two columns
     showed every step at once, each with a paragraph). Four views — get the files, import,
     categorize, done — each with a heading that says the one thing to do, one sentence at most,
-    and its content as a table. The page shows the view the owner is at; the bar goes to the others."""
+    and its content as a table. The page shows the view the owner is at; the bar goes to the others.
+
+    `first` is the last step of the setup (2026-11-15, roadmap 1.0.5): the setup has just imported
+    and what it could not file is asked here, in the same window, without the monthly bar or the
+    word "import"; the way out is the dashboard."""
     tpl = template(root)
     items = (q or {}).get("items") or []
     cur, _lead, _kw = current_step(st, q)
@@ -449,7 +453,8 @@ def render(base, root, st, q, rec, job, held, tool=None, lang="en"):
             "{{OPEN_DASH}}": e(t(lang, "open_dash")), "{{LANG_OTHER}}": e(t(lang, "lang_other")),
             "{{OTHER_LANG}}": "zh" if lang == "en" else "en",
             "{{BARS}}": bars(view), "{{VIEW}}": str(view), "{{CUR}}": str(cur), "{{INFOLDER}}": str(ready),
-            "{{STEP_OF}}": e(t(lang, "v_step", i="{i}", n=4)),
+            "{{STEP_OF}}": e(t(lang, "first_last") if first else t(lang, "v_step", i="{i}", n=4)),
+            "{{FIRST}}": "1" if first else "0",
             "{{V1_H}}": e(v1_h), "{{V1_S}}": e(v1_s), "{{V2_H}}": e(v2_h), "{{V3_H}}": e(v3_h), "{{V4_H}}": e(t(lang, "v4_h")),
             "{{STEP1}}": need_html, "{{STEP2}}": drop_html, "{{BALANCES}}": more,
             # with files in the folder the way on is one button, whatever else is still to come
