@@ -293,7 +293,7 @@ def m_fx_stale(r):
 def m_guard_data(r):
     g = lambda *a: subprocess.run(["git", "-C", r, "-c", "user.name=Emma Roy", "-c", "user.email=emma@example.com", *a],
                                   capture_output=True, text=True)
-    g("init", "-q"); g("remote", "add", "origin", "https://github.com/example/jade-toad.git")
+    g("init", "-q"); g("remote", "add", "origin", "https://github.com/example/firetoad.git")
     sys.path.insert(0, os.path.join(r, ".claude", "skills", "setup", "scripts"))
     import importlib
     import scaffold
@@ -2419,7 +2419,7 @@ def local_app_check(root, base):
             bad.append("a request without the token was not answered 404")
         if req("POST", tok + "/api/import", {"write": False}, {"Content-Type": "application/json", "Origin": "http://127.0.0.1:1"})[0] != 403:
             bad.append("a POST from another origin was not refused")
-        lock = os.path.join(ws, ".jade.lock")
+        lock = os.path.join(ws, ".firetoad.lock")
         json.dump({"pid": os.getpid(), "verb": "import", "since": "now"}, open(lock, "w"))
         st, body = req("POST", tok + "/api/import", {"write": True})
         if st != 409:
@@ -2524,10 +2524,10 @@ def local_app_setup_check(root, base):
     bad = []
     _, two = copies["api"]
     ws = os.path.join(base, "wiz_made")
-    spec = importlib.util.spec_from_file_location("jade_app", os.path.join(copies["api"][0], "app.py"))
-    jade_app = importlib.util.module_from_spec(spec); spec.loader.exec_module(jade_app)
+    spec = importlib.util.spec_from_file_location("app_mod", os.path.join(copies["api"][0], "app.py"))
+    app_mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(app_mod)
     with contextlib.redirect_stdout(io.StringIO()):
-        jade_app.make_workspace(ws)
+        app_mod.make_workspace(ws)
     made = sorted(os.path.relpath(os.path.join(d, f), ws) for d, _, fs in os.walk(os.path.join(ws, "findata")) for f in fs)
     if made != [os.path.join("findata", "register", "profile.json")]:
         bad.append("Create my folder left more than a profile.json in findata/: " + ", ".join(made[:4]))
@@ -2693,7 +2693,7 @@ def ai_sidecar_check(root, base):
     asked as before; with the provider
     set to the mock, the merchants nobody knows carry a model's suggestion and are STILL filed
     Other until the owner says, the mock saw only merchant strings and category names, and the
-    exchange is in .jade/log/ai.jsonl."""
+    exchange is in .firetoad/log/ai.jsonl."""
     import http.server, threading
     upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
     aip = os.path.join(os.path.dirname(upd), "ai.py")
@@ -2782,9 +2782,9 @@ def ai_sidecar_check(root, base):
                     bad.append("on: a request carried an amount or a date"); break
                 if c["auth"] != "Bearer selftest-key":
                     bad.append("on: the key did not travel as the bearer token"); break
-            lp = os.path.join(ws, ".jade", "log", "ai.jsonl")
+            lp = os.path.join(ws, ".firetoad", "log", "ai.jsonl")
             if not os.path.exists(lp) or len(open(lp, encoding="utf-8").read().splitlines()) < len(calls):
-                bad.append("on: .jade/log/ai.jsonl does not hold every exchange")
+                bad.append("on: .firetoad/log/ai.jsonl does not hold every exchange")
             if "suggests Travel" not in r.stdout:
                 bad.append("on: the run's summary does not say the model suggested")
             n_calls, n_model = len(calls), len(with_model)

@@ -37,7 +37,7 @@ one: the bank's own download path from `parsers/support.py`, the app page for a 
 field for a number) · 2 put them here · 3 import (look first, then import) · 4 answer a few
 questions · 5 done. A strip at the top lights the current step and one line says what to do
 next. Every sentence is in `scripts/strings.py`, English and Chinese; the page picks the
-language from `?lang=zh|en` (remembered in .jade/settings.json), else profile.json `lang`, else
+language from `?lang=zh|en` (remembered in .firetoad/settings.json), else profile.json `lang`, else
 English, and the header has the switch. The setup wizard reads its words from the same table
 (`W` in `scripts/strings.py`) and switches the same way; the draft's own sentences are not shown
 — the wizard says each question in its own words with the draft's figure in it.
@@ -54,7 +54,7 @@ lines streaming in; undo the last import; answer the open questions with pills a
 at once; type a balance no file carries (`balance.py` behind it — banks.json and foreign.json
 rows with no ledger; the register's copy follows); read such a balance off a phone screenshot
 (`ocr.py`: Apple Vision on this computer, the amounts ranked by the account's `capture` line,
-offered as pills, never written until tapped; the image is kept under .jade/shots/); open the
+offered as pills, never written until tapped; the image is kept under .firetoad/shots/); open the
 inbox folder; and show the last import's result. **A fresh folder gets the
 setup as screens** (step 2, 2026-11-06): while `findata/` is not set up (the demo's in a clone, or the blank one *Create my folder* writes:
 no data, profile.json marked `blank`), `/panel` draws the
@@ -71,8 +71,8 @@ starter map all miss. It sends the merchant string and the fifteen category name
 else; the answer has to be one of the fifteen or it is dropped; it becomes the question's
 *suggestion* (a dot marks it on the panel) and never the filing — Other stays until the owner
 confirms. The key lives in the macOS Keychain (service "Jade Toad", the product's first name, kept so a key already saved is still found), never in the workspace;
-the choice in .jade/settings.json; every exchange in .jade/log/ai.jsonl; one merchant costs
-one call (.jade/ai_cache.json). The same setting from this chat:
+the choice in .firetoad/settings.json; every exchange in .firetoad/log/ai.jsonl; one merchant costs
+one call (.firetoad/ai_cache.json). The same setting from this chat:
 `python3 .claude/skills/update-dashboard/scripts/ai.py . status | set <provider> … | off | test "<merchant>"`.
 What it cannot yet: download a statement (the owner does that, or this chat does with
 `fetch-statements`). OCR needs `ocrmac`
@@ -84,13 +84,13 @@ panel says so and the amount is typed.
 - **No financial logic in it.** Every route is one call into a script's `run()`
   (`.claude/skills/local-app/scripts/server.py` lists them in its docstring). A new thing the
   panel should do is first a thing the script can do.
-- **One writer.** A lock file (.jade.lock) in the workspace while a verb runs; a second import or save gets
+- **One writer.** A lock file (.firetoad.lock) in the workspace while a verb runs; a second import or save gets
   409 and the panel says what is running. A run from this chat while the app imports would race
   it — look for the lock file first.
 - **Loopback only, token in the path, no CORS.** A wrong token is 404.
 - **It never edits the page.** The import rebuilds through `rebuild.py` as it always did; the
   browser reloads the static file.
-- Logs: the app.log file under .jade/log/ in the workspace, nothing in the repository (both are gitignored).
+- Logs: the app.log file under .firetoad/log/ in the workspace, nothing in the repository (both are gitignored).
 - **The build carries no workspace.** The build script refuses a checkout whose `findata/` is
   not the demo's, and bundles only what `tools/sync.py` copies. Without `--sign`
   it is ad-hoc signed (this Mac runs it; another asks for System Settings → Privacy & Security → Open Anyway once); a public

@@ -196,7 +196,7 @@ the system browser, and serves two things: the built dashboard, as the static fi
 the **panel** (`templates/panel/panel.html`, filled by `local-app/scripts/panel.py`) — one
 step at a time under a four-part bar, *get the files, import, categorize, done*, each a heading
 that says the one thing to do and its content as a table (DESIGN.md 6a); every sentence from `local-app/scripts/strings.py` in
-English and Chinese (`?lang=`, remembered in `.jade/settings.json`, else profile.json `lang`),
+English and Chinese (`?lang=`, remembered in `.firetoad/settings.json`, else profile.json `lang`),
 and each missing file's *how do I get it* read from `parsers/support.py` (2026-11-07, after the
 first version's four internal names left the owner not knowing what to do). Every question the
 import raises carries `facts` (kind, amount, date, sender, merchant) beside its English `what`:
@@ -205,10 +205,10 @@ reads `what`; the categories keep English keys and get a screen name per languag
 (`categories.label`); step 3 draws the import's returned summary as a card, the lines folded. The server
 (`local-app/scripts/server.py`) holds **no financial logic**: each route is one call into a
 script's `run()` — `status`, `update`, `update.undo`, `confirm` — and the import still rebuilds
-through `rebuild.py`; the browser reloads the file. One lock file (`.jade.lock`, `jlock.py` in the
+through `rebuild.py`; the browser reloads the file. One lock file (`.firetoad.lock`, `jlock.py` in the
 update-dashboard scripts) makes it one writer at a time **through either door** — the app takes
 it around every verb, and `update`, `confirm` and `balance` refuse to write while another live
-process holds it — and its log is `.jade/log/` (both ignored by git). The dashboard's header
+process holds it — and its log is `.firetoad/log/` (both ignored by git). The dashboard's header
 counts the answers waiting and links to `/panel` when the app serves the page. The selftest's *local app*
 check imports the same month through `update.py --write` and through `POST /api/import` and
 expects identical `findata/` and `archive/`, with one statement uploaded and one balance typed
@@ -236,8 +236,8 @@ or Ollama on this computer) with `ai.py . set` — its card left the panel on 20
 only — a merchant every map misses, in `note_merchant` — with the merchant string and the
 fifteen category names and nothing else; its answer is validated against the fifteen, written
 as the question's `suggest` with `suggestBy: model`, never as the category (Other stays until
-the owner confirms); the key in the Keychain, the choice in `.jade/settings.json`, every
-exchange in `.jade/log/ai.jsonl`. The selftest's *model side-car* check runs an import against a
+the owner confirms); the key in the Keychain, the choice in `.firetoad/settings.json`, every
+exchange in `.firetoad/log/ai.jsonl`. The selftest's *model side-car* check runs an import against a
 loopback mock: off means no call, on means suggestions and still Other, and only merchant
 strings and category names on the wire. The second door is complete; what follows is a Windows
 build and signing.

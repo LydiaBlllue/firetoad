@@ -66,5 +66,46 @@ class Path(unittest.TestCase):
         self.assertEqual(sorted(os.listdir(os.path.join(self.root, "findata"))), sorted(layout.FOLDERS))
 
 
+class TheAppsOwnFolder(unittest.TestCase):
+    """.firetoad — it was .jade until 1.0.5 (layout.state_dir, jlock)."""
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+
+    def test_a_new_workspace_gets_the_new_name_and_nothing_is_made(self):
+        self.assertEqual(layout.state_dir(self.root), os.path.join(self.root, ".firetoad"))
+        self.assertEqual(os.listdir(self.root), [])
+
+    def test_a_folder_under_the_old_name_is_renamed_with_what_is_in_it(self):
+        os.makedirs(os.path.join(self.root, ".jade", "log"))
+        open(os.path.join(self.root, ".jade", "settings.json"), "w").write("{}")
+        d = layout.state_dir(self.root)
+        self.assertEqual(sorted(os.listdir(self.root)), [".firetoad"])
+        self.assertEqual(sorted(os.listdir(d)), ["log", "settings.json"])
+
+    def test_when_both_exist_the_new_one_is_used_and_the_old_left_alone(self):
+        os.makedirs(os.path.join(self.root, ".jade")); os.makedirs(os.path.join(self.root, ".firetoad"))
+        self.assertEqual(layout.state_dir(self.root), os.path.join(self.root, ".firetoad"))
+        self.assertTrue(os.path.isdir(os.path.join(self.root, ".jade")))
+
+    def test_the_lock_has_the_new_name(self):
+        import jlock
+        self.assertIsNone(jlock.acquire(self.root, "import"))
+        self.assertTrue(os.path.exists(os.path.join(self.root, ".firetoad.lock")))
+        jlock.release(self.root)
+        self.assertFalse(os.path.exists(os.path.join(self.root, ".firetoad.lock")))
+
+    def test_a_live_holder_under_the_old_lock_name_is_still_a_holder(self):
+        import jlock, json
+        json.dump({"pid": os.getppid(), "verb": "import", "since": "2026-01-01T00:00:00"}, open(os.path.join(self.root, ".jade.lock"), "w"))
+        self.assertEqual(jlock.held_by_other(self.root), "import")
+
+    def test_a_dead_holder_under_the_old_lock_name_is_cleared(self):
+        import jlock, json
+        json.dump({"pid": 2 ** 22 + 12345, "verb": "import", "since": "2026-01-01T00:00:00"}, open(os.path.join(self.root, ".jade.lock"), "w"))
+        self.assertIsNone(jlock.held_by_other(self.root))
+        self.assertFalse(os.path.exists(os.path.join(self.root, ".jade.lock")))
+
+
 if __name__ == "__main__":
     unittest.main()

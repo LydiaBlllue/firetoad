@@ -56,7 +56,7 @@ def draw(scale):
 
 
 def write(out):
-    tmp = tempfile.mkdtemp(prefix="jade-dmg-art-")
+    tmp = tempfile.mkdtemp(prefix="firetoad-dmg-art-")
     one, two = os.path.join(tmp, "bg.png"), os.path.join(tmp, "bg@2x.png")
     draw(1).save(one, dpi=(72, 72))
     draw(2).save(two, dpi=(144, 144))

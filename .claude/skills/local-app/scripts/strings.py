@@ -2,7 +2,7 @@
 
 The dashboard is English (DESIGN.md); the panel is instructions, and instructions are read in
 the owner's language. So each string lives here once per language, the page picks one at
-render time (`?lang=zh` on the panel, remembered in .jade/settings.json; before that, profile.json
+render time (`?lang=zh` on the panel, remembered in .firetoad/settings.json; before that, profile.json
 `lang`; before that, the system's language — `system_lang()`), and nothing in panel.py or the template carries a sentence of its
 own. A string says what to DO, in plain words: never a file name where a bank's name will do,
 never a tool's word (ledger, register, reconcile) where the owner's will do.
@@ -200,7 +200,7 @@ S = {
     "ai_try": {"en": "Try it on a merchant", "zh": "拿一个商户试试"},
     "ai_try_q": {"en": "A merchant string, as a statement prints it:", "zh": "一个商户名，照对账单上印的样子："},
     "ai_asking": {"en": "asking…", "zh": "正在问…"},
-    "ai_noanswer": {"en": "no usable answer ({how}) — .jade/log/ai.jsonl has the exchange", "zh": "没有可用的回答（{how}）——.jade/log/ai.jsonl 里有往来记录"},
+    "ai_noanswer": {"en": "no usable answer ({how}) — .firetoad/log/ai.jsonl has the exchange", "zh": "没有可用的回答（{how}）——.firetoad/log/ai.jsonl 里有往来记录"},
     "settings": {"en": "Settings", "zh": "设置"},
     # — the panel, one step at a time (2026-11-12): what each view is called and says
     "v_step": {"en": "Step {i} of {n}", "zh": "第 {i} 步，共 {n} 步"},

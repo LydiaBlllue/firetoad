@@ -14,7 +14,7 @@ the same findata/.
 What it keeps:
 
   one core        imports the scripts as modules; never a shell, never a user string in a command
-  one writer      a lock file in the workspace (.jade.lock: pid, verb, since); a second import or
+  one writer      a lock file in the workspace (.firetoad.lock: pid, verb, since); a second import or
                   save while one runs gets 409 with the running verb
   loopback only   binds 127.0.0.1; a per-launch token in the path (/t/<token>/…), so a page on
                   another local port cannot call the API; a wrong token is 404, not 401 — nothing
@@ -43,7 +43,7 @@ Routes (every API answer is {"ok": bool, "data" | "error": …, "took": seconds}
                                                         dashboard's Settings page; answers when it is written
   POST /api/ocr            ocr.read(image, capture)     (multipart: key + image) the amounts Vision sees on a
                                                         screenshot, ranked by the account's capture line —
-                                                        candidates only; the image is kept under .jade/shots/
+                                                        candidates only; the image is kept under .firetoad/shots/
   POST /api/open-inbox     —                            opens the inbox folder in the file manager
   POST /api/open-log       —                            shows the app's log in the file manager
   GET  /api/setup          wizard.state()               the setup screens, drafted from inbox/ (demo folders)
@@ -59,7 +59,7 @@ Routes (every API answer is {"ok": bool, "data" | "error": …, "took": seconds}
   GET  /api/ping           keeps the server alive
 
 Errors from the core are returned whole (the exception's name and text) and logged to
-.jade/log/app.log in the workspace, so the owner can send that file.
+.firetoad/log/app.log in the workspace, so the owner can send that file.
 """
 import argparse
 import datetime as dt
@@ -88,6 +88,7 @@ import balance  # noqa: E402
 import confirm  # noqa: E402
 import fetch  # noqa: E402  find_root
 import jlock  # noqa: E402  one writer at a time, both doors
+import layout  # noqa: E402  where the app's own files live in a workspace
 import ocr  # noqa: E402
 import panel  # noqa: E402
 import preflight  # noqa: E402  names a dropped file
@@ -105,7 +106,7 @@ MAX_UPLOAD = 64 << 20    # and a multipart one larger than this (a month of stat
 IMAGES = (".png", ".jpg", ".jpeg", ".heic", ".webp")
 
 import applog  # noqa: E402  the system log and the error an owner can copy
-log = logging.getLogger("jade.app")
+log = logging.getLogger("firetoad.app")
 
 
 # ---------------------------------------------------------------- the lock
@@ -199,7 +200,7 @@ class App:
         self._setup_log()
 
     def _setup_log(self):
-        d = os.path.join(self.root, ".jade", "log")
+        d = os.path.join(layout.state_dir(self.root), "log")
         os.makedirs(d, exist_ok=True)
         if not log.handlers:
             h = logging.FileHandler(os.path.join(d, "app.log"), encoding="utf-8")
@@ -255,7 +256,7 @@ class App:
                 job.finish(error={"type": type(e).__name__, "text": str(e)})
             finally:
                 self.lock.release()
-        threading.Thread(target=go, name=f"jade-{verb}", daemon=True).start()
+        threading.Thread(target=go, name=f"firetoad-{verb}", daemon=True).start()
         return job, None
 
     def do_status(self):
@@ -342,7 +343,7 @@ class App:
         return out
 
     def do_ocr(self, key, name, data):
-        """A screenshot for one account: kept under .jade/shots/, read, the candidates returned.
+        """A screenshot for one account: kept under .firetoad/shots/, read, the candidates returned.
         Writes nothing to findata/; the owner picks, and /api/balance writes."""
         reg = json.load(open(os.path.join(self.root, "findata", "register", "accounts.json"), encoding="utf-8")) \
             if os.path.exists(os.path.join(self.root, "findata", "register", "accounts.json")) else {}
@@ -352,7 +353,7 @@ class App:
         ext = os.path.splitext(safe_name(name) or "")[1].lower() or ".png"
         if ext not in IMAGES:
             raise ValueError("not an image")
-        shots = os.path.join(self.root, ".jade", "shots")
+        shots = os.path.join(layout.state_dir(self.root), "shots")
         os.makedirs(shots, exist_ok=True)
         path = os.path.join(shots, f"{re.sub(r'[^A-Za-z0-9_-]', '_', key)}-{dt.datetime.now().strftime('%Y%m%d-%H%M%S')}{ext}")
         with open(path, "wb") as fh:
@@ -407,10 +408,10 @@ class App:
         return {"category": cat, "how": how}
 
     def lang(self, q=None):
-        """The panel's language: ?lang= on the request (remembered in .jade/settings.json),
+        """The panel's language: ?lang= on the request (remembered in .firetoad/settings.json),
         else the remembered one, else profile.json `lang`, else the system's (strings.py)."""
         want = (q or {}).get("lang", [None])[0]
-        sp = os.path.join(self.root, ".jade", "settings.json")
+        sp = os.path.join(layout.state_dir(self.root), "settings.json")
         try:
             allset = json.load(open(sp, encoding="utf-8"))
         except (OSError, ValueError):
@@ -708,7 +709,7 @@ def serve(root, port=0, token=None, ready=None, tool=None, tool_hooks=None):
     app.httpd, app.port = httpd, httpd.server_address[1]
     url = f"http://127.0.0.1:{app.port}{app.base}/panel"
     log.info("serving %s on %s", app.root, url)
-    threading.Thread(target=app.idle_watch, name="jade-idle", daemon=True).start()
+    threading.Thread(target=app.idle_watch, name="firetoad-idle", daemon=True).start()
     if ready:
         ready(url, app)
     try:

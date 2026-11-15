@@ -47,6 +47,12 @@
   & chequing shows the newest eight chequing rows and offers the rest. In the sidebar the
   current page lists its sections under it, the one in view marked, and a thin chevron folds
   them — or a whole stage. A new check (R9) notes any other page past a screen and a half.
+- *The last of the first name inside a folder* (2026-11-15, user 001). The app's own folder in a
+  workspace is `.firetoad` and its lock `.firetoad.lock`; they were `.jade` and `.jade.lock`. A
+  folder that has the old one has it renamed, with everything in it, the first time the new
+  version touches it, and a lock still held under the old name is still respected. The
+  environment variable for a model's key is `FIRETOAD_AI_KEY`; the old name still works. Nothing
+  an owner sees changes.
 - **The roadmap you read is the release roadmap** (2026-11-13, user 001): the file is
   RELEASE-ROADMAP.md, where it was ROADMAP.md, so it reads as what it is, the plan of what is
   released next. A sync removes the old file from a folder once the new one is there.

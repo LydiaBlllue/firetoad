@@ -23,6 +23,25 @@ The folder is still called findata/: iCloud for Windows excludes any folder name
 """
 import os
 
+# The app's own files in a workspace — its settings, its log, the screenshots it read, a model's
+# cache. Not data, and ignored by git. The folder carried the product's first name (`.jade`)
+# until 1.0.5.
+STATE, STATE_WAS = ".firetoad", ".jade"
+
+
+def state_dir(root):
+    """<root>/.firetoad. A workspace that still has the folder under its old name has it renamed
+    here, once, the first time anything asks; if that cannot be done the old one goes on being
+    used, so nothing in it is lost. The folder is not created: the caller that writes makes it."""
+    new, old = os.path.join(root, STATE), os.path.join(root, STATE_WAS)
+    if not os.path.exists(new) and os.path.isdir(old):
+        try:
+            os.rename(old, new)
+        except OSError:
+            return old
+    return new
+
+
 REGISTER = ("accounts.json", "profile.json", "funds.json", "plan.json", "rules.json",
             "merchants.json", "senders.json", "tasks.json", "setup-answers.json")
 HISTORY = ("imports.json", "decisions.json", "filings.json", "investment_history.json",
