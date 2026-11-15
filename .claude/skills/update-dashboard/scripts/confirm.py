@@ -71,6 +71,11 @@ OWN = "Transfer"     # the answer "my own money, moved" to a transfer out: it st
 # money went"). A merchant is filed Other and marked so in merchants.json, so it is not asked
 # again and can be counted; a transfer or money in stays as the import typed it. Either way the
 # question is closed.
+# Money sent with no name on it is asked before the page says "that is enough" when it is big
+# or when it repeats: a rent paid by e-Transfer left as a transfer is spending that is not
+# counted, month after month, and that matters more than every small merchant together
+# (2026-11-15, user 001). Small and seen once, it waits with the small merchants.
+ASK_FIRST = 500
 UNSURE = "Not sure"
 UNSURE_SAID = ("not sure", "unsure", "i don't know", "i do not know", "不确定", "不知道")
 
@@ -276,6 +281,9 @@ def run(root, write=False, ok=False, sets=(), say=None):
                              "facts": d.get("facts"), "source": d.get("source"),
                              "recall": _recall(d, k, spend, ledgers), "group": group_of.get(id(d))})
         rc = res["items"][-1]["recall"]
+        # money out only: that is where uncounted spending hides. Money in with no name waits.
+        res["items"][-1]["first"] = bool(d.get("kind") == "transfer" and d.get("row") and rc and rc.get("rows")
+                                         and (group_of.get(id(d)) or rc["rows"][0]["a"] >= ASK_FIRST))
         if rc and rc.get("match"):
             rc["match"]["name"] = ledger_name.get(rc["match"]["ledger"], rc["match"]["ledger"])
 

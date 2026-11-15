@@ -60,7 +60,9 @@
   first, by what you use most. *Not sure* closes a question for good and is counted. The same
   amount sent several times with no name on it is one question. Progress is the share of your
   spending that is sorted: at 95% the page says that is enough and what is left can wait — on
-  one real first import that was 5 answers, where 58 questions were waiting.
+  one real first import that was 5 merchants, where 58 questions were waiting. Money sent with
+  no name on it is asked before that when it is $500 or more, or the same amount more than once:
+  a rent paid by e-Transfer and left as a transfer is spending nobody counted.
 - **The roadmap you read is the release roadmap** (2026-11-13, user 001): the file is
   RELEASE-ROADMAP.md, where it was ROADMAP.md, so it reads as what it is, the plan of what is
   released next. A sync removes the old file from a folder once the new one is there.

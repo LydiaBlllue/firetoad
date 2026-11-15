@@ -549,7 +549,8 @@ categories the owner uses most, four shown and the rest under *More*: the order 
 habit, never read off the merchant's name. **Not sure is an answer**: it closes the question,
 is counted, and is not asked again. The same amount moved several times with no name on it is
 one card, and one answer covers them. **Progress is money, not a count**: the share of spending
-sorted, with a line at 95%; reaching it shows *That is enough*, what is left — the small
+sorted, with a line at 95%. Money sent that is big or repeats (`confirm.py` `ASK_FIRST`) is
+asked before the line is called reached, since it may be spending nobody counted; then the page shows *That is enough*, what is left — the small
 merchants, what was answered not sure, the money questions — and the way on or out. A short
 list has no line and is simply gone through.
 

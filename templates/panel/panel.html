@@ -469,17 +469,22 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
     var acc = openOther, toLine = 0;
     merch.forEach(function(m){ if (spendT && 1 - acc / spendT < LINE) { toLine++; acc -= (m.amount || 0); } });
     var bigM = merch.slice(0, toLine), smallM = merch.slice(toLine);
+    // money moved that is big or repeats is asked before "enough" (confirm.py ASK_FIRST): left as
+    // a transfer, a rent paid by e-Transfer is spending nobody counted. The rest waits.
+    var amtOf = function(i){ return i.recall && i.recall.rows && i.recall.rows[0] ? i.recall.rows[0].a : 0; };
+    var moneyFirst = moneyQ.filter(function(i){ return i.first; }).sort(function(a, b){ return amtOf(b) * (b.members || [b]).length - amtOf(a) * (a.members || [a]).length; });
+    var moneyRest = moneyQ.filter(function(i){ return !i.first; });
     var ENOUGH = {kind: 'enough'};
     // a short list is simply gone through; the line is for a first import's long one
-    var useLine = merch.length && (smallM.length + moneyQ.length) && Q.items.length > 6;
-    var deckItems = useLine ? firsts.concat(bigM, [ENOUGH]) : firsts.concat(merch, moneyQ);
+    var useLine = merch.length && (smallM.length + moneyRest.length) && Q.items.length > 6;
+    var deckItems = useLine ? firsts.concat(bigM, moneyFirst, [ENOUGH]) : firsts.concat(merch, moneyQ);
     var qd = $('qdeck'), qof = $('qof'), qend = $('qend'), idx = 0, answered = 0;
     var prog = el('div', 'prog'); qd.appendChild(prog);
     var deck = el('div', 'deck'); qd.appendChild(deck);
     saveMsg = el('span', 'hint');
     function drawProg(){
       if (!merch.length || !spendT) { prog.innerHTML = ''; return; }
-      var p = share(), left = bigM.filter(function(m){ return !m.counted; }).length;
+      var p = share(), left = bigM.concat(moneyFirst).filter(function(m){ return !m.counted; }).length;
       prog.innerHTML = '<div class="pt"><span>' + esc(fmtS(T.q_sorted, {pct: Math.floor(p * 100)})) + '</span><span class="ln">' + esc(fmtS(T.q_line, {pct: Math.round(LINE * 100)})) + '</span></div>'
         + '<div class="pb"><i style="width:' + (p * 100).toFixed(1) + '%"></i><b style="left:' + (LINE * 100) + '%"></b></div>'
         + (useLine && left ? '<div class="pn">' + esc(fmtS(T.q_to_line, {n: left})) + '</div>' : '');
@@ -522,13 +527,13 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
       var b = el('div', 'rc');
       if (left.length) b.appendChild(el('div', 'rr', '<span>' + esc(fmtS(T.q_left_small, {n: left.length, amount: money(sum)}).replace('(s)', left.length === 1 ? '' : 's')) + '</span>'));
       if (unsure.n) b.appendChild(el('div', 'rr', '<span>' + esc(fmtS(T.q_left_unsure, {n: unsure.n, amount: money(unsure.total)})) + '</span>'));
-      if (moneyQ.length) b.appendChild(el('div', 'rr', '<span>' + esc(fmtS(T.q_left_money, {n: moneyQ.length})) + '</span>'));
+      if (moneyRest.length) b.appendChild(el('div', 'rr', '<span>' + esc(fmtS(T.q_left_money, {n: moneyRest.length})) + '</span>'));
       c.appendChild(b);
       var f = el('div', 'pills');
       var go = function(more){ deckItems = deckItems.concat(more); idx++; next(); };
       var fin = el('button', 'pl big sel', esc(T.q_finish)); fin.type = 'button'; fin.onclick = function(){ idx = deckItems.length; next(); }; f.appendChild(fin);
-      if (moneyQ.length) { var m = el('button', 'pl big', esc(fmtS(T.q_do_money, {n: moneyQ.length}))); m.type = 'button'; m.onclick = function(){ go(moneyQ); }; f.appendChild(m); }
-      if (left.length) { var sm = el('button', 'pl big', esc(T.q_do_small)); sm.type = 'button'; sm.onclick = function(){ go(left.concat(moneyQ)); }; f.appendChild(sm); }
+      if (moneyRest.length) { var m = el('button', 'pl big', esc(fmtS(T.q_do_money, {n: moneyRest.length}))); m.type = 'button'; m.onclick = function(){ go(moneyRest); }; f.appendChild(m); }
+      if (left.length) { var sm = el('button', 'pl big', esc(T.q_do_small)); sm.type = 'button'; sm.onclick = function(){ go(left.concat(moneyRest)); }; f.appendChild(sm); }
       c.appendChild(f);
       return c;
     }
@@ -588,7 +593,7 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
         if (it.kind === 'merchant' && !it.counted) {
           it.counted = true; openOther -= (it.amount || 0);
           if (ch === 'Not sure') { unsure.n++; unsure.total += (it.amount || 0); }
-        }
+        } else it.counted = true;
       }
       // "my own account" answers every transfer with that account (confirm.py does the same in
       // the data): their cards are not shown again

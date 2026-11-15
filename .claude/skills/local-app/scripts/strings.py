@@ -249,7 +249,7 @@ S = {
     "q_enough_p": {"en": "{pct}% of your spending is sorted. The rest can wait.", "zh": "{pct}% 的支出已经归类。剩下的可以以后再说。"},
     "q_left_small": {"en": "Left as Other: {n} small merchant(s), {amount}", "zh": "留在「其他」：{n} 个小商户，共 {amount}"},
     "q_left_unsure": {"en": "Not sure: {n}, {amount}", "zh": "不确定：{n} 个，共 {amount}"},
-    "q_left_money": {"en": "Money moved with no name on it: {n} to answer", "zh": "没写名字的转账：{n} 个要回答"},
+    "q_left_money": {"en": "Money in, and small amounts out, with no name: {n} to answer", "zh": "没写名字的进账和小额转出：{n} 个要回答"},
     "q_do_money": {"en": "Answer those {n}", "zh": "回答这 {n} 个"},
     "q_do_small": {"en": "Sort the small ones too", "zh": "小的也归一下"},
     "q_finish": {"en": "Done", "zh": "完成"},

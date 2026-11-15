@@ -79,6 +79,29 @@ class NotSure(unittest.TestCase):
         first = next(i for i in tr if i["recall"]["rows"][0]["d"] == "2026-02-02")
         self.assertEqual(first["recall"]["sameDay"], [{"what": "Plan fee", "a": -16.95}])
 
+    def test_money_moved_that_is_big_or_repeats_is_asked_first(self):
+        tr = [i for i in confirm.run(self.ws)["items"] if i["kind"] == "transfer"]
+        self.assertTrue(all(i["first"] for i in tr))                 # 650, twice
+        self.assertFalse(any(i["first"] for i in confirm.run(self.ws)["items"] if i["kind"] == "merchant"))
+
+    def test_money_in_with_no_name_waits_however_big(self):
+        d = self.load("decisions.json")
+        d["decisions"].append({"kind": "transfer", "what": "in", "default": "Other income", "status": "open",
+                               "facts": {"kind": "credit", "amount": 3000, "date": "2026-02-05"},
+                               "credit": {"date": "2026-02-05", "amount": 3000.0, "ledger": "chq.csv", "statement": "B1/20260213", "description": "e-Transfer received"}})
+        json.dump(d, open(layout.path(self.ws, "decisions.json"), "w", encoding="utf-8"))
+        it = next(i for i in confirm.run(self.ws)["items"] if i["credit"])
+        self.assertFalse(it["first"])
+
+    def test_a_small_amount_moved_once_waits(self):
+        d = self.load("decisions.json")
+        d["decisions"] = [x for x in d["decisions"] if x.get("kind") != "transfer"] + [
+            {"kind": "transfer", "what": "sent", "default": "Transfer", "status": "open", "facts": {"kind": "sent", "amount": 40, "date": "2026-02-02"},
+             "row": {"date": "2026-02-02", "amount": 40.0, "cur": "CAD", "note": "e-Transfer sent [B1/20260213]", "ledger": "chq.csv"}}]
+        json.dump(d, open(layout.path(self.ws, "decisions.json"), "w", encoding="utf-8"))
+        tr = [i for i in confirm.run(self.ws)["items"] if i["kind"] == "transfer"]
+        self.assertEqual([i["first"] for i in tr], [False])
+
     def test_what_is_still_to_sort_and_the_owners_own_habit(self):
         r = confirm.run(self.ws)
         self.assertEqual(r["openOther"], 105.0)
