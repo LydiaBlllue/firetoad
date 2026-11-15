@@ -31,6 +31,7 @@ import verbs                               # the shape run() returns, shared by 
 import usual                               # a usual month and the emergency fund's months -- computed once, here
 import settings                            # the numbers that are the owner's to choose -- one table
 import fire                                # the FIRE target, progress and months to go -- computed once, here
+import savings                             # the savings rate and the years it takes -- computed once, here
 import drawdown                            # living on the portfolio and late-life care, at the plan's own ages
 import debts as debt_rules                 # when a debt has to be paid: now, or over time
 
@@ -809,6 +810,10 @@ def derive(d):
     out["FIRE"] = fire.figures(out["INVEST"]["portfolio"], plan.get("planBase"), flow_totals(d["funds"]["plan"])["invest"],
                                out["SCENARIOS"], out["HORIZON"], out["ANCHOR_Y"], today, out["COAST_R"],
                                prof.get("born"), out["LIFE_TO"])
+    # The savings rate and the years it takes at that rate (savings.py): what work delivered
+    # against what was spent, on the same months the usual month is made of.
+    out["SAVINGS"] = savings.measured(out["INVEST"]["cashflow"], out["SPENDING"], out["STMT_END"], out["MONTH_SKIP"],
+                                      today, out["INVEST"]["portfolio"])
     out["FOREIGN"] = {"asof": fj["asof"], "currency": fj.get("currency"), "symbol": fj.get("symbol", ""),
                       "label": fgn_label, "total": round(fj["total"], 2), "cadPerUnit": rate_f,
                       # A fund row shows its code beside the name, the way the broker app does.

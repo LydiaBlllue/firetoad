@@ -409,6 +409,13 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <section data-pg="home" hidden>
 <div class="grid-stats" id="homeStats"></div>
+<div class="card" style="margin-bottom:10px" id="saveCard" hidden>
+  <div class="lab" id="saveLab">Savings rate</div>
+  <div class="say" id="saveSay"></div>
+  <div class="ctl"><span class="cl">If you saved</span><input type="range" id="saveRate" min="0" max="90" step="5" aria-label="Savings rate"><span class="cv num" id="saveRateV"></span></div>
+  <svg class="year-svg" id="saveChart" viewBox="0 0 940 140" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Years until work is optional at each savings rate"></svg>
+  <div class="cap" id="saveCap"></div>
+</div>
 <div class="card" style="margin-bottom:10px">
   <div class="lab" id="bothLab">Net worth</div>
   <div class="baseline-hero num" id="bothBig">—</div>
@@ -1169,6 +1176,7 @@ const GLOSSARY = {
   in_property:    {own:1, w:"In property", pos:"on this page", def:"What a property is worth minus what is still owed on it. You reach it only by selling or borrowing against it.", also:["equity"]},
   held_abroad:    {own:1, w:"Held abroad", pos:"on this page", def:"Money in another country. Bringing it home takes conversion, transfer limits and time.", also:["exchange_rate","liquidity"]},
   planning_figure:{own:1, w:"planning figure", pos:"on this page", def:"The monthly spending your FIRE target is built on. You set it by hand; what you actually spend only calibrates it.", also:["fire_target"]},
+  savings_rate:   {own:1, w:"Savings rate", pos:"on this page", def:"The share of what you earn from work that is left after spending. It decides both how fast the money builds and how much a year of life after work costs, so it decides the years more than the pay does. Gifts, money paid back and the broker's own income are not counted as earned.", also:["kept","usual_month"]},
   kept:           {own:1, w:"Kept", pos:"on this page", def:"Income minus spending over the same months. Money moved to savings or investments counts as kept.", also:["pay_yourself_first"]},
   repayment:      {own:1, w:"Paid back", pos:"on this page", def:"Money someone returns on a loan you made. It lowers what they owe you, and it is never income.", also:["owed_to_you","lent_out"]},
   bucket:         {own:1, w:"bucket", pos:"on this page", def:"A group of holdings your investing rules are written about, such as dry powder. What no bucket claims falls into the last one.", also:["dry_powder","target_band"]},
@@ -1470,6 +1478,44 @@ function bandLab(){
   const b = (RULES.buckets || []).find(x => x.target);
   return !b || b.key === "dry" ? term("dry_powder", "Dry powder") : b.name;
 }
+// The savings rate and the years it takes (savings.py has the sums; the page reads its curve).
+// The slider moves the rate in steps of five points, and the years come from the table the
+// build wrote, so there is no second copy of the formula here. 3% to 5% real, a range, because
+// one number would say more than the formula knows.
+const yearsTxt = y => !y || y[0] === null ? "No years at this rate: nothing is left to save"
+  : y[2] < 0.5 ? "The money is already enough" : "About "+Math.round(y[2])+" to "+Math.round(y[0])+" years to work, at 5% to 3%";
+function renderSavings(){
+  const card = $("saveCard");
+  if(SAVINGS.rate === undefined){ card.hidden = true; return; }
+  card.hidden = false;
+  const C = SAVINGS.curve, now = Math.min(90, Math.max(0, Math.round(SAVINGS.rate*100/5)*5)), inp = $("saveRate");
+  if(!inp.dataset.set){ inp.value = now; inp.dataset.set = "1"; inp.oninput = renderSavings; }
+  const at = C.find(p => p.pct === Number(inp.value)) || C[0];
+  $("saveRateV").textContent = at.pct+"%";
+  const you = Math.round(SAVINGS.rate*100);
+  $("saveSay").innerHTML = '<b>'+you+'%</b> of what you earn is left after spending'
+    + ' ('+fmt(SAVINGS.income)+' in, '+fmt(SAVINGS.spend)+' out a month). '+yearsTxt(SAVINGS.years)+'.';
+  const [W, H] = fit("saveChart", 140), pl = 40, pr = 12, pt = 14, pb = 26;
+  // past fifty years the curve says nothing more than "a working life": it is drawn flat there
+  const top = Math.min(50, Math.max(10, ...C.map(p => p.years[0] || 0)));
+  const x = pct => pl + pct/90*(W-pl-pr), y = v => pt + (1 - Math.min(v, top)/top)*(H-pt-pb);
+  const pts = i => C.filter(p => p.years[i] !== null).map(p => x(p.pct).toFixed(1)+","+y(p.years[i]).toFixed(1));
+  const hi = pts(0), lo = pts(2).reverse();
+  let out = '';
+  [0, Math.round(top/2), Math.round(top)].forEach(v => out += '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--grid)"/><text x="'+(pl-6)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--muted)">'+v+'</text>');
+  out += '<text x="'+(pl+4)+'" y="'+(pt-2)+'" font-size="11" fill="var(--muted)">years</text>';
+  [0, 30, 60, 90].forEach(v => out += '<text x="'+x(v)+'" y="'+(H-8)+'" text-anchor="middle" font-size="11" fill="var(--muted)">'+v+'%</text>');
+  if(hi.length > 1) out += '<polygon points="'+hi.concat(lo).join(" ")+'" fill="var(--ink)" opacity=".10"/>'
+    + '<polyline points="'+pts(1).join(" ")+'" fill="none" stroke="var(--ink)" stroke-width="2"/>';
+  out += '<line x1="'+x(you)+'" x2="'+x(you)+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="var(--muted)" stroke-dasharray="3 3"/>'
+    + '<text x="'+(x(you)+5)+'" y="'+(pt+10)+'" font-size="11" fill="var(--muted)">you</text>';
+  if(at.years[1] !== null) out += '<circle cx="'+x(at.pct)+'" cy="'+y(at.years[1])+'" r="5" fill="var(--ink)"/>';
+  $("saveChart").innerHTML = out;
+  $("saveCap").innerHTML = at.years[0] === null ? "At "+at.pct+"% nothing is left to save, so there are no years to count."
+    : at.years[2] < 0.5 ? "At "+at.pct+"% the money you have already reaches the target."
+    : "At <b>"+at.pct+"%</b>: about <b>"+Math.round(at.years[2])+" to "+Math.round(at.years[0])+" years</b> of saving, with what you have invested counted in. "
+      + "The target is 25 years of spending; the band is a real return of 5% down to 3%, so read it as roughly, not as a date.";
+}
 function renderHome(){
   renderNwChart();
   const yr = TODAY.slice(0,4);
@@ -1529,6 +1575,7 @@ function renderHome(){
         numx(monthsTxt(s.months), [["The money", fmt(s.money)], ["A usual month", fmt(s.cost)]], "From the Emergency fund page."), "Without income");
     },
     kept: () => {
+      if(SAVINGS.rate !== undefined) return null;   // the savings rate card says it, measured the one way
       const cfy = (INVEST.cashflow || []).filter(m => m.ym.startsWith(yr));
       if(!cfy.length) return null;
       const income = cfy.reduce((s,m) => s + incomeOf(m), 0);
@@ -1537,6 +1584,10 @@ function renderHome(){
       return card(term("kept", "Kept")+" in "+yr, numx((net >= 0 ? "+" : "\u2212") + fmt(Math.abs(net)), [["Income", fmt(income)], ["Spent", "\u2212"+fmt(spent)]], "", true),
         income > 0 ? Math.round(pc(net, income))+"% of income" : "");
     },
+    rate: () => SAVINGS.rate === undefined ? null : card(term("savings_rate", "Savings rate"),
+      numx(Math.round(SAVINGS.rate*100)+"%", [["Income", fmt(SAVINGS.income)+" a month"], ["Spending", "\u2212"+fmt(SAVINGS.spend)+" a month"]],
+        "What work delivered less what was spent, over the last "+SAVINGS.n+" full months. Gifts, repayments and the broker's own income are not in it.", true),
+      yearsTxt(SAVINGS.years)),
     subs: () => {
       const subs = SPENDING.filter(e => e.date.startsWith(yr) && e.sub), ytd = subs.reduce((a,e) => a + e.amount, 0);
       if(!(ytd > 0)) return null;
@@ -1553,7 +1604,7 @@ function renderHome(){
     },
   };
   const first = INVESTED() ? (GOAL() ? ["port", "fire", "inv", "spent"] : ["port", "inv"]) : (GOAL() ? ["fire"] : []);
-  const FILL = ["interest", "spent", "covered", "kept", "subs", "bigcat"];
+  const FILL = ["interest", "spent", "covered", "rate", "kept", "subs", "bigcat"];
   const shown = [];
   for(const k of first.concat(FILL)){
     if(shown.length >= 4 || shown.some(s => s.k === k)) continue;
@@ -1561,6 +1612,7 @@ function renderHome(){
     if(html) shown.push({k, html});
   }
   $("homeStats").innerHTML = shown.map(s => s.html).join("");
+  renderSavings();
 
   // Net worth, both cuts in one card: a row per purpose, its bar as long as its share and
   // coloured by reach; the row's number opens the accounts in it. Then total assets and what is
@@ -2676,6 +2728,8 @@ const HORIZON = 0;
 // sums at the page's numbers now, and check_render's R8 fails when a freshly built page's
 // fireNow() is not FIRE.
 const FIRE = {};
+// The savings rate and the years it takes (savings.py): the page draws it and does no sums.
+const SAVINGS = {};
 function fireNow(){
   const target = PLAN_BASE * 12 * 25, months = HORIZON * 12 - mIdx(TODAY.slice(0, 7));
   return {target, pct: target ? Math.round(PORTFOLIO / target * 1000) / 10 : 0, gap: Math.round(target - PORTFOLIO),

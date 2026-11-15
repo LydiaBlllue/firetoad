@@ -56,6 +56,28 @@
   scenarios there; the late-life care model (home care, then long-term care tiers) is data in the
   same file.
 
+## 1a. The savings rate, and the years it takes
+
+The first FIRE number that needs no goal, so it is on Home for anyone with three full months of
+income and spending (`savings.py`, the `SAVINGS` constant).
+
+- **Savings rate** = (income − spending) ÷ income, the ratio of the sums over the last full
+  months — up to twelve, the months in `skipMonths` left out, only months with both.
+- **Income** is what work delivered: ledger rows typed Payroll and Other (Other carries a
+  refund, a benefit and rent received, §2). A gift, a repayment, a card's cash back and the
+  broker's own income are not in it. Pay the employer saves for you before it reaches the bank
+  (a group RRSP, a match) is not seen, so the rate reads low for someone who has it.
+- **Spending** is the month total a usual month is made of (§3a): everything spent, a yearly
+  charge spread over its twelve months.
+- **Years**: the target is twenty-five years of that spending; what is left each month is
+  saved; what is invested today counts. n = ln((T + c/r) ÷ (P + c/r)) ÷ ln(1 + r), at a real
+  return of 3%, 4% and 5% — shown as a range, never one year.
+- The slider moves the rate at today's income, in steps of five points; the curve is a table the
+  build writes, so the page does no sums of its own.
+- It replaces Home's *Kept* card where both could show: one percentage of income on the page,
+  measured one way. The setup's *Share of income* is the plan's (what the plan leaves after
+  fixed and everyday costs), not this measured one.
+
 ## 2. Income: in the system
 
 - **Payroll** is what lands in the account whose `feeds` include "Income" (`accounts.json`).
