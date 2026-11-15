@@ -2797,7 +2797,24 @@ const LOANS = [];
 // cost of what you hold TODAY, so it silently absorbs realised gains and reinvested dividends.
 // A true contribution line needs a portfolio value at an older date — see the note on the page.
 const BOOKV = {};
-let stopAge = AGE_NOW, drawAge = 55, careAge = 80, ltcAge = 88, ltcTier = 0;
+// The drawdown at the ages the page starts from, worked out at build time (drawdown.py):
+// DRAWDOWN.at is those ages, DRAWDOWN.now the plan at them. The page keeps the sums below to
+// redraw as an age is moved; drawNow(at) is those sums at given ages, and check_render's R8
+// fails when a freshly built page's drawNow(DRAWDOWN.at) is not DRAWDOWN.now.
+const DRAWDOWN = {};
+function drawNow(a){
+  if(!a || !BORN || !LTC_TIERS[a.tier]) return null;
+  const ltc = LTC_TIERS[a.tier], drawM = PLAN_BASE, ltcA = a.ltc >= LIFE_TO ? null : a.ltc;
+  const go = (careA, lA) => coastRun(PORTFOLIO, COAST_R, MONTHLY_CONTRIB, drawM, a.stop, a.draw, careA, lA, ltc);
+  const run = go(a.care, ltcA), atDraw = run.series[Math.round((a.draw - AGE_NOW) * 12)] || 0;
+  const bt = backtest(atDraw, drawM, a.draw, a.care, ltcA, ltc);
+  return {dead: run.dead, atDraw, atStop: run.series[Math.round((a.stop - AGE_NOW) * 12)] || PORTFOLIO,
+          noCareDead: go(null, null).dead, stayHomeDead: go(a.care, null).dead,
+          extra: extraNeeded(run, drawM, a.care, ltcA, ltc),
+          bt: bt ? {ok: bt.ok, n: bt.n, N: bt.N, from: bt.from, to: bt.to} : null};
+}
+const DRAW_AT = DRAWDOWN.at || {};
+let stopAge = AGE_NOW, drawAge = DRAW_AT.draw || 0, careAge = DRAW_AT.care || 0, ltcAge = DRAW_AT.ltc || 0, ltcTier = DRAW_AT.tier || 0;
 try{ const v = JSON.parse(localStorage.getItem("ly_coast")||"null");
      if(v){ stopAge = v.stop ?? stopAge; drawAge = v.draw ?? drawAge;
             careAge = v.careAge ?? careAge; ltcAge = v.ltcAge ?? ltcAge;

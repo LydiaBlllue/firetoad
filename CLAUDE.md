@@ -244,9 +244,9 @@ build and signing.
 
 ## Nothing in a dashboard is typed by hand
 
-<!-- LINT:CONSTS n=56 -->
+<!-- LINT:CONSTS n=57 -->
 `rebuild.py` builds the dashboard from `templates/dashboards/` and `findata/`, deriving
-**56 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CARD_INTEREST, CATS, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DEBT_ACCTS, DECISIONS, DOC_LATEST, FGN, FIRE, FIRE_GOAL, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PENSIONS, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SAFETY, SCENARIOS, SETTINGS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, USUAL, WSDEP, WSINC. It compares without writing by default; `--write`
+**57 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CARD_INTEREST, CATS, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DEBT_ACCTS, DECISIONS, DOC_LATEST, DRAWDOWN, FGN, FIRE, FIRE_GOAL, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PENSIONS, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SAFETY, SCENARIOS, SETTINGS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, USUAL, WSDEP, WSINC. It compares without writing by default; `--write`
 applies, and it is idempotent. `--template DIR` writes the page with every constant emptied,
 which is what the template *is*: page code and nobody's numbers.
 
@@ -284,7 +284,7 @@ Three levels (2026-11-05, the owner: most checks are run when asked, not after e
 |---|---|---|
 | **① the money** — by itself | after any edit to `findata/` (the `PostToolUse` hook) and at the end of an import | `check_data.py . --money`: the `reconcile` and `rules` findings only. Under a second, **silent when clean** |
 | **② check the page** — 检查页面 | when the owner says so, and **before saying a change to the page, a template, DESIGN.md, README or the data's shape is done** | `checks.py . --level page`: check_data in full, check_design, check_render (widths, a short window, every kind of owner). About 20 seconds |
-| **③ check before a release** — 发版前检查 | when the owner says so, and before a release PR | `checks.py . --level release`: the unit tests in `tests/` (one per rule in a pure module — `flows.py`, `loans.py`, `categories.py`, `layout.py`, `clock.py`, `settings.py`, `usual.py`, `fire.py`; standard-library `unittest`, see `tests/README.md`), level ② and the selftest |
+| **③ check before a release** — 发版前检查 | when the owner says so, and before a release PR | `checks.py . --level release`: the unit tests in `tests/` (one per rule in a pure module — `flows.py`, `loans.py`, `categories.py`, `layout.py`, `clock.py`, `settings.py`, `usual.py`, `fire.py`, `drawdown.py`; standard-library `unittest`, see `tests/README.md`), level ② and the selftest |
 
 ⚠ Level ② is manual for the owner, **not optional for you**: a change to the page is not done
 until it has run, and the reply says what it found.
@@ -309,7 +309,8 @@ python3 .claude/skills/workspace-checks/scripts/checks.py . --level release
   page drawn for every kind of owner — invested or not, a FIRE goal or not, cards only — with
   each page drawing, Home's cards all carrying a number, and nothing in the sidebar that owner
   has no data for (R7). And the page's own FIRE sums — it keeps them to redraw while a number
-  is being changed — are the ones `fire.py` computed at build time (R8). Needs
+  is being changed — and its drawdown at the ages it starts from are the ones `fire.py` and `drawdown.py` computed
+  at build time (R8). Needs
   `pip3 install --user playwright && python3 -m playwright install chromium`.
 - `selftest.py` — the checker of the checkers. It plants specific faults in a copy of the
   workspace and asserts the matching rule fires for each; the count is in README's `LINT:FAULTS`.

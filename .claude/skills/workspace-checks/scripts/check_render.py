@@ -84,7 +84,9 @@ async () => {
 # R8: the FIRE figures are worked out twice -- at build time (fire.py, the FIRE constant) and in
 # the page (fireNow(), which it needs to redraw while a number is being changed). A freshly
 # loaded page has changed nothing, so the two must be the same numbers.
-FIRE_PROBE = "() => typeof fireNow === 'function' && typeof FIRE === 'object' ? {page: fireNow(), built: FIRE} : null"
+FIRE_PROBE = ("() => typeof fireNow === 'function' && typeof FIRE === 'object' ? {page: fireNow(), built: FIRE, "
+              "drawPage: typeof drawNow === 'function' && typeof DRAWDOWN === 'object' && DRAWDOWN.at ? drawNow(DRAWDOWN.at) : null, "
+              "drawBuilt: typeof DRAWDOWN === 'object' && DRAWDOWN.now ? DRAWDOWN.now : null} : null")
 
 
 def fire_differs(page, built):
@@ -92,6 +94,8 @@ def fire_differs(page, built):
     def same(a, b):
         if isinstance(a, list) and isinstance(b, list):
             return len(a) == len(b) and all(same(x, y) for x, y in zip(a, b))
+        if isinstance(a, dict) and isinstance(b, dict):
+            return set(a) == set(b) and all(same(a[k], b[k]) for k in a)
         if isinstance(a, (int, float)) and isinstance(b, (int, float)) and not isinstance(a, bool):
             return abs(a - b) <= 1e-6 * max(1, abs(a), abs(b))
         return a == b
@@ -268,6 +272,14 @@ def check(path):
                 + " — fire.py and the page's fireNow() no longer agree", "build")
         else:
             note("R8", "the page's own FIRE figures are the ones the build computed", "build")
+    if fp and fp.get("drawBuilt"):
+        off = fire_differs(fp.get("drawPage") or {}, fp["drawBuilt"])
+        if off:
+            err("R8", "the page's drawdown gives " + ", ".join(f"{k} = {(fp.get('drawPage') or {}).get(k)}" for k in off[:3])
+                + "; the build says " + ", ".join(f"{fp['drawBuilt'].get(k)}" for k in off[:3])
+                + " — drawdown.py and the page's drawNow() no longer agree", "build")
+        else:
+            note("R8", "the page's own drawdown at the starting ages is the one the build computed", "build")
 
     base = res[WIDTHS[0]]
     reached = {p["k"] for p in base["pages"]}

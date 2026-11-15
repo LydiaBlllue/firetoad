@@ -31,6 +31,7 @@ import verbs                               # the shape run() returns, shared by 
 import usual                               # a usual month and the emergency fund's months -- computed once, here
 import settings                            # the numbers that are the owner's to choose -- one table
 import fire                                # the FIRE target, progress and months to go -- computed once, here
+import drawdown                            # living on the portfolio and late-life care, at the plan's own ages
 
 MAIN_NAMES = ("ly_finance_dashboard.html", "finance_dashboard.html")   # an owner's copy, or the template's
 INV_NAME = "investment_dashboard.html"
@@ -847,6 +848,11 @@ def derive(d):
     out["DATA"] = {"fx": rate, "asof": hold_asof, "today": today, "broker": broker,
                    "positions": positions, "tickers": ticks}
     out["RET_HIST"] = return_history(d, positions, [dict(a, _rate=rate_f) for a in fgn_fund_rows], by_id)
+    # The drawdown at the ages the page starts from (drawdown.py): how long the money lasts, what
+    # care would need, how many starting years on record it survives. R8 holds the page to it.
+    out["DRAWDOWN"] = drawdown.figures(out["INVEST"]["portfolio"], plan.get("planBase"), flow_totals(d["funds"]["plan"])["invest"],
+                                       out["COAST_R"], out["LTC_TIERS"], out["HOME_CARE"], out["PENSIONS"],
+                                       (out["RET_HIST"] or {}).get("years"), prof.get("born"), out["LIFE_TO"], today)
     for p in positions:
         del p["_id"]
     out["FX"] = {"rate": rate, "asof": d["fx"].get("asof"), "quality": d["fx"].get("quality")}

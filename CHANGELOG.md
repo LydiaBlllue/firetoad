@@ -24,6 +24,11 @@
   table is written from the same numbers. The page keeps the FIRE sums to redraw while a number
   is being changed, and a new check (R8) fails when the two stop agreeing. Every page reads as it
   did.
+- *The drawdown too* (2026-11-15): how long the money lasts, what is there the day the drawing
+  starts, what late-life care would need and how many starting years on record the plan
+  survives are worked out at build time, at the ages the page starts from (`drawdown.py`). Those
+  ages (55, 80, 88) were written into the page; the page reads them now. R8 holds the page's own
+  sums to these as well.
 - **The roadmap you read is the release roadmap** (2026-11-13, user 001): the file is
   RELEASE-ROADMAP.md, where it was ROADMAP.md, so it reads as what it is, the plan of what is
   released next. A sync removes the old file from a folder once the new one is there.
