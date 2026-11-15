@@ -2,6 +2,20 @@
 
 ## 1.0.5 — unreleased
 
+- **The setup ends with everything in place** (2026-11-15). When the first import leaves
+  merchants or transfers to categorize, the setup goes straight on to them in the same window —
+  "Last step: what the files could not say" — and the last answer opens the dashboard. The
+  monthly import is not met until the first month.
+- **Your savings rate, and the years it takes** (Home). What work brought in less what was
+  spent, over your last full months, and how many years of saving that is until the money
+  covers twenty-five years of spending — shown as a range, 5% to 3% a year after inflation, with
+  what you already have invested counted in. A slider moves the rate and the curve shows what
+  each step is worth. It takes the place of the *Kept* card, so Home shows one percentage of
+  income. Gifts, money paid back and the broker's own income are not counted as earned.
+- **Long pages fold their detail.** Updates is one line per update with what it came to, the
+  newest open. Statements, This month and Year fold the card below the first screen to one line;
+  Investment income lists the eight holdings that paid the most and offers the rest.
+
 - **Settings: the numbers that are yours to choose** (2026-11-14, user 001: someone wants three
   months of emergency fund, someone six to nine). A new page at the foot of the sidebar lists
   them — the emergency range, the import day, planning spend, take-home pay, what goes to the
