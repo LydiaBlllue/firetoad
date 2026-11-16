@@ -17,7 +17,7 @@ test for the change was that a rebuild from the new files rendered every page by
     rebuild.py [root] --template DIR  # write the dashboards to DIR with every constant emptied
 """
 import sys, os, re, json, csv, collections
-import datetime
+import datetime, calendar
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from clock import clock  # noqa: E402
@@ -523,6 +523,30 @@ def derive(d):
             stmt[a["stmtLabel"]] = iso(newest(d["spending"], "note", a["spendTag"]))
     out["STMT_END"] = stmt
     out["LEDGER_THRU"] = thru
+    # A first month is a full month only if every source with spending in it covers its first day
+    # (1.0.7, feedback 103: eleven days of one card were counted as one of three full months and
+    # pulled a usual month down). A statement carries its closing day; the first one is taken to
+    # open the day after the same date a month before. Such a month is left out of comparisons
+    # the way an owner's own skipped month is, and says why; its totals stay whole.
+    def oldest(rows, col, tag):
+        ds = [m.group(1) for r in rows for m in re.finditer(tag + r'/(\d{8})', r.get(col) or "")]
+        return min(ds) if ds else None
+    start = {}
+    for a in accs:
+        if not a.get("stmtLabel"):
+            continue
+        o = oldest(d["ledgers"].get(a["key"], []), "statement", a["stmtTag"]) if a.get("ledger") and a.get("stmtTag") \
+            else oldest(d["spending"], "note", a["spendTag"]) if a.get("spendTag") else None
+        if o:
+            y, m, dd = int(o[:4]), int(o[4:6]), int(o[6:])
+            py, pm = (y, m - 1) if m > 1 else (y - 1, 12)
+            opened = datetime.date(py, pm, min(dd, calendar.monthrange(py, pm)[1])) + datetime.timedelta(days=1)
+            start[a["stmtLabel"]] = opened.isoformat()
+    if spend:
+        m0 = spend[0]["date"][:7]
+        late = sorted({e["acct"] for e in spend if e["date"].startswith(m0) and e.get("acct") and start.get(e["acct"], "") > m0 + "-01"})
+        if late and m0 not in out["MONTH_SKIP"]:
+            out["MONTH_SKIP"] = dict(out["MONTH_SKIP"], **{m0: "Not every statement covers it from the 1st (" + ", ".join(late) + ")"})
     by_key = {a["key"]: a for a in accs}
     acts_latest = max((r["effective_date"] for r in d["acts"]), default=None)
     bank_asof = {x["account"]: x.get("asof") for x in bank["assets"] + bank["debts"]}

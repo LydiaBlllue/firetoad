@@ -827,8 +827,13 @@ const cap1 = t => t.charAt(0).toUpperCase()+t.slice(1);
 const ymFull = ym => MN[Number(ym.slice(5))-1] + " " + ym.slice(0,4);
 // A month past what every statement reaches is open for one of two reasons, said apart: the
 // calendar has not finished it, or it has and a statement for it has not come yet.
-const notInYet = ym => ym >= TODAY.slice(0,7) ? ymFull(ym)+" is still going, so its totals will rise."
-  : "Not every statement for "+ymFull(ym)+" is in yet, so its totals will rise.";
+const notInYet = ym => {
+  if(ym >= TODAY.slice(0,7)) return ymFull(ym)+" is still going, so its totals will rise.";
+  // a month that has ended: which statements stop short of its last day, and where (feedback 103)
+  const last = ym + "-" + String(new Date(Number(ym.slice(0,4)), Number(ym.slice(5,7)), 0).getDate()).padStart(2, "0");
+  const short = Object.entries(STMT_END).filter(([k, e]) => e && e < last).map(([k, e]) => k + (e >= ym + "-01" ? " to " + dLong(e) : ": nothing yet"));
+  return "Not every statement for "+ymFull(ym)+" is in yet"+(short.length ? " — "+short.join(", ") : "")+". Its totals will rise.";
+};
 function daysElapsed(ym){
   if(ym === TODAY.slice(0,7)) return Number(TODAY.slice(8,10));
   const [y,m] = ym.split("-").map(Number); return new Date(y,m,0).getDate();
@@ -2143,8 +2148,9 @@ function renderCatPage(){
     .filter(p => Math.abs(p[1]) > 0.005);
   const rows = CATS.map(c => {
     const items = es.filter(e => e.category === c.k).sort((a,b) => b.amount - a.amount);
-    return {k:c.k, col:c.c, items, v:items.reduce((s,e) => s + e.amount, 0), med:catMedian(c.k, viewYM)};
-  }).filter(r => r.items.length).sort((a,b) => b.v - a.v);
+    // a category is what was bought in it; what came back is one line of its own (1.0.7, feedback 103)
+    return {k:c.k, col:c.c, items, v:items.reduce((s,e) => s + Math.max(e.amount, 0), 0), med:catMedian(c.k, viewYM)};
+  }).filter(r => r.v > 0.005).sort((a,b) => b.v - a.v);   // a category with only money back is in Refunds
   // Compared in dollars, not ratios. Two categories typically sit at zero (Transport, Other),
   // and a ratio against zero is either infinite or a meaningless "+3908%". $404 over typical
   // says the same thing and stays readable whatever the base.
@@ -2154,7 +2160,8 @@ function renderCatPage(){
   // otherwise fall back to the biggest one rather than leaving an empty panel.
   if(!rows.some(r => r.k === catSel)) catSel = rows.length ? rows[0].k : null;
   const drivers = rows.filter(isHigh).sort((a,b) => over(b) - over(a));
-  const pct = v => total > 0 ? Math.round(pc(v, total)) : 0;
+  const bought = es.reduce((s,e) => s + Math.max(e.amount, 0), 0), refunds = es.reduce((s,e) => s + Math.min(e.amount, 0), 0);
+  const pct = v => bought > 0 ? Math.round(pc(v, bought)) : 0;
 
   const card = (lab, val, status, cls) => StatCard(lab, val, status, {capCls: cls});
   const um = usualMonthAt(viewYM), usual = um ? um.v : null, diff = usual === null ? null : total - usual;
@@ -2162,7 +2169,8 @@ function renderCatPage(){
   // The month's whole spending is one line in the Everyday card; Against a usual month is a
   // card once the month has closed (an open month against a whole one says nothing yet).
   $("catTotal").innerHTML = '<div class="say" style="margin-top:8px">Spent in '+ymLabel(viewYM)+': <b>'+fmt(total)+'</b>'
-    + (partRows.length ? ' \u2014 '+partRows.map(p => p[0].toLowerCase()+' '+fmt(p[1])).join(", ") : '')+'.</div>';
+    + (refunds < -0.005 ? ' after '+fmt(-refunds)+' of refunds' : '')
+    + (partRows.length > 1 ? ' \u2014 '+partRows.map(p => p[0].toLowerCase()+' '+fmt(p[1])).join(", ") : '')+'.</div>';
   $("catStats").innerHTML = viewYM > covEnd ? "" :
     card("Against a usual month",
         diff === null ? "\u2014" : numx((diff >= 0 ? "+" : "\u2212") + fmt(Math.abs(diff)),
@@ -2186,7 +2194,7 @@ function renderCatPage(){
     catSel = b.dataset.k;
     renderCatPage(); drawFlow();
   });
-  $("catCap").textContent = "";
+  $("catCap").innerHTML = refunds < -0.005 ? '<div class="cat-row" style="cursor:default"><span style="width:9px"></span><span class="nm">Refunds</span><span class="bar-wrap"></span><span class="v num">'+fmt2(refunds)+'</span></div>' : "";
 
   const sel = rows.find(r => r.k === catSel);
   const win = {length: (catUsual(viewYM) || {n: 0}).n};

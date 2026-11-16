@@ -188,6 +188,14 @@ everyday, declare it. The category groups now decide only that, and colour and o
 
 Money that leaves and nobody has named is a transfer, outside the sum, until the owner answers.
 
+**A month as the page shows it** (1.0.7, feedback 103): each category is what was bought in it;
+what came back is one line, *Refunds*, and the month's total is said "after $X of refunds", so a
+refund never makes another category look like most of the month. A month whose statements have
+not all reached its last day says which stop short and where. **A first month is a full month
+only if every source with spending in it covers its first day** — a statement is taken to open
+the day after the same date a month before its closing day — otherwise it is left out of every
+comparison, as an owner's own skipped month is, and says why (`MONTH_SKIP`).
+
 **There is one word for each part**, and a part the month does not have is not shown.
 The same words are used in the page, this file, the code and the register. A reader is never asked to learn these rules first: the page shows their own
 month split, and the definitions wait behind the question mark.
