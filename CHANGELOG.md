@@ -24,6 +24,14 @@
   Past two years the axis is marked by year, past three dozen months the dots give way to the
   line, and the labels never crowd at a narrow window.
 
+- **The page is today's when you open it.** It used to count ages, the month and what is due
+  from the day it was last built; the app now rebuilds it first when that day is not today.
+- **A month that has ended but whose statements are not all in** says so, instead of "still
+  open".
+- *Smaller*: Budget's flow of the month is drawn at the width it is shown, and reads in a narrow
+  window; the drawdown chart's ages no longer collide at the start, and a label near its right
+  edge is no longer cut off. The months-to-go sums of the old three-line chart are gone.
+
 ## 1.0.5 — 2026-11-15
 
 - **The setup ends with everything in place** (2026-11-15). When the first import leaves

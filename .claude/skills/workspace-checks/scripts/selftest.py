@@ -486,7 +486,7 @@ def m_render_nan(r):
          lambda s: re.sub(r'"netWorth":\s*-?[\d.]+,\s*', '', s, count=1))
 def m_render_fire_drift(r):
     # The page's own FIRE sum changed and fire.py not: twenty-six years of spending, not twenty-five.
-    edit(r, main_dash(r), lambda s: s.replace("const target = PLAN_BASE * 12 * 25, months", "const target = PLAN_BASE * 12 * 26, months", 1))
+    edit(r, main_dash(r), lambda s: s.replace("  const target = PLAN_BASE * 12 * 25;\n  return {target,", "  const target = PLAN_BASE * 12 * 26;\n  return {target,", 1))
 def m_render_long_page(r):
     # The Glossary is thirteen screens and exempt as a reference page; without the mark it is
     # a long page that lists no sections.
