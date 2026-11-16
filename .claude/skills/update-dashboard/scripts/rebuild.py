@@ -48,9 +48,20 @@ CLASS_OF_TYPE = {"CURRENCY": "cash", "CRYPTOCURRENCY": "crypto", "PRECIOUS_METAL
 CLASS_OF_FUND = {"bond_fund": "bonds", "equity_fund": "stocks"}
 
 
+# What common single-asset ETFs hold, shipped with the setup and owned by nobody (1.0.7, feedback
+# 106: eight common funds landed in Not classified). Read only where the owner has not said.
+_STARTER_CLASSES = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                                "setup", "data", "starter_asset_classes.json")
+try:
+    STARTER_CLASSES = json.load(open(_STARTER_CLASSES, encoding="utf-8")).get("classes", {})
+except (OSError, ValueError):
+    STARTER_CLASSES = {}
+
+
 def asset_class(sym, sec_type, declared):
-    """A holding's class, or None when nobody has said (an ETF no one has classified)."""
-    return declared.get(sym) or CLASS_OF_TYPE.get(sec_type)
+    """A holding's class: the owner's word, else what the export's type says, else the starter
+    map; None when nobody can say (a balanced fund no one has classified)."""
+    return declared.get(sym) or CLASS_OF_TYPE.get(sec_type) or STARTER_CLASSES.get(sym)
 
 # The two cuts of net worth, one row per value of one axis (FINANCE.md §8a). The label is what
 # the page says, the colour is design (DESIGN.md palette), and both are keyed by the axis value
