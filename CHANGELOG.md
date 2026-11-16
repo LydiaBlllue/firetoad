@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.5 — unreleased
+## 1.0.5 — 2026-11-15
 
 - **The setup ends with everything in place** (2026-11-15). When the first import leaves
   merchants or transfers to categorize, the setup goes straight on to them in the same window —
@@ -84,7 +84,7 @@
   RELEASE-ROADMAP.md, where it was ROADMAP.md, so it reads as what it is, the plan of what is
   released next. A sync removes the old file from a folder once the new one is there.
 
-## 1.0.4 — unreleased
+## 1.0.4 — 2026-11-13
 
 - **The sidebar follows the way to FIRE** (2026-11-13, user 001). The pages are grouped by how
   far along you are, not by topic: *Get started* (Accounts, This month, Year, Income & chequing,
