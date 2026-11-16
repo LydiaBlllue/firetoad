@@ -95,6 +95,7 @@ import preflight  # noqa: E402  names a dropped file
 import rebuild  # noqa: E402  MAIN_NAMES
 import setting  # noqa: E402  one of the owner's numbers, changed
 import status  # noqa: E402
+from clock import clock  # noqa: E402  the date a page is built for
 import update  # noqa: E402
 import verbs  # noqa: E402
 import wizard  # noqa: E402  the setup as screens
@@ -216,8 +217,34 @@ class App:
         for n in rebuild.MAIN_NAMES:
             p = os.path.join(self.root, "dashboards", n)
             if os.path.exists(p):
+                self.fresh(p)
                 return p
         return None
+
+    def fresh(self, page):
+        """The page reads nothing at runtime: its "today" is the day it was built. Opened on a later
+        day, it would count ages, the month and what is due from that day (2026-11-16, user 001:
+        "does the app know the date?"). So the page is rebuilt first when its day is not today's
+        — a rebuild changes no data and is the same on any run of the same day. Skipped while
+        another writer holds the folder, or when the folder's data is newer than this app."""
+        try:
+            m = re.search(r'const TODAY = "(\d{4}-\d{2}-\d{2})"', open(page, encoding="utf-8").read(200000))
+            built, today = (m.group(1) if m else ""), clock(self.root)[0].isoformat()
+        except (OSError, ValueError):
+            return
+        if not built or built >= today or (self.tool and self.tool.get("state") == "newer"):
+            return
+        if self.job is not None and not self.job.done.is_set():
+            return
+        if self.lock.acquire("rebuild"):
+            return
+        try:
+            res = rebuild.run(self.root, write=True)
+            log.info("page built for %s, rebuilt for %s (%s)", built, today, "written" if res.get("written") else "unchanged")
+        except Exception:  # an old page beats no page
+            log.exception("rebuild for today failed")
+        finally:
+            self.lock.release()
 
     # -- verbs: each one call into the core ---------------------------------------------------
     def start_job(self, verb, write, fn):

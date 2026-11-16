@@ -15,8 +15,6 @@ Pure: numbers in, numbers out.
 import math
 
 YEARS = 25              # the 4% rule: a year of spending, twenty-five times
-HOME_RETURN = 0.05      # Home's one line: the middle return,
-HOME_MONTHS = 300       # looked at over twenty-five years
 
 
 def js_round(x):
@@ -37,23 +35,6 @@ def gap(portfolio, tgt):
     return js_round(tgt - portfolio)
 
 
-def project(p0, r, months, contrib):
-    """The portfolio month by month: compounding monthly, the same amount added each month."""
-    m, v, out = r / 12, p0, [p0]
-    for _ in range(months):
-        v = v * (1 + m) + contrib
-        out.append(v)
-    return out
-
-
-def cross_month(series, tgt):
-    """The first month the series reaches the target, or None inside the months looked at."""
-    for i, v in enumerate(series):
-        if v >= tgt:
-            return i
-    return None
-
-
 def coast_age(p0, tgt, r, age_now, life_to):
     """The age at which the portfolio, with nothing more added, grows to the target by itself;
     today's age when it is already there, None when that is beyond the plan's last year."""
@@ -65,16 +46,11 @@ def coast_age(p0, tgt, r, age_now, life_to):
     return None if yrs > life_to - age_now else age_now + yrs
 
 
-def figures(portfolio, plan_base, contrib, scenarios, horizon, anchor_year, today, coast_r, born, life_to):
-    """The FIRE constant. `cross` is, for each of the plan's returns in order, the months from
-    now until the target is reached (None when that is past the horizon); `homeCross` is the
-    one Home shows; `coastAge` the age the portfolio coasts to the target from."""
+def figures(portfolio, plan_base, today, coast_r, born, life_to):
+    """The FIRE constant: the target, how far along the portfolio is, what is still to go, and
+    `coastAge`, the age the portfolio coasts to the target from. (Months to go at each return,
+    for the three-line trajectory, went with it in 1.0.6: the years are savings.py's.)"""
     tgt = target(plan_base)
-    off = (int(today[:4]) - anchor_year) * 12 + int(today[5:7]) - 1
-    months = max(0, horizon * 12 - off)
-    contrib = contrib or 0
     age_now = int(today[:4]) - born if born else None
     return {"target": tgt, "pct": progress(portfolio, tgt), "gap": gap(portfolio, tgt),
-            "cross": [cross_month(project(portfolio, s["r"], months, contrib), tgt) for s in scenarios or []],
-            "homeCross": cross_month(project(portfolio, HOME_RETURN, HOME_MONTHS, contrib), tgt),
             "coastAge": coast_age(portfolio, tgt, coast_r, age_now, life_to) if age_now is not None and tgt > 0 else None}

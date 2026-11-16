@@ -2753,8 +2753,6 @@ function renderFire(){
 
 // ===== Trajectory: when does net worth reach the FIRE target? =====
 const MONTHLY_CONTRIB = FUNDS.plan.invest;   // the pay-yourself-first amount, from funds.json
-const SCENARIOS = [];
-const HORIZON = 0;
 // The FIRE figures at the plan's own values, worked out at build time (fire.py). The page keeps
 // the same sums below, because it redraws while a number is being changed; fireNow() is those
 // sums at the page's numbers now, and check_render's R8 fails when a freshly built page's
@@ -2763,21 +2761,9 @@ const FIRE = {};
 // The savings rate and the years it takes (savings.py): the page draws it and does no sums.
 const SAVINGS = {};
 function fireNow(){
-  const target = PLAN_BASE * 12 * 25, months = HORIZON * 12 - mIdx(TODAY.slice(0, 7));
+  const target = PLAN_BASE * 12 * 25;
   return {target, pct: target ? Math.round(PORTFOLIO / target * 1000) / 10 : 0, gap: Math.round(target - PORTFOLIO),
-          cross: SCENARIOS.map(s => crossMonth(project(PORTFOLIO, s.r, months), target)),
-          homeCross: crossMonth(project(PORTFOLIO, 0.05, 300), target),
           coastAge: target > 0 && BORN ? coastReachAge(PORTFOLIO, target, COAST_R) : null};
-}
-function project(p0, r, months){        // monthly compounding + level contribution
-  const m = r/12, out = [p0];
-  let v = p0;
-  for(let i=1;i<=months;i++){ v = v*(1+m) + MONTHLY_CONTRIB; out.push(v); }
-  return out;
-}
-function crossMonth(series, target){
-  for(let i=0;i<series.length;i++) if(series[i] >= target) return i;
-  return null;
 }
 // x-axis anchored at Jan 2026 permanently; NW_HISTORY = real net-worth snapshots (append one point per month on every "update dashboards", latest per month wins)
 const ANCHOR_Y = 0;

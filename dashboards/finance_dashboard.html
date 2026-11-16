@@ -2753,31 +2753,17 @@ function renderFire(){
 
 // ===== Trajectory: when does net worth reach the FIRE target? =====
 const MONTHLY_CONTRIB = FUNDS.plan.invest;   // the pay-yourself-first amount, from funds.json
-const SCENARIOS = [{"r": 0.03, "c": "#9ec5f4", "n": "3% real"}, {"r": 0.05, "c": "#2a78d6", "n": "5% real"}, {"r": 0.07, "c": "#104281", "n": "7% real"}];
-const HORIZON = 25;
 // The FIRE figures at the plan's own values, worked out at build time (fire.py). The page keeps
 // the same sums below, because it redraws while a number is being changed; fireNow() is those
 // sums at the page's numbers now, and check_render's R8 fails when a freshly built page's
 // fireNow() is not FIRE.
-const FIRE = {"target": 885000, "pct": 5.8, "gap": 833710, "cross": [null, null, null], "homeCross": null, "coastAge": 90.374303347623};
+const FIRE = {"target": 885000, "pct": 5.8, "gap": 833710, "coastAge": 90.374303347623};
 // The savings rate and the years it takes (savings.py): the page draws it and does no sums.
 const SAVINGS = {"target": 885000, "portfolio": 51290, "invest": 700.0, "paceMonths": 3, "returns": [0.04, 0.05, 0.06], "growth": 5.0, "fromPlan": false, "years": [36.5, 32.2, 28.8], "more": [{"more": 0, "years": [36.5, 32.2, 28.8]}, {"more": 50, "years": [35.5, 31.3, 28.1]}, {"more": 100, "years": [34.5, 30.5, 27.4]}, {"more": 150, "years": [33.5, 29.7, 26.8]}, {"more": 200, "years": [32.6, 29.0, 26.2]}, {"more": 250, "years": [31.8, 28.3, 25.6]}, {"more": 300, "years": [31.0, 27.7, 25.1]}, {"more": 350, "years": [30.3, 27.1, 24.6]}, {"more": 400, "years": [29.5, 26.5, 24.1]}, {"more": 450, "years": [28.9, 26.0, 23.6]}, {"more": 500, "years": [28.2, 25.4, 23.2]}, {"more": 550, "years": [27.6, 24.9, 22.8]}, {"more": 600, "years": [27.1, 24.4, 22.4]}, {"more": 650, "years": [26.5, 24.0, 22.0]}, {"more": 700, "years": [26.0, 23.5, 21.6]}, {"more": 750, "years": [25.5, 23.1, 21.2]}, {"more": 800, "years": [25.0, 22.7, 20.9]}, {"more": 850, "years": [24.5, 22.3, 20.5]}, {"more": 900, "years": [24.1, 21.9, 20.2]}, {"more": 950, "years": [23.6, 21.6, 19.9]}, {"more": 1000, "years": [23.2, 21.2, 19.6]}], "rate": 0.3473, "income": 4300.0, "spend": 2806.79, "n": 7, "from": "2026-01", "to": "2026-07", "keep": 1493.21, "jobs": [["Invested", 700.0], ["Emergency fund", 300.0]], "free": 493.21};
 function fireNow(){
-  const target = PLAN_BASE * 12 * 25, months = HORIZON * 12 - mIdx(TODAY.slice(0, 7));
+  const target = PLAN_BASE * 12 * 25;
   return {target, pct: target ? Math.round(PORTFOLIO / target * 1000) / 10 : 0, gap: Math.round(target - PORTFOLIO),
-          cross: SCENARIOS.map(s => crossMonth(project(PORTFOLIO, s.r, months), target)),
-          homeCross: crossMonth(project(PORTFOLIO, 0.05, 300), target),
           coastAge: target > 0 && BORN ? coastReachAge(PORTFOLIO, target, COAST_R) : null};
-}
-function project(p0, r, months){        // monthly compounding + level contribution
-  const m = r/12, out = [p0];
-  let v = p0;
-  for(let i=1;i<=months;i++){ v = v*(1+m) + MONTHLY_CONTRIB; out.push(v); }
-  return out;
-}
-function crossMonth(series, target){
-  for(let i=0;i<series.length;i++) if(series[i] >= target) return i;
-  return null;
 }
 // x-axis anchored at Jan 2026 permanently; NW_HISTORY = real net-worth snapshots (append one point per month on every "update dashboards", latest per month wins)
 const ANCHOR_Y = 2026;
