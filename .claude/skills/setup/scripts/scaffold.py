@@ -399,7 +399,6 @@ def build(a, today):
                 "judged by you.",
         **(a.get("rules") or {
             "buckets": [{"key": "rest", "name": "Holdings", "catchAll": True}],
-            "maxHoldings": 10,
         }),
         **({"notes": [], "checkpoints": []} if not (a.get("rules") or {}).get("notes") else {}),
     }, ensure_ascii=False, indent=2) + "\n"

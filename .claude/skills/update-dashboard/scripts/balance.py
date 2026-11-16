@@ -40,7 +40,7 @@ CHECKS = os.path.join(os.path.dirname(os.path.dirname(HERE)), "workspace-checks"
 
 
 def parse_amount(v):
-    """A number the way an app prints it: '¥203,134.64', 'US$17.56', '1 065,33' all read."""
+    """A number the way an app prints it: '¥12,345.67', 'US$42.10', '1 234,56' all read."""
     if isinstance(v, (int, float)):
         return float(v)
     s = str(v).strip()

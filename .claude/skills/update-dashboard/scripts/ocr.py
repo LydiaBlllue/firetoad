@@ -29,7 +29,7 @@ NOISE_WORDS = ("收益", "昨日", "利率", "%", "手续费", "fee", "rate", "y
 
 
 def amounts(text):
-    """Every amount in a line of text, as floats, in order. '余额 ¥203,134.64' → [203134.64]."""
+    """Every amount in a line of text, as floats, in order. '余额 ¥12,345.67' → [12345.67]."""
     out = []
     for m in AMOUNT.finditer(text or ""):
         try:

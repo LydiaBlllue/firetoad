@@ -4,9 +4,11 @@ Spending is money that leaves and buys nothing you still own, whatever paid it: 
 purchase, or chequing (rent, a bill, cash taken out, a bank fee, money sent to family). Every
 category sits in one of two groups, and the group is what decides what it counts for:
 
-- `bills`    — paid before anything is chosen. Not measured against the everyday amount; in the
-               spending the FIRE target is calibrated on.
-- `everyday` — what the everyday amount is for, and in the calibration.
+- `bills`    — bills and housing. Since 1.0.7 a group no longer decides what is everyday: only
+               a declared committed payment is kept out of it (fixed.py). The group stands for
+               a committed flow that is one estimate across several bills, and orders and
+               colours the categories.
+- `everyday` — the rest.
 
 Separately, a category can be spending that ends before FIRE (`NOT_IN_FIRE`, tuition by default):
 it is counted like any other today and left out of the FIRE target.

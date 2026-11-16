@@ -11,7 +11,7 @@ class OtherAccount(unittest.TestCase):
     def test_the_last_number_that_is_not_this_accounts_own(self):
         acc = {"id": "…471"}
         self.assertEqual(update.other_account("OnlineTransfer,TF0006#4471-9032", acc), "9032")
-        self.assertEqual(update.other_account("Online Banking transfer - 7082", {"id": "2306"}), "7082")
+        self.assertEqual(update.other_account("Online Banking transfer - 6100", {"id": "1234"}), "6100")
 
     def test_no_number_no_account(self):
         self.assertIsNone(update.other_account("Transfer", {"id": "…471"}))

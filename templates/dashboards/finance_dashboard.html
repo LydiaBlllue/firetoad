@@ -222,6 +222,7 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .subs .leg-row.off{opacity:.5}
 .subs .meta{font-size:11.5px;color:var(--muted)}
 .sub-badge{font-size:10.5px;font-weight:600;color:#006300;background:rgba(0,131,0,.09);border-radius:999px;padding:2px 8px;flex-shrink:0}
+#tip.sticky{pointer-events:auto}#tip .t-more{display:inline-block;margin-top:8px;font-size:12px;color:var(--bar);text-decoration:none}#tip .t-more:hover{text-decoration:underline}
 #tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--page);font-size:12px;padding:5px 9px;border-radius:6px;opacity:0;transition:opacity .08s;z-index:9;white-space:nowrap}
 #tip.def{white-space:normal;width:max-content;max-width:320px;background:var(--surface);color:var(--ink-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.55;box-shadow:0 10px 28px rgba(0,0,0,.10),0 2px 6px rgba(0,0,0,.06)}#tip.def p{margin:0}#tip.def p+p{margin-top:6px}#tip .t-h{display:flex;align-items:baseline;gap:7px;margin-bottom:2px}#tip .t-h b{font-size:14px;color:var(--ink)}#tip .t-h i{font-size:11.5px;color:var(--muted)}#tip .f{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--ink);background:var(--grid);border-radius:6px;padding:3px 8px}#tip .k{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:1px}#tip .eg{color:var(--ink-2)}#tip .here{border-top:1px solid var(--grid);padding-top:7px;margin-top:8px}#tip .calc{display:grid;grid-template-columns:1fr auto;gap:4px 18px;min-width:210px}#tip .calc span:nth-child(odd){color:var(--muted)}#tip .calc .num{color:var(--ink);font-weight:600;text-align:right}#tip .calc .t-rule{grid-column:1/-1;height:0;border-top:1px solid var(--border);margin:2px 0}#tip .calc .tot{color:var(--ink)!important;font-weight:700}#tip .cn{color:var(--muted)}.own{border-left:3px solid #c8971a;padding-left:10px}.own-k{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8a6a10;margin-bottom:2px}#tip .calc+.cn{border-top:1px solid var(--grid);padding-top:7px;margin-top:8px}
 .term{border-bottom:1px dotted var(--muted);cursor:help}.term:hover,.term:focus-visible{color:var(--ink);border-bottom-style:solid;outline:none}
@@ -729,7 +730,9 @@ const CATS = [];
 const CCOL = Object.fromEntries(CATS.map(c=>[c.k,c.c]));
 const CGRP = Object.fromEntries(CATS.map(c=>[c.k,c.g]));
 const catName = k => (CATS.find(c => c.k === k) || {n:k}).n;
-const inEveryday = e => (CGRP[e.category] || "everyday") === "everyday";
+// Everyday is everything spent that is not a declared payment (`fx`, fixed.py, FINANCE.md §3a, 1.0.7):
+// a category says what a thing is, not whether it was promised.
+const inEveryday = e => !e.fx;
 const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const SUB_KEYS = [];
 
@@ -824,8 +827,13 @@ const cap1 = t => t.charAt(0).toUpperCase()+t.slice(1);
 const ymFull = ym => MN[Number(ym.slice(5))-1] + " " + ym.slice(0,4);
 // A month past what every statement reaches is open for one of two reasons, said apart: the
 // calendar has not finished it, or it has and a statement for it has not come yet.
-const notInYet = ym => ym >= TODAY.slice(0,7) ? ymFull(ym)+" is still going, so its totals will rise."
-  : "Not every statement for "+ymFull(ym)+" is in yet, so its totals will rise.";
+const notInYet = ym => {
+  if(ym >= TODAY.slice(0,7)) return ymFull(ym)+" is still going, so its totals will rise.";
+  // a month that has ended: which statements stop short of its last day, and where (feedback 103)
+  const last = ym + "-" + String(new Date(Number(ym.slice(0,4)), Number(ym.slice(5,7)), 0).getDate()).padStart(2, "0");
+  const short = Object.entries(STMT_END).filter(([k, e]) => e && e < last).map(([k, e]) => k + (e >= ym + "-01" ? " to " + dLong(e) : ": nothing yet"));
+  return "Not every statement for "+ymFull(ym)+" is in yet"+(short.length ? " — "+short.join(", ") : "")+". Its totals will rise.";
+};
 function daysElapsed(ym){
   if(ym === TODAY.slice(0,7)) return Number(TODAY.slice(8,10));
   const [y,m] = ym.split("-").map(Number); return new Date(y,m,0).getDate();
@@ -866,7 +874,7 @@ function setYear(y){
 const PROFILE = {};
 const BROKER = "";          // the institution that holds the portfolio, from accounts.json
 const CP = INVEST.counterparty || null;   // who pays money back, from cashflow.json
-const VERSION = "1.0.6";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
+const VERSION = "1.0.7";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
 // The brand is data, not markup: it used to be typed into the <title>, the sidebar and the link
 // between the two dashboards, which is three places to miss when someone makes this theirs.
 // FIRE Toad is the product; the owner's name is the instance. Both are shown, neither typed
@@ -1285,21 +1293,36 @@ function moveTip(ev){
   const below = ev.clientY+18, h = tip.offsetHeight;
   tip.style.top = (!tip.classList.contains("def") ? ev.clientY-34 : below+h > innerHeight-8 ? Math.max(8, ev.clientY-h-12) : below)+"px";
 }
-function hideTip(){ tip.style.opacity = 0; }
-// A term shows its entry on hover and opens the Glossary on click; a number shows its working.
-// Esc or a click elsewhere closes it.
-const tipOf = el => el.classList.contains("term") ? [entryHtml(el.dataset.term), "raw"] : [calcHtml(JSON.parse(el.dataset.calc), el.textContent.split(" of ")[0]), "raw"];
-const TIPPED = ".term, .numx";
-document.addEventListener("mouseover", ev => { const h = ev.target.closest?.(TIPPED); if(h) showTip(ev, ...tipOf(h)); });
-document.addEventListener("mousemove", ev => { if(ev.target.closest?.(TIPPED)) moveTip(ev); });
-document.addEventListener("mouseout",  ev => { if(ev.target.closest?.(TIPPED)) hideTip(); });
+function hideTip(){ tip.style.opacity = 0; tip.classList.remove("sticky"); }
+// A number shows its working on hover. A word shows its meaning only when clicked, in a box that
+// stays, and the Glossary is one more click from there (1.0.7, the owner: an explanation should
+// not open by itself, and the page should not be left by one click). Esc or a click elsewhere
+// closes it.
+const calcOf = el => [calcHtml(JSON.parse(el.dataset.calc), el.textContent.split(" of ")[0]), "raw"];
+function openWord(ev, el){
+  showTip(ev, entryHtml(el.dataset.term) + '<a href="#" class="t-more" data-gl="'+el.dataset.term+'">In the Glossary \u2192</a>', "raw");
+  tip.classList.add("sticky");
+}
+document.addEventListener("mouseover", ev => { const h = ev.target.closest?.(".numx"); if(h && !tip.classList.contains("sticky")) showTip(ev, ...calcOf(h)); });
+document.addEventListener("mousemove", ev => { if(ev.target.closest?.(".numx") && !tip.classList.contains("sticky")) moveTip(ev); });
+document.addEventListener("mouseout",  ev => { if(ev.target.closest?.(".numx") && !tip.classList.contains("sticky")) hideTip(); });
 document.addEventListener("click", ev => {
-  const h = ev.target.closest?.(TIPPED);
-  if(!h){ hideTip(); return; }
+  const more = ev.target.closest?.("#tip .t-more");
+  if(more){ ev.preventDefault(); ev.stopPropagation(); hideTip(); openTerm(more.dataset.gl); return; }
+  if(ev.target.closest?.("#tip")) return;                 // reading the box does not close it
+  const w = ev.target.closest?.(".term"), n = ev.target.closest?.(".numx");
+  if(!w && !n){ hideTip(); return; }
   ev.preventDefault(); ev.stopPropagation();
-  if(h.classList.contains("term")){ hideTip(); openTerm(h.dataset.term); } else showTip(ev, ...tipOf(h));
+  if(w) openWord(ev, w); else { hideTip(); showTip(ev, ...calcOf(n)); }
 }, true);
-document.addEventListener("keydown", ev => { if(ev.key === "Escape") hideTip(); });
+document.addEventListener("keydown", ev => {
+  if(ev.key === "Escape") hideTip();
+  const w = ev.target.closest?.(".term");
+  if(w && (ev.key === "Enter" || ev.key === " ")){
+    ev.preventDefault(); const r = w.getBoundingClientRect();
+    openWord({clientX: r.left, clientY: r.bottom}, w);
+  }
+});
 function hoverable(el, html){
   el.addEventListener("mousemove", ev => showTip(ev, html));
   el.addEventListener("mouseleave", hideTip);
@@ -1525,7 +1548,11 @@ function renderHome(){
     inv: () => card(dep ? "Invested in "+ymLabel(dep.ym) : "Invested this month",
       unset("invest") ? (dep ? numx(fmt(dep.amt), [], "Counted the day "+BROKER+" receives it. The plan has no investing amount yet.") : notSet("invest"))
         : dep ? numx(fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>', [["Planned", fmt(FUNDS.plan.invest)], ["Arrived", fmt(dep.amt)]], "Two transfers of "+fmt(half)+", counted the day "+BROKER+" receives them.") : "\u2014",
-      dep && !unset("invest") ? (dep.nRule >= 2 ? "Both transfers arrived \u2713" : dep.nRule === 1 ? "One of two transfers arrived" : "No transfer arrived yet") : ""),
+      // judged by what arrived, not by how many transfers were exactly half the plan (1.0.7: more than the
+      // plan arrived and the page still said "No transfer arrived yet")
+      dep && !unset("invest") ? (dep.amt >= FUNDS.plan.invest - 0.5
+          ? "All arrived \u2713" + (dep.amt > FUNDS.plan.invest + 0.5 ? ", " + fmt(dep.amt - FUNDS.plan.invest) + " more than planned" : "")
+          : dep.amt > 0.5 ? fmt(FUNDS.plan.invest - dep.amt) + " still to arrive" : "No transfer arrived yet") : ""),
     // The month's whole spending, not the everyday amount (2026-11-03, the owner): Home says what
     // the month cost, and what is left of Everyday is This month's to say. The month is today's
     // when it has a purchase yet, otherwise the newest one the statements reach.
@@ -1533,7 +1560,7 @@ function renderHome(){
       if(!MONTHS.length) return null;
       const ym = MONTHS.includes(curYM) ? curYM : MONTHS[MONTHS.length - 1];
       const es = monthOf(ym), total = es.reduce((s,e) => s + e.amount, 0), parts = monthParts(ym);
-      const rows = [["Bills & housing", parts.bills], ["Everyday", parts.everyday]].filter(p => Math.abs(p[1]) > 0.005);
+      const rows = [["Committed", parts.bills], ["Everyday", parts.everyday]].filter(p => Math.abs(p[1]) > 0.005);
       return card("Total spent in "+ymLabel(ym),
         numx(fmt(total), rows.map(p => [p[0], fmt(p[1])]), es.length+" purchase"+(es.length === 1 ? "" : "s")+(ym > covEnd ? (ym >= TODAY.slice(0,7) ? ", and the month is still going." : ", and not every statement for it is in yet.") : "."), true),
         rows.map(p => p[0]+" "+fmt(p[1])).join(" \u00b7 "));
@@ -1595,7 +1622,7 @@ function renderHome(){
   // A row opens in place to the accounts behind it; "where is my cash" should not need another page.
   const acctList = (rows, total) => '<div class="both-accts" hidden>' + rows.map(a =>
       '<div class="both-acct"><span>'+(a.i ? '<span class="i">'+a.i+'</span>' : "")+a.n
-      + (a.cur ? '<span class="a">'+a.cur+'</span>' : "") + (a.asof ? '<span class="a">'+MN[Number(a.asof.slice(5,7))-1]+' '+Number(a.asof.slice(8,10))+(a.asof.slice(0,4) !== TODAY.slice(0,4) ? ', '+a.asof.slice(0,4) : '')+'</span>' : "")+'</span>'
+      + (a.cur ? '<span class="a">'+a.cur+'</span>' : "") + (a.note ? '<span class="a">'+a.note+'</span>' : "") + (a.asof ? '<span class="a">'+MN[Number(a.asof.slice(5,7))-1]+' '+Number(a.asof.slice(8,10))+(a.asof.slice(0,4) !== TODAY.slice(0,4) ? ', '+a.asof.slice(0,4) : '')+'</span>' : "")+'</span>'
       + '<span class="v num">'+fmt(a.v)+'</span><span class="p num">'+Math.round(pc(a.v, total))+'%</span></div>').join("") + '</div>';
   const opens = n => n ? ' role="button" tabindex="0" aria-expanded="false"' : "";
   const caret = n => n ? '<span class="caret">\u25B8</span>' : "";
@@ -2111,18 +2138,19 @@ const TX_COLS = [
 // A month's spending, each row in exactly one part (FINANCE.md §3a), so the parts add up to the total.
 function monthParts(ym){
   const sum = f => monthOf(ym).filter(f).reduce((s,e) => s + e.amount, 0);
-  return {bills:sum(e => CGRP[e.category] === "bills"), everyday:everydayOf(ym)};
+  return {bills:sum(e => !!e.fx), everyday:everydayOf(ym)};
 }
 function renderCatPage(){
   const es = monthOf(viewYM);
   const total = es.reduce((s,e) => s + e.amount, 0);
   const parts = monthParts(viewYM);
-  const partRows = [["Bills & housing", parts.bills], ["Everyday", parts.everyday]]
+  const partRows = [["Committed", parts.bills], ["Everyday", parts.everyday]]
     .filter(p => Math.abs(p[1]) > 0.005);
   const rows = CATS.map(c => {
     const items = es.filter(e => e.category === c.k).sort((a,b) => b.amount - a.amount);
-    return {k:c.k, col:c.c, items, v:items.reduce((s,e) => s + e.amount, 0), med:catMedian(c.k, viewYM)};
-  }).filter(r => r.items.length).sort((a,b) => b.v - a.v);
+    // a category is what was bought in it; what came back is one line of its own (1.0.7, feedback 103)
+    return {k:c.k, col:c.c, items, v:items.reduce((s,e) => s + Math.max(e.amount, 0), 0), med:catMedian(c.k, viewYM)};
+  }).filter(r => r.v > 0.005).sort((a,b) => b.v - a.v);   // a category with only money back is in Refunds
   // Compared in dollars, not ratios. Two categories typically sit at zero (Transport, Other),
   // and a ratio against zero is either infinite or a meaningless "+3908%". $404 over typical
   // says the same thing and stays readable whatever the base.
@@ -2132,7 +2160,8 @@ function renderCatPage(){
   // otherwise fall back to the biggest one rather than leaving an empty panel.
   if(!rows.some(r => r.k === catSel)) catSel = rows.length ? rows[0].k : null;
   const drivers = rows.filter(isHigh).sort((a,b) => over(b) - over(a));
-  const pct = v => total > 0 ? Math.round(pc(v, total)) : 0;
+  const bought = es.reduce((s,e) => s + Math.max(e.amount, 0), 0), refunds = es.reduce((s,e) => s + Math.min(e.amount, 0), 0);
+  const pct = v => bought > 0 ? Math.round(pc(v, bought)) : 0;
 
   const card = (lab, val, status, cls) => StatCard(lab, val, status, {capCls: cls});
   const um = usualMonthAt(viewYM), usual = um ? um.v : null, diff = usual === null ? null : total - usual;
@@ -2140,7 +2169,8 @@ function renderCatPage(){
   // The month's whole spending is one line in the Everyday card; Against a usual month is a
   // card once the month has closed (an open month against a whole one says nothing yet).
   $("catTotal").innerHTML = '<div class="say" style="margin-top:8px">Spent in '+ymLabel(viewYM)+': <b>'+fmt(total)+'</b>'
-    + (partRows.length ? ' \u2014 '+partRows.map(p => p[0].toLowerCase()+' '+fmt(p[1])).join(", ") : '')+'.</div>';
+    + (refunds < -0.005 ? ' after '+fmt(-refunds)+' of refunds' : '')
+    + (partRows.length > 1 ? ' \u2014 '+partRows.map(p => p[0].toLowerCase()+' '+fmt(p[1])).join(", ") : '')+'.</div>';
   $("catStats").innerHTML = viewYM > covEnd ? "" :
     card("Against a usual month",
         diff === null ? "\u2014" : numx((diff >= 0 ? "+" : "\u2212") + fmt(Math.abs(diff)),
@@ -2164,7 +2194,7 @@ function renderCatPage(){
     catSel = b.dataset.k;
     renderCatPage(); drawFlow();
   });
-  $("catCap").textContent = "";
+  $("catCap").innerHTML = refunds < -0.005 ? '<div class="cat-row" style="cursor:default"><span style="width:9px"></span><span class="nm">Refunds</span><span class="bar-wrap"></span><span class="v num">'+fmt2(refunds)+'</span></div>' : "";
 
   const sel = rows.find(r => r.k === catSel);
   const win = {length: (catUsual(viewYM) || {n: 0}).n};
@@ -2461,7 +2491,7 @@ function renderSettings(){
     const rows = SETTINGS.filter(r => r.stage === st);
     return rows.length ? '<div class="set-grp"><div class="lab">' + SET_STAGE[st] + '</div>' + rows.map(r => {
       const meta = setMeta(r);
-      return '<div class="set-row"><div><div class="n">' + r.n + '</div><div class="why">' + r.why + '</div></div>'
+      return '<div class="set-row"><div><div class="n">' + r.n + '</div><div class="why">' + r.why + (r.key === "growth" ? mixPast() : "") + '</div></div>'
         + '<div class="set-ctl">' + setControl(r) + (meta ? '<div class="set-meta">' + meta + '</div>' : "") + '</div></div>';
     }).join("") + '</div>' : "";
   }).join("");
@@ -2513,7 +2543,7 @@ function renderSafety(){
         : state === "above" ? '<div class="cap">' + fmt(c.money - band[1] * c.cost) + " is beyond " + band[1] + " months.</div>" : "");
     wireSettings($("safeRange"));
   }
-  const row = a => '<div class="both-acct"><span>'+(a.i ? '<span class="i">'+a.i+'</span>' : "")+a.n+(a.cur ? '<span class="a">'+a.cur+'</span>' : "")+'</span><span class="v num">'+fmt(a.v)+'</span></div>';
+  const row = a => '<div class="both-acct"><span>'+(a.i ? '<span class="i">'+a.i+'</span>' : "")+a.n+(a.cur ? '<span class="a">'+a.cur+'</span>' : "")+(a.note ? '<span class="a">'+a.note+'</span>' : "")+'</span><span class="v num">'+fmt(a.v)+'</span></div>';
   $("safeAccts").innerHTML = '<div class="lab">Where the money is</div>'
     + ((S.accts || []).length ? (S.accts || []).map(row).join("") : '<div class="empty">No account you could spend from today.</div>')
     + ((S.debts || []).length ? '<div class="lab" style="margin-top:12px">Due now</div>' + S.debts.map(row).join("") : "")
@@ -2570,6 +2600,11 @@ function renderSubs(){
   $("subs").innerHTML = rows.length ? rows.map(s =>
     '<div class="leg-row'+(s.active?"":" off")+'"><span class="nm">'+s.name+(s.active?' <span class="sub-badge">● Active</span>':"")+'</span><span class="meta num">'+s.n+' charge'+(s.n === 1 ? "" : "s")+', last '+dLong(s.last.date)+'</span><span class="v num">'+fmt2(s.last.amount)+'</span></div>').join("")
     : '<div class="empty">No subscriptions detected.</div>';
+  // a charge is a subscription once it comes back three months running: fewer months than that
+  // and none can be seen yet, which is said, not left to look like "none" (feedback 104)
+  const span = MONTHS.length;
+  if(span < 3) $("subs").innerHTML += '<div class="cap" style="margin-top:8px">A charge counts as a subscription once it comes back three months running. Your statements cover '
+    + span + ' month' + (span === 1 ? "" : "s") + ' so far.</div>';
 }
 
 // ===== Investments summary (data from holdings_latest.csv + banks.json at build time) =====
@@ -2615,6 +2650,10 @@ const baseDrift = () => { const m = measuredBase(); return m === null || !(PLAN_
 // The answer is the years at the pace money really reaches the broker; under it, the savings
 // rate and what the money kept each month does. The lever is investing a little more. Every
 // number is savings.py's (SAVINGS); the lines in the chart are drawn from the same returns.
+// What the portfolio's mix today earned a year after inflation over the whole record (RET_HIST.avg),
+// said beside the return setting: a fact about the past, never advice (1.0.7, the owner).
+const mixPast = () => RET_HIST.avg == null || !RET_HIST.years ? "" : " Your mix today earned about "
+  + (Math.round(RET_HIST.avg * 1000) / 10) + "% a year after inflation from " + RET_HIST.years[0][0] + " to " + RET_HIST.years[RET_HIST.years.length - 1][0] + ".";
 const yrsTxt = y => y[0] === null ? null : y[2] < 0.5 ? "0" : Math.round(y[2]) === Math.round(y[0]) ? String(Math.round(y[1])) : Math.round(y[2])+"–"+Math.round(y[0]);
 function renderFi(){
   const S = SAVINGS, on = S.target !== undefined;
@@ -2675,7 +2714,7 @@ function renderFi(){
   });
   $("fiChart").innerHTML = out;
   $("fiCap").innerHTML = "The dashed line is the target. Each line is what you have invested, growing "+g+"% a year after inflation ("
-    + '<a href="#" onclick="setPage(\'set\');return false">your setting</a>); the shading is '+Math.round(R[0]*100)+"% to "+Math.round(R[2]*100)+"%. Roughly, not a date.";
+    + '<a href="#" onclick="setPage(\'set\');return false">your setting</a>); the shading is '+Math.round(R[0]*100)+"% to "+Math.round(R[2]*100)+"%. Roughly, not a date." + mixPast();
 }
 function renderFire(){
   renderFi();
@@ -3379,8 +3418,9 @@ function renderAccounts(){
   out += '<tr class="tot"><td style="text-align:left">All accounts</td><td class="opt"></td>'
        + '<td class="sub" style="text-align:left">'
        + (ownCad ? "+ " + fmt(ownCad) + " in " + term("other_assets", "what you own") + " on Home " : "")
-       + (Math.abs(totCad + ownCad - NW_GLOBAL) < 2 ? "= net worth \u2713" : "\u26a0 " + fmt(Math.abs(totCad + ownCad - NW_GLOBAL)) + " apart from net worth")
-       + '</td><td class="num">' + numx(fmt(totCad), byCurAll.map(([c,v]) => [money2(v,c), money2(v*RATE[c], "CAD")]),
+       // the same exact sum rounded once on both sides: equal to the dollar, or the difference is said
+       + (Math.round(totCad + ownCad) === NW_GLOBAL ? "= net worth \u2713" : "\u26a0 " + fmt(Math.abs(Math.round(totCad + ownCad) - NW_GLOBAL)) + " apart from net worth")
+       + '</td><td class="num">' + numx(fmt(Math.round(totCad)), byCurAll.map(([c,v]) => [money2(v,c), money2(v*RATE[c], "CAD")]),
            (rateNote ? rateNote + ". " : "") + (missing ? missing + " account" + (missing>1?"s":"") + " with no balance left out." : ""), true) + '</td></tr>';
   $("acctTable").innerHTML = out;
   foldGroups($("acctTable"), "account");
@@ -3587,9 +3627,12 @@ function headerLine(){
   // the chat when the file was opened from disk (2026-11-07)
   // the count says what is to be done with it: "27 to confirm" left the owner asking 27 of
   // what (2026-11-12, user 001). One short line, as before: what each one is, is the panel's to say
+  // On the web (the live demo) there is no app and nobody to answer them, so the line says nothing
+  // (2026-11-16: "open FIRE Toad" read as a broken promise to a visitor).
   const open = (DECISIONS || []).filter(d => d.status === "open").length;
   const served = location.protocol.startsWith("http") && /\/t\/[^/]+\//.test(location.pathname);
-  const waiting = !open ? "" : (served
+  const web = location.protocol.startsWith("http") && !served;
+  const waiting = !open || web ? "" : (served
     ? '<a class="hdr-wait" href="panel">' + open + " to categorize \u2192</a>"
     : '<span class="hdr-wait">' + open + " to categorize \u2014 open FIRE Toad</span>");
   return (req.length ? term("complete_to") + " " + dLong(req[0]) : "")
@@ -3901,7 +3944,7 @@ renderGlossary();
   $("hdrNW").innerHTML = numx(fmt(NW_GLOBAL), [["You own", fmt(owned)], ["You owe", "\u2212"+fmt(NW_DEBT)]], 
     FOREIGN_CAD ? fmt(FOREIGN_CAD)+" of it is held abroad, converted at the "+dLong(FOREIGN.asof || TODAY).replace(" ", "\u00a0")+" rate." : "", true);
   $("hdrSub").innerHTML = '<span class="hdr-line" tabindex="0">'+headerLine()+'</span>';
-  $("hdrSub").querySelector(".hdr-line").onclick = ev => { if(!ev.target.closest(TIPPED)) setPage("src"); };
+  $("hdrSub").querySelector(".hdr-line").onclick = ev => { if(!ev.target.closest(".term, .numx")) setPage("src"); };
   $("brand").onclick = () => setPage("home");
 })();
 setPage(ST.p || "home");

@@ -12,16 +12,16 @@ import ocr
 
 class Amounts(unittest.TestCase):
     def test_currency_signs_and_thousands(self):
-        self.assertEqual(ocr.amounts("余额 ¥203,134.64"), [203134.64])
-        self.assertEqual(ocr.amounts("US$17.56 available"), [17.56])
-        self.assertEqual(ocr.amounts("C$1,065.33"), [1065.33])
+        self.assertEqual(ocr.amounts("余额 ¥12,345.67"), [12345.67])
+        self.assertEqual(ocr.amounts("US$42.10 available"), [42.10])
+        self.assertEqual(ocr.amounts("C$2,481.90"), [2481.90])
 
     def test_plain_integers_are_not_amounts(self):
         # an account number, a date fragment, a count: no decimals and no thousands separator
-        self.assertEqual(ocr.amounts("卡号 4016 2026"), [])
+        self.assertEqual(ocr.amounts("卡号 5830 2026"), [])
 
     def test_several_on_one_line(self):
-        self.assertEqual(ocr.amounts("市值 29,000.64 收益 -63.57"), [29000.64, 63.57])
+        self.assertEqual(ocr.amounts("市值 18,250.40 收益 -41.25"), [18250.40, 41.25])
 
 
 class Dates(unittest.TestCase):
@@ -69,10 +69,10 @@ class Candidates(unittest.TestCase):
 
     def test_the_english_balance_word_counts_too(self):
         boxes = [{"text": "Available balance", "x": 0.1, "y": 0.1, "w": 0.3, "h": 0.02},
-                 {"text": "$1,065.33", "x": 0.1, "y": 0.13, "w": 0.3, "h": 0.04},
+                 {"text": "$2,481.90", "x": 0.1, "y": 0.13, "w": 0.3, "h": 0.04},
                  {"text": "$9,999.99", "x": 0.1, "y": 0.50, "w": 0.3, "h": 0.04}]
         cands, _ = ocr.candidates(boxes, "Wealthsimple app · Chequing", datetime.date(2026, 11, 6))
-        self.assertEqual(cands[0]["amount"], 1065.33)
+        self.assertEqual(cands[0]["amount"], 2481.90)
 
 
 if __name__ == "__main__":

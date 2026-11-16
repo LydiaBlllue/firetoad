@@ -3,19 +3,24 @@
   "decisions": [
     {
       "added": "2026-09-06",
-      "kind": "merchant",
-      "what": "FARM BOY OTTAWA has appeared many times and is filed as Grocery.",
-      "default": "Grocery",
-      "source": "MasterCard, most recently Aug 14",
-      "status": "open"
-    },
-    {
-      "added": "2026-09-06",
       "kind": "transfer",
-      "what": "A $200 e-Transfer received on Aug 11 carries no sender name.",
+      "what": "A $200 e-Transfer received on Aug 11 carries no sender you have named.",
       "default": "Other income",
-      "source": "Chequing statement to Sep 5",
-      "status": "open"
+      "source": "Chequing statement to Sep 5, Aug 11",
+      "status": "open",
+      "credit": {
+        "ledger": "chequing.csv",
+        "statement": "BMOCHQ4471/20260905",
+        "date": "2026-08-11",
+        "amount": 200.0,
+        "description": "INTERACe-TransferReceived"
+      },
+      "facts": {
+        "kind": "credit",
+        "amount": 200.0,
+        "date": "2026-08-11",
+        "sender": null
+      }
     },
     {
       "added": "2026-08-12",
