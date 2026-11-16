@@ -537,10 +537,11 @@ RETIREMENT_DEFAULTS = OrderedDict([
 ])
 
 
-# README shows these. They are of the demo owner, so they are generated here; S4 checks every
+# README and the live demo's front page (docs/site/) show these. They are of the demo owner, so they are generated here; S4 checks every
 # image README shows resolves, so a missing shot fails the checks rather than leaving a broken image.
 SHOTS = [("home.png", "main", "home"), ("spending.png", "main", "trends"), ("plan.png", "main", "budget"),
-         ("sources.png", "main", "src"), ("portfolio.png", "main", "port")]
+         ("sources.png", "main", "src"), ("portfolio.png", "main", "port"),
+         ("fire.png", "main", "fire")]
 
 
 def screenshots(out):
