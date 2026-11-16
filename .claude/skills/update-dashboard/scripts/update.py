@@ -310,8 +310,8 @@ OTHER_ACCOUNT = re.compile(r"TRANSFER|\bTFR\b|\bWIRE\b|\bDRAFT\b")
 def other_account(desc, acc):
     """The number a statement prints for the account on the other side of a transfer, or None:
     the last run of three or more digits in the description that is not this account's own
-    ("OnlineTransfer,TF0006#4471-9032" seen from …471 → 9032; "Online Banking transfer - 7082"
-    → 7082). What a transfer to an account outside the register is known by."""
+    ("OnlineTransfer,TF0006#4471-9032" seen from …471 → 9032; "Online Banking transfer - 6100"
+    → 6100). What a transfer to an account outside the register is known by."""
     own = digits((acc or {}).get("id"))
     runs = [g for g in re.findall(r"\d{3,}", desc or "") if not (own and (own in g or g in own))]
     return runs[-1] if runs else None

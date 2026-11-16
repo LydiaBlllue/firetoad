@@ -362,7 +362,7 @@ def run(root, write=False, ok=False, sets=(), say=None):
     changed, closed = 0, 0
     # "my own account", said of one transfer, answers every open one to or from the same
     # account, in or out, and is remembered for the imports to come: asked once (2026-11-12,
-    # user 001 — $0.02, $733.98 and $252.44 to her own accounts were three questions)
+    # user 001 — three transfers to her own accounts were three questions)
     own_said = {(d.get("facts") or {}).get("other") for i, d in enumerate(items)
                 if want.get(i) == OWN and d.get("kind") == "transfer" and (d.get("facts") or {}).get("other")}
     for other in own_said:
