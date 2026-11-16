@@ -56,7 +56,7 @@
   scenarios there; the late-life care model (home care, then long-term care tiers) is data in the
   same file.
 
-## 1a. The savings rate, and the years it takes
+## 1a. Years to financial independence, and the savings rate
 
 The first FIRE number that needs no goal, so it is on Home for anyone with three full months of
 income and spending (`savings.py`, the `SAVINGS` constant).
@@ -72,8 +72,11 @@ income and spending (`savings.py`, the `SAVINGS` constant).
 - **Years**: the target is twenty-five years of that spending; what is left each month is
   saved; what is invested today counts. n = ln((T + c/r) ÷ (P + c/r)) ÷ ln(1 + r), at a real
   return of 3%, 4% and 5% — shown as a range, never one year.
-- The slider moves the rate at today's income, in steps of five points; the curve is a table the
-  build writes, so the page does no sums of its own.
+- Home leads with the years and gives the rate as the reason. The years are to financial
+  independence — the day the money could carry you — not to the day work stops: past it,
+  working is a choice. The slider is in dollars kept a month (`more`, $0 to $1,000 in steps of
+  $50) and the curve under it, always shown, marks today and where the slider is; both are
+  tables the build writes, so the page does no sums of its own.
 - It replaces Home's *Kept* card where both could show: one percentage of income on the page,
   measured one way. The setup's *Planned savings rate* is the plan's (what the numbers typed
   there leave after fixed and everyday costs), named apart from this measured one, and says so.

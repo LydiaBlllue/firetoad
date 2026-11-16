@@ -9,13 +9,14 @@
 - **Money sent to Wealthsimple is a transfer, even before its export is in.** A first setup
   from bank statements alone filed a twice-monthly deposit to the broker as a purchase, asked
   you to categorize it, and counted it as a subscription.
-- **Your savings rate, and the years it takes** (Home). What work brought in less what was
-  spent, over your last full months, and how many years of saving that is until the money
-  covers twenty-five years of spending — shown as a range, 5% to 3% a year after inflation, with
-  what you already have invested counted in. A slider moves the rate and the curve shows what
-  each step is worth. It takes the place of the *Kept* card, so Home shows one percentage of
-  income. Gifts, money paid back and the broker's own income are not counted as earned.
-
+- **Years to financial independence** (Home). How many years, at the rate you save now, until
+  what you have invested covers twenty-five years of what you spend — shown as a range, 5% to 3%
+  a year after inflation. Under it, your savings rate: what work brought in less what was spent,
+  over your last full months. A slider asks "keep more each month" in dollars and says how many
+  years sooner that is; the curve under it shows where you are and where the slider takes you.
+  It takes the place of the *Kept* card, so Home shows one percentage of income. Gifts, money
+  paid back and the broker's own income are not counted as earned. Financial independence is
+  when work becomes a choice, not when it stops.
 - **Settings: the numbers that are yours to choose** (2026-11-14, user 001: someone wants three
   months of emergency fund, someone six to nine). A new page at the foot of the sidebar lists
   them — the emergency range, the import day, planning spend, take-home pay, what goes to the

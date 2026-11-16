@@ -17,7 +17,8 @@ Years: target T = twenty-five years of spending (fire.YEARS), saved c a year, in
 real return r:  n = ln((T + c/r) / (P + c/r)) / ln(1 + r). Three returns, 3%, 4% and 5%, because
 a single number would say more than the formula knows; zero when P already reaches T; None when
 nothing is saved. The curve is the same sum at income held as it is and the rate moved, from
-nothing to ninety percent in steps of five.
+nothing to ninety percent in steps of five; `more` is the slider's table, the same sum with a
+little more kept each month.
 
 Pure: rows and numbers in, numbers out.
 """
@@ -29,6 +30,8 @@ from fire import YEARS
 RETURNS = (0.03, 0.04, 0.05)    # real, after inflation: the range the years are shown over
 STEP = 5                        # the curve's percentage points
 TOP = 90
+MORE_STEP = 50                  # the slider: keeping this much more a month, in steps of
+MORE_TOP = 1000                 # up to this
 
 
 def years(portfolio, income, spend, r):
@@ -73,8 +76,15 @@ def measured(cashflow, spending, stmt_end, skip, today, portfolio):
         curve.append({"pct": pct, "years": [None if (y := years(portfolio, inc, s, r)) is None else round(y, 1)
                                             for r in RETURNS]})
     now = [None if (y := years(portfolio, inc, spend, r)) is None else round(y, 1) for r in RETURNS]
+    # The slider is in money, not in points of the rate (2026-11-15, user 001: a person thinks
+    # "keep $200 more", not "save 5 points more"): the years and the rate at each step.
+    more = []
+    for extra in range(0, MORE_TOP + 1, MORE_STEP):
+        s = spend - extra
+        more.append({"more": extra, "pct": round((inc - s) / inc * 100, 1),
+                     "years": [None if (y := years(portfolio, inc, s, r)) is None else round(y, 1) for r in RETURNS]})
     return {"rate": round(rate, 4), "income": round(inc, 2), "spend": round(spend, 2), "n": len(rows),
             "from": rows[0]["m"], "to": rows[-1]["m"], "returns": list(RETURNS),
-            "years": now, "curve": curve,
+            "years": now, "curve": curve, "more": more,
             # the planned rate sits beside it where the plan has one, so the two are never mixed
             "portfolio": round(portfolio or 0, 2)}

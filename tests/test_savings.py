@@ -82,5 +82,22 @@ class TheCurve(unittest.TestCase):
         self.assertEqual(savings.measured(CASH, SPEND, END, {}, "2026-07-15", 0)["curve"][0]["years"], [None] * 3)
 
 
+class TheSlider(unittest.TestCase):
+
+    def test_it_is_in_dollars_from_nothing_more(self):
+        m = savings.measured(CASH, SPEND, END, {}, "2026-07-15", 0)["more"]
+        self.assertEqual((m[0]["more"], m[1]["more"], m[-1]["more"]), (0, 50, 1000))
+
+    def test_nothing_more_is_today(self):
+        r = savings.measured(CASH, SPEND, END, {}, "2026-07-15", 0)
+        self.assertEqual(r["more"][0]["years"], r["years"])
+        self.assertEqual(r["more"][0]["pct"], 50.0)
+
+    def test_keeping_more_is_never_slower(self):
+        m = savings.measured(CASH, SPEND, END, {}, "2026-07-15", 0)["more"]
+        ys = [x["years"][1] for x in m]
+        self.assertEqual(ys, sorted(ys, reverse=True))
+
+
 if __name__ == "__main__":
     unittest.main()

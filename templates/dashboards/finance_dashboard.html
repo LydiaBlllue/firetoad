@@ -410,10 +410,12 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 <section data-pg="home" hidden>
 <div class="grid-stats" id="homeStats"></div>
 <div class="card" style="margin-bottom:10px" id="saveCard" hidden>
-  <div class="lab" id="saveLab">Savings rate</div>
+  <div class="lab" id="saveLab">Years to financial independence</div>
+  <div class="baseline-hero num" id="saveBig"></div>
   <div class="say" id="saveSay"></div>
-  <div class="ctl"><span class="cl">If you saved</span><input type="range" id="saveRate" min="0" max="90" step="5" aria-label="Savings rate"><span class="cv num" id="saveRateV"></span></div>
-  <svg class="year-svg" id="saveChart" viewBox="0 0 940 140" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Years until work is optional at each savings rate"></svg>
+  <div class="ctl" id="saveCtl"><span class="cl">Keep more each month</span><input type="range" id="saveMore" min="0" max="1000" step="50" aria-label="Keep more each month"><span class="cv num" id="saveMoreV"></span></div>
+  <div class="say" id="saveRes"></div>
+  <svg class="year-svg" id="saveChart" viewBox="0 0 940 130" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Years to financial independence at each savings rate"></svg>
   <div class="cap" id="saveCap"></div>
 </div>
 <div class="card" style="margin-bottom:10px">
@@ -1478,43 +1480,51 @@ function bandLab(){
   const b = (RULES.buckets || []).find(x => x.target);
   return !b || b.key === "dry" ? term("dry_powder", "Dry powder") : b.name;
 }
-// The savings rate and the years it takes (savings.py has the sums; the page reads its curve).
-// The slider moves the rate in steps of five points, and the years come from the table the
-// build wrote, so there is no second copy of the formula here. 3% to 5% real, a range, because
-// one number would say more than the formula knows.
-const yearsTxt = y => !y || y[0] === null ? "No years at this rate: nothing is left to save"
-  : y[2] < 0.5 ? "The money is already enough" : "About "+Math.round(y[2])+" to "+Math.round(y[0])+" years to work, at 5% to 3%";
+// Years to financial independence (savings.py has the sums; the page reads its tables). It
+// leads with the answer — the years at the rate you save now — and gives the rate as the reason.
+// The slider is in money ("keep $200 more a month"), and the curve below it is the slider's
+// picture: where you are, and where the slider takes you. 3% to 5% real, a range, never a date.
+const yrsRange = y => Math.round(y[2]) === Math.round(y[0]) ? String(Math.round(y[2])) : Math.round(y[2])+"\u2013"+Math.round(y[0]);
 function renderSavings(){
   const card = $("saveCard");
   if(SAVINGS.rate === undefined){ card.hidden = true; return; }
   card.hidden = false;
-  const C = SAVINGS.curve, now = Math.min(90, Math.max(0, Math.round(SAVINGS.rate*100/5)*5)), inp = $("saveRate");
-  if(!inp.dataset.set){ inp.value = now; inp.dataset.set = "1"; inp.oninput = renderSavings; }
-  const at = C.find(p => p.pct === Number(inp.value)) || C[0];
-  $("saveRateV").textContent = at.pct+"%";
-  const you = Math.round(SAVINGS.rate*100);
-  $("saveSay").innerHTML = '<b>'+you+'%</b> of what you earn is left after spending'
-    + ' ('+fmt(SAVINGS.income)+' in, '+fmt(SAVINGS.spend)+' out a month). '+yearsTxt(SAVINGS.years)+'.';
-  const [W, H] = fit("saveChart", 140), pl = 40, pr = 12, pt = 14, pb = 26;
+  const you = Math.round(SAVINGS.rate*100), Y = SAVINGS.years, done = Y[2] !== null && Y[2] < 0.5, none = Y[0] === null;
+  const inp = $("saveMore");
+  if(!inp.dataset.set){ inp.value = 0; inp.dataset.set = "1"; inp.oninput = renderSavings; }
+  const at = SAVINGS.more.find(m => m.more === Number(inp.value)) || SAVINGS.more[0];
+  $("saveBig").textContent = done ? "Already there" : none ? "Not at this rate" : "About "+yrsRange(Y)+" years";
+  $("saveSay").innerHTML = done ? "What you have invested already covers 25 years of what you spend."
+    : (none ? "Nothing is left to save at today\u2019s spending, so the money does not build. " : "At the rate you save now. ")
+      + "You keep <b>"+you+"%</b> of what you earn \u2014 "+fmt(SAVINGS.income)+" in, "+fmt(SAVINGS.spend)+" out a month. That "+you+"% is your "+term("savings_rate", "savings rate")+".";
+  $("saveCtl").hidden = $("saveRes").hidden = done;
+  $("saveMoreV").textContent = "+"+fmt(at.more);
+  const sooner = !none && at.years[0] !== null ? [Y[2] - at.years[2], Y[0] - at.years[0]].map(Math.round) : null;
+  $("saveRes").innerHTML = done ? "" : at.more === 0 ? "Move the slider to see what keeping a little more is worth."
+    : at.years[0] === null ? "Keeping "+fmt(at.more)+" more a month still leaves nothing to save."
+    : "Keeping "+fmt(at.more)+" more a month: about <b>"+yrsRange(at.years)+" years</b>"
+      + (sooner && Math.max(...sooner) > 0 ? " \u2014 <b>"+(sooner[0] === sooner[1] ? sooner[0] : Math.min(...sooner)+" to "+Math.max(...sooner))+" year"+(Math.max(...sooner) === 1 ? "" : "s")+" sooner</b>." : ".");
+  const C = SAVINGS.curve;
+  const [W, H] = fit("saveChart", 140), pl = 40, pr = 12, pt = 24, pb = 22;
   // past fifty years the curve says nothing more than "a working life": it is drawn flat there
   const top = Math.min(50, Math.max(10, ...C.map(p => p.years[0] || 0)));
-  const x = pct => pl + pct/90*(W-pl-pr), y = v => pt + (1 - Math.min(v, top)/top)*(H-pt-pb);
+  const x = pct => pl + Math.max(0, Math.min(90, pct))/90*(W-pl-pr), y = v => pt + (1 - Math.min(v, top)/top)*(H-pt-pb);
   const pts = i => C.filter(p => p.years[i] !== null).map(p => x(p.pct).toFixed(1)+","+y(p.years[i]).toFixed(1));
-  const hi = pts(0), lo = pts(2).reverse();
-  let out = '';
+  let out = '<text x="'+(pl+4)+'" y="'+(pt-10)+'" font-size="11" fill="var(--muted)">years</text>';
   [0, Math.round(top/2), Math.round(top)].forEach(v => out += '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--grid)"/><text x="'+(pl-6)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--muted)">'+v+'</text>');
-  out += '<text x="'+(pl+4)+'" y="'+(pt-2)+'" font-size="11" fill="var(--muted)">years</text>';
-  [0, 30, 60, 90].forEach(v => out += '<text x="'+x(v)+'" y="'+(H-8)+'" text-anchor="middle" font-size="11" fill="var(--muted)">'+v+'%</text>');
-  if(hi.length > 1) out += '<polygon points="'+hi.concat(lo).join(" ")+'" fill="var(--ink)" opacity=".10"/>'
+  [0, 30, 60, 90].forEach(v => out += '<text x="'+x(v)+'" y="'+(H-6)+'" text-anchor="'+(v === 0 ? "start" : v === 90 ? "end" : "middle")+'" font-size="11" fill="var(--muted)">'+v+'%</text>');
+  const hi = pts(0), lo = pts(2).reverse();
+  if(hi.length > 1) out += '<polygon points="'+hi.concat(lo).join(" ")+'" fill="var(--ink)" opacity=".08"/>'
     + '<polyline points="'+pts(1).join(" ")+'" fill="none" stroke="var(--ink)" stroke-width="2"/>';
-  out += '<line x1="'+x(you)+'" x2="'+x(you)+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="var(--muted)" stroke-dasharray="3 3"/>'
-    + '<text x="'+(x(you)+5)+'" y="'+(pt+10)+'" font-size="11" fill="var(--muted)">you</text>';
-  if(at.years[1] !== null) out += '<circle cx="'+x(at.pct)+'" cy="'+y(at.years[1])+'" r="5" fill="var(--ink)"/>';
+  const dot = (pct, yrs, col, lab, r, anchor) => yrs === null ? "" : '<line x1="'+x(pct)+'" x2="'+x(pct)+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="'+col+'" stroke-dasharray="3 3"/>'
+    + '<circle cx="'+x(pct)+'" cy="'+y(yrs)+'" r="'+r+'" fill="'+col+'"/>'
+    + '<text x="'+(x(pct) + (anchor === "end" ? -5 : 5))+'" y="'+(pt-10)+'" text-anchor="'+anchor+'" font-size="11" fill="'+col+'">'+lab+'</text>';
+  if(!done){
+    out += dot(you, Y[1], "var(--muted)", "you, "+you+"%", 4, at.more ? "end" : "start");
+    if(at.more) out += dot(at.pct, at.years[1], "#006300", "+"+fmt(at.more)+", "+Math.round(at.pct)+"%", 5, "start");
+  }
   $("saveChart").innerHTML = out;
-  $("saveCap").innerHTML = at.years[0] === null ? "At "+at.pct+"% nothing is left to save, so there are no years to count."
-    : at.years[2] < 0.5 ? "At "+at.pct+"% the money you have already reaches the target."
-    : "At <b>"+at.pct+"%</b>: about <b>"+Math.round(at.years[2])+" to "+Math.round(at.years[0])+" years</b> of saving, with what you have invested counted in. "
-      + "The target is 25 years of spending; the band is a real return of 5% down to 3%, so read it as roughly, not as a date.";
+  $("saveCap").innerHTML = "Further right, fewer years; the first steps are worth the most. Counted until the money covers 25 years of what you spend, with what you have invested, at 3% to 5% a year after inflation \u2014 roughly, not a date.";
 }
 function renderHome(){
   renderNwChart();
@@ -1584,10 +1594,6 @@ function renderHome(){
       return card(term("kept", "Kept")+" in "+yr, numx((net >= 0 ? "+" : "\u2212") + fmt(Math.abs(net)), [["Income", fmt(income)], ["Spent", "\u2212"+fmt(spent)]], "", true),
         income > 0 ? Math.round(pc(net, income))+"% of income" : "");
     },
-    rate: () => SAVINGS.rate === undefined ? null : card(term("savings_rate", "Savings rate"),
-      numx(Math.round(SAVINGS.rate*100)+"%", [["Income", fmt(SAVINGS.income)+" a month"], ["Spending", "\u2212"+fmt(SAVINGS.spend)+" a month"]],
-        "What work delivered less what was spent, over the last "+SAVINGS.n+" full months. Gifts, repayments and the broker's own income are not in it.", true),
-      yearsTxt(SAVINGS.years)),
     subs: () => {
       const subs = SPENDING.filter(e => e.date.startsWith(yr) && e.sub), ytd = subs.reduce((a,e) => a + e.amount, 0);
       if(!(ytd > 0)) return null;
@@ -1604,7 +1610,7 @@ function renderHome(){
     },
   };
   const first = INVESTED() ? (GOAL() ? ["port", "fire", "inv", "spent"] : ["port", "inv"]) : (GOAL() ? ["fire"] : []);
-  const FILL = ["interest", "spent", "covered", "rate", "kept", "subs", "bigcat"];
+  const FILL = ["interest", "spent", "covered", "kept", "subs", "bigcat"];
   const shown = [];
   for(const k of first.concat(FILL)){
     if(shown.length >= 4 || shown.some(s => s.k === k)) continue;
