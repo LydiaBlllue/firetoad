@@ -475,7 +475,11 @@ W = {
     "w_left_cards": {"en": "Your cards spent about {sug} a month", "zh": "你的卡每月大约花 {sug}"},
     "w_kept": {"en": "Kept each month", "zh": "每月留下"},
     "w_kept_neg": {"en": "You spend more than your income", "zh": "花的比收入多"},
-    "w_rate": {"en": "Share of income", "zh": "占收入"},
+    # the plan's rate: what the numbers typed here leave. The dashboard's Savings rate is measured
+    # from what was really spent, so the two are named apart (2026-11-15, user 001)
+    "w_rate": {"en": "Planned savings rate", "zh": "计划储蓄率"},
+    "w_rate_hint": {"en": "From the numbers above. Your dashboard measures it from what you really spend.",
+                    "zh": "按上面这几个数算。仪表盘上的储蓄率按你实际花的算。"},
     "w_invest_of": {"en": "Of that, to the broker", "zh": "其中转去券商"},
     "w_invest_over": {"en": "More than you keep", "zh": "比留下的多"},
     "w_goal_means": {"en": "Reached when your investments can pay 4% a year of what you spend.", "zh": "投资每年取 4% 就够你花时，就算达到。"},

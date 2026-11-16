@@ -75,8 +75,8 @@ income and spending (`savings.py`, the `SAVINGS` constant).
 - The slider moves the rate at today's income, in steps of five points; the curve is a table the
   build writes, so the page does no sums of its own.
 - It replaces Home's *Kept* card where both could show: one percentage of income on the page,
-  measured one way. The setup's *Share of income* is the plan's (what the plan leaves after
-  fixed and everyday costs), not this measured one.
+  measured one way. The setup's *Planned savings rate* is the plan's (what the numbers typed
+  there leave after fixed and everyday costs), named apart from this measured one, and says so.
 
 ## 2. Income: in the system
 

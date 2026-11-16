@@ -386,7 +386,7 @@ table.cm input{width:100%}
       k1.appendChild(el('span', null, '<b>' + esc(W.w_kept) + '</b>')); k1.appendChild(keptHint);
       k2.appendChild(keptVal); keptTr.appendChild(k1); keptTr.appendChild(k2); tb.appendChild(keptTr);
       var rateTr = el('tr'), r1 = el('td'), r2 = el('td', 'num');
-      r1.appendChild(el('span', null, esc(W.w_rate))); r2.appendChild(rateVal);
+      r1.appendChild(el('span', null, esc(W.w_rate))); r1.appendChild(el('small', null, esc(W.w_rate_hint))); r2.appendChild(rateVal);
       rateTr.appendChild(r1); rateTr.appendChild(r2); tb.appendChild(rateTr);
       var hasInv = !!(m.invest.suggest || +A.money.invest);
       var inv = amt(A.money.invest != null ? A.money.invest : (m.invest.suggest || '')), invHint = null;
