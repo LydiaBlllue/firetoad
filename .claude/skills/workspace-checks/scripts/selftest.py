@@ -468,8 +468,8 @@ def m_decision_no_default(r):
 # real sentence the owner rejected on 2026-09-10.
 def m_first_person(r):
     edit(r, "templates/dashboards/finance_dashboard.html",
-         lambda s: s.replace('<span class="lab">What arrives each month</span>',
-                             '<span class="lab">What you drop in, and when I last got it</span>', 1))
+         lambda s: s.replace('<div class="lab">What arrives each month</div>',
+                             '<div class="lab">What you drop in, and when I last got it</div>', 1))
 
 def m_brand_mark_gone(r):
     edit(r, main_dash(r),

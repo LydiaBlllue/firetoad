@@ -71,15 +71,12 @@ body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system
 details.fold{border-top:1px solid var(--grid);scroll-margin-top:16px}
 details.fold>summary{display:flex;align-items:center;gap:16px;padding:10px 0;cursor:pointer;list-style:none}
 details.fold>summary::-webkit-details-marker{display:none}
-details.fold>summary .lab{width:220px;flex-shrink:0;margin:0}
+details.fold>summary .lab{width:170px;flex-shrink:0;margin:0}
 details.fold>summary .fv{flex:1;font-size:13.5px;min-width:0}
 details.fold>summary .fa{font-size:12.5px;color:var(--bar);white-space:nowrap}
 details.fold>summary .fa::before{content:"Show all"}
 details.fold[open]>summary .fa::before{content:"Hide"}
 details.fold>.fb{padding:0 0 14px}
-/* a fold inside a fold sits one step in, so the two levels read as two */
-details.fold .fb details.fold{margin-left:16px}
-details.fold .fb details.fold>summary .lab{width:204px}
 .anchor{scroll-margin-top:16px}
 .side button .dot-n{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-left:auto}
 .main{flex:1;min-width:0}
@@ -445,9 +442,9 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
     <div class="year-legend" id="yearLegend"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
-    <details class="fold" id="secEvYr" style="border-top:0"><summary><span class="lab" id="everydayYrLab">Everyday, month by month</span><span class="fv" id="sumEvYr"></span><span class="fa"></span></summary>
-      <div class="fb"><svg class="year-svg" id="everydayYrChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
-      <div class="cap" id="everydayYrCap"></div></div></details>
+    <div class="lab" id="everydayYrLab">Everyday, month by month</div>
+    <svg class="year-svg" id="everydayYrChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="cap" id="everydayYrCap"></div>
   </div>
 </section>
 
@@ -462,9 +459,9 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
   </div>
   <div class="grid-stats" id="catStats"></div>
   <div class="card" style="margin-bottom:10px">
-    <details class="fold" id="secFlow" style="border-top:0"><summary><span class="lab" id="flowLab">Where the income went</span><span class="fv" id="sumFlow"></span><span class="fa"></span></summary>
-      <div class="fb"><svg id="flowSvg" class="flow" role="img" aria-label="How income splits, and where everyday money went"></svg>
-      <div class="cap" id="flowCap"></div></div></details>
+    <div class="lab" id="flowLab">Where the income went</div>
+    <svg id="flowSvg" class="flow" role="img" aria-label="How income splits, and where everyday money went"></svg>
+    <div class="cap" id="flowCap"></div>
   </div>
   <div class="cat-split" id="catSplit">
     <div class="card">
@@ -575,7 +572,6 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
   <div class="card" style="margin-bottom:10px">
     <div class="lab">By holding</div>
     <table class="dt" id="wsIncBy"></table>
-    <div id="wsIncMore"></div>
   </div>
 </section>
 
@@ -654,7 +650,7 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <section data-pg="upd" hidden>
   <div class="grid-stats" id="updStats"></div>
-  <div id="updList" data-nodraw></div>
+  <div id="updList"></div>
 </section>
 
 
@@ -688,10 +684,14 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
     <div class="cap" id="trackCap"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
-    <details class="fold" id="secArrives"><summary><span class="lab">What arrives each month</span><span class="fv" id="sumArrives"></span><span class="fa"></span></summary>
-      <div class="fb"><table class="dt" id="srcTable"></table><div class="cap" id="srcCap"></div></div></details>
-    <details class="fold" id="secMissing" style="border-bottom:1px solid var(--grid)"><summary><span class="lab">Still missing</span><span class="fv" id="sumMissing"></span><span class="fa"></span></summary>
-      <div class="fb"><div id="gapList"></div><div class="cap" id="gapCap"></div></div></details>
+    <div class="lab">What arrives each month</div>
+    <table class="dt" id="srcTable"></table>
+    <div class="cap" id="srcCap"></div>
+  </div>
+  <div class="card">
+    <div class="lab">Still missing</div>
+    <div id="gapList"></div>
+    <div class="cap" id="gapCap"></div>
   </div>
 </section>
 
@@ -1037,8 +1037,7 @@ window.addEventListener("scroll", markSection, {passive: true});
 // again when one does.
 document.addEventListener("toggle", ev => {
   if(!(ev.target.matches && ev.target.matches("details.fold"))) return;
-  // a fold drawn by a render (Updates) holds no chart, and redrawing for it would loop
-  if(ev.target.open && !ev.target.closest("[data-nodraw]")) render();
+  if(ev.target.open) render();
   markSection();
 }, true);
 // A page merged into another or taken off: an old link or saved state still lands.
@@ -1842,8 +1841,6 @@ function drawFlow(){
   const short = rest < 0;
   $("flowLab").textContent = short ? "Where the plan sends the money" : ym ? "Where the income went" : "Where the income goes";
   const segs = alloc.filter(a => a.v > 0).concat(rest > 0 ? [UNALLOC(rest)] : []);
-  // folded, the line says the split in words: each part of the plan and what it comes to
-  $("sumFlow").textContent = [short ? "" : "Income " + fmt(PLAN.takeHome)].concat(segs.map(a => a.k + " " + fmt(a.v))).filter(Boolean).join(" \u00b7 ");
   const ev = ym ? monthOf(ym).filter(inEveryday) : [];
   const net = CATS.map(c => ({k:c.k, n:c.n, c:c.c, v:ev.filter(e => e.category === c.k).reduce((s,e) => s + e.amount, 0)}));
   const byCat = net.filter(c => c.v > 0.5);
@@ -2014,7 +2011,7 @@ function renderYear(){
 function renderAlwYear(){
   const YM12 = MONTHS_IN(viewYear), svg = $("everydayYrChart");
   const has = YM12.filter(m => MONTHS.includes(m));
-  if(!has.length){ svg.innerHTML = '<text x="470" y="110" text-anchor="middle" font-size="13" fill="var(--muted)">No spending recorded in '+viewYear+' yet.</text>'; $("everydayYrCap").textContent = ""; $("sumEvYr").textContent = "No spending in "+viewYear+" yet"; return; }
+  if(!has.length){ svg.innerHTML = '<text x="470" y="110" text-anchor="middle" font-size="13" fill="var(--muted)">No spending recorded in '+viewYear+' yet.</text>'; $("everydayYrCap").textContent = ""; return; }
   const [W, H] = fit("everydayYrChart", 220), padB=26, padT=26, step=W/12, bw=Math.min(52, step*0.5);
   const ev = YM12.map(m => MONTHS.includes(m) ? everydayOf(m) : null);
   const mx = Math.max(EVERYDAY * 1.15, ...ev.filter(v => v !== null));
@@ -2041,7 +2038,6 @@ function renderAlwYear(){
   // Only months since the plan began had a fund behind them to pay for an overspend.
   const overSum = closed.filter(d => d.m >= PLAN.start).reduce((s,d) => s + Math.max(d.v - EVERYDAY, 0), 0);
   $("everydayYrCap").textContent = closed.length ? "Inside it in " + kept.length + " of " + closed.length + " closed months" : "No month has closed yet";
-  $("sumEvYr").textContent = $("everydayYrCap").textContent;
 }
 
 // ===== Income month-by-month: stacked by source (blue family = income domain) =====
@@ -3584,15 +3580,11 @@ function renderSources(){
   $("gapList").innerHTML = GAPS.map(g =>
     '<div class="alert-row"><span class="sym" style="color:var(--muted)">○</span><span><b>'+g.ep+' — '+g.t+'</b><div class="cap" style="margin-top:1px">'+g.d+'</div></span></div>').join("");
   $("gapCap").innerHTML = GAPS.length ? "" : '<div class="empty">Nothing missing.</div>';
-  $("sumArrives").textContent = SOURCES.length + " source" + (SOURCES.length === 1 ? "" : "s") + (stale ? " \u00b7 " + stale + " older than a month" : " \u00b7 all within a month");
-  $("sumMissing").textContent = GAPS.length ? GAPS.length + " thing" + (GAPS.length === 1 ? "" : "s") + " no file has carried yet" : "Nothing";
 }
 
 // ===== Investment income (findata/ws_activities.csv) =====
 // Money the portfolio produced on its own: dividends, cash interest, stock-lending fees,
 // minus the non-resident tax withheld on US payers. Never previously visible anywhere.
-const WSINC_FIRST = 8;
-let wsIncAll = false;
 function renderWsInc(){
   const tot = k => WSINC.reduce((a,m) => a + (m[k]||0), 0);
   const net = tot("div")+tot("int")+tot("lend")+tot("tax");
@@ -3630,12 +3622,7 @@ function renderWsInc(){
   // that is more than the word ETF.
   const names = {}, fund = n => n.split(" - ").filter(x => !/^ETF$/i.test(x.trim())).pop() || n;
   ((typeof DATA !== "undefined" && DATA.positions) || []).forEach(p => names[p.sym] = names[p.sym] || fund(p.name));
-  const all = Object.entries(by).filter(([k,b]) => b.v > 0).sort((a,b) => b[1].v - a[1].v);
-  // A long table starts with the holdings that pay the most and offers the rest (DESIGN.md §4).
-  const rows = wsIncAll || all.length <= WSINC_FIRST + 2 ? all : all.slice(0, WSINC_FIRST);
-  const rest = all.length - rows.length, restV = all.slice(rows.length).reduce((a,[k,b]) => a + b.v, 0);
-  $("wsIncMore").innerHTML = rest ? '<button class="pill" id="wsIncMoreB" style="margin-top:8px">Show the other '+rest+', '+fmt2(restV)+' together</button>' : "";
-  if($("wsIncMoreB")) $("wsIncMoreB").onclick = () => { wsIncAll = true; renderWsInc(); };
+  const rows = Object.entries(by).filter(([k,b]) => b.v > 0).sort((a,b) => b[1].v - a[1].v);
   $("wsIncBy").innerHTML =
     DataTable([
       {h:"Holding", c: ([k,b]) => '<b>'+k+'</b>'+(names[k] ? ' <span style="color:var(--muted)">'+names[k]+'</span>' : ""), num:false},
@@ -3725,27 +3712,14 @@ function renderUpdates(){
       return StatCard("Next update", dLong(iso), owe ? owe+" statement"+(owe === 1 ? "" : "s")+" still to bring" : "Everything due is in");
     })();
   const SYM = {bad:["\u2717","bad"], warn:["\u26a0","warn"], ok:["\u2713","ok"]};
-  // One line per update, the newest open (DESIGN.md §4, a long page): the line carries the
-  // date and what it came to — the net worth it moved, else what it noticed. Inside, what was
-  // decided without asking, what was asked and the files are each one line that opens; what
-  // it noticed stays in view, because that is the update's news.
-  const plural = (n, w) => n + " " + w + (n === 1 ? "" : "s");
-  // opening a fold redraws the page (charts inside folds need a width), so what is open is kept
-  const was = {}; document.querySelectorAll("#updList details[id]").forEach(d => was[d.id] = d.open);
-  const op = (id, dflt) => ' id="'+id+'"' + ((id in was ? was[id] : dflt) ? " open" : "");
-  let subI = 0;
-  const sub = (lab, n, body) => n ? '<details class="fold"'+op("updS"+(subI++), false)+'><summary><span class="lab">'+lab+'</span><span class="fv">'+n+'</span><span class="fa"></span></summary><div class="fb">'+body+'</div></details>' : "";
-  const line = r => { const nw = r.changed.find(c => /net worth/i.test(c.label));
-    const bad = r.noticed.filter(x => x.sev !== "ok").length;
-    return [nw ? "Net worth "+nw.from+" \u2192 "+nw.to : "", bad ? plural(bad, "thing")+" to look at" : "", r.asked.length ? plural(r.asked.length, "question") : ""].filter(Boolean).join(" \u00b7 ") || nFiles(r); };
-  $("updList").innerHTML = IMPORTS.length ? '<div class="card" style="margin-bottom:10px">' + IMPORTS.map((r, i) =>
-    '<details class="fold"'+op("upd"+i, !i)+(i === IMPORTS.length - 1 ? ' style="border-bottom:1px solid var(--grid)"' : "")+'><summary><span class="lab">'+dLong(r.date)+'</span><span class="fv">'+line(r)+'</span><span class="fa"></span></summary><div class="fb">'
+  $("updList").innerHTML = IMPORTS.length ? IMPORTS.map(r =>
+    '<div class="card" style="margin-bottom:10px"><div class="lab">'+dLong(r.date)+'</div>'
     + (r.changed.length ? metaList(r.changed.map(c => [c.label, c.from+" \u2192 "+c.to])) : "")
     + r.noticed.map(x => { const g = SYM[x.sev] || SYM.warn; return '<div class="alert-row"><span class="sym '+g[1]+'">'+g[0]+'</span><span>'+x.text+'</span></div>'; }).join("")
-    + sub("Decided without asking", r.judged.length, r.judged.map(t => '<div class="alert-row"><span class="sym" style="color:var(--muted)">\u25cf</span><span>'+t+'</span></div>').join(""))
-    + sub("Asked you", r.asked.length, r.asked.map(t => '<div class="alert-row"><span class="sym" style="color:#c98500">?</span><span>'+t+'</span></div>').join(""))
-    + sub("Files", r.files.length, '<div class="cap">'+r.files.join(" \u00b7 ")+'</div>')
-    + '</div></details>').join("") + '</div>'
+    + (r.judged.length ? '<div class="cap" style="margin-top:8px">Decided without asking</div>' + r.judged.map(t => '<div class="alert-row"><span class="sym" style="color:var(--muted)">\u25cf</span><span>'+t+'</span></div>').join("") : "")
+    + (r.asked.length ? '<div class="cap" style="margin-top:8px">Asked you</div>' + r.asked.map(t => '<div class="alert-row"><span class="sym" style="color:#c98500">?</span><span>'+t+'</span></div>').join("") : "")
+    + (r.files.length ? '<div class="cap" style="margin-top:8px">'+nFiles(r)+'</div><div class="cap">'+r.files.join(" \u00b7 ")+'</div>' : "")
+    + '</div>').join("")
     : '<div class="card"><div class="empty">No updates yet. Drop your first statements into inbox and say \u201cupdate dashboards\u201d.</div></div>';
 }
 
