@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.7 — unreleased
+## 1.0.7 — 2026-11-16
 
 - **What arrived for investing is judged by the total.** More than planned no longer reads as
   "No transfer arrived yet" or "Move the rest".
