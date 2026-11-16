@@ -18,11 +18,17 @@ import html
 import json
 import os
 import shutil
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 GH = "https://github.com/lydiablllue/firetoad"
 DOWNLOAD = GH + "/releases/latest"
+
+# The demo's person is the one tools/demo.py invents; the page names her from there.
+sys.path.insert(0, os.path.join(REPO, "tools"))
+from demo import P as DEMO  # noqa: E402
+CITY_ZH = {"Ottawa": "渥太华", "Toronto": "多伦多", "Vancouver": "温哥华", "Montreal": "蒙特利尔", "Calgary": "卡尔加里"}
 
 EN = dict(
     lang="en", path="", other="zh/", other_name="中文", other_lang="zh",
@@ -36,8 +42,9 @@ EN = dict(
           "Mac, checks that every statement adds up, files every purchase and builds one page: what "
           "you spent, what you own, how many years until financial independence."),
     demo="Open the live demo", download="Download for Mac — free",
-    fine=("The demo is a made-up owner's page, nothing to install. The app is signed and notarised "
-          "by Apple, in English and Chinese, free and open source (MIT)."),
+    fine=(f"The demo is {DEMO['first']}'s money — a made-up {DEMO['age']}-year-old in {DEMO['city']}. "
+          "Nothing to install. The app is signed and notarised by Apple, in English and Chinese, free "
+          "and open source (MIT)."),
     phone="The demo is built for a computer screen; on a phone, the pictures below show it.",
     hero_alt="The FIRE page: about 29 to 37 years to financial independence, and what investing more each month changes",
     points=[("No bank login.", "You download your statements; the app reads them on your computer. "
@@ -82,7 +89,7 @@ EN = dict(
           "(python3 app.py)."),
          ("My bank is not on the list.", "Download your transactions as OFX or QFX (the Quicken or "
           "Money choice); most Canadian banks offer it. Failing that, a CSV, or the balance typed once a month.")],
-    end_h="See it with a made-up owner's money first.",
+    end_h="Try it on sample data first.",
     foot=[(GH, "FIRE Toad on GitHub"), (GH + "/blob/main/docs/install.md", "Installing it")],
 )
 
@@ -97,7 +104,8 @@ ZH = dict(
     lede=("每个月把银行对账单放进一个文件夹。FIRE蛙在你的 Mac 上读取它们，核对每份对账单是否对平，"
           "给每笔消费归类，再生成一个页面：花了多少、有多少、离财务自由还有几年。"),
     demo="打开在线 demo", download="下载 Mac 版（免费）",
-    fine="demo 是一位虚构用户的页面，什么都不用装（页面是英文的）。app 经过 Apple 签名和公证，有中文和英文，免费开源（MIT）。",
+    fine=(f"demo 里是 {DEMO['first']} 的钱，一位虚构的、住在{CITY_ZH.get(DEMO['city'], DEMO['city'])}的 {DEMO['age']} 岁上班族。"
+          "什么都不用装（页面是英文的）。app 经过 Apple 签名和公证，有中文和英文，免费开源（MIT）。"),
     phone="demo 是为电脑屏幕做的；在手机上，可以先看下面的图。",
     hero_alt="FIRE 页：离财务自由大约 29 到 37 年，每月多投一点会怎样",
     points=[("不登录银行。", "对账单你自己下载，app 在你的电脑上读，什么都不上传，也不用注册。"),
@@ -133,7 +141,7 @@ ZH = dict(
          ("有 Windows 版吗？", "还没有安装包。在 Windows 上可以用 Python 运行（python3 app.py）。"),
          ("我的银行不在上面。", "把交易下载成 OFX 或 QFX（选 Quicken 或 Money）；加拿大大多数银行都有。"
           "实在没有，就用 CSV，或者每月填一次余额。")],
-    end_h="先用一位虚构用户的钱看看。",
+    end_h="先用示例数据看看。",
     foot=[(GH, "GitHub 上的 FIRE蛙"), (GH + "/blob/main/docs/zh/install.md", "怎么安装")],
 )
 

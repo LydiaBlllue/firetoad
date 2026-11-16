@@ -8,7 +8,7 @@
 
 **你的钱，一页看完。给在加拿大追求财务自由的人。**
 
-**[打开在线 demo →](https://lydiablllue.github.io/firetoad/dashboard.html)** 一位虚构用户的页面，什么都不用装。
+**[打开在线 demo →](https://lydiablllue.github.io/firetoad/dashboard.html)** Emma 的钱，一位虚构的、住在渥太华的 32 岁上班族。什么都不用装。
 
 每个月把银行对账单丢进一个文件夹。工具读取它们，核对每份对账单是否对平，给每笔消费归类，再生成
 一个 HTML 页面：花了多少、有多少、离 FIRE 还有多远。不用登录银行，没有服务器，不用注册任何账号。
