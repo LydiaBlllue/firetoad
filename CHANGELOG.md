@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.6 — unreleased
+## 1.0.6 — 2026-11-16
 
 - **Each page answers one question.** Nothing is folded away; what answers another question moved
   to where that one is asked. *Budget* now answers whether the plan is holding: everyday month by

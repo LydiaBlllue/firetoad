@@ -95,7 +95,7 @@
     bank accounts*) — each name is that card's own heading on the page, never a second vocabulary.
   - **Past a screen and a half, a page says what is further down** (R9): its sections are listed
     under it in the sidebar. Its first screen answers the page's question. **Nothing is folded
-    away** (1.0.5, the owner, after a round of folds that made pages shorter and served nobody):
+    away** (1.0.6, the owner, after a round of folds that made pages shorter and served nobody):
     what does not serve the page's question moves to the page that asks it, or goes; a long
     table starts with its newest rows and offers the rest. A reference page (the Glossary) is
     exempt and marked `ref`.
@@ -180,7 +180,7 @@
 ### Spending
 
 - **Every page answers one question, and what serves another question lives where that one is
-  asked** (1.0.5, after a round of folding that only made pages shorter: the owner, "not serving
+  asked** (1.0.6, after a round of folding that only made pages shorter: the owner, "not serving
   any purpose"). Nothing is folded away; what is not needed for the page's question is moved or
   removed.
 - **This month** — *how much can I still spend this month?* The month on the cursor: **Everyday**
@@ -199,7 +199,7 @@
 - **Income** — *what came in this year, and from where?* It follows the year only: the year's
   income as one card, its total the headline and the sources under it — Investment and Rewards
   (a card's cash back) carry their explanation, since neither reaches chequing — a line for what
-  a borrower paid back, which is never income, and the months by source. No *Kept* here (1.0.5):
+  a borrower paid back, which is never income, and the months by source. No *Kept* here (1.0.6):
   the one share of income on the page is the savings rate, on FIRE, measured on what work
   brought in; a share that counted gifts as earned said something else under the same word.
 - **Investment income**: what was paid, a month on average, its share of spending, the tax
@@ -242,7 +242,7 @@
   the lower end, above, how much is beyond the upper end. Nothing else: no advice on what to do
   with it, and no colour beyond the one word.
 
-- **Budget** — *is my plan holding?* It follows the month cursor and the year (1.0.5). First the
+- **Budget** — *is my plan holding?* It follows the month cursor and the year (1.0.6). First the
   answer, **Everyday, month by month** (everyday spending against today's everyday amount, the
   overspend in red, the open month faded, and in how many closed months it held); then the plan;
   then **Where the income went** for the month on the cursor (the plan as flows, each marked
@@ -270,7 +270,7 @@
 - **Drawdown & care** answers *will the money last as long as I do?* First the answer, two
   cards side by side: what a steady return gives (*Lasts to 95* or *Runs out at 88*, at the
   return setting) and how often real history did as well (*Lasted in 11 of 46*, in amber under
-  nine in ten) — one without the other is the friendly half (1.0.5, the owner). Then the ages
+  nine in ten) — one without the other is the friendly half (1.0.6, the owner). Then the ages
   that move it: stop adding, start taking, light care at home, a care home, which home, and an
   **age** chart to 95 (blue adding, green growing alone, amber taking out, then care). The ages
   start where the FIRE page ends — adding until the year the money reaches the target, taking
@@ -331,7 +331,7 @@
   belongs to no account (`standalone`) is one small line above the table. With none, nothing is
   shown — no card saying all is well. The source is `findata/register/accounts.json`, **a
   register, not a second set of books**. Under the table, **What no file shows yet** (`GAPS`, from
-  Statements in 1.0.5), and **Every row in your bank accounts** (1.0.1, from Income in 1.0.5):
+  Statements in 1.0.6), and **Every row in your bank accounts** (1.0.1, from Income in 1.0.6):
   each typed ledger row — transfers, fees and e-Transfers one row each, newest first, sixty at a
   time, the year beside a date that is not this year's — with a search that reads the label and
   the bank's own words, and one pill per account when there is more than one.
