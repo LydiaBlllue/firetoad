@@ -1615,7 +1615,7 @@ function renderHome(){
   // A row opens in place to the accounts behind it; "where is my cash" should not need another page.
   const acctList = (rows, total) => '<div class="both-accts" hidden>' + rows.map(a =>
       '<div class="both-acct"><span>'+(a.i ? '<span class="i">'+a.i+'</span>' : "")+a.n
-      + (a.cur ? '<span class="a">'+a.cur+'</span>' : "") + (a.asof ? '<span class="a">'+MN[Number(a.asof.slice(5,7))-1]+' '+Number(a.asof.slice(8,10))+(a.asof.slice(0,4) !== TODAY.slice(0,4) ? ', '+a.asof.slice(0,4) : '')+'</span>' : "")+'</span>'
+      + (a.cur ? '<span class="a">'+a.cur+'</span>' : "") + (a.note ? '<span class="a">'+a.note+'</span>' : "") + (a.asof ? '<span class="a">'+MN[Number(a.asof.slice(5,7))-1]+' '+Number(a.asof.slice(8,10))+(a.asof.slice(0,4) !== TODAY.slice(0,4) ? ', '+a.asof.slice(0,4) : '')+'</span>' : "")+'</span>'
       + '<span class="v num">'+fmt(a.v)+'</span><span class="p num">'+Math.round(pc(a.v, total))+'%</span></div>').join("") + '</div>';
   const opens = n => n ? ' role="button" tabindex="0" aria-expanded="false"' : "";
   const caret = n => n ? '<span class="caret">\u25B8</span>' : "";
@@ -2481,7 +2481,7 @@ function renderSettings(){
     const rows = SETTINGS.filter(r => r.stage === st);
     return rows.length ? '<div class="set-grp"><div class="lab">' + SET_STAGE[st] + '</div>' + rows.map(r => {
       const meta = setMeta(r);
-      return '<div class="set-row"><div><div class="n">' + r.n + '</div><div class="why">' + r.why + '</div></div>'
+      return '<div class="set-row"><div><div class="n">' + r.n + '</div><div class="why">' + r.why + (r.key === "growth" ? mixPast() : "") + '</div></div>'
         + '<div class="set-ctl">' + setControl(r) + (meta ? '<div class="set-meta">' + meta + '</div>' : "") + '</div></div>';
     }).join("") + '</div>' : "";
   }).join("");
@@ -2533,7 +2533,7 @@ function renderSafety(){
         : state === "above" ? '<div class="cap">' + fmt(c.money - band[1] * c.cost) + " is beyond " + band[1] + " months.</div>" : "");
     wireSettings($("safeRange"));
   }
-  const row = a => '<div class="both-acct"><span>'+(a.i ? '<span class="i">'+a.i+'</span>' : "")+a.n+(a.cur ? '<span class="a">'+a.cur+'</span>' : "")+'</span><span class="v num">'+fmt(a.v)+'</span></div>';
+  const row = a => '<div class="both-acct"><span>'+(a.i ? '<span class="i">'+a.i+'</span>' : "")+a.n+(a.cur ? '<span class="a">'+a.cur+'</span>' : "")+(a.note ? '<span class="a">'+a.note+'</span>' : "")+'</span><span class="v num">'+fmt(a.v)+'</span></div>';
   $("safeAccts").innerHTML = '<div class="lab">Where the money is</div>'
     + ((S.accts || []).length ? (S.accts || []).map(row).join("") : '<div class="empty">No account you could spend from today.</div>')
     + ((S.debts || []).length ? '<div class="lab" style="margin-top:12px">Due now</div>' + S.debts.map(row).join("") : "")
@@ -2635,6 +2635,10 @@ const baseDrift = () => { const m = measuredBase(); return m === null || !(PLAN_
 // The answer is the years at the pace money really reaches the broker; under it, the savings
 // rate and what the money kept each month does. The lever is investing a little more. Every
 // number is savings.py's (SAVINGS); the lines in the chart are drawn from the same returns.
+// What the portfolio's mix today earned a year after inflation over the whole record (RET_HIST.avg),
+// said beside the return setting: a fact about the past, never advice (1.0.7, the owner).
+const mixPast = () => RET_HIST.avg == null || !RET_HIST.years ? "" : " Your mix today earned about "
+  + (Math.round(RET_HIST.avg * 1000) / 10) + "% a year after inflation from " + RET_HIST.years[0][0] + " to " + RET_HIST.years[RET_HIST.years.length - 1][0] + ".";
 const yrsTxt = y => y[0] === null ? null : y[2] < 0.5 ? "0" : Math.round(y[2]) === Math.round(y[0]) ? String(Math.round(y[1])) : Math.round(y[2])+"–"+Math.round(y[0]);
 function renderFi(){
   const S = SAVINGS, on = S.target !== undefined;
@@ -2695,7 +2699,7 @@ function renderFi(){
   });
   $("fiChart").innerHTML = out;
   $("fiCap").innerHTML = "The dashed line is the target. Each line is what you have invested, growing "+g+"% a year after inflation ("
-    + '<a href="#" onclick="setPage(\'set\');return false">your setting</a>); the shading is '+Math.round(R[0]*100)+"% to "+Math.round(R[2]*100)+"%. Roughly, not a date.";
+    + '<a href="#" onclick="setPage(\'set\');return false">your setting</a>); the shading is '+Math.round(R[0]*100)+"% to "+Math.round(R[2]*100)+"%. Roughly, not a date." + mixPast();
 }
 function renderFire(){
   renderFi();

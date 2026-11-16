@@ -260,7 +260,13 @@ def return_history(d, positions, fgn_funds, by_id):
     tot = sum(mix.values()) or 1
     w = {k: round(v / tot, 4) for k, v in mix.items() if v > 0}
     real = [[r[0], round((1 + sum(w[k] * r[col[k]] for k in w)) / (1 + r[5]) - 1, 5)] for r in rows]
-    return {"mix": w, "years": real, "source": d["returns"]["source"], "asof": d["returns"]["asof"]}
+    # what this mix earned a year, after inflation, over the whole record: said beside the return
+    # setting (1.0.7), a fact about the past, never a suggestion
+    g = 1.0
+    for _, x in real:
+        g *= 1 + x
+    avg = round(g ** (1 / len(real)) - 1, 4) if real else None
+    return {"mix": w, "years": real, "avg": avg, "source": d["returns"]["source"], "asof": d["returns"]["asof"]}
 
 
 def benchmark_run(d):
@@ -573,7 +579,7 @@ def derive(d):
     # A card paid past zero owes nothing: the bank owes the owner the difference, so it is counted
     # as spendable cash rather than as a debt below zero.
     def credit_as_cash(a):
-        return dict(a, side="asset", role="buffer", reach="today", against=None)
+        return dict(a, side="asset", role="buffer", reach="today", against=None, credit=True)
     items = []
     for a in accs:
         if a.get("src") in (None, "none") and a.get("balance") is None:
@@ -718,8 +724,10 @@ def derive(d):
         return [[reach_lab[r][0], v, reach_lab[r][1], r] for r, v in t.items() if v]
     def one_account(a, v):
         cur = a.get("cur", "CAD")
+        # a card paid past zero is listed as money with why (1.0.7: "a credit card counted as money")
         return {"n": a.get("label") or a["name"], "i": "" if a.get("role") == "owed" else a.get("inst", ""),
-                "v": round(v), "asof": a.get("asof") or "", "cur": cur if cur != "CAD" else ""}
+                "v": round(v), "asof": a.get("asof") or "", "cur": cur if cur != "CAD" else "",
+                **({"note": "credit in your favour"} if a.get("credit") else {})}
     def part_accounts(role, where, total):
         """The accounts behind a row, largest first. Rounded per account, the dollar that can
         drift settled on the largest, so the list sums to the row it opens under."""
