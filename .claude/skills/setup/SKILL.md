@@ -257,7 +257,7 @@ Offer a default if they hesitate, and say plainly that it is a starting point an
 ```
 
 Also ask, once: **is any account set aside** — earmarked for a purpose, so it should sit outside
-the portfolio entirely? And **how many holdings do they want to end up with** (`maxHoldings`)?
+the portfolio entirely? There is no limit on how many holdings: do not ask for one.
 
 **Do not ask about their strategy beyond this.** Do not ask about tiers, tax placement, or
 triggers. Those exist on the page for whoever wants to write them, and pushing a stranger's
@@ -359,8 +359,7 @@ Three things, in this order:
   ],
   "plan": {"takeHome":4200,"invest":900,"everyday":1800,"fire":{"goal":true,"asked":"2026-09-06"}},
   "rules": {
-    "buckets": [{"key":"rest","name":"Holdings","catchAll":true}],
-    "maxHoldings": 8
+    "buckets": [{"key":"rest","name":"Holdings","catchAll":true}]
   },
   "foreign": null
 }

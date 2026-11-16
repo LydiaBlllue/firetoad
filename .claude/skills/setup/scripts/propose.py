@@ -400,11 +400,13 @@ def propose(root, inbox):
     grow_ids = {a["id"] for a in accounts if a.get("role") == "grow"}
     tickers = sorted({r["Symbol"] for r in (holdings[1] if holdings else [])
                       if r.get("Symbol") and r.get("Security Type") != "CURRENCY" and r.get("Account Number") in grow_ids})
-    rules = {"buckets": [{"key": "rest", "name": "Holdings", "catchAll": True}], "maxHoldings": len(tickers) or 10}
+    # no cap on how many holdings (2026-11-16, user 001): an owner who never set one was told
+    # "inside your limit of 16", the count of the day written in as a rule
+    rules = {"buckets": [{"key": "rest", "name": "Holdings", "catchAll": True}]}
     if tickers:
         src("rules", f"{len(tickers)} holdings in the invested accounts; one bucket, no target range, by default")
         questions.append({"id": "buckets", "q": f"You hold {len(tickers)}: {', '.join(tickers)}. Group them into buckets, and does one "
-                                                f"have a target range? And how many holdings do you want at most?"})
+                                                f"have a target range?"})
 
     # --- the rest, which no file carries
     holder = holders.most_common(1)[0][0] if holders else None

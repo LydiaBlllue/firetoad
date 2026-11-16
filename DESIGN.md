@@ -376,9 +376,11 @@
 - Charts have hover tooltips (dark bubble, white text), **one fact per line** — break with
   `<br>`, never string them on `·`.
 - Legends isolate a single category on click: the selection is highlighted and the rest dim.
-- **Explanations** (§5b′): a term with a dotted underline shows its dictionary entry on hover
-  and opens the Glossary on click; a tappable number shows its sum. Both use one floating light
-  card, clamped to the viewport, closed by clicking away or Esc.
+- **Explanations** (§5b′): a term with a dotted underline shows its dictionary entry when it is
+  clicked (or Enter on it), in a card that stays until a click elsewhere or Esc, with *In the
+  Glossary →* at its foot — the Glossary is one more click, never the first (1.0.7, the owner:
+  nothing opens by itself, and one click does not take the reader off the page). A tappable
+  number shows its sum on hover. Both use one floating light card, clamped to the viewport.
 - **There is no `?` mark.** Every explanation is a term or a sum.
 
 ## 5a. The top of the page, and the page header
@@ -447,7 +449,7 @@ these jobs is deleted, not shortened.
 | **status** | the one fact the value cannot show | optional; at most seven words, one fact, no `·`, never a restatement of the label, never where a number came from. `On track for May 2039`, `Both transfers landed`. |
 
 - **Explanations are never on the card.** A word that needs one is a **term**: dotted underline,
-  hover for its entry, click for the Glossary page. A number that needs one is **tappable**:
+  click for its entry, and from the entry one more click for the Glossary. A number that needs one is **tappable**:
   hover or tap it for how yours is worked out.
 - **A term's entry is a dictionary entry**, the same for anyone: the word, its part of speech,
   one sentence, a formula where there is one, an example in round numbers, *see also*. Never the

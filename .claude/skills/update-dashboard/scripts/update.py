@@ -94,6 +94,9 @@ NEW_MERCHANT_CATEGORY = "Other"      # a merchant nobody has decided, until the 
 STARTER = os.path.join(os.path.dirname(SKILL), "setup", "data", "starter_merchants.json")
 
 
+TECH_MAX_HOLDINGS = 500   # a page limit, not an owner's: no limit is set on how many they hold
+
+
 def _words(s):
     return " " + re.sub(r"[^A-Z0-9&]+", " ", s.upper().replace("'", "").replace("\u2019", "")).strip() + " "
 
@@ -1304,22 +1307,25 @@ def noticed_lines(ws, out, plan):
             lines.append({"sev": "ok" if ok else "warn",
                           "text": f"Dry powder is {inv['dryPct']}%, {'inside' if ok else 'outside'} your {lo}–{hi}% band."
                                   + ("" if ok else " Rebalance when you next add money.")})
-    cap = rules.get("maxHoldings")
-    if cap:
-        ok = inv["holdings"] <= cap
-        lines.append({"sev": "ok" if ok else "warn",
-                      "text": f"{inv['holdings']} holdings, {'inside' if ok else 'over'} your limit of {cap}."
-                              + ("" if ok else " Pick one to let go before the next buy.")})
+    # No limit on how many holdings is the owner's (2026-10-26, again 2026-11-16): the page says
+    # how many and judges nothing. Only a count no page was built for is said, as a fact about
+    # the page, never as a rule about the portfolio.
+    if inv["holdings"] > TECH_MAX_HOLDINGS:
+        lines.append({"sev": "warn", "text": f"{inv['holdings']} holdings: past {TECH_MAX_HOLDINGS} the Holdings page draws slowly."})
     dep = out.get("WSDEP") or []
     ym = (ws.today.replace(day=1) - datetime.timedelta(days=1)).strftime("%Y-%m")
     last = next((d for d in dep if d["ym"] == ym), None)
     half = round(rebuild.flow_totals(ws.funds["plan"])["invest"] / 2, 2)
     if last:
         mon = LONG[int(ym[5:]) - 1]
-        if last["nRule"] >= 2:
-            lines.append({"sev": "ok", "text": f"{mon} kept the rule: {last['nRule']} deposits of {money(half)} reached the broker."})
+        # judged by the month's total, not by how many deposits were exactly half (1.0.7: more than
+        # planned arrived and the note still said to move the rest)
+        plan_m, got = half * 2, last["amt"]
+        if got >= plan_m - 0.5:
+            more = f", {money(got - plan_m)} more than the {money(plan_m)} planned" if got > plan_m + 0.5 else ""
+            lines.append({"sev": "ok", "text": f"{mon} kept the rule: {money(got)} reached the broker{more}."})
         else:
-            lines.append({"sev": "warn", "text": f"{mon} shows {money(last['amt'])} reaching the broker against the {money(half * 2)} you planned. Move the rest when you can."})
+            lines.append({"sev": "warn", "text": f"{mon} shows {money(got)} reaching the broker against the {money(plan_m)} you planned. Move the rest when you can."})
     everyday = rebuild.flow_totals(ws.funds["plan"]).get("everyday")
     sp = spending_by_month(ws.root)
     if everyday and sp:

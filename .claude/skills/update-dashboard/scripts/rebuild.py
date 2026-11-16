@@ -631,7 +631,20 @@ def derive(d):
 
     R_inv, R_earm, R_cash, R_other = role_ca["grow"], by_role["set-aside"], role_ca["buffer"], role_ca["none"]
     invested = sum(v for a, v in ca if a.get("role") == "grow")
-    net_worth = sum(role_ca.values()) - R_debt        # the Canadian side; the page adds FOREIGN_CAD
+    # Net worth is the exact sum rounded once (1.0.7: Accounts and net worth differed by a dollar,
+    # each side rounding its own parts). The Canadian side is what is left of it after the
+    # foreign figure; the dollar the rounded rows disagree by goes on the largest role and the
+    # largest reach row, so both cuts still add to it.
+    exact = sum(v for _, v in ca) - sum(v for _, v in liabs) + (fj["total"] * rate_f if fgn_cad else 0)
+    net_worth = round(exact) - fgn_cad                # the Canadian side; the page adds FOREIGN_CAD
+    off = net_worth - (sum(role_ca.values()) - R_debt)
+    if off:
+        big = max(role_ca, key=lambda k: role_ca[k])
+        role_ca[big] += off
+        by_role[big] += off
+        bigr = max((r for r in by_reach if r != "abroad"), key=lambda k: by_reach[k])
+        by_reach[bigr] += off
+        R_inv, R_earm, R_cash, R_other = role_ca["grow"], by_role["set-aside"], role_ca["buffer"], role_ca["none"]
     dry_syms = set()
     for b in d["rules"].get("buckets", []):
         if b.get("target"):
