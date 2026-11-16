@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.0.6 — 2026-11-16
+
+- **Each page answers one question.** Nothing is folded away; what answers another question moved
+  to where that one is asked. *Budget* now answers whether the plan is holding: everyday month by
+  month first (it moved from Year), then the plan, then where the month's income went (it moved
+  from This month), with the month and year to choose. *This month* keeps what is left to spend
+  and where it went; the month's total is a sentence, and a usual month is compared only once the
+  month has closed. *Updates* shows one update in full and lists every update to choose from.
+  *Statements* says first what is still to bring, and the grid gives each source's latest date;
+  what no file shows yet moved to *Accounts*. *Investment income* lists the holdings that paid
+  nine-tenths and the rest in one line.
+- **Drawdown & care starts where FIRE ends, and its answer says both halves.** The money is
+  added until the year the FIRE page reaches the target and taken from the year after (it used to
+  start from adding nothing from today). The answer is two cards: what a steady return gives, and
+  how often real history did as well. The ages and the chart come next; then the money and care
+  side by side; then the history. Nothing on it is folded.
+- **Income is one question**, what came in and from where. Every row in your bank accounts moved
+  to *Accounts*, all years, newest first. *Kept* left the page: the one share of income is the
+  savings rate on FIRE.
+- **Net worth over time says when a month is missing.** A month with no update used to be crossed
+  by a solid line as if it were known; the line across it is dashed now, and the caption names it.
+  Past two years the axis is marked by year, past three dozen months the dots give way to the
+  line, and the labels never crowd at a narrow window.
+
+- **The page is today's when you open it.** It used to count ages, the month and what is due
+  from the day it was last built; the app now rebuilds it first when that day is not today.
+- **A month that has ended but whose statements are not all in** says so, instead of "still
+  open".
+- *Smaller*: Budget's flow of the month is drawn at the width it is shown, and reads in a narrow
+  window; the drawdown chart's ages no longer collide at the start, and a label near its right
+  edge is no longer cut off. The months-to-go sums of the old three-line chart are gone.
+
 ## 1.0.5 — 2026-11-15
 
 - **The setup ends with everything in place** (2026-11-15). When the first import leaves

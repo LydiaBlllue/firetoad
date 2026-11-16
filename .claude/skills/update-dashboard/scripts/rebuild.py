@@ -426,8 +426,6 @@ def derive(d):
     out["COMMITTED_KEEP"] = flow_totals(d["funds"]["plan"])["committedKeep"]
     out["MONTH_SKIP"] = plan.get("skipMonths", {})
     ret = plan.get("retirement", {})
-    out["SCENARIOS"] = ret.get("scenarios", [])
-    out["HORIZON"] = ret.get("horizon", 25)
     out["ANCHOR_Y"] = ret.get("anchorYear", int(today[:4]))
     out["LIFE_TO"] = ret.get("lifeTo", 95)
     # The return the years-to-go figures assume: the owner's setting (settings.py `growth`), else
@@ -812,8 +810,7 @@ def derive(d):
     }
     # The FIRE figures at the plan's own values (fire.py): the page shows them, the figures table
     # in FINANCE.md is written from them, and check_render's R8 holds the page's own sums to them.
-    out["FIRE"] = fire.figures(out["INVEST"]["portfolio"], plan.get("planBase"), flow_totals(d["funds"]["plan"])["invest"],
-                               out["SCENARIOS"], out["HORIZON"], out["ANCHOR_Y"], today, out["COAST_R"],
+    out["FIRE"] = fire.figures(out["INVEST"]["portfolio"], plan.get("planBase"), today, out["COAST_R"],
                                prof.get("born"), out["LIFE_TO"])
     # The savings rate and the years it takes at that rate (savings.py): what work delivered
     # against what was spent, on the same months the usual month is made of.
@@ -872,7 +869,8 @@ def derive(d):
     # care would need, how many starting years on record it survives. R8 holds the page to it.
     out["DRAWDOWN"] = drawdown.figures(out["INVEST"]["portfolio"], plan.get("planBase"), flow_totals(d["funds"]["plan"])["invest"],
                                        out["COAST_R"], out["LTC_TIERS"], out["HOME_CARE"], out["PENSIONS"],
-                                       (out["RET_HIST"] or {}).get("years"), prof.get("born"), out["LIFE_TO"], today)
+                                       (out["RET_HIST"] or {}).get("years"), prof.get("born"), out["LIFE_TO"], today,
+                                       (out["SAVINGS"].get("years") or [None, None])[1])
     for p in positions:
         del p["_id"]
     out["FX"] = {"rate": rate, "asof": d["fx"].get("asof"), "quality": d["fx"].get("quality")}

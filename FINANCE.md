@@ -52,9 +52,10 @@
     they are this tool's calibration of the planning figure.
 - Net worth covers every account in every currency: the Canadian side plus foreign-currency
   accounts at the reference rate in `foreign.json`.
-- The trajectory chart anchors at `plan.json` `retirement.anchorYear` and projects the three
-  scenarios there; the late-life care model (home care, then long-term care tiers) is data in the
-  same file.
+- The late-life care model (home care, then long-term care tiers) is data in `plan.json`
+  `retirement`. Its `scenarios` and `horizon` drew the three-line trajectory until 1.0.6; nothing
+  reads them now (the years to go are §1a's), and they stay in the file so its shape does not
+  change.
 
 ## 1a. Years to financial independence, and the savings rate
 

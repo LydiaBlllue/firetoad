@@ -135,6 +135,15 @@ class TheConstant(unittest.TestCase):
         self.assertEqual(f["now"]["atStop"], 500000)
         self.assertIsNone(f["now"]["bt"])
 
+    def test_it_starts_where_the_fire_page_ends(self):
+        # adding until the year the money reaches the target (14.2 years from 36 is 51), taking from the next
+        f = dd.figures(500000, 3000, 1000, 0.05, [LTC], HOME, [], [], 1990, 95, "2026-01-01", fi_years=14.2)
+        self.assertEqual((f["at"]["stop"], f["at"]["draw"]), (51, 52))
+
+    def test_without_that_year_it_starts_from_the_old_ages(self):
+        f = dd.figures(500000, 3000, 1000, 0.05, [LTC], HOME, [], [], 1990, 95, "2026-01-01", fi_years=None)
+        self.assertEqual((f["at"]["stop"], f["at"]["draw"]), (36, 55))
+
     def test_money_gone_before_care_has_a_shortfall_and_no_extra_for_care(self):
         f = dd.figures(1000, 3000, 0, 0.05, [LTC], HOME, [], [], 1990, 95, "2026-01-01")["now"]
         self.assertLess(f["dead"], 80)

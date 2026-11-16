@@ -68,15 +68,6 @@ body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system
 .side .subs button{font-size:12.5px;height:26px;padding:0 8px;color:var(--ink-2);border-radius:6px}
 .side .subs button.on{color:var(--ink);font-weight:600}
 /* A section of a long page folded to one line: its name, what it comes to, and the way in. */
-details.fold{border-top:1px solid var(--grid);scroll-margin-top:16px}
-details.fold>summary{display:flex;align-items:center;gap:16px;padding:10px 0;cursor:pointer;list-style:none}
-details.fold>summary::-webkit-details-marker{display:none}
-details.fold>summary .lab{width:170px;flex-shrink:0;margin:0}
-details.fold>summary .fv{flex:1;font-size:13.5px;min-width:0}
-details.fold>summary .fa{font-size:12.5px;color:var(--bar);white-space:nowrap}
-details.fold>summary .fa::before{content:"Show all"}
-details.fold[open]>summary .fa::before{content:"Hide"}
-details.fold>.fb{padding:0 0 14px}
 .anchor{scroll-margin-top:16px}
 .side button .dot-n{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-left:auto}
 .main{flex:1;min-width:0}
@@ -104,6 +95,8 @@ h1{font-size:21px;font-weight:700;letter-spacing:-.2px}
 .pill.sel{background:var(--ink);color:var(--page);border-color:var(--ink);font-weight:600}
 .grid-stats{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
 .grid-stats > .card{flex:1 1 190px;max-width:340px}
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:1119px){.paths{grid-template-columns:1fr}}
 /* what is kept each month, split by its job (the FIRE page) */
 .kept{margin-top:14px}
 .kept .sl{font-size:13px;color:var(--ink-2);margin-bottom:6px}
@@ -440,11 +433,6 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
     <svg class="year-svg" id="yearChart" viewBox="0 0 940 280" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="year-legend" id="yearLegend"></div>
   </div>
-  <div class="card" style="margin-bottom:10px">
-    <div class="lab" id="everydayYrLab">Everyday, month by month</div>
-    <svg class="year-svg" id="everydayYrChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
-    <div class="cap" id="everydayYrCap"></div>
-  </div>
 </section>
 
 <section data-pg="cat" hidden>
@@ -454,14 +442,10 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
     <div class="big num" id="freeBig"></div>
     <div class="bud-track" style="margin-top:10px;max-width:720px"><div class="bud-fill" id="freeFill"></div><div class="bud-tick" id="freeTick"></div></div>
     <div id="freeMeta"></div>
+    <div id="catTotal"></div>
   </div>
   </div>
   <div class="grid-stats" id="catStats"></div>
-  <div class="card" style="margin-bottom:10px">
-    <div class="lab" id="flowLab">Where the income went</div>
-    <svg id="flowSvg" class="flow" role="img" aria-label="How income splits, and where everyday money went"></svg>
-    <div class="cap" id="flowCap"></div>
-  </div>
   <div class="cat-split" id="catSplit">
     <div class="card">
       <div class="lab">Spending by category</div>
@@ -476,19 +460,16 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 </section>
 
 <section data-pg="income" hidden>
-  <div class="grid-stats anchor" id="secIncome"><div id="incStats" style="display:contents"></div></div>
-  <div class="card" style="margin-bottom:10px"><div class="lab" id="yrIncLab">By source</div><div id="yrIncCats"></div></div>
+  <div class="card" style="margin-bottom:10px">
+    <div class="lab" id="incLab"></div>
+    <div class="baseline-hero num" id="incBig"></div>
+    <div id="yrIncCats" style="margin-top:6px"></div>
+  </div>
   <div class="card">
     <div class="lab">Each month, by source</div>
     <svg class="year-svg" id="incChart" viewBox="0 0 940 280" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="year-legend" id="incLegend"></div>
     <div class="cap" id="incChartCap"></div>
-  </div>
-  <div class="card anchor" style="margin-top:10px" id="secChq">
-    <div class="lab" id="chqLab">Every row in chequing</div>
-    <div class="chq-ctl"><input type="search" id="chqQ" placeholder="Search by merchant or description" aria-label="Search chequing rows"><div class="pills" id="chqAcct"></div></div>
-    <table class="dt" id="chqTable"></table>
-    <div id="chqMore"></div>
   </div>
 </section>
 
@@ -507,10 +488,20 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <section data-pg="budget" hidden>
   <div class="card" style="margin-bottom:10px">
+    <div class="lab" id="everydayYrLab">Everyday, month by month</div>
+    <svg class="year-svg" id="everydayYrChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="cap" id="everydayYrCap"></div>
+  </div>
+  <div class="card" style="margin-bottom:10px">
     <div class="lab" id="splitLab">How each month's income is split</div>
     <div class="split" id="splitBar"></div>
     <div id="splitRows"></div>
     <div id="splitNote"></div>
+  </div>
+  <div class="card" style="margin-bottom:10px">
+    <div class="lab" id="flowLab">Where the income went</div>
+    <svg id="flowSvg" class="flow" role="img" aria-label="How income splits, and where everyday money went"></svg>
+    <div class="cap" id="flowCap"></div>
   </div>
   <div class="card" style="margin-bottom:10px" id="fundCard" hidden>
     <div class="lab">Funds</div>
@@ -598,20 +589,9 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 </section>
 
 <section data-pg="coast" hidden>
+  <div class="paths" id="drawAns" style="margin-bottom:10px"></div>
   <div class="card" style="margin-bottom:10px">
-    <div class="say" id="drawSay" style="margin-bottom:10px"></div>
-    <details class="fold" id="secMoney"><summary><span class="lab">The money</span><span class="fv" id="sumMoney"></span><span class="fa"></span></summary>
-      <div class="fb"><div id="coastMeta"></div></div></details>
-    <details class="fold" id="secCare"><summary><span class="lab">Care</span><span class="fv" id="sumCare"></span><span class="fa"></span></summary>
-      <div class="fb"><div id="careMeta"></div></div></details>
-    <details class="fold" id="secLasted" style="border-bottom:1px solid var(--grid)"><summary><span class="lab" id="btLab">Would it have lasted?</span><span class="fv" id="sumLasted"></span><span class="fa"></span></summary>
-      <div class="fb">
-        <div class="grid-stats" id="btStats" style="margin:8px 0 4px"></div>
-        <svg class="year-svg" id="btChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
-        <div class="phase-key" id="btKey"></div>
-        <div id="btMeta"></div>
-        <div id="btNote"></div>
-      </div></details>
+    <div class="say" id="drawSay"></div>
     <div style="margin:10px 0 2px">
       <div class="ctl"><span class="cl">Stop adding at</span><input type="range" id="stopAge" min="26" max="65" step="1"><span class="cv" id="stopAgeV"></span></div>
       <div class="ctl"><span class="cl">Start taking at</span><input type="range" id="drawAge" min="27" max="75" step="1"><span class="cv" id="drawAgeV"></span></div>
@@ -622,6 +602,18 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
     <svg class="year-svg" id="coastChart" viewBox="0 0 940 300" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="phase-key" id="coastKey"></div>
     <div id="coastNote"></div>
+  </div>
+  <div class="paths" style="margin-bottom:10px">
+    <div class="card anchor" id="secMoney"><div class="lab">The money</div><div id="coastMeta"></div></div>
+    <div class="card anchor" id="secCare"><div class="lab">Care</div><div id="careMeta"></div></div>
+  </div>
+  <div class="card anchor" id="secLasted" style="margin-bottom:10px">
+    <div class="lab" id="btLab">Would it have lasted?</div>
+    <div class="grid-stats" id="btStats" style="margin:8px 0 4px"></div>
+    <svg class="year-svg" id="btChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="phase-key" id="btKey"></div>
+    <div id="btMeta"></div>
+    <div id="btNote"></div>
   </div>
 </section>
 
@@ -662,11 +654,22 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <section data-pg="acct" hidden>
   <div class="grid-stats" id="acctStats"></div>
-  <div class="card" style="margin-bottom:10px">
+  <div class="card anchor" id="secAccts" style="margin-bottom:10px">
     <div class="lab">Every account, by institution</div>
     <div id="acctLoose"></div>
     <table class="dt" id="acctTable"></table>
     <div class="cap" id="acctCap"></div>
+  </div>
+  <div class="card anchor" id="secGaps" style="margin-bottom:10px">
+    <div class="lab">What no file shows yet</div>
+    <div id="gapList"></div>
+    <div class="cap" id="gapCap"></div>
+  </div>
+  <div class="card anchor" id="secRows" style="margin-bottom:10px">
+    <div class="lab" id="chqLab">Every row in your bank accounts</div>
+    <div class="chq-ctl"><input type="search" id="chqQ" placeholder="Search by merchant or description" aria-label="Search bank rows"><div class="pills" id="chqAcct"></div></div>
+    <table class="dt" id="chqTable"></table>
+    <div id="chqMore"></div>
   </div>
 </section>
 
@@ -684,18 +687,9 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
   <div class="card" style="margin-bottom:10px">
     <div class="lab">Filed each month</div>
     <div class="pills" id="srcYears" style="margin:0 0 12px"></div>
+    <div class="say" id="trackBring" style="margin-bottom:10px"></div>
     <div id="tracker"></div>
     <div class="cap" id="trackCap"></div>
-  </div>
-  <div class="card" style="margin-bottom:10px">
-    <div class="lab">What arrives each month</div>
-    <table class="dt" id="srcTable"></table>
-    <div class="cap" id="srcCap"></div>
-  </div>
-  <div class="card">
-    <div class="lab">Still missing</div>
-    <div id="gapList"></div>
-    <div class="cap" id="gapCap"></div>
   </div>
 </section>
 
@@ -828,6 +822,10 @@ const ymLabel = ym => MN[Number(ym.slice(5))-1] + (ym.slice(0,4) !== TODAY.slice
 const pc = (a,b) => b ? (a/b)*100 : 0;
 const cap1 = t => t.charAt(0).toUpperCase()+t.slice(1);
 const ymFull = ym => MN[Number(ym.slice(5))-1] + " " + ym.slice(0,4);
+// A month past what every statement reaches is open for one of two reasons, said apart: the
+// calendar has not finished it, or it has and a statement for it has not come yet.
+const notInYet = ym => ym >= TODAY.slice(0,7) ? ymFull(ym)+" is still going, so its totals will rise."
+  : "Not every statement for "+ymFull(ym)+" is in yet, so its totals will rise.";
 function daysElapsed(ym){
   if(ym === TODAY.slice(0,7)) return Number(TODAY.slice(8,10));
   const [y,m] = ym.split("-").map(Number); return new Date(y,m,0).getDate();
@@ -868,7 +866,7 @@ function setYear(y){
 const PROFILE = {"schema": 18, "demo": true, "owner": "Emma Roy", "born": 1994, "importDay": 1};
 const BROKER = "Wealthsimple";          // the institution that holds the portfolio, from accounts.json
 const CP = INVEST.counterparty || null;   // who pays money back, from cashflow.json
-const VERSION = "1.0.5";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
+const VERSION = "1.0.6";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
 // The brand is data, not markup: it used to be typed into the <title>, the sidebar and the link
 // between the two dashboards, which is three places to miss when someone makes this theirs.
 // FIRE Toad is the product; the owner's name is the instance. Both are shown, neither typed
@@ -896,7 +894,7 @@ const NAV = [
   {sec:"Get started", items:[{k:"acct", n:"Accounts",        t:"Accounts",             d:""},
                            {k:"cat",   n:"This month",       t:"This month",           d:""},
                            {k:"trends",n:"Year",             t:"The year",             d:""},
-                           {k:"income",n:"Income & chequing",t:"Income and chequing", d:""},
+                           {k:"income",n:"Income",t:"Income", d:""},
                            {k:"subs",  n:"Subscriptions",    t:"Subscriptions",        d:""},
                            {k:"base",  n:"Monthly spending", t:"Monthly spending",     d:""},
                            {k:"safe",  n:"Emergency fund",       t:"Emergency fund",           d:""}]},
@@ -923,12 +921,13 @@ const PAGES = NAV.flatMap(g => g.items);
 // element on the page, the section's own heading]. Kept beside NAV, not in it, so NAV stays one
 // flat list of pages.
 const PAGE_SECS = {
-  income: [["secIncome", "Income"], ["secChq", "Chequing"]],
-  coast:  [["secMoney", "The money"], ["secCare", "Care"], ["secLasted", "Would it have lasted?"]]
+  coast: [["secMoney", "The money"], ["secCare", "Care"], ["secLasted", "Would it have lasted?"]],
+  acct:  [["secAccts", "Every account, by institution"], ["secGaps", "What no file shows yet"], ["secRows", "Every row in your bank accounts"]]
+
 };
 PAGES.forEach(p => { p.secs = PAGE_SECS[p.k] || []; });
-const PILL_PAGES = ["cat"];                          // driven by the month cursor
-const YEAR_PAGES = ["cat","income","trends"];                 // driven by the year container
+const PILL_PAGES = ["cat","budget"];                          // driven by the month cursor
+const YEAR_PAGES = ["cat","income","trends","budget"];                 // driven by the year container
 let curPage = "home";   // real starting page is chosen at boot from ST.p
 
 // A dot next to a page name means that page has something you should look at.
@@ -1015,14 +1014,11 @@ function drawNav(){
   });
   $("sideNav").querySelectorAll("button.sub").forEach(b => b.onclick = () => {
     const el = document.getElementById(b.dataset.sec); if(!el) return;
-    if(el.tagName === "DETAILS") el.open = true;       // a folded section opens when it is asked for by name
     el.scrollIntoView({block: "start"});
   });
   markSection();
 }
-// The section in view. A section laid out down the page is in view once its top has passed the
-// upper part of the window; one folded to a line is in view only while it is open and on screen
-// (three folded lines sit together, and none of them is "where you are").
+// The section in view: the last one whose top has passed the upper part of the window.
 function markSection(){
   const subs = [...$("sideNav").querySelectorAll("button.sub")];
   if(!subs.length) return;
@@ -1031,20 +1027,12 @@ function markSection(){
   subs.forEach((b, i) => {
     const el = document.getElementById(b.dataset.sec); if(!el) return;
     const r = el.getBoundingClientRect(), line = window.innerHeight * 0.35;
-    if(el.tagName === "DETAILS"){ if(el.open && r.top < line && r.bottom > 80) on = b.dataset.sec; }
     // at the foot of the page the last section is the one in view, however short the page
-    else if(i === 0 || r.top < line || (atFoot && r.top < window.innerHeight)) on = b.dataset.sec;
+    if(i === 0 || r.top < line || (atFoot && r.top < window.innerHeight)) on = b.dataset.sec;
   });
   subs.forEach(b => b.classList.toggle("on", b.dataset.sec === on));
 }
 window.addEventListener("scroll", markSection, {passive: true});
-// A chart inside a folded section has no width until the section opens, so the page is drawn
-// again when one does.
-document.addEventListener("toggle", ev => {
-  if(!(ev.target.matches && ev.target.matches("details.fold"))) return;
-  if(ev.target.open) render();
-  markSection();
-}, true);
 // A page merged into another or taken off: an old link or saved state still lands.
 const MOVED = {tasks:"upd", todo:"upd", rules:"port"};
 function setPage(p){
@@ -1336,7 +1324,7 @@ function render(){
   const es = monthOf(viewYM);
   const spent = es.reduce((s,e) => s + e.amount, 0);
   $("partNote").innerHTML = viewYM > covEnd
-    ? '<div class="cap">'+ymFull(viewYM)+" is still open, so its totals will rise.</div>"
+    ? '<div class="cap">'+notInYet(viewYM)+"</div>"
     : "";
 
 
@@ -1461,21 +1449,47 @@ function renderNwChart(){
     out += '<line x1="'+padL+'" y1="'+y(v)+'" x2="'+(W-padR)+'" y2="'+y(v)+'" stroke="var(--grid)" stroke-width="1"/>'
       + '<text x="'+(padL-8)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="12" class="num" fill="var(--muted)">'+yLab(v)+'</text>';
   }
-  const every = Math.max(1, Math.ceil((m1 - m0) / 8));
-  for(let i=m0; i<=m1; i+=every){
-    const yy = ANCHOR_Y + Math.floor(i/12);
-    out += '<text x="'+x(i)+'" y="'+(H-8)+'" text-anchor="'+(i === m0 ? "start" : x(i) > W - padR - 24 ? "end" : "middle")+'" font-size="12" class="num" fill="var(--muted)">'+MN[((i%12)+12)%12]+" "+String(yy).slice(2)+'</text>';
+  // One point a month. Over two years the axis is marked by year, every 1, 2, 5 or 10; under
+  // that by month, every few. How many fit is the chart's width (a label is about 70px).
+  const span = m1 - m0, fitN = Math.max(2, Math.floor((W - padL - padR) / 70));
+  if(span > 24){
+    const ys = [1,2,5,10].find(k => span/12/k <= fitN) || 10;
+    for(let i = Math.ceil(m0/12)*12; i <= m1; i += 12){
+      const yy = ANCHOR_Y + Math.floor(i/12);
+      if(yy % ys) continue;
+      out += '<text x="'+x(i)+'" y="'+(H-8)+'" text-anchor="'+(x(i) < padL + 16 ? "start" : x(i) > W - padR - 24 ? "end" : "middle")+'" font-size="12" class="num" fill="var(--muted)">'+yy+'</text>';
+    }
+  } else {
+    const every = [1,2,3,4,6,12].find(k => span / k <= fitN) || 12;
+    for(let i=m0; i<=m1; i+=every){
+      const yy = ANCHOR_Y + Math.floor(i/12);
+      out += '<text x="'+x(i)+'" y="'+(H-8)+'" text-anchor="'+(i === m0 ? "start" : x(i) > W - padR - 24 ? "end" : "middle")+'" font-size="12" class="num" fill="var(--muted)">'+MN[((i%12)+12)%12]+" "+String(yy).slice(2)+'</text>';
+    }
   }
-  out += '<path d="'+pts.map((p,i) => (i ? "L " : "M ")+x(mIdx(p.ym))+" "+y(p.v)).join(" ")+'" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
-  pts.forEach((p,i) => out += '<circle cx="'+x(mIdx(p.ym))+'" cy="'+y(p.v)+'" r="4" fill="'+(p.cadOnly ? "var(--surface)" : "var(--ink)")+'" stroke="'+(p.cadOnly ? "var(--ink)" : "var(--surface)")+'" stroke-width="2" data-i="'+i+'"/>'
-    + '<circle cx="'+x(mIdx(p.ym))+'" cy="'+y(p.v)+'" r="12" fill="rgba(0,0,0,0)" data-i="'+i+'"/>');
+  // A month with no update has no point: the line across it is dashed, and the caption names it.
+  // The line is never drawn as if the month were known.
+  for(let k = 1; k < pts.length; k++){
+    const a0 = mIdx(pts[k-1].ym), a1 = mIdx(pts[k].ym), gap = a1 - a0 > 1;
+    out += '<line x1="'+x(a0)+'" y1="'+y(pts[k-1].v)+'" x2="'+x(a1)+'" y2="'+y(pts[k].v)+'" stroke="'+(gap ? "var(--muted)" : "var(--ink)")+'" stroke-width="2" stroke-linecap="round"'+(gap ? ' stroke-dasharray="3 5"' : '')+'/>';
+  }
+  // Each month a dot while they fit; past three dozen the line alone, and the month nearest the
+  // pointer answers.
+  const dense = pts.length > 36, gapPx = (W - padL - padR) / Math.max(1, span), hitR = Math.max(3, Math.min(12, gapPx / 2));
+  pts.forEach((p,i) => out += (dense ? "" : '<circle cx="'+x(mIdx(p.ym))+'" cy="'+y(p.v)+'" r="4" fill="'+(p.cadOnly ? "var(--surface)" : "var(--ink)")+'" stroke="'+(p.cadOnly ? "var(--ink)" : "var(--surface)")+'" stroke-width="2"/>')
+    + '<circle cx="'+x(mIdx(p.ym))+'" cy="'+y(p.v)+'" r="'+hitR+'" fill="rgba(0,0,0,0)" data-i="'+i+'"/>');
   const svg = $("nwChart");
   svg.innerHTML = out;
   svg.querySelectorAll("circle[data-i]").forEach(c => { const p = pts[Number(c.dataset.i)];
     hoverable(c, ymFull(p.ym)+"<br>net worth "+fmt(p.v)+(p.cadOnly ? "<br>Canadian side only" : "")); });
+  const have = new Set(pts.map(p => mIdx(p.ym))), missing = [];
+  for(let i = m0 + 1; i < m1; i++) if(!have.has(i)) missing.push(i);
+  const nameM = i => MN[((i%12)+12)%12] + " " + (ANCHOR_Y + Math.floor(i/12));
+  const missTxt = !missing.length ? "" : missing.length <= 3
+    ? " " + missing.map(nameM).join(", ").replace(/, ([^,]*)$/, " and $1") + " had no update, so the dashed line passes " + (missing.length === 1 ? "it" : "them") + "."
+    : " " + missing.length + " months had no update; the dashed lines pass them.";
   const d = vals[vals.length-1] - vals[0];
   $("nwCap").textContent = (d >= 0 ? "Up " : "Down ") + fmt(Math.abs(d)) + " since " + ymFull(pts[0].ym) + "."
-    + (pts.some(p => p.cadOnly) ? " The hollow point counts the Canadian side only." : "");
+    + missTxt + (!dense && pts.some(p => p.cadOnly) ? " The hollow point counts the Canadian side only." : "");
 }
 // The share the owner holds a band on is named after their bucket: "Dry powder" is one owner's
 // word for her safe end, and an owner with a bond band reads "Bonds" (2026-11-03).
@@ -1521,7 +1535,7 @@ function renderHome(){
       const es = monthOf(ym), total = es.reduce((s,e) => s + e.amount, 0), parts = monthParts(ym);
       const rows = [["Bills & housing", parts.bills], ["Everyday", parts.everyday]].filter(p => Math.abs(p[1]) > 0.005);
       return card("Total spent in "+ymLabel(ym),
-        numx(fmt(total), rows.map(p => [p[0], fmt(p[1])]), es.length+" purchase"+(es.length === 1 ? "" : "s")+(ym > covEnd ? ", and the month is still open." : "."), true),
+        numx(fmt(total), rows.map(p => [p[0], fmt(p[1])]), es.length+" purchase"+(es.length === 1 ? "" : "s")+(ym > covEnd ? (ym >= TODAY.slice(0,7) ? ", and the month is still going." : ", and not every statement for it is in yet.") : "."), true),
         rows.map(p => p[0]+" "+fmt(p[1])).join(" \u00b7 "));
     },
     interest: () => {
@@ -1695,9 +1709,9 @@ function renderFree(){
   $("freeTick").title = "An even pace";
   // One fact under the bar: what a day can take for the rest of the month, or how it ended.
   const daysLeft = dim - de;
-  $("freeMeta").innerHTML = '<div class="cap" style="margin-top:8px">' + (open
-      ? (left > 0 && daysLeft > 0 ? fmt(left/daysLeft) + " a day for " + daysLeft + " day" + (daysLeft > 1 ? "s" : "") : left > 0 ? "Last day of the month" : "All used")
-      : (left >= 0 ? fmt(left) + " left unspent" : "Over by " + fmt(-left))) + '</div>';
+  // A month that has ended says nothing more here: the number above already is how it ended.
+  $("freeMeta").innerHTML = open ? '<div class="cap" style="margin-top:8px">'
+      + (left > 0 && daysLeft > 0 ? fmt(left/daysLeft) + " a day for " + daysLeft + " day" + (daysLeft > 1 ? "s" : "") : left > 0 ? "Last day of the month" : "All used") + '</div>' : "";
 }
 
 // --- where the paycheque goes ----------------------------------------------
@@ -1815,7 +1829,11 @@ function drawFlow(){
       ? [{k:open ? "Not spent yet" : "Left over", v:EVERYDAY - spent, c:"var(--pill)", rest:true}] : []);
   // A node is drawn at its size but laid out in a slot tall enough for its two-line label, so a
   // $130 line never sits on top of the one below it.
-  const W = 980, PAD = 10, NW = 10, GAP = 8, SLOT = 34, X = [150, 470, 790];
+  // Drawn at the width it is shown, up to 980 (DESIGN.md: a chart is drawn at the size it is
+  // shown): scaled down from a fixed 980 it was unreadable in an 800px window.
+  const W = Math.max(440, Math.min(980, Math.round(svg.getBoundingClientRect().width) || document.querySelector(".main").clientWidth - 64));
+  const PAD = 10, NW = 10, GAP = 8, SLOT = 34;
+  const X0 = Math.round(Math.min(150, W * 0.16)), X2 = Math.round(W - Math.min(190, W * 0.24)), X = [X0, Math.round((X0 + X2) / 2 - 10), X2];
   const k = 220 / left[0].v;
   const place = (col, top) => { let y = top; col.forEach(n => { n.h = Math.max(1.5, n.v * k);
       n.y = y + Math.max(0, SLOT - n.h) / 2; y += Math.max(n.h, SLOT) + GAP; }); return y - GAP; };
@@ -2052,7 +2070,7 @@ function renderIncChart(){
   $("incLegend").querySelectorAll(".leg-row[data-cat]").forEach(el =>
     el.onclick = () => { const k = el.dataset.cat; incSel = (!k || incSel === k) ? null : k; renderIncChart(); });
   const openM = months.filter(ym => ym > covEnd && byYm[ym]).pop();
-  $("incChartCap").textContent = openM ? ymFull(openM)+" is still open, so its totals will rise." : "";
+  $("incChartCap").textContent = openM ? notInYet(openM) : "";
 }
 
 // ===== Spending by category, one month at a time =====
@@ -2119,11 +2137,12 @@ function renderCatPage(){
   const card = (lab, val, status, cls) => StatCard(lab, val, status, {capCls: cls});
   const um = usualMonthAt(viewYM), usual = um ? um.v : null, diff = usual === null ? null : total - usual;
   const nWin = um ? um.n : 0;
-  $("catStats").innerHTML =
-    card("Total spent in "+ymLabel(viewYM), numx(fmt(total), partRows.map(p => [p[0], fmt(p[1])]), es.length+" purchase"+(es.length === 1 ? "" : "s")+" in "+rows.length+" categor"+(rows.length === 1 ? "y" : "ies")+"."),
-        partRows.map(p => p[0]+" "+fmt(p[1])).join(" \u00b7 "))
-    + (rows.length ? card("Biggest category", catName(rows[0].k), fmt(rows[0].v)+", "+pct(rows[0].v)+"% of the month") : "")
-    + card("Against a usual month",
+  // The month's whole spending is one line in the Everyday card; Against a usual month is a
+  // card once the month has closed (an open month against a whole one says nothing yet).
+  $("catTotal").innerHTML = '<div class="say" style="margin-top:8px">Spent in '+ymLabel(viewYM)+': <b>'+fmt(total)+'</b>'
+    + (partRows.length ? ' \u2014 '+partRows.map(p => p[0].toLowerCase()+' '+fmt(p[1])).join(", ") : '')+'.</div>';
+  $("catStats").innerHTML = viewYM > covEnd ? "" :
+    card("Against a usual month",
         diff === null ? "\u2014" : numx((diff >= 0 ? "+" : "\u2212") + fmt(Math.abs(diff)),
           [["This month", fmt(total)], ["A usual month", "\u2212"+fmt(usual)]],
           "A usual month is the average of the "+nWin+" full months before this one. Months you set aside as unusual are left out.", true),
@@ -2193,15 +2212,12 @@ function renderYr(){
 
   const inc = ICATS.map(c => [c.k, cfy.reduce((s,m)=>s+(m[c.f]||0),0), c.c]).filter(x => x[1] > 0);
   const icard = StatCard;
-  $("incStats").innerHTML =
-    icard("Income in "+viewYear, hasIncome ? numx(fmt(income), inc.map(x => [x[0], fmt(x[1])]), cfy.length+" month"+(cfy.length === 1 ? "" : "s")+" on record.", true) : "\u2014")
-    + icard(term("kept", "Kept"), net === null ? "\u2014" : numx((net >= 0 ? "+" : "\u2212") + fmt(Math.abs(net)), [["Income", fmt(income)], ["Spent", "\u2212"+fmt(spent)]], "", true),
-            net !== null && income > 0 ? Math.round(pc(net, income))+"% of income" : "");
+  $("incLab").textContent = "Income in "+viewYear;
+  $("incBig").innerHTML = hasIncome ? numx(fmt(income), inc.map(x => [x[0], fmt(x[1])]), cfy.length+" month"+(cfy.length === 1 ? "" : "s")+" on record.", true) : "\u2014";
   const imx = Math.max(...inc.map(x => x[1]), 1);
   // What the month card used to say, said once for the year: investment income is income but
   // never reaches chequing, and money a borrower pays back is not income at all.
   const repaid = cfy.reduce((s,m) => s + (m.repaid||0), 0);
-  $("yrIncLab").textContent = "By source";
   $("yrIncCats").innerHTML = (inc.length ? inc.map(x =>
     '<div class="inc-row"><span class="dot" style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+x[2]+'"></span><span class="nm" style="width:105px">'+(x[0] === "Investment" ? term("investment_income", x[0]) : x[0] === "Rewards" ? term("rewards", x[0]) : x[0])+'</span><div class="bar-wrap"><div class="bar" style="width:'+(pc(x[1], imx))+'%;background:'+x[2]+'"></div></div><span class="v num">'+fmt2(x[1])+'</span></div>').join("")
     : '<div class="empty">No income data for '+viewYear+'</div>')
@@ -2222,12 +2238,12 @@ function renderChq(){
     '<button class="pill'+(a === chqAcct ? " sel" : "")+'" data-a="'+a+'">'+(a || "All")+'</button>').join("") : "";
   $("chqAcct").querySelectorAll(".pill").forEach(b => b.onclick = () => { chqAcct = b.dataset.a; chqN = 60; renderChq(); });
   const q = chqQ.trim().toLowerCase();
-  const rows = CHEQUING.filter(r => r.date.startsWith(viewYear) && (!chqAcct || r.src === chqAcct)
+  const rows = CHEQUING.filter(r => (!chqAcct || r.src === chqAcct)
     && (!q || (r.desc + " " + (r.raw || "") + " " + r.type).toLowerCase().includes(q))).slice().reverse();
-  $("chqLab").textContent = "Every row in chequing, " + viewYear;
+  $("chqLab").textContent = "Every row in your bank accounts";
   const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
   $("chqTable").innerHTML = DataTable([
-      {h:"Date", c: r => MN[Number(r.date.slice(5,7))-1]+' '+Number(r.date.slice(8,10)), nw:1},
+      {h:"Date", c: r => MN[Number(r.date.slice(5,7))-1]+' '+Number(r.date.slice(8,10))+(r.date.slice(0,4) !== TODAY.slice(0,4) ? ', '+r.date.slice(0,4) : ''), nw:1},
       {h:"What", c: r => r.raw ? '<span title="'+esc(r.raw)+'">'+esc(r.desc)+'</span>' : esc(r.desc), a:"l", num:false},
       {h:"Type", c: r => esc(r.type), a:"l", m:1, num:false}]
       .concat(accts.length > 1 ? [{h:"Account", c: r => esc(r.src), a:"l", m:1, nw:1, num:false}] : [])
@@ -2745,31 +2761,17 @@ function renderFire(){
 
 // ===== Trajectory: when does net worth reach the FIRE target? =====
 const MONTHLY_CONTRIB = FUNDS.plan.invest;   // the pay-yourself-first amount, from funds.json
-const SCENARIOS = [{"r": 0.03, "c": "#9ec5f4", "n": "3% real"}, {"r": 0.05, "c": "#2a78d6", "n": "5% real"}, {"r": 0.07, "c": "#104281", "n": "7% real"}];
-const HORIZON = 25;
 // The FIRE figures at the plan's own values, worked out at build time (fire.py). The page keeps
 // the same sums below, because it redraws while a number is being changed; fireNow() is those
 // sums at the page's numbers now, and check_render's R8 fails when a freshly built page's
 // fireNow() is not FIRE.
-const FIRE = {"target": 885000, "pct": 5.8, "gap": 833710, "cross": [null, null, null], "homeCross": null, "coastAge": 90.374303347623};
+const FIRE = {"target": 885000, "pct": 5.8, "gap": 833710, "coastAge": 90.374303347623};
 // The savings rate and the years it takes (savings.py): the page draws it and does no sums.
 const SAVINGS = {"target": 885000, "portfolio": 51290, "invest": 700.0, "paceMonths": 3, "returns": [0.04, 0.05, 0.06], "growth": 5.0, "fromPlan": false, "years": [36.5, 32.2, 28.8], "more": [{"more": 0, "years": [36.5, 32.2, 28.8]}, {"more": 50, "years": [35.5, 31.3, 28.1]}, {"more": 100, "years": [34.5, 30.5, 27.4]}, {"more": 150, "years": [33.5, 29.7, 26.8]}, {"more": 200, "years": [32.6, 29.0, 26.2]}, {"more": 250, "years": [31.8, 28.3, 25.6]}, {"more": 300, "years": [31.0, 27.7, 25.1]}, {"more": 350, "years": [30.3, 27.1, 24.6]}, {"more": 400, "years": [29.5, 26.5, 24.1]}, {"more": 450, "years": [28.9, 26.0, 23.6]}, {"more": 500, "years": [28.2, 25.4, 23.2]}, {"more": 550, "years": [27.6, 24.9, 22.8]}, {"more": 600, "years": [27.1, 24.4, 22.4]}, {"more": 650, "years": [26.5, 24.0, 22.0]}, {"more": 700, "years": [26.0, 23.5, 21.6]}, {"more": 750, "years": [25.5, 23.1, 21.2]}, {"more": 800, "years": [25.0, 22.7, 20.9]}, {"more": 850, "years": [24.5, 22.3, 20.5]}, {"more": 900, "years": [24.1, 21.9, 20.2]}, {"more": 950, "years": [23.6, 21.6, 19.9]}, {"more": 1000, "years": [23.2, 21.2, 19.6]}], "rate": 0.3473, "income": 4300.0, "spend": 2806.79, "n": 7, "from": "2026-01", "to": "2026-07", "keep": 1493.21, "jobs": [["Invested", 700.0], ["Emergency fund", 300.0]], "free": 493.21};
 function fireNow(){
-  const target = PLAN_BASE * 12 * 25, months = HORIZON * 12 - mIdx(TODAY.slice(0, 7));
+  const target = PLAN_BASE * 12 * 25;
   return {target, pct: target ? Math.round(PORTFOLIO / target * 1000) / 10 : 0, gap: Math.round(target - PORTFOLIO),
-          cross: SCENARIOS.map(s => crossMonth(project(PORTFOLIO, s.r, months), target)),
-          homeCross: crossMonth(project(PORTFOLIO, 0.05, 300), target),
           coastAge: target > 0 && BORN ? coastReachAge(PORTFOLIO, target, COAST_R) : null};
-}
-function project(p0, r, months){        // monthly compounding + level contribution
-  const m = r/12, out = [p0];
-  let v = p0;
-  for(let i=1;i<=months;i++){ v = v*(1+m) + MONTHLY_CONTRIB; out.push(v); }
-  return out;
-}
-function crossMonth(series, target){
-  for(let i=0;i<series.length;i++) if(series[i] >= target) return i;
-  return null;
 }
 // x-axis anchored at Jan 2026 permanently; NW_HISTORY = real net-worth snapshots (append one point per month on every "update dashboards", latest per month wins)
 const ANCHOR_Y = 2026;
@@ -2839,7 +2841,7 @@ const BOOKV = {"mv": 51290, "bv": 45922, "incomeYtd": 763};
 // DRAWDOWN.at is those ages, DRAWDOWN.now the plan at them. The page keeps the sums below to
 // redraw as an age is moved; drawNow(at) is those sums at given ages, and check_render's R8
 // fails when a freshly built page's drawNow(DRAWDOWN.at) is not DRAWDOWN.now.
-const DRAWDOWN = {"at": {"stop": 32, "draw": 55, "care": 80, "ltc": 88, "tier": 0}, "now": {"dead": 60.25, "short": 1777440.6444244043, "atDraw": 161597.16497027813, "atStop": 51290, "noCareDead": 60.25, "stayHomeDead": 60.25, "extra": null, "bt": {"ok": 0, "n": 59, "N": 40, "from": 1928, "to": 2025}}};
+const DRAWDOWN = {"at": {"stop": 65, "draw": 66, "care": 80, "ltc": 88, "tier": 0}, "now": {"dead": null, "short": 0, "atDraw": 1019554.6225672617, "atStop": 969931.1063517759, "noCareDead": null, "stayHomeDead": null, "extra": 0, "bt": {"ok": 59, "n": 70, "N": 29, "from": 1928, "to": 2025}}};
 // Money that runs out before care begins: everything after it is the shortfall, so there is no
 // "extra for care" to state.
 const brokeBefore = (run, careA) => run.dead !== null && run.dead <= careA;
@@ -2855,7 +2857,7 @@ function drawNow(a){
           bt: bt ? {ok: bt.ok, n: bt.n, N: bt.N, from: bt.from, to: bt.to} : null};
 }
 const DRAW_AT = DRAWDOWN.at || {};
-let stopAge = AGE_NOW, drawAge = DRAW_AT.draw || 0, careAge = DRAW_AT.care || 0, ltcAge = DRAW_AT.ltc || 0, ltcTier = DRAW_AT.tier || 0;
+let stopAge = DRAW_AT.stop ?? AGE_NOW, drawAge = DRAW_AT.draw || 0, careAge = DRAW_AT.care || 0, ltcAge = DRAW_AT.ltc || 0, ltcTier = DRAW_AT.tier || 0;
 try{ const v = JSON.parse(localStorage.getItem("ly_coast")||"null");
      if(v){ stopAge = v.stop ?? stopAge; drawAge = v.draw ?? drawAge;
             careAge = v.careAge ?? careAge; ltcAge = v.ltcAge ?? ltcAge;
@@ -2979,14 +2981,9 @@ function renderCoast(target, annualSpend){
   ]);
 
   $("coastMeta").innerHTML = metaList([
-    [stopAge > AGE_NOW ? "Pot at "+stopAge+", when you stop adding" : "Pot today", fmt(atStop)],
     ["Pot at "+drawAge+", when you start taking", fmt(atDraw)],
     ["Taken each year", fmt(annualSpend)],
     [term("withdrawal_rate", "Withdrawal rate")+" at "+drawAge, empty ? "\u2014" : numx(safeRate.toFixed(1)+"%", [["Taken each year", fmt(annualSpend)], ["Pot", fmt(atDraw)]], "")],
-    ["Highest rate", empty ? "\u2014" : atDraw >= annualSpend
-      ? numx(peakR.toFixed(1)+"% at "+Math.floor(peakA), [], "Recomputed every month up to age "+(LIFE_TO-HORIZON)+"; the last "+HORIZON+" years are left out, when a high rate only means the pot is being spent as planned.")
-      : "Never a year of spending", atDraw >= annualSpend && peakR > 4 && lasts ? "hi" : ""],
-    ["Lasts to "+LIFE_TO, empty ? "Nothing to draw from yet" : lasts ? "Yes" : "No, runs out at "+Math.floor(run.dead), lasts || empty ? "" : "hi"],
     !lasts && !empty && run.short > 0 ? [term("shortfall", "Shortfall")+", "+Math.floor(run.dead)+" to "+LIFE_TO,
       numx(fmt(run.short), [], "What is still to pay after the money has run out \u2014 spending and care, less any pensions \u2014 added up in today\u2019s money. It says how much is missing, not where it would come from."), "hi"] : null
   ].concat(PENSIONS.length
@@ -3001,7 +2998,7 @@ function renderCoast(target, annualSpend){
     let bill = 0;
     for(let a = careAge; a < LIFE_TO; a += 1/12) bill += careAt(a, careAge, ltcA, ltc);
     // The section's one line (DESIGN.md §4): what care comes to, before the rows that make it up.
-    $("sumCare").innerHTML = "<b>"+fmt(atHome)+"</b> a month from "+careAge
+    if($("sumCare")) $("sumCare").innerHTML = "<b>"+fmt(atHome)+"</b> a month from "+careAge
       + (atLtc === null ? "" : " \u00b7 then "+fmt(atLtc)+" from "+ltcAge) + " \u00b7 whole bill <b>"+fmt(bill)+"</b>";
     const noCareEnd = runNoCare.dead === null ? null : Math.floor(runNoCare.dead);
     const stayEnd   = runStayHome.dead === null ? null : Math.floor(runStayHome.dead);
@@ -3014,8 +3011,6 @@ function renderCoast(target, annualSpend){
             ltc.d+". Rising "+(ltc.esc*100).toFixed(1)+"% a year above inflation.")],
       ["Whole care bill, "+careAge+" to "+LIFE_TO, fmt(bill)],
       ["Extra needed at "+careAge, early ? "The money runs out at "+Math.floor(run.dead)+", before care starts" : extra === null ? "\u2014" : extra === 0 ? "None" : numx(fmt(extra), [], "The smallest lump at "+careAge+" that keeps the pot alive to "+LIFE_TO+"."), extra ? "hi" : ""],
-      ["Staying home throughout", empty ? "\u2014" : stayEnd === null ? "Lasts past "+LIFE_TO : "Runs out at "+stayEnd],
-      ["With no paid care", empty ? "\u2014" : noCareEnd === null ? "Lasts past "+LIFE_TO : "Runs out at "+noCareEnd, "mut"]
     ]) + (ltcA === null ? "" : '<div class="cap" style="margin-top:8px">From '+ltcAge+' the care-home fee is charged on top of the whole planning figure, so the plan has more room after '+ltcAge+' than the chart shows.</div>');
   }
 
@@ -3032,18 +3027,20 @@ function renderCoast(target, annualSpend){
     + '<div class="cap" style="margin-top:6px">Every figure is in today\u2019s money, so the '+fmt(MONTHLY_CONTRIB)+' a month has to rise with inflation each year to stay on this line.</div>';
 
   const bt = backtest(atDraw, drawM, drawAge, careAge, ltcA, ltc);
-  $("sumMoney").innerHTML = empty ? "Nothing to draw from yet"
+  if($("sumMoney")) $("sumMoney").innerHTML = empty ? "Nothing to draw from yet"
     : (lasts ? "Lasts to <b>"+LIFE_TO+"</b>" : "Runs out at <b>"+Math.floor(run.dead)+"</b>"
         + (run.short > 0 ? " \u00b7 shortfall <b>"+fmt(run.short)+"</b>" : ""))
       + " \u00b7 pot at "+drawAge+" "+fmt(atDraw);
-  $("sumLasted").innerHTML = bt ? "Lasted to "+LIFE_TO+" in <b>"+bt.ok+" of "+bt.n+"</b> stretches since "+bt.from
+  if($("sumLasted")) $("sumLasted").innerHTML = bt ? "Lasted to "+LIFE_TO+" in <b>"+bt.ok+" of "+bt.n+"</b> stretches since "+bt.from
     : RET_HIST.years ? "Nothing to replay yet" : "No history on record yet";
-  $("drawSay").innerHTML = empty
-    ? "Nothing is invested yet, so at <b>"+drawAge+"</b> there is no pot to take "+fmt(annualSpend/12)+" a month from."
-    : !lasts
-    ? "Start taking "+fmt(annualSpend/12)+" a month at <b>"+drawAge+"</b> and, at a steady "+rPct+", the money runs out at <b>"+Math.floor(run.dead)+"</b>."
-    : "Start taking "+fmt(annualSpend/12)+" a month at <b>"+drawAge+"</b> and, at a steady "+rPct+", the money lasts to "+LIFE_TO+"."
-      + (bt ? " Through real history it would have lasted in <b>"+bt.ok+" of "+bt.n+"</b> stretches since "+bt.from+"." : "");
+  // The answer is two cards, side by side (2026-11-15, user 001): what a steady return gives,
+  // and how often real history did as well. The sliders and the chart are the next card.
+  const steady = lasts ? "Lasts to "+LIFE_TO : "Runs out at "+Math.floor(run.dead);
+  const okShare = bt ? bt.ok / bt.n : null;
+  $("drawAns").innerHTML = empty ? StatCard("Will the money last?", "Nothing to draw from yet", "", {text: true})
+    : StatCard("At a steady "+rPct+" a year", steady, "Taking "+fmt(annualSpend/12)+" a month from "+drawAge+". "+rPct+' is <a href="#" onclick="setPage(\'set\');return false">your setting</a>.', {text: true})
+      + (bt ? StatCard("In real history, since "+bt.from, "Lasted in "+bt.ok+" of "+bt.n, "Every start year on record, your mix today, year by year.", {text: true, color: okShare < 0.9 ? "#c98500" : null}) : "");
+  $("drawSay").innerHTML = empty ? "" : "Move the ages to see when the money runs out, and what care does to it.";
   renderBacktest(bt, atDraw);
 
   // only show a colour that is actually on the chart
@@ -3096,7 +3093,7 @@ function renderBacktest(bt, pot0){
   const med = [...bt.runs].map(r => r.end).sort((a,b) => a-b)[Math.floor(bt.n/2)];
   $("btLab").textContent = "Would it have lasted?";
   $("btStats").innerHTML =
-    StatCard("Lasted to "+LIFE_TO, rate+"%", bt.ok+" of "+bt.n+" stretches") +
+    // how many lasted is the answer card's at the top of the page; here, the worst and the middle
     StatCard(fails.length ? "Worst start" : "Closest call", worst.y, fails.length ? "runs out at "+Math.floor(worst.dead) : fmt(worst.end)+" left at "+LIFE_TO) +
     StatCard("Left at "+LIFE_TO+", middle case", fmt(med));
   // One bar per start year: green above the line is what is left at the end, red below is how
@@ -3154,8 +3151,10 @@ function drawCoast(run, target, atDraw, careA, ltcA){
         +  (v>=1e6?(v/1e6).toFixed(v%1e6?1:0)+"M":Math.round(v/1e3)+"k")+'</text>';
   }
   for(let a=30; a<=LIFE_TO; a+=10){
+    // a decade too close to today's age, which is written at the start, is a line without its number
+    const room = ageX(a) - padL > 28;
     out += '<line x1="'+ageX(a)+'" y1="'+padT+'" x2="'+ageX(a)+'" y2="'+(H-padB)+'" stroke="var(--grid)"/>'
-        +  '<text x="'+ageX(a)+'" y="'+(H-10)+'" text-anchor="middle" font-size="12" class="num" fill="var(--muted)">'+a+'</text>';
+        +  (room ? '<text x="'+ageX(a)+'" y="'+(H-10)+'" text-anchor="middle" font-size="12" class="num" fill="var(--muted)">'+a+'</text>' : '');
   }
   out += '<line x1="'+padL+'" y1="'+(H-padB)+'" x2="'+(W-padR)+'" y2="'+(H-padB)+'" stroke="var(--grid)"/>';
   out += '<text x="'+padL+'" y="'+(H-10)+'" text-anchor="start" font-size="12" class="num" fill="var(--muted)">'+AGE_NOW+'</text>';
@@ -3177,9 +3176,11 @@ function drawCoast(run, target, atDraw, careA, ltcA){
     .concat(ltcA===null?[]:[[ltcA,"Care home",PH.ltc]]).forEach(([a,lab,c]) => {
     if(a<=AGE_NOW && lab==="Stop adding") return;
     // Each label on its own row: at the right edge the two care lines and the target sit close.
-    const row = lab==="Care at home" ? 1 : lab==="Care home" ? 2 : 0;
+    const row = lab==="Care at home" ? 1 : lab==="Care home" ? 2 : lab==="Start taking" && drawAge - stopAge < 8 && stopAge > AGE_NOW ? 1 : 0;
+    // near the right edge a label reads leftward from its line, so it is never cut off
+    const nearR = ageX(a) > W - padR - 90;
     out += '<line x1="'+ageX(a)+'" y1="'+padT+'" x2="'+ageX(a)+'" y2="'+(H-padB)+'" stroke="'+c+'" stroke-width="1.5" stroke-dasharray="3 3"/>'
-        +  '<text x="'+(ageX(a)+5)+'" y="'+(padT+11+row*14)+'" font-size="11.5" fill="'+c+'" font-weight="700">'+lab+'</text>';
+        +  '<text x="'+(nearR ? ageX(a)-5 : ageX(a)+5)+'" y="'+(padT+11+row*14)+'" text-anchor="'+(nearR ? "end" : "start")+'" font-size="11.5" fill="'+c+'" font-weight="700">'+lab+'</text>';
   });
   out += '<circle cx="'+ageX(drawAge)+'" cy="'+y(atDraw)+'" r="4.5" fill="'+PH.draw+'" stroke="var(--surface)" stroke-width="2"/>';
   out += '<rect x="'+padL+'" y="'+padT+'" width="'+(W-padL-padR)+'" height="'+(H-padT-padB)+'" fill="rgba(0,0,0,0)" id="coastHit"/>';
@@ -3419,7 +3420,7 @@ function renderTracker(){
   const nowYM = TODAY.slice(0,7);
   let ep = "", out = '<table class="trk"><tr><th class="nm">Source</th>'
     + MN.map((m,i) => '<th class="'+(trackYear+"-"+String(i+1).padStart(2,"0") === nowYM ? "now":"")+'">'+m[0]+'</th>').join("")
-    + '<th class="nm" style="text-align:right;padding-right:2px">Months in</th></tr>';
+    + '<th class="nm" style="text-align:right;padding-right:2px">Last in</th></tr>';
   SOURCES.forEach(r => {
     if(r.optional) return;          // on demand, not monthly — a grid of empty circles says nothing
     if(r.ep !== ep){ ep = r.ep; out += '<tr class="grp"><td colspan="14">'+ep+'</td></tr>'; }
@@ -3440,26 +3441,23 @@ function renderTracker(){
       else if(r.optional)    cells += cell(ym,"opt",nowYM);
       else { cells += cell(ym,"miss",nowYM); miss++; }
     }
+    const last = DOC_LATEST[r.src], age = last ? Math.round((new Date(TODAY) - new Date(last))/864e5) : null;
     out += '<tr><td class="nm">'+r.src+'</td>'+cells
-        +  '<td class="cnt" style="text-align:right">'+n
-        +  (miss ? ' <span style="color:#c98500;font-weight:700">missing '+miss+'</span>' : '')+'</td></tr>';
+        +  '<td class="cnt" style="text-align:right;white-space:nowrap">'+(last ? dLong(last) : "\u2014")
+        +  (age !== null && age > 30 ? ' <span style="color:#c98500;font-weight:700">'+age+'d</span>' : '')+'</td></tr>';
   });
   out += '</table>';
   $("tracker").innerHTML = out;
   const missing = missingSources(trackYear);
-  $("trackCap").innerHTML = metaList([
-    ["Filled dot", "That month is in"],
-    ["Hollow amber", "Due, not filed yet"],
-    ["Small grey dot", "Not owed yet", "mut"],
-    ["A gap this year", missing.length ? missing.map(r=>r.src).join(", ") : "None", "mut"]
-  ]);
+  $("trackBring").innerHTML = missing.length ? '<b>Still to bring for '+trackYear+':</b> '+missing.map(r => r.src).join(", ")+'.' : 'Everything due in '+trackYear+' is in.';
+  $("trackCap").innerHTML = '<div class="cap" style="margin-top:8px">A filled dot is a month that is in; a hollow amber one is due and not filed yet; a small grey one is not owed yet. A date in amber is more than a month old.</div>';
 }
 function renderSources(){
   renderTracker();
   const last = DOC_LATEST;   // per document, derived by rebuild.py from the files themselves
   const age = d => Math.round((new Date(TODAY) - new Date(d))/864e5);
   let ep = "";
-  $("srcTable").innerHTML =
+  if($("srcTable")) $("srcTable").innerHTML =
     '<tr><th style="text-align:left">Source</th><th style="text-align:left">File</th><th style="padding-right:16px">Closes</th><th style="text-align:left">Feeds</th><th>Last received</th><th>Age</th></tr>'   // S10: a grouped table, kept until 2.0
     + SOURCES.map(r => {
         const d = last[r.src], a = d ? age(d) : null, ok = a === null || a <= 30;
@@ -3471,7 +3469,7 @@ function renderSources(){
           +'<td class="num">'+(a===null?"—":'<span class="sym '+(ok?"ok":"warn")+'" style="color:'+(ok?"#006300":"#c98500")+';font-weight:700">'+(ok?"✓":"⚠")+'</span> '+a+'d')+'</td></tr>';
       }).join("");
   const stale = SOURCES.filter(r => last[r.src] && age(last[r.src]) > 30).length;
-  $("srcCap").innerHTML = metaList([
+  if($("srcCap")) $("srcCap").innerHTML = metaList([
     ["Import day", "The " + ordinal(IMPORT_DAY) + " of each month"],
     ["Older than a month", stale ? String(stale) : "None"]
   ]);
@@ -3520,11 +3518,14 @@ function renderWsInc(){
   // that is more than the word ETF.
   const names = {}, fund = n => n.split(" - ").filter(x => !/^ETF$/i.test(x.trim())).pop() || n;
   ((typeof DATA !== "undefined" && DATA.positions) || []).forEach(p => names[p.sym] = names[p.sym] || fund(p.name));
-  const rows = Object.entries(by).filter(([k,b]) => b.v > 0).sort((a,b) => b[1].v - a[1].v);
+  const all = Object.entries(by).filter(([k,b]) => b.v > 0).sort((a,b) => b[1].v - a[1].v);
+  let acc = 0; const rows = all.filter(([k,b]) => { const take = acc < divs * 0.9; acc += b.v; return take; });
+  const rest = all.slice(rows.length), restV = rest.reduce((a,[k,b]) => a + b.v, 0);
+  if(rest.length > 1) rows.push(["__rest", {v: restV, ms: [], n: rest.length}]); else rows.push(...rest);
   $("wsIncBy").innerHTML =
     DataTable([
-      {h:"Holding", c: ([k,b]) => '<b>'+k+'</b>'+(names[k] ? ' <span style="color:var(--muted)">'+names[k]+'</span>' : ""), num:false},
-      {h:"Pays", c: ([k,b]) => rhythm(b.ms)},
+      {h:"Holding", c: ([k,b]) => k === "__rest" ? '<span style="color:var(--muted)">The other '+b.n+' together</span>' : '<b>'+k+'</b>'+(names[k] ? ' <span style="color:var(--muted)">'+names[k]+'</span>' : ""), num:false},
+      {h:"Pays", c: ([k,b]) => k === "__rest" ? "" : rhythm(b.ms)},
       {h:term("dividend", "Dividends"), c: ([k,b]) => fmt2(b.v)},
       {h:"Share", c: ([k,b]) => Math.round(pc(b.v, divs))+"%"}], rows, {inner: true, empty: "No dividends on record yet."});
 }
@@ -3537,6 +3538,7 @@ function renderWsInc(){
 // the import could not settle on its own. The story of an update lives on this page and nowhere
 // else: every other page shows a status computed today. (2026-09-10)
 const IMPORTS = [{"date": "2026-09-06", "files": ["MasterCard statement to Aug 20", "Chequing and savings statements to Sep 5", "Holdings report of Sep 6", "Activities export of Sep 6"], "changed": [{"label": "Portfolio", "from": "$50,470", "to": "$51,290"}, {"label": "Spending in August", "from": "$0", "to": "$2,171"}], "noticed": [{"sev": "ok", "text": "Bonds are 16.6% of the portfolio, inside your 15–25% band."}, {"sev": "ok", "text": "August kept the rule: two deposits of $350 reached the TFSA on Aug 2 and Aug 17."}, {"sev": "ok", "text": "Every statement due has arrived. The next to close is the MasterCard on Sep 20."}], "judged": ["Filed the Hydro Ottawa payment as a bill."], "asked": ["Whether FARM BOY OTTAWA stays in Grocery, and what the unnamed $200 e-Transfer of Aug 11 was."]}];
+let updAt = 0;   // which update is read in full on the Updates page
 const DECISIONS = [{"added": "2026-09-06", "kind": "merchant", "what": "FARM BOY OTTAWA has appeared many times and is filed as Grocery.", "default": "Grocery", "source": "MasterCard, most recently Aug 14", "status": "open"}, {"added": "2026-09-06", "kind": "transfer", "what": "A $200 e-Transfer received on Aug 11 carries no sender name.", "default": "Other income", "source": "Chequing statement to Sep 5", "status": "open"}, {"added": "2026-08-12", "kind": "merchant", "what": "STEAM PURCHASE SEATTLE, seen for the first time.", "default": "Shopping", "source": "MasterCard, Aug 3", "status": "confirmed", "answer": "Entertainment", "resolved": "2026-08-12"}];
 const dLong = d => { const p = String(d).split("-"); return MN[Number(p[1])-1] + " " + Number(p[2]); };
 
@@ -3597,6 +3599,7 @@ function headerLine(){
 
 function renderUpdates(){
   if(!$("updStats")) return;
+  setTimeout(() => document.querySelectorAll(".upd-pick").forEach(a => a.onclick = e => { e.preventDefault(); updAt = Number(a.dataset.i); renderUpdates(); window.scrollTo({top: 0}); }), 0);
   const last = IMPORTS[0] || null;
   const age = d => Math.round((new Date(TODAY) - new Date(d))/864e5);
   const nFiles = r => r.files.length ? r.files.length + " file" + (r.files.length === 1 ? "" : "s") : "";
@@ -3610,14 +3613,24 @@ function renderUpdates(){
       return StatCard("Next update", dLong(iso), owe ? owe+" statement"+(owe === 1 ? "" : "s")+" still to bring" : "Everything due is in");
     })();
   const SYM = {bad:["\u2717","bad"], warn:["\u26a0","warn"], ok:["\u2713","ok"]};
-  $("updList").innerHTML = IMPORTS.length ? IMPORTS.map(r =>
-    '<div class="card" style="margin-bottom:10px"><div class="lab">'+dLong(r.date)+'</div>'
+  // The newest update in full: what changed, what it noticed, what it decided for you. What it
+  // asked is one line — how many, and how many still wait. Earlier updates are a line each.
+  const waiting = (DECISIONS || []).filter(d => !d.resolved).length;
+  const shown = IMPORTS[updAt] || IMPORTS[0];
+  const latest = r => '<div class="card" style="margin-bottom:10px"><div class="lab">'+dLong(r.date)+(r === IMPORTS[0] ? ' \u2014 the newest update' : '')+'</div>'
     + (r.changed.length ? metaList(r.changed.map(c => [c.label, c.from+" \u2192 "+c.to])) : "")
     + r.noticed.map(x => { const g = SYM[x.sev] || SYM.warn; return '<div class="alert-row"><span class="sym '+g[1]+'">'+g[0]+'</span><span>'+x.text+'</span></div>'; }).join("")
     + (r.judged.length ? '<div class="cap" style="margin-top:8px">Decided without asking</div>' + r.judged.map(t => '<div class="alert-row"><span class="sym" style="color:var(--muted)">\u25cf</span><span>'+t+'</span></div>').join("") : "")
-    + (r.asked.length ? '<div class="cap" style="margin-top:8px">Asked you</div>' + r.asked.map(t => '<div class="alert-row"><span class="sym" style="color:#c98500">?</span><span>'+t+'</span></div>').join("") : "")
-    + (r.files.length ? '<div class="cap" style="margin-top:8px">'+nFiles(r)+'</div><div class="cap">'+r.files.join(" \u00b7 ")+'</div>' : "")
-    + '</div>').join("")
+    + (r.asked.length ? '<div class="alert-row" style="margin-top:6px"><span class="sym" style="color:#c98500">?</span><span>Asked you '+r.asked.length+' question'+(r.asked.length === 1 ? "" : "s")+(r === IMPORTS[0] ? ' \u2014 '+(waiting ? waiting+' still waiting' : 'none still waiting') : '')+'.</span></div>' : "")
+    + (r.files.length ? '<div class="cap" style="margin-top:8px">'+nFiles(r)+': '+r.files.join(" \u00b7 ")+'</div>' : "") + '</div>';
+  const nw = r => { const c = r.changed.find(c => /net worth/i.test(c.label)); return c ? c.from+" \u2192 "+c.to : "\u2014"; };
+  $("updList").innerHTML = IMPORTS.length ? latest(shown)
+    + (IMPORTS.length > 1 ? '<div class="card upd-all" style="margin-bottom:10px"><div class="lab">Every update</div>'
+      + DataTable([
+          {h:"Date", c: r => '<a href="#" class="upd-pick" data-i="'+IMPORTS.indexOf(r)+'"'+(r === shown ? ' style="font-weight:700"' : '')+'>'+dLong(r.date)+'</a>'+(r === shown ? ' \u25b4' : ''), num:false},
+          {h:"Net worth", c: r => nw(r), a:"l"},
+          {h:"Files", c: r => String(r.files.length)}], IMPORTS)
+      + '<div class="cap">Choose an update to read it above.</div></div>' : "")
     : '<div class="card"><div class="empty">No updates yet. Drop your first statements into inbox and say \u201cupdate dashboards\u201d.</div></div>';
 }
 

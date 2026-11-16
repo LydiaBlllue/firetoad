@@ -468,8 +468,8 @@ def m_decision_no_default(r):
 # real sentence the owner rejected on 2026-09-10.
 def m_first_person(r):
     edit(r, "templates/dashboards/finance_dashboard.html",
-         lambda s: s.replace('<div class="lab">What arrives each month</div>',
-                             '<div class="lab">What you drop in, and when I last got it</div>', 1))
+         lambda s: s.replace('<div class="lab">Filed each month</div>',
+                             '<div class="lab">What you dropped in, and when I last got it</div>', 1))
 
 def m_brand_mark_gone(r):
     edit(r, main_dash(r),
@@ -486,7 +486,7 @@ def m_render_nan(r):
          lambda s: re.sub(r'"netWorth":\s*-?[\d.]+,\s*', '', s, count=1))
 def m_render_fire_drift(r):
     # The page's own FIRE sum changed and fire.py not: twenty-six years of spending, not twenty-five.
-    edit(r, main_dash(r), lambda s: s.replace("const target = PLAN_BASE * 12 * 25, months", "const target = PLAN_BASE * 12 * 26, months", 1))
+    edit(r, main_dash(r), lambda s: s.replace("  const target = PLAN_BASE * 12 * 25;\n  return {target,", "  const target = PLAN_BASE * 12 * 26;\n  return {target,", 1))
 def m_render_long_page(r):
     # The Glossary is thirteen screens and exempt as a reference page; without the mark it is
     # a long page that lists no sections.

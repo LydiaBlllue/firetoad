@@ -141,7 +141,7 @@ def now(at, portfolio, r, contrib, draw_m, tiers, home, pensions, years, age_now
             "bt": {k: bt[k] for k in ("ok", "n", "N", "from", "to")} if bt else None}
 
 
-def figures(portfolio, plan_base, contrib, r, tiers, home, pensions, years, born, life_to, today):
+def figures(portfolio, plan_base, contrib, r, tiers, home, pensions, years, born, life_to, today, fi_years=None):
     """The DRAWDOWN constant: `at` (the ages the page starts from) and `now` (the plan at them).
     Empty when there is no year of birth, no planning figure or no care tier to price."""
     if not born or not tiers or not home or not life_to:
@@ -149,5 +149,12 @@ def figures(portfolio, plan_base, contrib, r, tiers, home, pensions, years, born
     age_now = int(today[:4]) - born
     if life_to <= age_now:
         return {}
-    at = ages(age_now, life_to)
+    # The page starts where the FIRE page ends (2026-11-15, user 001): adding until the year the
+    # money reaches the target, and taking from the year after. Without that year, the old ages.
+    if fi_years is not None:
+        import math
+        stop = age_now + math.ceil(fi_years)
+        at = ages(age_now, life_to, draw=stop + 1, stop=stop)
+    else:
+        at = ages(age_now, life_to)
     return {"at": at, "now": now(at, portfolio, r, contrib or 0, plan_base or 0, tiers, home, pensions, years, age_now, life_to)}
