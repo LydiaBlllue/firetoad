@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.6 — unreleased
+
+- **Net worth over time says when a month is missing.** A month with no update used to be crossed
+  by a solid line as if it were known; the line across it is dashed now, and the caption names it.
+  Past two years the axis is marked by year, past three dozen months the dots give way to the
+  line, and the labels never crowd at a narrow window.
+
 ## 1.0.5 — 2026-11-15
 
 - **The setup ends with everything in place** (2026-11-15). When the first import leaves
