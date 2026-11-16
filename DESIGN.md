@@ -151,6 +151,11 @@
   home one; the amounts sum to the row. So does *Less what you owe*.
 - **Net worth over time** under the net-worth card: one point per month, what really was, nothing
   projected, from two months on. It is not the FIRE chart, which follows the portfolio to a target.
+  A month with no update has no point, and is never drawn as if it had one: the line across it is
+  dashed and the caption names it ("Jul 2026 had no update"; past three, how many). The axis is
+  marked by month, every few, up to two years, and by year after that, every 1, 2, 5 or 10 —
+  as many as the chart's width holds, about one per 70px. Past three dozen months the dots go and
+  the line stays; the month nearest the pointer answers (1.0.6).
 - **Four stat cards**, chosen by two signals, something invested and a FIRE goal (1.0.1). Invested
   with a goal: **Portfolio** (with its dry-powder share), **Years to financial independence** (at
   what reaches the broker, linking to the FIRE page; 1.0.5, in place of FIRE progress), **Invested

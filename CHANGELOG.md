@@ -19,6 +19,10 @@
 - **Income is one question**, what came in and from where. Every row in your bank accounts moved
   to *Accounts*, all years, newest first. *Kept* left the page: the one share of income is the
   savings rate on FIRE.
+- **Net worth over time says when a month is missing.** A month with no update used to be crossed
+  by a solid line as if it were known; the line across it is dashed now, and the caption names it.
+  Past two years the axis is marked by year, past three dozen months the dots give way to the
+  line, and the labels never crowd at a narrow window.
 
 ## 1.0.5 — 2026-11-15
 
