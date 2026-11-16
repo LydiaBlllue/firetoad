@@ -20,6 +20,14 @@
   funds are still asked.
 - **The Done screen is three lines** — files read and how far they reach, net worth, the way to
   the dashboard — in English or Chinese; question cards say where a charge came from in Chinese.
+- **The live demo has a front page that says what FIRE Toad is**, in English and Chinese: the
+  demo and the download, the four monthly steps, the questions it answers, which banks it reads
+  and six plain answers before you try it. Built by `docs/site/make.py`, with a sitemap, so a
+  search can find it. The README's demo link opens the demo itself.
+- **The live demo no longer says "open FIRE Toad"** beside the questions waiting: on the web there
+  is no app to answer them in.
+- **The screenshots are current** (they still showed 1.0.1 and the old name), and the demo's
+  waiting question is one a real import asks, so the Chinese panel says it in Chinese.
 
 ## 1.0.6 — 2026-11-16
 
