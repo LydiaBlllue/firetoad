@@ -469,6 +469,7 @@ class Plan:
         self.rewards = []                               # rewards.csv rows: cash back a card paid
         self.interest = []                              # card_interest.csv rows: what a statement charged
         self.files = []                                 # sentences, the way the owner knows them
+        self.reach = ""                                 # the newest statement's closing day read
         self.holdings = None                            # (src path, asof)
         self.activities = None
         self.friend = None
@@ -627,6 +628,7 @@ def plan_statement(ws, plan, path, doc):
         filed_any = True
         plan.counts["statements"] += 1
         plan.files.append(f"{ws.doc_name(pdoc)} statement to {short(p_end)}" + (" (again)" if redrop else ""))
+        plan.reach = max(plan.reach, p_end.isoformat())
     if not filed_any:
         plan.archive.pop()
 
@@ -1364,7 +1366,9 @@ def record(ws, plan, changed, noticed, seconds=None):
     for ledger, d, desc, amt in plan.untyped:
         asked.append(f"What the {money(abs(amt))} on {short(iso_to_date(d))} ({desc[:40]}) was.")
     rec = {"date": ws.today.isoformat(), "files": plan.files, "changed": changed, "noticed": noticed,
-           "judged": plan.judged, "asked": asked}
+           "judged": plan.judged, "asked": asked,
+           # what the Done screen says, as facts any language can say (1.0.7, feedback 89)
+           "facts": {"files": len(plan.files), "reach": plan.reach or None}}
     if seconds:
         rec["seconds"] = seconds   # how long each stage took, so one import can be compared with another
     ws.imports.setdefault("imports", []).append(rec)

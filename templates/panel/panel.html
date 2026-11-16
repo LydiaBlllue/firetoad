@@ -417,6 +417,15 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
   function keep(it, c){ answers[it.n] = c; if (it.id != null) { pending['id:' + it.id] = c; flush(); } }
   var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function fmtS(s, o){ return String(s).replace(/\{(\w+)\}/g, function(_, k){ return o[k] == null ? '' : o[k]; }); }
+  // "Primary Chequing statement to Jul 5, Jun 17": the import writes where a row came from in one
+  // fixed shape; in Chinese it is said from its parts (1.0.7, feedback 89). The account's name stays.
+  var MON = {Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12};
+  function srcSay(src){
+    if ((document.documentElement.lang || 'en') !== 'zh') return src;
+    var m = /^(.*) statement to ([A-Z][a-z]{2}) (\d+)(?:, ([A-Z][a-z]{2}) (\d+))?$/.exec(src || '');
+    if (!m || !MON[m[2]]) return src;
+    return m[1] + ' 对账单（到 ' + MON[m[2]] + ' 月 ' + m[3] + ' 日）' + (m[4] && MON[m[4]] ? '，' + MON[m[4]] + ' 月 ' + m[5] + ' 日' : '');
+  }
   function money(v){ return '$' + Number(v || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}); }
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function el(tag, cls, html){ var d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; return d; }
@@ -561,7 +570,7 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
       c.appendChild(name);
       var meta = [];
       if (it.kind === 'merchant' && it.amount != null) meta.push(fmtS(T.q_meta, {amount: money(it.amount), n: it.seen || 0}).replace('(s)', (it.seen || 0) === 1 ? '' : 's'));
-      if (it.source && !it.members) meta.push(it.source);
+      if (it.source && !it.members) meta.push(srcSay(it.source));
       if (meta.length) c.appendChild(el('div', 'meta', meta.map(esc).join('<br>')));
       var rb = recallBox(it); if (rb) c.appendChild(rb);
       if (it.brand) c.appendChild(el('div', 'brand', esc(fmtS(T.q_brand, {brand: it.what.split(' ')[0], cat: L(it.brand)}))));

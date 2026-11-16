@@ -179,6 +179,10 @@ S = {
     "saved_rebuilt": {"en": "answers saved — the page is rebuilt", "zh": "答案已保存——页面已重建"},
     "not_saved": {"en": "not saved; the lines under step 3 say which answer was refused", "zh": "没保存；第 3 步下面的行说了哪条被拒绝"},
     # — step 5
+    "done_read": {"en": "Read", "zh": "读了"},
+    "done_files": {"en": "{n} file(s)", "zh": "{n} 份文件"},
+    "done_reach": {"en": ", up to {date}", "zh": "，数据到 {date}"},
+    "done_nw": {"en": "Net worth", "zh": "净值"},
     "last_import": {"en": "Last import: {date}", "zh": "上次导入：{date}"},
     "no_import": {"en": "No import yet.", "zh": "还没有导入过。"},
     # — the folder's tool copy

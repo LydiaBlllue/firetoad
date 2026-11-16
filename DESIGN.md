@@ -575,6 +575,13 @@ categorize` where there is room (the setup's last screen), `5 to categorize` in 
 header, which keeps its one short line — never `5 to confirm`. **These screens never change the
 dashboard's layout**: the error box, the lists and the tables above are the panel's and the setup's.
 
+**The Done screen is three lines** (1.0.7, the owner: "does the user need to see the record?"):
+how many files were read and how far the data reaches; what net worth did; and the way to the
+dashboard (with *Undo the last import*). The import's full record — what was noticed, decided,
+asked — is the tool's: for undo, a report, the chat and the Updates page. The three lines are
+said from facts the record keeps (`facts`), so they read the same in either language; a
+question card's source line is said from its parts in Chinese too.
+
 **A question about a charge helps the owner remember it** (1.0.5, user 001: "I cannot remember
 where this money went"). One card at a time, and on it, from the rows and nothing else
 (`recall.py`): each charge's day with its weekday and amount; a rhythm when there is one, in one

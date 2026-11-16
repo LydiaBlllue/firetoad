@@ -315,16 +315,28 @@ def merchants_list(lang, root):
 
 
 # ---------------------------------------------------------------- step 5
+def day(lang, iso):
+    """A date as the panel says it: "Oct 23" or "10 月 23 日"."""
+    y, m, d = (int(x) for x in iso.split("-"))
+    return f"{m} 月 {d} 日" if lang == "zh" else ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1] + f" {d}"
+
+
 def step5(lang, rec, base):
     if not rec:
         return f'<p class="foot">{e(t(lang, "no_import"))}</p>'
-    out = [f'<p class="foot">{e(t(lang, "last_import", date=rec.get("date")))}</p><table class="tbl">']
-    for c in rec.get("changed") or []:
-        out.append(f'<tr><td>{e(c.get("label"))}</td><td>{e(c.get("from"))} → {e(c.get("to"))}</td></tr>')
+    # Three lines, said from facts in the panel's language (1.0.7, feedback 89, the owner: the
+    # record is the tool's — for undo, a report, the chat, the Updates page — not the Done screen's):
+    # what was read and how far it reaches, what net worth did, and the way to the page.
+    f = rec.get("facts") or {}
+    n = f.get("files", len(rec.get("files") or []))
+    reach = f.get("reach")
+    nw = next((c for c in rec.get("changed") or [] if (c.get("label") or "").lower() == "net worth"), None)
+    out = [f'<table class="tbl"><tr><td>{e(t(lang, "done_read"))}</td><td>'
+           + e(t(lang, "done_files", n=n).replace("(s)", "" if n == 1 else "s"))
+           + (e(t(lang, "done_reach", date=day(lang, reach))) if reach else "") + '</td></tr>']
+    if nw:
+        out.append(f'<tr><td>{e(t(lang, "done_nw"))}</td><td>{e(nw.get("from"))} → {e(nw.get("to"))}</td></tr>')
     out.append('</table>')
-    for n in rec.get("noticed") or []:
-        sev = n.get("sev") or "ok"
-        out.append(f'<div class="nt {e(sev)}"><span class="ic">{"✓" if sev == "ok" else "!"}</span>{e(n.get("text"))}</div>')
     out.append(f'<div class="act"><a class="btn primary" href="{e(base)}/" target="_blank" rel="noopener">{e(t(lang, "open_dash"))}</a>'
                f'<button type="button" class="lnk hint" id="undo">{e(t(lang, "undo"))}</button></div>')
     return "".join(out)
