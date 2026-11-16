@@ -173,15 +173,18 @@
 
 ### Spending
 
-- **This month** — the month on the cursor, all of it: **Everyday** (the headline: the
-  everyday less this month's everyday spending, no categories, a track bar with an even-pace
-  marker for the current month only); three stat cards (spent, split into the parts that month has, biggest category, against a usual
-  month); **Where the income went** (the plan as flows, each marked planned, and titled for the plan rather than the paycheque when it asks for more than take-home; the everyday amount fanning out into that
-  month's categories — refunds a source coming in, an overspend a second source from savings, so every band is its real size and the total is Everyday's); the category
-  list and the line-by-line of the chosen category.
-- **Year** — the year pills, the yearly stat cards, "What stands out" and the year by category
-  side by side, the monthly stacked chart, and **Everyday, month by month** (everyday spending against
-  today's everyday amount, the overspend in red, the open month faded).
+- **Every page answers one question, and what serves another question lives where that one is
+  asked** (1.0.5, after a round of folding that only made pages shorter: the owner, "not serving
+  any purpose"). Nothing is folded away; what is not needed for the page's question is moved or
+  removed.
+- **This month** — *how much can I still spend this month?* The month on the cursor: **Everyday**
+  (the headline: the everyday less this month's everyday spending, no categories, a track bar
+  with an even-pace marker and what a day can take, for the current month only; under it one
+  sentence, what the month cost in all, split into the parts it has); *Against a usual month* as
+  a card once the month has closed; the category list and the line-by-line of the chosen category.
+  The biggest category is the list's first row, not a card of its own.
+- **Year** — *where did this year's money go?* The year pills, the yearly stat cards, "What
+  stands out" and the year by category side by side, and the monthly stacked chart.
 - **Subscriptions** follows no time.
 - No transactions page: a month's purchases are reached through a category on This month.
 
@@ -196,7 +199,9 @@
 - **Investment income**: what was paid, a month on average, its share of spending, the tax
   withheld; the months, each split into dividends, interest, lending and tax; and **By holding**
   — which funds paid the dividends, how often each pays (every month, every quarter), and its
-  share — because the months swing with the funds' rhythms.
+  share — because the months swing with the funds' rhythms. It lists the holdings that together
+  paid nine-tenths, then one line for the others together: they do not matter, so they are not
+  listed, and there is nothing to open.
 
 ### Investing
 
@@ -231,7 +236,14 @@
   the lower end, above, how much is beyond the upper end. Nothing else: no advice on what to do
   with it, and no colour beyond the one word.
 
-- **Budget** follows no time: the plan, no category caps. Below the split, a Funds card appears
+- **Budget** — *is my plan holding?* It follows the month cursor and the year (1.0.5). First the
+  answer, **Everyday, month by month** (everyday spending against today's everyday amount, the
+  overspend in red, the open month faded, and in how many closed months it held); then the plan;
+  then **Where the income went** for the month on the cursor (the plan as flows, each marked
+  planned, and titled for the plan rather than the paycheque when it asks for more than
+  take-home; the everyday amount fanning out into that month's categories — refunds a source
+  coming in, an overspend a second source from savings, so every band is its real size and the
+  total is Everyday's). No category caps. Below the split, a Funds card appears
   only when the owner has a fund: each one's set-aside amount against its goal, what the plan adds,
   and when that pace reaches the goal.
   - **How each month's income is split**: one stacked bar cutting take-home into the committed
@@ -242,17 +254,13 @@
   - Invest and Everyday can be edited on the page (`.bud-edit[data-pk]`, kept in the
     URL hash and localStorage, never written back). Parts that add to more than take-home get a
     `noteBox`.
-- **FIRE** answers *when*: the stat cards, the progress bar, the trajectory, and *If you stopped
-  adding today* — the age today's money reaches the target alone, with the year and the return
-  assumed.
-  - **The trajectory**: the portfolio under today's contribution at three real returns, drawn to
-    the target's dashed line, each curve stopping where it arrives, the legend giving
-    "X.X years · month year". A money y-axis on nice steps; **the x-axis is calendar time**
-    (quarters, years or every five years, by span). **Four spans**: 1 year, 5 years, 10 years, and
-    To FIRE, the default, which stops just past the month the middle return arrives; the choice is
-    kept. A span that does not reach the target says so, and its y-axis fits what it shows.
-    The real snapshots are a black line with dots, first in the legend as Actual; the projections
-    continue from the current month.
+- **FIRE** answers *when*: **Years to financial independence** first — one range of years, at
+  what really reaches the broker; under it what is kept each month, split by its job, with the
+  savings rate as the reason (FINANCE.md §1a). Then *Invest more each month*, a slider in dollars,
+  the years it saves, and a chart of what is invested growing to the target's dashed line, now and
+  with the extra, each line named where it arrives and shaded one point of return either side.
+  Then the stat cards and the progress bar, and *If you stopped adding today* — the age today's
+  money reaches the target alone, with the year and the return assumed.
 - **Drawdown & care** answers *does it last*: a headline sentence; two sliders (the age you stop
   contributing, the age you start drawing); a three-colour line on an **age** x-axis to 95 (blue
   contributing, green compounding alone, amber drawing down); a list of the portfolio at
@@ -280,8 +288,11 @@
 - **No To do page** (taken off 2026-10-28). `tasks.json` and `decisions.json` are still
   written and read by the import; nothing on the page lists them, and an old link opens Updates.
 - **Updates**: where an update leaves its trace — two stat cards (the last update, and the next one
-  with how many statements are still to bring), then one card per update from `findata/history/imports.json`: what changed
-  (label, from, to), what was noticed, what was decided without asking, what you were asked.
+  with how many statements are still to bring), then one update in full — the newest, or the one
+  chosen — from `findata/history/imports.json`: what changed (label, from, to), what was noticed,
+  what was decided without asking, and in one line how many questions were asked and how many
+  still wait. Under it **Every update**: one row each, its date, the net worth it moved and how
+  many files, the date choosing it.
   **The story of an update lives here and nowhere else; every other page shows a status computed
   today.**
 - **Accounts**: one row per place money sits — a bank or broker account, a card, a loan, money
@@ -307,7 +318,11 @@
   belongs to no account (`standalone`) is one small line above the table. With none, nothing is
   shown — no card saying all is well. The source is `findata/register/accounts.json`, **a
   register, not a second set of books**.
-- **Statements**: the filing grid (§5c), and every source's date.
+- **Statements** — *is everything in, and what do I still bring?* One sentence first, what is
+  still to bring this year; then the filing grid (§5c), its last column the date the newest file
+  of each source came, in amber past a month. How each file is named and what it feeds is the
+  setup's to know, not this page's. What no file shows yet (`GAPS`) is a card on **Accounts**,
+  where the accounts it is about are.
 
 ### Settings
 
@@ -438,7 +453,7 @@ these jobs is deleted, not shortened.
 
 - The first card on Statements is **Filed each month**: one row per source going down, twelve
   months across, a mark when it has been filed.
-- Three marks, their meanings in a list below rather than beside the cells:
+- Three marks, their meanings in one line below rather than beside the cells:
   - **Filled black dot** = filed for that month
   - **Hollow amber ring** = due, and never arrived
   - **Small grey dot** = not owed yet — the account did not exist that month (`from`), or its
@@ -448,8 +463,9 @@ these jobs is deleted, not shortened.
   missing only once its closing day has passed.
 - The current month's column has a deeper background (`td.now`); the year pills are derived from
   `SUBMITTED`, never written down.
-- The "Months in" column gives the count filed, with an amber "missing N" only when something
-  is missing.
+- The last column, **Last in**, is the date the newest file of that source came, in amber with
+  its age past 30 days. Which months are missing the dots already say; the sentence above the
+  grid names what is still to bring.
 
 ## 5d. Measured constraints
 

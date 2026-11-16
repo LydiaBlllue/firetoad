@@ -19,6 +19,15 @@
 - **Your return after inflation is a setting.** 5% a year unless you change it — about what a
   60/40 portfolio did over the last century; someone all in stocks may say 7. The years, Coast
   and the drawdown all use it.
+- **Each page answers one question.** Nothing is folded away; what answers another question moved
+  to where that one is asked. *Budget* now answers whether the plan is holding: everyday month by
+  month first (it moved from Year), then the plan, then where the month's income went (it moved
+  from This month), with the month and year to choose. *This month* keeps what is left to spend
+  and where it went; the month's total is a sentence, and a usual month is compared only once the
+  month has closed. *Updates* shows one update in full and lists every update to choose from.
+  *Statements* says first what is still to bring, and the grid gives each source's latest date;
+  what no file shows yet moved to *Accounts*. *Investment income* lists the holdings that paid
+  nine-tenths and the rest in one line.
 - **Settings: the numbers that are yours to choose** (2026-11-14, user 001: someone wants three
   months of emergency fund, someone six to nine). A new page at the foot of the sidebar lists
   them — the emergency range, the import day, planning spend, take-home pay, what goes to the
