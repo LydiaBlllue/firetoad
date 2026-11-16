@@ -730,7 +730,9 @@ const CATS = [];
 const CCOL = Object.fromEntries(CATS.map(c=>[c.k,c.c]));
 const CGRP = Object.fromEntries(CATS.map(c=>[c.k,c.g]));
 const catName = k => (CATS.find(c => c.k === k) || {n:k}).n;
-const inEveryday = e => (CGRP[e.category] || "everyday") === "everyday";
+// Everyday is everything spent that is not a declared payment (`fx`, fixed.py, FINANCE.md §3a, 1.0.7):
+// a category says what a thing is, not whether it was promised.
+const inEveryday = e => !e.fx;
 const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const SUB_KEYS = [];
 
@@ -1553,7 +1555,7 @@ function renderHome(){
       if(!MONTHS.length) return null;
       const ym = MONTHS.includes(curYM) ? curYM : MONTHS[MONTHS.length - 1];
       const es = monthOf(ym), total = es.reduce((s,e) => s + e.amount, 0), parts = monthParts(ym);
-      const rows = [["Bills & housing", parts.bills], ["Everyday", parts.everyday]].filter(p => Math.abs(p[1]) > 0.005);
+      const rows = [["Committed", parts.bills], ["Everyday", parts.everyday]].filter(p => Math.abs(p[1]) > 0.005);
       return card("Total spent in "+ymLabel(ym),
         numx(fmt(total), rows.map(p => [p[0], fmt(p[1])]), es.length+" purchase"+(es.length === 1 ? "" : "s")+(ym > covEnd ? (ym >= TODAY.slice(0,7) ? ", and the month is still going." : ", and not every statement for it is in yet.") : "."), true),
         rows.map(p => p[0]+" "+fmt(p[1])).join(" \u00b7 "));
@@ -2131,13 +2133,13 @@ const TX_COLS = [
 // A month's spending, each row in exactly one part (FINANCE.md §3a), so the parts add up to the total.
 function monthParts(ym){
   const sum = f => monthOf(ym).filter(f).reduce((s,e) => s + e.amount, 0);
-  return {bills:sum(e => CGRP[e.category] === "bills"), everyday:everydayOf(ym)};
+  return {bills:sum(e => !!e.fx), everyday:everydayOf(ym)};
 }
 function renderCatPage(){
   const es = monthOf(viewYM);
   const total = es.reduce((s,e) => s + e.amount, 0);
   const parts = monthParts(viewYM);
-  const partRows = [["Bills & housing", parts.bills], ["Everyday", parts.everyday]]
+  const partRows = [["Committed", parts.bills], ["Everyday", parts.everyday]]
     .filter(p => Math.abs(p[1]) > 0.005);
   const rows = CATS.map(c => {
     const items = es.filter(e => e.category === c.k).sort((a,b) => b.amount - a.amount);

@@ -30,6 +30,7 @@ import categories                          # the spending categories and their g
 import verbs                               # the shape run() returns, shared by every script a month goes through
 import usual                               # a usual month and the emergency fund's months -- computed once, here
 import settings                            # the numbers that are the owner's to choose -- one table
+import fixed                               # which spending rows are a declared committed payment
 import fire                                # the FIRE target, progress and months to go -- computed once, here
 import savings                             # the savings rate and the years it takes -- computed once, here
 import drawdown                            # living on the portfolio and late-life care, at the plan's own ages
@@ -358,6 +359,10 @@ def derive(d):
                       "acct": ACCT_OF.get(m.group(1)) if m else None})
     spend_unsorted = list(spend)                 # row for row with d["spending"], for the marks below
     spend.sort(key=lambda e: e["date"])          # stable: same-day rows keep ledger order
+    # Fixed costs are only what the owner declared (fixed.py, 1.0.7): the rows that are a committed
+    # flow's payment carry `fx`; everything else spent is everyday, whatever its category.
+    for i in fixed.mark(spend, flow_totals(d["funds"]["plan"])["committedNow"], categories.groups(plan)):
+        spend[i]["fx"] = 1
     out["SPENDING"] = spend
 
     # --- CHEQUING: the classified rows of every ledger. The classification is the `type`

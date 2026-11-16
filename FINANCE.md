@@ -170,12 +170,21 @@ repaid, a loan's principal.
 
 Every row of spending is in exactly one part, so the parts always sum to the month's total:
 
-> **spent = bills & housing + everyday**
+> **spent = committed + everyday**
 
 | part | what is in it | measured against |
 |---|---|---|
-| bills & housing | the `bills` group | nothing yet |
-| everyday | the `everyday` group | the `everyday` flow |
+| committed | the payments the owner declared: each `committed` flow's payment that month (`fixed.py`) | the `committed` flows |
+| everyday | everything else spent, whatever its category — a phone bill included | the `everyday` flow |
+
+**Fixed costs are only what the owner declared** (1.0.7, feedback 110). A category says what a
+thing is, not whether it was promised: the setup's everyday figure counted every bill while the
+page left the Bills category out, and a phone bill nobody declared sat in neither line of the
+plan. Now the parts of a month are the lines of the plan, one for one: a declared payment is
+found the way D21 proves it (the row within a dollar or one per cent of the flow, or one
+payee's rows that add up to it); a flow that is an estimate across several bills is stood for
+by the `bills` group's rows in its months. Anything else is everyday; to keep a bill out of
+everyday, declare it. The category groups now decide only that, and colour and order.
 
 Money that leaves and nobody has named is a transfer, outside the sum, until the owner answers.
 

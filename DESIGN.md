@@ -160,7 +160,7 @@
   with a goal: **Portfolio** (with its dry-powder share), **Years to financial independence** (at
   what reaches the broker, linking to the FIRE page; 1.0.5, in place of FIRE progress), **Invested
   in \<month\>** (pay-yourself-first, from the broker's record), **Total spent in \<month\>** (the
-  month's whole spending, bills & housing and everyday beneath it; today's month once it has a
+  month's whole spending, committed and everyday beneath it; today's month once it has a
   purchase, otherwise the newest one the statements reach. What is left of Everyday is This
   month's to say, 2026-11-03). Invested, no goal: Portfolio · Years · Invested. Nothing invested:
   Years, when there is a number for it. The rest fill from one list, in order, taking only a card with a

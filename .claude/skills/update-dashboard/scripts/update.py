@@ -66,6 +66,8 @@ sys.path.insert(0, HERE)
 import layout  # noqa: E402
 import preflight  # noqa: E402
 import seen_accounts  # noqa: E402
+import categories  # noqa: E402
+import fixed  # noqa: E402  which spending rows are a declared payment
 import rebuild  # noqa: E402
 import verbs  # noqa: E402
 import jlock  # noqa: E402  one writer at a time, both doors
@@ -1243,10 +1245,14 @@ def derive(root):
     return rebuild.derive(rebuild.load(root))
 
 
-def spending_by_month(root):
+def spending_by_month(root, committed=(), plan=None):
+    """Everyday spending by month: every row but a declared committed payment (fixed.py)."""
+    rows = [dict(r, amount=float(r["amount"])) for r in csv_rows(layout.path(root, "spending.csv"))]
+    skip = fixed.mark(rows, committed, categories.groups(plan or {})) if committed else set()
     out = collections.defaultdict(float)
-    for r in csv_rows(layout.path(root, "spending.csv")):
-        out[r["date"][:7]] += float(r["amount"])
+    for i, r in enumerate(rows):
+        if i not in skip:
+            out[r["date"][:7]] += r["amount"]
     return out
 
 
@@ -1327,7 +1333,7 @@ def noticed_lines(ws, out, plan):
         else:
             lines.append({"sev": "warn", "text": f"{mon} shows {money(got)} reaching the broker against the {money(plan_m)} you planned. Move the rest when you can."})
     everyday = rebuild.flow_totals(ws.funds["plan"]).get("everyday")
-    sp = spending_by_month(ws.root)
+    sp = spending_by_month(ws.root, rebuild.flow_totals(ws.funds["plan"])["committedNow"], jload(ws.fd("plan.json"), {}))
     if everyday and sp:
         m = max(sp)
         mon = LONG[int(m[5:]) - 1]
