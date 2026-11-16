@@ -15,9 +15,6 @@
   what you already have invested counted in. A slider moves the rate and the curve shows what
   each step is worth. It takes the place of the *Kept* card, so Home shows one percentage of
   income. Gifts, money paid back and the broker's own income are not counted as earned.
-- **Long pages fold their detail.** Updates is one line per update with what it came to, the
-  newest open. Statements, This month and Year fold the card below the first screen to one line;
-  Investment income lists the eight holdings that paid the most and offers the rest.
 
 - **Settings: the numbers that are yours to choose** (2026-11-14, user 001: someone wants three
   months of emergency fund, someone six to nine). A new page at the foot of the sidebar lists
