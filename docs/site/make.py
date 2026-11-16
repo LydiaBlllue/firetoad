@@ -59,7 +59,7 @@ EN = dict(
            ("Categorize", "Answer what a program cannot decide: a shop seen for the first time, "
                           "a transfer with no name. One tap each, remembered next time."),
            ("Done", "Your page is rebuilt with the new month.")],
-    panel_img="panel.png", panel_alt="The monthly import in the app, at step 3: categorize a merchant",
+    panel_img="panel.png", panel_alt="The monthly import in the app, at step 3: what was a $200 e-Transfer with no sender?",
     q_lab="What it answers",
     qs=[("Where do I stand?", "Net worth across every account and currency: a row for what each part "
                               "is for, its bar coloured by how easily you could reach it.",
@@ -116,7 +116,7 @@ ZH = dict(
            ("导入", "把文件放进来。每份都在你的 Mac 上读，对平了才收。"),
            ("归类", "程序定不了的才问你：第一次出现的商户、没有名字的转账。点一下就好，下次记得。"),
            ("完成", "你的页面带上新的一个月，重新生成。")],
-    panel_img="panel-zh.png", panel_alt="app 里的月度导入，第 3 步：给一个商户归类",
+    panel_img="panel-zh.png", panel_alt="app 里的月度导入，第 3 步：一笔没写是谁的 $200 e-Transfer 是什么？",
     q_lab="它回答什么",
     qs=[("我现在在哪？", "所有账户、所有币种算在一起的净值：每一行是这部分钱的用途，色条按多容易拿到上色。",
          "crop-home.png", "首页：净值 $65,655、离财务自由几年、这个月的投资和花销"),
