@@ -3627,9 +3627,12 @@ function headerLine(){
   // the chat when the file was opened from disk (2026-11-07)
   // the count says what is to be done with it: "27 to confirm" left the owner asking 27 of
   // what (2026-11-12, user 001). One short line, as before: what each one is, is the panel's to say
+  // On the web (the live demo) there is no app and nobody to answer them, so the line says nothing
+  // (2026-11-16: "open FIRE Toad" read as a broken promise to a visitor).
   const open = (DECISIONS || []).filter(d => d.status === "open").length;
   const served = location.protocol.startsWith("http") && /\/t\/[^/]+\//.test(location.pathname);
-  const waiting = !open ? "" : (served
+  const web = location.protocol.startsWith("http") && !served;
+  const waiting = !open || web ? "" : (served
     ? '<a class="hdr-wait" href="panel">' + open + " to categorize \u2192</a>"
     : '<span class="hdr-wait">' + open + " to categorize \u2014 open FIRE Toad</span>");
   return (req.length ? term("complete_to") + " " + dLong(req[0]) : "")

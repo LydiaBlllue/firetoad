@@ -1,6 +1,10 @@
-# The live demo: the demo owner's page, published as it is committed, behind a front door
-# (docs/site/index.html) that sends a wide screen straight to it and shows a phone the screenshots.
-# dashboards/ is what the template and findata/ build (T1), so nothing is rebuilt here.
+# The live demo: the demo owner's page, published as it is committed, behind a front page in
+# English and Chinese that says what the tool is, so a search can find it, with the demo one click
+# away. docs/site/make.py builds the site; dashboards/ is what the template and findata/ build (T1),
+# so nothing is rebuilt here. The site's own address goes into the pages and sitemap.xml, so a fork
+# publishes its own address, not this one. (No robots.txt: a project site lives under /<repo>/, and
+# search engines read robots.txt only at the domain root; the sitemap is submitted in Search
+# Console instead.)
 name: Live demo
 
 # Every push to main redeploys, whatever it changed (2026-10-29, user 001): a release is a
@@ -27,12 +31,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          mkdir -p _site/screens
-          cp docs/site/index.html docs/logo.svg _site/
-          cp dashboards/finance_dashboard.html _site/dashboard.html
-          cp docs/screens/*.png _site/screens/
-      - uses: actions/configure-pages@v5
+      - id: pages
+        uses: actions/configure-pages@v5
+      - run: python3 docs/site/make.py _site --base "${{ steps.pages.outputs.base_url }}"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

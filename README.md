@@ -8,8 +8,8 @@
 
 **Your money on one page, for working toward financial independence in Canada.**
 
-**[Open the live demo →](https://lydiablllue.github.io/firetoad/)** a made-up owner's page,
-nothing to install.
+**[Open the live demo →](https://lydiablllue.github.io/firetoad/dashboard.html)** Emma's money — a made-up
+32-year-old in Ottawa. Nothing to install.
 
 Once a month you drop your bank statements into a folder. The tool reads them, checks that
 every statement adds up, files every purchase and rebuilds one HTML page: what you spent, what
