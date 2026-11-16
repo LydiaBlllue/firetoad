@@ -5,8 +5,8 @@ double-click. (中文：[安装说明](zh/install.md))
 
 ## 1. Download and open
 
-Open the [releases page](https://github.com/lydiablllue/firetoad/releases), download
-`FIRE-Toad-<version>.dmg` and double-click it. In the window that opens, **double-click FIRE
+[Download the disk image](https://github.com/lydiablllue/firetoad/releases/latest/download/FIRE-Toad.dmg) — `FIRE-Toad.dmg`, always the newest version (older
+ones are on the [releases page](https://github.com/lydiablllue/firetoad/releases)) — and double-click it. In the window that opens, **double-click FIRE
 Toad**. There is nothing to drag. The disk image also holds a short note with these same steps.
 
 macOS asks once: *"FIRE Toad" is an app downloaded from the Internet. Are you sure you want to
