@@ -160,7 +160,7 @@ def m_zh_guide_figure(r):
     p = os.path.join(r, "docs", "zh", "guide.md")
     os.makedirs(os.path.dirname(p), exist_ok=True)
     old = open(p, encoding="utf-8").read() if os.path.exists(p) else "# guide\n"
-    open(p, "w", encoding="utf-8").write(old + "\n\u6bcf\u6708\u6295\u8d44 $2,500\u3002\n")
+    open(p, "w", encoding="utf-8").write(old + "\n\u6bcf\u6708\u6295\u8d44 $700\u3002\n")
 
 def m_chain_break(r):
     p = layout.path(r, "chequing.csv")
