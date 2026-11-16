@@ -28,6 +28,12 @@ import layout                              # where each findata file lives (sche
 import loans                               # what a borrower still owes, read from the ledgers -- one place
 import categories                          # the spending categories and their groups -- one place
 import verbs                               # the shape run() returns, shared by every script a month goes through
+import usual                               # a usual month and the emergency fund's months -- computed once, here
+import settings                            # the numbers that are the owner's to choose -- one table
+import fire                                # the FIRE target, progress and months to go -- computed once, here
+import savings                             # the savings rate and the years it takes -- computed once, here
+import drawdown                            # living on the portfolio and late-life care, at the plan's own ages
+import debts as debt_rules                 # when a debt has to be paid: now, or over time
 
 MAIN_NAMES = ("ly_finance_dashboard.html", "finance_dashboard.html")   # an owner's copy, or the template's
 INV_NAME = "investment_dashboard.html"
@@ -424,7 +430,12 @@ def derive(d):
     out["HORIZON"] = ret.get("horizon", 25)
     out["ANCHOR_Y"] = ret.get("anchorYear", int(today[:4]))
     out["LIFE_TO"] = ret.get("lifeTo", 95)
-    out["COAST_R"] = ret.get("coastR", 0.05)
+    # The return the years-to-go figures assume: the owner's setting (settings.py `growth`), else
+    # the retirement block's own, else 5%. Coast and the drawdown read it too, so one page never
+    # grows money at two rates.
+    _files = {"plan.json": plan, "funds.json": d["funds"], "profile.json": prof}
+    growth = settings.value("growth", _files) if settings.stored("growth", _files) is not None else round(ret.get("coastR", 0.05) * 100, 2)
+    out["COAST_R"] = growth / 100
     out["HOME_CARE"] = ret.get("homeCare", {})
     # Government pensions (1.0.1): CPP and OAS as the owner's own statement estimates them, in
     # today's dollars a month, from the age each starts. They pay part of what the drawdown takes.
@@ -733,16 +744,31 @@ def derive(d):
         return rows
     # A TFSA is spendable today, but it is invested: Spendable today less what in it is held to
     # grow, so the step from Home's row to this one is on the page.
-    unsecured = R_debt - secured
+    # What is taken off the money is what is due now (a card's bill). A debt paid over time is
+    # not taken off: its monthly payment is in what a month costs (debts.py, FINANCE.md §8d).
+    due_now, due_later = debt_rules.unsecured(liabs, by_key)
+    unsecured = round(sum(v for _, v in due_now))
     ft = flow_totals(d["funds"]["plan"])
+    paid = debt_rules.paid_by(d["funds"]["plan"].get("flows"))
     inv_today = round(sum(v for a, v in ca if a.get("reach") == "today" and a.get("role") == "grow"))
     out["SAFETY"] = {"today": by_reach["today"], "invested": inv_today, "abroad": by_reach["abroad"], "unsecured": unsecured,
                      "accts": listed([(a, v) for a, v in ca if a.get("reach") == "today" and a.get("role") != "grow"],
                                      by_reach["today"] - inv_today),
-                     "debts": listed([(a, v) for a, v in liabs if by_key.get(a.get("against") or "") is None], unsecured),
+                     "debts": listed(due_now, unsecured),
+                     # paid over time: listed, not subtracted; `paid` says the plan carries its payment
+                     "later": [dict(one_account(a, v), paid=a["key"] in paid) for a, v in sorted(due_later, key=lambda x: -x[1]) if round(v)],
                      "repay": ft["repayNow"],
                      "repayRows": [{"n": f.get("name") or f.get("pays"), "v": f.get("amount") or 0}
                                    for f in ft["committedNow"] if f.get("pays")]}
+    # A usual month, as of every month the page can be turned to, and what the emergency fund
+    # comes to on today's (usual.py). Both were the page's own arithmetic until 1.0.5; computed
+    # here, a checker or a second front end reads the same numbers the page shows.
+    out["USUAL"] = usual.measured(out["SPENDING"], out["STMT_END"], out["MONTH_SKIP"], today,
+                                  [c["k"] for c in out["CATS"] if c.get("noFire")])
+    out["SAFETY"].update(usual.runway(by_reach["today"], inv_today, unsecured, by_reach["abroad"], ft["repayNow"],
+                                      out["USUAL"]["month"].get(today[:7])))
+    # The numbers that are the owner's to choose, each with its value now (settings.py).
+    out["SETTINGS"] = settings.rows({"plan.json": plan, "funds.json": d["funds"], "profile.json": prof})
     # What each card statement charged in interest (1.0.1): a fact the import keeps, one row per
     # statement, from the Interest total the statement prints. Never read off a merchant name.
     names = {a["key"]: a.get("label") or a.get("name") for a in accs}
@@ -784,6 +810,18 @@ def derive(d):
         "counterparty": next(({"name": doc["counterparty"]} for doc in d["accounts"].get("documents", [])
                               if doc.get("counterparty")), None),
     }
+    # The FIRE figures at the plan's own values (fire.py): the page shows them, the figures table
+    # in FINANCE.md is written from them, and check_render's R8 holds the page's own sums to them.
+    out["FIRE"] = fire.figures(out["INVEST"]["portfolio"], plan.get("planBase"), flow_totals(d["funds"]["plan"])["invest"],
+                               out["SCENARIOS"], out["HORIZON"], out["ANCHOR_Y"], today, out["COAST_R"],
+                               prof.get("born"), out["LIFE_TO"])
+    # The savings rate and the years it takes at that rate (savings.py): what work delivered
+    # against what was spent, on the same months the usual month is made of.
+    set_aside = [(f.get("name") or f.get("to"), f.get("amount") or 0) for f in d["funds"]["plan"].get("flows") or []
+                 if f.get("kind") == "saving" and not f.get("starts") and (f.get("to") or "broker") != "broker"]
+    out["SAVINGS"] = savings.measured(out["INVEST"]["cashflow"], out["SPENDING"], out["STMT_END"], out["MONTH_SKIP"],
+                                      today, out["INVEST"]["portfolio"], plan.get("planBase"), out["WSDEP"],
+                                      flow_totals(d["funds"]["plan"])["invest"], set_aside, growth)
     out["FOREIGN"] = {"asof": fj["asof"], "currency": fj.get("currency"), "symbol": fj.get("symbol", ""),
                       "label": fgn_label, "total": round(fj["total"], 2), "cadPerUnit": rate_f,
                       # A fund row shows its code beside the name, the way the broker app does.
@@ -830,6 +868,11 @@ def derive(d):
     out["DATA"] = {"fx": rate, "asof": hold_asof, "today": today, "broker": broker,
                    "positions": positions, "tickers": ticks}
     out["RET_HIST"] = return_history(d, positions, [dict(a, _rate=rate_f) for a in fgn_fund_rows], by_id)
+    # The drawdown at the ages the page starts from (drawdown.py): how long the money lasts, what
+    # care would need, how many starting years on record it survives. R8 holds the page to it.
+    out["DRAWDOWN"] = drawdown.figures(out["INVEST"]["portfolio"], plan.get("planBase"), flow_totals(d["funds"]["plan"])["invest"],
+                                       out["COAST_R"], out["LTC_TIERS"], out["HOME_CARE"], out["PENSIONS"],
+                                       (out["RET_HIST"] or {}).get("years"), prof.get("born"), out["LIFE_TO"], today)
     for p in positions:
         del p["_id"]
     out["FX"] = {"rate": rate, "asof": d["fx"].get("asof"), "quality": d["fx"].get("quality")}
@@ -947,11 +990,11 @@ def sync_figures(root, out):
     fj, plan = out["FOREIGN"], out["FUNDS"]["plan"]
     nw = inv["netWorth"] + round(fj["total"] * fj["cadPerUnit"])
     port = inv["portfolio"]
-    tgt = (pb or 0) * 300
+    tgt, F = out["FIRE"]["target"], out["FIRE"]
     miss = flow_unset(plan)
     val = {"plan_base": f"${pb:,} /mo", "fire_target": f"${tgt:,}", "net_worth": f"${nw:,}",
            "portfolio": f"${port:,}",
-           "progress": f"{round(port / tgt * 100, 1) if tgt else 0}%", "gap": f"${tgt - port:,}",
+           "progress": f"{F['pct']}%", "gap": f"${F['gap']:,}",
            "invest_monthly": f"${flow_totals(plan)['invest']:,}", "everyday": f"${flow_totals(plan)['everyday']:,}",
            "dry_powder": f"{inv['dryPct']}%"} if pb is not None else None
     if val is None:

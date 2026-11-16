@@ -48,7 +48,7 @@ SYNCED = [
     "CLAUDE.md",
     "FINANCE.md",
     "DESIGN.md",
-    "ROADMAP.md",         # what is coming, and the version rule
+    "RELEASE-ROADMAP.md", # what is coming, and the version rule (ROADMAP.md until 2026-11-13)
     "CHANGELOG.md",
     "docs/pipeline.svg",
     "docs/hero.png",
@@ -59,6 +59,10 @@ SYNCED = [
     ".gitignore",         # not for git: check_design's S4 reads it to skip files an owner writes
                           # (setup-answers.json), and without it a workspace failed on them
 ]
+# A tool file that was renamed leaves its old copy in every folder synced before, and a stale
+# copy is read as current. The old name goes when the new one has arrived (2026-11-13).
+RENAMED = {"ROADMAP.md": "RELEASE-ROADMAP.md"}
+
 NEVER = ("findata", "inbox", "archive", "dashboards", "OWNER.md", "decisions", ".private", "feedback", "product")
 
 # The empty OWNER.md a new owner starts from; setup writes the same file over the demo's.
@@ -167,6 +171,9 @@ def pending(ws):
                 out.append(rel)
         elif differs(src, dst):
             out.append(rel)
+    for old, new in RENAMED.items():
+        if os.path.isfile(os.path.join(ws, old)) and os.path.exists(os.path.join(TOOL, new)) and not os.path.exists(os.path.join(TOOL, old)):
+            out.append(old)
     return out
 
 
@@ -254,6 +261,12 @@ def main(argv):
                 else:
                     os.makedirs(os.path.dirname(dst), exist_ok=True)
                     shutil.copy2(src, dst)
+    for old, new in RENAMED.items():
+        gone = os.path.join(ws, old)
+        if os.path.isfile(gone) and os.path.exists(os.path.join(TOOL, new)) and not os.path.exists(os.path.join(TOOL, old)):
+            changed.append(f"{old} (now {new})")
+            if not check:
+                os.remove(gone)
     for rel in changed:
         print(f"  {'·' if check else '→'} {rel}")
     if not changed:

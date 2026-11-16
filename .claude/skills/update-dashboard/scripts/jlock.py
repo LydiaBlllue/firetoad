@@ -1,6 +1,6 @@
 """jlock.py — one writer at a time, for both doors.
 
-A lock file in the workspace (`.jade.lock`: pid, verb, since), taken with O_EXCL so two
+A lock file in the workspace (`.firetoad.lock`: pid, verb, since), taken with O_EXCL so two
 processes cannot both think they have it, and stale when its pid is dead. The local app takes
 it around every verb it runs; the core's own writers — update, confirm, balance, the wizard —
 refuse to write while another live process holds it, so an import started in this chat cannot
@@ -11,7 +11,8 @@ import datetime
 import json
 import os
 
-NAME = ".jade.lock"
+NAME = ".firetoad.lock"
+NAME_WAS = ".jade.lock"       # the name until 1.0.5: a live holder under it is still a holder
 
 
 def _alive(pid):
@@ -28,17 +29,18 @@ def path(root):
 
 def holder(root):
     """{pid, verb, since} of a live holder, or None (a dead holder's file is removed)."""
-    try:
-        h = json.load(open(path(root), encoding="utf-8"))
-    except (OSError, ValueError):
-        return None
-    if not _alive(h.get("pid")):
+    for p in (path(root), os.path.join(os.path.abspath(root), NAME_WAS)):
         try:
-            os.remove(path(root))
+            h = json.load(open(p, encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if _alive(h.get("pid")):
+            return h
+        try:
+            os.remove(p)
         except OSError:
             pass
-        return None
-    return h
+    return None
 
 
 def held_by_other(root):

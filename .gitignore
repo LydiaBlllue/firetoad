@@ -23,6 +23,8 @@ findata.restoring/
 findata.replaced/
 
 # the local app (app.py): its lock while a verb runs, and its log
+.firetoad.lock
+.firetoad/
 .jade.lock
 .jade/
 

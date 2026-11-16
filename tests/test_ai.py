@@ -66,7 +66,7 @@ class Calls(unittest.TestCase):
         ai.save_settings(self.ws, {"provider": "openai"})
         self.reply = "probably food of some kind"
         self.assertEqual(ai.categorise(self.ws, "X"), (None, "invalid"))
-        log = open(os.path.join(self.ws, ".jade", "log", "ai.jsonl"), encoding="utf-8").read()
+        log = open(os.path.join(self.ws, ".firetoad", "log", "ai.jsonl"), encoding="utf-8").read()
         self.assertIn('"got": "probably food of some kind"', log)
         self.assertIn('"merchant": "X"', log)
 
@@ -97,7 +97,7 @@ class Calls(unittest.TestCase):
 
     def test_the_settings_file_never_holds_the_key(self):
         ai.save_settings(self.ws, {"provider": "openai", "model": "m"})
-        text = open(os.path.join(self.ws, ".jade", "settings.json"), encoding="utf-8").read()
+        text = open(os.path.join(self.ws, ".firetoad", "settings.json"), encoding="utf-8").read()
         self.assertNotIn("test-key", text)
         self.assertNotIn("key", json.loads(text)["ai"])
 

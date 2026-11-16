@@ -440,7 +440,7 @@ def run_as_mac_app(serve, reopen):
     nsapp = NSApplication.sharedApplication()
     delegate = Delegate.alloc().init()
     nsapp.setDelegate_(delegate)
-    threading.Thread(target=work, name="jade-serve", daemon=True).start()
+    threading.Thread(target=work, name="firetoad-serve", daemon=True).start()
     AppHelper.runEventLoop()                 # returns at terminate
     return rc.get("rc", 0)
 

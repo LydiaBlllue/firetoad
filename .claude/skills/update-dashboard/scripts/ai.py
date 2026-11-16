@@ -13,12 +13,12 @@ string and the category names: no amount, no date, no account.
     python3 .claude/skills/update-dashboard/scripts/ai.py . off
     python3 .claude/skills/update-dashboard/scripts/ai.py . test "STARBUCKS 1234 TORONTO"
 
-Where things live: the choice (provider, base URL, model) in .jade/settings.json in the
+Where things live: the choice (provider, base URL, model) in .firetoad/settings.json in the
 workspace, gitignored and never synced; the key in the macOS Keychain (service "Jade Toad": the
 product's first name, kept when it became FIRE Toad so a key already saved is still found),
-or the JADE_AI_KEY environment variable, or — elsewhere — .jade/ai.key with owner-only
-permissions; every call in .jade/log/ai.jsonl with what was sent, so the owner can read it back;
-an answer already given in .jade/ai_cache.json, so one merchant costs one call.
+or the FIRETOAD_AI_KEY environment variable, or — elsewhere — .firetoad/ai.key with owner-only
+permissions; every call in .firetoad/log/ai.jsonl with what was sent, so the owner can read it back;
+an answer already given in .firetoad/ai_cache.json, so one merchant costs one call.
 
 Providers: `openai` (any OpenAI-compatible endpoint — OpenAI, DeepSeek, Qwen, Gemini's OpenAI
 endpoint, Groq, OpenRouter — base URL and model), `anthropic`, and `ollama` (a model on this
@@ -39,6 +39,7 @@ import urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from categories import CATEGORIES  # noqa: E402
+import layout  # noqa: E402  where the app's own files live in a workspace
 
 SERVICE = "Jade Toad"   # not renamed with the product (2026-11-12): saved keys live under it
 PROVIDERS = {
@@ -57,14 +58,14 @@ TIMEOUT = 20
 
 # ---------------------------------------------------------------- settings and the key
 def _dir(root):
-    d = os.path.join(root, ".jade")
+    d = layout.state_dir(root)
     os.makedirs(d, exist_ok=True)
     return d
 
 
 def settings(root):
     try:
-        return json.load(open(os.path.join(root, ".jade", "settings.json"), encoding="utf-8")).get("ai") or {"provider": "none"}
+        return json.load(open(os.path.join(layout.state_dir(root), "settings.json"), encoding="utf-8")).get("ai") or {"provider": "none"}
     except (OSError, ValueError):
         return {"provider": "none"}
 
@@ -83,14 +84,15 @@ def save_settings(root, ai):
 
 def key_get(root, provider):
     """The key, from the environment, the Keychain, or the owner-only file — never from findata/."""
-    if os.environ.get("JADE_AI_KEY"):
-        return os.environ["JADE_AI_KEY"]
+    for name in ("FIRETOAD_AI_KEY", "JADE_AI_KEY"):      # the second is the name until 1.0.5
+        if os.environ.get(name):
+            return os.environ[name]
     if sys.platform == "darwin":
         r = subprocess.run(["security", "find-generic-password", "-s", SERVICE, "-a", provider, "-w"],
                            capture_output=True, text=True)
         if r.returncode == 0 and r.stdout.strip():
             return r.stdout.strip()
-    p = os.path.join(root, ".jade", f"ai-{provider}.key")
+    p = os.path.join(layout.state_dir(root), f"ai-{provider}.key")
     try:
         return open(p, encoding="utf-8").read().strip() or None
     except OSError:
@@ -114,7 +116,7 @@ def key_delete(root, provider):
     if sys.platform == "darwin":
         subprocess.run(["security", "delete-generic-password", "-s", SERVICE, "-a", provider], capture_output=True)
     try:
-        os.remove(os.path.join(root, ".jade", f"ai-{provider}.key"))
+        os.remove(os.path.join(layout.state_dir(root), f"ai-{provider}.key"))
     except OSError:
         pass
 
@@ -180,7 +182,7 @@ def _log(root, rec):
 
 def _cache(root):
     try:
-        return json.load(open(os.path.join(root, ".jade", "ai_cache.json"), encoding="utf-8"))
+        return json.load(open(os.path.join(layout.state_dir(root), "ai_cache.json"), encoding="utf-8"))
     except (OSError, ValueError):
         return {}
 

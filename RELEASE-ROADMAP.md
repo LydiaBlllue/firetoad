@@ -1,18 +1,9 @@
-# Roadmap
+# Release roadmap
 
 What is coming, said as what you will be able to do. These are aims, not promises; what has
 already shipped is in [`CHANGELOG.md`](CHANGELOG.md).
 
-## Next — 1.0.5
-
-- **Setup ends on a finished page.** The few merchants and transfers the first import could not
-  file are answered inside the last setup screen, so the first thing you open is complete.
-- **Your savings rate, and how many more years of work it means**, on the page with a curve you
-  can drag. A first number for anyone, with or without a goal.
-- **The same numbers everywhere.** Every figure is worked out once and shown wherever it is
-  needed. Nothing you see changes; what follows is built on it.
-
-## 1.1.0
+## Next — 1.1.0
 
 - **What to do next, beside your own numbers.** The things worth understanding on the way —
   an emergency fund, fees, compounding, when to take a pension — set out in order, each in one

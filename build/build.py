@@ -307,7 +307,7 @@ def make_dmg(app, dmg):
         # Finder is told the disk by name; a second one would be "FIRE Toad 1" and the layout
         # would land on whichever Finder found first
         sys.exit(f'  ✗ a disk named {NAME} is mounted: eject it first (Finder, or hdiutil detach "{vol}")')
-    work = tempfile.mkdtemp(prefix="jade-dmg-")
+    work = tempfile.mkdtemp(prefix="firetoad-dmg-")
     stage_dir = os.path.join(work, "stage")
     os.makedirs(stage_dir)
     shutil.copytree(app, os.path.join(stage_dir, os.path.basename(app)), symlinks=True)

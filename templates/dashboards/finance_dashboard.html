@@ -18,6 +18,7 @@
   --c-fees:#1f3f74; --c-education:#b07ad6; --c-rest:#a8a69e;
   --c-other:#4a3aa7;   /* the plan's own parts (DESIGN.md §3), not a category */
   --bar:#2a78d6; --bar-dim:#9ec5f4;
+  --rng-ok:#0f6e56; --rng-fill:#cfeee2; --rng-low:#854f0b;   /* the owner's own range (Emergency fund) */
   --headh:92px;   /* sidebar wordmark and page header share this so their rules line up */
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -55,6 +56,28 @@ body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system
 /* the open page in the fold reads like any open page: dim grey on the dark pill was unreadable (#37) */
 .side details.wait button.sel{color:#fff}
 .side details.wait button.sel small{color:rgba(255,255,255,.72)}
+/* A long page lists its sections under it (DESIGN.md §4): indented, on one line down, the one in
+   view in ink. A thin chevron folds them; the same chevron folds a stage. */
+.side .chev{width:9px;height:9px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
+.side .shut>.chev,.side .chev.shut{transform:rotate(-90deg)}
+.side .sec.tog{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none}
+.side .sec.tog:hover{color:var(--ink-2)}
+.side button .tw{margin-left:auto;display:flex;padding:3px;border-radius:4px}
+.side .subs{position:relative;margin:1px 0 3px 16px;padding-left:15px}
+.side .subs::before{content:"";position:absolute;left:0;top:0;bottom:13px;width:9px;border-left:1.5px solid #c9c7bf;border-bottom:1.5px solid #c9c7bf;border-bottom-left-radius:7px}
+.side .subs button{font-size:12.5px;height:26px;padding:0 8px;color:var(--ink-2);border-radius:6px}
+.side .subs button.on{color:var(--ink);font-weight:600}
+/* A section of a long page folded to one line: its name, what it comes to, and the way in. */
+details.fold{border-top:1px solid var(--grid);scroll-margin-top:16px}
+details.fold>summary{display:flex;align-items:center;gap:16px;padding:10px 0;cursor:pointer;list-style:none}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary .lab{width:170px;flex-shrink:0;margin:0}
+details.fold>summary .fv{flex:1;font-size:13.5px;min-width:0}
+details.fold>summary .fa{font-size:12.5px;color:var(--bar);white-space:nowrap}
+details.fold>summary .fa::before{content:"Show all"}
+details.fold[open]>summary .fa::before{content:"Hide"}
+details.fold>.fb{padding:0 0 14px}
+.anchor{scroll-margin-top:16px}
 .side button .dot-n{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-left:auto}
 .main{flex:1;min-width:0}
 .pghead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;height:var(--headh);
@@ -81,6 +104,12 @@ h1{font-size:21px;font-weight:700;letter-spacing:-.2px}
 .pill.sel{background:var(--ink);color:var(--page);border-color:var(--ink);font-weight:600}
 .grid-stats{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
 .grid-stats > .card{flex:1 1 190px;max-width:340px}
+/* what is kept each month, split by its job (the FIRE page) */
+.kept{margin-top:14px}
+.kept .sl{font-size:13px;color:var(--ink-2);margin-bottom:6px}
+.kept .kb{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;max-width:720px}
+.kept .kk{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:7px;font-size:13px}
+.kept .kk i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 15px}
 .card.tight{max-width:780px}
 /* --- Motion (2026-09-06). Two rules only: a page change should be felt, and anyone who has
@@ -108,6 +137,25 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .say b{font-weight:700}
 .note-box{max-width:900px;display:flex;gap:8px;align-items:flex-start;background:#fdf6e6;border:1px solid #f0dfb4;border-radius:8px;padding:8px 10px;margin:8px 0 0;font-size:12.5px;line-height:1.45;color:#6b5417}
 .note-box .sym{font-weight:700;color:#c98500;flex-shrink:0}
+/* Settings (FINANCE.md §8e): a row is a name, one line of what it is, and the control */
+.set-grp{margin-top:18px}
+.set-grp:first-child{margin-top:0}
+.set-row{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:12px 0;border-top:1px solid var(--grid)}
+.set-row .n{font-weight:600}
+.set-row .why{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.set-ctl{text-align:right;white-space:nowrap;flex-shrink:0;font-size:13px;color:var(--ink-2)}
+.set-in{font:inherit;font-size:14px;padding:5px 9px;margin:0 4px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--ink);text-align:right;font-variant-numeric:tabular-nums}
+.set-in:disabled{background:var(--pill);color:var(--muted)}
+.set-in.w-m{width:62px}.set-in.w-c{width:112px}
+.set-meta{font-size:11.5px;color:var(--muted);margin-top:4px}
+.set-meta button{font:inherit;color:var(--bar);background:none;border:0;cursor:pointer;padding:0}
+.rng{position:relative;height:50px;margin:22px 0 2px}
+.rng .track{position:absolute;left:0;right:0;top:10px;height:12px;border-radius:6px;background:var(--pill)}
+.rng .band{position:absolute;top:10px;height:12px;background:var(--rng-fill);border-left:2px solid var(--rng-ok);border-right:2px solid var(--rng-ok)}
+.rng .you{position:absolute;top:3px;width:3px;height:26px;background:var(--ink);transform:translateX(-50%)}
+.rng .you span{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);font-size:11.5px;font-weight:600;white-space:nowrap}
+.rng .tk{position:absolute;top:30px;transform:translateX(-50%);font-size:11px;color:var(--muted)}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13px;padding:9px 14px;border-radius:8px;z-index:50;max-width:560px}
 .ctl{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)}
 .ctl:last-of-type{border-bottom:0}
 .ctl .cl{font-size:12px;color:var(--muted);width:112px;flex-shrink:0}
@@ -428,7 +476,7 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 </section>
 
 <section data-pg="income" hidden>
-  <div class="grid-stats" id="incStats"></div>
+  <div class="grid-stats anchor" id="secIncome"><div id="incStats" style="display:contents"></div></div>
   <div class="card" style="margin-bottom:10px"><div class="lab" id="yrIncLab">By source</div><div id="yrIncCats"></div></div>
   <div class="card">
     <div class="lab">Each month, by source</div>
@@ -436,7 +484,7 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
     <div class="year-legend" id="incLegend"></div>
     <div class="cap" id="incChartCap"></div>
   </div>
-  <div class="card" style="margin-top:10px">
+  <div class="card anchor" style="margin-top:10px" id="secChq">
     <div class="lab" id="chqLab">Every row in chequing</div>
     <div class="chq-ctl"><input type="search" id="chqQ" placeholder="Search by merchant or description" aria-label="Search chequing rows"><div class="pills" id="chqAcct"></div></div>
     <table class="dt" id="chqTable"></table>
@@ -529,14 +577,19 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 
 <section data-pg="fire" hidden>
-  <div class="grid-stats" id="fireStats"></div>
-  <div class="card" style="margin-bottom:10px">
-    <div class="lab">Trajectory to FIRE</div>
-    <div class="pills" id="trajPills" style="margin:6px 0 8px"></div>
-    <svg class="year-svg" id="fireTraj" viewBox="0 0 940 300" preserveAspectRatio="xMidYMid meet"></svg>
-    <div class="year-legend" id="trajLegend"></div>
-    <div class="cap" id="trajCap"></div>
+  <div class="card" style="margin-bottom:12px" id="fiCard">
+    <div class="lab">Years to financial independence</div>
+    <div class="baseline-hero num" id="fiBig"></div>
+    <div class="say" id="fiSay"></div>
+    <div class="kept" id="fiKept"></div>
   </div>
+  <div class="card" style="margin-bottom:12px" id="fiMoreCard">
+    <div class="ctl"><span class="cl">Invest more each month</span><input type="range" id="fiMore" min="0" max="1000" step="50" aria-label="Invest more each month"><span class="cv num" id="fiMoreV"></span></div>
+    <div class="say" id="fiRes"></div>
+    <svg class="year-svg" id="fiChart" viewBox="0 0 940 260" preserveAspectRatio="xMidYMid meet" role="img" aria-label="What you have invested, growing to the target"></svg>
+    <div class="cap" id="fiCap"></div>
+  </div>
+  <div class="grid-stats" id="fireStats"></div>
   <div class="card" style="margin-bottom:10px">
     <div class="lab">If you stopped adding today</div>
     <div class="say" id="coastSay"></div>
@@ -546,7 +599,19 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <section data-pg="coast" hidden>
   <div class="card" style="margin-bottom:10px">
-    <div class="say" id="drawSay"></div>
+    <div class="say" id="drawSay" style="margin-bottom:10px"></div>
+    <details class="fold" id="secMoney"><summary><span class="lab">The money</span><span class="fv" id="sumMoney"></span><span class="fa"></span></summary>
+      <div class="fb"><div id="coastMeta"></div></div></details>
+    <details class="fold" id="secCare"><summary><span class="lab">Care</span><span class="fv" id="sumCare"></span><span class="fa"></span></summary>
+      <div class="fb"><div id="careMeta"></div></div></details>
+    <details class="fold" id="secLasted" style="border-bottom:1px solid var(--grid)"><summary><span class="lab" id="btLab">Would it have lasted?</span><span class="fv" id="sumLasted"></span><span class="fa"></span></summary>
+      <div class="fb">
+        <div class="grid-stats" id="btStats" style="margin:8px 0 4px"></div>
+        <svg class="year-svg" id="btChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="phase-key" id="btKey"></div>
+        <div id="btMeta"></div>
+        <div id="btNote"></div>
+      </div></details>
     <div style="margin:10px 0 2px">
       <div class="ctl"><span class="cl">Stop adding at</span><input type="range" id="stopAge" min="26" max="65" step="1"><span class="cv" id="stopAgeV"></span></div>
       <div class="ctl"><span class="cl">Start taking at</span><input type="range" id="drawAge" min="27" max="75" step="1"><span class="cv" id="drawAgeV"></span></div>
@@ -556,17 +621,7 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
     </div>
     <svg class="year-svg" id="coastChart" viewBox="0 0 940 300" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="phase-key" id="coastKey"></div>
-    <div id="coastMeta"></div>
-    <div id="careMeta" style="margin-top:10px"></div>
     <div id="coastNote"></div>
-  </div>
-  <div class="card" style="margin-bottom:10px">
-    <div class="lab" id="btLab">Would it have lasted? Every stretch since 1928</div>
-    <div class="grid-stats" id="btStats" style="margin:8px 0 4px"></div>
-    <svg class="year-svg" id="btChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
-    <div class="phase-key" id="btKey"></div>
-    <div id="btMeta"></div>
-    <div id="btNote"></div>
   </div>
 </section>
 
@@ -588,7 +643,13 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <section data-pg="safe" hidden>
   <div class="grid-stats" id="safeStats"></div>
+  <div class="card" id="safeRange" style="margin-bottom:10px"></div>
   <div class="card" id="safeAccts"></div>
+</section>
+
+<section data-pg="set" hidden>
+  <div id="setNote"></div>
+  <div class="card" id="setList"></div>
 </section>
 
 <section data-pg="upd" hidden>
@@ -675,7 +736,6 @@ const CCOL = Object.fromEntries(CATS.map(c=>[c.k,c.c]));
 const CGRP = Object.fromEntries(CATS.map(c=>[c.k,c.g]));
 const catName = k => (CATS.find(c => c.k === k) || {n:k}).n;
 const inEveryday = e => (CGRP[e.category] || "everyday") === "everyday";
-const inTarget    = e => !(CATS.find(c => c.k === e.category) || {}).noFire;
 const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const SUB_KEYS = [];
 
@@ -704,10 +764,10 @@ const stNum = (k, dflt) => {
   const v = Number(ST[k]);
   return isFinite(v) && v > 0 && Number(ST["of_"+k]) === dflt ? v : dflt;
 };
-let trajView = ST.traj && ST.traj !== "fire" ? Number(ST.traj) || "fire" : "fire";   // the FIRE chart's span: years ahead, or to the target
 function saveState(){
-  const st = {traj:trajView, p:curPage, ym:viewYM, base:PLAN_BASE, stop:stopAge, draw:drawAge,
-              care:careAge, ltc:ltcAge, home:ltcTier, everyday:EVERYDAY, invm:INVM};
+  const st = {p:curPage, ym:viewYM, stop:stopAge, draw:drawAge,
+              care:careAge, ltc:ltcAge, home:ltcTier};
+  if(navShut.size) st.shut = [...navShut].join(",");
   Object.entries(stBuilt).forEach(([k,v]) => { st["of_"+k] = v; });
   try{ localStorage.setItem("ly_state", JSON.stringify(st)); }catch(e){}
   try{ history.replaceState(null, "", "#" + Object.entries(st)
@@ -756,7 +816,6 @@ const ymNum = ym => Number(ym.slice(0,4)) * 12 + Number(ym.slice(5,7));
 const cmpOf = ym => monthOf(ym).filter(e => !e.yr).concat(
   SPENDING.filter(e => e.yr && e.currency === "CAD" && ymNum(ym) - ymNum(e.date) >= 0 && ymNum(ym) - ymNum(e.date) < 12)
           .map(e => Object.assign({}, e, {amount: e.amount / 12})));
-const monthTarget = ym => cmpOf(ym).filter(inTarget).reduce((s,e) => s + e.amount, 0);
 function ymShift(ym,d){let[y,m]=ym.split("-").map(Number);m+=d;if(m<1){m=12;y--}if(m>12){m=1;y++}return y+"-"+String(m).padStart(2,"0");}
 // Months from today as a label ("Aug 2039").
 const dTxt = m => { if(m === null) return "beyond 25y"; const [Y,M] = TODAY.slice(0,7).split("-").map(Number); const t = M-1+m, yy = Y + Math.floor(t/12); return MN[t%12]+" "+yy; };
@@ -809,7 +868,7 @@ function setYear(y){
 const PROFILE = {};
 const BROKER = "";          // the institution that holds the portfolio, from accounts.json
 const CP = INVEST.counterparty || null;   // who pays money back, from cashflow.json
-const VERSION = "1.0.4";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
+const VERSION = "1.0.5";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
 // The brand is data, not markup: it used to be typed into the <title>, the sidebar and the link
 // between the two dashboards, which is three places to miss when someone makes this theirs.
 // FIRE Toad is the product; the owner's name is the instance. Both are shown, neither typed
@@ -852,12 +911,22 @@ const NAV = [
   // After FIRE: living on it.
   {sec:"After FIRE", items:[{k:"coast",n:"Drawdown & care",  t:"Drawdown and care",    d:""}]},
   // Records and reference, for every stage, at the foot of the sidebar under the pages still
-  // waiting for their data: what each update changed, which statements are in, and the Glossary.
+  // waiting for their data: what each update changed, which statements are in, the Glossary, and
+  // Settings — the numbers that are the owner's to choose.
   {sec:"",          items:[{k:"upd",   n:"Updates",          t:"Updates",              d:""},
                            {k:"src",   n:"Statements",       t:"Statements",           d:""},
-                           {k:"gloss", n:"Glossary",         t:"Glossary",             d:""}]}
+                           {k:"gloss", n:"Glossary",         t:"Glossary",             d:"", ref:1},
+                           {k:"set",   n:"Settings",         t:"Settings",             d:"The numbers that are yours to choose. A change is saved as you make it."}]}
 ];
 const PAGES = NAV.flatMap(g => g.items);
+// The sections of a long page, listed under it in the sidebar (DESIGN.md §4): [the id of the
+// element on the page, the section's own heading]. Kept beside NAV, not in it, so NAV stays one
+// flat list of pages.
+const PAGE_SECS = {
+  income: [["secIncome", "Income"], ["secChq", "Chequing"]],
+  coast:  [["secMoney", "The money"], ["secCare", "Care"], ["secLasted", "Would it have lasted?"]]
+};
+PAGES.forEach(p => { p.secs = PAGE_SECS[p.k] || []; });
 const PILL_PAGES = ["cat"];                          // driven by the month cursor
 const YEAR_PAGES = ["cat","income","trends"];                 // driven by the year container
 let curPage = "home";   // real starting page is chosen at boot from ST.p
@@ -901,15 +970,26 @@ const WAITS = {
   // The FIRE pages wait for a goal, not for money (1.0.1): someone saving toward FIRE with
   // nothing invested yet still has a target to read. Drawdown also waits for something invested,
   // so nobody with nothing invested reads that the money runs out.
-  fire:   () => GOAL() ? "" : "a FIRE goal",
+  // and, since 1.0.5, for anyone it has a number for: three months of income and spending give
+  // the years to financial independence without a goal (2026-11-15, user 001)
+  fire:   () => GOAL() || (SAVINGS.years && SAVINGS.years[1] !== null) ? "" : "a FIRE goal",
   coast:  () => !GOAL() ? "a FIRE goal" : INVESTED() ? "" : "something invested",
 };
 const waitsFor = k => WAITS[k] ? WAITS[k]() : "";
 let waitOpen = false;
+// What is folded in the sidebar: a stage ("g:<name>") or the current page's sections ("p:<key>").
+// Kept with the rest of the page's state, so a stage folded away stays folded.
+const navShut = new Set(String(ST.shut || "").split(",").filter(Boolean));
+const CHEV = '<svg class="chev" viewBox="0 0 10 10"><path d="M2 3.5 L5 6.5 L8 3.5"/></svg>';
 function drawNav(){
   const f = pageFlags();
+  // The current page, when it is long enough to have sections (PAGE_SECS), lists them under it.
+  const subs = i => i.k !== curPage || !(i.secs || []).length || navShut.has("p:"+i.k) ? ""
+    : '<div class="subs">' + i.secs.map(x => '<button class="sub" data-sec="'+x[0]+'"><span>'+x[1]+'</span></button>').join("") + '</div>';
   const btn = i => '<button data-k="'+i.k+'" class="'+(i.k===curPage?"sel":"")+'"><span>'+i.n+'</span>'
-    + (f[i.k] ? '<span class="dot-n" style="background:'+f[i.k]+'"></span>' : '') + '</button>';
+    + (f[i.k] ? '<span class="dot-n" style="background:'+f[i.k]+'"></span>' : '')
+    + (i.k === curPage && (i.secs || []).length ? '<span class="tw'+(navShut.has("p:"+i.k) ? " shut" : "")+'" data-tog="p:'+i.k+'" title="Sections of this page">'+CHEV+'</span>' : '')
+    + '</button>' + subs(i);
   const waiting = PAGES.filter(i => waitsFor(i.k));
   if(waiting.some(i => i.k === curPage)) waitOpen = true;
   const fold = !waiting.length ? "" : '<details class="wait"'+(waitOpen ? " open" : "")+'><summary class="sec">Waiting for data</summary>'
@@ -919,14 +999,52 @@ function drawNav(){
     if(gi === NAV.length - 1) return fold + '<div class="grp foot">' + g.items.map(btn).join("") + '</div>';
     const items = g.items.filter(i => !waitsFor(i.k));
     if(!items.length) return "";
+    // A stage folds to its heading; the one the current page is in never does.
+    const shut = g.sec && navShut.has("g:"+g.sec) && !items.some(i => i.k === curPage);
     // A group with no heading after the first stands apart from the one above.
-    const head = !g.sec ? '' : '<div class="sec">'+g.sec+'</div>';
-    return head + '<div class="grp'+(!g.sec && gi > 0 ? " solo" : "")+'">' + items.map(btn).join("") + '</div>';
+    const head = !g.sec ? '' : '<div class="sec tog'+(shut ? " shut" : "")+'" data-tog="g:'+g.sec+'">'+g.sec+CHEV+'</div>';
+    return head + (shut ? "" : '<div class="grp'+(!g.sec && gi > 0 ? " solo" : "")+'">' + items.map(btn).join("") + '</div>');
   }).join("");
   const det = $("sideNav").querySelector("details.wait");
   if(det) det.ontoggle = () => { waitOpen = det.open; };
-  $("sideNav").querySelectorAll("button").forEach(b => b.onclick = () => setPage(b.dataset.k));
+  $("sideNav").querySelectorAll("button[data-k]").forEach(b => b.onclick = () => setPage(b.dataset.k));
+  $("sideNav").querySelectorAll("[data-tog]").forEach(t => t.onclick = ev => {
+    ev.stopPropagation();
+    const k = t.dataset.tog; if(navShut.has(k)) navShut.delete(k); else navShut.add(k);
+    drawNav(); saveState();
+  });
+  $("sideNav").querySelectorAll("button.sub").forEach(b => b.onclick = () => {
+    const el = document.getElementById(b.dataset.sec); if(!el) return;
+    if(el.tagName === "DETAILS") el.open = true;       // a folded section opens when it is asked for by name
+    el.scrollIntoView({block: "start"});
+  });
+  markSection();
 }
+// The section in view. A section laid out down the page is in view once its top has passed the
+// upper part of the window; one folded to a line is in view only while it is open and on screen
+// (three folded lines sit together, and none of them is "where you are").
+function markSection(){
+  const subs = [...$("sideNav").querySelectorAll("button.sub")];
+  if(!subs.length) return;
+  let on = null;
+  const atFoot = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+  subs.forEach((b, i) => {
+    const el = document.getElementById(b.dataset.sec); if(!el) return;
+    const r = el.getBoundingClientRect(), line = window.innerHeight * 0.35;
+    if(el.tagName === "DETAILS"){ if(el.open && r.top < line && r.bottom > 80) on = b.dataset.sec; }
+    // at the foot of the page the last section is the one in view, however short the page
+    else if(i === 0 || r.top < line || (atFoot && r.top < window.innerHeight)) on = b.dataset.sec;
+  });
+  subs.forEach(b => b.classList.toggle("on", b.dataset.sec === on));
+}
+window.addEventListener("scroll", markSection, {passive: true});
+// A chart inside a folded section has no width until the section opens, so the page is drawn
+// again when one does.
+document.addEventListener("toggle", ev => {
+  if(!(ev.target.matches && ev.target.matches("details.fold"))) return;
+  if(ev.target.open) render();
+  markSection();
+}, true);
 // A page merged into another or taken off: an old link or saved state still lands.
 const MOVED = {tasks:"upd", todo:"upd", rules:"port"};
 function setPage(p){
@@ -1048,6 +1166,7 @@ const GLOSSARY = {
   cpp:            {w:"CPP", pos:"noun", def:"Canada Pension Plan: a monthly pension for life, paid for by the contributions taken from your pay. What you will get depends on how long and how much you contributed; your My Service Canada account shows an estimate.", also:["oas"]},
   oas:            {w:"OAS", pos:"noun", def:"Old Age Security: a monthly pension from 65 for people who have lived in Canada long enough after 18, whatever they earned. A full pension needs 40 years of residence; fewer years give part of it, and a high income in retirement reduces it.", also:["cpp"]},
   long_term_care: {w:"long-term care", pos:"noun", def:"Help with daily living in later life, at home or in a facility, usually paid for privately."},
+  shortfall:      {w:"shortfall", pos:"noun", def:"What is still to pay after the money set aside for it has run out. It says how much is missing, not where it would come from.", also:["drawdown"]},
   // Words this page coined
   for_fire:       {own:1, w:"For FIRE", pos:"on this page", def:"Money whose job is to grow until you stop working. FIRE progress is measured on it.", also:["portfolio","fire"]},
   set_aside:      {own:1, w:"Set aside", pos:"on this page", def:"Money promised to a goal, such as a first home or a trip. It is left out of FIRE progress and out of dry powder.", also:["promised_to_a_goal"]},
@@ -1062,6 +1181,7 @@ const GLOSSARY = {
   in_property:    {own:1, w:"In property", pos:"on this page", def:"What a property is worth minus what is still owed on it. You reach it only by selling or borrowing against it.", also:["equity"]},
   held_abroad:    {own:1, w:"Held abroad", pos:"on this page", def:"Money in another country. Bringing it home takes conversion, transfer limits and time.", also:["exchange_rate","liquidity"]},
   planning_figure:{own:1, w:"planning figure", pos:"on this page", def:"The monthly spending your FIRE target is built on. You set it by hand; what you actually spend only calibrates it.", also:["fire_target"]},
+  savings_rate:   {own:1, w:"Savings rate", pos:"on this page", def:"The share of what you earn from work that is left after spending. It decides both how fast the money builds and how much a year of life after work costs, so it decides the years more than the pay does. Gifts, money paid back and the broker's own income are not counted as earned.", also:["kept","usual_month"]},
   kept:           {own:1, w:"Kept", pos:"on this page", def:"Income minus spending over the same months. Money moved to savings or investments counts as kept.", also:["pay_yourself_first"]},
   repayment:      {own:1, w:"Paid back", pos:"on this page", def:"Money someone returns on a loan you made. It lowers what they owe you, and it is never income.", also:["owed_to_you","lent_out"]},
   bucket:         {own:1, w:"bucket", pos:"on this page", def:"A group of holdings your investing rules are written about, such as dry powder. What no bucket claims falls into the last one.", also:["dry_powder","target_band"]},
@@ -1071,7 +1191,7 @@ const GLOSSARY = {
   unallocated:    {own:1, w:"Unallocated", pos:"on this page", def:"What is left of income once every line of the plan is paid. It stays where the income landed.", also:["everyday"]},
   safety_net:     {own:1, w:"Emergency fund", pos:"on this page", def:"Money you can reach at once, to live on if your income stops or a large bill arrives. This page shows how much you have and how many months it would last. A common guide is three to six months of spending.", also:["months_covered","spendable_today"]},
   usual_month:    {own:1, w:"A usual month", pos:"on this page", def:"What a month usually costs you: everything spent, averaged over your last full months, up to twelve, leaving out months you marked as unusual. A yearly charge counts as a twelfth each month.", also:["months_covered","planning_figure"]},
-  months_covered: {own:1, w:"Months covered", pos:"on this page", def:"How many months of your usual spending the money you can reach today would pay for, after what you owe on no asset.", f:"(spendable today − what you owe on no asset) ÷ a usual month", also:["safety_net","spendable_today"]},
+  months_covered: {own:1, w:"Months covered", pos:"on this page", def:"How many months of your usual spending the money you can reach today would pay for, after what is due now. A debt paid over time is not taken off; its monthly payment is part of a usual month.", f:"(spendable today − what is due now) ÷ a usual month", also:["safety_net","spendable_today"]},
   complete_to:    {own:1, w:"Complete to", pos:"on this page", def:"The day every account’s numbers are in up to. After it, some accounts are still waiting for their next statement."},
 };
 // The register's axes in the page's own words (Home's net-worth card, the Accounts table).
@@ -1225,6 +1345,7 @@ function render(){
   renderIncChart();
   renderCatPage();
   renderSafety();
+  renderSettings();
   renderSubs();
   renderYear();
   renderAlwYear();
@@ -1365,12 +1486,9 @@ function bandLab(){
 function renderHome(){
   renderNwChart();
   const yr = TODAY.slice(0,4);
-  const target = PLAN_BASE * 300;
   const invested = INVEST.portfolio;   // every account held to grow, the foreign funds included; 0 until the first holdings export
   // Four questions, one per section: is the money growing, how far along, did this month's rule
   // hold, and what the month cost. Net worth is the header line; "reach" is the table.
-  const pctP = Math.round(PORTFOLIO/target*1000)/10;
-  const crossP = crossMonth(project(PORTFOLIO, 0.05, 300), target);
   const dep = (WSDEP||[]).slice(-1)[0] || null, half = FUNDS.plan.invest/2;
   const curYM = TODAY.slice(0,7);
   const gross = NWPARTS.reduce((a,r) => a + r.v, 0);
@@ -1388,10 +1506,8 @@ function renderHome(){
     port: () => card(term("portfolio", "Portfolio"),
       numx(fmt(PORTFOLIO), split(grow.by), "Every account you hold to grow. Set-aside accounts and bank cash are not in it.", true),
       !INVEST.investable ? "Nothing invested yet" : bandLab()+" "+INVEST.dryPct+"%"),
-    fire: () => card(term("fire", "FIRE")+" progress",
-      unset("planBase") ? notSet("planBase")
-        : numx(pctP+"%", [["Portfolio", fmt(PORTFOLIO)], ["Target", fmt(target)]], "The target is your planning figure × 12 × 25."),
-      !unset("planBase") && crossP ? "On track for "+dTxt(crossP) : ""),
+    yrs: () => { const S = SAVINGS, t = S.years && yrsTxt(S.years);
+      return t ? card("Years to financial independence", "About "+t+" years", "At "+fmt(S.invest)+" a month invested · <a href=\"#\" onclick=\"setPage('fire');return false\">FIRE →</a>") : null; },
     inv: () => card(dep ? "Invested in "+ymLabel(dep.ym) : "Invested this month",
       unset("invest") ? (dep ? numx(fmt(dep.amt), [], "Counted the day "+BROKER+" receives it. The plan has no investing amount yet.") : notSet("invest"))
         : dep ? numx(fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>', [["Planned", fmt(FUNDS.plan.invest)], ["Arrived", fmt(dep.amt)]], "Two transfers of "+fmt(half)+", counted the day "+BROKER+" receives them.") : "\u2014",
@@ -1422,6 +1538,7 @@ function renderHome(){
         numx(monthsTxt(s.months), [["The money", fmt(s.money)], ["A usual month", fmt(s.cost)]], "From the Emergency fund page."), "Without income");
     },
     kept: () => {
+      if(SAVINGS.rate !== undefined) return null;   // the savings rate card says it, measured the one way
       const cfy = (INVEST.cashflow || []).filter(m => m.ym.startsWith(yr));
       if(!cfy.length) return null;
       const income = cfy.reduce((s,m) => s + incomeOf(m), 0);
@@ -1445,7 +1562,7 @@ function renderHome(){
       return card("Biggest category in "+yr, catName(top[0]), fmt(top[1])+", "+Math.round(pc(top[1], all))+"% of spending", {text: true});
     },
   };
-  const first = INVESTED() ? (GOAL() ? ["port", "fire", "inv", "spent"] : ["port", "inv"]) : (GOAL() ? ["fire"] : []);
+  const first = INVESTED() ? (GOAL() ? ["port", "yrs", "inv", "spent"] : ["port", "yrs", "inv"]) : ["yrs"];
   const FILL = ["interest", "spent", "covered", "kept", "subs", "bigcat"];
   const shown = [];
   for(const k of first.concat(FILL)){
@@ -1538,10 +1655,10 @@ const unset = k =>
 const notSet = k => numx('<span class="unset">Not set</span>', [], "Never given. Say "+UNSET_HOW[k]+" to set it.");
 const COMMITTED     = FLOWS.filter(f => f.kind === "committed" && flowNow(f));
 const COMMITTED_NOW = COMMITTED.reduce((s, f) => s + f.amount, 0);
-// Editable in the page, same caveat as PLAN_BASE: an edit rides in the hash and this browser,
-// not in the file. Tell Claude the number and it goes into funds.json, where a rebuild keeps it.
-let EVERYDAY  = stNum("everyday", PLAN.everyday);
-let INVM = stNum("invm", PLAN.invest);
+// Editable in the page. Since 1.0.5 an edit is a setting (FINANCE.md §8e): it is written to
+// funds.json through the local app as it is made, never kept in this browser.
+let EVERYDAY  = PLAN.everyday;
+let INVM = PLAN.invest;
 
 const everydayOf = ym => monthOf(ym).filter(inEveryday).reduce((s,e) => s + e.amount, 0);
 const monthsBetween = (a,b) => { const [y1,m1] = a.split("-").map(Number), [y2,m2] = b.split("-").map(Number); return (y2-y1)*12 + (m2-m1); };
@@ -1755,7 +1872,10 @@ function pickCat(k){
 // One editor for the plan numbers. Same behaviour as the old cap editor: click, type,
 // Enter or blur to keep, Esc to drop.
 function wirePlanEdits(){
-  document.querySelectorAll('.bud-edit[data-pk]').forEach(el => el.onclick = () => {
+  document.querySelectorAll('.bud-edit[data-pk]').forEach(el => {
+    const why = cantChange(el.dataset.pk === "everyday" ? "everyday" : "invest");
+    if(why){ el.classList.remove("bud-edit"); el.title = why; return; }
+    el.onclick = () => {
     const k = el.dataset.pk;
     const cur = k === "everyday" ? EVERYDAY : INVM;
     const inp = document.createElement("input");
@@ -1767,15 +1887,12 @@ function wirePlanEdits(){
     const commit = () => {
       if(done) return; done = true;
       const v = Number(inp.value);
-      if(isFinite(v) && v >= 0){
-        if(k === "everyday") EVERYDAY = v; else INVM = v;
-        saveState();
-      }
-      renderPlan(); drawNav(); renderInsights();
+      if(isFinite(v) && v >= 0 && v !== cur) changeSetting(k === "everyday" ? "everyday" : "invest", v);
+      else renderPlan();
     };
     inp.addEventListener("blur", commit);
     inp.onkeydown = e => { if(e.key === "Enter") commit(); if(e.key === "Escape"){ done = true; renderPlan(); } };
-  });
+  }; });
 }
 
 // ===== Month by Month: full-period stacked bars (click a legend chip to isolate one category) =====
@@ -1951,16 +2068,9 @@ let catSel = null;
 //   last 12 -- because at ten years an all-time median would blend 2026 prices with 2036 ones
 //              and quietly stop meaning "typical". The window is named in the UI so it cannot
 //              drift without someone noticing.
-const CAT_WINDOW = 12;
-const catWindow = ym => usableMonths().filter(m => m < ym).slice(-CAT_WINDOW);
-function catMedian(cat, ym){
-  const win = catWindow(ym);
-  if(win.length < 3) return null;
-  const vs = win.map(m => cmpOf(m).filter(e => e.category === cat).reduce((s,e) => s + e.amount, 0));
-  vs.sort((a,b) => a - b);
-  const h = vs.length >> 1;
-  return vs.length % 2 ? vs[h] : (vs[h-1] + vs[h]) / 2;
-}
+// Worked out at build time since 1.0.5 (usual.py `medians`): USUAL.median[ym] is {n, cats}.
+const catUsual = ym => (USUAL.median || {})[ym] || null;
+function catMedian(cat, ym){ const u = catUsual(ym); return u ? (u.cats[cat] || 0) : null; }
 // A usual month, whole: the median of the monthly totals over the same window. Until
 // 2026-10-26 the card added up only the categories that ran over and let the ones that ran under
 // count for nothing, so it showed a gap no two figures on the page could produce.
@@ -1969,19 +2079,11 @@ function catMedian(cat, ym){
 // months set aside as unusual left out. Big months are in it, because they happen. Unlike the
 // planning figure's calibration it keeps the categories that end before FIRE: today they are
 // still paid. Emergency fund, Investment income, This month and Monthly spending all read this.
-function usualMonthAt(ym){
-  const win = usableMonths().filter(m => m < ym).slice(-12)
-    .map(m => cmpOf(m).reduce((s, e) => s + e.amount, 0)).filter(v => v > 0);
-  return win.length >= 3 ? {v: win.reduce((s, v) => s + v, 0) / win.length, n: win.length} : null;
-}
+// Computed at build time since 1.0.5 (usual.py), one answer per month the page can be turned to,
+// so the page and everything outside it read the same number.
+const USUAL = {};
+const usualMonthAt = ym => (USUAL.month || {})[ym] || null;
 const usualMonth = () => usualMonthAt(TODAY.slice(0, 7));
-function monthMedian(ym){
-  const win = catWindow(ym);
-  if(win.length < 3) return null;
-  const vs = win.map(m => cmpOf(m).reduce((s,e) => s + e.amount, 0)).sort((a,b) => a - b);
-  const h = vs.length >> 1;
-  return vs.length % 2 ? vs[h] : (vs[h-1] + vs[h]) / 2;
-}
 const TX_COLS = [
   {h:"Date", c: e => e.date.slice(5), m:1, nw:1},
   {h:"Description", c: e => e.note, a:"l", num:false},
@@ -2046,7 +2148,7 @@ function renderCatPage(){
   $("catCap").textContent = "";
 
   const sel = rows.find(r => r.k === catSel);
-  const win = catWindow(viewYM);
+  const win = {length: (catUsual(viewYM) || {n: 0}).n};
   $("catDetLab").textContent = sel ? catName(sel.k) : "Detail";
   $("catDetail").innerHTML = !sel
     ? '<div class="empty">Nothing to show for '+ymLabel(viewYM)+' '+viewYM.slice(0,4)+'.</div>'
@@ -2113,7 +2215,7 @@ function renderYr(){
 // Every typed row of every ledger in the year: transfers, fees and e-Transfers one row each, as
 // the import typed them. Search reads the label and the bank's own words; the pills pick one
 // account. The year follows the year pills, like the rest of the page.
-let chqAcct = "", chqQ = "", chqN = 60;
+let chqAcct = "", chqQ = "", chqN = 8;   // a long table starts with its newest rows; Show more brings the rest
 function renderChq(){
   const accts = [...new Set(CHEQUING.map(r => r.src))];
   $("chqAcct").innerHTML = accts.length > 1 ? ["", ...accts].map(a =>
@@ -2206,10 +2308,10 @@ function renderBaseline(){
   if(!MONTHS.length) $("baseChart").innerHTML = '<text x="470" y="130" text-anchor="middle" font-size="13" fill="var(--muted)">No closed months with records yet.</text>';
   // The average of up to twelve closed months: big months are in it, and early retirement pays
   // for those too. usableMonths never reaches a month a card has not reported.
-  const closed = TODAY.slice(0,7);
-  const vals = usableMonths().filter(m => m < closed).map(m => ({m, v:monthTarget(m)})).filter(x => x.v > 0).slice(-12);
+  // Worked out at build time since 1.0.5 (usual.py `baseline`): the months used and their average.
+  const vals = (USUAL.base || {}).rows || [];
   if(vals.length >= 3){
-    baselineAvg = vals.reduce((s,x) => s + x.v, 0) / vals.length;
+    baselineAvg = USUAL.base.avg;
     const um = usualMonth();
     $("baseStats").innerHTML = StatCard(term("usual_month", "A usual month"), um ? numx(fmt(um.v), [["Months", um.n]], "Everything spent, averaged over your last full months, unusual ones left out.") : null, um ? "From "+um.n+" full months" : "");
     $("baseMonths").innerHTML = vals.map(x =>
@@ -2240,38 +2342,170 @@ function cardInterest(){
 // months covered = (Spendable today − what is owed on no asset) ÷ a usual month. The money is
 // Home's own "Spendable today" row, so the two pages cannot disagree; investments are never in
 // it, and money abroad is a line of its own. A usual month is the monthly spending average plus the
-// repayments the plan pays today: rent and bills paid today are in the spending already. It
-// judges nothing: no band, no colour, no target (FINANCE.md §8d).
+// repayments the plan pays today: rent and bills paid today are in the spending already. The
+// range it is held against is the owner's own (SETTINGS `emergency`, FINANCE.md §8d, §8e): the
+// page says below, inside or above it, and never what to do about it.
 const SAFETY = {};
+// The numbers that are the owner's to choose, each with its value now (settings.py, FINANCE.md §8e).
+const SETTINGS = [];
+// ===== Settings (1.0.5) =====
+// One value, in the data. A change is shown at once and handed to the local app, which writes
+// it, rebuilds and answers; then the page is loaded again, so what it shows is what the files
+// say. A page opened as a file has nothing to write for it and only shows the values. The demo
+// is nobody's data, so there a change is shown and not kept.
+const SET = Object.fromEntries(SETTINGS.map(r => [r.key, r]));
+const SET_MODE = location.protocol.startsWith("http") && /\/t\/[^/]+\//.test(location.pathname) ? "save" : PROFILE.demo ? "demo" : "read";
+const SET_STAGE = Object.fromEntries(["start", "goal", "track", "after"].map((k, i) => [k, (NAV.filter(g => g.sec)[i] || {}).sec || ""]));
+const sameVal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+// Why this number cannot be changed here, or "" when it can.
+function cantChange(k){
+  const r = SET[k];
+  if(!r) return "";
+  if(r.locked) return "Made of several lines of your plan";
+  return SET_MODE === "read" ? "Open this page with the FIRE Toad app to change it" : "";
+}
+function toast(msg){
+  document.querySelectorAll(".toast").forEach(el => el.remove());
+  const el = document.createElement("div"); el.className = "toast"; el.textContent = msg;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 6000);
+}
+function applySetting(k, v){
+  SET[k].v = v;
+  if(k === "planBase") PLAN_BASE = v; else if(k === "everyday") EVERYDAY = v; else if(k === "invest") INVM = v;
+}
+let setQueue = Promise.resolve(), setPending = 0, setSaved = false;
+// Loaded again only when every change has been answered and nothing is being typed: a page
+// loaded while a second change is still being written would show the value from before it.
+function reloadWhenIdle(){
+  if(setPending || !setSaved) return;
+  const a = document.activeElement;
+  if(a && a.tagName === "INPUT"){ setTimeout(reloadWhenIdle, 400); return; }
+  location.reload();
+}
+function changeSetting(k, v, reset){
+  const r = SET[k];
+  if(!r || cantChange(k)) return;
+  const was = {v: r.v, isDef: r.isDef, changed: r.changed};
+  if(reset) v = r.def;
+  if(sameVal(v, was.v) && !reset){ render(); return; }
+  applySetting(k, v);
+  r.isDef = r.def !== null && sameVal(v, r.def);
+  r.changed = reset ? null : new Date().toLocaleDateString("en-CA");
+  render();
+  if(SET_MODE !== "save") return;
+  // one at a time: a second change waits for the first, so the app never answers "busy" to its own page
+  setPending++;
+  setQueue = setQueue.then(() => fetch("api/setting", {method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(reset ? {key: k, reset: true} : {key: k, value: v})})
+      .then(res => res.json().then(j => { if(!res.ok || !j.ok) throw j.error || {}; }))
+      .then(() => { setSaved = true; })
+      .catch(e => {
+        applySetting(k, was.v); r.isDef = was.isDef; r.changed = was.changed; render();
+        toast(e.type === "Busy" ? "Not saved: an import is running. Change it again when the import is done."
+            : "Not saved" + (e.text ? ": " + e.text : ". The app did not answer."));
+      })
+      .then(() => { setPending--; reloadWhenIdle(); }));
+}
+const setShow = (r, v) => v === null ? "Not set" : r.kind === "months" ? v[0] + " to " + v[1] + " months" : r.kind === "day" ? "the " + ordinal(v) : r.kind === "percent" ? v + "% a year" : fmt(v);
+function setControl(r){
+  if(r.locked) return '<span class="num">' + setShow(r, r.v) + '</span>';
+  const inp = (i, v, cls, more) => '<input class="set-in '+cls+'" type="number" data-sk="'+r.key+'" data-si="'+i+'" value="'+(v === null ? "" : v)
+    + '" min="'+r.min+'" max="'+r.max+'" '+more+(cantChange(r.key) ? " disabled" : "")+' aria-label="'+r.n+'">';
+  if(r.kind === "months") return inp(0, r.v[0], "w-m", 'step="1"') + "to" + inp(1, r.v[1], "w-m", 'step="1"') + "months";
+  if(r.kind === "day") return "Day" + inp(0, r.v, "w-m", 'step="1"');
+  if(r.kind === "percent") return inp(0, r.v, "w-m", 'step="0.5"') + "% a year";
+  return "$" + inp(0, r.v, "w-c", 'step="50" placeholder="Not set"');
+}
+function setMeta(r){
+  if(r.locked) return cantChange(r.key);
+  const parts = [];
+  if(r.changed && !r.isDef) parts.push("Changed " + dLong(r.changed));
+  if(r.def !== null && !r.isDef && !cantChange(r.key)) parts.push('<button data-sreset="'+r.key+'">Back to ' + setShow(r, r.def) + '</button>');
+  return parts.join(" \u00b7 ");
+}
+// The controls of one setting, wherever they are drawn: the Settings page and the number's own page.
+function wireSettings(root){
+  root.querySelectorAll("input.set-in").forEach(inp => inp.onchange = () => {
+    const r = SET[inp.dataset.sk], n = Number(inp.value);
+    if(inp.value === "" || !isFinite(n) || n < r.min || n > r.max || ((r.kind === "months" || r.kind === "day") && n !== Math.round(n))){ render(); return; }
+    if(r.kind !== "months"){ changeSetting(r.key, n); return; }
+    // the end that was typed stays; the other one follows it rather than refusing
+    const v = r.v.slice(); v[Number(inp.dataset.si)] = n;
+    if(v[0] > v[1]) v[1 - Number(inp.dataset.si)] = n;
+    if(v[1] <= 0){ render(); return; }
+    changeSetting(r.key, v);
+  });
+  root.querySelectorAll("[data-sreset]").forEach(b => b.onclick = () => changeSetting(b.dataset.sreset, null, true));
+}
+function renderSettings(){
+  $("setNote").innerHTML = SET_MODE === "read" ? noteBox("These numbers can be read here, not changed. Open this page with the FIRE Toad app to change them.")
+    : SET_MODE === "demo" ? noteBox("This is the demo: a change here is shown and not kept.") : "";
+  $("setNote").style.marginBottom = SET_MODE === "save" ? "0" : "10px";
+  $("setList").innerHTML = Object.keys(SET_STAGE).map(st => {
+    const rows = SETTINGS.filter(r => r.stage === st);
+    return rows.length ? '<div class="set-grp"><div class="lab">' + SET_STAGE[st] + '</div>' + rows.map(r => {
+      const meta = setMeta(r);
+      return '<div class="set-row"><div><div class="n">' + r.n + '</div><div class="why">' + r.why + '</div></div>'
+        + '<div class="set-ctl">' + setControl(r) + (meta ? '<div class="set-meta">' + meta + '</div>' : "") + '</div></div>';
+    }).join("") + '</div>' : "";
+  }).join("");
+  wireSettings($("setList"));
+}
+// Where the months covered sit against the owner's own range (settings.py emergency_state).
+const RANGE_SAYS = {below: "Below your range", inside: "Inside your range", above: "Above your range"};
+const rangeState = (months, band) => months === null || !band ? null : months < band[0] ? "below" : months > band[1] ? "above" : "inside";
 function safetyCalc(){
-  const S = SAFETY, money = (S.today || 0) - (S.invested || 0) - (S.unsecured || 0);
-  const um = usualMonth(), cost = um ? um.v + (S.repay || 0) : null;
-  return {money, cost, months: cost ? Math.max(0, money / cost) : null,
-          abroadMonths: cost && S.abroad > 0 ? Math.max(0, (money + S.abroad) / cost) : null};
+  // the money, what a month costs and the months covered are worked out at build time (usual.py)
+  const S = SAFETY, n = k => S[k] === undefined ? null : S[k];
+  return {money: S.money || 0, cost: n("cost"), months: n("months"), abroadMonths: n("abroadMonths")};
 }
 const monthsTxt = m => (Math.round(m * 10) / 10).toFixed(1);
 function renderSafety(){
   const S = SAFETY, c = safetyCalc();
   const card = StatCard;
+  const er = SET.emergency, band = er ? er.v : null, state = rangeState(c.months, band);
   const costRows = [["Spending", usualMonth() ? fmt(usualMonth().v) : "\u2014"]].concat((S.repayRows || []).map(r => [r.n, fmt(r.v)]));
   $("safeStats").innerHTML =
     card(term("months_covered", "Months covered"),
       c.months === null ? "\u2014" : numx(monthsTxt(c.months), [["The money", fmt(c.money)], ["A usual month", fmt(c.cost)]], "The money \u00f7 a usual month.", false),
       c.months === null ? "Needs three full months of spending to know a usual month."
-        : c.abroadMonths !== null ? "With money abroad, " + monthsTxt(c.abroadMonths) + " months" : "") +
+        : [state ? '<b style="color:var(--'+(state === "below" ? "rng-low" : state === "inside" ? "rng-ok" : "ink-2")+')">' + RANGE_SAYS[state] + '</b>' : "",
+           c.abroadMonths !== null ? "With money abroad, " + monthsTxt(c.abroadMonths) + " months" : ""].filter(Boolean).join("<br>")) +
     card("The money",
       numx(fmt(c.money), [[term("spendable_today", "Spendable today"), fmt(S.today || 0)]]
           .concat(S.invested ? [["Less what is invested", "\u2212"+fmt(S.invested)]] : [])
-          .concat(S.unsecured ? [["Less what you owe", "\u2212"+fmt(S.unsecured)]] : []),
-        "What you could spend today, less what you owe that sits on no asset. Investments are not in it.", true),
+          .concat(S.unsecured ? [["Less what is due now", "\u2212"+fmt(S.unsecured)]] : []),
+        "What you could spend today, less what is due now. Investments are not in it, and a debt paid over time is not taken off: its payment is in a usual month.", true),
       S.abroad > 0 ? "Not counting " + fmt(S.abroad) + " " + term("held_abroad", "held abroad") : "") +
     card(term("usual_month", "A usual month"),
       c.cost === null ? "\u2014" : numx(fmt(c.cost), costRows, "What you usually spend, plus the repayments your plan pays today. Rent and bills are already in the spending.", true),
       "");
+  // Your range: the owner's own months, where the money sits against them, and the one fact
+  // that follows — how much more reaches the lower end, or how much is beyond the upper one.
+  // Never what to do about it (FINANCE.md §8d).
+  $("safeRange").style.display = er ? "" : "none";
+  if(er){
+    const top = Math.max(12, Math.ceil((Math.max(band[1], c.months || 0) + 1) / 3) * 3), step = top <= 12 ? 3 : top <= 24 ? 6 : 12;
+    const x = m => (Math.min(m, top) / top * 100).toFixed(2) + "%";
+    const ticks = []; for(let m = 0; m <= top; m += step) ticks.push('<div class="tk" style="left:'+x(m)+'">'+m+'</div>');
+    const meta = setMeta(er), lock = cantChange("emergency");
+    $("safeRange").innerHTML = '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px"><div class="lab">Your range</div>'
+      + '<div class="set-ctl">' + setControl(er) + (meta ? '<div class="set-meta">' + meta + '</div>' : lock ? '<div class="set-meta">' + lock + '</div>' : "") + '</div></div>'
+      + '<div class="rng"><div class="track"></div><div class="band" style="left:'+x(band[0])+';width:'+((Math.min(band[1], top) - Math.min(band[0], top)) / top * 100).toFixed(2)+'%"></div>'
+      + (c.months === null ? "" : '<div class="you" style="left:'+x(c.months)+'"><span>You: '+monthsTxt(c.months)+'</span></div>') + ticks.join("") + '</div>'
+      + (state === "below" ? '<div class="cap">' + fmt(band[0] * c.cost - c.money) + " more reaches " + band[0] + " months.</div>"
+        : state === "above" ? '<div class="cap">' + fmt(c.money - band[1] * c.cost) + " is beyond " + band[1] + " months.</div>" : "");
+    wireSettings($("safeRange"));
+  }
   const row = a => '<div class="both-acct"><span>'+(a.i ? '<span class="i">'+a.i+'</span>' : "")+a.n+(a.cur ? '<span class="a">'+a.cur+'</span>' : "")+'</span><span class="v num">'+fmt(a.v)+'</span></div>';
   $("safeAccts").innerHTML = '<div class="lab">Where the money is</div>'
     + ((S.accts || []).length ? (S.accts || []).map(row).join("") : '<div class="empty">No account you could spend from today.</div>')
-    + ((S.debts || []).length ? '<div class="lab" style="margin-top:12px">What you owe on no asset</div>' + S.debts.map(row).join("") : "");
+    + ((S.debts || []).length ? '<div class="lab" style="margin-top:12px">Due now</div>' + S.debts.map(row).join("") : "")
+    // A debt paid over time is listed and not taken off the money: what leaves each month is its
+    // payment, and that is in what a month costs. One the plan carries no payment for says so.
+    + ((S.later || []).length ? '<div class="lab" style="margin-top:12px">Paid over time</div>'
+        + S.later.map(a => row(a.paid ? a : Object.assign({}, a, {cur: (a.cur ? a.cur + " \u00b7 " : "") + "no payment in your plan"}))).join("")
+        + '<div class="cap" style="margin-top:6px">Not taken off the money. What you pay each month is part of a usual month.</div>' : "");
 }
 
 const TREND_INC = "#2a78d6", TREND_SP = "#eb6834";
@@ -2357,21 +2591,85 @@ const RULES = {};
 
 const PLAN_BASE_DEFAULT = 0;
 const DRIFT_FLAG = 0.10;                  // measured vs planned gap that is worth flagging
-let PLAN_BASE = stNum("base", PLAN_BASE_DEFAULT || 0);
-const savePlanBase = saveState;
+let PLAN_BASE = PLAN_BASE_DEFAULT || 0;   // an edit is a setting (FINANCE.md §8e), saved as it is made
 // What the statements say the same figure would be, for comparison only.
 const measuredBase = () => baselineAvg ? baselineAvg + COMMITTED_KEEP : null;
 const baseDrift = () => { const m = measuredBase(); return m === null || !(PLAN_BASE > 0) ? null : (m - PLAN_BASE) / PLAN_BASE; };
+// ===== Years to financial independence: one answer and one lever (FINANCE.md §1a) =====
+// The answer is the years at the pace money really reaches the broker; under it, the savings
+// rate and what the money kept each month does. The lever is investing a little more. Every
+// number is savings.py's (SAVINGS); the lines in the chart are drawn from the same returns.
+const yrsTxt = y => y[0] === null ? null : y[2] < 0.5 ? "0" : Math.round(y[2]) === Math.round(y[0]) ? String(Math.round(y[1])) : Math.round(y[2])+"–"+Math.round(y[0]);
+function renderFi(){
+  const S = SAVINGS, on = S.target !== undefined;
+  $("fiCard").hidden = $("fiMoreCard").hidden = !on;
+  if(!on) return;
+  const txt = yrsTxt(S.years), done = S.years[2] !== null && S.years[2] < 0.5, g = Math.round(S.growth*10)/10;
+  $("fiBig").textContent = done ? "Already there" : txt ? "About "+txt+" years" : "Not at this pace";
+  const of = S.fromPlan ? "what you spend" : "your "+term("planning_figure", "planning figure");
+  $("fiSay").innerHTML = done ? "What you have invested already covers 25 years of "+of+" ("+fmt(S.target)+")."
+    : !txt ? "Nothing reaches "+BROKER+" each month yet, so what you have invested only grows on its own."
+    : "At the <b>"+fmt(S.invest)+"</b> a month that "+(S.paceMonths ? "reached "+BROKER+" over the last "+S.paceMonths+" month"+(S.paceMonths === 1 ? "" : "s") : "your plan sends to "+BROKER)
+      + ", until what you have invested covers 25 years of "+of+" ("+fmt(S.target)+").";
+  if(S.rate !== undefined){
+    const parts = S.jobs.map((j, i) => [j[0], j[1], i ? "#9a9890" : "var(--ink)"]).concat(S.free > 0.5 ? [["No job yet", S.free, "#e8c27a"]] : []);
+    const tot = Math.max(S.keep, parts.reduce((a,p) => a + p[1], 0)) || 1;
+    $("fiKept").innerHTML = '<div class="sl">Of the <b>'+fmt(S.keep)+'</b> you keep each month — <b>'+Math.round(S.rate*100)+'%</b> of what you earn, your '+term("savings_rate", "savings rate")+':</div>'
+      + '<div class="kb">'+parts.filter(p => p[1] > 0).map(p => '<span style="width:'+(p[1]/tot*100)+'%;background:'+p[2]+'"></span>').join("")+'</div>'
+      + '<div class="kk">'+parts.map(p => '<span><i style="background:'+p[2]+'"></i>'+p[0]+' <b>'+fmt(p[1])+'</b></span>').join("")+'</div>'
+      + (S.free < -0.5 ? '<div class="cap">You set aside '+fmt(-S.free)+' a month more than you keep; it comes out of what you already have.</div>' : "");
+  } else $("fiKept").innerHTML = "";
+  $("fiMoreCard").hidden = done;
+  if(done) return;
+  const inp = $("fiMore");
+  if(!inp.dataset.set){ inp.value = S.free > 25 ? Math.min(1000, Math.round(S.free/50)*50) : 200; inp.dataset.set = "1"; inp.oninput = renderFi; }
+  const more = Number(inp.value), M = S.more.find(x => x.more === more) || S.more[0];
+  $("fiMoreV").textContent = "+"+fmt(more);
+  const sooner = S.years[1] !== null && M.years[1] !== null ? Math.round(S.years[1] - M.years[1]) : null;
+  $("fiRes").innerHTML = !more ? "Move the slider to see what investing a little more is worth."
+    : "Investing "+fmt(more)+" more a month: about <b>"+yrsTxt(M.years)+" years</b>"
+      + (sooner > 0 ? " — <b style=\"color:#006300\">about "+sooner+" year"+(sooner === 1 ? "" : "s")+" sooner</b>" : "")
+      + (S.free > 25 && Math.abs(more - S.free) < 50 ? ". That is about what has no job yet." : ".");
+  const lines = [[S.invest, S.years, "var(--ink)", "Now", ""], [S.invest + more, M.years, "#006300", "+"+fmt(more)+" a month", "4 3"]]
+    .filter((l, i) => (i === 0 || more) && l[1][1] !== null);
+  const ymax = Math.min(60, Math.ceil(Math.max(10, ...lines.map(l => l[1][0] || l[1][1] || 0)) / 5) * 5 + 5);
+  const [W, H] = fit("fiChart", 260), pl = 58, pr = 14, pt = 18, pb = 26, T = S.target, vmax = T * 1.12;
+  const x = t => pl + t/ymax*(W-pl-pr), y = v => pt + (1 - Math.min(v, vmax)/vmax)*(H-pt-pb);
+  const grow = (cm, r) => { const out = []; let v = S.portfolio; for(let t = 0; t <= ymax; t++){ out.push(v); v = v*(1+r) + cm*12; } return out; };
+  let out = '<defs><clipPath id="fiBelow"><rect x="'+pl+'" y="'+y(T)+'" width="'+(W-pl-pr)+'" height="'+(H-pb-y(T))+'"/></clipPath></defs>';
+  const step = T > 1.6e6 ? 500000 : T > 600000 ? 250000 : T > 250000 ? 100000 : 50000;
+  for(let v = 0; v <= vmax; v += step) if(Math.abs(y(v) - y(T)) > 14)
+    out += '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--grid)"/><text x="'+(pl-6)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--muted)">$'+Math.round(v/1000)+'k</text>';
+  for(let t = 0; t <= ymax; t += 10) out += '<text x="'+x(t)+'" y="'+(H-8)+'" text-anchor="'+(t ? "middle" : "start")+'" font-size="11" fill="var(--muted)">'+(t ? "+"+t+" y" : "now")+'</text>';
+  out += '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(T)+'" y2="'+y(T)+'" stroke="var(--ink)" stroke-dasharray="5 4"/>'
+    + '<text x="'+(pl-6)+'" y="'+(y(T)+4)+'" text-anchor="end" font-size="11" font-weight="600" fill="var(--ink)">Target</text><g clip-path="url(#fiBelow)">';
+  const pts = a => a.map((v,t) => x(t).toFixed(1)+","+y(v).toFixed(1)).join(" "), R = S.returns;
+  lines.forEach(([cm, , col, , dash]) => {
+    const hi = grow(cm, R[2]), lo = grow(cm, R[0]);
+    out += '<polygon points="'+pts(hi)+' '+lo.map((v,t) => x(t).toFixed(1)+","+y(v).toFixed(1)).reverse().join(" ")+'" fill="'+col+'" opacity=".07"/>'
+      + '<polyline points="'+pts(grow(cm, R[1]))+'" fill="none" stroke="'+col+'" stroke-width="2"'+(dash ? ' stroke-dasharray="'+dash+'"' : "")+'/>';
+  });
+  out += '</g>';
+  // each line is named where it reaches the target (direct labels, no legend)
+  lines.forEach(([, Y, col, name]) => {
+    if(Y[1] > ymax) return;
+    const cx = x(Y[1]), right = name === "Now";
+    out += '<circle cx="'+cx+'" cy="'+y(T)+'" r="4.5" fill="'+col+'"/>'
+      + '<text x="'+(right ? cx + 8 : cx - 8)+'" y="'+(y(T)-8)+'" text-anchor="'+(right ? "start" : "end")+'" font-size="11.5" font-weight="600" fill="'+col+'">'+name+' · '+Math.round(Y[1])+' y</text>';
+  });
+  $("fiChart").innerHTML = out;
+  $("fiCap").innerHTML = "The dashed line is the target. Each line is what you have invested, growing "+g+"% a year after inflation ("
+    + '<a href="#" onclick="setPage(\'set\');return false">your setting</a>); the shading is '+Math.round(R[0]*100)+"% to "+Math.round(R[2]*100)+"%. Roughly, not a date.";
+}
 function renderFire(){
+  renderFi();
   if(unset("planBase")){
     // No planning figure, no target: every number on these pages is a share of it.
     $("fireStats").innerHTML = StatCard(term("fire_target", "Target"), notSet("planBase"));
   }
   const I = INVEST;
   const adjBase = PLAN_BASE;
-  const target = adjBase * 12 * 25;   // 4% rule: annual spend × 25
-  const pct = Math.round(PORTFOLIO / target * 1000) / 10;
-  const gap = Math.round(target - PORTFOLIO);
+  const F = fireNow(), target = F.target, pct = F.pct, gap = F.gap;   // 4% rule: annual spend × 25
   const fcard = StatCard;
   if(!unset("planBase")){
   $("fireStats").innerHTML =
@@ -2380,15 +2678,14 @@ function renderFire(){
     + fcard("Still to go", numx(fmt(gap), [["Target", fmt(target)], ["Portfolio", "\u2212"+fmt(PORTFOLIO)]], "", true))
     + fcard(term("fire_target", "Target"), numx(fmt(target), [[term("planning_figure", "Planning figure"), fmt(adjBase)+" a month"], ["A year of it", fmt(adjBase*12)], ["Times 25", fmt(target)]], "25 years of spending, from the 4% rule."));
   }
-  $("baseHero").innerHTML = '<span class="plan-edit num" id="planEdit" title="Click to change">'
+  const baseLock = cantChange("planBase");
+  $("baseHero").innerHTML = '<span class="'+(baseLock ? "" : "plan-edit ")+'num" id="planEdit" title="'+(baseLock || "Click to change")+'">'
     + (unset("planBase") ? '<span class="unset">Not set</span>' : fmt(PLAN_BASE)) + '</span> / mo';
-  // An edited figure lives in the browser, not in this file. Rebuilding the dashboard would
-  // silently drop back to the built-in default, and the numbers would move with no explanation.
-  // So say it out loud whenever the two differ.
+  // A change is saved as it is made (FINANCE.md §8e). Only the demo, which is nobody's data,
+  // shows a change it does not keep, and says so.
   $("baseLab").innerHTML = term("planning_figure", "Planning figure");
-  $("baseDrift").innerHTML = PLAN_BASE === (PLAN_BASE_DEFAULT || 0) ? "" : noteBox(
-    "Changed here to <b>"+fmt(PLAN_BASE)+"</b>; the plan still says "+(PLAN_BASE_DEFAULT === null ? "nothing" : fmt(PLAN_BASE_DEFAULT))
-    + ". It resets at the next update. Say the new number to keep it.");
+  $("baseDrift").innerHTML = SET_MODE !== "demo" || PLAN_BASE === (PLAN_BASE_DEFAULT || 0) ? "" : noteBox(
+    "Changed here to <b>"+fmt(PLAN_BASE)+"</b>. This is the demo, so the change is not kept.");
   const drift = baseDrift();
   const usedM = [...$("baseMonths").querySelectorAll(".bm-row span:first-child")].map(x => x.textContent.trim());
   const skipM = Object.keys(MONTH_SKIP).filter(m => MONTHS.includes(m));
@@ -2409,7 +2706,7 @@ function renderFire(){
     ? noteBox("Real spending is "+Math.round(Math.abs(drift)*100)+"% "+(drift > 0 ? "above" : "below")
         +" the planning figure. Setting it to "+fmt(measuredBase())+" would make the target "+fmt(measuredBase()*300)+".")
     : "");
-  $("planEdit").onclick = () => {
+  if(!baseLock) $("planEdit").onclick = () => {
     const inp = document.createElement("input");
     inp.type = "number"; inp.min = "1"; inp.step = "50"; inp.value = PLAN_BASE;
     inp.style.cssText = "width:130px;font:inherit;font-size:30px;font-weight:700;padding:0 6px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink)";
@@ -2419,8 +2716,8 @@ function renderFire(){
     const commit = () => {
       if(done) return; done = true;
       const v = Number(inp.value);
-      if(v > 0){ PLAN_BASE = v; savePlanBase(); }
-      renderFire(); renderHome();
+      if(v > 0 && v !== PLAN_BASE) changeSetting("planBase", v);
+      else { renderFire(); renderHome(); }
     };
     inp.onblur = commit;
     inp.onkeydown = e => { if(e.key === "Enter") commit(); if(e.key === "Escape"){ done = true; renderFire(); } };
@@ -2433,14 +2730,12 @@ function renderFire(){
     drawCard.querySelectorAll(":scope > :not(#drawSay)").forEach(e => e.hidden = on);
     $("btChart").closest(".card").hidden = on;
     $("coastSay").closest(".card").hidden = on;
-    $("fireTraj").closest(".card").hidden = unset("planBase");
   };
   drawOff(unset("planBase") || unset("born"));
   if(unset("planBase")){
     $("drawSay").innerHTML = "Whether the money lasts is measured against a "+term("planning_figure", "planning figure")+": "+notSet("planBase");
     return;
   }
-  renderTrajectory(target);
   if(unset("born")){
     $("drawSay").innerHTML = "The drawdown runs by age: "+notSet("born");
     return;
@@ -2452,6 +2747,20 @@ function renderFire(){
 const MONTHLY_CONTRIB = FUNDS.plan.invest;   // the pay-yourself-first amount, from funds.json
 const SCENARIOS = [];
 const HORIZON = 0;
+// The FIRE figures at the plan's own values, worked out at build time (fire.py). The page keeps
+// the same sums below, because it redraws while a number is being changed; fireNow() is those
+// sums at the page's numbers now, and check_render's R8 fails when a freshly built page's
+// fireNow() is not FIRE.
+const FIRE = {};
+// The savings rate and the years it takes (savings.py): the page draws it and does no sums.
+const SAVINGS = {};
+function fireNow(){
+  const target = PLAN_BASE * 12 * 25, months = HORIZON * 12 - mIdx(TODAY.slice(0, 7));
+  return {target, pct: target ? Math.round(PORTFOLIO / target * 1000) / 10 : 0, gap: Math.round(target - PORTFOLIO),
+          cross: SCENARIOS.map(s => crossMonth(project(PORTFOLIO, s.r, months), target)),
+          homeCross: crossMonth(project(PORTFOLIO, 0.05, 300), target),
+          coastAge: target > 0 && BORN ? coastReachAge(PORTFOLIO, target, COAST_R) : null};
+}
 function project(p0, r, months){        // monthly compounding + level contribution
   const m = r/12, out = [p0];
   let v = p0;
@@ -2466,132 +2775,6 @@ function crossMonth(series, target){
 const ANCHOR_Y = 0;
 const NW_HISTORY = [];
 function mIdx(ym){ const [yy,mm] = ym.split("-").map(Number); return (yy-ANCHOR_Y)*12 + (mm-1); }
-function renderTrajectory(target){
-  const p0 = PORTFOLIO, months = HORIZON*12;   // axis: Jan 2026 → Jan 2051
-  const offM = mIdx(TODAY.slice(0,7));               // projections start at the current month
-  const projMonths = months - offM;
-  const paths = SCENARIOS.map(s => ({...s, series: project(p0, s.r, projMonths)}));
-  paths.forEach(p => p.cross = crossMonth(p.series, target));
-  const [W, H] = fit("fireTraj", 300), padL=58, padR=8, padT=18, padB=28;
-  // The span shown: from the first real point to some years ahead, or to just past the month the
-  // middle return reaches the target. Twenty-five years squeezed the real months into a corner.
-  const midCross = (paths[1] || paths[0] || {}).cross;
-  const from = PORT_HISTORY.length ? Math.min(mIdx(PORT_HISTORY[0].ym), offM) : offM;
-  const to = trajView === "fire" ? Math.min(months, offM + (midCross === null || midCross === undefined ? projMonths : midCross + 6))
-                                 : Math.min(months, offM + trajView * 12);
-  const shownEnd = p => Math.min(p.cross ?? projMonths, to - offM);
-  const reached = paths.some(p => p.cross !== null && offM + p.cross <= to);
-  const seen = PORT_HISTORY.map(h => h.v).concat(...paths.map(p => [p.series[0], p.series[shownEnd(p)]]));
-  const maxV = Math.max(reached ? target * 1.12 : 0, ...seen) * (reached ? 1 : 1.05);
-  const minV = reached ? 0 : Math.max(0, Math.min(...seen) * 0.9);     // a line need not start at zero
-  const x = i => padL + (i - from) / Math.max(1, to - from) * (W-padL-padR);
-  const y = v => H-padB - (v - minV) / Math.max(1, maxV - minV) * (H-padT-padB);
-  let out = "";
-  // y-axis: horizontal gridlines at a nice dollar step (~5 ticks)
-  const rawStep = (maxV - minV)/5, mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
-  const yStep = [1,2,2.5,5,10].map(m => m*mag).find(s => s >= rawStep);
-  const yLab = v => "$" + (v >= 1e6 ? (v/1e6).toFixed(v%1e6?1:0)+"M" : Math.round(v/1e3)+"k");
-  for(let v=Math.ceil((minV + 1)/yStep)*yStep; v<=maxV; v+=yStep){
-    out += '<line x1="'+padL+'" y1="'+y(v)+'" x2="'+(W-padR)+'" y2="'+y(v)+'" stroke="var(--grid)" stroke-width="1"/>';
-    out += '<text x="'+(padL-8)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="12" class="num" fill="var(--muted)">'+yLab(v)+'</text>';
-  }
-  // time: quarters on a short span, then years, then every five
-  const span = to - from, stepM = span <= 30 ? 3 : span <= 96 ? 12 : 60;
-  for(let i=Math.ceil(from/stepM)*stepM; i<=to; i+=stepM){
-    const yy = ANCHOR_Y + Math.floor(i/12);
-    out += '<line x1="'+x(i)+'" y1="'+padT+'" x2="'+x(i)+'" y2="'+(H-padB)+'" stroke="var(--grid)" stroke-width="1"/>';
-    out += '<text x="'+x(i)+'" y="'+(H-9)+'" text-anchor="'+(x(i) < padL + 20 ? "start" : x(i) > W - padR - 24 ? "end" : "middle")+'" font-size="12" class="num" fill="var(--muted)">'
-      + (stepM < 12 ? MN[i%12]+" "+yy : yy)+'</text>';
-  }
-  out += '<line x1="'+padL+'" y1="'+(H-padB)+'" x2="'+(W-padR)+'" y2="'+(H-padB)+'" stroke="var(--grid)" stroke-width="1"/>';
-  // target line, when the span reaches it; otherwise say where it is
-  if(reached){
-    out += '<line x1="'+padL+'" y1="'+y(target)+'" x2="'+(W-padR)+'" y2="'+y(target)+'" stroke="#d03b3b" stroke-width="2" stroke-dasharray="6 4"/>';
-    out += '<text x="'+(W-padR)+'" y="'+(y(target)-7)+'" text-anchor="end" font-size="12" class="num" fill="#d03b3b" font-weight="700">FIRE '+fmt(target)+'</text>';
-  } else {
-    out += '<text x="'+(W-padR)+'" y="'+(padT+2)+'" text-anchor="end" font-size="12" class="num" fill="#d03b3b" font-weight="700">FIRE '+fmt(target)+' is above this range</text>';
-  }
-  // the portfolio so far: solid ink line with dots
-  if(PORT_HISTORY.length){
-    let hd = "";
-    PORT_HISTORY.forEach(h => { hd += (hd?" L ":"M ")+x(mIdx(h.ym))+" "+y(h.v); });
-    out += '<path d="'+hd+'" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/>';
-    PORT_HISTORY.forEach(h => {
-      out += '<circle cx="'+x(mIdx(h.ym))+'" cy="'+y(h.v)+'" r="4" fill="var(--ink)" stroke="var(--surface)" stroke-width="2" data-h="'+h.ym+'"/>';
-    });
-  }
-  // the months between the last snapshot and today, which no snapshot has seen yet
-  const lastH = PORT_HISTORY[PORT_HISTORY.length-1];
-  if(lastH && mIdx(lastH.ym) < offM)
-    out += '<line x1="'+x(mIdx(lastH.ym))+'" y1="'+y(lastH.v)+'" x2="'+x(offM)+'" y2="'+y(p0)+'" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="3 4"/>';
-  // scenario lines from the current month, drawn only up to the crossing point
-  paths.forEach((p, pi) => {
-    const end = shownEnd(p), st = span <= 60 ? 1 : 3;
-    let d = "";
-    for(let i=0;i<=end;i+=st) d += (d?" L ":"M ")+x(offM+i)+" "+y(p.series[i]);
-    if(end % st) d += " L "+x(offM+end)+" "+y(p.series[end]);
-    out += '<path d="'+d+'" fill="none" stroke="'+p.c+'" stroke-width="2" stroke-linecap="round"/>';
-    out += '<path d="'+d+'" fill="none" stroke="rgba(0,0,0,0)" stroke-width="16" data-hov="'+pi+'"/>';
-    if(p.cross !== null && offM + p.cross <= to){
-      out += '<circle cx="'+x(offM+p.cross)+'" cy="'+y(target)+'" r="4.5" fill="'+p.c+'" stroke="var(--surface)" stroke-width="2" data-c="'+pi+'"/>';
-    }
-  });
-  const svg = $("fireTraj");
-  svg.innerHTML = out;
-  svg.querySelectorAll("circle[data-h]").forEach(c => {
-    const h = PORT_HISTORY.find(q => q.ym === c.dataset.h);
-    hoverable(c, ymFull(h.ym)+"<br>portfolio "+fmt(h.v)+(h.cadOnly?"<br>Canadian side only":""));
-  });
-  const yrTxt = m => m === null ? "beyond "+HORIZON+"y" : (m/12).toFixed(1)+" yr";
-  const dateTxt = m => {
-    if(m === null) return "—";
-    const [Y,M] = TODAY.slice(0,7).split("-").map(Number);
-    const t = M - 1 + m, yy = Y + Math.floor(t/12);
-    return MN[t%12] + " " + yy;
-  };
-  // hover anywhere on a scenario line → month + projected value; crossing dots → arrival info
-  svg.querySelectorAll("path[data-hov]").forEach(ph => {
-    const p = paths[Number(ph.dataset.hov)];
-    const end = shownEnd(p);
-    ph.addEventListener("mousemove", ev => {
-      const r = svg.getBoundingClientRect();
-      const mx = (ev.clientX - r.left) / r.width * W;
-      let i = Math.round(from + (mx - padL)/(W-padL-padR)*(to - from)) - offM;
-      i = Math.max(0, Math.min(end, i));
-      showTip(ev, p.n+"<br>"+dateTxt(i)+"<br>"+fmt(p.series[i]));
-    });
-    ph.addEventListener("mouseleave", hideTip);
-  });
-  svg.querySelectorAll("circle[data-c]").forEach(c => {
-    const p = paths[Number(c.dataset.c)];
-    hoverable(c, p.n+"<br>reaches "+fmt(target)+"<br>"+dateTxt(p.cross));
-  });
-  $("trajPills").innerHTML = [[1,"1 year"],[5,"5 years"],[10,"10 years"],["fire","To FIRE"]].map(([v,t]) =>
-    '<button class="pill'+(trajView === v ? " sel" : "")+'" data-v="'+v+'">'+t+'</button>').join("");
-  $("trajPills").querySelectorAll(".pill").forEach(b => b.onclick = () => {
-    trajView = b.dataset.v === "fire" ? "fire" : Number(b.dataset.v);
-    saveState(); renderTrajectory(target);
-  });
-  $("trajLegend").innerHTML =
-    '<div class="leg-row" style="pointer-events:none"><span class="dot" style="background:var(--ink)"></span>'
-    +'<span class="nm">Actual</span><span class="v num" style="width:auto;padding-left:6px">'+fmt((PORT_HISTORY[PORT_HISTORY.length-1]||{v:0}).v)+'</span></div>'
-    + paths.map(p =>
-    '<div class="leg-row" style="pointer-events:none"><span class="dot" style="background:'+p.c+'"></span>'
-    +'<span class="nm">'+p.n+'</span><span class="v num" style="width:auto;padding-left:6px">'+yrTxt(p.cross)+' · '+dateTxt(p.cross)+'</span></div>').join("");
-  const base = paths[1];
-  const rs = SCENARIOS.map(sc => Math.round(sc.r*100)+"%");
-  const nothing = PORTFOLIO <= 0 && MONTHLY_CONTRIB <= 0;
-  $("trajCap").innerHTML = '<div class="say">' + (nothing
-      ? "Nothing is invested and nothing is added each month, so the target is not getting closer."
-      : base.cross === null
-      ? "On the middle return the target is more than " + HORIZON + " years away."
-      : 'On the middle return you reach the target around <b>' + dateTxt(base.cross) + '</b>.') + '</div>'
-    + metaList([
-      ["Added each month", fmt(MONTHLY_CONTRIB)],
-      [term("real_return", "Returns"), (rs.length > 1 ? rs.slice(0,-1).join(", ")+" and "+rs[rs.length-1] : rs.join("")) + " a year"]
-    ]);
-}
-
 // ===== Coast and drawdown =====
 // Two questions the Trajectory chart cannot answer:
 //   1. If contributions stop, does the money still get there on its own? (compounding does the rest)
@@ -2652,7 +2835,27 @@ const LOANS = [];
 // cost of what you hold TODAY, so it silently absorbs realised gains and reinvested dividends.
 // A true contribution line needs a portfolio value at an older date — see the note on the page.
 const BOOKV = {};
-let stopAge = AGE_NOW, drawAge = 55, careAge = 80, ltcAge = 88, ltcTier = 0;
+// The drawdown at the ages the page starts from, worked out at build time (drawdown.py):
+// DRAWDOWN.at is those ages, DRAWDOWN.now the plan at them. The page keeps the sums below to
+// redraw as an age is moved; drawNow(at) is those sums at given ages, and check_render's R8
+// fails when a freshly built page's drawNow(DRAWDOWN.at) is not DRAWDOWN.now.
+const DRAWDOWN = {};
+// Money that runs out before care begins: everything after it is the shortfall, so there is no
+// "extra for care" to state.
+const brokeBefore = (run, careA) => run.dead !== null && run.dead <= careA;
+function drawNow(a){
+  if(!a || !BORN || !LTC_TIERS[a.tier]) return null;
+  const ltc = LTC_TIERS[a.tier], drawM = PLAN_BASE, ltcA = a.ltc >= LIFE_TO ? null : a.ltc;
+  const go = (careA, lA) => coastRun(PORTFOLIO, COAST_R, MONTHLY_CONTRIB, drawM, a.stop, a.draw, careA, lA, ltc);
+  const run = go(a.care, ltcA), atDraw = run.series[Math.round((a.draw - AGE_NOW) * 12)] || 0;
+  const bt = backtest(atDraw, drawM, a.draw, a.care, ltcA, ltc);
+  return {dead: run.dead, short: run.short, atDraw, atStop: run.series[Math.round((a.stop - AGE_NOW) * 12)] || PORTFOLIO,
+          noCareDead: go(null, null).dead, stayHomeDead: go(a.care, null).dead,
+          extra: brokeBefore(run, a.care) ? null : extraNeeded(run, drawM, a.care, ltcA, ltc),
+          bt: bt ? {ok: bt.ok, n: bt.n, N: bt.N, from: bt.from, to: bt.to} : null};
+}
+const DRAW_AT = DRAWDOWN.at || {};
+let stopAge = AGE_NOW, drawAge = DRAW_AT.draw || 0, careAge = DRAW_AT.care || 0, ltcAge = DRAW_AT.ltc || 0, ltcTier = DRAW_AT.tier || 0;
 try{ const v = JSON.parse(localStorage.getItem("ly_coast")||"null");
      if(v){ stopAge = v.stop ?? stopAge; drawAge = v.draw ?? drawAge;
             careAge = v.careAge ?? careAge; ltcAge = v.ltcAge ?? ltcAge;
@@ -2700,14 +2903,15 @@ function careAt(age, careA, ltcA, ltc){
   return 0;
 }
 function coastRun(p0, r, contribM, drawM, stopA, startA, careA, ltcA, ltc){
-  const m = r/12, out = [p0]; let v = p0, dead = null;
+  const m = r/12, out = [p0]; let v = p0, dead = null, short = 0;
   for(let i=1; i<=(LIFE_TO-AGE_NOW)*12; i++){
     const age = AGE_NOW + (i-1)/12;
     v = v*(1+m) + (age < stopA ? contribM : 0) - takeOut(age, (age >= startA ? drawM : 0) + careAt(age, careA, ltcA, ltc));
-    if(v <= 0 && dead === null){ dead = AGE_NOW + i/12; v = 0; }
+    // spent is spent: the portfolio stays at nothing, and what it could not pay adds to the shortfall
+    if(v <= 0){ short += -v; if(dead === null) dead = AGE_NOW + i/12; v = 0; }
     out.push(v);
   }
-  return {series:out, dead};
+  return {series:out, dead, short};
 }
 // Age at which today's money alone — no further contributions — reaches the FIRE target.
 function coastReachAge(p0, target, r){
@@ -2782,7 +2986,9 @@ function renderCoast(target, annualSpend){
     ["Highest rate", empty ? "\u2014" : atDraw >= annualSpend
       ? numx(peakR.toFixed(1)+"% at "+Math.floor(peakA), [], "Recomputed every month up to age "+(LIFE_TO-HORIZON)+"; the last "+HORIZON+" years are left out, when a high rate only means the pot is being spent as planned.")
       : "Never a year of spending", atDraw >= annualSpend && peakR > 4 && lasts ? "hi" : ""],
-    ["Lasts to "+LIFE_TO, empty ? "Nothing to draw from yet" : lasts ? "Yes" : "No, runs out at "+Math.floor(run.dead), lasts || empty ? "" : "hi"]
+    ["Lasts to "+LIFE_TO, empty ? "Nothing to draw from yet" : lasts ? "Yes" : "No, runs out at "+Math.floor(run.dead), lasts || empty ? "" : "hi"],
+    !lasts && !empty && run.short > 0 ? [term("shortfall", "Shortfall")+", "+Math.floor(run.dead)+" to "+LIFE_TO,
+      numx(fmt(run.short), [], "What is still to pay after the money has run out \u2014 spending and care, less any pensions \u2014 added up in today\u2019s money. It says how much is missing, not where it would come from."), "hi"] : null
   ].concat(PENSIONS.length
     ? PENSIONS.map(p => [term(p.k === "OAS" ? "oas" : p.k === "CPP" ? "cpp" : "", p.k)+" from "+p.from,
         numx(fmt(p.v)+" a month", [], "From "+(p.src || "your own statement")+(p.asof ? ", "+p.asof : "")+", in today\u2019s dollars. It pays part of what is taken out from that age.")])
@@ -2794,9 +3000,12 @@ function renderCoast(target, annualSpend){
     const atLtc  = ltcA === null ? null : careAt(ltcAge, careAge, ltcA, ltc);
     let bill = 0;
     for(let a = careAge; a < LIFE_TO; a += 1/12) bill += careAt(a, careAge, ltcA, ltc);
+    // The section's one line (DESIGN.md §4): what care comes to, before the rows that make it up.
+    $("sumCare").innerHTML = "<b>"+fmt(atHome)+"</b> a month from "+careAge
+      + (atLtc === null ? "" : " \u00b7 then "+fmt(atLtc)+" from "+ltcAge) + " \u00b7 whole bill <b>"+fmt(bill)+"</b>";
     const noCareEnd = runNoCare.dead === null ? null : Math.floor(runNoCare.dead);
     const stayEnd   = runStayHome.dead === null ? null : Math.floor(runStayHome.dead);
-    const extra = extraNeeded(run, drawM, careAge, ltcA, ltc);
+    const early = brokeBefore(run, careAge), extra = early ? null : extraNeeded(run, drawM, careAge, ltcA, ltc);
     $("careMeta").innerHTML = metaList([
       [term("long_term_care", "Light care at home")+", from "+careAge, numx(fmt(atHome)+" a month", [["Today", fmt(HOME_CARE.v)], ["At "+careAge, fmt(atHome)]],
         HOME_CARE.d+". Rising "+(HOME_CARE.esc*100).toFixed(1)+"% a year above inflation.")],
@@ -2804,7 +3013,7 @@ function renderCoast(target, annualSpend){
         : ["Then "+ltc.k+", from "+ltcAge, numx(fmt(atLtc)+" a month", [["Today", fmt(ltc.v)], ["At "+ltcAge, fmt(atLtc)]],
             ltc.d+". Rising "+(ltc.esc*100).toFixed(1)+"% a year above inflation.")],
       ["Whole care bill, "+careAge+" to "+LIFE_TO, fmt(bill)],
-      ["Extra needed at "+careAge, extra === null ? "\u2014" : extra === 0 ? "None" : numx(fmt(extra), [], "The smallest lump at "+careAge+" that keeps the pot alive to "+LIFE_TO+"."), extra ? "hi" : ""],
+      ["Extra needed at "+careAge, early ? "The money runs out at "+Math.floor(run.dead)+", before care starts" : extra === null ? "\u2014" : extra === 0 ? "None" : numx(fmt(extra), [], "The smallest lump at "+careAge+" that keeps the pot alive to "+LIFE_TO+"."), extra ? "hi" : ""],
       ["Staying home throughout", empty ? "\u2014" : stayEnd === null ? "Lasts past "+LIFE_TO : "Runs out at "+stayEnd],
       ["With no paid care", empty ? "\u2014" : noCareEnd === null ? "Lasts past "+LIFE_TO : "Runs out at "+noCareEnd, "mut"]
     ]) + (ltcA === null ? "" : '<div class="cap" style="margin-top:8px">From '+ltcAge+' the care-home fee is charged on top of the whole planning figure, so the plan has more room after '+ltcAge+' than the chart shows.</div>');
@@ -2823,6 +3032,12 @@ function renderCoast(target, annualSpend){
     + '<div class="cap" style="margin-top:6px">Every figure is in today\u2019s money, so the '+fmt(MONTHLY_CONTRIB)+' a month has to rise with inflation each year to stay on this line.</div>';
 
   const bt = backtest(atDraw, drawM, drawAge, careAge, ltcA, ltc);
+  $("sumMoney").innerHTML = empty ? "Nothing to draw from yet"
+    : (lasts ? "Lasts to <b>"+LIFE_TO+"</b>" : "Runs out at <b>"+Math.floor(run.dead)+"</b>"
+        + (run.short > 0 ? " \u00b7 shortfall <b>"+fmt(run.short)+"</b>" : ""))
+      + " \u00b7 pot at "+drawAge+" "+fmt(atDraw);
+  $("sumLasted").innerHTML = bt ? "Lasted to "+LIFE_TO+" in <b>"+bt.ok+" of "+bt.n+"</b> stretches since "+bt.from
+    : RET_HIST.years ? "Nothing to replay yet" : "No history on record yet";
   $("drawSay").innerHTML = empty
     ? "Nothing is invested yet, so at <b>"+drawAge+"</b> there is no pot to take "+fmt(annualSpend/12)+" a month from."
     : !lasts

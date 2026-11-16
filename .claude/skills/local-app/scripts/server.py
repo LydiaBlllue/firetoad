@@ -14,7 +14,7 @@ the same findata/.
 What it keeps:
 
   one core        imports the scripts as modules; never a shell, never a user string in a command
-  one writer      a lock file in the workspace (.jade.lock: pid, verb, since); a second import or
+  one writer      a lock file in the workspace (.firetoad.lock: pid, verb, since); a second import or
                   save while one runs gets 409 with the running verb
   loopback only   binds 127.0.0.1; a per-launch token in the path (/t/<token>/…), so a page on
                   another local port cannot call the API; a wrong token is 404, not 401 — nothing
@@ -39,9 +39,11 @@ Routes (every API answer is {"ok": bool, "data" | "error": …, "took": seconds}
   POST /api/inbox          (multipart)                  files dropped on the panel, saved to inbox/ under
                                                         their own names and named by preflight; nothing parsed
   POST /api/balance        balance.run(key, amount, asof, write) a balance no file carries; rebuilds
+  POST /api/setting        setting.run(key, value, reset, write) one of the owner's numbers (settings.py), from the
+                                                        dashboard's Settings page; answers when it is written
   POST /api/ocr            ocr.read(image, capture)     (multipart: key + image) the amounts Vision sees on a
                                                         screenshot, ranked by the account's capture line —
-                                                        candidates only; the image is kept under .jade/shots/
+                                                        candidates only; the image is kept under .firetoad/shots/
   POST /api/open-inbox     —                            opens the inbox folder in the file manager
   POST /api/open-log       —                            shows the app's log in the file manager
   GET  /api/setup          wizard.state()               the setup screens, drafted from inbox/ (demo folders)
@@ -57,7 +59,7 @@ Routes (every API answer is {"ok": bool, "data" | "error": …, "took": seconds}
   GET  /api/ping           keeps the server alive
 
 Errors from the core are returned whole (the exception's name and text) and logged to
-.jade/log/app.log in the workspace, so the owner can send that file.
+.firetoad/log/app.log in the workspace, so the owner can send that file.
 """
 import argparse
 import datetime as dt
@@ -86,10 +88,12 @@ import balance  # noqa: E402
 import confirm  # noqa: E402
 import fetch  # noqa: E402  find_root
 import jlock  # noqa: E402  one writer at a time, both doors
+import layout  # noqa: E402  where the app's own files live in a workspace
 import ocr  # noqa: E402
 import panel  # noqa: E402
 import preflight  # noqa: E402  names a dropped file
 import rebuild  # noqa: E402  MAIN_NAMES
+import setting  # noqa: E402  one of the owner's numbers, changed
 import status  # noqa: E402
 import update  # noqa: E402
 import verbs  # noqa: E402
@@ -102,7 +106,7 @@ MAX_UPLOAD = 64 << 20    # and a multipart one larger than this (a month of stat
 IMAGES = (".png", ".jpg", ".jpeg", ".heic", ".webp")
 
 import applog  # noqa: E402  the system log and the error an owner can copy
-log = logging.getLogger("jade.app")
+log = logging.getLogger("firetoad.app")
 
 
 # ---------------------------------------------------------------- the lock
@@ -196,7 +200,7 @@ class App:
         self._setup_log()
 
     def _setup_log(self):
-        d = os.path.join(self.root, ".jade", "log")
+        d = os.path.join(layout.state_dir(self.root), "log")
         os.makedirs(d, exist_ok=True)
         if not log.handlers:
             h = logging.FileHandler(os.path.join(d, "app.log"), encoding="utf-8")
@@ -252,7 +256,7 @@ class App:
                 job.finish(error={"type": type(e).__name__, "text": str(e)})
             finally:
                 self.lock.release()
-        threading.Thread(target=go, name=f"jade-{verb}", daemon=True).start()
+        threading.Thread(target=go, name=f"firetoad-{verb}", daemon=True).start()
         return job, None
 
     def do_status(self):
@@ -292,6 +296,27 @@ class App:
         return self.start_job("balance", True,
                               lambda say: verbs.public(balance.run(self.root, str(key), amount, asof=asof or None, write=True, say=say)))
 
+    def do_setting(self, key, value, reset=False):
+        """One of the owner's numbers, changed from the dashboard (FINANCE.md §8e). Unlike the
+        other writes it answers only when the value is written and the page rebuilt — a second or
+        two — because the page that asked has already shown the new number and needs to know
+        whether to keep it. Returns (result, busy): busy names what holds the lock."""
+        if not key:
+            raise ValueError("a setting's key is needed")
+        if self.job is not None and not self.job.done.is_set():
+            return None, self.job.verb
+        if self.tool and self.tool.get("state") == "newer":
+            return None, "nothing (this folder's data is newer than the app — update the app first)"
+        held = self.lock.acquire("setting")
+        if held:
+            return None, held
+        try:
+            res = setting.run(self.root, str(key), value, reset=bool(reset), write=True)
+        finally:
+            self.lock.release()
+        log.info("setting %s: %s", key, "written" if res.get("written") else "refused")
+        return res, None
+
     def save_inbox(self, parts):
         """Files dropped on the panel: into inbox/ under their own (base)names, then named the way
         preflight names them. A file already there, byte for byte, is said so and not written
@@ -318,7 +343,7 @@ class App:
         return out
 
     def do_ocr(self, key, name, data):
-        """A screenshot for one account: kept under .jade/shots/, read, the candidates returned.
+        """A screenshot for one account: kept under .firetoad/shots/, read, the candidates returned.
         Writes nothing to findata/; the owner picks, and /api/balance writes."""
         reg = json.load(open(os.path.join(self.root, "findata", "register", "accounts.json"), encoding="utf-8")) \
             if os.path.exists(os.path.join(self.root, "findata", "register", "accounts.json")) else {}
@@ -328,7 +353,7 @@ class App:
         ext = os.path.splitext(safe_name(name) or "")[1].lower() or ".png"
         if ext not in IMAGES:
             raise ValueError("not an image")
-        shots = os.path.join(self.root, ".jade", "shots")
+        shots = os.path.join(layout.state_dir(self.root), "shots")
         os.makedirs(shots, exist_ok=True)
         path = os.path.join(shots, f"{re.sub(r'[^A-Za-z0-9_-]', '_', key)}-{dt.datetime.now().strftime('%Y%m%d-%H%M%S')}{ext}")
         with open(path, "wb") as fh:
@@ -383,10 +408,10 @@ class App:
         return {"category": cat, "how": how}
 
     def lang(self, q=None):
-        """The panel's language: ?lang= on the request (remembered in .jade/settings.json),
+        """The panel's language: ?lang= on the request (remembered in .firetoad/settings.json),
         else the remembered one, else profile.json `lang`, else the system's (strings.py)."""
         want = (q or {}).get("lang", [None])[0]
-        sp = os.path.join(self.root, ".jade", "settings.json")
+        sp = os.path.join(layout.state_dir(self.root), "settings.json")
         try:
             allset = json.load(open(sp, encoding="utf-8"))
         except (OSError, ValueError):
@@ -561,7 +586,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if path == "/panel":
                 return self._send(200, panel.render(app.base, app.root, app.do_status(), app.do_questions(),
                                                     app.last_import(), app.job.public() if app.job else None,
-                                                    app.lock.holder(), app.tool, app.lang(q)),
+                                                    app.lock.holder(), app.tool, app.lang(q),
+                                                    first=(q.get("first", [""])[0] == "1")),
                                   extra=[("Content-Security-Policy",
                                           "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; "
                                           "connect-src 'self'; img-src data:; base-uri 'none'; form-action 'none'")])
@@ -634,6 +660,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 job, busy = app.do_refile(body.get("match"), body.get("category"))
             elif path == "/api/balance":
                 job, busy = app.do_balance(body.get("key"), body.get("amount"), body.get("asof"))
+            elif path == "/api/setting":
+                res, busy = app.do_setting(body.get("key"), body.get("value"), body.get("reset", False))
+                if busy:
+                    return self._json(409, False, {"type": "Busy", "text": f"{busy} is running; wait for it", "verb": busy}, t0)
+                if not res.get("written"):
+                    why = next((l.strip().lstrip("✗ ").strip() for l in res["lines"] if "✗" in l), "not written")
+                    return self._json(400, False, {"type": "BadRequest", "text": why}, t0)
+                return self._json(200, True, verbs.public(res), t0)
             elif path == "/api/inbox":
                 return self._json(200, True, app.save_inbox(body.get("files") or []), t0)
             elif path == "/api/ocr":
@@ -676,7 +710,7 @@ def serve(root, port=0, token=None, ready=None, tool=None, tool_hooks=None):
     app.httpd, app.port = httpd, httpd.server_address[1]
     url = f"http://127.0.0.1:{app.port}{app.base}/panel"
     log.info("serving %s on %s", app.root, url)
-    threading.Thread(target=app.idle_watch, name="jade-idle", daemon=True).start()
+    threading.Thread(target=app.idle_watch, name="firetoad-idle", daemon=True).start()
     if ready:
         ready(url, app)
     try:

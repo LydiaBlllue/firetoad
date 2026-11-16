@@ -84,15 +84,29 @@
     (`WAITS` — Income without a chequing ledger, Investing and FIRE with nothing invested) is
     listed there with what it waits for, closed by default, and returns to its section by itself
     the day the data arrives. A workspace with only a credit card is then a complete product.
-  - **Updates, Statements and the Glossary sit at the foot**, above the version, under no
-    heading: what each update changed, which statements are in, and a reference for reading the
-    page. None of them belongs to a stage.
+  - **A long page lists its sections under it** (1.0.5, user 001, after the way a session lists
+    its branches in Claude Code's sidebar). The current page, when it has sections
+    (`PAGE_SECS`), shows them indented under its name on one thin line down; the one in view is in
+    ink; clicking one goes there, and opens it if it is folded. A thin chevron beside the page
+    folds the list, and the same chevron beside a stage's name folds the stage — never the one
+    the current page is in. What is folded is remembered with the page's state. Only a page that
+    needs it has sections: today Income & chequing (*Income*, *Chequing*) and Drawdown & care
+    (*The money*, *Care*, *Would it have lasted?*) — each name is that section's own heading on
+    the page, never a second vocabulary.
+  - **Past a screen and a half, a page says what is further down** (R9). Its first screen
+    answers the page's question; each section's detail is folded to one line that carries the
+    section's name and what it comes to, opening in place (*Show all*); what the reader acts on
+    — a slider, a field — is never folded; and a long table starts with its newest rows and
+    offers the rest. A reference page (the Glossary) is exempt and marked `ref`.
+  - **Updates, Statements, the Glossary and Settings sit at the foot**, above the version, under
+    no heading: what each update changed, which statements are in, a reference for reading the
+    page, and the numbers that are the owner's to choose. None of them belongs to a stage.
   - **Dots**: `pageFlags()` hangs a 6px dot on a sidebar entry when its page has something on
     it — amber `#c98500` = look at this, red `#d03b3b` = a rule is broken or something is due.
     A new rule is wired into it.
   - The month pills appear only on `PILL_PAGES`, the year pills only on `YEAR_PAGES`.
   - The foot of the sidebar carries the tool version (`VERSION`) in muted 10.5px. MAJOR.MINOR.PATCH,
-    by the rule in ROADMAP.md, Version numbers: a patch needs only a sync, a minor also a migration, a
+    by the rule in RELEASE-ROADMAP.md, Version numbers: a patch needs only a sync, a minor also a migration, a
     major a change of technology.
 - **One page, one question, one kind of time**: a page follows the month cursor, the year cursor
   or no time at all, never half of each; a thing is judged in one place, and Home only
@@ -104,8 +118,8 @@
   hand-aligned table heading written outside them; the two grouped tables not yet moved (Accounts,
   Statements) say so on their line. In 2.0 the two become the component library's Card and Table.
 
-<!-- LINT:PAGES pages=18 sections=4 -->
-- **The pages**: 18 pages under 4 sidebar sections, **one per stage of the way to FIRE** (2026-11-13, user 001: grouped by how far along the owner is, not by topic; until then the sections were Money in & out, Plan, Investing and Monthly import). **Lint rule S4 checks this table against
+<!-- LINT:PAGES pages=19 sections=4 -->
+- **The pages**: 19 pages under 4 sidebar sections, **one per stage of the way to FIRE** (2026-11-13, user 001: grouped by how far along the owner is, not by topic; until then the sections were Money in & out, Plan, Investing and Monthly import). **Lint rule S4 checks this table against
   `NAV`**, so changing the navigation means changing this table too — and the page count, the
   sidebar list and the minimum width stated in `README.md`, and every path the README hands the
   reader:
@@ -116,11 +130,12 @@
   | Set a goal | FIRE |
   | Stay on track | Budget · Portfolio · Performance · Holdings · Investment income |
   | After FIRE | Drawdown & care |
-  | — | Updates, Statements and the Glossary: records and reference for every stage, at the foot of the sidebar, under the pages still waiting for their data |
+  | — | Updates, Statements, the Glossary and Settings: records, reference and the owner's own numbers, for every stage, at the foot of the sidebar, under the pages still waiting for their data |
 
   **What a page waits for** (`WAITS`): Income and Emergency fund a chequing statement; Portfolio,
   Performance and Holdings a broker's holdings; Investment income a broker's activity; FIRE a FIRE
-  goal; Drawdown & care a FIRE goal and something invested. A page that waits is folded under
+  goal or a number for it (years to financial independence: a target and money reaching the
+  broker, 1.0.5); Drawdown & care a FIRE goal and something invested. A page that waits is folded under
   *Waiting for data*, saying what it waits for, and comes back by itself.
 
 ### Home
@@ -136,12 +151,13 @@
 - **Net worth over time** under the net-worth card: one point per month, what really was, nothing
   projected, from two months on. It is not the FIRE chart, which follows the portfolio to a target.
 - **Four stat cards**, chosen by two signals, something invested and a FIRE goal (1.0.1). Invested
-  with a goal: **Portfolio** (with its dry-powder share), **FIRE progress** (with the on-track
-  year), **Invested in \<month\>** (pay-yourself-first, from the broker's record), **Total spent in
-  \<month\>** (the month's whole spending, bills & housing and everyday beneath it; today's month
-  once it has a purchase, otherwise the newest one the statements reach. What is left of Everyday
-  is This month's to say, 2026-11-03). Invested, no goal: Portfolio · Invested. A goal, nothing
-  invested: FIRE progress. The rest fill from one list, in order, taking only a card with a
+  with a goal: **Portfolio** (with its dry-powder share), **Years to financial independence** (at
+  what reaches the broker, linking to the FIRE page; 1.0.5, in place of FIRE progress), **Invested
+  in \<month\>** (pay-yourself-first, from the broker's record), **Total spent in \<month\>** (the
+  month's whole spending, bills & housing and everyday beneath it; today's month once it has a
+  purchase, otherwise the newest one the statements reach. What is left of Everyday is This
+  month's to say, 2026-11-03). Invested, no goal: Portfolio · Years · Invested. Nothing invested:
+  Years, when there is a number for it. The rest fill from one list, in order, taking only a card with a
   number: Card interest (only when a statement charged some) · Total spent in \<month\> · Months covered ·
   Kept this year · A year of subscriptions · Biggest category. So no owner sees an empty card.
 - **Net worth in one card, cut both ways at once**: one row per `role`, cash split by where it
@@ -206,8 +222,14 @@
 ### Plan
 
 - **Emergency fund** (1.0.1): three cards — Months covered, The money, A usual month — each
-  opening its sum, then where the money is and what is owed on no asset. No band, colour or
-  target; money abroad only in the line under Months covered (FINANCE.md §8d).
+  opening its sum, then where the money is, what is *Due now* (taken off the money) and what is
+  *Paid over time* (listed, not taken off: its payment is in a usual month); money abroad only in
+  the line under Months covered (FINANCE.md §8d). Since 1.0.5 a fourth block, **Your range**: the
+  owner's own months (three to six until changed), drawn as a band on one scale with a mark where
+  the money stands, and changeable in place. Under Months covered the page says *Below your
+  range*, *Inside your range* or *Above your range*; below, one line says how much more reaches
+  the lower end, above, how much is beyond the upper end. Nothing else: no advice on what to do
+  with it, and no colour beyond the one word.
 
 - **Budget** follows no time: the plan, no category caps. Below the split, a Funds card appears
   only when the owner has a fund: each one's set-aside amount against its goal, what the plan adds,
@@ -286,6 +308,23 @@
   shown — no card saying all is well. The source is `findata/register/accounts.json`, **a
   register, not a second set of books**.
 - **Statements**: the filing grid (§5c), and every source's date.
+
+### Settings
+
+- At the foot of the sidebar, in no group (1.0.5, FINANCE.md §8e): the numbers that are the
+  owner's to choose, one row each — its name, one line of what it is, and the control — grouped
+  under the four stage names. The rows are `settings.py`'s table; the page lists nothing itself.
+- **A change is saved as it is made.** No save button and no draft: the number shows at once,
+  the local app writes it, and the page loads again when every change has been answered and
+  nothing is being typed. A row that differs from its default says the day it was changed and
+  offers the way back; a refused or unsaved change puts the old number back and says why in one
+  line at the foot of the window.
+- **The same control on the number's own page.** The emergency range is changed on Emergency
+  fund, planning spend on Monthly spending, the two plan figures on Budget — one value, one
+  script, wherever it is typed.
+- **Opened as a file, the numbers are read, not changed**: the controls are greyed and one line
+  says to open the page with the app. The demo is nobody's data, so there a change is shown and
+  not kept, and the page says so.
 
 ### Glossary
 
@@ -500,6 +539,24 @@ other screen. A count says what it counts or what is to be done with it: `3 merc
 categorize` where there is room (the setup's last screen), `5 to categorize` in the dashboard's
 header, which keeps its one short line — never `5 to confirm`. **These screens never change the
 dashboard's layout**: the error box, the lists and the tables above are the panel's and the setup's.
+
+**A question about a charge helps the owner remember it** (1.0.5, user 001: "I cannot remember
+where this money went"). One card at a time, and on it, from the rows and nothing else
+(`recall.py`): each charge's day with its weekday and amount; a rhythm when there is one, in one
+line (*every other week · on a Sat · about $140 each time*); what else was paid on those days;
+for money moved, what else moved in that account that day and whether another account shows the
+other end. *Look it up* searches the web for the merchant's words — only when pressed, only
+those words. The buttons are the brand's earlier answer and a suggestion first, then the
+categories the owner uses most, four shown and the rest under *More*: the order is the owner's
+habit, never read off the merchant's name. **Not sure is an answer**: it closes the question,
+is counted, and is not asked again. The same amount moved several times with no name on it is
+one card, and one answer covers them. **The bar is the road to enough**: how many of the cards before *That is enough* are
+behind the owner, with *3 more, then that is enough* beside it and the share of spending sorted
+said as a fact. Which merchants are on that road is decided by money: the biggest, until 95% of
+spending is sorted. Money sent that is big or repeats (`confirm.py` `ASK_FIRST`) is
+asked before the line is called reached, since it may be spending nobody counted; then the page shows *That is enough*, what is left — the small
+merchants, what was answered not sure, the money questions — and the way on or out. A short
+list has no line and is simply gone through.
 
 ## 7. Principles for presenting data
 

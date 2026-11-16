@@ -81,6 +81,35 @@ async () => {
 """
 
 
+# R8: the FIRE figures are worked out twice -- at build time (fire.py, the FIRE constant) and in
+# the page (fireNow(), which it needs to redraw while a number is being changed). A freshly
+# loaded page has changed nothing, so the two must be the same numbers.
+FIRE_PROBE = ("() => typeof fireNow === 'function' && typeof FIRE === 'object' ? {page: fireNow(), built: FIRE, "
+              "drawPage: typeof drawNow === 'function' && typeof DRAWDOWN === 'object' && DRAWDOWN.at ? drawNow(DRAWDOWN.at) : null, "
+              "drawBuilt: typeof DRAWDOWN === 'object' && DRAWDOWN.now ? DRAWDOWN.now : null} : null")
+
+
+# R9: a page longer than a screen and a half lists its sections under it in the sidebar, so
+# the reader can see what is further down and get there (DESIGN.md §4). A reference page (the
+# Glossary) is meant to be long and is marked so in NAV. Measured at the widest window, where a
+# page is at its shortest.
+NAV_PROBE = "() => typeof PAGES === 'object' ? PAGES.map(p => ({k: p.k, n: p.n, ref: !!p.ref, secs: (p.secs || []).length})) : []"
+LONG = 1.5
+
+
+def fire_differs(page, built):
+    """The keys on which the page's own FIRE figures are not the built ones."""
+    def same(a, b):
+        if isinstance(a, list) and isinstance(b, list):
+            return len(a) == len(b) and all(same(x, y) for x, y in zip(a, b))
+        if isinstance(a, dict) and isinstance(b, dict):
+            return set(a) == set(b) and all(same(a[k], b[k]) for k in a)
+        if isinstance(a, (int, float)) and isinstance(b, (int, float)) and not isinstance(a, bool):
+            return abs(a - b) <= 1e-6 * max(1, abs(a), abs(b))
+        return a == b
+    return sorted(k for k in set(page) | set(built) if not same(page.get(k), built.get(k)))
+
+
 def probe(path):
     """Load the page once per width and return {width: result}. Import is inside the function
     so the missing-browser message is a sentence, not a traceback from the top of the file."""
@@ -95,6 +124,9 @@ def probe(path):
             pg.goto("file://" + os.path.abspath(path))
             pg.wait_for_timeout(400)
             out[w] = pg.evaluate(PROBE)
+            if w == WIDTHS[0]:
+                out[w]["fire"] = pg.evaluate(FIRE_PROBE)
+                out[w]["nav"] = pg.evaluate(NAV_PROBE)
             pg.close()
         b.close()
     return out, console
@@ -169,14 +201,20 @@ def states(src):
         s = without_investing(s)
         s = put(s, "INVEST", dict(get(s, "INVEST"), cashflow=[]))
         return put(put(s, "CHEQUING", []), "WSINC", [])
+    # The FIRE page also opens without a goal when there is a number for it (1.0.5): years to
+    # financial independence, which needs a target and something reaching the broker.
+    sav = get(src, "SAVINGS")
+    years = bool(sav.get("years") and sav["years"][1] is not None)
+    fire_waits = set() if years else {"fire"}
     out = []
     if invested:
         out.append(("invested, a goal", put(src, "FIRE_GOAL", True), set()))
-        out.append(("invested, no goal", put(src, "FIRE_GOAL", False), {"fire", "coast"}))
+        out.append(("invested, no goal", put(src, "FIRE_GOAL", False), {"coast"} | fire_waits))
     base = without_investing(src)
     out.append(("a goal, nothing invested", put(base, "FIRE_GOAL", True), {"port", "perf", "hold", "coast"}))
-    out.append(("no goal, nothing invested", put(base, "FIRE_GOAL", False), {"port", "perf", "hold", "fire", "coast"}))
-    out.append(("cards only", put(card_only(src), "FIRE_GOAL", None), {"port", "perf", "hold", "fire", "coast", "income", "safe", "wsinc"}))
+    out.append(("no goal, nothing invested", put(base, "FIRE_GOAL", False), {"port", "perf", "hold", "coast"} | fire_waits))
+    # cards only: no income, nothing reaching a broker — no years, so no FIRE page without a goal
+    out.append(("cards only", put(put(card_only(src), "SAVINGS", {}), "FIRE_GOAL", None), {"port", "perf", "hold", "fire", "coast", "income", "safe", "wsinc"}))
     return out
 
 
@@ -238,6 +276,35 @@ def check(path):
         note("R5", "no undefined / NaN / null in any rendered page", "build")
     for c in console:
         err("R1", f"console error — {c[:120]}")
+
+    # -- R9 a long page lists its sections in the sidebar ------------------------
+    nav = {p["k"]: p for p in res[WIDTHS[0]].get("nav") or []}
+    tall = [(p["k"], p["h"]) for p in res[WIDTHS[-1]]["pages"]
+            if p["h"] > LONG * SHORT[0] and p["k"] in nav and not nav[p["k"]]["ref"] and not nav[p["k"]]["secs"]]
+    for k, h in tall:
+        warn("R9", f"page '{nav[k]['n']}' is {h / SHORT[0]:.1f} screens long at {WIDTHS[-1]}px and lists no sections in the sidebar "
+                   f"— past {LONG} screens a page says what is further down (DESIGN.md §4)")
+    if nav and not tall:
+        note("R9", f"every page past {LONG} screens lists its sections in the sidebar")
+
+    # -- R8 the page's own FIRE sums are the ones the build computed ------------
+    fp = res[WIDTHS[0]].get("fire")
+    if fp and fp.get("built"):
+        off = fire_differs(fp["page"], fp["built"])
+        if off:
+            err("R8", "the page works out " + ", ".join(f"{k} = {fp['page'].get(k)}" for k in off[:3])
+                + "; the build says " + ", ".join(f"{fp['built'].get(k)}" for k in off[:3])
+                + " — fire.py and the page's fireNow() no longer agree", "build")
+        else:
+            note("R8", "the page's own FIRE figures are the ones the build computed", "build")
+    if fp and fp.get("drawBuilt"):
+        off = fire_differs(fp.get("drawPage") or {}, fp["drawBuilt"])
+        if off:
+            err("R8", "the page's drawdown gives " + ", ".join(f"{k} = {(fp.get('drawPage') or {}).get(k)}" for k in off[:3])
+                + "; the build says " + ", ".join(f"{fp['drawBuilt'].get(k)}" for k in off[:3])
+                + " — drawdown.py and the page's drawNow() no longer agree", "build")
+        else:
+            note("R8", "the page's own drawdown at the starting ages is the one the build computed", "build")
 
     base = res[WIDTHS[0]]
     reached = {p["k"] for p in base["pages"]}

@@ -2,7 +2,7 @@
 
 Two things the first full run on a fresh account showed missing (2026-11-12, user 001):
 
-**A system log.** The workspace's log (.jade/log/app.log) starts only once there is a folder,
+**A system log.** The workspace's log (.firetoad/log/app.log) starts only once there is a folder,
 so a first launch that failed left nothing to read. This one is the computer's, where its other
 logs are, from the first line of a launch:
 
@@ -29,7 +29,7 @@ import platform
 import sys
 
 APP_NAME = "FIRE Toad"
-log = logging.getLogger("jade")          # server.py's "jade.app" is its child: one line, both logs
+log = logging.getLogger("firetoad")         # server.py's "firetoad.app" is its child: one line, both logs
 _ready = False
 
 

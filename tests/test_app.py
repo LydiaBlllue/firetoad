@@ -57,6 +57,18 @@ class ToolState(unittest.TestCase):
         self.assertEqual(st["changed"], [])
         self.assertEqual(st["version"], "9.9.9")
 
+    def test_a_renamed_tool_file_leaves_no_old_copy(self):
+        # RELEASE-ROADMAP.md was ROADMAP.md: a folder synced before the rename still holds the
+        # old file, and a stale plan left behind reads as the current one (2026-11-13).
+        self.copy_in()
+        open(os.path.join(self.tool, "RELEASE-ROADMAP.md"), "w").write("what is released next\n")
+        open(os.path.join(self.ws, "RELEASE-ROADMAP.md"), "w").write("what is released next\n")
+        open(os.path.join(self.ws, "ROADMAP.md"), "w").write("the old plan\n")
+        self.assertIn("ROADMAP.md", sync.pending(self.ws))
+        # while the tool itself still has a file of the old name, nothing is taken away
+        open(os.path.join(self.tool, "ROADMAP.md"), "w").write("still shipped\n")
+        self.assertNotIn("ROADMAP.md", sync.pending(self.ws))
+
     def test_one_file_apart_is_differs_and_named(self):
         self.copy_in()
         open(os.path.join(self.ws, "CLAUDE.md"), "a").write("edited\n")

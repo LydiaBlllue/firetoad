@@ -56,6 +56,39 @@
   scenarios there; the late-life care model (home care, then long-term care tiers) is data in the
   same file.
 
+## 1a. Years to financial independence, and the savings rate
+
+The FIRE page opens with one answer and one lever (`savings.py`, the `SAVINGS` constant); Home
+carries the answer as a card. The page opens for anyone it has a number for, a FIRE goal or not:
+a target and money reaching the broker are enough (1.0.5). Financial independence is the day the money could carry you, not
+the day work stops: past it, working is a choice.
+
+- **The answer**: years until what is invested covers 25 years of the planning figure — or, with
+  none set, of what is really spent — at the pace money **really reaches the broker**: the
+  average of the last three full months of deposits (`WSDEP`), the plan's investing amount until
+  any has been seen. What is invested today counts. n = ln((T + c/r) ÷ (P + c/r)) ÷ ln(1 + r).
+- **The return** is the owner's setting (§8e, `growth`): 5% a year after inflation unless
+  changed — about a 60/40 portfolio's history in `returns.json` (5.2% since 1928; all stocks
+  6.8%, 80/20 6.0%) and the figure the savings-rate literature assumes. The years are shown at it
+  and one point either side, as a range, never one year. Coast and the drawdown read the same
+  setting, so the site never grows money at two rates.
+- **The reason**, under the answer: the **savings rate** = (income − spending) ÷ income, the
+  ratio of the sums over the last full months — up to twelve, `skipMonths` left out, only months
+  with both; fewer than three, no rate. **Income** is what work delivered: ledger rows typed
+  Payroll and Other (Other carries a refund, a benefit and rent received, §2); a gift, a
+  repayment, a card's cash back and the broker's own income are not in it. Pay the employer
+  saves before it reaches the bank (a group RRSP, a match) is not seen, so the rate reads low for
+  someone who has it. **Spending** is the month total a usual month is made of (§3a).
+- **What is kept, by its job**: the money kept each month split into what is invested (the pace
+  above), each saving flow with another destination (an emergency fund), and what has *no job
+  yet*. More set aside than kept is said as it is.
+- **The lever**: *Invest more each month*, $0 to $1,000 in steps of $50 (`more`), starting at
+  what has no job yet. The chart shows what is invested growing to the target now and with the
+  extra, each line named where it reaches the target. Both the years and the steps are tables
+  the build writes; the page draws the lines and does no other sums.
+- Home's *Kept* card steps aside while the rate exists: one percentage of income, measured one
+  way. The setup's *Planned savings rate* is the plan's, named apart from this one, and says so.
+
 ## 2. Income: in the system
 
 - **Payroll** is what lands in the account whose `feeds` include "Income" (`accounts.json`).
@@ -148,6 +181,13 @@ Money that leaves and nobody has named is a transfer, outside the sum, until the
 **There is one word for each part**, and a part the month does not have is not shown.
 The same words are used in the page, this file, the code and the register. A reader is never asked to learn these rules first: the page shows their own
 month split, and the definitions wait behind the question mark.
+
+- **Not sure is an answer** (1.0.5). A merchant the owner cannot place is filed Other and marked
+  `unsure` in `merchants.json`, so it is not asked again and can be counted apart from what was
+  never asked; money moved that the owner cannot place stays as the import typed it. Either way
+  the question in `decisions.json` is closed with the answer *Not sure*. Nothing is guessed in
+  its place: what helps the owner remember (`recall.py`) is the days, the rhythm and the day's
+  other charges, read from the rows — a rhythm is a fact, not a category.
 
 ## 3b. Guilt-free spending
 
@@ -326,16 +366,29 @@ Debts → liability; a foreign-currency account → asset · abroad, role per ac
   an investor had disappears, and as no otherwise; the next import asks once.
 - **Emergency fund**, how long the money would last without income:
 
-  > **months covered = (Spendable today − what is invested in it − what is owed on no asset) ÷ a usual month**
+  > **months covered = (Spendable today − what is invested in it − what is due now) ÷ a usual month**
 
   The money starts from Home's own *Spendable today* row, so the two pages cannot disagree, and
-  takes out what in it is invested (a TFSA can be spent today, but it is held to grow). **A usual
+  takes out what in it is invested (a TFSA can be spent today, but it is held to grow). **What is
+  due now** is the unsecured debt that has to be paid at once: a card's balance, which is this
+  month's bill. A debt **paid over time** — a loan, a line of credit — is not taken off (1.0.5):
+  what leaves each month is its payment, and that is in what a month costs. Taking the whole
+  balance off as well charged it twice, and read zero months for anyone who owed more than they
+  held in cash. Which one a debt is, is the register's `due` (`now` · `later`), defaulting from
+  its kind — a credit card is `now`, everything else `later` — and the owner's to change
+  (`debts.py`). A debt secured on an asset was never in this sum. The page lists the debts paid
+  over time beside the others, and says so of one the plan carries no payment for. **A usual
   month** = the average of up to twelve full months of spending (the Monthly spending page) + the repayments the plan pays today (active
   committed flows with `pays`, `flows.py` `repayNow`). Rent and bills paid today are in
   `spending.csv` already, so they are not added; `COMMITTED_KEEP` is not used, because it holds
   rent that starts only at FIRE. Money abroad is its own line, never in the headline. Below zero
-  is 0; without three closed months the page says so instead of a figure. It judges nothing: no
-  band, colour or target. The usual three to six months is the Glossary's *emergency fund*.
+  is 0; without three closed months the page says so instead of a figure. Both numbers are
+  computed at build time (`usual.py`), so the page and the checkers read the same ones.
+  **The range is the owner's** (1.0.5): `plan.json` `emergency` `{low, high}`, in months, three
+  to six until they say otherwise (§8e). The page says where the months covered sit against it:
+  below it, with how much more reaches the lower end; inside it, and nothing more; above it,
+  with how much is beyond the upper end. It states that and stops: it never says what to do
+  with money beyond the range, and it has no opinion on which range is right.
 - **Card interest** is a fact, never a verdict: the Interest total each card statement prints,
   which the card parsers already read to reconcile, kept one row per statement in
   `card_interest.csv` (0.00 included). Never read off a merchant name. The first import after
@@ -350,3 +403,31 @@ Debts → liability; a foreign-currency account → asset · abroad, role per ac
   the age each starts they pay part of what is taken out (spending and care), so the portfolio
   takes only the rest; a pension that starts before the drawdown does not add to the pot. The FIRE
   target is unchanged: it still has to carry the years before the pensions start.
+- **When the money runs out** in the drawdown (1.0.5): the portfolio stays at nothing from that
+  month on — it is not a loan, and the plan assumes no borrowing. What it could not pay after
+  that is the **shortfall**: spending and care, less any pensions, month by month to the plan's
+  last year, added up in today's money. A plain sum: no interest, and no word on where the money
+  would come from. If the money runs out before care begins there is no "extra needed for care"
+  to state, only the age it ran out; the shortfall carries the rest.
+
+### 8e. The owner's settings (1.0.5)
+
+Some numbers are no statement's to state: how many months an emergency fund should cover, what a
+month is planned to cost, what goes to the broker, the day of the import. They are declarations,
+and `settings.py` is the one table of them — each row a key, where the value already lives in
+`findata/register/`, its kind, its legal range and, where one exists, a default.
+
+- **One value, in the data.** The page is handed the table with each value (`SETTINGS`). What a
+  setting is changed to is written to the register, never kept in the browser: a number that
+  lived only on one screen was a second source nothing else could read.
+- **Changed as it is made.** There is no draft and no save button. The page recomputes at once
+  and hands the value to the local app, which writes it through `setting.py` — the same script a
+  chat calls — under the one lock, rebuilds, and runs the money checks. The day goes beside it in
+  `plan.json` `changed`. A row with a default can go back to it, which removes the stored value.
+- **Read-only without the app.** A page opened as a file has nothing to write for it, so it
+  shows the values and says to open it with the app. It never keeps a change it cannot save.
+- **A sum is not one number.** A plan figure made of several flows (two paycheques) is shown and
+  not editable as one: which line a new total would change is the owner's to say.
+- D31 holds every stored value to the table's range.
+- The rows: the emergency range, the import day, planning spend, the return after inflation
+  (`growth`, §1a), take-home pay, what goes to the broker, the everyday amount.

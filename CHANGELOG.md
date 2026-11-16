@@ -1,6 +1,90 @@
 # Changelog
 
-## 1.0.4 — unreleased
+## 1.0.5 — 2026-11-15
+
+- **The setup ends with everything in place** (2026-11-15). When the first import leaves
+  merchants or transfers to categorize, the setup goes straight on to them in the same window —
+  "Last step: what the files could not say" — and the last answer opens the dashboard. The
+  monthly import is not met until the first month.
+- **Money sent to Wealthsimple is a transfer, even before its export is in.** A first setup
+  from bank statements alone filed a twice-monthly deposit to the broker as a purchase, asked
+  you to categorize it, and counted it as a subscription.
+- **Years to financial independence** (the FIRE page, and a card on Home). One answer: how many
+  years, at what really reaches your broker each month, until what you have invested covers 25
+  years of your planning figure — a range, 4% to 6% a year after inflation. Under it, what you
+  keep each month and what it does: invested, set aside, and what has no job yet — that is your
+  savings rate, as the reason. One lever: *Invest more each month*, in dollars, with the years it
+  saves and a chart of both. It replaces the FIRE page's three-line trajectory. Financial
+  independence is when work becomes a choice, not when it stops.
+- **Your return after inflation is a setting.** 5% a year unless you change it — about what a
+  60/40 portfolio did over the last century; someone all in stocks may say 7. The years, Coast
+  and the drawdown all use it.
+- **Settings: the numbers that are yours to choose** (2026-11-14, user 001: someone wants three
+  months of emergency fund, someone six to nine). A new page at the foot of the sidebar lists
+  them — the emergency range, the import day, planning spend, take-home pay, what goes to the
+  broker, the everyday amount — and a change is saved as you make it: no save button, the day it
+  changed beside it, and a way back to the default. It needs the app; a page opened as a file
+  shows the numbers and does not change them. In a chat, `setting.py` is the same change.
+- **The Emergency fund has your range.** Three to six months until you say otherwise. The page
+  shows where your money stands against it — below, inside or above — and the one fact that
+  follows: how much more reaches the lower end, or how much is beyond the upper one. It never
+  says what to do with it.
+- **A change to a plan figure is kept.** Planning spend (Monthly spending) and the two plan
+  figures on Budget used to change only in the browser and reset at the next update. They are
+  settings now: changed on the page, written to your data.
+- *Under the page*: a usual month and the emergency fund's months are computed once, at build
+  time (`usual.py`), and the page is handed the result — every page reads as it did. `settings.py`
+  is the one table of adjustable numbers; D31 holds a stored value to its range.
+- *More sums computed once* (2026-11-15): each category's usual month and the average the
+  planning figure is calibrated on (`usual.py`), and the FIRE target, progress, months to go at
+  each return and the coast age (`fire.py`) are worked out at build time; FINANCE.md's figures
+  table is written from the same numbers. The page keeps the FIRE sums to redraw while a number
+  is being changed, and a new check (R8) fails when the two stop agreeing. Every page reads as it
+  did.
+- *The drawdown too* (2026-11-15): how long the money lasts, what is there the day the drawing
+  starts, what late-life care would need and how many starting years on record the plan
+  survives are worked out at build time, at the ages the page starts from (`drawdown.py`). Those
+  ages (55, 80, 88) were written into the page; the page reads them now. R8 holds the page's own
+  sums to these as well.
+- **Money that has run out stays at nothing, and the page says what is short** (2026-11-15,
+  user 001: a person can owe; a portfolio cannot). In the drawdown, the months after the
+  portfolio ran out went on subtracting, as if it could be borrowed against without limit at
+  its own rate of return. It stays at nothing now, and a new line, *Shortfall*, adds up what is
+  still to pay from that age to the plan's last year — spending and care, less any pensions, in
+  today's money, with nothing assumed about where it comes from. When the money runs out before
+  care begins, *Extra needed* says so instead of a number that was mostly that gap.
+- **The Emergency fund no longer charges a loan twice** (2026-11-15, user 001). Every debt on
+  no asset was taken off the money in full, and its monthly payment was also counted in what a
+  month costs — so someone with a student loan larger than their cash read zero months. Only
+  what is *Due now* is taken off (a card's balance); a debt *Paid over time* is listed and left
+  in, because what leaves each month is its payment. A card-only owner's page reads as it did.
+- **A long page says what is further down** (2026-11-15, user 001). Drawdown & care opens with
+  one line per section — *The money*, *Care*, *Would it have lasted?* — each carrying what it
+  comes to and opening its detail in place; the sliders and the chart stay as they were. Income
+  & chequing shows the newest eight chequing rows and offers the rest. In the sidebar the
+  current page lists its sections under it, the one in view marked, and a thin chevron folds
+  them — or a whole stage. A new check (R9) notes any other page past a screen and a half.
+- *The last of the first name inside a folder* (2026-11-15, user 001). The app's own folder in a
+  workspace is `.firetoad` and its lock `.firetoad.lock`; they were `.jade` and `.jade.lock`. A
+  folder that has the old one has it renamed, with everything in it, the first time the new
+  version touches it, and a lock still held under the old name is still respected. The
+  environment variable for a model's key is `FIRETOAD_AI_KEY`; the old name still works. Nothing
+  an owner sees changes.
+- **Categorizing: less to recall, and "not sure" is an answer** (2026-11-15, user 001: "I cannot
+  remember where this money went"). A question about a merchant now shows each charge's day with
+  its weekday, a rhythm when there is one, and what else you paid that day; *Look it up*
+  searches the web for the merchant's words, only when you press it. Four likely categories
+  first, by what you use most. *Not sure* closes a question for good and is counted. The same
+  amount sent several times with no name on it is one question. Progress is the share of your
+  spending that is sorted: at 95% the page says that is enough and what is left can wait — on
+  one real first import that was 5 merchants, where 58 questions were waiting. Money sent with
+  no name on it is asked before that when it is $500 or more, or the same amount more than once:
+  a rent paid by e-Transfer and left as a transfer is spending nobody counted.
+- **The roadmap you read is the release roadmap** (2026-11-13, user 001): the file is
+  RELEASE-ROADMAP.md, where it was ROADMAP.md, so it reads as what it is, the plan of what is
+  released next. A sync removes the old file from a folder once the new one is there.
+
+## 1.0.4 — 2026-11-13
 
 - **The sidebar follows the way to FIRE** (2026-11-13, user 001). The pages are grouped by how
   far along you are, not by topic: *Get started* (Accounts, This month, Year, Income & chequing,

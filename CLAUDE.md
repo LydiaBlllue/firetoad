@@ -64,7 +64,7 @@ The rest of `findata/`, and what each carries:
 | `banks.json` | one balance and one as-of date per bank account |
 | `profile.json` | the owner (shown under the FIRE Toad wordmark and in the tab), the year of birth, the import day |
 | `funds.json` | the monthly plan as **flows** — `income`, `committed` (rent, a mortgage, a loan), `saving` (to the broker), `everyday`, each with an amount and, where it applies, `until`, `afterFire`, `pays`, `starts`, `to`; and `funds`, the owner's own funds, each a label on money in one account |
-| `plan.json` | planning spend, months excluded from comparisons, deposits into the broker that were gifts (`brokerGifts`), the retirement assumptions, the owner's one-line descriptions of the net-worth parts |
+| `plan.json` | planning spend, months excluded from comparisons, deposits into the broker that were gifts (`brokerGifts`), the retirement assumptions, the owner's one-line descriptions of the net-worth parts; and, since 1.0.5, the owner's settings that live nowhere else: `emergency` `{low, high}` (the months an emergency fund should cover, absent means three to six) and `changed` (the day each setting was last changed) |
 | `rules.json` | the investing buckets and their target bands, the owner's theses (`notes`) and `checkpoints`, `assetClass` — what each ETF holds (stocks / bonds / cash / gold / crypto), the one thing the broker's export cannot say — and `principles`, the owner's high-level rules, each naming a check the Investing overview runs today (with `placement`, which account each holding belongs in) |
 | `merchants.json` | merchant → category |
 | `senders.json` | who sends money by e-Transfer → what it is (Payroll / Gift / Other / Transfer / Repayment), answered once; the import types the next one by it and does not ask — the rule an owner used to keep in prose, as data both doors read (2026-11-07) |
@@ -122,7 +122,7 @@ Net worth used to be five words in `feeds` added up in `rebuild.py`, so every ne
 mortgage got a net worth with the loan in it and the house nowhere. Each account row is now a
 **balance item with five orthogonal axes**, and each derived total reads exactly one of them:
 
-- `side` — asset / liability → net worth = Σ assets − Σ liabilities
+- `side` — asset / liability → net worth = Σ assets − Σ liabilities; a liability may also say `due` (now / later, from its kind: a card is now) — the Emergency fund takes off only what is due now
 - `role` — grow / set-aside / buffer / owed / none → Portfolio is `grow`; net worth by purpose is one
   slice per role; `owed` is money lent (FINANCE.md §8a)
 - `reach` — today / costs / spoken / lent / locked / abroad → the reach table
@@ -196,7 +196,7 @@ the system browser, and serves two things: the built dashboard, as the static fi
 the **panel** (`templates/panel/panel.html`, filled by `local-app/scripts/panel.py`) — one
 step at a time under a four-part bar, *get the files, import, categorize, done*, each a heading
 that says the one thing to do and its content as a table (DESIGN.md 6a); every sentence from `local-app/scripts/strings.py` in
-English and Chinese (`?lang=`, remembered in `.jade/settings.json`, else profile.json `lang`),
+English and Chinese (`?lang=`, remembered in `.firetoad/settings.json`, else profile.json `lang`),
 and each missing file's *how do I get it* read from `parsers/support.py` (2026-11-07, after the
 first version's four internal names left the owner not knowing what to do). Every question the
 import raises carries `facts` (kind, amount, date, sender, merchant) beside its English `what`:
@@ -205,10 +205,10 @@ reads `what`; the categories keep English keys and get a screen name per languag
 (`categories.label`); step 3 draws the import's returned summary as a card, the lines folded. The server
 (`local-app/scripts/server.py`) holds **no financial logic**: each route is one call into a
 script's `run()` — `status`, `update`, `update.undo`, `confirm` — and the import still rebuilds
-through `rebuild.py`; the browser reloads the file. One lock file (`.jade.lock`, `jlock.py` in the
+through `rebuild.py`; the browser reloads the file. One lock file (`.firetoad.lock`, `jlock.py` in the
 update-dashboard scripts) makes it one writer at a time **through either door** — the app takes
 it around every verb, and `update`, `confirm` and `balance` refuse to write while another live
-process holds it — and its log is `.jade/log/` (both ignored by git). The dashboard's header
+process holds it — and its log is `.firetoad/log/` (both ignored by git). The dashboard's header
 counts the answers waiting and links to `/panel` when the app serves the page. The selftest's *local app*
 check imports the same month through `update.py --write` and through `POST /api/import` and
 expects identical `findata/` and `archive/`, with one statement uploaded and one balance typed
@@ -218,6 +218,7 @@ script, and the panel follows. Two verbs came with the panel and serve this chat
 ledger, by register key, the register's copy following (D14, D20), refused for an account with
 a ledger (D7) or a loan (D23) — and **`ocr.py`** reads a phone screenshot with Apple Vision on
 this computer and ranks its amounts by the account's `capture` line; it offers, never writes.
+**`setting.py`** (1.0.5) changes one of the numbers that are the owner's to choose — `settings.py` is the one table of them (FINANCE.md §8e): the emergency range, the import day, planning spend, take-home, what goes to the broker, the everyday amount. The dashboard's Settings page posts to it through the app (`POST /api/setting`, answered when the value is written and the page rebuilt); a chat calls the same script; a page opened as a file only shows the values. D31 holds every stored value to its row's range.
 **Packaged** (1d, `build/build.py` → `dist/FIRE Toad.app`, PyInstaller, one folder, the tool
 and never anyone's data), the same `app.py` is the entry: the first launch asks for the
 folder or makes one — a made one holds the tool and a profile.json marked `blank`, no demo data (remembered in the system's application-support folder, outside the
@@ -235,17 +236,17 @@ or Ollama on this computer) with `ai.py . set` — its card left the panel on 20
 only — a merchant every map misses, in `note_merchant` — with the merchant string and the
 fifteen category names and nothing else; its answer is validated against the fifteen, written
 as the question's `suggest` with `suggestBy: model`, never as the category (Other stays until
-the owner confirms); the key in the Keychain, the choice in `.jade/settings.json`, every
-exchange in `.jade/log/ai.jsonl`. The selftest's *model side-car* check runs an import against a
+the owner confirms); the key in the Keychain, the choice in `.firetoad/settings.json`, every
+exchange in `.firetoad/log/ai.jsonl`. The selftest's *model side-car* check runs an import against a
 loopback mock: off means no call, on means suggestions and still Other, and only merchant
 strings and category names on the wire. The second door is complete; what follows is a Windows
 build and signing.
 
 ## Nothing in a dashboard is typed by hand
 
-<!-- LINT:CONSTS n=53 -->
+<!-- LINT:CONSTS n=58 -->
 `rebuild.py` builds the dashboard from `templates/dashboards/` and `findata/`, deriving
-**53 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CARD_INTEREST, CATS, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DEBT_ACCTS, DECISIONS, DOC_LATEST, FGN, FIRE_GOAL, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PENSIONS, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SAFETY, SCENARIOS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, WSDEP, WSINC. It compares without writing by default; `--write`
+**58 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CARD_INTEREST, CATS, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DEBT_ACCTS, DECISIONS, DOC_LATEST, DRAWDOWN, FGN, FIRE, FIRE_GOAL, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, HORIZON, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PENSIONS, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SAFETY, SAVINGS, SCENARIOS, SETTINGS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, USUAL, WSDEP, WSINC. It compares without writing by default; `--write`
 applies, and it is idempotent. `--template DIR` writes the page with every constant emptied,
 which is what the template *is*: page code and nobody's numbers.
 
@@ -283,7 +284,7 @@ Three levels (2026-11-05, the owner: most checks are run when asked, not after e
 |---|---|---|
 | **① the money** — by itself | after any edit to `findata/` (the `PostToolUse` hook) and at the end of an import | `check_data.py . --money`: the `reconcile` and `rules` findings only. Under a second, **silent when clean** |
 | **② check the page** — 检查页面 | when the owner says so, and **before saying a change to the page, a template, DESIGN.md, README or the data's shape is done** | `checks.py . --level page`: check_data in full, check_design, check_render (widths, a short window, every kind of owner). About 20 seconds |
-| **③ check before a release** — 发版前检查 | when the owner says so, and before a release PR | `checks.py . --level release`: the unit tests in `tests/` (one per rule in a pure module — `flows.py`, `loans.py`, `categories.py`, `layout.py`, `clock.py`; standard-library `unittest`, see `tests/README.md`), level ② and the selftest |
+| **③ check before a release** — 发版前检查 | when the owner says so, and before a release PR | `checks.py . --level release`: the unit tests in `tests/` (one per rule in a pure module — `flows.py`, `loans.py`, `categories.py`, `layout.py`, `clock.py`, `settings.py`, `usual.py`, `fire.py`, `drawdown.py`, `debts.py`, `recall.py`; standard-library `unittest`, see `tests/README.md`), level ② and the selftest |
 
 ⚠ Level ② is manual for the owner, **not optional for you**: a change to the page is not done
 until it has run, and the reply says what it found.
@@ -307,7 +308,10 @@ python3 .claude/skills/workspace-checks/scripts/checks.py . --level release
   the screen; in a 700 and 800px-tall window every sidebar entry can be reached (R6); and the
   page drawn for every kind of owner — invested or not, a FIRE goal or not, cards only — with
   each page drawing, Home's cards all carrying a number, and nothing in the sidebar that owner
-  has no data for (R7). Needs
+  has no data for (R7). And the page's own FIRE sums — it keeps them to redraw while a number
+  is being changed — and its drawdown at the ages it starts from are the ones `fire.py` and `drawdown.py` computed
+  at build time (R8). And a page past a screen and a half lists its sections in
+  the sidebar (R9, a warning). Needs
   `pip3 install --user playwright && python3 -m playwright install chromium`.
 - `selftest.py` — the checker of the checkers. It plants specific faults in a copy of the
   workspace and asserts the matching rule fires for each; the count is in README's `LINT:FAULTS`.
@@ -321,7 +325,9 @@ HTML files there (mock-ups, decision records) that were never meant to follow th
 Subscription because of the word "PUBLICATION" in it. It was a shop, and the charge was a
 notebook. Merchant strings are abbreviated and truncated; they cannot be read for meaning. So:
 look the merchant up in `merchants.json` first and reuse a hit — only a miss is a judgement, and
-every miss goes in the report for the owner to confirm. And **a subscription is a charge that
+every miss goes in the report for the owner to confirm. A question about a miss shows what the rows
+say — the days, a rhythm, the day's other charges (`recall.py`) — and orders its buttons by the
+owner's own habit, never by the name; *Not sure* is an answer, and closes it. And **a subscription is a charge that
 repeats**: since 2026-10-29 it is measured from the rows, not filed as a category, so a brand
 seen once can never be one, whatever the name suggests and whatever it cost.
 

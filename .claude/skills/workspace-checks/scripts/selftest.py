@@ -47,10 +47,10 @@ def stage(root, dst):
     # OWNER.md is optional (a workspace may not have written one yet); README names it.
     # .gitignore too: S4 exempts the files an owner writes and the tool deliberately does not ship
     # (setup-answers.json), and it learns which those are from there (2026-09-13).
-    # LICENSE, CHANGELOG.md, ROADMAP.md, CONTRIBUTING.md and SECURITY.md: README links to them,
+    # LICENSE, CHANGELOG.md, RELEASE-ROADMAP.md, CONTRIBUTING.md and SECURITY.md: README links to them,
     # and S4 resolves every link.
     # app.py too (2026-11-06): the local-app skill hands the reader `python3 app.py`, and S4 resolves it.
-    for f in ("CLAUDE.md", "DESIGN.md", "FINANCE.md", "README.md", "OWNER.md", ".gitignore", "LICENSE", "CHANGELOG.md", "ROADMAP.md",
+    for f in ("CLAUDE.md", "DESIGN.md", "FINANCE.md", "README.md", "OWNER.md", ".gitignore", "LICENSE", "CHANGELOG.md", "RELEASE-ROADMAP.md",
               "CONTRIBUTING.md", "SECURITY.md", "app.py"):
         if os.path.exists(os.path.join(root, f)):
             shutil.copy2(os.path.join(root, f), dst)
@@ -293,7 +293,7 @@ def m_fx_stale(r):
 def m_guard_data(r):
     g = lambda *a: subprocess.run(["git", "-C", r, "-c", "user.name=Emma Roy", "-c", "user.email=emma@example.com", *a],
                                   capture_output=True, text=True)
-    g("init", "-q"); g("remote", "add", "origin", "https://github.com/example/jade-toad.git")
+    g("init", "-q"); g("remote", "add", "origin", "https://github.com/example/firetoad.git")
     sys.path.insert(0, os.path.join(r, ".claude", "skills", "setup", "scripts"))
     import importlib
     import scaffold
@@ -450,6 +450,9 @@ def m_chequing_no_spend_tag(r):
 def m_broker_gift_no_deposit(r):
     edit_json(r, layout.rel("plan.json"), lambda d: d.update(brokerGifts=[
         {"date": "2026-02-03", "amount": 12345.67, "currency": "CAD", "why": "planted"}]))
+def m_setting_out_of_range(r):
+    # The emergency range with its ends swapped, typed into the file past setting.py's own check.
+    edit_json(r, layout.rel("plan.json"), lambda d: d.update(emergency={"low": 9, "high": 3}))
 def m_decision_no_default(r):
     # An empty queue (an owner with nothing waiting) gets one item planted without its default;
     # this used to index [0] and crash the whole selftest in such a workspace (2026-09-10).
@@ -481,6 +484,13 @@ def m_render_nan(r):
     # looking at "undefined".
     edit(r, main_dash(r),
          lambda s: re.sub(r'"netWorth":\s*-?[\d.]+,\s*', '', s, count=1))
+def m_render_fire_drift(r):
+    # The page's own FIRE sum changed and fire.py not: twenty-six years of spending, not twenty-five.
+    edit(r, main_dash(r), lambda s: s.replace("const target = PLAN_BASE * 12 * 25, months", "const target = PLAN_BASE * 12 * 26, months", 1))
+def m_render_long_page(r):
+    # The Glossary is thirteen screens and exempt as a reference page; without the mark it is
+    # a long page that lists no sections.
+    edit(r, main_dash(r), lambda s: s.replace('d:"", ref:1}', 'd:""}', 1))
 def m_render_sidebar_stuck(r):
     # the sidebar loses its own scroll: in a short window its foot is out of reach (2026-11-05)
     edit(r, main_dash(r), lambda s: s.replace(";max-height:calc(100vh - 38px);overflow-y:auto", "", 1))
@@ -569,9 +579,12 @@ CASES = [
     ("R5", "a broken field leaves NaN on the page",         m_render_nan,         "render"),
     ("D29", "a gift declared in the broker with no such deposit", m_broker_gift_no_deposit, "find"),
     ("D30", "a chequing bill that never reached spending",  m_chequing_no_spend_tag, "find"),
+    ("D31", "a setting outside the range its row allows",   m_setting_out_of_range, "find"),
     ("R3", "a chart pinned to a fixed height",              m_render_chart_capped,"render"),
     ("R6", "the sidebar cannot scroll in a short window",   m_render_sidebar_stuck,"render"),
     ("R7", "Home shows a card with no number",              m_render_empty_card,  "render"),
+    ("R8", "the page's FIRE sum drifts from the build's",   m_render_fire_drift,  "render"),
+    ("R9", "a long page that lists no sections",            m_render_long_page,   "render"),
 ]
 
 
@@ -2347,6 +2360,13 @@ def local_app_check(root, base):
                            capture_output=True, text=True, timeout=120)
         if r.returncode not in (0, 2):
             bad.append(f"balance.py exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:]))
+    # one of the owner's numbers, changed the same on both sides (FINANCE.md §8e)
+    stg = os.path.join(os.path.dirname(upd), "setting.py")
+    if os.path.exists(stg):
+        r = subprocess.run([sys.executable, stg, ".", "emergency", "6", "9", "--write"], cwd=copies["cli"],
+                           capture_output=True, text=True, timeout=120)
+        if r.returncode not in (0, 2):
+            bad.append(f"setting.py exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:]))
     # the first door
     r = subprocess.run([sys.executable, upd, ".", "--write"], cwd=copies["cli"], capture_output=True, text=True, timeout=300)
     if r.returncode != 0:
@@ -2399,7 +2419,7 @@ def local_app_check(root, base):
             bad.append("a request without the token was not answered 404")
         if req("POST", tok + "/api/import", {"write": False}, {"Content-Type": "application/json", "Origin": "http://127.0.0.1:1"})[0] != 403:
             bad.append("a POST from another origin was not refused")
-        lock = os.path.join(ws, ".jade.lock")
+        lock = os.path.join(ws, ".firetoad.lock")
         json.dump({"pid": os.getpid(), "verb": "import", "since": "now"}, open(lock, "w"))
         st, body = req("POST", tok + "/api/import", {"write": True})
         if st != 409:
@@ -2434,6 +2454,14 @@ def local_app_check(root, base):
             st, body = req("POST", tok + "/api/ocr", data, hdr)
             if st != 200 or not (body.get("data") or {}).get("error"):
                 bad.append(f"POST /api/ocr with junk answered {st} without a reason")
+        if os.path.exists(stg):
+            st, body = req("POST", tok + "/api/setting", {"key": "emergency", "value": [9, 6]})
+            plan_now = json.load(open(layout.path(ws, "plan.json"), encoding="utf-8"))
+            if st != 400 or "emergency" in plan_now:
+                bad.append(f"a range with its ends swapped got {st} from POST /api/setting, not a refusal")
+            st, body = req("POST", tok + "/api/setting", {"key": "emergency", "value": [6, 9]})
+            if st != 200 or not (body.get("data") or {}).get("written"):
+                bad.append(f"POST /api/setting answered {st}: {str(body)[:120]}")
         st, body = req("POST", tok + "/api/import", {"write": True})
         if st != 202:
             bad.append(f"POST /api/import answered {st}: {str(body)[:120]}")
@@ -2460,7 +2488,7 @@ def local_app_check(root, base):
     if bad:
         return ["  ✗ local app: " + x for x in bad[:6]]
     return [f"  ✓ local app: the same month through update.py and through POST /api/import left identical findata/ and archive/ "
-            f"({len(a)} files), with one statement uploaded and one balance typed through the app; no token → 404, "
+            f"({len(a)} files), with one statement uploaded, one balance typed and one setting changed through the app; no token → 404, "
             f"another origin → 403, the lock held → 409, a screenshot that is no image answered with a reason"]
 
 
@@ -2496,10 +2524,10 @@ def local_app_setup_check(root, base):
     bad = []
     _, two = copies["api"]
     ws = os.path.join(base, "wiz_made")
-    spec = importlib.util.spec_from_file_location("jade_app", os.path.join(copies["api"][0], "app.py"))
-    jade_app = importlib.util.module_from_spec(spec); spec.loader.exec_module(jade_app)
+    spec = importlib.util.spec_from_file_location("app_mod", os.path.join(copies["api"][0], "app.py"))
+    app_mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(app_mod)
     with contextlib.redirect_stdout(io.StringIO()):
-        jade_app.make_workspace(ws)
+        app_mod.make_workspace(ws)
     made = sorted(os.path.relpath(os.path.join(d, f), ws) for d, _, fs in os.walk(os.path.join(ws, "findata")) for f in fs)
     if made != [os.path.join("findata", "register", "profile.json")]:
         bad.append("Create my folder left more than a profile.json in findata/: " + ", ".join(made[:4]))
@@ -2665,7 +2693,7 @@ def ai_sidecar_check(root, base):
     asked as before; with the provider
     set to the mock, the merchants nobody knows carry a model's suggestion and are STILL filed
     Other until the owner says, the mock saw only merchant strings and category names, and the
-    exchange is in .jade/log/ai.jsonl."""
+    exchange is in .firetoad/log/ai.jsonl."""
     import http.server, threading
     upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
     aip = os.path.join(os.path.dirname(upd), "ai.py")
@@ -2754,9 +2782,9 @@ def ai_sidecar_check(root, base):
                     bad.append("on: a request carried an amount or a date"); break
                 if c["auth"] != "Bearer selftest-key":
                     bad.append("on: the key did not travel as the bearer token"); break
-            lp = os.path.join(ws, ".jade", "log", "ai.jsonl")
+            lp = os.path.join(ws, ".firetoad", "log", "ai.jsonl")
             if not os.path.exists(lp) or len(open(lp, encoding="utf-8").read().splitlines()) < len(calls):
-                bad.append("on: .jade/log/ai.jsonl does not hold every exchange")
+                bad.append("on: .firetoad/log/ai.jsonl does not hold every exchange")
             if "suggests Travel" not in r.stdout:
                 bad.append("on: the run's summary does not say the model suggested")
             n_calls, n_model = len(calls), len(with_model)
