@@ -390,7 +390,12 @@ def run(root, write=False, ok=False, sets=(), say=None):
         if d.get("kind") == "merchant":
             changed += _file_merchant(merchant_of(d), ans, table, merchants, spend)
             if i in brand_of:
-                table[merchant_of(d)]["brand"] = brand_of[i]
+                # the name as the card's own charges already carry it, so both are one brand:
+                # "Fido" typed beside TELEPHONE PMT becomes FIDO MOBILE when that is on a card
+                said = brand_of[i].upper()
+                seen = sorted({categories.brand_of(r["note"]) for r in spend} - {""})
+                table[merchant_of(d)]["brand"] = next((b for b in seen if b == said), None) \
+                    or next((b for b in seen if b.startswith(said + " ") or b.startswith(said)), None) or said
         if d.get("credit"):
             t = "Other" if ans == "Other income" else ans
             if t in INCOMING:
