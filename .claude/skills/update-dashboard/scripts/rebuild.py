@@ -17,7 +17,7 @@ test for the change was that a rebuild from the new files rendered every page by
     rebuild.py [root] --template DIR  # write the dashboards to DIR with every constant emptied
 """
 import sys, os, re, json, csv, collections
-import datetime
+import datetime, calendar
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from clock import clock  # noqa: E402
@@ -30,6 +30,7 @@ import categories                          # the spending categories and their g
 import verbs                               # the shape run() returns, shared by every script a month goes through
 import usual                               # a usual month and the emergency fund's months -- computed once, here
 import settings                            # the numbers that are the owner's to choose -- one table
+import fixed                               # which spending rows are a declared committed payment
 import fire                                # the FIRE target, progress and months to go -- computed once, here
 import savings                             # the savings rate and the years it takes -- computed once, here
 import drawdown                            # living on the portfolio and late-life care, at the plan's own ages
@@ -47,9 +48,20 @@ CLASS_OF_TYPE = {"CURRENCY": "cash", "CRYPTOCURRENCY": "crypto", "PRECIOUS_METAL
 CLASS_OF_FUND = {"bond_fund": "bonds", "equity_fund": "stocks"}
 
 
+# What common single-asset ETFs hold, shipped with the setup and owned by nobody (1.0.7, feedback
+# 106: eight common funds landed in Not classified). Read only where the owner has not said.
+_STARTER_CLASSES = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                                "setup", "data", "starter_asset_classes.json")
+try:
+    STARTER_CLASSES = json.load(open(_STARTER_CLASSES, encoding="utf-8")).get("classes", {})
+except (OSError, ValueError):
+    STARTER_CLASSES = {}
+
+
 def asset_class(sym, sec_type, declared):
-    """A holding's class, or None when nobody has said (an ETF no one has classified)."""
-    return declared.get(sym) or CLASS_OF_TYPE.get(sec_type)
+    """A holding's class: the owner's word, else what the export's type says, else the starter
+    map; None when nobody can say (a balanced fund no one has classified)."""
+    return declared.get(sym) or CLASS_OF_TYPE.get(sec_type) or STARTER_CLASSES.get(sym)
 
 # The two cuts of net worth, one row per value of one axis (FINANCE.md §8a). The label is what
 # the page says, the colour is design (DESIGN.md palette), and both are keyed by the axis value
@@ -260,7 +272,13 @@ def return_history(d, positions, fgn_funds, by_id):
     tot = sum(mix.values()) or 1
     w = {k: round(v / tot, 4) for k, v in mix.items() if v > 0}
     real = [[r[0], round((1 + sum(w[k] * r[col[k]] for k in w)) / (1 + r[5]) - 1, 5)] for r in rows]
-    return {"mix": w, "years": real, "source": d["returns"]["source"], "asof": d["returns"]["asof"]}
+    # what this mix earned a year, after inflation, over the whole record: said beside the return
+    # setting (1.0.7), a fact about the past, never a suggestion
+    g = 1.0
+    for _, x in real:
+        g *= 1 + x
+    avg = round(g ** (1 / len(real)) - 1, 4) if real else None
+    return {"mix": w, "years": real, "avg": avg, "source": d["returns"]["source"], "asof": d["returns"]["asof"]}
 
 
 def benchmark_run(d):
@@ -352,6 +370,10 @@ def derive(d):
                       "acct": ACCT_OF.get(m.group(1)) if m else None})
     spend_unsorted = list(spend)                 # row for row with d["spending"], for the marks below
     spend.sort(key=lambda e: e["date"])          # stable: same-day rows keep ledger order
+    # Fixed costs are only what the owner declared (fixed.py, 1.0.7): the rows that are a committed
+    # flow's payment carry `fx`; everything else spent is everyday, whatever its category.
+    for i in fixed.mark(spend, flow_totals(d["funds"]["plan"])["committedNow"], categories.groups(plan)):
+        spend[i]["fx"] = 1
     out["SPENDING"] = spend
 
     # --- CHEQUING: the classified rows of every ledger. The classification is the `type`
@@ -512,6 +534,30 @@ def derive(d):
             stmt[a["stmtLabel"]] = iso(newest(d["spending"], "note", a["spendTag"]))
     out["STMT_END"] = stmt
     out["LEDGER_THRU"] = thru
+    # A first month is a full month only if every source with spending in it covers its first day
+    # (1.0.7, feedback 103: eleven days of one card were counted as one of three full months and
+    # pulled a usual month down). A statement carries its closing day; the first one is taken to
+    # open the day after the same date a month before. Such a month is left out of comparisons
+    # the way an owner's own skipped month is, and says why; its totals stay whole.
+    def oldest(rows, col, tag):
+        ds = [m.group(1) for r in rows for m in re.finditer(tag + r'/(\d{8})', r.get(col) or "")]
+        return min(ds) if ds else None
+    start = {}
+    for a in accs:
+        if not a.get("stmtLabel"):
+            continue
+        o = oldest(d["ledgers"].get(a["key"], []), "statement", a["stmtTag"]) if a.get("ledger") and a.get("stmtTag") \
+            else oldest(d["spending"], "note", a["spendTag"]) if a.get("spendTag") else None
+        if o:
+            y, m, dd = int(o[:4]), int(o[4:6]), int(o[6:])
+            py, pm = (y, m - 1) if m > 1 else (y - 1, 12)
+            opened = datetime.date(py, pm, min(dd, calendar.monthrange(py, pm)[1])) + datetime.timedelta(days=1)
+            start[a["stmtLabel"]] = opened.isoformat()
+    if spend:
+        m0 = spend[0]["date"][:7]
+        late = sorted({e["acct"] for e in spend if e["date"].startswith(m0) and e.get("acct") and start.get(e["acct"], "") > m0 + "-01"})
+        if late and m0 not in out["MONTH_SKIP"]:
+            out["MONTH_SKIP"] = dict(out["MONTH_SKIP"], **{m0: "Not every statement covers it from the 1st (" + ", ".join(late) + ")"})
     by_key = {a["key"]: a for a in accs}
     acts_latest = max((r["effective_date"] for r in d["acts"]), default=None)
     bank_asof = {x["account"]: x.get("asof") for x in bank["assets"] + bank["debts"]}
@@ -573,7 +619,7 @@ def derive(d):
     # A card paid past zero owes nothing: the bank owes the owner the difference, so it is counted
     # as spendable cash rather than as a debt below zero.
     def credit_as_cash(a):
-        return dict(a, side="asset", role="buffer", reach="today", against=None)
+        return dict(a, side="asset", role="buffer", reach="today", against=None, credit=True)
     items = []
     for a in accs:
         if a.get("src") in (None, "none") and a.get("balance") is None:
@@ -631,7 +677,20 @@ def derive(d):
 
     R_inv, R_earm, R_cash, R_other = role_ca["grow"], by_role["set-aside"], role_ca["buffer"], role_ca["none"]
     invested = sum(v for a, v in ca if a.get("role") == "grow")
-    net_worth = sum(role_ca.values()) - R_debt        # the Canadian side; the page adds FOREIGN_CAD
+    # Net worth is the exact sum rounded once (1.0.7: Accounts and net worth differed by a dollar,
+    # each side rounding its own parts). The Canadian side is what is left of it after the
+    # foreign figure; the dollar the rounded rows disagree by goes on the largest role and the
+    # largest reach row, so both cuts still add to it.
+    exact = sum(v for _, v in ca) - sum(v for _, v in liabs) + (fj["total"] * rate_f if fgn_cad else 0)
+    net_worth = round(exact) - fgn_cad                # the Canadian side; the page adds FOREIGN_CAD
+    off = net_worth - (sum(role_ca.values()) - R_debt)
+    if off:
+        big = max(role_ca, key=lambda k: role_ca[k])
+        role_ca[big] += off
+        by_role[big] += off
+        bigr = max((r for r in by_reach if r != "abroad"), key=lambda k: by_reach[k])
+        by_reach[bigr] += off
+        R_inv, R_earm, R_cash, R_other = role_ca["grow"], by_role["set-aside"], role_ca["buffer"], role_ca["none"]
     dry_syms = set()
     for b in d["rules"].get("buckets", []):
         if b.get("target"):
@@ -705,8 +764,10 @@ def derive(d):
         return [[reach_lab[r][0], v, reach_lab[r][1], r] for r, v in t.items() if v]
     def one_account(a, v):
         cur = a.get("cur", "CAD")
+        # a card paid past zero is listed as money with why (1.0.7: "a credit card counted as money")
         return {"n": a.get("label") or a["name"], "i": "" if a.get("role") == "owed" else a.get("inst", ""),
-                "v": round(v), "asof": a.get("asof") or "", "cur": cur if cur != "CAD" else ""}
+                "v": round(v), "asof": a.get("asof") or "", "cur": cur if cur != "CAD" else "",
+                **({"note": "credit in your favour"} if a.get("credit") else {})}
     def part_accounts(role, where, total):
         """The accounts behind a row, largest first. Rounded per account, the dollar that can
         drift settled on the largest, so the list sums to the row it opens under."""

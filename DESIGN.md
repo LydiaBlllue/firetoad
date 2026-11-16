@@ -160,7 +160,7 @@
   with a goal: **Portfolio** (with its dry-powder share), **Years to financial independence** (at
   what reaches the broker, linking to the FIRE page; 1.0.5, in place of FIRE progress), **Invested
   in \<month\>** (pay-yourself-first, from the broker's record), **Total spent in \<month\>** (the
-  month's whole spending, bills & housing and everyday beneath it; today's month once it has a
+  month's whole spending, committed and everyday beneath it; today's month once it has a
   purchase, otherwise the newest one the statements reach. What is left of Everyday is This
   month's to say, 2026-11-03). Invested, no goal: Portfolio · Years · Invested. Nothing invested:
   Years, when there is a number for it. The rest fill from one list, in order, taking only a card with a
@@ -376,9 +376,11 @@
 - Charts have hover tooltips (dark bubble, white text), **one fact per line** — break with
   `<br>`, never string them on `·`.
 - Legends isolate a single category on click: the selection is highlighted and the rest dim.
-- **Explanations** (§5b′): a term with a dotted underline shows its dictionary entry on hover
-  and opens the Glossary on click; a tappable number shows its sum. Both use one floating light
-  card, clamped to the viewport, closed by clicking away or Esc.
+- **Explanations** (§5b′): a term with a dotted underline shows its dictionary entry when it is
+  clicked (or Enter on it), in a card that stays until a click elsewhere or Esc, with *In the
+  Glossary →* at its foot — the Glossary is one more click, never the first (1.0.7, the owner:
+  nothing opens by itself, and one click does not take the reader off the page). A tappable
+  number shows its sum on hover. Both use one floating light card, clamped to the viewport.
 - **There is no `?` mark.** Every explanation is a term or a sum.
 
 ## 5a. The top of the page, and the page header
@@ -447,7 +449,7 @@ these jobs is deleted, not shortened.
 | **status** | the one fact the value cannot show | optional; at most seven words, one fact, no `·`, never a restatement of the label, never where a number came from. `On track for May 2039`, `Both transfers landed`. |
 
 - **Explanations are never on the card.** A word that needs one is a **term**: dotted underline,
-  hover for its entry, click for the Glossary page. A number that needs one is **tappable**:
+  click for its entry, and from the entry one more click for the Glossary. A number that needs one is **tappable**:
   hover or tap it for how yours is worked out.
 - **A term's entry is a dictionary entry**, the same for anyone: the word, its part of speech,
   one sentence, a formula where there is one, an example in round numbers, *see also*. Never the
@@ -573,6 +575,13 @@ categorize` where there is room (the setup's last screen), `5 to categorize` in 
 header, which keeps its one short line — never `5 to confirm` — and says nothing on the web, where
 no app serves the page and nobody can answer (the live demo). **These screens never change the
 dashboard's layout**: the error box, the lists and the tables above are the panel's and the setup's.
+
+**The Done screen is three lines** (1.0.7, the owner: "does the user need to see the record?"):
+how many files were read and how far the data reaches; what net worth did; and the way to the
+dashboard (with *Undo the last import*). The import's full record — what was noticed, decided,
+asked — is the tool's: for undo, a report, the chat and the Updates page. The three lines are
+said from facts the record keeps (`facts`), so they read the same in either language; a
+question card's source line is said from its parts in Chinese too.
 
 **A question about a charge helps the owner remember it** (1.0.5, user 001: "I cannot remember
 where this money went"). One card at a time, and on it, from the rows and nothing else

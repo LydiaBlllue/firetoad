@@ -161,6 +161,7 @@ S = {
     "q_other_after": {"en": "after this one → {pct}%", "zh": "答完这条 → {pct}%"},
     "q_left": {"en": "{n} left", "zh": "还剩 {n} 条"},
     "q_cards_done": {"en": "That is all of them.", "zh": "都过完了。"},
+    "q_paid_to": {"en": "Paid to (optional), e.g. Fido", "zh": "付给谁（可不填），比如 Fido"},
     "q_more": {"en": "More", "zh": "更多"},
     "q_brand": {"en": "you filed other {brand} charges as {cat}", "zh": "你之前把别的 {brand} 归为 {cat}"},
     "q_undo_card": {"en": "Back", "zh": "上一条"},
@@ -178,6 +179,10 @@ S = {
     "saved_rebuilt": {"en": "answers saved — the page is rebuilt", "zh": "答案已保存——页面已重建"},
     "not_saved": {"en": "not saved; the lines under step 3 say which answer was refused", "zh": "没保存；第 3 步下面的行说了哪条被拒绝"},
     # — step 5
+    "done_read": {"en": "Read", "zh": "读了"},
+    "done_files": {"en": "{n} file(s)", "zh": "{n} 份文件"},
+    "done_reach": {"en": ", up to {date}", "zh": "，数据到 {date}"},
+    "done_nw": {"en": "Net worth", "zh": "净值"},
     "last_import": {"en": "Last import: {date}", "zh": "上次导入：{date}"},
     "no_import": {"en": "No import yet.", "zh": "还没有导入过。"},
     # — the folder's tool copy
@@ -338,7 +343,7 @@ def js_strings(lang):
             "r_asked", "r_by_hand", "r_untyped", "r_unknown", "r_stopped", "r_nothing_written", "r_changed", "r_noticed",
             "r_findings", "r_clean", "r_raw",
             "q_money_h", "q_sug_h", "q_sug_intro", "q_accept_all", "q_accepted", "q_change", "q_unknown_h", "q_unknown_intro",
-            "q_meta", "q_skip", "q_skip_all", "q_other_now", "q_other_after", "q_left", "q_cards_done", "q_more", "q_brand", "q_of", "q_next", "q_done_n", "own_account", "spent_it", "spent_on", "save_answers", "unanswered_keep", "go", "dry_hint",
+            "q_meta", "q_paid_to", "q_skip", "q_skip_all", "q_other_now", "q_other_after", "q_left", "q_cards_done", "q_more", "q_brand", "q_of", "q_next", "q_done_n", "own_account", "spent_it", "spent_on", "save_answers", "unanswered_keep", "go", "dry_hint",
             "q_undo_card", "q_saved_one", "q_saving_one", "q_save_failed", "q_resume", "m_moved", "q_change",
             "q_sorted", "q_line", "q_to_line", "q_lookup", "q_lookup_tip", "q_when", "q_more_n", "q_same_days", "q_same_day_acct",
             "q_nothing_else", "q_match", "q_every_week", "q_every_2weeks", "q_every_month", "q_on_weekday", "q_same_amount", "q_about",

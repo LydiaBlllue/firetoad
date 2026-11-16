@@ -66,6 +66,8 @@ sys.path.insert(0, HERE)
 import layout  # noqa: E402
 import preflight  # noqa: E402
 import seen_accounts  # noqa: E402
+import categories  # noqa: E402
+import fixed  # noqa: E402  which spending rows are a declared payment
 import rebuild  # noqa: E402
 import verbs  # noqa: E402
 import jlock  # noqa: E402  one writer at a time, both doors
@@ -92,6 +94,9 @@ NEW_MERCHANT_CATEGORY = "Other"      # a merchant nobody has decided, until the 
 # map knows is filed under its category instead of Other, and is still asked (a first user's
 # first import put every purchase in Other, 2026-10).
 STARTER = os.path.join(os.path.dirname(SKILL), "setup", "data", "starter_merchants.json")
+
+
+TECH_MAX_HOLDINGS = 500   # a page limit, not an owner's: no limit is set on how many they hold
 
 
 def _words(s):
@@ -464,6 +469,7 @@ class Plan:
         self.rewards = []                               # rewards.csv rows: cash back a card paid
         self.interest = []                              # card_interest.csv rows: what a statement charged
         self.files = []                                 # sentences, the way the owner knows them
+        self.reach = ""                                 # the newest statement's closing day read
         self.holdings = None                            # (src path, asof)
         self.activities = None
         self.friend = None
@@ -622,6 +628,7 @@ def plan_statement(ws, plan, path, doc):
         filed_any = True
         plan.counts["statements"] += 1
         plan.files.append(f"{ws.doc_name(pdoc)} statement to {short(p_end)}" + (" (again)" if redrop else ""))
+        plan.reach = max(plan.reach, p_end.isoformat())
     if not filed_any:
         plan.archive.pop()
 
@@ -1240,10 +1247,14 @@ def derive(root):
     return rebuild.derive(rebuild.load(root))
 
 
-def spending_by_month(root):
+def spending_by_month(root, committed=(), plan=None):
+    """Everyday spending by month: every row but a declared committed payment (fixed.py)."""
+    rows = [dict(r, amount=float(r["amount"])) for r in csv_rows(layout.path(root, "spending.csv"))]
+    skip = fixed.mark(rows, committed, categories.groups(plan or {})) if committed else set()
     out = collections.defaultdict(float)
-    for r in csv_rows(layout.path(root, "spending.csv")):
-        out[r["date"][:7]] += float(r["amount"])
+    for i, r in enumerate(rows):
+        if i not in skip:
+            out[r["date"][:7]] += r["amount"]
     return out
 
 
@@ -1304,24 +1315,27 @@ def noticed_lines(ws, out, plan):
             lines.append({"sev": "ok" if ok else "warn",
                           "text": f"Dry powder is {inv['dryPct']}%, {'inside' if ok else 'outside'} your {lo}–{hi}% band."
                                   + ("" if ok else " Rebalance when you next add money.")})
-    cap = rules.get("maxHoldings")
-    if cap:
-        ok = inv["holdings"] <= cap
-        lines.append({"sev": "ok" if ok else "warn",
-                      "text": f"{inv['holdings']} holdings, {'inside' if ok else 'over'} your limit of {cap}."
-                              + ("" if ok else " Pick one to let go before the next buy.")})
+    # No limit on how many holdings is the owner's (2026-10-26, again 2026-11-16): the page says
+    # how many and judges nothing. Only a count no page was built for is said, as a fact about
+    # the page, never as a rule about the portfolio.
+    if inv["holdings"] > TECH_MAX_HOLDINGS:
+        lines.append({"sev": "warn", "text": f"{inv['holdings']} holdings: past {TECH_MAX_HOLDINGS} the Holdings page draws slowly."})
     dep = out.get("WSDEP") or []
     ym = (ws.today.replace(day=1) - datetime.timedelta(days=1)).strftime("%Y-%m")
     last = next((d for d in dep if d["ym"] == ym), None)
     half = round(rebuild.flow_totals(ws.funds["plan"])["invest"] / 2, 2)
     if last:
         mon = LONG[int(ym[5:]) - 1]
-        if last["nRule"] >= 2:
-            lines.append({"sev": "ok", "text": f"{mon} kept the rule: {last['nRule']} deposits of {money(half)} reached the broker."})
+        # judged by the month's total, not by how many deposits were exactly half (1.0.7: more than
+        # planned arrived and the note still said to move the rest)
+        plan_m, got = half * 2, last["amt"]
+        if got >= plan_m - 0.5:
+            more = f", {money(got - plan_m)} more than the {money(plan_m)} planned" if got > plan_m + 0.5 else ""
+            lines.append({"sev": "ok", "text": f"{mon} kept the rule: {money(got)} reached the broker{more}."})
         else:
-            lines.append({"sev": "warn", "text": f"{mon} shows {money(last['amt'])} reaching the broker against the {money(half * 2)} you planned. Move the rest when you can."})
+            lines.append({"sev": "warn", "text": f"{mon} shows {money(got)} reaching the broker against the {money(plan_m)} you planned. Move the rest when you can."})
     everyday = rebuild.flow_totals(ws.funds["plan"]).get("everyday")
-    sp = spending_by_month(ws.root)
+    sp = spending_by_month(ws.root, rebuild.flow_totals(ws.funds["plan"])["committedNow"], jload(ws.fd("plan.json"), {}))
     if everyday and sp:
         m = max(sp)
         mon = LONG[int(m[5:]) - 1]
@@ -1352,7 +1366,9 @@ def record(ws, plan, changed, noticed, seconds=None):
     for ledger, d, desc, amt in plan.untyped:
         asked.append(f"What the {money(abs(amt))} on {short(iso_to_date(d))} ({desc[:40]}) was.")
     rec = {"date": ws.today.isoformat(), "files": plan.files, "changed": changed, "noticed": noticed,
-           "judged": plan.judged, "asked": asked}
+           "judged": plan.judged, "asked": asked,
+           # what the Done screen says, as facts any language can say (1.0.7, feedback 89)
+           "facts": {"files": len(plan.files), "reach": plan.reach or None}}
     if seconds:
         rec["seconds"] = seconds   # how long each stage took, so one import can be compared with another
     ws.imports.setdefault("imports", []).append(rec)

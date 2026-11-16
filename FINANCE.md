@@ -170,14 +170,31 @@ repaid, a loan's principal.
 
 Every row of spending is in exactly one part, so the parts always sum to the month's total:
 
-> **spent = bills & housing + everyday**
+> **spent = committed + everyday**
 
 | part | what is in it | measured against |
 |---|---|---|
-| bills & housing | the `bills` group | nothing yet |
-| everyday | the `everyday` group | the `everyday` flow |
+| committed | the payments the owner declared: each `committed` flow's payment that month (`fixed.py`) | the `committed` flows |
+| everyday | everything else spent, whatever its category — a phone bill included | the `everyday` flow |
+
+**Fixed costs are only what the owner declared** (1.0.7, feedback 110). A category says what a
+thing is, not whether it was promised: the setup's everyday figure counted every bill while the
+page left the Bills category out, and a phone bill nobody declared sat in neither line of the
+plan. Now the parts of a month are the lines of the plan, one for one: a declared payment is
+found the way D21 proves it (the row within a dollar or one per cent of the flow, or one
+payee's rows that add up to it); a flow that is an estimate across several bills is stood for
+by the `bills` group's rows in its months. Anything else is everyday; to keep a bill out of
+everyday, declare it. The category groups now decide only that, and colour and order.
 
 Money that leaves and nobody has named is a transfer, outside the sum, until the owner answers.
+
+**A month as the page shows it** (1.0.7, feedback 103): each category is what was bought in it;
+what came back is one line, *Refunds*, and the month's total is said "after $X of refunds", so a
+refund never makes another category look like most of the month. A month whose statements have
+not all reached its last day says which stop short and where. **A first month is a full month
+only if every source with spending in it covers its first day** — a statement is taken to open
+the day after the same date a month before its closing day — otherwise it is left out of every
+comparison, as an owner's own skipped month is, and says why (`MONTH_SKIP`).
 
 **There is one word for each part**, and a part the month does not have is not shown.
 The same words are used in the page, this file, the code and the register. A reader is never asked to learn these rules first: the page shows their own

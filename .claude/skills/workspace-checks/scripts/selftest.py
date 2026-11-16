@@ -160,7 +160,7 @@ def m_zh_guide_figure(r):
     p = os.path.join(r, "docs", "zh", "guide.md")
     os.makedirs(os.path.dirname(p), exist_ok=True)
     old = open(p, encoding="utf-8").read() if os.path.exists(p) else "# guide\n"
-    open(p, "w", encoding="utf-8").write(old + "\n\u6bcf\u6708\u6295\u8d44 $2,500\u3002\n")
+    open(p, "w", encoding="utf-8").write(old + "\n\u6bcf\u6708\u6295\u8d44 $700\u3002\n")
 
 def m_chain_break(r):
     p = layout.path(r, "chequing.csv")
@@ -320,8 +320,9 @@ def m_guard_data(r):
 def m_parse_tampered(r):
     return ("rbc_visa", "bmo_mastercard")   # whichever card the demo has; the runner does the rest
 def m_class_missing(r):
-    # An ETF bought since anyone said what it holds: the asset-type split would file it nowhere.
-    edit_json(r, layout.rel("rules.json"), lambda d: d["assetClass"].pop(next(iter(d["assetClass"]))))
+    # A fund bought since anyone said what it holds, and one no starter list can say: a balanced
+    # fund holds several kinds, so the asset-type split would file it nowhere.
+    edit(r, layout.rel("holdings_latest.csv"), lambda s: s.replace("XAW", "VGRO"))
 def m_class_unknown(r):
     # A kind of asset the page has no slice for.
     edit_json(r, layout.rel("rules.json"), lambda d: d["assetClass"].__setitem__(next(iter(d["assetClass"])), "property"))

@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.0.7 — unreleased
+
+- **What arrived for investing is judged by the total.** More than planned no longer reads as
+  "No transfer arrived yet" or "Move the rest".
+- **No limit on how many holdings**, and the setup no longer writes one in.
+- **Net worth is the exact sum rounded once**, so Accounts and the header agree to the dollar.
+- **A card paid past zero says so** where it is counted as money: "credit in your favour".
+- **Your return setting says what your mix earned**: "Your mix today earned about X% a year after
+  inflation from 1928 to 2025" — a fact, not advice.
+- **A word's meaning opens when you click it**, in place; the Glossary is one more click.
+- **Fixed costs are only what you declared** (rent, a mortgage, a loan). Everything else spent
+  is everyday, a phone bill included, so the month's parts are the lines of your plan.
+- **A month says what its statements reach**; refunds are one line instead of shrinking a
+  category; a first month that not every statement covers from the 1st is not a "full month".
+- **A bill paid from the bank asks who it went to**, so it and the same bill on a card are one
+  subscription; Subscriptions says how many months it needs to see one.
+- **Common single-asset ETFs know what they hold** (a starter list; yours always wins). Balanced
+  funds are still asked.
+- **The Done screen is three lines** — files read and how far they reach, net worth, the way to
+  the dashboard — in English or Chinese; question cards say where a charge came from in Chinese.
+
 ## 1.0.6 — 2026-11-16
 
 - **Each page answers one question.** Nothing is folded away; what answers another question moved
