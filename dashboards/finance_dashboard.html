@@ -68,15 +68,6 @@ body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system
 .side .subs button{font-size:12.5px;height:26px;padding:0 8px;color:var(--ink-2);border-radius:6px}
 .side .subs button.on{color:var(--ink);font-weight:600}
 /* A section of a long page folded to one line: its name, what it comes to, and the way in. */
-details.fold{border-top:1px solid var(--grid);scroll-margin-top:16px}
-details.fold>summary{display:flex;align-items:center;gap:16px;padding:10px 0;cursor:pointer;list-style:none}
-details.fold>summary::-webkit-details-marker{display:none}
-details.fold>summary .lab{width:170px;flex-shrink:0;margin:0}
-details.fold>summary .fv{flex:1;font-size:13.5px;min-width:0}
-details.fold>summary .fa{font-size:12.5px;color:var(--bar);white-space:nowrap}
-details.fold>summary .fa::before{content:"Show all"}
-details.fold[open]>summary .fa::before{content:"Hide"}
-details.fold>.fb{padding:0 0 14px}
 .anchor{scroll-margin-top:16px}
 .side button .dot-n{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-left:auto}
 .main{flex:1;min-width:0}
@@ -104,6 +95,8 @@ h1{font-size:21px;font-weight:700;letter-spacing:-.2px}
 .pill.sel{background:var(--ink);color:var(--page);border-color:var(--ink);font-weight:600}
 .grid-stats{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
 .grid-stats > .card{flex:1 1 190px;max-width:340px}
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:1119px){.paths{grid-template-columns:1fr}}
 /* what is kept each month, split by its job (the FIRE page) */
 .kept{margin-top:14px}
 .kept .sl{font-size:13px;color:var(--ink-2);margin-bottom:6px}
@@ -467,19 +460,16 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 </section>
 
 <section data-pg="income" hidden>
-  <div class="grid-stats anchor" id="secIncome"><div id="incStats" style="display:contents"></div></div>
-  <div class="card" style="margin-bottom:10px"><div class="lab" id="yrIncLab">By source</div><div id="yrIncCats"></div></div>
+  <div class="card" style="margin-bottom:10px">
+    <div class="lab" id="incLab"></div>
+    <div class="baseline-hero num" id="incBig"></div>
+    <div id="yrIncCats" style="margin-top:6px"></div>
+  </div>
   <div class="card">
     <div class="lab">Each month, by source</div>
     <svg class="year-svg" id="incChart" viewBox="0 0 940 280" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="year-legend" id="incLegend"></div>
     <div class="cap" id="incChartCap"></div>
-  </div>
-  <div class="card anchor" style="margin-top:10px" id="secChq">
-    <div class="lab" id="chqLab">Every row in chequing</div>
-    <div class="chq-ctl"><input type="search" id="chqQ" placeholder="Search by merchant or description" aria-label="Search chequing rows"><div class="pills" id="chqAcct"></div></div>
-    <table class="dt" id="chqTable"></table>
-    <div id="chqMore"></div>
   </div>
 </section>
 
@@ -599,20 +589,9 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 </section>
 
 <section data-pg="coast" hidden>
+  <div class="paths" id="drawAns" style="margin-bottom:10px"></div>
   <div class="card" style="margin-bottom:10px">
-    <div class="say" id="drawSay" style="margin-bottom:10px"></div>
-    <details class="fold" id="secMoney"><summary><span class="lab">The money</span><span class="fv" id="sumMoney"></span><span class="fa"></span></summary>
-      <div class="fb"><div id="coastMeta"></div></div></details>
-    <details class="fold" id="secCare"><summary><span class="lab">Care</span><span class="fv" id="sumCare"></span><span class="fa"></span></summary>
-      <div class="fb"><div id="careMeta"></div></div></details>
-    <details class="fold" id="secLasted" style="border-bottom:1px solid var(--grid)"><summary><span class="lab" id="btLab">Would it have lasted?</span><span class="fv" id="sumLasted"></span><span class="fa"></span></summary>
-      <div class="fb">
-        <div class="grid-stats" id="btStats" style="margin:8px 0 4px"></div>
-        <svg class="year-svg" id="btChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
-        <div class="phase-key" id="btKey"></div>
-        <div id="btMeta"></div>
-        <div id="btNote"></div>
-      </div></details>
+    <div class="say" id="drawSay"></div>
     <div style="margin:10px 0 2px">
       <div class="ctl"><span class="cl">Stop adding at</span><input type="range" id="stopAge" min="26" max="65" step="1"><span class="cv" id="stopAgeV"></span></div>
       <div class="ctl"><span class="cl">Start taking at</span><input type="range" id="drawAge" min="27" max="75" step="1"><span class="cv" id="drawAgeV"></span></div>
@@ -623,6 +602,18 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
     <svg class="year-svg" id="coastChart" viewBox="0 0 940 300" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="phase-key" id="coastKey"></div>
     <div id="coastNote"></div>
+  </div>
+  <div class="paths" style="margin-bottom:10px">
+    <div class="card anchor" id="secMoney"><div class="lab">The money</div><div id="coastMeta"></div></div>
+    <div class="card anchor" id="secCare"><div class="lab">Care</div><div id="careMeta"></div></div>
+  </div>
+  <div class="card anchor" id="secLasted" style="margin-bottom:10px">
+    <div class="lab" id="btLab">Would it have lasted?</div>
+    <div class="grid-stats" id="btStats" style="margin:8px 0 4px"></div>
+    <svg class="year-svg" id="btChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="phase-key" id="btKey"></div>
+    <div id="btMeta"></div>
+    <div id="btNote"></div>
   </div>
 </section>
 
@@ -663,16 +654,22 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <section data-pg="acct" hidden>
   <div class="grid-stats" id="acctStats"></div>
-  <div class="card" style="margin-bottom:10px">
+  <div class="card anchor" id="secAccts" style="margin-bottom:10px">
     <div class="lab">Every account, by institution</div>
     <div id="acctLoose"></div>
     <table class="dt" id="acctTable"></table>
     <div class="cap" id="acctCap"></div>
   </div>
-  <div class="card">
+  <div class="card anchor" id="secGaps" style="margin-bottom:10px">
     <div class="lab">What no file shows yet</div>
     <div id="gapList"></div>
     <div class="cap" id="gapCap"></div>
+  </div>
+  <div class="card anchor" id="secRows" style="margin-bottom:10px">
+    <div class="lab" id="chqLab">Every row in your bank accounts</div>
+    <div class="chq-ctl"><input type="search" id="chqQ" placeholder="Search by merchant or description" aria-label="Search bank rows"><div class="pills" id="chqAcct"></div></div>
+    <table class="dt" id="chqTable"></table>
+    <div id="chqMore"></div>
   </div>
 </section>
 
@@ -893,7 +890,7 @@ const NAV = [
   {sec:"Get started", items:[{k:"acct", n:"Accounts",        t:"Accounts",             d:""},
                            {k:"cat",   n:"This month",       t:"This month",           d:""},
                            {k:"trends",n:"Year",             t:"The year",             d:""},
-                           {k:"income",n:"Income & chequing",t:"Income and chequing", d:""},
+                           {k:"income",n:"Income",t:"Income", d:""},
                            {k:"subs",  n:"Subscriptions",    t:"Subscriptions",        d:""},
                            {k:"base",  n:"Monthly spending", t:"Monthly spending",     d:""},
                            {k:"safe",  n:"Emergency fund",       t:"Emergency fund",           d:""}]},
@@ -920,8 +917,9 @@ const PAGES = NAV.flatMap(g => g.items);
 // element on the page, the section's own heading]. Kept beside NAV, not in it, so NAV stays one
 // flat list of pages.
 const PAGE_SECS = {
-  income: [["secIncome", "Income"], ["secChq", "Chequing"]],
-  coast:  [["secMoney", "The money"], ["secCare", "Care"], ["secLasted", "Would it have lasted?"]]
+  coast: [["secMoney", "The money"], ["secCare", "Care"], ["secLasted", "Would it have lasted?"]],
+  acct:  [["secAccts", "Every account, by institution"], ["secGaps", "What no file shows yet"], ["secRows", "Every row in your bank accounts"]]
+
 };
 PAGES.forEach(p => { p.secs = PAGE_SECS[p.k] || []; });
 const PILL_PAGES = ["cat","budget"];                          // driven by the month cursor
@@ -1012,14 +1010,11 @@ function drawNav(){
   });
   $("sideNav").querySelectorAll("button.sub").forEach(b => b.onclick = () => {
     const el = document.getElementById(b.dataset.sec); if(!el) return;
-    if(el.tagName === "DETAILS") el.open = true;       // a folded section opens when it is asked for by name
     el.scrollIntoView({block: "start"});
   });
   markSection();
 }
-// The section in view. A section laid out down the page is in view once its top has passed the
-// upper part of the window; one folded to a line is in view only while it is open and on screen
-// (three folded lines sit together, and none of them is "where you are").
+// The section in view: the last one whose top has passed the upper part of the window.
 function markSection(){
   const subs = [...$("sideNav").querySelectorAll("button.sub")];
   if(!subs.length) return;
@@ -1028,20 +1023,12 @@ function markSection(){
   subs.forEach((b, i) => {
     const el = document.getElementById(b.dataset.sec); if(!el) return;
     const r = el.getBoundingClientRect(), line = window.innerHeight * 0.35;
-    if(el.tagName === "DETAILS"){ if(el.open && r.top < line && r.bottom > 80) on = b.dataset.sec; }
     // at the foot of the page the last section is the one in view, however short the page
-    else if(i === 0 || r.top < line || (atFoot && r.top < window.innerHeight)) on = b.dataset.sec;
+    if(i === 0 || r.top < line || (atFoot && r.top < window.innerHeight)) on = b.dataset.sec;
   });
   subs.forEach(b => b.classList.toggle("on", b.dataset.sec === on));
 }
 window.addEventListener("scroll", markSection, {passive: true});
-// A chart inside a folded section has no width until the section opens, so the page is drawn
-// again when one does.
-document.addEventListener("toggle", ev => {
-  if(!(ev.target.matches && ev.target.matches("details.fold"))) return;
-  if(ev.target.open) render();
-  markSection();
-}, true);
 // A page merged into another or taken off: an old link or saved state still lands.
 const MOVED = {tasks:"upd", todo:"upd", rules:"port"};
 function setPage(p){
@@ -2191,15 +2178,12 @@ function renderYr(){
 
   const inc = ICATS.map(c => [c.k, cfy.reduce((s,m)=>s+(m[c.f]||0),0), c.c]).filter(x => x[1] > 0);
   const icard = StatCard;
-  $("incStats").innerHTML =
-    icard("Income in "+viewYear, hasIncome ? numx(fmt(income), inc.map(x => [x[0], fmt(x[1])]), cfy.length+" month"+(cfy.length === 1 ? "" : "s")+" on record.", true) : "\u2014")
-    + icard(term("kept", "Kept"), net === null ? "\u2014" : numx((net >= 0 ? "+" : "\u2212") + fmt(Math.abs(net)), [["Income", fmt(income)], ["Spent", "\u2212"+fmt(spent)]], "", true),
-            net !== null && income > 0 ? Math.round(pc(net, income))+"% of income" : "");
+  $("incLab").textContent = "Income in "+viewYear;
+  $("incBig").innerHTML = hasIncome ? numx(fmt(income), inc.map(x => [x[0], fmt(x[1])]), cfy.length+" month"+(cfy.length === 1 ? "" : "s")+" on record.", true) : "\u2014";
   const imx = Math.max(...inc.map(x => x[1]), 1);
   // What the month card used to say, said once for the year: investment income is income but
   // never reaches chequing, and money a borrower pays back is not income at all.
   const repaid = cfy.reduce((s,m) => s + (m.repaid||0), 0);
-  $("yrIncLab").textContent = "By source";
   $("yrIncCats").innerHTML = (inc.length ? inc.map(x =>
     '<div class="inc-row"><span class="dot" style="width:9px;height:9px;border-radius:3px;flex-shrink:0;background:'+x[2]+'"></span><span class="nm" style="width:105px">'+(x[0] === "Investment" ? term("investment_income", x[0]) : x[0] === "Rewards" ? term("rewards", x[0]) : x[0])+'</span><div class="bar-wrap"><div class="bar" style="width:'+(pc(x[1], imx))+'%;background:'+x[2]+'"></div></div><span class="v num">'+fmt2(x[1])+'</span></div>').join("")
     : '<div class="empty">No income data for '+viewYear+'</div>')
@@ -2220,12 +2204,12 @@ function renderChq(){
     '<button class="pill'+(a === chqAcct ? " sel" : "")+'" data-a="'+a+'">'+(a || "All")+'</button>').join("") : "";
   $("chqAcct").querySelectorAll(".pill").forEach(b => b.onclick = () => { chqAcct = b.dataset.a; chqN = 60; renderChq(); });
   const q = chqQ.trim().toLowerCase();
-  const rows = CHEQUING.filter(r => r.date.startsWith(viewYear) && (!chqAcct || r.src === chqAcct)
+  const rows = CHEQUING.filter(r => (!chqAcct || r.src === chqAcct)
     && (!q || (r.desc + " " + (r.raw || "") + " " + r.type).toLowerCase().includes(q))).slice().reverse();
-  $("chqLab").textContent = "Every row in chequing, " + viewYear;
+  $("chqLab").textContent = "Every row in your bank accounts";
   const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
   $("chqTable").innerHTML = DataTable([
-      {h:"Date", c: r => MN[Number(r.date.slice(5,7))-1]+' '+Number(r.date.slice(8,10)), nw:1},
+      {h:"Date", c: r => MN[Number(r.date.slice(5,7))-1]+' '+Number(r.date.slice(8,10))+(r.date.slice(0,4) !== TODAY.slice(0,4) ? ', '+r.date.slice(0,4) : ''), nw:1},
       {h:"What", c: r => r.raw ? '<span title="'+esc(r.raw)+'">'+esc(r.desc)+'</span>' : esc(r.desc), a:"l", num:false},
       {h:"Type", c: r => esc(r.type), a:"l", m:1, num:false}]
       .concat(accts.length > 1 ? [{h:"Account", c: r => esc(r.src), a:"l", m:1, nw:1, num:false}] : [])
@@ -2837,7 +2821,7 @@ const BOOKV = {"mv": 51290, "bv": 45922, "incomeYtd": 763};
 // DRAWDOWN.at is those ages, DRAWDOWN.now the plan at them. The page keeps the sums below to
 // redraw as an age is moved; drawNow(at) is those sums at given ages, and check_render's R8
 // fails when a freshly built page's drawNow(DRAWDOWN.at) is not DRAWDOWN.now.
-const DRAWDOWN = {"at": {"stop": 32, "draw": 55, "care": 80, "ltc": 88, "tier": 0}, "now": {"dead": 60.25, "short": 1777440.6444244043, "atDraw": 161597.16497027813, "atStop": 51290, "noCareDead": 60.25, "stayHomeDead": 60.25, "extra": null, "bt": {"ok": 0, "n": 59, "N": 40, "from": 1928, "to": 2025}}};
+const DRAWDOWN = {"at": {"stop": 65, "draw": 66, "care": 80, "ltc": 88, "tier": 0}, "now": {"dead": null, "short": 0, "atDraw": 1019554.6225672617, "atStop": 969931.1063517759, "noCareDead": null, "stayHomeDead": null, "extra": 0, "bt": {"ok": 59, "n": 70, "N": 29, "from": 1928, "to": 2025}}};
 // Money that runs out before care begins: everything after it is the shortfall, so there is no
 // "extra for care" to state.
 const brokeBefore = (run, careA) => run.dead !== null && run.dead <= careA;
@@ -2853,7 +2837,7 @@ function drawNow(a){
           bt: bt ? {ok: bt.ok, n: bt.n, N: bt.N, from: bt.from, to: bt.to} : null};
 }
 const DRAW_AT = DRAWDOWN.at || {};
-let stopAge = AGE_NOW, drawAge = DRAW_AT.draw || 0, careAge = DRAW_AT.care || 0, ltcAge = DRAW_AT.ltc || 0, ltcTier = DRAW_AT.tier || 0;
+let stopAge = DRAW_AT.stop ?? AGE_NOW, drawAge = DRAW_AT.draw || 0, careAge = DRAW_AT.care || 0, ltcAge = DRAW_AT.ltc || 0, ltcTier = DRAW_AT.tier || 0;
 try{ const v = JSON.parse(localStorage.getItem("ly_coast")||"null");
      if(v){ stopAge = v.stop ?? stopAge; drawAge = v.draw ?? drawAge;
             careAge = v.careAge ?? careAge; ltcAge = v.ltcAge ?? ltcAge;
@@ -2977,14 +2961,9 @@ function renderCoast(target, annualSpend){
   ]);
 
   $("coastMeta").innerHTML = metaList([
-    [stopAge > AGE_NOW ? "Pot at "+stopAge+", when you stop adding" : "Pot today", fmt(atStop)],
     ["Pot at "+drawAge+", when you start taking", fmt(atDraw)],
     ["Taken each year", fmt(annualSpend)],
     [term("withdrawal_rate", "Withdrawal rate")+" at "+drawAge, empty ? "\u2014" : numx(safeRate.toFixed(1)+"%", [["Taken each year", fmt(annualSpend)], ["Pot", fmt(atDraw)]], "")],
-    ["Highest rate", empty ? "\u2014" : atDraw >= annualSpend
-      ? numx(peakR.toFixed(1)+"% at "+Math.floor(peakA), [], "Recomputed every month up to age "+(LIFE_TO-HORIZON)+"; the last "+HORIZON+" years are left out, when a high rate only means the pot is being spent as planned.")
-      : "Never a year of spending", atDraw >= annualSpend && peakR > 4 && lasts ? "hi" : ""],
-    ["Lasts to "+LIFE_TO, empty ? "Nothing to draw from yet" : lasts ? "Yes" : "No, runs out at "+Math.floor(run.dead), lasts || empty ? "" : "hi"],
     !lasts && !empty && run.short > 0 ? [term("shortfall", "Shortfall")+", "+Math.floor(run.dead)+" to "+LIFE_TO,
       numx(fmt(run.short), [], "What is still to pay after the money has run out \u2014 spending and care, less any pensions \u2014 added up in today\u2019s money. It says how much is missing, not where it would come from."), "hi"] : null
   ].concat(PENSIONS.length
@@ -2999,7 +2978,7 @@ function renderCoast(target, annualSpend){
     let bill = 0;
     for(let a = careAge; a < LIFE_TO; a += 1/12) bill += careAt(a, careAge, ltcA, ltc);
     // The section's one line (DESIGN.md §4): what care comes to, before the rows that make it up.
-    $("sumCare").innerHTML = "<b>"+fmt(atHome)+"</b> a month from "+careAge
+    if($("sumCare")) $("sumCare").innerHTML = "<b>"+fmt(atHome)+"</b> a month from "+careAge
       + (atLtc === null ? "" : " \u00b7 then "+fmt(atLtc)+" from "+ltcAge) + " \u00b7 whole bill <b>"+fmt(bill)+"</b>";
     const noCareEnd = runNoCare.dead === null ? null : Math.floor(runNoCare.dead);
     const stayEnd   = runStayHome.dead === null ? null : Math.floor(runStayHome.dead);
@@ -3012,8 +2991,6 @@ function renderCoast(target, annualSpend){
             ltc.d+". Rising "+(ltc.esc*100).toFixed(1)+"% a year above inflation.")],
       ["Whole care bill, "+careAge+" to "+LIFE_TO, fmt(bill)],
       ["Extra needed at "+careAge, early ? "The money runs out at "+Math.floor(run.dead)+", before care starts" : extra === null ? "\u2014" : extra === 0 ? "None" : numx(fmt(extra), [], "The smallest lump at "+careAge+" that keeps the pot alive to "+LIFE_TO+"."), extra ? "hi" : ""],
-      ["Staying home throughout", empty ? "\u2014" : stayEnd === null ? "Lasts past "+LIFE_TO : "Runs out at "+stayEnd],
-      ["With no paid care", empty ? "\u2014" : noCareEnd === null ? "Lasts past "+LIFE_TO : "Runs out at "+noCareEnd, "mut"]
     ]) + (ltcA === null ? "" : '<div class="cap" style="margin-top:8px">From '+ltcAge+' the care-home fee is charged on top of the whole planning figure, so the plan has more room after '+ltcAge+' than the chart shows.</div>');
   }
 
@@ -3030,18 +3007,20 @@ function renderCoast(target, annualSpend){
     + '<div class="cap" style="margin-top:6px">Every figure is in today\u2019s money, so the '+fmt(MONTHLY_CONTRIB)+' a month has to rise with inflation each year to stay on this line.</div>';
 
   const bt = backtest(atDraw, drawM, drawAge, careAge, ltcA, ltc);
-  $("sumMoney").innerHTML = empty ? "Nothing to draw from yet"
+  if($("sumMoney")) $("sumMoney").innerHTML = empty ? "Nothing to draw from yet"
     : (lasts ? "Lasts to <b>"+LIFE_TO+"</b>" : "Runs out at <b>"+Math.floor(run.dead)+"</b>"
         + (run.short > 0 ? " \u00b7 shortfall <b>"+fmt(run.short)+"</b>" : ""))
       + " \u00b7 pot at "+drawAge+" "+fmt(atDraw);
-  $("sumLasted").innerHTML = bt ? "Lasted to "+LIFE_TO+" in <b>"+bt.ok+" of "+bt.n+"</b> stretches since "+bt.from
+  if($("sumLasted")) $("sumLasted").innerHTML = bt ? "Lasted to "+LIFE_TO+" in <b>"+bt.ok+" of "+bt.n+"</b> stretches since "+bt.from
     : RET_HIST.years ? "Nothing to replay yet" : "No history on record yet";
-  $("drawSay").innerHTML = empty
-    ? "Nothing is invested yet, so at <b>"+drawAge+"</b> there is no pot to take "+fmt(annualSpend/12)+" a month from."
-    : !lasts
-    ? "Start taking "+fmt(annualSpend/12)+" a month at <b>"+drawAge+"</b> and, at a steady "+rPct+", the money runs out at <b>"+Math.floor(run.dead)+"</b>."
-    : "Start taking "+fmt(annualSpend/12)+" a month at <b>"+drawAge+"</b> and, at a steady "+rPct+", the money lasts to "+LIFE_TO+"."
-      + (bt ? " Through real history it would have lasted in <b>"+bt.ok+" of "+bt.n+"</b> stretches since "+bt.from+"." : "");
+  // The answer is two cards, side by side (2026-11-15, user 001): what a steady return gives,
+  // and how often real history did as well. The sliders and the chart are the next card.
+  const steady = lasts ? "Lasts to "+LIFE_TO : "Runs out at "+Math.floor(run.dead);
+  const okShare = bt ? bt.ok / bt.n : null;
+  $("drawAns").innerHTML = empty ? StatCard("Will the money last?", "Nothing to draw from yet", "", {text: true})
+    : StatCard("At a steady "+rPct+" a year", steady, "Taking "+fmt(annualSpend/12)+" a month from "+drawAge+". "+rPct+' is <a href="#" onclick="setPage(\'set\');return false">your setting</a>.', {text: true})
+      + (bt ? StatCard("In real history, since "+bt.from, "Lasted in "+bt.ok+" of "+bt.n, "Every start year on record, your mix today, year by year.", {text: true, color: okShare < 0.9 ? "#c98500" : null}) : "");
+  $("drawSay").innerHTML = empty ? "" : "Move the ages to see when the money runs out, and what care does to it.";
   renderBacktest(bt, atDraw);
 
   // only show a colour that is actually on the chart
@@ -3094,7 +3073,7 @@ function renderBacktest(bt, pot0){
   const med = [...bt.runs].map(r => r.end).sort((a,b) => a-b)[Math.floor(bt.n/2)];
   $("btLab").textContent = "Would it have lasted?";
   $("btStats").innerHTML =
-    StatCard("Lasted to "+LIFE_TO, rate+"%", bt.ok+" of "+bt.n+" stretches") +
+    // how many lasted is the answer card's at the top of the page; here, the worst and the middle
     StatCard(fails.length ? "Worst start" : "Closest call", worst.y, fails.length ? "runs out at "+Math.floor(worst.dead) : fmt(worst.end)+" left at "+LIFE_TO) +
     StatCard("Left at "+LIFE_TO+", middle case", fmt(med));
   // One bar per start year: green above the line is what is left at the end, red below is how
@@ -3175,7 +3154,7 @@ function drawCoast(run, target, atDraw, careA, ltcA){
     .concat(ltcA===null?[]:[[ltcA,"Care home",PH.ltc]]).forEach(([a,lab,c]) => {
     if(a<=AGE_NOW && lab==="Stop adding") return;
     // Each label on its own row: at the right edge the two care lines and the target sit close.
-    const row = lab==="Care at home" ? 1 : lab==="Care home" ? 2 : 0;
+    const row = lab==="Care at home" ? 1 : lab==="Care home" ? 2 : lab==="Start taking" && drawAge - stopAge < 8 && stopAge > AGE_NOW ? 1 : 0;
     out += '<line x1="'+ageX(a)+'" y1="'+padT+'" x2="'+ageX(a)+'" y2="'+(H-padB)+'" stroke="'+c+'" stroke-width="1.5" stroke-dasharray="3 3"/>'
         +  '<text x="'+(ageX(a)+5)+'" y="'+(padT+11+row*14)+'" font-size="11.5" fill="'+c+'" font-weight="700">'+lab+'</text>';
   });

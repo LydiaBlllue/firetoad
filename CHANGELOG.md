@@ -28,6 +28,14 @@
   *Statements* says first what is still to bring, and the grid gives each source's latest date;
   what no file shows yet moved to *Accounts*. *Investment income* lists the holdings that paid
   nine-tenths and the rest in one line.
+- **Drawdown & care starts where FIRE ends, and its answer says both halves.** The money is
+  added until the year the FIRE page reaches the target and taken from the year after (it used to
+  start from adding nothing from today). The answer is two cards: what a steady return gives, and
+  how often real history did as well. The ages and the chart come next; then the money and care
+  side by side; then the history. Nothing on it is folded.
+- **Income is one question**, what came in and from where. Every row in your bank accounts moved
+  to *Accounts*, all years, newest first. *Kept* left the page: the one share of income is the
+  savings rate on FIRE.
 - **Settings: the numbers that are yours to choose** (2026-11-14, user 001: someone wants three
   months of emergency fund, someone six to nine). A new page at the foot of the sidebar lists
   them — the emergency range, the import day, planning spend, take-home pay, what goes to the

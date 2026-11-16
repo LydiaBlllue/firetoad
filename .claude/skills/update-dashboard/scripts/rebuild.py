@@ -872,7 +872,8 @@ def derive(d):
     # care would need, how many starting years on record it survives. R8 holds the page to it.
     out["DRAWDOWN"] = drawdown.figures(out["INVEST"]["portfolio"], plan.get("planBase"), flow_totals(d["funds"]["plan"])["invest"],
                                        out["COAST_R"], out["LTC_TIERS"], out["HOME_CARE"], out["PENSIONS"],
-                                       (out["RET_HIST"] or {}).get("years"), prof.get("born"), out["LIFE_TO"], today)
+                                       (out["RET_HIST"] or {}).get("years"), prof.get("born"), out["LIFE_TO"], today,
+                                       (out["SAVINGS"].get("years") or [None, None])[1])
     for p in positions:
         del p["_id"]
     out["FX"] = {"rate": rate, "asof": d["fx"].get("asof"), "quality": d["fx"].get("quality")}
