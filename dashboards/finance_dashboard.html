@@ -104,6 +104,12 @@ h1{font-size:21px;font-weight:700;letter-spacing:-.2px}
 .pill.sel{background:var(--ink);color:var(--page);border-color:var(--ink);font-weight:600}
 .grid-stats{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
 .grid-stats > .card{flex:1 1 190px;max-width:340px}
+/* what is kept each month, split by its job (the FIRE page) */
+.kept{margin-top:14px}
+.kept .sl{font-size:13px;color:var(--ink-2);margin-bottom:6px}
+.kept .kb{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px;max-width:720px}
+.kept .kk{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:7px;font-size:13px}
+.kept .kk i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 15px}
 .card.tight{max-width:780px}
 /* --- Motion (2026-09-06). Two rules only: a page change should be felt, and anyone who has
@@ -409,15 +415,6 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <section data-pg="home" hidden>
 <div class="grid-stats" id="homeStats"></div>
-<div class="card" style="margin-bottom:10px" id="saveCard" hidden>
-  <div class="lab" id="saveLab">Years to financial independence</div>
-  <div class="baseline-hero num" id="saveBig"></div>
-  <div class="say" id="saveSay"></div>
-  <div class="ctl" id="saveCtl"><span class="cl">Keep more each month</span><input type="range" id="saveMore" min="0" max="1000" step="50" aria-label="Keep more each month"><span class="cv num" id="saveMoreV"></span></div>
-  <div class="say" id="saveRes"></div>
-  <svg class="year-svg" id="saveChart" viewBox="0 0 940 130" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Years to financial independence at each savings rate"></svg>
-  <div class="cap" id="saveCap"></div>
-</div>
 <div class="card" style="margin-bottom:10px">
   <div class="lab" id="bothLab">Net worth</div>
   <div class="baseline-hero num" id="bothBig">—</div>
@@ -580,14 +577,19 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 
 <section data-pg="fire" hidden>
-  <div class="grid-stats" id="fireStats"></div>
-  <div class="card" style="margin-bottom:10px">
-    <div class="lab">Trajectory to FIRE</div>
-    <div class="pills" id="trajPills" style="margin:6px 0 8px"></div>
-    <svg class="year-svg" id="fireTraj" viewBox="0 0 940 300" preserveAspectRatio="xMidYMid meet"></svg>
-    <div class="year-legend" id="trajLegend"></div>
-    <div class="cap" id="trajCap"></div>
+  <div class="card" style="margin-bottom:12px" id="fiCard">
+    <div class="lab">Years to financial independence</div>
+    <div class="baseline-hero num" id="fiBig"></div>
+    <div class="say" id="fiSay"></div>
+    <div class="kept" id="fiKept"></div>
   </div>
+  <div class="card" style="margin-bottom:12px" id="fiMoreCard">
+    <div class="ctl"><span class="cl">Invest more each month</span><input type="range" id="fiMore" min="0" max="1000" step="50" aria-label="Invest more each month"><span class="cv num" id="fiMoreV"></span></div>
+    <div class="say" id="fiRes"></div>
+    <svg class="year-svg" id="fiChart" viewBox="0 0 940 260" preserveAspectRatio="xMidYMid meet" role="img" aria-label="What you have invested, growing to the target"></svg>
+    <div class="cap" id="fiCap"></div>
+  </div>
+  <div class="grid-stats" id="fireStats"></div>
   <div class="card" style="margin-bottom:10px">
     <div class="lab">If you stopped adding today</div>
     <div class="say" id="coastSay"></div>
@@ -1480,60 +1482,12 @@ function bandLab(){
   const b = (RULES.buckets || []).find(x => x.target);
   return !b || b.key === "dry" ? term("dry_powder", "Dry powder") : b.name;
 }
-// Years to financial independence (savings.py has the sums; the page reads its tables). It
-// leads with the answer — the years at the rate you save now — and gives the rate as the reason.
-// The slider is in money ("keep $200 more a month"), and the curve below it is the slider's
-// picture: where you are, and where the slider takes you. 3% to 5% real, a range, never a date.
-const yrsRange = y => Math.round(y[2]) === Math.round(y[0]) ? String(Math.round(y[2])) : Math.round(y[2])+"\u2013"+Math.round(y[0]);
-function renderSavings(){
-  const card = $("saveCard");
-  if(SAVINGS.rate === undefined){ card.hidden = true; return; }
-  card.hidden = false;
-  const you = Math.round(SAVINGS.rate*100), Y = SAVINGS.years, done = Y[2] !== null && Y[2] < 0.5, none = Y[0] === null;
-  const inp = $("saveMore");
-  if(!inp.dataset.set){ inp.value = 0; inp.dataset.set = "1"; inp.oninput = renderSavings; }
-  const at = SAVINGS.more.find(m => m.more === Number(inp.value)) || SAVINGS.more[0];
-  $("saveBig").textContent = done ? "Already there" : none ? "Not at this rate" : "About "+yrsRange(Y)+" years";
-  $("saveSay").innerHTML = done ? "What you have invested already covers 25 years of what you spend."
-    : (none ? "Nothing is left to save at today\u2019s spending, so the money does not build. " : "At the rate you save now. ")
-      + "You keep <b>"+you+"%</b> of what you earn \u2014 "+fmt(SAVINGS.income)+" in, "+fmt(SAVINGS.spend)+" out a month. That "+you+"% is your "+term("savings_rate", "savings rate")+".";
-  $("saveCtl").hidden = $("saveRes").hidden = done;
-  $("saveMoreV").textContent = "+"+fmt(at.more);
-  const sooner = !none && at.years[0] !== null ? [Y[2] - at.years[2], Y[0] - at.years[0]].map(Math.round) : null;
-  $("saveRes").innerHTML = done ? "" : at.more === 0 ? "Move the slider to see what keeping a little more is worth."
-    : at.years[0] === null ? "Keeping "+fmt(at.more)+" more a month still leaves nothing to save."
-    : "Keeping "+fmt(at.more)+" more a month: about <b>"+yrsRange(at.years)+" years</b>"
-      + (sooner && Math.max(...sooner) > 0 ? " \u2014 <b>"+(sooner[0] === sooner[1] ? sooner[0] : Math.min(...sooner)+" to "+Math.max(...sooner))+" year"+(Math.max(...sooner) === 1 ? "" : "s")+" sooner</b>." : ".");
-  const C = SAVINGS.curve;
-  const [W, H] = fit("saveChart", 140), pl = 40, pr = 12, pt = 24, pb = 22;
-  // past fifty years the curve says nothing more than "a working life": it is drawn flat there
-  const top = Math.min(50, Math.max(10, ...C.map(p => p.years[0] || 0)));
-  const x = pct => pl + Math.max(0, Math.min(90, pct))/90*(W-pl-pr), y = v => pt + (1 - Math.min(v, top)/top)*(H-pt-pb);
-  const pts = i => C.filter(p => p.years[i] !== null).map(p => x(p.pct).toFixed(1)+","+y(p.years[i]).toFixed(1));
-  let out = '<text x="'+(pl+4)+'" y="'+(pt-10)+'" font-size="11" fill="var(--muted)">years</text>';
-  [0, Math.round(top/2), Math.round(top)].forEach(v => out += '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--grid)"/><text x="'+(pl-6)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--muted)">'+v+'</text>');
-  [0, 30, 60, 90].forEach(v => out += '<text x="'+x(v)+'" y="'+(H-6)+'" text-anchor="'+(v === 0 ? "start" : v === 90 ? "end" : "middle")+'" font-size="11" fill="var(--muted)">'+v+'%</text>');
-  const hi = pts(0), lo = pts(2).reverse();
-  if(hi.length > 1) out += '<polygon points="'+hi.concat(lo).join(" ")+'" fill="var(--ink)" opacity=".08"/>'
-    + '<polyline points="'+pts(1).join(" ")+'" fill="none" stroke="var(--ink)" stroke-width="2"/>';
-  const dot = (pct, yrs, col, lab, r, anchor) => yrs === null ? "" : '<line x1="'+x(pct)+'" x2="'+x(pct)+'" y1="'+pt+'" y2="'+(H-pb)+'" stroke="'+col+'" stroke-dasharray="3 3"/>'
-    + '<circle cx="'+x(pct)+'" cy="'+y(yrs)+'" r="'+r+'" fill="'+col+'"/>'
-    + '<text x="'+(x(pct) + (anchor === "end" ? -5 : 5))+'" y="'+(pt-10)+'" text-anchor="'+anchor+'" font-size="11" fill="'+col+'">'+lab+'</text>';
-  if(!done){
-    out += dot(you, Y[1], "var(--muted)", "you, "+you+"%", 4, at.more ? "end" : "start");
-    if(at.more) out += dot(at.pct, at.years[1], "#006300", "+"+fmt(at.more)+", "+Math.round(at.pct)+"%", 5, "start");
-  }
-  $("saveChart").innerHTML = out;
-  $("saveCap").innerHTML = "Further right, fewer years; the first steps are worth the most. Counted until the money covers 25 years of what you spend, with what you have invested, at 3% to 5% a year after inflation \u2014 roughly, not a date.";
-}
 function renderHome(){
   renderNwChart();
   const yr = TODAY.slice(0,4);
-  const target = PLAN_BASE * 300;
   const invested = INVEST.portfolio;   // every account held to grow, the foreign funds included; 0 until the first holdings export
   // Four questions, one per section: is the money growing, how far along, did this month's rule
   // hold, and what the month cost. Net worth is the header line; "reach" is the table.
-  const FN = fireNow(), pctP = FN.pct, crossP = FN.homeCross;
   const dep = (WSDEP||[]).slice(-1)[0] || null, half = FUNDS.plan.invest/2;
   const curYM = TODAY.slice(0,7);
   const gross = NWPARTS.reduce((a,r) => a + r.v, 0);
@@ -1551,10 +1505,8 @@ function renderHome(){
     port: () => card(term("portfolio", "Portfolio"),
       numx(fmt(PORTFOLIO), split(grow.by), "Every account you hold to grow. Set-aside accounts and bank cash are not in it.", true),
       !INVEST.investable ? "Nothing invested yet" : bandLab()+" "+INVEST.dryPct+"%"),
-    fire: () => card(term("fire", "FIRE")+" progress",
-      unset("planBase") ? notSet("planBase")
-        : numx(pctP+"%", [["Portfolio", fmt(PORTFOLIO)], ["Target", fmt(target)]], "The target is your planning figure × 12 × 25."),
-      !unset("planBase") && crossP ? "On track for "+dTxt(crossP) : ""),
+    yrs: () => { const S = SAVINGS, t = S.years && yrsTxt(S.years);
+      return t ? card("Years to financial independence", "About "+t+" years", "At "+fmt(S.invest)+" a month invested · <a href=\"#\" onclick=\"setPage('fire');return false\">FIRE →</a>") : null; },
     inv: () => card(dep ? "Invested in "+ymLabel(dep.ym) : "Invested this month",
       unset("invest") ? (dep ? numx(fmt(dep.amt), [], "Counted the day "+BROKER+" receives it. The plan has no investing amount yet.") : notSet("invest"))
         : dep ? numx(fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>', [["Planned", fmt(FUNDS.plan.invest)], ["Arrived", fmt(dep.amt)]], "Two transfers of "+fmt(half)+", counted the day "+BROKER+" receives them.") : "\u2014",
@@ -1609,7 +1561,7 @@ function renderHome(){
       return card("Biggest category in "+yr, catName(top[0]), fmt(top[1])+", "+Math.round(pc(top[1], all))+"% of spending", {text: true});
     },
   };
-  const first = INVESTED() ? (GOAL() ? ["port", "fire", "inv", "spent"] : ["port", "inv"]) : (GOAL() ? ["fire"] : []);
+  const first = INVESTED() ? (GOAL() ? ["port", "yrs", "inv", "spent"] : ["port", "inv"]) : (GOAL() ? ["yrs"] : []);
   const FILL = ["interest", "spent", "covered", "kept", "subs", "bigcat"];
   const shown = [];
   for(const k of first.concat(FILL)){
@@ -1618,7 +1570,6 @@ function renderHome(){
     if(html) shown.push({k, html});
   }
   $("homeStats").innerHTML = shown.map(s => s.html).join("");
-  renderSavings();
 
   // Net worth, both cuts in one card: a row per purpose, its bar as long as its share and
   // coloured by reach; the row's number opens the accounts in it. Then total assets and what is
@@ -2395,7 +2346,7 @@ function cardInterest(){
 // page says below, inside or above it, and never what to do about it.
 const SAFETY = {"today": 54466, "invested": 39110, "abroad": 0, "unsecured": 991, "accts": [{"n": "Primary Chequing", "i": "BMO", "v": 8445, "asof": "2026-09-05", "cur": ""}, {"n": "Savings Amplifier", "i": "BMO", "v": 6911, "asof": "2026-09-05", "cur": ""}], "debts": [{"n": "MasterCard", "i": "BMO", "v": 991, "asof": "2026-08-20", "cur": ""}], "later": [], "repay": 0, "repayRows": [], "money": 14365, "cost": 2806.7928571428565, "months": 5.117940913752607, "abroadMonths": null};
 // The numbers that are the owner's to choose, each with its value now (settings.py, FINANCE.md §8e).
-const SETTINGS = [{"key": "emergency", "kind": "months", "stage": "start", "n": "Emergency fund", "why": "How many months of your usual spending you want within reach.", "v": [3, 6], "def": [3, 6], "min": 0, "max": 36, "isDef": true, "changed": null, "locked": null}, {"key": "importDay", "kind": "day", "stage": "start", "n": "Import day", "why": "The day of the month your statements are all out.", "v": 1, "def": 1, "min": 1, "max": 28, "isDef": true, "changed": null, "locked": null}, {"key": "planBase", "kind": "money", "stage": "goal", "n": "Planning spend a month", "why": "What a month costs, for the FIRE target.", "v": 2950, "def": null, "min": 0, "max": 1000000, "isDef": false, "changed": null, "locked": null}, {"key": "takeHome", "kind": "money", "stage": "track", "n": "Take-home pay a month", "why": "What reaches your account after tax.", "v": 4300, "def": null, "min": 0, "max": 1000000, "isDef": false, "changed": null, "locked": null}, {"key": "invest", "kind": "money", "stage": "track", "n": "To the broker a month", "why": "What you invest every month.", "v": 700, "def": null, "min": 0, "max": 1000000, "isDef": false, "changed": null, "locked": null}, {"key": "everyday", "kind": "money", "stage": "track", "n": "Everyday a month", "why": "The guilt-free amount, no categories.", "v": 1500, "def": null, "min": 0, "max": 1000000, "isDef": false, "changed": null, "locked": null}];
+const SETTINGS = [{"key": "emergency", "kind": "months", "stage": "start", "n": "Emergency fund", "why": "How many months of your usual spending you want within reach.", "v": [3, 6], "def": [3, 6], "min": 0, "max": 36, "isDef": true, "changed": null, "locked": null}, {"key": "importDay", "kind": "day", "stage": "start", "n": "Import day", "why": "The day of the month your statements are all out.", "v": 1, "def": 1, "min": 1, "max": 28, "isDef": true, "changed": null, "locked": null}, {"key": "planBase", "kind": "money", "stage": "goal", "n": "Planning spend a month", "why": "What a month costs, for the FIRE target.", "v": 2950, "def": null, "min": 0, "max": 1000000, "isDef": false, "changed": null, "locked": null}, {"key": "growth", "kind": "percent", "stage": "goal", "n": "Return after inflation", "why": "What your investments grow a year after inflation, in the years-to-go figures.", "v": 5, "def": 5, "min": 1, "max": 10, "isDef": true, "changed": null, "locked": null}, {"key": "takeHome", "kind": "money", "stage": "track", "n": "Take-home pay a month", "why": "What reaches your account after tax.", "v": 4300, "def": null, "min": 0, "max": 1000000, "isDef": false, "changed": null, "locked": null}, {"key": "invest", "kind": "money", "stage": "track", "n": "To the broker a month", "why": "What you invest every month.", "v": 700, "def": null, "min": 0, "max": 1000000, "isDef": false, "changed": null, "locked": null}, {"key": "everyday", "kind": "money", "stage": "track", "n": "Everyday a month", "why": "The guilt-free amount, no categories.", "v": 1500, "def": null, "min": 0, "max": 1000000, "isDef": false, "changed": null, "locked": null}];
 // ===== Settings (1.0.5) =====
 // One value, in the data. A change is shown at once and handed to the local app, which writes
 // it, rebuilds and answers; then the page is loaded again, so what it shows is what the files
@@ -2454,13 +2405,14 @@ function changeSetting(k, v, reset){
       })
       .then(() => { setPending--; reloadWhenIdle(); }));
 }
-const setShow = (r, v) => v === null ? "Not set" : r.kind === "months" ? v[0] + " to " + v[1] + " months" : r.kind === "day" ? "the " + ordinal(v) : fmt(v);
+const setShow = (r, v) => v === null ? "Not set" : r.kind === "months" ? v[0] + " to " + v[1] + " months" : r.kind === "day" ? "the " + ordinal(v) : r.kind === "percent" ? v + "% a year" : fmt(v);
 function setControl(r){
   if(r.locked) return '<span class="num">' + setShow(r, r.v) + '</span>';
   const inp = (i, v, cls, more) => '<input class="set-in '+cls+'" type="number" data-sk="'+r.key+'" data-si="'+i+'" value="'+(v === null ? "" : v)
     + '" min="'+r.min+'" max="'+r.max+'" '+more+(cantChange(r.key) ? " disabled" : "")+' aria-label="'+r.n+'">';
   if(r.kind === "months") return inp(0, r.v[0], "w-m", 'step="1"') + "to" + inp(1, r.v[1], "w-m", 'step="1"') + "months";
   if(r.kind === "day") return "Day" + inp(0, r.v, "w-m", 'step="1"');
+  if(r.kind === "percent") return inp(0, r.v, "w-m", 'step="0.5"') + "% a year";
   return "$" + inp(0, r.v, "w-c", 'step="50" placeholder="Not set"');
 }
 function setMeta(r){
@@ -2474,7 +2426,7 @@ function setMeta(r){
 function wireSettings(root){
   root.querySelectorAll("input.set-in").forEach(inp => inp.onchange = () => {
     const r = SET[inp.dataset.sk], n = Number(inp.value);
-    if(inp.value === "" || !isFinite(n) || n < r.min || n > r.max || (r.kind !== "money" && n !== Math.round(n))){ render(); return; }
+    if(inp.value === "" || !isFinite(n) || n < r.min || n > r.max || ((r.kind === "months" || r.kind === "day") && n !== Math.round(n))){ render(); return; }
     if(r.kind !== "months"){ changeSetting(r.key, n); return; }
     // the end that was typed stays; the other one follows it rather than refusing
     const v = r.v.slice(); v[Number(inp.dataset.si)] = n;
@@ -2642,7 +2594,74 @@ let PLAN_BASE = PLAN_BASE_DEFAULT || 0;   // an edit is a setting (FINANCE.md §
 // What the statements say the same figure would be, for comparison only.
 const measuredBase = () => baselineAvg ? baselineAvg + COMMITTED_KEEP : null;
 const baseDrift = () => { const m = measuredBase(); return m === null || !(PLAN_BASE > 0) ? null : (m - PLAN_BASE) / PLAN_BASE; };
+// ===== Years to financial independence: one answer and one lever (FINANCE.md §1a) =====
+// The answer is the years at the pace money really reaches the broker; under it, the savings
+// rate and what the money kept each month does. The lever is investing a little more. Every
+// number is savings.py's (SAVINGS); the lines in the chart are drawn from the same returns.
+const yrsTxt = y => y[0] === null ? null : y[2] < 0.5 ? "0" : Math.round(y[2]) === Math.round(y[0]) ? String(Math.round(y[1])) : Math.round(y[2])+"–"+Math.round(y[0]);
+function renderFi(){
+  const S = SAVINGS, on = S.target !== undefined;
+  $("fiCard").hidden = $("fiMoreCard").hidden = !on;
+  if(!on) return;
+  const txt = yrsTxt(S.years), done = S.years[2] !== null && S.years[2] < 0.5, g = Math.round(S.growth*10)/10;
+  $("fiBig").textContent = done ? "Already there" : txt ? "About "+txt+" years" : "Not at this pace";
+  const of = S.fromPlan ? "what you spend" : "your "+term("planning_figure", "planning figure");
+  $("fiSay").innerHTML = done ? "What you have invested already covers 25 years of "+of+" ("+fmt(S.target)+")."
+    : !txt ? "Nothing reaches "+BROKER+" each month yet, so what you have invested only grows on its own."
+    : "At the <b>"+fmt(S.invest)+"</b> a month that "+(S.paceMonths ? "reached "+BROKER+" over the last "+S.paceMonths+" month"+(S.paceMonths === 1 ? "" : "s") : "your plan sends to "+BROKER)
+      + ", until what you have invested covers 25 years of "+of+" ("+fmt(S.target)+").";
+  if(S.rate !== undefined){
+    const parts = S.jobs.map((j, i) => [j[0], j[1], i ? "#9a9890" : "var(--ink)"]).concat(S.free > 0.5 ? [["No job yet", S.free, "#e8c27a"]] : []);
+    const tot = Math.max(S.keep, parts.reduce((a,p) => a + p[1], 0)) || 1;
+    $("fiKept").innerHTML = '<div class="sl">Of the <b>'+fmt(S.keep)+'</b> you keep each month — <b>'+Math.round(S.rate*100)+'%</b> of what you earn, your '+term("savings_rate", "savings rate")+':</div>'
+      + '<div class="kb">'+parts.filter(p => p[1] > 0).map(p => '<span style="width:'+(p[1]/tot*100)+'%;background:'+p[2]+'"></span>').join("")+'</div>'
+      + '<div class="kk">'+parts.map(p => '<span><i style="background:'+p[2]+'"></i>'+p[0]+' <b>'+fmt(p[1])+'</b></span>').join("")+'</div>'
+      + (S.free < -0.5 ? '<div class="cap">You set aside '+fmt(-S.free)+' a month more than you keep; it comes out of what you already have.</div>' : "");
+  } else $("fiKept").innerHTML = "";
+  $("fiMoreCard").hidden = done;
+  if(done) return;
+  const inp = $("fiMore");
+  if(!inp.dataset.set){ inp.value = S.free > 25 ? Math.min(1000, Math.round(S.free/50)*50) : 200; inp.dataset.set = "1"; inp.oninput = renderFi; }
+  const more = Number(inp.value), M = S.more.find(x => x.more === more) || S.more[0];
+  $("fiMoreV").textContent = "+"+fmt(more);
+  const sooner = S.years[1] !== null && M.years[1] !== null ? Math.round(S.years[1] - M.years[1]) : null;
+  $("fiRes").innerHTML = !more ? "Move the slider to see what investing a little more is worth."
+    : "Investing "+fmt(more)+" more a month: about <b>"+yrsTxt(M.years)+" years</b>"
+      + (sooner > 0 ? " — <b style=\"color:#006300\">about "+sooner+" year"+(sooner === 1 ? "" : "s")+" sooner</b>" : "")
+      + (S.free > 25 && Math.abs(more - S.free) < 50 ? ". That is about what has no job yet." : ".");
+  const lines = [[S.invest, S.years, "var(--ink)", "Now", ""], [S.invest + more, M.years, "#006300", "+"+fmt(more)+" a month", "4 3"]]
+    .filter((l, i) => (i === 0 || more) && l[1][1] !== null);
+  const ymax = Math.min(60, Math.ceil(Math.max(10, ...lines.map(l => l[1][0] || l[1][1] || 0)) / 5) * 5 + 5);
+  const [W, H] = fit("fiChart", 260), pl = 58, pr = 14, pt = 18, pb = 26, T = S.target, vmax = T * 1.12;
+  const x = t => pl + t/ymax*(W-pl-pr), y = v => pt + (1 - Math.min(v, vmax)/vmax)*(H-pt-pb);
+  const grow = (cm, r) => { const out = []; let v = S.portfolio; for(let t = 0; t <= ymax; t++){ out.push(v); v = v*(1+r) + cm*12; } return out; };
+  let out = '<defs><clipPath id="fiBelow"><rect x="'+pl+'" y="'+y(T)+'" width="'+(W-pl-pr)+'" height="'+(H-pb-y(T))+'"/></clipPath></defs>';
+  const step = T > 1.6e6 ? 500000 : T > 600000 ? 250000 : T > 250000 ? 100000 : 50000;
+  for(let v = 0; v <= vmax; v += step) if(Math.abs(y(v) - y(T)) > 14)
+    out += '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--grid)"/><text x="'+(pl-6)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--muted)">$'+Math.round(v/1000)+'k</text>';
+  for(let t = 0; t <= ymax; t += 10) out += '<text x="'+x(t)+'" y="'+(H-8)+'" text-anchor="'+(t ? "middle" : "start")+'" font-size="11" fill="var(--muted)">'+(t ? "+"+t+" y" : "now")+'</text>';
+  out += '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(T)+'" y2="'+y(T)+'" stroke="var(--ink)" stroke-dasharray="5 4"/>'
+    + '<text x="'+(pl-6)+'" y="'+(y(T)+4)+'" text-anchor="end" font-size="11" font-weight="600" fill="var(--ink)">Target</text><g clip-path="url(#fiBelow)">';
+  const pts = a => a.map((v,t) => x(t).toFixed(1)+","+y(v).toFixed(1)).join(" "), R = S.returns;
+  lines.forEach(([cm, , col, , dash]) => {
+    const hi = grow(cm, R[2]), lo = grow(cm, R[0]);
+    out += '<polygon points="'+pts(hi)+' '+lo.map((v,t) => x(t).toFixed(1)+","+y(v).toFixed(1)).reverse().join(" ")+'" fill="'+col+'" opacity=".07"/>'
+      + '<polyline points="'+pts(grow(cm, R[1]))+'" fill="none" stroke="'+col+'" stroke-width="2"'+(dash ? ' stroke-dasharray="'+dash+'"' : "")+'/>';
+  });
+  out += '</g>';
+  // each line is named where it reaches the target (direct labels, no legend)
+  lines.forEach(([, Y, col, name]) => {
+    if(Y[1] > ymax) return;
+    const cx = x(Y[1]), right = name === "Now";
+    out += '<circle cx="'+cx+'" cy="'+y(T)+'" r="4.5" fill="'+col+'"/>'
+      + '<text x="'+(right ? cx + 8 : cx - 8)+'" y="'+(y(T)-8)+'" text-anchor="'+(right ? "start" : "end")+'" font-size="11.5" font-weight="600" fill="'+col+'">'+name+' · '+Math.round(Y[1])+' y</text>';
+  });
+  $("fiChart").innerHTML = out;
+  $("fiCap").innerHTML = "The dashed line is the target. Each line is what you have invested, growing "+g+"% a year after inflation ("
+    + '<a href="#" onclick="setPage(\'set\');return false">your setting</a>); the shading is '+Math.round(R[0]*100)+"% to "+Math.round(R[2]*100)+"%. Roughly, not a date.";
+}
 function renderFire(){
+  renderFi();
   if(unset("planBase")){
     // No planning figure, no target: every number on these pages is a share of it.
     $("fireStats").innerHTML = StatCard(term("fire_target", "Target"), notSet("planBase"));
@@ -2710,14 +2729,12 @@ function renderFire(){
     drawCard.querySelectorAll(":scope > :not(#drawSay)").forEach(e => e.hidden = on);
     $("btChart").closest(".card").hidden = on;
     $("coastSay").closest(".card").hidden = on;
-    $("fireTraj").closest(".card").hidden = unset("planBase");
   };
   drawOff(unset("planBase") || unset("born"));
   if(unset("planBase")){
     $("drawSay").innerHTML = "Whether the money lasts is measured against a "+term("planning_figure", "planning figure")+": "+notSet("planBase");
     return;
   }
-  renderTrajectory(target);
   if(unset("born")){
     $("drawSay").innerHTML = "The drawdown runs by age: "+notSet("born");
     return;
@@ -2735,7 +2752,7 @@ const HORIZON = 25;
 // fireNow() is not FIRE.
 const FIRE = {"target": 885000, "pct": 5.8, "gap": 833710, "cross": [null, null, null], "homeCross": null, "coastAge": 90.374303347623};
 // The savings rate and the years it takes (savings.py): the page draws it and does no sums.
-const SAVINGS = {"rate": 0.3473, "income": 4300.0, "spend": 2806.79, "n": 7, "from": "2026-01", "to": "2026-07", "returns": [0.03, 0.04, 0.05], "years": [27.0, 24.2, 22.0], "curve": [{"pct": 0, "years": [null, null, null]}, {"pct": 5, "years": [76.4, 61.5, 51.6]}, {"pct": 10, "years": [60.4, 50.2, 43.1]}, {"pct": 15, "years": [50.0, 42.4, 37.0]}, {"pct": 20, "years": [42.2, 36.4, 32.2]}, {"pct": 25, "years": [36.1, 31.6, 28.2]}, {"pct": 30, "years": [31.0, 27.5, 24.8]}, {"pct": 35, "years": [26.8, 24.0, 21.9]}, {"pct": 40, "years": [23.1, 20.9, 19.2]}, {"pct": 45, "years": [19.8, 18.2, 16.9]}, {"pct": 50, "years": [17.0, 15.7, 14.7]}, {"pct": 55, "years": [14.4, 13.5, 12.7]}, {"pct": 60, "years": [12.1, 11.4, 10.8]}, {"pct": 65, "years": [10.0, 9.5, 9.0]}, {"pct": 70, "years": [8.0, 7.7, 7.4]}, {"pct": 75, "years": [6.2, 6.0, 5.8]}, {"pct": 80, "years": [4.6, 4.5, 4.3]}, {"pct": 85, "years": [3.0, 3.0, 2.9]}, {"pct": 90, "years": [1.6, 1.6, 1.6]}], "more": [{"more": 0, "pct": 34.7, "years": [27.0, 24.2, 22.0]}, {"more": 50, "pct": 35.9, "years": [26.1, 23.4, 21.4]}, {"more": 100, "pct": 37.1, "years": [25.2, 22.7, 20.8]}, {"more": 150, "pct": 38.2, "years": [24.3, 22.0, 20.2]}, {"more": 200, "pct": 39.4, "years": [23.5, 21.3, 19.6]}, {"more": 250, "pct": 40.5, "years": [22.7, 20.6, 19.0]}, {"more": 300, "pct": 41.7, "years": [21.9, 20.0, 18.4]}, {"more": 350, "pct": 42.9, "years": [21.2, 19.3, 17.9]}, {"more": 400, "pct": 44.0, "years": [20.4, 18.7, 17.3]}, {"more": 450, "pct": 45.2, "years": [19.7, 18.1, 16.8]}, {"more": 500, "pct": 46.4, "years": [19.0, 17.5, 16.3]}, {"more": 550, "pct": 47.5, "years": [18.4, 16.9, 15.7]}, {"more": 600, "pct": 48.7, "years": [17.7, 16.4, 15.2]}, {"more": 650, "pct": 49.8, "years": [17.1, 15.8, 14.7]}, {"more": 700, "pct": 51.0, "years": [16.4, 15.3, 14.3]}, {"more": 750, "pct": 52.2, "years": [15.8, 14.7, 13.8]}, {"more": 800, "pct": 53.3, "years": [15.2, 14.2, 13.3]}, {"more": 850, "pct": 54.5, "years": [14.7, 13.7, 12.9]}, {"more": 900, "pct": 55.7, "years": [14.1, 13.2, 12.4]}, {"more": 950, "pct": 56.8, "years": [13.5, 12.7, 12.0]}, {"more": 1000, "pct": 58.0, "years": [13.0, 12.2, 11.5]}], "portfolio": 51290};
+const SAVINGS = {"target": 885000, "portfolio": 51290, "invest": 700.0, "paceMonths": 3, "returns": [0.04, 0.05, 0.06], "growth": 5.0, "fromPlan": false, "years": [36.5, 32.2, 28.8], "more": [{"more": 0, "years": [36.5, 32.2, 28.8]}, {"more": 50, "years": [35.5, 31.3, 28.1]}, {"more": 100, "years": [34.5, 30.5, 27.4]}, {"more": 150, "years": [33.5, 29.7, 26.8]}, {"more": 200, "years": [32.6, 29.0, 26.2]}, {"more": 250, "years": [31.8, 28.3, 25.6]}, {"more": 300, "years": [31.0, 27.7, 25.1]}, {"more": 350, "years": [30.3, 27.1, 24.6]}, {"more": 400, "years": [29.5, 26.5, 24.1]}, {"more": 450, "years": [28.9, 26.0, 23.6]}, {"more": 500, "years": [28.2, 25.4, 23.2]}, {"more": 550, "years": [27.6, 24.9, 22.8]}, {"more": 600, "years": [27.1, 24.4, 22.4]}, {"more": 650, "years": [26.5, 24.0, 22.0]}, {"more": 700, "years": [26.0, 23.5, 21.6]}, {"more": 750, "years": [25.5, 23.1, 21.2]}, {"more": 800, "years": [25.0, 22.7, 20.9]}, {"more": 850, "years": [24.5, 22.3, 20.5]}, {"more": 900, "years": [24.1, 21.9, 20.2]}, {"more": 950, "years": [23.6, 21.6, 19.9]}, {"more": 1000, "years": [23.2, 21.2, 19.6]}], "rate": 0.3473, "income": 4300.0, "spend": 2806.79, "n": 7, "from": "2026-01", "to": "2026-07", "keep": 1493.21, "jobs": [["Invested", 700.0], ["Emergency fund", 300.0]], "free": 493.21};
 function fireNow(){
   const target = PLAN_BASE * 12 * 25, months = HORIZON * 12 - mIdx(TODAY.slice(0, 7));
   return {target, pct: target ? Math.round(PORTFOLIO / target * 1000) / 10 : 0, gap: Math.round(target - PORTFOLIO),
@@ -2757,132 +2774,6 @@ function crossMonth(series, target){
 const ANCHOR_Y = 2026;
 const NW_HISTORY = [{"ym": "2026-06", "v": 61755}, {"ym": "2026-08", "v": 64355}, {"ym": "2026-09", "v": 65655}];
 function mIdx(ym){ const [yy,mm] = ym.split("-").map(Number); return (yy-ANCHOR_Y)*12 + (mm-1); }
-function renderTrajectory(target){
-  const p0 = PORTFOLIO, months = HORIZON*12;   // axis: Jan 2026 → Jan 2051
-  const offM = mIdx(TODAY.slice(0,7));               // projections start at the current month
-  const projMonths = months - offM;
-  const paths = SCENARIOS.map(s => ({...s, series: project(p0, s.r, projMonths)}));
-  paths.forEach(p => p.cross = crossMonth(p.series, target));
-  const [W, H] = fit("fireTraj", 300), padL=58, padR=8, padT=18, padB=28;
-  // The span shown: from the first real point to some years ahead, or to just past the month the
-  // middle return reaches the target. Twenty-five years squeezed the real months into a corner.
-  const midCross = (paths[1] || paths[0] || {}).cross;
-  const from = PORT_HISTORY.length ? Math.min(mIdx(PORT_HISTORY[0].ym), offM) : offM;
-  const to = trajView === "fire" ? Math.min(months, offM + (midCross === null || midCross === undefined ? projMonths : midCross + 6))
-                                 : Math.min(months, offM + trajView * 12);
-  const shownEnd = p => Math.min(p.cross ?? projMonths, to - offM);
-  const reached = paths.some(p => p.cross !== null && offM + p.cross <= to);
-  const seen = PORT_HISTORY.map(h => h.v).concat(...paths.map(p => [p.series[0], p.series[shownEnd(p)]]));
-  const maxV = Math.max(reached ? target * 1.12 : 0, ...seen) * (reached ? 1 : 1.05);
-  const minV = reached ? 0 : Math.max(0, Math.min(...seen) * 0.9);     // a line need not start at zero
-  const x = i => padL + (i - from) / Math.max(1, to - from) * (W-padL-padR);
-  const y = v => H-padB - (v - minV) / Math.max(1, maxV - minV) * (H-padT-padB);
-  let out = "";
-  // y-axis: horizontal gridlines at a nice dollar step (~5 ticks)
-  const rawStep = (maxV - minV)/5, mag = Math.pow(10, Math.floor(Math.log10(rawStep)));
-  const yStep = [1,2,2.5,5,10].map(m => m*mag).find(s => s >= rawStep);
-  const yLab = v => "$" + (v >= 1e6 ? (v/1e6).toFixed(v%1e6?1:0)+"M" : Math.round(v/1e3)+"k");
-  for(let v=Math.ceil((minV + 1)/yStep)*yStep; v<=maxV; v+=yStep){
-    out += '<line x1="'+padL+'" y1="'+y(v)+'" x2="'+(W-padR)+'" y2="'+y(v)+'" stroke="var(--grid)" stroke-width="1"/>';
-    out += '<text x="'+(padL-8)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="12" class="num" fill="var(--muted)">'+yLab(v)+'</text>';
-  }
-  // time: quarters on a short span, then years, then every five
-  const span = to - from, stepM = span <= 30 ? 3 : span <= 96 ? 12 : 60;
-  for(let i=Math.ceil(from/stepM)*stepM; i<=to; i+=stepM){
-    const yy = ANCHOR_Y + Math.floor(i/12);
-    out += '<line x1="'+x(i)+'" y1="'+padT+'" x2="'+x(i)+'" y2="'+(H-padB)+'" stroke="var(--grid)" stroke-width="1"/>';
-    out += '<text x="'+x(i)+'" y="'+(H-9)+'" text-anchor="'+(x(i) < padL + 20 ? "start" : x(i) > W - padR - 24 ? "end" : "middle")+'" font-size="12" class="num" fill="var(--muted)">'
-      + (stepM < 12 ? MN[i%12]+" "+yy : yy)+'</text>';
-  }
-  out += '<line x1="'+padL+'" y1="'+(H-padB)+'" x2="'+(W-padR)+'" y2="'+(H-padB)+'" stroke="var(--grid)" stroke-width="1"/>';
-  // target line, when the span reaches it; otherwise say where it is
-  if(reached){
-    out += '<line x1="'+padL+'" y1="'+y(target)+'" x2="'+(W-padR)+'" y2="'+y(target)+'" stroke="#d03b3b" stroke-width="2" stroke-dasharray="6 4"/>';
-    out += '<text x="'+(W-padR)+'" y="'+(y(target)-7)+'" text-anchor="end" font-size="12" class="num" fill="#d03b3b" font-weight="700">FIRE '+fmt(target)+'</text>';
-  } else {
-    out += '<text x="'+(W-padR)+'" y="'+(padT+2)+'" text-anchor="end" font-size="12" class="num" fill="#d03b3b" font-weight="700">FIRE '+fmt(target)+' is above this range</text>';
-  }
-  // the portfolio so far: solid ink line with dots
-  if(PORT_HISTORY.length){
-    let hd = "";
-    PORT_HISTORY.forEach(h => { hd += (hd?" L ":"M ")+x(mIdx(h.ym))+" "+y(h.v); });
-    out += '<path d="'+hd+'" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/>';
-    PORT_HISTORY.forEach(h => {
-      out += '<circle cx="'+x(mIdx(h.ym))+'" cy="'+y(h.v)+'" r="4" fill="var(--ink)" stroke="var(--surface)" stroke-width="2" data-h="'+h.ym+'"/>';
-    });
-  }
-  // the months between the last snapshot and today, which no snapshot has seen yet
-  const lastH = PORT_HISTORY[PORT_HISTORY.length-1];
-  if(lastH && mIdx(lastH.ym) < offM)
-    out += '<line x1="'+x(mIdx(lastH.ym))+'" y1="'+y(lastH.v)+'" x2="'+x(offM)+'" y2="'+y(p0)+'" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="3 4"/>';
-  // scenario lines from the current month, drawn only up to the crossing point
-  paths.forEach((p, pi) => {
-    const end = shownEnd(p), st = span <= 60 ? 1 : 3;
-    let d = "";
-    for(let i=0;i<=end;i+=st) d += (d?" L ":"M ")+x(offM+i)+" "+y(p.series[i]);
-    if(end % st) d += " L "+x(offM+end)+" "+y(p.series[end]);
-    out += '<path d="'+d+'" fill="none" stroke="'+p.c+'" stroke-width="2" stroke-linecap="round"/>';
-    out += '<path d="'+d+'" fill="none" stroke="rgba(0,0,0,0)" stroke-width="16" data-hov="'+pi+'"/>';
-    if(p.cross !== null && offM + p.cross <= to){
-      out += '<circle cx="'+x(offM+p.cross)+'" cy="'+y(target)+'" r="4.5" fill="'+p.c+'" stroke="var(--surface)" stroke-width="2" data-c="'+pi+'"/>';
-    }
-  });
-  const svg = $("fireTraj");
-  svg.innerHTML = out;
-  svg.querySelectorAll("circle[data-h]").forEach(c => {
-    const h = PORT_HISTORY.find(q => q.ym === c.dataset.h);
-    hoverable(c, ymFull(h.ym)+"<br>portfolio "+fmt(h.v)+(h.cadOnly?"<br>Canadian side only":""));
-  });
-  const yrTxt = m => m === null ? "beyond "+HORIZON+"y" : (m/12).toFixed(1)+" yr";
-  const dateTxt = m => {
-    if(m === null) return "—";
-    const [Y,M] = TODAY.slice(0,7).split("-").map(Number);
-    const t = M - 1 + m, yy = Y + Math.floor(t/12);
-    return MN[t%12] + " " + yy;
-  };
-  // hover anywhere on a scenario line → month + projected value; crossing dots → arrival info
-  svg.querySelectorAll("path[data-hov]").forEach(ph => {
-    const p = paths[Number(ph.dataset.hov)];
-    const end = shownEnd(p);
-    ph.addEventListener("mousemove", ev => {
-      const r = svg.getBoundingClientRect();
-      const mx = (ev.clientX - r.left) / r.width * W;
-      let i = Math.round(from + (mx - padL)/(W-padL-padR)*(to - from)) - offM;
-      i = Math.max(0, Math.min(end, i));
-      showTip(ev, p.n+"<br>"+dateTxt(i)+"<br>"+fmt(p.series[i]));
-    });
-    ph.addEventListener("mouseleave", hideTip);
-  });
-  svg.querySelectorAll("circle[data-c]").forEach(c => {
-    const p = paths[Number(c.dataset.c)];
-    hoverable(c, p.n+"<br>reaches "+fmt(target)+"<br>"+dateTxt(p.cross));
-  });
-  $("trajPills").innerHTML = [[1,"1 year"],[5,"5 years"],[10,"10 years"],["fire","To FIRE"]].map(([v,t]) =>
-    '<button class="pill'+(trajView === v ? " sel" : "")+'" data-v="'+v+'">'+t+'</button>').join("");
-  $("trajPills").querySelectorAll(".pill").forEach(b => b.onclick = () => {
-    trajView = b.dataset.v === "fire" ? "fire" : Number(b.dataset.v);
-    saveState(); renderTrajectory(target);
-  });
-  $("trajLegend").innerHTML =
-    '<div class="leg-row" style="pointer-events:none"><span class="dot" style="background:var(--ink)"></span>'
-    +'<span class="nm">Actual</span><span class="v num" style="width:auto;padding-left:6px">'+fmt((PORT_HISTORY[PORT_HISTORY.length-1]||{v:0}).v)+'</span></div>'
-    + paths.map(p =>
-    '<div class="leg-row" style="pointer-events:none"><span class="dot" style="background:'+p.c+'"></span>'
-    +'<span class="nm">'+p.n+'</span><span class="v num" style="width:auto;padding-left:6px">'+yrTxt(p.cross)+' · '+dateTxt(p.cross)+'</span></div>').join("");
-  const base = paths[1];
-  const rs = SCENARIOS.map(sc => Math.round(sc.r*100)+"%");
-  const nothing = PORTFOLIO <= 0 && MONTHLY_CONTRIB <= 0;
-  $("trajCap").innerHTML = '<div class="say">' + (nothing
-      ? "Nothing is invested and nothing is added each month, so the target is not getting closer."
-      : base.cross === null
-      ? "On the middle return the target is more than " + HORIZON + " years away."
-      : 'On the middle return you reach the target around <b>' + dateTxt(base.cross) + '</b>.') + '</div>'
-    + metaList([
-      ["Added each month", fmt(MONTHLY_CONTRIB)],
-      [term("real_return", "Returns"), (rs.length > 1 ? rs.slice(0,-1).join(", ")+" and "+rs[rs.length-1] : rs.join("")) + " a year"]
-    ]);
-}
-
 // ===== Coast and drawdown =====
 // Two questions the Trajectory chart cannot answer:
 //   1. If contributions stop, does the money still get there on its own? (compounding does the rest)

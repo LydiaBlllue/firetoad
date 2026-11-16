@@ -58,28 +58,35 @@
 
 ## 1a. Years to financial independence, and the savings rate
 
-The first FIRE number that needs no goal, so it is on Home for anyone with three full months of
-income and spending (`savings.py`, the `SAVINGS` constant).
+The FIRE page opens with one answer and one lever (`savings.py`, the `SAVINGS` constant); Home
+carries the answer as a card. Financial independence is the day the money could carry you, not
+the day work stops: past it, working is a choice.
 
-- **Savings rate** = (income − spending) ÷ income, the ratio of the sums over the last full
-  months — up to twelve, the months in `skipMonths` left out, only months with both.
-- **Income** is what work delivered: ledger rows typed Payroll and Other (Other carries a
-  refund, a benefit and rent received, §2). A gift, a repayment, a card's cash back and the
-  broker's own income are not in it. Pay the employer saves for you before it reaches the bank
-  (a group RRSP, a match) is not seen, so the rate reads low for someone who has it.
-- **Spending** is the month total a usual month is made of (§3a): everything spent, a yearly
-  charge spread over its twelve months.
-- **Years**: the target is twenty-five years of that spending; what is left each month is
-  saved; what is invested today counts. n = ln((T + c/r) ÷ (P + c/r)) ÷ ln(1 + r), at a real
-  return of 3%, 4% and 5% — shown as a range, never one year.
-- Home leads with the years and gives the rate as the reason. The years are to financial
-  independence — the day the money could carry you — not to the day work stops: past it,
-  working is a choice. The slider is in dollars kept a month (`more`, $0 to $1,000 in steps of
-  $50) and the curve under it, always shown, marks today and where the slider is; both are
-  tables the build writes, so the page does no sums of its own.
-- It replaces Home's *Kept* card where both could show: one percentage of income on the page,
-  measured one way. The setup's *Planned savings rate* is the plan's (what the numbers typed
-  there leave after fixed and everyday costs), named apart from this measured one, and says so.
+- **The answer**: years until what is invested covers 25 years of the planning figure — or, with
+  none set, of what is really spent — at the pace money **really reaches the broker**: the
+  average of the last three full months of deposits (`WSDEP`), the plan's investing amount until
+  any has been seen. What is invested today counts. n = ln((T + c/r) ÷ (P + c/r)) ÷ ln(1 + r).
+- **The return** is the owner's setting (§8e, `growth`): 5% a year after inflation unless
+  changed — about a 60/40 portfolio's history in `returns.json` (5.2% since 1928; all stocks
+  6.8%, 80/20 6.0%) and the figure the savings-rate literature assumes. The years are shown at it
+  and one point either side, as a range, never one year. Coast and the drawdown read the same
+  setting, so the site never grows money at two rates.
+- **The reason**, under the answer: the **savings rate** = (income − spending) ÷ income, the
+  ratio of the sums over the last full months — up to twelve, `skipMonths` left out, only months
+  with both; fewer than three, no rate. **Income** is what work delivered: ledger rows typed
+  Payroll and Other (Other carries a refund, a benefit and rent received, §2); a gift, a
+  repayment, a card's cash back and the broker's own income are not in it. Pay the employer
+  saves before it reaches the bank (a group RRSP, a match) is not seen, so the rate reads low for
+  someone who has it. **Spending** is the month total a usual month is made of (§3a).
+- **What is kept, by its job**: the money kept each month split into what is invested (the pace
+  above), each saving flow with another destination (an emergency fund), and what has *no job
+  yet*. More set aside than kept is said as it is.
+- **The lever**: *Invest more each month*, $0 to $1,000 in steps of $50 (`more`), starting at
+  what has no job yet. The chart shows what is invested growing to the target now and with the
+  extra, each line named where it reaches the target. Both the years and the steps are tables
+  the build writes; the page draws the lines and does no other sums.
+- Home's *Kept* card steps aside while the rate exists: one percentage of income, measured one
+  way. The setup's *Planned savings rate* is the plan's, named apart from this one, and says so.
 
 ## 2. Income: in the system
 
@@ -421,3 +428,5 @@ and `settings.py` is the one table of them — each row a key, where the value a
 - **A sum is not one number.** A plan figure made of several flows (two paycheques) is shown and
   not editable as one: which line a new total would change is the owner's to say.
 - D31 holds every stored value to the table's range.
+- The rows: the emergency range, the import day, planning spend, the return after inflation
+  (`growth`, §1a), take-home pay, what goes to the broker, the everyday amount.

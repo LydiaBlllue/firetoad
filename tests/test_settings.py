@@ -133,5 +133,20 @@ class TheEmergencyRange(unittest.TestCase):
         self.assertIsNone(settings.emergency_state(None, [3, 6]))
 
 
+class TheReturn(unittest.TestCase):
+
+    def test_it_is_five_percent_until_the_owner_says_otherwise(self):
+        self.assertEqual(settings.value("growth", {"plan.json": {}}), 5)
+
+    def test_a_half_point_is_a_legal_value_and_twelve_is_not(self):
+        self.assertEqual(settings.check("growth", "6.5"), (6.5, None))
+        self.assertIsNone(settings.check("growth", "12")[0])
+
+    def test_it_lives_in_the_plan_with_its_day(self):
+        f = {"plan.json": {}}
+        self.assertEqual(settings.write("growth", 7, f, "2026-11-15"), ["plan.json"])
+        self.assertEqual(f["plan.json"], {"growth": 7, "changed": {"growth": "2026-11-15"}})
+
+
 if __name__ == "__main__":
     unittest.main()

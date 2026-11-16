@@ -9,14 +9,16 @@
 - **Money sent to Wealthsimple is a transfer, even before its export is in.** A first setup
   from bank statements alone filed a twice-monthly deposit to the broker as a purchase, asked
   you to categorize it, and counted it as a subscription.
-- **Years to financial independence** (Home). How many years, at the rate you save now, until
-  what you have invested covers twenty-five years of what you spend — shown as a range, 5% to 3%
-  a year after inflation. Under it, your savings rate: what work brought in less what was spent,
-  over your last full months. A slider asks "keep more each month" in dollars and says how many
-  years sooner that is; the curve under it shows where you are and where the slider takes you.
-  It takes the place of the *Kept* card, so Home shows one percentage of income. Gifts, money
-  paid back and the broker's own income are not counted as earned. Financial independence is
-  when work becomes a choice, not when it stops.
+- **Years to financial independence** (the FIRE page, and a card on Home). One answer: how many
+  years, at what really reaches your broker each month, until what you have invested covers 25
+  years of your planning figure — a range, 4% to 6% a year after inflation. Under it, what you
+  keep each month and what it does: invested, set aside, and what has no job yet — that is your
+  savings rate, as the reason. One lever: *Invest more each month*, in dollars, with the years it
+  saves and a chart of both. It replaces the FIRE page's three-line trajectory. Financial
+  independence is when work becomes a choice, not when it stops.
+- **Your return after inflation is a setting.** 5% a year unless you change it — about what a
+  60/40 portfolio did over the last century; someone all in stocks may say 7. The years, Coast
+  and the drawdown all use it.
 - **Settings: the numbers that are yours to choose** (2026-11-14, user 001: someone wants three
   months of emergency fund, someone six to nine). A new page at the foot of the sidebar lists
   them — the emergency range, the import day, planning spend, take-home pay, what goes to the

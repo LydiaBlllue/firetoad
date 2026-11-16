@@ -1,24 +1,23 @@
-"""savings.py — the savings rate, and the years it takes at that rate (FINANCE.md §1a).
+"""savings.py — years to financial independence, and the savings rate (FINANCE.md §1a).
 
-The first FIRE number that needs no goal: how much of what you earn is left after spending, and
-how many years of that, with what is already invested, it takes for the money to cover twenty-
-five years of spending. Computed here, once; the page draws the curve and a slider over the
-`curve` table and does no arithmetic of its own, so there is no second copy to keep equal.
+One answer and one lever. The answer: how many years, at the pace money really reaches the
+broker, until what is invested covers twenty-five years of the planning figure (or, with none
+set, of what is really spent). The lever: investing a little more each month. Computed here,
+once; the FIRE page and Home read the tables and do no sums of their own.
 
-What counts, as KNOWLEDGE 0.5 settled it: income is what work delivered to the bank — ledger
-rows typed Payroll and Other (the cash-flow rows' `payroll` and `other`; a gift, a repayment, a
-card's cash back and the broker's own income are not). Spending is the same month total the
-usual month is made of (usual.compared, a yearly charge spread over its twelve months). Up to
-twelve full months, the months set aside as unusual left out, and only months that have both an
-income and a spend; fewer than three is not enough to say. The rate is the ratio of the sums,
-so a month with a large bonus does not outweigh the rest.
+The pace is what reached the broker over the last three full months (WSDEP), the plan's amount
+until anything has been seen arriving. Years: target T, invested P now, c a year, a real return
+r:  n = ln((T + c/r) / (P + c/r)) / ln(1 + r) — at the owner's return setting (`growth`, 5%
+unless changed) and one point either side, because one number would say more than the formula
+knows; zero when P already reaches T; None when nothing is added.
 
-Years: target T = twenty-five years of spending (fire.YEARS), saved c a year, invested P now, a
-real return r:  n = ln((T + c/r) / (P + c/r)) / ln(1 + r). Three returns, 3%, 4% and 5%, because
-a single number would say more than the formula knows; zero when P already reaches T; None when
-nothing is saved. The curve is the same sum at income held as it is and the rate moved, from
-nothing to ninety percent in steps of five; `more` is the slider's table, the same sum with a
-little more kept each month.
+The savings rate is the reason under the answer, as KNOWLEDGE 0.5 settled it: income is what
+work delivered to the bank — ledger rows typed Payroll and Other (a gift, a repayment, a card's
+cash back and the broker's own income are not); spending is the month total the usual month is
+made of (usual.compared). Up to twelve full months, the months set aside left out, only months
+with both; fewer than three is not enough to say. The rate is the ratio of the sums. What is
+kept each month is then split by the job the plan gives it: invested, each saving flow with
+another destination (an emergency fund), and what has no job yet.
 
 Pure: rows and numbers in, numbers out.
 """
@@ -27,20 +26,15 @@ import math
 import usual
 from fire import YEARS
 
-RETURNS = (0.03, 0.04, 0.05)    # real, after inflation: the range the years are shown over
-STEP = 5                        # the curve's percentage points
-TOP = 90
+PACE_MONTHS = 3                 # what reached the broker is averaged over this many full months
 MORE_STEP = 50                  # the slider: keeping this much more a month, in steps of
 MORE_TOP = 1000                 # up to this
 
 
-def years(portfolio, income, spend, r):
-    """Years of saving what is left of `income` after `spend` (monthly figures) until
-    `portfolio` plus the savings reaches twenty-five years of spending at real return r."""
-    c = (income - spend) * 12
-    target = spend * 12 * YEARS
-    if target <= 0:
-        return None
+def years_to(portfolio, target, monthly, r):
+    """Years of adding `monthly` until `portfolio` grows to `target` at real return r: zero when
+    it is there already, None when nothing is added and it is not."""
+    c = monthly * 12
     if portfolio >= target:
         return 0.0
     if c <= 0:
@@ -61,30 +55,45 @@ def months_used(cashflow, spending, stmt_end, skip, today):
     return out[-usual.WINDOW:]
 
 
-def measured(cashflow, spending, stmt_end, skip, today, portfolio):
-    """The SAVINGS constant: {} below three months, else the rate and what it came from, the
-    years at each return, and the curve for the slider."""
+def pace(wsdep, today, plan_invest):
+    """(a month, how many months it is the average of): what reached the broker over the last
+    three full months (WSDEP), or the plan's amount with 0 when nothing has been seen arriving."""
+    full = [d for d in wsdep or [] if d["ym"] < today[:7]][-PACE_MONTHS:]
+    if full:
+        return round(sum(d["amt"] for d in full) / len(full), 2), len(full)
+    return float(plan_invest or 0), 0
+
+
+def measured(cashflow, spending, stmt_end, skip, today, portfolio, plan_base=None, wsdep=None,
+             plan_invest=0, set_aside=(), growth=5):
+    """The SAVINGS constant (FINANCE.md §1a): the years to financial independence at the pace
+    money really reaches the broker, the table the slider reads, and — with three full months of
+    income and spending — the savings rate and what the money kept each month does.
+    {} when there is no target to count to: no planning figure and nothing measured."""
     rows = months_used(cashflow, spending, stmt_end, skip, today)
-    if len(rows) < usual.ENOUGH:
+    have = len(rows) >= usual.ENOUGH
+    inc = sum(r["income"] for r in rows) / len(rows) if have else None
+    spend = sum(r["spend"] for r in rows) / len(rows) if have else None
+    target = (plan_base or spend or 0) * 12 * YEARS
+    if not target:
         return {}
-    inc = sum(r["income"] for r in rows) / len(rows)
-    spend = sum(r["spend"] for r in rows) / len(rows)
-    rate = (inc - spend) / inc
-    curve = []
-    for pct in range(0, TOP + 1, STEP):
-        s = inc * (1 - pct / 100)
-        curve.append({"pct": pct, "years": [None if (y := years(portfolio, inc, s, r)) is None else round(y, 1)
-                                            for r in RETURNS]})
-    now = [None if (y := years(portfolio, inc, spend, r)) is None else round(y, 1) for r in RETURNS]
-    # The slider is in money, not in points of the rate (2026-11-15, user 001: a person thinks
-    # "keep $200 more", not "save 5 points more"): the years and the rate at each step.
-    more = []
-    for extra in range(0, MORE_TOP + 1, MORE_STEP):
-        s = spend - extra
-        more.append({"more": extra, "pct": round((inc - s) / inc * 100, 1),
-                     "years": [None if (y := years(portfolio, inc, s, r)) is None else round(y, 1) for r in RETURNS]})
-    return {"rate": round(rate, 4), "income": round(inc, 2), "spend": round(spend, 2), "n": len(rows),
-            "from": rows[0]["m"], "to": rows[-1]["m"], "returns": list(RETURNS),
-            "years": now, "curve": curve, "more": more,
-            # the planned rate sits beside it where the plan has one, so the two are never mixed
-            "portfolio": round(portfolio or 0, 2)}
+    rs = [round((growth - 1) / 100, 4), round(growth / 100, 4), round((growth + 1) / 100, 4)]
+    inv, n = pace(wsdep, today, plan_invest)
+    p = portfolio or 0
+
+    def yrs(cm):            # at the lowest return first: the longest of the three
+        return [None if (y := years_to(p, target, cm, r)) is None else round(y, 1) for r in rs]
+
+    out = {"target": round(target, 2), "portfolio": round(p, 2), "invest": inv, "paceMonths": n,
+           "returns": rs, "growth": growth, "fromPlan": not plan_base,
+           "years": yrs(inv),
+           # the slider: investing this much more a month, from nothing to MORE_TOP
+           "more": [{"more": m, "years": yrs(inv + m)} for m in range(0, MORE_TOP + 1, MORE_STEP)]}
+    if have:
+        keep = inc - spend
+        jobs = [["Invested", inv]] + [[n_, float(a)] for n_, a in set_aside]
+        free = keep - sum(a for _, a in jobs)
+        out.update({"rate": round(keep / inc, 4), "income": round(inc, 2), "spend": round(spend, 2),
+                    "n": len(rows), "from": rows[0]["m"], "to": rows[-1]["m"], "keep": round(keep, 2),
+                    "jobs": [[a, round(b, 2)] for a, b in jobs], "free": round(free, 2)})
+    return out

@@ -430,7 +430,12 @@ def derive(d):
     out["HORIZON"] = ret.get("horizon", 25)
     out["ANCHOR_Y"] = ret.get("anchorYear", int(today[:4]))
     out["LIFE_TO"] = ret.get("lifeTo", 95)
-    out["COAST_R"] = ret.get("coastR", 0.05)
+    # The return the years-to-go figures assume: the owner's setting (settings.py `growth`), else
+    # the retirement block's own, else 5%. Coast and the drawdown read it too, so one page never
+    # grows money at two rates.
+    _files = {"plan.json": plan, "funds.json": d["funds"], "profile.json": prof}
+    growth = settings.value("growth", _files) if settings.stored("growth", _files) is not None else round(ret.get("coastR", 0.05) * 100, 2)
+    out["COAST_R"] = growth / 100
     out["HOME_CARE"] = ret.get("homeCare", {})
     # Government pensions (1.0.1): CPP and OAS as the owner's own statement estimates them, in
     # today's dollars a month, from the age each starts. They pay part of what the drawdown takes.
@@ -812,8 +817,11 @@ def derive(d):
                                prof.get("born"), out["LIFE_TO"])
     # The savings rate and the years it takes at that rate (savings.py): what work delivered
     # against what was spent, on the same months the usual month is made of.
+    set_aside = [(f.get("name") or f.get("to"), f.get("amount") or 0) for f in d["funds"]["plan"].get("flows") or []
+                 if f.get("kind") == "saving" and not f.get("starts") and (f.get("to") or "broker") != "broker"]
     out["SAVINGS"] = savings.measured(out["INVEST"]["cashflow"], out["SPENDING"], out["STMT_END"], out["MONTH_SKIP"],
-                                      today, out["INVEST"]["portfolio"])
+                                      today, out["INVEST"]["portfolio"], plan.get("planBase"), out["WSDEP"],
+                                      flow_totals(d["funds"]["plan"])["invest"], set_aside, growth)
     out["FOREIGN"] = {"asof": fj["asof"], "currency": fj.get("currency"), "symbol": fj.get("symbol", ""),
                       "label": fgn_label, "total": round(fj["total"], 2), "cadPerUnit": rate_f,
                       # A fund row shows its code beside the name, the way the broker app does.

@@ -13,6 +13,7 @@ The table points at where each value already lives — it moves no data:
     emergency   plan.json `emergency` {low, high}      months; absent means the default
     importDay   profile.json `importDay`
     planBase    plan.json `planBase`
+    growth      plan.json `growth`                     percent a year after inflation
     takeHome    funds.json plan.flows, the income flow paid today
     invest      funds.json plan.flows, the saving flow to the broker
     everyday    funds.json plan.flows, the everyday flow
@@ -39,6 +40,13 @@ TABLE = [
      "en": "Planning spend a month", "zh": "每月规划支出",
      "whyEn": "What a month costs, for the FIRE target.",
      "whyZh": "算 FIRE 目标时，一个月按多少花销算。"},
+    # 5% unless the owner says otherwise: about a 60/40 portfolio's century after inflation
+    # (returns.json: 5.2%), and the figure KNOWLEDGE 0.6's source assumes; drawn 1 point either side
+    # (2026-11-15, user 001: "回报可以高一点", then a setting so an all-stocks owner can say 7)
+    {"key": "growth", "kind": "percent", "stage": "goal", "default": 5, "min": 1, "max": 10,
+     "en": "Return after inflation", "zh": "扣通胀后的年回报",
+     "whyEn": "What your investments grow a year after inflation, in the years-to-go figures.",
+     "whyZh": "算还要几年时，投资每年扣掉通胀后长多少。"},
     {"key": "takeHome", "kind": "money", "stage": "track", "default": None, "min": 0, "max": 1_000_000,
      "en": "Take-home pay a month", "zh": "每月到手工资",
      "whyEn": "What reaches your account after tax.",
@@ -95,8 +103,8 @@ def stored(key, files):
         return [_num(e["low"]), _num(e["high"])] if isinstance(e, dict) and "low" in e and "high" in e else None
     if key == "importDay":
         return (files.get("profile.json") or {}).get("importDay")
-    if key == "planBase":
-        return _plan(files).get("planBase")
+    if key in ("planBase", "growth"):
+        return _plan(files).get(key)
     rows = _flow_rows(files, key)
     if not rows or any(f.get("amount") is None for f in rows):
         return None
@@ -159,8 +167,8 @@ def write(key, v, files, today):
     elif key == "importDay":
         files.setdefault("profile.json", {})["importDay"] = int(v)
         touched.add("profile.json")
-    elif key == "planBase":
-        plan["planBase"] = v
+    elif key in ("planBase", "growth"):
+        plan[key] = v
     else:
         fl = files.setdefault("funds.json", {}).setdefault("plan", {}).setdefault("flows", [])
         rows = _flow_rows(files, key)
