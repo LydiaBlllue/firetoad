@@ -544,6 +544,21 @@ SHOTS = [("home.png", "main", "home"), ("spending.png", "main", "trends"), ("pla
          ("fire.png", "main", "fire")]
 
 
+# The live demo's front page shows the content of five pages without the sidebar, so the numbers
+# are big enough to read at half size: each page's first `n` blocks (0 = all), 16px around them
+# (less above, where the month or year pills end).
+CROPS = [("crop-fire.png", "fire", 2), ("crop-home.png", "home", 2), ("crop-year.png", "trends", 2),
+         ("crop-port.png", "port", 0), ("crop-src.png", "src", 0)]
+CROP_BOX = """([k, n]) => { const s = document.querySelector('section[data-pg="' + k + '"]');
+  const kids = [...s.children].filter(c => c.offsetParent !== null && c.getBoundingClientRect().height > 0);
+  const last = n ? kids[Math.min(n, kids.length) - 1] : kids[kids.length - 1];
+  const a = s.getBoundingClientRect(), b = last.getBoundingClientRect();
+  const above = [...document.querySelectorAll('main.main > :not(section)')].map(el => el.getBoundingClientRect())
+    .filter(r => r.height > 0 && r.bottom <= a.y).map(r => r.bottom);
+  const top = Math.max(a.y - 16, above.length ? Math.max(...above) + 4 : 0);
+  return [a.x, top, a.width, b.bottom - top]; }"""
+
+
 def screenshots(out):
     try:
         from playwright.sync_api import sync_playwright
@@ -558,8 +573,15 @@ def screenshots(out):
             pg.goto("file://" + os.path.abspath(paths[which])); pg.wait_for_timeout(500)
             pg.eval_on_selector(f'[data-k="{key}"]', "el => el.click()"); pg.wait_for_timeout(400)
             pg.screenshot(path=os.path.join(dst, fn)); pg.close()
+        for fn, key, n in CROPS:
+            pg = b.new_page(viewport={"width": 1180, "height": 1400}, device_scale_factor=2)
+            pg.goto("file://" + os.path.abspath(paths["main"])); pg.wait_for_timeout(500)
+            pg.eval_on_selector(f'[data-k="{key}"]', "el => el.click()"); pg.wait_for_timeout(400)
+            x, y, w, h = pg.evaluate(CROP_BOX, [key, n]); m = 16
+            pg.screenshot(path=os.path.join(dst, fn), clip={"x": x - m, "y": y, "width": w + 2 * m, "height": h + 6})
+            pg.close()
         b.close()
-    print(f"  screenshots: {len(SHOTS)} written to docs/screens/")
+    print(f"  screenshots: {len(SHOTS)} pages and {len(CROPS)} crops written to docs/screens/")
 
 
 if __name__ == "__main__":

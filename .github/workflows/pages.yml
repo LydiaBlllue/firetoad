@@ -1,10 +1,10 @@
-# The live demo: the demo owner's page, published as it is committed, behind a front door
-# (docs/site/index.html, and its Chinese twin docs/site/zh/) that says what the tool is, so a search
-# can find it, with the demo one click away. dashboards/ is what the template and findata/ build
-# (T1), so nothing is rebuilt here. The site's own address fills __BASE__ in the front door and
-# goes into sitemap.xml, so a fork publishes its own address, not this one. (No robots.txt: a
-# project site lives under /<repo>/, and search engines read robots.txt only at the domain root;
-# the sitemap is submitted in Search Console instead.)
+# The live demo: the demo owner's page, published as it is committed, behind a front page in
+# English and Chinese that says what the tool is, so a search can find it, with the demo one click
+# away. docs/site/make.py builds the site; dashboards/ is what the template and findata/ build (T1),
+# so nothing is rebuilt here. The site's own address goes into the pages and sitemap.xml, so a fork
+# publishes its own address, not this one. (No robots.txt: a project site lives under /<repo>/, and
+# search engines read robots.txt only at the domain root; the sitemap is submitted in Search
+# Console instead.)
 name: Live demo
 
 # Every push to main redeploys, whatever it changed (2026-10-29, user 001): a release is a
@@ -33,19 +33,7 @@ jobs:
       - uses: actions/checkout@v4
       - id: pages
         uses: actions/configure-pages@v5
-      - env:
-          BASE: ${{ steps.pages.outputs.base_url }}
-        run: |
-          mkdir -p _site/screens
-          cp -R docs/site/. _site/
-          cp docs/logo.svg _site/
-          cp dashboards/finance_dashboard.html _site/dashboard.html
-          cp docs/screens/*.png _site/screens/
-          find _site -name index.html -exec sed -i "s|__BASE__|$BASE|g" {} +
-          printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' \
-            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' \
-            "<url><loc>$BASE/</loc></url>" "<url><loc>$BASE/zh/</loc></url>" \
-            "<url><loc>$BASE/dashboard.html</loc></url>" '</urlset>' > _site/sitemap.xml
+      - run: python3 docs/site/make.py _site --base "${{ steps.pages.outputs.base_url }}"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
