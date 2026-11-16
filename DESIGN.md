@@ -570,7 +570,8 @@ the error code, the run and the log as rows (`FT-SETUP-KeyError`, `3fa9c1d2`), *
 the run's lines under *Details*. One fact a line; nothing joined with a dot, here or on any
 other screen. A count says what it counts or what is to be done with it: `3 merchants and 2 transfers to
 categorize` where there is room (the setup's last screen), `5 to categorize` in the dashboard's
-header, which keeps its one short line — never `5 to confirm`. **These screens never change the
+header, which keeps its one short line — never `5 to confirm` — and says nothing on the web, where
+no app serves the page and nobody can answer (the live demo). **These screens never change the
 dashboard's layout**: the error box, the lists and the tables above are the panel's and the setup's.
 
 **A question about a charge helps the owner remember it** (1.0.5, user 001: "I cannot remember

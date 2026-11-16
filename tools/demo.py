@@ -480,15 +480,20 @@ def build(out):
                 dict(sev="ok", text="Every statement due has arrived. The next to close is the MasterCard on Sep 20."),
             ]),
             ("judged", ["Filed the Hydro Ottawa payment as a bill."]),
-            ("asked", ["Whether FARM BOY OTTAWA stays in Grocery, and what the unnamed $200 e-Transfer of Aug 11 was."]),
+            ("asked", ["What the unnamed $200 e-Transfer of Aug 11 was."]),
         ])])]))
     J("decisions.json", OrderedDict([
         ("note", NOTE_DEC),
         ("decisions", [
-            dict(added="2026-09-06", kind="merchant", what="FARM BOY OTTAWA has appeared many times and is filed as Grocery.",
-                 default="Grocery", source="MasterCard, most recently Aug 14", status="open"),
-            dict(added="2026-09-06", kind="transfer", what="A $200 e-Transfer received on Aug 11 carries no sender name.",
-                 default="Other income", source="Chequing statement to Sep 5", status="open"),
+            # written the way update.py writes one, `facts` and `credit` included: the panel says the
+            # question in the owner's language from the facts, and answering it types the ledger row
+            # (2026-11-16: without them the Chinese panel showed this card in English)
+            dict(added="2026-09-06", kind="transfer",
+                 what="A $200 e-Transfer received on Aug 11 carries no sender you have named.",
+                 default="Other income", source="Chequing statement to Sep 5, Aug 11", status="open",
+                 credit=dict(ledger="chequing.csv", statement=f"BMOCHQ{ID['bmo_chq']}/20260905", date="2026-08-11",
+                             amount=200.0, description="INTERACe-TransferReceived"),
+                 facts=dict(kind="credit", amount=200.0, date="2026-08-11", sender=None)),
             dict(added="2026-08-12", kind="merchant", what="STEAM PURCHASE SEATTLE, seen for the first time.",
                  default="Shopping", source="MasterCard, Aug 3", status="confirmed",
                  answer="Entertainment", resolved="2026-08-12"),
@@ -564,23 +569,32 @@ def screenshots(out):
         from playwright.sync_api import sync_playwright
     except ImportError:
         print("  screenshots: SKIPPED (no playwright) — README will point at missing files"); return
+    import functools, http.server, threading
     dst = os.path.join(out, "docs", "screens"); os.makedirs(dst, exist_ok=True)
-    paths = {"main": os.path.join(out, "dashboards", "finance_dashboard.html")}
+    # served over http, the way the live demo is, so the pictures show what a visitor sees there
+    # (a file opened from disk says where to answer the open questions; the web says nothing)
+    H = functools.partial(http.server.SimpleHTTPRequestHandler, directory=os.path.join(out, "dashboards"))
+    H.log_message = lambda *a: None
+    srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{srv.server_address[1]}/finance_dashboard.html"
+    paths = {"main": url}
     with sync_playwright() as pw:
         b = pw.chromium.launch()
         for fn, which, key in SHOTS:
             pg = b.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=2)
-            pg.goto("file://" + os.path.abspath(paths[which])); pg.wait_for_timeout(500)
+            pg.goto(paths[which]); pg.wait_for_timeout(500)
             pg.eval_on_selector(f'[data-k="{key}"]', "el => el.click()"); pg.wait_for_timeout(400)
             pg.screenshot(path=os.path.join(dst, fn)); pg.close()
         for fn, key, n in CROPS:
             pg = b.new_page(viewport={"width": 1180, "height": 1400}, device_scale_factor=2)
-            pg.goto("file://" + os.path.abspath(paths["main"])); pg.wait_for_timeout(500)
+            pg.goto(paths["main"]); pg.wait_for_timeout(500)
             pg.eval_on_selector(f'[data-k="{key}"]', "el => el.click()"); pg.wait_for_timeout(400)
             x, y, w, h = pg.evaluate(CROP_BOX, [key, n]); m = 16
             pg.screenshot(path=os.path.join(dst, fn), clip={"x": x - m, "y": y, "width": w + 2 * m, "height": h + 6})
             pg.close()
         b.close()
+    srv.shutdown()
     print(f"  screenshots: {len(SHOTS)} pages and {len(CROPS)} crops written to docs/screens/")
 
 
