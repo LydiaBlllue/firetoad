@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.8 — unreleased
+
+- **Download for Mac downloads the app**: the front page's button fetches the newest disk image
+  directly, instead of opening the list of releases.
+
 ## 1.0.7 — 2026-11-16
 
 - **What arrived for investing is judged by the total.** More than planned no longer reads as

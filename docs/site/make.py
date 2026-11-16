@@ -23,7 +23,9 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 GH = "https://github.com/lydiablllue/firetoad"
-DOWNLOAD = GH + "/releases/latest"
+# Every Release carries the dmg twice: FIRE-Toad-X.Y.Z.dmg and FIRE-Toad.dmg, the same bytes under a
+# name that never changes (RELEASE.md, since 1.0.7), so the button downloads the newest one directly.
+DOWNLOAD = GH + "/releases/latest/download/FIRE-Toad.dmg"
 
 # The demo's person is the one tools/demo.py invents; the page names her from there.
 sys.path.insert(0, os.path.join(REPO, "tools"))
