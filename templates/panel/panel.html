@@ -183,6 +183,7 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
 /* one step at a time (2026-11-12): the setup's bar, one card, tables for what a step lists */
 .wrap{max-width:760px}
 body[data-first="1"] .bars{display:none}
+.paid{display:block;width:100%;max-width:320px;margin:6px 0 8px;font:inherit;font-size:13px;padding:6px 9px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink)}
 .bars{display:flex;gap:4px;margin-bottom:14px}
 .bars a{flex:1;height:4px;border-radius:2px;background:var(--grid);display:block}
 .bars a.on{background:var(--ink)}
@@ -581,6 +582,13 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
         };
         two.appendChild(own); two.appendChild(sp); two.appendChild(notSure()); c.appendChild(two);
       } else if (it.choices.length) {
+        // a bank often prints only "BILL PMT": who it was paid to is asked beside the category, and
+        // remembered, so the same bill on a card and from the bank is one subscription (feedback 104)
+        if (it.kind === 'merchant' && it.bank) {
+          var pt = el('input', 'paid'); pt.type = 'text'; pt.placeholder = T.q_paid_to; pt.setAttribute('aria-label', T.q_paid_to);
+          pt.value = it.paidTo || ''; pt.oninput = function(){ it.paidTo = pt.value.trim(); };
+          c.appendChild(pt);
+        }
         var ps = pills(it, answers[it.n] || null, true, function(ch){ answer(it, ch); });
         if (it.kind === 'merchant' || it.kind === 'transfer') ps.appendChild(notSure());
         c.appendChild(ps);
@@ -596,7 +604,7 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
     function answer(it, ch){
       if (ch) {
         // one answer for the same amount moved several times: every one of them is written
-        (it.members || [it]).forEach(function(m){ if (!answers[m.n]) answered++; keep(m, ch); });
+        (it.members || [it]).forEach(function(m){ if (!answers[m.n]) answered++; keep(m, ch !== 'Not sure' && it.paidTo ? ch + '|' + it.paidTo.replace(/\|/g, ' ') : ch); });
         if (it.kind === 'merchant' && !it.counted) {
           it.counted = true; openOther -= (it.amount || 0);
           if (ch === 'Not sure') { unsure.n++; unsure.total += (it.amount || 0); }

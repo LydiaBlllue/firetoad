@@ -53,6 +53,13 @@ class NotSure(unittest.TestCase):
         self.assertEqual((d["SHOP"]["status"], d["SHOP"]["answer"]), ("confirmed", "Not sure"))
         self.assertEqual(d["CAFE"]["status"], "open")           # only what was answered is closed
 
+    def test_who_a_bill_was_paid_to_is_remembered_as_its_brand(self):
+        # feedback 104: a bank prints "TELEPHONE PMT"; the payee named once groups it with the card's charges
+        r = confirm.run(self.ws, write=True, sets=["CAFE=Bills|Fido"])
+        self.assertEqual(r["rc"], 0, r["lines"])
+        m = {e["match"]: e for e in self.load("merchants.json")["merchants"]}
+        self.assertEqual((m["CAFE"]["category"], m["CAFE"]["brand"]), ("Bills", "Fido"))
+
     def test_it_is_counted_and_not_asked_again(self):
         confirm.run(self.ws, write=True, sets=["SHOP=Not sure"])
         r = confirm.run(self.ws)

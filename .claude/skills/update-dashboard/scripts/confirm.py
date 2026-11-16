@@ -249,6 +249,10 @@ def run(root, write=False, ok=False, sets=(), say=None):
                openOther=round(sum(total.get(merchant_of(d), 0) for d in items if d.get("kind") == "merchant"), 2))
     reg = jload(fd("accounts.json"), {"accounts": []})
     ledgers = {a["ledger"]: csv_rows(fd(a["ledger"])) for a in reg.get("accounts", []) if a.get("ledger")}
+    # merchants paid from a bank account rather than a card: a bank often prints only "BILL PMT"
+    bank_tags = {a.get("spendTag") for a in reg.get("accounts", []) if a.get("ledger") and a.get("spendTag")}
+    from_bank = {merchant_key(r["note"]) for r in spend
+                 if (m := re.search(r"\[([A-Za-z]+\d+)/\d{8}\]", r["note"])) and m.group(1) in bank_tags}
     ledger_name = {a["ledger"]: (a.get("label") or f"{a.get('inst', '')} {a.get('name', '')}".strip()) for a in reg.get("accounts", []) if a.get("ledger")}
     same = recall.groups(items, _same_question)
     group_of = {id(d): "g%d" % n for n, members in enumerate(same.values()) for d in members}
@@ -279,6 +283,7 @@ def run(root, write=False, ok=False, sets=(), say=None):
                              "suggestBy": d.get("suggestBy"),
                              "amount": total.get(k) if k else None, "brand": kin.pop() if len(kin) == 1 else None,
                              "facts": d.get("facts"), "source": d.get("source"),
+                             "bank": bool(k and k in from_bank),
                              "recall": _recall(d, k, spend, ledgers), "group": group_of.get(id(d))})
         rc = res["items"][-1]["recall"]
         # money out only: that is where uncounted spending hides. Money in with no name waits.
@@ -288,11 +293,15 @@ def run(root, write=False, ok=False, sets=(), say=None):
             rc["match"]["name"] = ledger_name.get(rc["match"]["ledger"], rc["match"]["ledger"])
 
     # what the owner said
-    want, bad = {}, res["bad"]
+    want, bad, brand_of = {}, res["bad"], {}
     for s in sets:
         if "=" not in s:
             bad.append(f"--set {s!r}: write it as N=Category or MERCHANT=Category"); continue
         who, said = (x.strip() for x in s.rsplit("=", 1))
+        # "Bills|Fido": a category, and who a bank's bill payment went to (1.0.7, feedback 104:
+        # "TELEPHONE PMT" never matched the Fido charges on the card, so no subscription was seen)
+        said, _, paid_to = said.partition("|")
+        said, paid_to = said.strip(), paid_to.strip()
         cat = next((k for k, n, *_ in categories.TABLE if said.lower() in (k.lower(), n.lower())), None)
         if who.startswith("id:") and who[3:].isdigit():
             idx = next((i for i, d in enumerate(items) if ids[id(d)] == int(who[3:])), None)
@@ -335,6 +344,8 @@ def run(root, write=False, ok=False, sets=(), say=None):
             bad.append(f"--set {s!r}: #{idx + 1} is a {items[idx].get('kind')}, not a merchant — change it in its ledger")
         else:
             want[idx] = cat
+            if paid_to and items[idx].get("kind") == "merchant":
+                brand_of[idx] = paid_to[:60]
     if bad:
         emit()
         for b in bad:
@@ -378,6 +389,8 @@ def run(root, write=False, ok=False, sets=(), say=None):
             changed += 1
         if d.get("kind") == "merchant":
             changed += _file_merchant(merchant_of(d), ans, table, merchants, spend)
+            if i in brand_of:
+                table[merchant_of(d)]["brand"] = brand_of[i]
         if d.get("credit"):
             t = "Other" if ans == "Other income" else ans
             if t in INCOMING:

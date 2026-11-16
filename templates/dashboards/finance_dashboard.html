@@ -2600,6 +2600,11 @@ function renderSubs(){
   $("subs").innerHTML = rows.length ? rows.map(s =>
     '<div class="leg-row'+(s.active?"":" off")+'"><span class="nm">'+s.name+(s.active?' <span class="sub-badge">● Active</span>':"")+'</span><span class="meta num">'+s.n+' charge'+(s.n === 1 ? "" : "s")+', last '+dLong(s.last.date)+'</span><span class="v num">'+fmt2(s.last.amount)+'</span></div>').join("")
     : '<div class="empty">No subscriptions detected.</div>';
+  // a charge is a subscription once it comes back three months running: fewer months than that
+  // and none can be seen yet, which is said, not left to look like "none" (feedback 104)
+  const span = MONTHS.length;
+  if(span < 3) $("subs").innerHTML += '<div class="cap" style="margin-top:8px">A charge counts as a subscription once it comes back three months running. Your statements cover '
+    + span + ' month' + (span === 1 ? "" : "s") + ' so far.</div>';
 }
 
 // ===== Investments summary (data from holdings_latest.csv + banks.json at build time) =====
