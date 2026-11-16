@@ -764,9 +764,8 @@ const stNum = (k, dflt) => {
   const v = Number(ST[k]);
   return isFinite(v) && v > 0 && Number(ST["of_"+k]) === dflt ? v : dflt;
 };
-let trajView = ST.traj && ST.traj !== "fire" ? Number(ST.traj) || "fire" : "fire";   // the FIRE chart's span: years ahead, or to the target
 function saveState(){
-  const st = {traj:trajView, p:curPage, ym:viewYM, stop:stopAge, draw:drawAge,
+  const st = {p:curPage, ym:viewYM, stop:stopAge, draw:drawAge,
               care:careAge, ltc:ltcAge, home:ltcTier};
   if(navShut.size) st.shut = [...navShut].join(",");
   Object.entries(stBuilt).forEach(([k,v]) => { st["of_"+k] = v; });
@@ -971,7 +970,9 @@ const WAITS = {
   // The FIRE pages wait for a goal, not for money (1.0.1): someone saving toward FIRE with
   // nothing invested yet still has a target to read. Drawdown also waits for something invested,
   // so nobody with nothing invested reads that the money runs out.
-  fire:   () => GOAL() ? "" : "a FIRE goal",
+  // and, since 1.0.5, for anyone it has a number for: three months of income and spending give
+  // the years to financial independence without a goal (2026-11-15, user 001)
+  fire:   () => GOAL() || (SAVINGS.years && SAVINGS.years[1] !== null) ? "" : "a FIRE goal",
   coast:  () => !GOAL() ? "a FIRE goal" : INVESTED() ? "" : "something invested",
 };
 const waitsFor = k => WAITS[k] ? WAITS[k]() : "";
@@ -1561,7 +1562,7 @@ function renderHome(){
       return card("Biggest category in "+yr, catName(top[0]), fmt(top[1])+", "+Math.round(pc(top[1], all))+"% of spending", {text: true});
     },
   };
-  const first = INVESTED() ? (GOAL() ? ["port", "yrs", "inv", "spent"] : ["port", "inv"]) : (GOAL() ? ["yrs"] : []);
+  const first = INVESTED() ? (GOAL() ? ["port", "yrs", "inv", "spent"] : ["port", "yrs", "inv"]) : ["yrs"];
   const FILL = ["interest", "spent", "covered", "kept", "subs", "bigcat"];
   const shown = [];
   for(const k of first.concat(FILL)){

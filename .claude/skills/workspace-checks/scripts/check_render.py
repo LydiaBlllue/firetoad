@@ -201,14 +201,20 @@ def states(src):
         s = without_investing(s)
         s = put(s, "INVEST", dict(get(s, "INVEST"), cashflow=[]))
         return put(put(s, "CHEQUING", []), "WSINC", [])
+    # The FIRE page also opens without a goal when there is a number for it (1.0.5): years to
+    # financial independence, which needs a target and something reaching the broker.
+    sav = get(src, "SAVINGS")
+    years = bool(sav.get("years") and sav["years"][1] is not None)
+    fire_waits = set() if years else {"fire"}
     out = []
     if invested:
         out.append(("invested, a goal", put(src, "FIRE_GOAL", True), set()))
-        out.append(("invested, no goal", put(src, "FIRE_GOAL", False), {"fire", "coast"}))
+        out.append(("invested, no goal", put(src, "FIRE_GOAL", False), {"coast"} | fire_waits))
     base = without_investing(src)
     out.append(("a goal, nothing invested", put(base, "FIRE_GOAL", True), {"port", "perf", "hold", "coast"}))
-    out.append(("no goal, nothing invested", put(base, "FIRE_GOAL", False), {"port", "perf", "hold", "fire", "coast"}))
-    out.append(("cards only", put(card_only(src), "FIRE_GOAL", None), {"port", "perf", "hold", "fire", "coast", "income", "safe", "wsinc"}))
+    out.append(("no goal, nothing invested", put(base, "FIRE_GOAL", False), {"port", "perf", "hold", "coast"} | fire_waits))
+    # cards only: no income, nothing reaching a broker — no years, so no FIRE page without a goal
+    out.append(("cards only", put(put(card_only(src), "SAVINGS", {}), "FIRE_GOAL", None), {"port", "perf", "hold", "fire", "coast", "income", "safe", "wsinc"}))
     return out
 
 

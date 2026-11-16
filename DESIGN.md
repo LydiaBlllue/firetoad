@@ -134,7 +134,8 @@
 
   **What a page waits for** (`WAITS`): Income and Emergency fund a chequing statement; Portfolio,
   Performance and Holdings a broker's holdings; Investment income a broker's activity; FIRE a FIRE
-  goal; Drawdown & care a FIRE goal and something invested. A page that waits is folded under
+  goal or a number for it (years to financial independence: a target and money reaching the
+  broker, 1.0.5); Drawdown & care a FIRE goal and something invested. A page that waits is folded under
   *Waiting for data*, saying what it waits for, and comes back by itself.
 
 ### Home
@@ -150,12 +151,13 @@
 - **Net worth over time** under the net-worth card: one point per month, what really was, nothing
   projected, from two months on. It is not the FIRE chart, which follows the portfolio to a target.
 - **Four stat cards**, chosen by two signals, something invested and a FIRE goal (1.0.1). Invested
-  with a goal: **Portfolio** (with its dry-powder share), **FIRE progress** (with the on-track
-  year), **Invested in \<month\>** (pay-yourself-first, from the broker's record), **Total spent in
-  \<month\>** (the month's whole spending, bills & housing and everyday beneath it; today's month
-  once it has a purchase, otherwise the newest one the statements reach. What is left of Everyday
-  is This month's to say, 2026-11-03). Invested, no goal: Portfolio · Invested. A goal, nothing
-  invested: FIRE progress. The rest fill from one list, in order, taking only a card with a
+  with a goal: **Portfolio** (with its dry-powder share), **Years to financial independence** (at
+  what reaches the broker, linking to the FIRE page; 1.0.5, in place of FIRE progress), **Invested
+  in \<month\>** (pay-yourself-first, from the broker's record), **Total spent in \<month\>** (the
+  month's whole spending, bills & housing and everyday beneath it; today's month once it has a
+  purchase, otherwise the newest one the statements reach. What is left of Everyday is This
+  month's to say, 2026-11-03). Invested, no goal: Portfolio · Years · Invested. Nothing invested:
+  Years, when there is a number for it. The rest fill from one list, in order, taking only a card with a
   number: Card interest (only when a statement charged some) · Total spent in \<month\> · Months covered ·
   Kept this year · A year of subscriptions · Biggest category. So no owner sees an empty card.
 - **Net worth in one card, cut both ways at once**: one row per `role`, cash split by where it

@@ -59,7 +59,8 @@
 ## 1a. Years to financial independence, and the savings rate
 
 The FIRE page opens with one answer and one lever (`savings.py`, the `SAVINGS` constant); Home
-carries the answer as a card. Financial independence is the day the money could carry you, not
+carries the answer as a card. The page opens for anyone it has a number for, a FIRE goal or not:
+a target and money reaching the broker are enough (1.0.5). Financial independence is the day the money could carry you, not
 the day work stops: past it, working is a choice.
 
 - **The answer**: years until what is invested covers 25 years of the planning figure — or, with
