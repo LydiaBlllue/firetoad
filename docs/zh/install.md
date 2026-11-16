@@ -5,8 +5,8 @@
 
 ## 1. 下载并打开
 
-打开[发布页](https://github.com/lydiablllue/firetoad/releases)，下载
-`FIRE-Toad-<版本>.dmg`，双击它。在弹出的窗口里**双击 FIRE Toad**，不用拖。磁盘映像窗口里的字和说明是英文的（打开磁盘映像时还没有程序在运行，没法按系统语言显示）；之后应用会按系统语言显示。
+[下载磁盘映像](https://github.com/lydiablllue/firetoad/releases/latest/download/FIRE-Toad.dmg)（`FIRE-Toad.dmg`，永远是最新版；旧版本在
+[发布页](https://github.com/lydiablllue/firetoad/releases)上），双击它。在弹出的窗口里**双击 FIRE Toad**，不用拖。磁盘映像窗口里的字和说明是英文的（打开磁盘映像时还没有程序在运行，没法按系统语言显示）；之后应用会按系统语言显示。
 
 macOS 会问一次：*"FIRE Toad"是从互联网下载的应用。你确定要打开吗？* 点 **打开**。FIRE Toad 会把自己拷进
 **应用程序**（不是管理员的账户，拷进你个人文件夹里的「应用程序」），从那里打开，并推出磁盘映像。
