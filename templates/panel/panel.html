@@ -157,23 +157,25 @@ details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-a
 .cq{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:0 1px 2px rgba(11,11,11,.04);transition:transform .12s ease-out,opacity .12s ease-out}
 .cq.out{transform:translateX(-36px);opacity:0}
 .cq.in{transform:translateX(24px);opacity:0}
-.cq .name{font-size:15px;font-weight:700;letter-spacing:-.2px;word-break:break-word}
-.cq .meta{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.cq .name{font-size:17px;font-weight:700;letter-spacing:-.2px;line-height:1.35;word-break:break-word}
+.cq .meta{font-size:14px;color:var(--ink-2);margin-top:4px;font-variant-numeric:tabular-nums}
+.cq .ask{font-size:15px;font-weight:600;margin-top:16px}
+.cq .ask + .pills{margin-top:8px}
 .cq .brand{font-size:11.5px;color:#6250d6;margin-top:4px}
 .cq .pills{margin-top:10px}
 .cq .name .lk{float:right;font-size:12px;font-weight:500;letter-spacing:0;color:#2a78d6;text-decoration:none;margin-left:10px}
 .cq .pl.unsure{border-style:dashed;color:var(--ink-2)}
-.rc{margin-top:8px;font-size:12.5px}
-.rc .rl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:10px 0 3px}
+.rc{margin-top:10px;font-size:13.5px}
+.rc .rl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 3px}
 .rc .rr{display:flex;justify-content:space-between;padding:3px 0;border-top:1px solid var(--border);font-variant-numeric:tabular-nums}
-.rc .rn,.rc .rs{color:var(--ink-2);padding:3px 0}
+.rc .rn,.rc .rs{color:var(--muted);padding:2px 0}
 .rc .rh{font-weight:600;padding:4px 0;border-top:1px solid var(--border)}
 .prog{margin:2px 0 8px;font-size:12px;color:var(--ink-2)}
 .prog .pt{display:flex;justify-content:space-between}
 .prog .pt .ln{color:var(--ok)}
 .prog .pb{position:relative;height:6px;background:var(--grid);border-radius:3px;margin:4px 0 2px}
 .prog .pb i{display:block;height:100%;background:var(--ink);border-radius:3px}
-.cq .pl.big{padding:6px 13px;font-size:13px}
+.cq .pl.big{padding:7px 14px;font-size:14px}
 .cq .foot2{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:11.5px;color:var(--muted);flex-wrap:wrap;gap:6px}
 .share{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--ink-2);margin:4px 0 2px}
 .share b{font-variant-numeric:tabular-nums}
@@ -205,8 +207,8 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
 .drop .lnk{display:block}
 .bal{padding:8px 0;border-top:1px solid var(--border)}
 .bal b{font-size:13px}.bal small{display:block;font-size:11.5px;color:var(--muted)}
-.q-of{font-size:12.5px;color:var(--muted);margin:2px 0 8px}
-.cq .for{font-size:12.5px;color:var(--ink-2);margin-top:6px}
+.q-of{font-size:13px;color:var(--muted);margin:2px 0 8px;display:flex;justify-content:space-between;gap:12px}
+.cq .for{font-size:13px;color:var(--muted);margin-top:8px}
 .cq .foot2{justify-content:flex-start;gap:8px}
 </style>
 </head>
@@ -288,7 +290,7 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
     if (!res) return;
     var h = el('div', 'qh', esc(written ? T.r_done_h : T.r_dry_h)); rbox.appendChild(h);
     var files = res.files || [];
-    rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(T.r_files) + '</span><span class="v">' + (files.length ? files.map(esc).join('<br>') : esc(T.r_none_read)) + '</span>'));
+    rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(T.r_files) + '</span><span class="v">' + (files.length ? files.map(function(f){ return esc(srcSay(f)); }).join('<br>') : esc(T.r_none_read)) + '</span>'));
     var counts = res.counts || {}, cs = [];
     Object.keys(counts).forEach(function(k){ var key = 'c_' + k; cs.push(T[key] ? fmtS(T[key], {n: counts[k]}) : counts[k] + ' ' + k); });
     if (cs.length) rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(T.r_counts) + '</span><span class="v">' + cs.map(esc).join('<br>') + '</span>'));
@@ -416,9 +418,12 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
   }
   function keep(it, c){ answers[it.n] = c; if (it.id != null) { pending['id:' + it.id] = c; flush(); } }
   var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function fmtS(s, o){ return String(s).replace(/\{(\w+)\}/g, function(_, k){ return o[k] == null ? '' : o[k]; }); }
+  // a count says its own plural: "{n} statement(s)" reads "1 statement", "3 statements"
+  function fmtS(s, o){ var r = String(s).replace(/\{(\w+)\}/g, function(_, k){ return o[k] == null ? '' : o[k]; });
+    return o.n == null ? r : r.replace(/\(s\)/g, +o.n === 1 ? '' : 's'); }
   // "Primary Chequing statement to Jul 5, Jun 17": the import writes where a row came from in one
   // fixed shape; in Chinese it is said from its parts (1.0.7, feedback 89). The account's name stays.
+  // The files an import would read are named the same way, so step 2 says them through it too.
   var MON = {Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12};
   function srcSay(src){
     if ((document.documentElement.lang || 'en') !== 'zh') return src;
@@ -426,6 +431,7 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
     if (!m || !MON[m[2]]) return src;
     return m[1] + ' 对账单（到 ' + MON[m[2]] + ' 月 ' + m[3] + ' 日）' + (m[4] && MON[m[4]] ? '，' + MON[m[4]] + ' 月 ' + m[5] + ' 日' : '');
   }
+  function acctOf(src){ var m = /^(.*) statement to /.exec(src || ''); return m ? m[1] : srcSay(src); }
   function money(v){ return '$' + Number(v || 0).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}); }
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function el(tag, cls, html){ var d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; return d; }
@@ -464,6 +470,8 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
   // "Not sure" is an answer; Skip leaves the item as it is filed and it is asked again.
   if (Q.items && Q.items.length) {
     var LINE = 0.95, LANG = document.documentElement.lang || 'en', WD = String(T.q_weekdays).split(',');
+    // facts are joined the way the language joins them, with a comma; never a middle dot (the owner)
+    var SEP = LANG === 'zh' ? '，' : ', ';
     var dayS = function(d, w){ var x = new Date(d + 'T12:00:00'); return WD[w == null ? (x.getDay() + 6) % 7 : w] + ' ' + x.toLocaleDateString(LANG, {month: 'short', day: 'numeric'}); };
     var money2 = function(v){ return '$' + Number(v || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); };
     var merch = Q.items.filter(function(i){ return i.kind === 'merchant'; }).sort(function(a, b){ return (b.amount || 0) - (a.amount || 0); });
@@ -497,22 +505,24 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
     // to be the share of spending, which reached its line after the merchants while the money
     // questions were still to come — the page looked finished and went on asking (2026-11-15,
     // user 001). The share of spending sorted is said beside it, as a fact.
+    var sortedS = '';
     function drawProg(){
+      sortedS = '';
       if (!merch.length || !spendT) { prog.innerHTML = ''; return; }
-      var sorted = '<span>' + esc(fmtS(T.q_sorted, {pct: Math.floor(share() * 100)})) + '</span>';
+      sortedS = fmtS(T.q_sorted, {pct: Math.floor(share() * 100)});
       var e = deckItems.indexOf(ENOUGH);
-      if (!useLine || e < 0) { prog.innerHTML = '<div class="pt">' + sorted + '</div>'; return; }
+      if (!useLine || e < 0) { prog.innerHTML = ''; return; }
       var left = Math.max(0, e - idx), fill = e ? (e - left) / e : 1;
-      prog.innerHTML = '<div class="pt">' + sorted + '<span class="ln">' + esc(left ? fmtS(T.q_to_line, {n: left}) : T.q_line) + '</span></div>'
+      prog.innerHTML = '<div class="pt"><span></span><span class="ln">' + esc(left ? fmtS(T.q_to_line, {n: left}) : T.q_line) + '</span></div>'
         + '<div class="pb"><i style="width:' + (fill * 100).toFixed(1) + '%"></i></div>';
     }
     function recallBox(it){
       var r = it.recall; if (!r) return null;
       var b = el('div', 'rc');
       var rows = it.members ? it.members.map(function(m){ return m.recall && m.recall.rows[0]; }).filter(Boolean) : (r.rows || []);
-      var n = it.members ? rows.length : (r.n || rows.length), show = rows.slice(-4);
+      var n = it.members ? rows.length : (r.n || rows.length), show = n > 1 ? rows.slice(-4) : [];
       if (show.length) {
-        b.appendChild(el('div', 'rl', esc(T.q_when)));
+        b.appendChild(el('div', 'rl', esc(it.kind === 'merchant' ? T.q_when : T.q_each)));
         show.forEach(function(x){ b.appendChild(el('div', 'rr', '<span>' + esc(dayS(x.d, x.w)) + '</span><span>' + money2(x.a) + '</span>')); });
         if (n > show.length) b.appendChild(el('div', 'rn', esc(fmtS(T.q_more_n, {n: n - show.length}))));
       }
@@ -523,15 +533,17 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
         if (rh.weekday != null) parts.push(fmtS(T.q_on_weekday, {day: WD[rh.weekday]}));
         if (rh.when) parts.push(rh.when === 'start' ? T.q_month_start : T.q_month_end);
         parts.push(rh.same ? T.q_same_amount : fmtS(T.q_about, {amount: money(rh.about)}));
-        b.appendChild(el('div', 'rh', esc(parts.join(' · '))));
+        b.appendChild(el('div', 'rh', esc(parts.join(SEP))));
       }
       if (r.sameDays && r.sameDays.length) {
-        b.appendChild(el('div', 'rl', esc(T.q_same_days)));
-        r.sameDays.forEach(function(x){ b.appendChild(el('div', 'rs', esc(dayS(x.d, x.w) + ': ' + x['with'].map(function(o){ return o.what + ' ' + money(o.a); }).join(', ')))); });
+        b.appendChild(el('div', 'rl', esc(r.sameDays.length > 1 ? T.q_same_days : T.q_same_day1)));
+        // one line each, never strung together on one line
+        r.sameDays.forEach(function(x){ x['with'].forEach(function(o){ b.appendChild(el('div', 'rs', esc((r.sameDays.length > 1 ? dayS(x.d, x.w) + '  ' : '') + o.what + ' ' + money(o.a)))); }); });
       }
       if (it.kind === 'transfer' && !it.members) {
         b.appendChild(el('div', 'rl', esc(T.q_same_day_acct)));
-        b.appendChild(el('div', 'rs', esc((r.sameDay || []).length ? r.sameDay.map(function(o){ return o.what + ' ' + money(Math.abs(o.a)); }).join(', ') : T.q_nothing_else)));
+        if ((r.sameDay || []).length) r.sameDay.forEach(function(o){ b.appendChild(el('div', 'rs', esc(o.what + ' ' + money(Math.abs(o.a))))); });
+        else b.appendChild(el('div', 'rs', esc(T.q_nothing_else)));
         if (r.match) b.appendChild(el('div', 'rs', esc(fmtS(T.q_match, {name: r.match.name || '', date: dayS(r.match.d)}))));
       }
       return b;
@@ -568,13 +580,20 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
         a.target = '_blank'; a.rel = 'noopener noreferrer'; a.title = T.q_lookup_tip; name.appendChild(a);
       }
       c.appendChild(name);
-      var meta = [];
-      if (it.kind === 'merchant' && it.amount != null) meta.push(fmtS(T.q_meta, {amount: money(it.amount), n: it.seen || 0}).replace('(s)', (it.seen || 0) === 1 ? '' : 's'));
-      if (it.source && !it.members) meta.push(srcSay(it.source));
-      if (meta.length) c.appendChild(el('div', 'meta', meta.map(esc).join('<br>')));
+      // the facts, said once and as a sentence (DESIGN.md 5b: never strung on a joiner): one
+      // purchase is its amount, day and account; several are their total and count, listed below;
+      // a transfer's amount and day are in its question, so only the account is said
+      var r0 = it.recall && it.recall.rows && it.recall.rows.length === 1 && (it.recall.n || 1) === 1 ? it.recall.rows[0] : null;
+      var acct = it.source && !it.members ? (it.acct || acctOf(it.source)) : '', meta = '';
+      if (it.kind === 'merchant' && r0) {
+        var dd = LANG === 'zh' ? (function(){ var x = new Date(r0.d + 'T12:00:00'); return (x.getMonth() + 1) + ' 月 ' + x.getDate() + ' 日（' + WD[r0.w == null ? (x.getDay() + 6) % 7 : r0.w] + '）'; })() : dayS(r0.d, r0.w);
+        meta = fmtS(acct ? T.q_paid1 : T.q_paid1_na, {amount: money2(r0.a), day: dd, acct: acct});
+      } else if (it.kind === 'merchant' && it.amount != null) meta = fmtS(acct ? T.q_paidn : T.q_paidn_na, {amount: money(it.amount), n: it.seen || 0, acct: acct});
+      else if (acct) meta = fmtS(it.credit ? T.q_into : T.q_out_of, {acct: acct});
+      if (meta) c.appendChild(el('div', 'meta', esc(meta)));
       var rb = recallBox(it); if (rb) c.appendChild(rb);
       if (it.brand) c.appendChild(el('div', 'brand', esc(fmtS(T.q_brand, {brand: it.what.split(' ')[0], cat: L(it.brand)}))));
-      if (it.default && it.kind !== 'merchant') c.appendChild(el('div', 'for', esc(T.filed_as) + ' <b>' + esc(L(it.default)) + '</b>'));
+      if (it.kind === 'merchant' && it.choices.length) c.appendChild(el('div', 'ask', esc(it.bank ? T.q_ask_for : T.q_ask_buy)));
       var notSure = function(){ var u = el('button', 'pl big unsure', esc(T.q_unsure)); u.type = 'button'; u.onclick = function(){ answer(it, 'Not sure'); }; return u; };
       var f = el('div', 'foot2');
       if (it.kind === 'transfer' && it.spent && !it.credit) {
@@ -603,6 +622,7 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
         c.appendChild(ps);
       } else c.appendChild(el('div', 'for', esc(T.in_ledger)));
       if (it.members) c.appendChild(el('div', 'for', esc(fmtS(T.q_one_answer, {n: it.members.length}))));
+      if (it.default && it.kind !== 'merchant') c.appendChild(el('div', 'for', esc(fmtS(T.q_for_now, {cat: L(it.default)}))));
       var skip = el('button', 'btn sm', esc(it.choices.length ? T.q_skip : T.q_next)); skip.type = 'button'; skip.onclick = function(){ answer(it, null); };
       f.appendChild(skip);
       if (idx > 0) { var back = el('button', 'btn sm', esc(T.q_undo_card)); back.type = 'button'; back.onclick = function(){ idx = Math.max(0, idx - 1); next(true); }; f.appendChild(back); }
@@ -634,7 +654,8 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
         deck.innerHTML = ''; drawProg();
         if (idx < deckItems.length) {
           var it = deckItems[idx];
-          qof.textContent = it === ENOUGH ? '' : fmtS(T.q_of, {i: idx + 1 - (deckItems.indexOf(ENOUGH) >= 0 && idx > deckItems.indexOf(ENOUGH) ? 1 : 0), n: deckItems.length - (deckItems.indexOf(ENOUGH) >= 0 ? 1 : 0)});
+          var ofS = it === ENOUGH ? '' : fmtS(T.q_of, {i: idx + 1 - (deckItems.indexOf(ENOUGH) >= 0 && idx > deckItems.indexOf(ENOUGH) ? 1 : 0), n: deckItems.length - (deckItems.indexOf(ENOUGH) >= 0 ? 1 : 0)});
+          qof.innerHTML = '<span>' + esc(ofS) + '</span><span>' + esc(sortedS) + '</span>';
           qend.style.display = 'none';
           var c = card(it); if (!reduced) c.classList.add('in'); deck.appendChild(c);
           if (!reduced) { requestAnimationFrame(function(){ requestAnimationFrame(function(){ c.classList.remove('in'); }); }); setTimeout(function(){ c.classList.remove('in'); }, 250); }

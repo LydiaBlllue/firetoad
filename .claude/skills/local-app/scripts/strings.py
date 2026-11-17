@@ -34,8 +34,8 @@ S = {
                      "zh": "inbox 里有 {n} 个文件认不出来。命名之前什么都不会导入——看第 2 步。"},
     "lead_inbox": {"en": "Files are in. Next: step 3, press “See what would happen”.",
                    "zh": "文件已经放进来了。下一步：第 3 步，点「先看看会发生什么」。"},
-    "lead_questions": {"en": "The import is done. {n} question(s) wait for you in step 4.",
-                       "zh": "导入完成了。第 4 步有 {n} 个问题等你回答。"},
+    "lead_questions": {"en": "The import is done. {n} question(s) wait for you in step 3.",
+                       "zh": "导入完成了。第 3 步有 {n} 个问题等你回答。"},
     "lead_done": {"en": "Everything is up to date. Nothing to do until the next statements arrive.",
                   "zh": "都是最新的。等下一批对账单出来之前没有事要做。"},
     # — step 1 rows
@@ -113,7 +113,7 @@ S = {
     "c_ledger rows": {"en": "{n} account rows", "zh": "{n} 行账户流水"},
     "c_purchases": {"en": "{n} purchases", "zh": "{n} 笔消费"},
     "c_refunds": {"en": "{n} refund(s)", "zh": "{n} 笔退款"},
-    "r_asked": {"en": "{n} question(s) for you afterwards — step 4", "zh": "之后有 {n} 个问题要你答——第 4 步"},
+    "r_asked": {"en": "{n} question(s) for you afterwards — step 3", "zh": "之后有 {n} 个问题要你答——第 3 步"},
     "r_by_hand": {"en": "{n} file(s) no program can read: a person has to", "zh": "{n} 个文件程序读不了，得人来读"},
     "r_untyped": {"en": "{n} row(s) nobody could type", "zh": "{n} 行没人认得出是什么"},
     "r_unknown": {"en": "Left in the folder, not recognised ({n})", "zh": "留在文件夹里，没认出来（{n} 个）"},
@@ -125,11 +125,11 @@ S = {
     "r_clean": {"en": "every check clean", "zh": "所有检查都过了"},
     "r_raw": {"en": "Details", "zh": "详情"},
     # — the questions, said from their facts
-    "qs_credit_named": {"en": "{amount} arrived by e-Transfer on {date} from {who}. What is it?", "zh": "{date} 收到 {who} 的 e-Transfer {amount}。这是什么？"},
-    "qs_credit": {"en": "{amount} arrived by e-Transfer on {date}; the statement names no sender. What is it?", "zh": "{date} 收到一笔 e-Transfer {amount}，对账单没写是谁。这是什么？"},
-    "qs_sent": {"en": "{amount} left by e-Transfer on {date} to someone you have not named. What was it?", "zh": "{date} 转出一笔 e-Transfer {amount}，给了没登记的人。这是什么？"},
-    "qs_account_to": {"en": "{amount} went to an account you have not registered, on {date} ({desc}).", "zh": "{date} 有 {amount} 转到一个没登记的账户（{desc}）。"},
-    "qs_account_from": {"en": "{amount} came from an account you have not registered, on {date} ({desc}).", "zh": "{date} 有 {amount} 从一个没登记的账户转来（{desc}）。"},
+    "qs_credit_named": {"en": "{amount} came in by e-Transfer on {date} from {who}. What was it?", "zh": "{date}收到 {who} 的 e-Transfer {amount}。这是什么？"},
+    "qs_credit": {"en": "{amount} came in by e-Transfer on {date}, with no sender named. What was it?", "zh": "{date}收到一笔 e-Transfer {amount}，对账单没写是谁。这是什么？"},
+    "qs_sent": {"en": "{amount} left by e-Transfer on {date} to someone you have not named. What was it?", "zh": "{date}转出一笔 e-Transfer {amount}，给了没登记的人。这是什么？"},
+    "qs_account_to": {"en": "{amount} went to an account you have not registered, on {date} ({desc}).", "zh": "{date}有 {amount} 转到一个没登记的账户（{desc}）。"},
+    "qs_account_from": {"en": "{amount} came from an account you have not registered, on {date} ({desc}).", "zh": "{date}有 {amount} 从一个没登记的账户转来（{desc}）。"},
     "qs_merchant": {"en": "{merchant} — the first time it appears. Which category?", "zh": "{merchant}——第一次出现。算哪一类？"},
     "qs_merchant_starter": {"en": "{merchant} — the first time it appears; a known chain, filed as {cat}.", "zh": "{merchant}——第一次出现；常见连锁店，暂记为 {cat}。"},
     "qs_fire": {"en": "Is retiring early (FIRE) something you are working toward? The FIRE pages show only for yes.", "zh": "提前退休（FIRE）是你在努力的方向吗？FIRE 页面只在「是」时出现。"},
@@ -140,6 +140,16 @@ S = {
     "q_intro": {"en": "The import filed everything it could. Tap an answer on each of these, then save once.", "zh": "能归类的都已归好。下面这些每条点一个答案，最后保存一次。"},
     "q_none": {"en": "Nothing to categorize. Anything the next import cannot file appears here.", "zh": "没有要归类的。下次导入归不了类的会出现在这里。"},
     "filed_as": {"en": "for now:", "zh": "现在记为："},
+    "q_for_now": {"en": "Until you answer, it counts as {cat}.", "zh": "回答之前，先算作「{cat}」。"},
+    "q_paid1": {"en": "{amount} paid on {day} with your {acct}.", "zh": "{day}用 {acct} 付了 {amount}。"},
+    "q_paid1_na": {"en": "{amount} paid on {day}.", "zh": "{day}付了 {amount}。"},
+    "q_paidn": {"en": "{amount} in {n} purchase(s) with your {acct}.", "zh": "用 {acct} 付了 {n} 笔，共 {amount}。"},
+    "q_paidn_na": {"en": "{amount} in {n} purchase(s).", "zh": "{n} 笔，共 {amount}。"},
+    "q_into": {"en": "Into your {acct}.", "zh": "进了 {acct}。"},
+    "q_out_of": {"en": "Out of your {acct}.", "zh": "从 {acct} 转出。"},
+    "q_ask_buy": {"en": "What did you buy here?", "zh": "在这里买的是什么？"},
+    "q_ask_for": {"en": "What was it for?", "zh": "这笔是付什么的？"},
+    "q_same_day1": {"en": "Also paid that day", "zh": "那天还付了"},
     "suggested": {"en": "suggested:", "zh": "建议："},
     "seen_n": {"en": "seen {n}×", "zh": "出现 {n} 次"},
     "model_dot": {"en": "a model's suggestion", "zh": "模型的建议"},
@@ -232,11 +242,12 @@ S = {
     "q_to_line": {"en": "{n} more, then that is enough", "zh": "再答 {n} 个就够了"},
     "q_lookup": {"en": "Look it up", "zh": "查一下"},
     "q_lookup_tip": {"en": "Searches the web for these words. Nothing else is sent.", "zh": "用这几个字在网上搜一下。别的什么都不发。"},
-    "q_when": {"en": "When", "zh": "什么时候"},
+    "q_when": {"en": "Each purchase", "zh": "每一笔"},
+    "q_each": {"en": "Each one", "zh": "每一笔"},
     "q_more_n": {"en": "…and {n} more", "zh": "……还有 {n} 笔"},
-    "q_same_days": {"en": "The same days", "zh": "同一天还付了"},
-    "q_same_day_acct": {"en": "The same day in this account", "zh": "同一天这个账户还有"},
-    "q_nothing_else": {"en": "Nothing else moved in this account that day.", "zh": "那天这个账户没有别的进出。"},
+    "q_same_days": {"en": "Also paid those days", "zh": "那几天还付了"},
+    "q_same_day_acct": {"en": "Also in this account that day", "zh": "那天这个账户还有"},
+    "q_nothing_else": {"en": "Nothing else moved.", "zh": "没有别的进出。"},
     "q_match": {"en": "Looks like the other end: {name}, {date}", "zh": "看起来另一头在：{name}，{date}"},
     "q_every_week": {"en": "every week", "zh": "每周"},
     "q_every_2weeks": {"en": "every other week", "zh": "每两周"},
@@ -316,13 +327,20 @@ def system_lang():
 def t(lang, key, **kw):
     """The string for `key` in `lang` (English when the language has none), formatted. A
     placeholder may not be called `lang` or `key` (the panel crashed on `{key}` once a broker
-    export was missing, 2026-11-07, found by the first full simulation)."""
+    export was missing, 2026-11-07, found by the first full simulation). A count says its own
+    plural: with `n`, "{n} file(s)" reads "1 file" or "3 files", as the panel's fmtS does."""
     row = S.get(key) or {}
     text = row.get(lang) or row.get("en") or key
     try:
-        return text.format(**kw) if kw else text
+        text = text.format(**kw) if kw else text
     except (KeyError, IndexError):
         return text
+    if "n" in kw:
+        try:
+            text = text.replace("(s)", "" if float(kw["n"]) == 1 else "s")
+        except (TypeError, ValueError):
+            pass
+    return text
 
 
 def month(lang, m):
@@ -345,11 +363,11 @@ def js_strings(lang):
             "q_money_h", "q_sug_h", "q_sug_intro", "q_accept_all", "q_accepted", "q_change", "q_unknown_h", "q_unknown_intro",
             "q_meta", "q_paid_to", "q_skip", "q_skip_all", "q_other_now", "q_other_after", "q_left", "q_cards_done", "q_more", "q_brand", "q_of", "q_next", "q_done_n", "own_account", "spent_it", "spent_on", "save_answers", "unanswered_keep", "go", "dry_hint",
             "q_undo_card", "q_saved_one", "q_saving_one", "q_save_failed", "q_resume", "m_moved", "q_change",
-            "q_sorted", "q_line", "q_to_line", "q_lookup", "q_lookup_tip", "q_when", "q_more_n", "q_same_days", "q_same_day_acct",
+            "q_sorted", "q_line", "q_to_line", "q_lookup", "q_lookup_tip", "q_when", "q_each", "q_more_n", "q_same_days", "q_same_day_acct",
             "q_nothing_else", "q_match", "q_every_week", "q_every_2weeks", "q_every_month", "q_on_weekday", "q_same_amount", "q_about",
             "q_month_start", "q_month_end", "q_weekdays", "q_unsure", "q_one_answer", "q_group_out", "q_group_in", "q_enough_h", "q_enough_p",
             "q_left_small", "q_left_unsure", "q_left_money", "q_do_money", "q_do_small", "q_finish",
-            "filed_as", "suggested", "seen_n", "in_ledger", "model_dot",
+            "filed_as", "q_paid1", "q_paid1_na", "q_paidn", "q_paidn_na", "q_into", "q_out_of", "q_for_now", "q_ask_buy", "q_ask_for", "q_same_day1", "suggested", "seen_n", "in_ledger", "model_dot",
             "dry_running", "dry_none", "dry_stop", "dry_plan", "go_running", "go_done", "go_failed", "undo_q", "undo_running",
             "undo_done", "undo_none", "failed_lines", "saving", "saved_rebuilt", "not_saved", "saved", "already", "refused",
             "cands_note", "cands_none", "near", "date_read", "refresh_running", "refresh_done", "refresh_failed",

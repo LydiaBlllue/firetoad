@@ -12,8 +12,8 @@ The Pages workflow runs it; run it locally to look at the site before a release.
 
 The front page is the page a search finds, so everything on it is plain HTML, never written by a
 script. One layout, two tables of words: the two languages say the same things in the same order.
-The screenshots are the demo owner's, retaken at every release by tools/demo.py (the panel's are
-taken from the app). Facts only: nothing here that the tool does not do today — no phone app, no
+The screenshots are the demo owner's, retaken at every release by tools/demo.py (the panel's from
+the app itself, on a copy of the demo set one month back). Facts only: nothing here that the tool does not do today — no phone app, no
 bank connection, no Windows download.
 """
 import argparse
@@ -43,134 +43,146 @@ EN = dict(
           "and see your spending, net worth and years to FIRE. No bank login, no account."),
     name="FIRE Toad",
     nav=[("#how", "How it works"), ("#banks", "Banks"), ("#faq", "Questions")],
-    h1="Your money on one page — for reaching financial independence in Canada.",
-    lede=("Once a month you drop your bank statements into a folder. FIRE Toad reads them on your "
-          "Mac, checks that every statement adds up, files every purchase and builds one page: what "
-          "you spent, what you own, how many years until financial independence."),
-    demo="Open the live demo", download="Download for Mac — free",
-    fine=(f"The demo is {DEMO['first']}'s money — a made-up {DEMO['age']}-year-old in {DEMO['city']}. "
-          "Nothing to install. The app is signed and notarised by Apple, in English and Chinese, free "
-          "and open source (MIT)."),
-    phone="The demo is built for a computer screen; on a phone, the pictures below show it.",
+    h1="See where your money goes, what you've built, and how many years until work is optional.",
+    lede=("Once a month, drop your bank statements into a folder. FIRE Toad reads them on your Mac, "
+          "checks that each one adds up, sorts every purchase, and builds one page: what you spent, "
+          "what you own, and how many years until financial independence."),
+    demo="Try the live demo", download="Download for Mac — free",
+    fine=(f"The demo shows {DEMO['first']}'s money — a made-up {DEMO['age']}-year-old in {DEMO['city']}. "
+          "Nothing to install. The app is signed and notarised by Apple, works in English and Chinese, "
+          "and is free and open source (MIT)."),
+    phone="The demo is made for a computer screen. On a phone, the pictures below show what it looks like.",
     hero_alt="The FIRE page: about 29 to 37 years to financial independence, and what investing more each month changes",
     points=[("No bank login.", "You download your statements; the app reads them on your computer. "
-                               "Nothing is uploaded, and there is no account to make."),
-            ("Every number adds up.", "A statement is let in only when it balances to the totals it prints."),
-            ("Your FIRE plan, not just a budget.", "Years to financial independence, how long the money "
-             "lasts, your TFSA, RRSP and FHSA, and money held abroad, in one net worth.")],
-    how_lab="How it works", how_h="Once a month, four steps",
-    steps=[("Get the files", "Download last month's statements from your bank's website. The app "
-                             "says which ones are still missing and how to get each."),
-           ("Import", "Drop them in. Each is read on your Mac and let in only if it adds up."),
-           ("Categorize", "Answer what a program cannot decide: a shop seen for the first time, "
-                          "a transfer with no name. One tap each, remembered next time."),
-           ("Done", "Your page is rebuilt with the new month.")],
-    panel_img="panel.png", panel_alt="The monthly import in the app, at step 3: what was a $200 e-Transfer with no sender?",
-    q_lab="What it answers",
-    qs=[("Where do I stand?", "Net worth across every account and currency: a row for what each part "
-                              "is for, its bar coloured by how easily you could reach it.",
-         "crop-home.png", "Home: net worth $65,655, years to financial independence, this month's investing and spending"),
-        ("Where did the money go?", "The year by category and month by month, with what stands out: "
-                                    "the biggest category, a subscription, the biggest month.",
+                               "Nothing is uploaded, and there's no account to create."),
+            ("Every number adds up.", "A statement only gets in if it matches the totals printed on it."),
+            ("A FIRE plan, not just a budget.", "Years to financial independence, how long your money "
+             "will last, your TFSA, RRSP and FHSA, and accounts abroad — all in one net worth.")],
+    how_lab="How it works", how_h="Four steps, once a month",
+    steps=[("Get your files", "Download last month's statements from your bank. The app tells you "
+                              "which ones are missing and where to find each.",
+            "Step 1 in the app: each account and what is still needed, and the files in the folder"),
+           ("Import", "Drag them in. Each one is read on your Mac and only gets in if it adds up.",
+            "Step 2: what the import will add, before anything is written"),
+           ("Categorize", "You only answer what a program can't decide — a new shop, a transfer "
+                          "with no name. One tap each, and it remembers next time.",
+            "Step 3: one question at a time, here a transfer with no sender"),
+           ("Done", "Your page updates with the new month.",
+            "Step 4: what changed, with the net worth before and after")],
+    panel="panel",
+    q_lab="What it tells you",
+    qs=[("Where do I stand?", "Your net worth across every account and currency — each part labelled "
+                              "by what it's for, its bar coloured by how easily you can get to it.",
+         "crop-home.png", "Home: net worth, years to financial independence, this month's investing and spending"),
+        ("Where did my money go?", "Your year by category and by month, with what stands out: "
+                                   "the biggest category, subscriptions, the priciest month.",
          "crop-year.png", "The year: spending by category and what stands out"),
-        ("What do I own?", "Your portfolio by currency, by kind of asset and by your own buckets.",
+        ("What do I own?", "Your investments by currency, by type of asset, and by your own buckets.",
          "crop-port.png", "Portfolio: by currency, kind of asset and bucket"),
-        ("Is everything in?", "Which statement arrived which month, and what is still to bring.",
+        ("Is everything in?", "Which statements have arrived each month, and what's still missing.",
          "crop-src.png", "Statements: a dot for each month each statement arrived")],
-    banks_lab="What it reads", banks_h="Your bank's own files",
+    banks_lab="Banks it reads", banks_h="Straight from your bank's own files",
     banks=[("Read directly", ["RBC · PDF", "BMO · PDF", "Wealthsimple · exports"]),
-           ("Through an OFX or QFX download", ["TD", "Scotiabank", "CIBC", "Tangerine", "most other banks"]),
-           ("Anything else", "A balance you type once a month, read off the bank's app.")],
-    banks_more="Every bank and broker →", banks_doc="docs/banks.md",
+           ("Via an OFX or QFX download", ["TD", "Scotiabank", "CIBC", "Tangerine", "most other banks"]),
+           ("Anything else", "Type in the balance once a month, from your bank's app.")],
+    banks_more="See every bank and broker →", banks_doc="docs/banks.md",
     faq_lab="Questions", faq_h="Before you try it",
-    faq=[("Is it free?", "Yes, free and open source (MIT), nothing to subscribe to. There is no company "
-          "server behind it: the app runs on your Mac, so there is no account and nothing of yours for "
-          "anyone to sell. The code is public, so anyone can check."),
+    faq=[("Is it free?", "Yes — free and open source (MIT), with nothing to subscribe to. There's no "
+          "company server behind it: the app runs on your Mac, so there's no account and nothing of "
+          "yours to sell. The code is public, so anyone can check."),
          ("I already track my money in a spreadsheet. Why switch?", "Keep it if it works for you. "
-          "FIRE Toad does the part a spreadsheet leaves to you — typing in every row, sorting it into "
+          "FIRE Toad does the parts a spreadsheet leaves to you — typing in every row, sorting it into "
           "categories, checking it against the bank — and draws the charts. Everything it keeps is "
-          "plain CSV, so your spreadsheet can still read it."),
-         ("Does it connect to my bank?", "No. Once a month you sign in to your bank as you always do "
-          "and download your statements. FIRE Toad never signs in, so it never asks you to log in "
-          "again, and it never sees your bank password."),
-         ("Do I have to categorize everything myself?", "Mostly no. A shop you have filed once is "
-          "filed the same way every time after. Only a shop seen for the first time is asked — one "
-          "tap, with common Canadian chains already filled in for you to confirm, and \"Not sure\" "
-          "is an answer."),
-         ("Where does my data live?", "In a folder on your Mac: plain CSV and JSON files and one page. "
+          "plain CSV, so your spreadsheet can still open it."),
+         ("Does it connect to my bank?", "No. Once a month you sign in to your bank as usual and "
+          "download your statements. FIRE Toad never signs in, so it never makes you log in again — "
+          "and it never sees your bank password."),
+         ("Do I have to categorize everything myself?", "Mostly, no. Once you've categorized a shop, "
+          "it stays that way. Only a shop it hasn't seen before is asked — one tap, with common "
+          "Canadian chains already filled in for you to confirm. \"Not sure\" is an answer too."),
+         ("Where does my data live?", "In a folder on your Mac: plain CSV and JSON files, plus one page. "
           "Nothing is sent anywhere unless you turn on the optional AI suggestions, which send only "
-          "the names of shops. Backing the folder up is yours."),
-         ("Do I need Claude?", "No. The app works on its own. Claude Code is a second way in, for a "
-          "statement no parser reads, money held abroad, or a question in words."),
+          "shop names. Backing up the folder is up to you."),
+         ("Do I need Claude?", "No. The app works on its own. Claude Code is another way to use it — "
+          "for a statement the app can't read, accounts abroad, or a question in plain words."),
          ("Is there a Windows version?", "Not as a download yet. On Windows it runs from Python "
           "(python3 app.py)."),
-         ("My bank is not on the list.", "Download your transactions as OFX or QFX (the Quicken or "
-          "Money choice); most Canadian banks offer it. Failing that, a CSV, or the balance typed once a month.")],
+         ("My bank isn't on the list.", "Download your transactions as OFX or QFX (the Quicken or "
+          "Money option) — most Canadian banks offer it. If yours doesn't, use a CSV, or type in the "
+          "balance once a month.")],
     end_h="Try it on sample data first.",
-    foot=[(GH, "FIRE Toad on GitHub"), (GH + "/blob/main/docs/install.md", "Installing it")],
+    foot=[(GH, "FIRE Toad on GitHub"), (GH + "/blob/main/docs/install.md", "Install guide")],
 )
 
 ZH = dict(
     lang="zh-CN", path="zh/", other="../", other_name="English", other_lang="en",
-    title="FIRE蛙 FIRE Toad — 加拿大的免费记账 app，不用登录银行",
-    desc=("给在加拿大的人的免费开源 Mac app。把 RBC、BMO 或任何银行的对账单放进来，看花了多少、净值多少、"
-          "离财务自由还有几年。不用登录银行，不用注册。"),
+    title="FIRE蛙 FIRE Toad — 加拿大免费记账 app，不用连银行",
+    desc=("免费开源的 Mac 记账 app，为在加拿大生活的人做。放进 RBC、BMO 或其他银行的对账单，就能看到钱花在哪、"
+          "净值多少、还要几年财务自由。不用连银行，也不用注册。"),
     name="FIRE蛙 FIRE Toad",
-    nav=[("#how", "怎么用"), ("#banks", "银行"), ("#faq", "常见问题")],
-    h1="你的钱，一页看完。给在加拿大追求财务自由的人。",
-    lede=("每个月把银行对账单放进一个文件夹。FIRE蛙在你的 Mac 上读取它们，核对每份对账单是否对平，"
-          "给每笔消费归类，再生成一个页面：花了多少、有多少、离财务自由还有几年。"),
-    demo="打开在线 demo", download="下载 Mac 版（免费）",
-    fine=(f"demo 里是 {DEMO['first']} 的钱，一位虚构的、住在{CITY_ZH.get(DEMO['city'], DEMO['city'])}的 {DEMO['age']} 岁上班族。"
-          "什么都不用装（页面是英文的）。app 经过 Apple 签名和公证，有中文和英文，免费开源（MIT）。"),
-    phone="demo 是为电脑屏幕做的；在手机上，可以先看下面的图。",
+    nav=[("#how", "怎么用"), ("#banks", "支持的银行"), ("#faq", "常见问题")],
+    h1="钱花在哪、攒了多少、还要几年财务自由——一页看清。",
+    lede=("每个月把银行对账单放进一个文件夹。FIRE蛙在你的 Mac 上逐份读取、核对金额，把每笔消费分好类，"
+          "生成一页总览：花了多少、有多少、还要几年财务自由。"),
+    demo="看在线演示", download="免费下载 Mac 版",
+    fine=(f"演示里是 {DEMO['first']} 的钱：一位住在{CITY_ZH.get(DEMO['city'], DEMO['city'])}的 {DEMO['age']} 岁上班族，"
+          "人物是虚构的。不用安装，打开就能看（演示页面是英文的）。app 已通过 Apple 签名和公证，支持中英文，免费开源（MIT）。"),
+    phone="演示适合在电脑上看；用手机的话，可以先看下面的截图。",
     hero_alt="FIRE 页：离财务自由大约 29 到 37 年，每月多投一点会怎样",
-    points=[("不登录银行。", "对账单你自己下载，app 在你的电脑上读，什么都不上传，也不用注册。"),
-            ("每个数都对得上。", "一份对账单要和它自己印的合计对平，才会收进来。"),
-            ("不只是记账，还有 FIRE 计划。", "离财务自由几年、钱能撑多久；TFSA、RRSP、FHSA 和国外的钱，都算进一个净值。")],
-    how_lab="怎么用", how_h="每个月，四步",
-    steps=[("拿文件", "从银行网站下载上个月的对账单。app 会告诉你还差哪几份、每份怎么拿。"),
-           ("导入", "把文件放进来。每份都在你的 Mac 上读，对平了才收。"),
-           ("归类", "程序定不了的才问你：第一次出现的商户、没有名字的转账。点一下就好，下次记得。"),
-           ("完成", "你的页面带上新的一个月，重新生成。")],
-    panel_img="panel-zh.png", panel_alt="app 里的月度导入，第 3 步：一笔没写是谁的 $200 e-Transfer 是什么？",
-    q_lab="它回答什么",
-    qs=[("我现在在哪？", "所有账户、所有币种算在一起的净值：每一行是这部分钱的用途，色条按多容易拿到上色。",
-         "crop-home.png", "首页：净值 $65,655、离财务自由几年、这个月的投资和花销"),
-        ("钱花到哪去了？", "这一年按分类、按月看，还有特别的地方：最大的分类、一笔订阅、花得最多的月。",
-         "crop-year.png", "这一年：按分类的花销和特别的地方"),
-        ("我有什么？", "投资组合按币种、资产类别和你自己的分组怎么分。",
+    points=[("不用连银行。", "对账单你自己下载，app 在你的电脑上读取，不上传任何东西，也不用注册。"),
+            ("每个数都对得上。", "每份对账单都要和它自己印的合计一致，才会收进来。"),
+            ("不只是记账，还有 FIRE 计划。", "还要几年财务自由、退休后钱能撑多久；TFSA、RRSP、FHSA 和海外账户，都算进同一个净值。")],
+    how_lab="怎么用", how_h="每个月，四步搞定",
+    steps=[("下载文件", "从网银下载上个月的对账单。app 会提醒你还差哪几份、每份去哪下载。",
+            "app 里的第 1 步：每个账户还差什么，文件夹里已经有哪些文件"),
+           ("导入", "把文件拖进来。每份都在你的 Mac 上读取，金额核对无误才收进来。",
+            "第 2 步：写进去之前，先告诉你会加进来什么"),
+           ("归类", "只有程序判断不了的才问你，比如第一次出现的商户、没写付款人的转账。点一下就好，下次自动记住。",
+            "第 3 步：一次只问一件事，这里是一笔没写付款人的转账"),
+           ("完成", "你的总览页加上新的一个月，自动更新。",
+            "第 4 步：这次改了什么，净值前后各是多少")],
+    panel="panel-zh",
+    q_lab="它能回答",
+    qs=[("我现在有多少家底？", "所有账户、所有币种合在一起的净值：每一行是这笔钱的用途，色条的颜色表示取用有多方便。",
+         "crop-home.png", "首页：净值、还要几年财务自由、这个月的投资和花销"),
+        ("钱都花到哪了？", "按分类、按月份看一整年，并标出值得注意的：最大的分类、订阅、花得最多的月份。",
+         "crop-year.png", "这一年：按分类的花销和值得注意的地方"),
+        ("我的投资怎么分布？", "投资组合按币种、资产类别和你自己的分组拆开看。",
          "crop-port.png", "投资组合：按币种、资产类别和分组"),
-        ("都到齐了吗？", "哪份对账单哪个月到了，还差哪些。",
+        ("对账单都齐了吗？", "每份对账单哪个月到了、还差哪些，一目了然。",
          "crop-src.png", "对账单：每份每个月到了就是一个点")],
-    banks_lab="能读什么", banks_h="银行自己给的文件",
-    banks=[("直接读", ["RBC · PDF", "BMO · PDF", "Wealthsimple · 导出"]),
-           ("用 OFX 或 QFX 下载", ["TD", "Scotiabank", "CIBC", "Tangerine", "大多数其他银行"]),
-           ("别的", "每月从银行 app 里看一眼余额，填一次。")],
-    banks_more="每家银行和券商 →", banks_doc="docs/zh/banks.md",
-    faq_lab="常见问题", faq_h="试之前想知道的",
-    faq=[("免费吗？", "免费，开源（MIT），没有订阅。背后没有公司的服务器：app 在你的 Mac 上跑，不用注册，"
-          "也就没有你的东西可以拿去卖。代码是公开的，谁都能查。"),
-         ("我已经在用表格记账了，为什么要换？", "用得顺手就接着用。表格要你自己做的那部分，一行行录、"
-          "一笔笔分类、跟银行对数，FIRE蛙替你做，图也画好。它存的都是普通的 CSV 文件，你的表格照样能读。"),
-         ("要连我的银行吗？", "不连。一个月一次，你照常登录网银、下载对账单。FIRE蛙从不登录，所以不会叫你"
-          "一遍遍重新验证，也从来见不到你的银行密码。"),
-         ("分类要我自己一条条弄吗？", "基本不用。你归过一次的店，以后每次都照样归。只有第一次见到的店才会"
-          "问你，点一下就行；常见的加拿大连锁店已经替你填好，你确认就行。「不确定」也算回答。"),
-         ("数据放在哪？", "你 Mac 上的一个文件夹里：普通的 CSV、JSON 文件和一个页面。除非你打开可选的 AI 建议"
-          "（只发送商户名），什么都不会发出去。文件夹要你自己备份。"),
-         ("要用 Claude 吗？", "不用。app 自己就能用。Claude Code 是另一种用法，适合解析器读不了的对账单、国外的钱，"
-          "或者想用一句话问。"),
+    banks_lab="支持哪些银行", banks_h="直接用银行提供的文件",
+    banks=[("直接读取", ["RBC · PDF", "BMO · PDF", "Wealthsimple · 导出"]),
+           ("下载成 OFX 或 QFX 格式", ["TD", "Scotiabank", "CIBC", "Tangerine", "大多数其他银行"]),
+           ("其他", "每月看一眼银行 app 里的余额，手动填一次。")],
+    banks_more="查看所有银行和券商 →", banks_doc="docs/zh/banks.md",
+    faq_lab="常见问题", faq_h="试用之前，你可能想知道",
+    faq=[("免费吗？", "免费、开源（MIT），没有订阅。背后没有公司服务器：app 在你的 Mac 上运行，不用注册，"
+          "也就没有你的数据可以拿去卖。代码公开，谁都可以检查。"),
+         ("我已经在用表格记账了，为什么要换？", "用得顺手就继续用。表格里要你亲手做的事——一行行录入、"
+          "一笔笔分类、和银行对账——FIRE蛙替你做，图表也画好了。数据都存成普通的 CSV 文件，你的表格照样能打开。"),
+         ("需要连接我的银行吗？", "不需要。每月一次，你像平时一样登录网银、下载对账单。FIRE蛙从不登录银行，"
+          "所以不会让你反复验证，也永远拿不到你的银行密码。"),
+         ("分类要我一条条自己弄吗？", "基本不用。归过一次类的商户，之后都会自动归到同一类。只有第一次出现的商户才会"
+          "问你，点一下就行；常见的加拿大连锁店已经预先填好，你确认一下即可。选「不确定」也可以。"),
+         ("数据存在哪里？", "存在你 Mac 上的一个文件夹里：普通的 CSV、JSON 文件和一个页面。除非你开启可选的 AI 建议"
+          "（只发送商户名称），否则什么都不会发出去。文件夹需要你自己备份。"),
+         ("需要用 Claude 吗？", "不需要，app 可以单独使用。Claude Code 是另一种用法，适合处理 app 读不了的对账单、"
+          "海外账户，或者想直接用一句话提问。"),
          ("有 Windows 版吗？", "还没有安装包。在 Windows 上可以用 Python 运行（python3 app.py）。"),
-         ("我的银行不在上面。", "把交易下载成 OFX 或 QFX（选 Quicken 或 Money）；加拿大大多数银行都有。"
-          "实在没有，就用 CSV，或者每月填一次余额。")],
-    end_h="先用示例数据看看。",
-    foot=[(GH, "GitHub 上的 FIRE蛙"), (GH + "/blob/main/docs/zh/install.md", "怎么安装")],
+         ("我的银行不在列表里怎么办？", "把交易记录下载成 OFX 或 QFX 格式（选 Quicken 或 Money 那一项），"
+          "加拿大大多数银行都支持。实在不行，也可以用 CSV，或者每月手动填一次余额。")],
+    end_h="先用示例数据试试看。",
+    foot=[(GH, "FIRE蛙的 GitHub"), (GH + "/blob/main/docs/zh/install.md", "安装说明")],
 )
 
 CSS = """
-:root { --page:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink-2:#52514e; --muted:#75736d;
-        --grid:#e6e4de; --border:rgba(11,11,11,.10); --pill:#efeeea; --ok:#1e7a46; }
+/* Warm grey (2026-11-17, user 001 chose it from three greys): the page and its cards a shade warmer
+   than the app's white, so the screenshots sit on it like paper; one deep warm grey for the main
+   button, the step numbers and the closing band. Every text colour is 4.5:1 or more on --page. */
+:root { --page:#eeece8; --surface:#f7f6f3; --ink:#2e2c29; --ink-2:#5c5853; --muted:#6b665f;
+        --grid:#dcd8d1; --border:rgba(46,44,41,.12); --pill:#e2ded7; --ok:#1e7a46;
+        --btn:#4d4842; --btn-hover:#3d3934; --band:#3a3733; }
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; }
 body { margin:0; background:var(--page); color:var(--ink);
@@ -178,7 +190,7 @@ body { margin:0; background:var(--page); color:var(--ink);
 a { color:inherit; }
 .wrap { max-width:1120px; margin:0 auto; padding:0 24px; }
 @media (max-width:600px) { .wrap { padding:0 16px; } }
-.top { position:sticky; top:0; z-index:5; background:rgba(249,249,247,.92); backdrop-filter:blur(8px);
+.top { position:sticky; top:0; z-index:5; background:rgba(238,236,232,.92); backdrop-filter:blur(8px);
        border-bottom:1px solid var(--border); }
 .top .wrap { display:flex; align-items:center; gap:22px; height:60px; }
 .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; text-decoration:none; }
@@ -195,15 +207,15 @@ h1 { font-size:clamp(30px,3.3vw,44px); line-height:1.1; letter-spacing:-.025em; 
 .lede { color:var(--ink-2); font-size:18px; margin:0 0 26px; max-width:34em; }
 .actions { display:flex; flex-wrap:wrap; gap:10px; }
 .btn { display:inline-block; border-radius:9px; padding:12px 18px; font-size:16px; font-weight:600; text-decoration:none; }
-.primary { background:var(--ink); color:#fff; }
-.primary:hover { background:#2b2b2a; }
+.primary { background:var(--btn); color:#fff; }
+.primary:hover { background:var(--btn-hover); }
 .secondary { background:var(--pill); color:var(--ink); }
-.secondary:hover { background:#e4e2dc; }
+.secondary:hover { background:var(--grid); }
 .fine { color:var(--muted); font-size:14px; margin:14px 0 0; max-width:36em; }
 .phone { display:none; }
 @media (max-width:799px) { .phone { display:block; } }
 .shot { margin:0; background:var(--page); border:1px solid var(--border); border-radius:14px; overflow:hidden;
-        box-shadow:0 1px 2px rgba(11,11,11,.04), 0 12px 32px rgba(11,11,11,.07); }
+        box-shadow:0 1px 2px rgba(46,44,41,.05), 0 12px 32px rgba(46,44,41,.09); }
 .shot img { display:block; width:100%; height:auto; }
 .points { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:0; padding:0; list-style:none; }
 @media (max-width:760px) { .points { grid-template-columns:1fr; } }
@@ -212,14 +224,15 @@ h1 { font-size:clamp(30px,3.3vw,44px); line-height:1.1; letter-spacing:-.025em; 
 .points span { color:var(--ink-2); font-size:15px; }
 section { padding:72px 0 0; scroll-margin-top:60px; }
 h2 { font-size:clamp(24px,3vw,32px); letter-spacing:-.015em; line-height:1.2; margin:0 0 28px; }
-.how { display:grid; grid-template-columns:4fr 7fr; gap:40px; align-items:start; }
-@media (max-width:980px) { .how { grid-template-columns:1fr; } }
-.steps { margin:0; padding:0; list-style:none; counter-reset:s; }
-.steps li { counter-increment:s; position:relative; padding:0 0 22px 44px; }
-.steps li::before { content:counter(s); position:absolute; left:0; top:0; width:28px; height:28px; border-radius:50%;
-                    background:var(--ink); color:#fff; font-weight:700; font-size:14px; display:flex;
+.steps { display:grid; grid-template-columns:1fr 1fr; gap:48px 40px; align-items:start;
+         margin:0; padding:0; list-style:none; counter-reset:s; }
+@media (max-width:760px) { .steps { grid-template-columns:1fr; gap:40px; } }
+.steps li { counter-increment:s; }
+.steps .st { position:relative; padding:0 0 18px 44px; min-height:92px; }
+@media (max-width:760px) { .steps .st { min-height:0; } }
+.steps .st::before { content:counter(s); position:absolute; left:0; top:0; width:28px; height:28px; border-radius:50%;
+                    background:var(--btn); color:#fff; font-weight:700; font-size:14px; display:flex;
                     align-items:center; justify-content:center; }
-.steps li:not(:last-child)::after { content:""; position:absolute; left:13.5px; top:32px; bottom:4px; width:1px; background:var(--grid); }
 .steps b { display:block; font-size:17px; margin:2px 0 4px; }
 .steps span { color:var(--ink-2); font-size:15px; }
 .qs { display:grid; gap:56px; }
@@ -242,11 +255,11 @@ h2 { font-size:clamp(24px,3vw,32px); letter-spacing:-.015em; line-height:1.2; ma
 @media (max-width:760px) { .faq { grid-template-columns:1fr; } }
 .faq dt { font-weight:700; font-size:17px; margin:0 0 6px; }
 .faq dd { margin:0; color:var(--ink-2); font-size:15px; }
-.end { margin:88px 0 0; background:var(--ink); color:#fff; border-radius:18px; padding:44px 40px;
+.end { margin:88px 0 0; background:var(--band); color:#fff; border-radius:18px; padding:44px 40px;
        display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:20px; }
 .end h2 { margin:0; color:#fff; font-size:clamp(22px,2.6vw,28px); }
 .end .primary { background:#fff; color:var(--ink); }
-.end .primary:hover { background:#efeeea; }
+.end .primary:hover { background:var(--pill); }
 .end .secondary { background:rgba(255,255,255,.12); color:#fff; }
 .end .secondary:hover { background:rgba(255,255,255,.2); }
 @media (max-width:600px) { .end { padding:28px 20px; } }
@@ -263,10 +276,11 @@ def page(t, base):
           "operatingSystem": "macOS", "applicationCategory": "FinanceApplication",
           "description": t["desc"], "url": url, "downloadUrl": DOWNLOAD, "inLanguage": t["lang"],
           "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CAD"}}
+    panel = lambda i: f"{t['panel']}-{i}.png"   # the app's monthly panel at step i, taken by tools/demo.py
     img = lambda f, alt, lazy=True: (f'<img src="{up}screens/{f}" alt="{e(alt)}"'
                                      + (' loading="lazy"' if lazy else "") + ">")
-    btns = (f'<a class="btn primary" href="{up}dashboard.html">{e(t["demo"])}</a>'
-            f'<a class="btn secondary" href="{DOWNLOAD}">{e(t["download"])}</a>')
+    btns = (f'<a class="btn primary" href="{DOWNLOAD}">{e(t["download"])}</a>'
+            f'<a class="btn secondary" href="{up}dashboard.html">{e(t["demo"])}</a>')
     out = [f"""<!doctype html>
 <!-- Built by docs/site/make.py; edit that, not this. -->
 <html lang="{t['lang']}">
@@ -316,10 +330,9 @@ def page(t, base):
   <section id="how">
     <p class="lab">{e(t['how_lab'])}</p>
     <h2>{e(t['how_h'])}</h2>
-    <div class="how">
-      <ol class="steps">{''.join(f'<li><b>{e(a)}</b><span>{e(b)}</span></li>' for a, b in t['steps'])}</ol>
-      <figure class="shot">{img(t['panel_img'], t['panel_alt'])}</figure>
-    </div>
+    <ol class="steps">{''.join(f'<li><div class="st"><b>{e(a)}</b><span>{e(b)}</span></div>'
+                               f'<figure class="shot">{img(panel(i), alt)}</figure></li>'
+                               for i, (a, b, alt) in enumerate(t['steps'], 1))}</ol>
   </section>
 
   <section>

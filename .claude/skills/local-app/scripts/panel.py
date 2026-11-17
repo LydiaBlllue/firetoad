@@ -24,6 +24,7 @@ The ids step1 … step5 stay in the markup: they are the five states `current_st
 """
 import html
 import json
+import re
 import os
 import sys
 
@@ -35,6 +36,7 @@ import ai  # noqa: E402  which model is set, for the settings card
 import categories  # noqa: E402
 import confirm  # noqa: E402  INCOMING: what money in from no named sender can be
 import preflight  # noqa: E402  names the files in inbox/
+import layout  # noqa: E402  where a register file lives
 from strings import t, months, js_strings, wizard_strings  # noqa: E402
 try:
     from parsers import support  # noqa: E402  each bank's own download path, in both languages
@@ -233,6 +235,9 @@ def say(lang, it):
     English sentence when there are none (items from before the facts, or kinds without them)."""
     f = it.get("facts") or {}
     k = f.get("kind")
+    # a date is said the way the cards say it, with its weekday: "Tue Aug 11", not "2026-08-11"
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(f.get("date") or "")):
+        f = dict(f, date=wday(lang, f["date"]))
     if k == "credit":
         d = f.get("date") or ""
         if f.get("sender"):
@@ -259,7 +264,23 @@ def option_label(lang, c):
     return t(lang, "opt_" + c) if ("opt_" + c) in __import__("strings").S else c
 
 
-def qdata(q, lang="en"):
+def doc_names(root):
+    """The import names a statement by its document without the number ("Chequing statement to
+    Sep 5"); the panel names it the way step 1 does, number and all ("Chequing 4471"), so a card
+    says which account, not which kind (2026-11-17, the owner: "a specific account or a type?")."""
+    try:
+        reg = json.load(open(layout.path(root, "accounts.json"), encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    out = {}
+    for d in reg.get("documents") or []:
+        k = str(d.get("key") or "")
+        short = re.sub(r"\s*\d+$", "", k)
+        out.setdefault(short, []).append(k)
+    return {short: ks[0] for short, ks in out.items() if len(ks) == 1 and ks[0] != short}
+
+
+def qdata(q, lang="en", names=None):
     """What step 4 draws: every open item with its choices, and the spending totals the Other
     share is computed from. The page groups them — money first, then the merchants with a
     suggestion, then the unknown ones as cards by amount."""
@@ -270,6 +291,9 @@ def qdata(q, lang="en"):
         if it.get("credit") and d.get("suggest"):
             d["suggest"] = confirm.INCOMING.get(d["suggest"], d["suggest"])
         d["text"] = say(lang, it)
+        m = re.match(r"^(.*) statement to ", str(it.get("source") or ""))
+        if m and (names or {}).get(m.group(1)):
+            d["acct"] = names[m.group(1)]
         d["labels"] = {c: option_label(lang, c) for c in d["choices"]}
         d["labels"].update({x: option_label(lang, x) for x in (d.get("default"), d.get("suggest")) if x})
         items.append(d)
@@ -315,6 +339,13 @@ def merchants_list(lang, root):
 
 
 # ---------------------------------------------------------------- step 5
+def wday(lang, iso):
+    """A date with its weekday: "Tue Aug 11" or "8 月 11 日（周二）"."""
+    import datetime as _dt
+    w = t(lang, "q_weekdays").split(",")[_dt.date.fromisoformat(iso).weekday()]
+    return f"{day(lang, iso)}（{w}）" if lang == "zh" else f"{w} {day(lang, iso)}"
+
+
 def day(lang, iso):
     """A date as the panel says it: "Oct 23" or "10 月 23 日"."""
     y, m, d = (int(x) for x in iso.split("-"))
@@ -477,7 +508,7 @@ def render(base, root, st, q, rec, job, held, tool=None, lang="en", first=False)
             "{{BUSY}}": busy,
             "{{SETTINGS}}": e(t(lang, "settings")), "{{MORE}}": e(t(lang, "more_h")),
             "{{JS}}": json.dumps(js_strings(lang), ensure_ascii=False).replace("</", "<\\/"),
-            "{{QDATA}}": json.dumps(qdata(q, lang), ensure_ascii=False).replace("</", "<\\/"),
+            "{{QDATA}}": json.dumps(qdata(q, lang, doc_names(root)), ensure_ascii=False).replace("</", "<\\/"),
             "{{VERSION}}": e((tool or {}).get("version") or "")}
     for k, v in fill.items():
         tpl = tpl.replace(k, v)
