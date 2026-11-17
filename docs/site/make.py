@@ -3,7 +3,8 @@
 
     python3 docs/site/make.py OUT --base https://<owner>.github.io/<repo>
 
-writes OUT/index.html, OUT/zh/index.html, OUT/sitemap.xml and copies the demo
+writes OUT/index.html, OUT/zh/index.html, the stops of "My way to FIRE" (docs/site/path.py) under
+OUT/path/ and OUT/zh/path/, OUT/sitemap.xml and copies the demo
 (dashboards/finance_dashboard.html → OUT/dashboard.html), the logo and docs/screens/ beside them.
 When the site is the whole domain (a custom domain, no /<repo>/ path) it also writes
 OUT/robots.txt naming the sitemap; under a path it does not, because a search engine reads
@@ -20,6 +21,7 @@ import argparse
 import html
 import json
 import os
+import re
 import shutil
 import sys
 from urllib.parse import urlparse
@@ -35,6 +37,8 @@ DOWNLOAD_INTEL = GH + "/releases/latest/download/FIRE-Toad-Intel.dmg"   # from 1
 # The demo's person is the one tools/demo.py invents; the page names her from there.
 sys.path.insert(0, os.path.join(REPO, "tools"))
 from demo import P as DEMO  # noqa: E402
+sys.path.insert(0, HERE)
+import path as road  # noqa: E402  "My way to FIRE": one page a stop, and an index
 CITY_ZH = {"Ottawa": "渥太华", "Toronto": "多伦多", "Vancouver": "温哥华", "Montreal": "蒙特利尔", "Calgary": "卡尔加里"}
 
 EN = dict(
@@ -43,7 +47,7 @@ EN = dict(
     desc=("Free, open-source Mac app for Canadians. Drop in your RBC, BMO or any bank's statements "
           "and see your spending, net worth and years to FIRE. No bank login, no account."),
     name="FIRE Toad",
-    nav=[("#how", "How it works"), ("#banks", "Banks"), ("#faq", "Questions")],
+    nav=[("path/", "My way to FIRE"), ("#how", "How it works"), ("#banks", "Banks"), ("#faq", "Questions")],
     h1="See where your money goes, what you've built, and how many years until work is optional.",
     lede=("Once a month, drop your bank statements into a folder. FIRE Toad reads them on your Mac, "
           "checks that each one adds up, sorts every purchase, and builds one page: what you spent, "
@@ -128,7 +132,7 @@ ZH = dict(
     desc=("免费开源的 Mac 记账 app，为在加拿大生活的人做。放进 RBC、BMO 或其他银行的对账单，就能看到钱花在哪、"
           "净值多少、还要几年财务自由。不用连银行，也不用注册。"),
     name="FIRE蛙 FIRE Toad",
-    nav=[("#how", "怎么用"), ("#banks", "支持的银行"), ("#faq", "常见问题")],
+    nav=[("path/", "我的 FIRE 之路"), ("#how", "怎么用"), ("#banks", "支持的银行"), ("#faq", "常见问题")],
     h1="钱花在哪、攒了多少、还要几年财务自由——一页看清。",
     lede=("每个月把银行对账单放进一个文件夹。FIRE蛙在你的 Mac 上逐份读取、核对金额，把每笔消费分好类，"
           "生成一页总览：花了多少、有多少、还要几年财务自由。"),
@@ -402,9 +406,10 @@ def build(dst, base):
     for t in (EN, ZH):
         with open(os.path.join(dst, t["path"], "index.html"), "w", encoding="utf-8") as f:
             f.write(page(t, base))
+    stops = road.build(dst, base, CSS, REPO, DOWNLOAD)
     with open(os.path.join(dst, "sitemap.xml"), "w", encoding="utf-8") as f:
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-                + "".join(f"  <url><loc>{base}/{p}</loc></url>\n" for p in ("", "zh/", "dashboard.html"))
+                + "".join(f"  <url><loc>{base}/{p}</loc></url>\n" for p in ["", "zh/", "dashboard.html"] + stops)
                 + "</urlset>\n")
     if not urlparse(base).path.strip("/"):
         with open(os.path.join(dst, "robots.txt"), "w", encoding="utf-8") as f:
@@ -412,6 +417,29 @@ def build(dst, base):
     shutil.copy(os.path.join(REPO, "docs", "logo.svg"), dst)
     shutil.copy(os.path.join(REPO, "dashboards", "finance_dashboard.html"), os.path.join(dst, "dashboard.html"))
     shutil.copytree(os.path.join(REPO, "docs", "screens"), os.path.join(dst, "screens"), dirs_exist_ok=True)
+    broken = dead_links(dst)
+    if broken:
+        raise SystemExit("links that point nowhere:\n  " + "\n  ".join(broken))
+
+
+def dead_links(dst):
+    """Every relative href and src in the built site that names no file: a page links only to a
+    page that was written (a stop not yet published is never linked)."""
+    bad = []
+    for d, _, files in os.walk(dst):
+        for n in files:
+            if not n.endswith(".html") or n == "dashboard.html":
+                continue
+            src = os.path.join(d, n)
+            for ref in re.findall(r'(?:href|src)="([^"#?]*)', open(src, encoding="utf-8").read()):
+                if not ref or re.match(r"[a-z]+:", ref):
+                    continue
+                target = os.path.normpath(os.path.join(d, ref))
+                if os.path.isdir(target) or ref.endswith("/"):
+                    target = os.path.join(target, "index.html")
+                if not os.path.exists(target):
+                    bad.append(f"{os.path.relpath(src, dst)} → {ref}")
+    return bad
 
 
 if __name__ == "__main__":
