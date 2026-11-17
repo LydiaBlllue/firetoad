@@ -14,6 +14,11 @@
   the demo's data at every release.
 - **The import panel counts in plain words**: "1 question", "3 statements", and the questions are
   in step 3, where they are.
+- **A question in step 3 is easier to read**: a purchase is said once, as a sentence ("$50.16 paid
+  on Sat Aug 8 with your MasterCard 5518.", the account named as step 1 names it), a shop's card asks "What did you buy here?", what else was paid that day sits
+  quietly below it, a transfer's day reads "Tue Aug 11", and "for now" is a whole sentence: "Until
+  you answer, it counts as Other income".
+- **Step 2 names the files in Chinese** when the panel is in Chinese, as step 3 already did.
 
 ## 1.0.7 — 2026-11-16
 
