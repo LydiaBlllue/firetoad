@@ -231,11 +231,13 @@ h1 { font-size:clamp(30px,3.3vw,44px); line-height:1.1; letter-spacing:-.025em; 
 section { padding:72px 0 0; scroll-margin-top:60px; }
 h2 { font-size:clamp(24px,3vw,32px); letter-spacing:-.015em; line-height:1.2; margin:0 0 28px; }
 /* Once a month, three things to do (2026-11-17, user 001): what you do is one short line, what the
-   app does the longer one under it; then the result, which asks nothing of you. */
-.walk { display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; margin:0; padding:0; list-style:none; }
-@media (max-width:980px) { .walk { grid-template-columns:1fr; } }
-.wk { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px 22px 20px;
-      display:flex; flex-direction:column; gap:16px; }
+   app does the longer one under it; then the result, which asks nothing of you. One step a row, the
+   words beside the whole picture: in two columns the panel's tall and short views left holes. */
+.walk { display:grid; grid-template-columns:1fr; gap:20px; margin:0; padding:0; list-style:none; }
+.wk { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:28px;
+      display:grid; grid-template-columns:5fr 6fr; gap:20px 40px; align-items:center; }
+@media (max-width:980px) { .wk { grid-template-columns:1fr; padding:22px; } }
+.wk .txt { display:flex; flex-direction:column; gap:16px; }
 .wk h3 { display:flex; align-items:center; gap:12px; font-size:20px; margin:0; letter-spacing:-.01em; }
 .wk h3 i { flex:none; width:28px; height:28px; border-radius:50%; background:var(--btn); color:#fff; font-style:normal;
            font-size:14px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
@@ -345,11 +347,11 @@ def page(t, base):
   <section id="how">
     <p class="lab">{e(t['how_lab'])}</p>
     <h2>{e(t['how_h'])}</h2>
-    <ol class="walk">{''.join(f'<li class="wk"><h3><i>{i}</i>{e(a)}</h3><dl class="who"><dt>{e(t["you"])}</dt>'
-                              f'<dd class="you">{e(y)}</dd><dt>{e(t["app"])}</dt><dd>{e(d)}</dd></dl>'
+    <ol class="walk">{''.join(f'<li class="wk"><div class="txt"><h3><i>{i}</i>{e(a)}</h3><dl class="who"><dt>{e(t["you"])}</dt>'
+                              f'<dd class="you">{e(y)}</dd><dt>{e(t["app"])}</dt><dd>{e(d)}</dd></dl></div>'
                               f'<figure class="pic">{img(panel(i), alt)}</figure></li>'
-                              for i, (a, y, d, alt) in enumerate(t['steps'], 1))}<li class="wk then"><h3><i>✓</i>{e(t['then_h'])}</h3>
-      <p>{e(t['then_p'])}</p><figure class="pic">{img(panel(4), t['then_alt'])}</figure></li></ol>
+                              for i, (a, y, d, alt) in enumerate(t['steps'], 1))}<li class="wk then"><div class="txt"><h3><i>✓</i>{e(t['then_h'])}</h3>
+      <p>{e(t['then_p'])}</p></div><figure class="pic">{img(panel(4), t['then_alt'])}</figure></li></ol>
   </section>
 
   <section>
