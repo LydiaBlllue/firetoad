@@ -214,8 +214,10 @@
 - **The headline number is Portfolio**, money that is actually invested: the `grow` accounts. It
   is the group's only denominator; dry powder is measured on its home-currency part, and holdings
   in other currencies are listed separately.
-- **Portfolio**: the stat cards, the three ways the portfolio splits, and the exchange-rate card
-  that goes with the by-currency split.
+- **Portfolio**: the stat cards, the three ways the portfolio splits — by currency, by kind of
+  asset, by account (each as the broker names it, a fund abroad by its institution; 1.0.9, in place
+  of the buckets) — and the exchange-rate card that goes with the by-currency split. The dry-powder
+  card is there only when a bucket has a target band.
 - **Performance**: *Against \<benchmark\>* — the same money bought into the fund `rules.json`
   `benchmark` names, on the days it actually went in, drawn as that fund's daily line against the
   growth accounts' snapshots, dashed marks where money moved; three stat cards (your growth

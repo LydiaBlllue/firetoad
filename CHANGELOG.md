@@ -16,6 +16,9 @@
 - **Plainer words**: "Cash at the broker", not "Idle cash"; a transfer goes to "an account you
   haven't added", not one "not in the register". With no investing bucket set, Home and Portfolio
   no longer show "Dry powder 0.0%" beside the cash.
+- **Portfolio splits by account**: the third ring shows which account the money sits in, as your
+  broker names it, in place of the buckets.
+- **A ring with one slice is drawn whole**: a portfolio all in one currency showed an empty ring.
 
 ## 1.0.8 — 2026-11-17
 

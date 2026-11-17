@@ -2316,7 +2316,12 @@ function drawDonut(svgId, centerId, legendId, rows, totalVal, emptyMsg, withPct,
     const large = (a1-a0) > Math.PI ? 1 : 0;
     const x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
     const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
-    paths += '<path d="M '+x0+' '+y0+' A '+r+' '+r+' 0 '+large+' 1 '+x1+' '+y1+'" fill="none" stroke="'+seg.col+'" stroke-width="'+sw+'" data-i="'+i+'"/>';
+    // one slice is the whole ring: an arc that ends where it starts draws nothing, so a portfolio
+    // all in one currency showed an empty ring (2026-11-17); two half arcs make the circle
+    const xm = cx + r*Math.cos(a0 + Math.PI), ym = cy + r*Math.sin(a0 + Math.PI);
+    const d = rows.length === 1 ? 'M '+x0+' '+y0+' A '+r+' '+r+' 0 1 1 '+xm+' '+ym+' A '+r+' '+r+' 0 1 1 '+x0+' '+y0
+                                : 'M '+x0+' '+y0+' A '+r+' '+r+' 0 '+large+' 1 '+x1+' '+y1;
+    paths += '<path d="'+d+'" fill="none" stroke="'+seg.col+'" stroke-width="'+sw+'" data-i="'+i+'"/>';
     a += span;
   });
   svg.innerHTML = paths;
@@ -3771,7 +3776,7 @@ const IV = (function(){
   const PRIMARY  = BANDED[0] || null;
   const DRY      = PRIMARY ? (PRIMARY.symbols||[]) : [];
   FGN.rows = (FGN.funds||[]).map(f => ({
-    account:FGN.label + " \u00b7 " + f.inst, sym:f.sym, name:f.name, fgn:f.amount, amount:f.amount, qty:null, cn:1, class:f.class,
+    account:FGN.label + " \u00b7 " + f.inst, inst:f.inst, sym:f.sym, name:f.name, fgn:f.amount, amount:f.amount, qty:null, cn:1, class:f.class,
     mv:+(f.amount*FGN.cadPerUnit).toFixed(2), bv:+((f.amount-f.gain)*FGN.cadPerUnit).toFixed(2)
   }));
   FGN.amount = (FGN.funds||[]).reduce((s,f)=>s+f.amount,0);
@@ -3836,14 +3841,12 @@ const IV = (function(){
     ]);
   }
 
-  // ----- structure: the CAD side only, one denominator inside this chart
-  const BCOL=["#2a78d6","#008300","#eda100","#b7bfba","#7a5cd6","#c96f9b"];
-  const segs=[...BUCKETS.map((b,i)=>({k:b.name.split(" \u00b7 ")[0],v:B[b.key],c:BCOL[i%BCOL.length]})),
-              {k:"Cash at the broker",v:idle,c:"#d8dcd9"}];
+  // ----- structure: three cuts of the whole portfolio
   function renderBarbell(){
     // Three cuts of the same portfolio (the owner, 2026-10-26): by the currency it is held in, by
-    // what kind of asset it is, and by the buckets your rules are written in. Until then there was
-    // only the third, titled "the Canadian side" though more than half of it was in US dollars.
+    // what kind of asset it is, and by the account it sits in — each account as the broker names
+    // it, a fund abroad by the institution that holds it (2026-11-17, the owner: "by account /
+    // broker", in place of the buckets, which are a rule of one owner's and not where money is).
     const port = positions.filter(p => !EARMARK.includes(p.account));
     const cut = (keyOf, order) => {
       const m = {};
@@ -3857,7 +3860,13 @@ const IV = (function(){
       [{id:"stocks", n:"Stocks", c:"#2a78d6"}, {id:"bonds", n:"Bonds & T-bills", c:"#eda100"},
        {id:"cash", n:"Cash", c:"#b7bfba"}, {id:"gold", n:"Gold", c:"#c98500"}, {id:"crypto", n:"Crypto", c:"#e87ba4"},
        {id:"none", n:"Not classified", c:"#d8dcd9"}]);
-    const byBucket = segs.filter(g => g.v > 0).map(g => ({k:g.k, v:g.v, col:g.c}));
+    const ACOL = ["#2a78d6","#1baf7a","#eda100","#7a5cd6","#c96f9b","#b7bfba"];
+    const byAcctM = {};
+    port.forEach(p => { const k = p.cn ? (p.inst || FGN.label) : p.account; byAcctM[k] = (byAcctM[k] || 0) + p.mv; });
+    let byAcct = Object.entries(byAcctM).filter(x => x[1] > 0).sort((a,b) => b[1] - a[1]);
+    // six slices at most: the rest are one, named for how many they are
+    if(byAcct.length > 6){ const rest = byAcct.slice(5); byAcct = byAcct.slice(0, 5).concat([["The other " + rest.length + " accounts", rest.reduce((s,x) => s + x[1], 0)]]); }
+    byAcct = byAcct.map((x, i) => ({k:x[0], v:x[1], col:ACOL[i % ACOL.length]}));
     const block = (id, title, centre) =>
       `<div><div class="sub">${title}</div><div class="donut-wrap"><div class="donut-box"><svg id="${id}" viewBox="0 0 170 170" width="170" height="170"></svg>`
       + `<div class="donut-center"><div class="t num" id="${id}T"></div><div class="s">${centre}</div></div></div>`
@@ -3867,14 +3876,14 @@ const IV = (function(){
       `<div class="split3">`
       + block("spCur", "By currency", "portfolio")
       + block("spType", "By kind of asset", "portfolio")
-      + block("bbDonut", "By " + term("bucket", "bucket"), "at " + DATA.broker)
+      + block("bbDonut", "By account", "portfolio")
       + `</div>`
       + (unclassed.length ? noteBox(unclassed.join(", ") + (unclassed.length > 1 ? " have" : " has") + " no kind of asset yet, so "
           + (unclassed.length > 1 ? "they sit" : "it sits") + " under Not classified. Say what " + (unclassed.length > 1 ? "they hold" : "it holds") + " and it moves.") : "");
     const empty = "Nothing invested yet. Your first broker report fills this.";
     drawDonut("spCur", "spCurT", "spCurL", byCur, portfolio, empty, true);
     drawDonut("spType", "spTypeT", "spTypeL", byType, portfolio, empty, true);
-    drawDonut("bbDonut", "bbDonutT", "bbDonutL", byBucket, cadInv, empty, true);
+    drawDonut("bbDonut", "bbDonutT", "bbDonutL", byAcct, portfolio, empty, true);
   }
 
 
