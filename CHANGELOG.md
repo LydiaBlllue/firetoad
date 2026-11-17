@@ -2,6 +2,9 @@
 
 ## 1.0.9 — unreleased
 
+- **An app for Intel Macs, and older macOS for both**: the download for Apple silicon now opens on
+  macOS 11 or later (it needed macOS 14), and a second download, for Intel Macs, on macOS 10.15 or
+  later. Each is built on the same Python 3.12, not on whatever Python the building Mac has.
 - **The front page, README and install guide say which Macs it runs on**: Apple silicon (M1 or
   newer), with how to check; Intel Macs and Windows run it from Python.
 - **The front page says what a month asks of you**: three things to do — get the files, import,

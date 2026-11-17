@@ -30,4 +30,5 @@ findata.replaced/
 
 # build/build.py: PyInstaller work and the built app
 build/work/
+build/work-intel/
 dist/
