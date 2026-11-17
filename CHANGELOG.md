@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.9 — unreleased
+## 1.0.9 — 2026-11-17
 
 - **An app for Intel Macs, and older macOS for both**: the download for Apple silicon now opens on
   macOS 11 or later (it needed macOS 14), and a second download, for Intel Macs, on macOS 10.15 or
