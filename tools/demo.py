@@ -605,12 +605,11 @@ def screenshots(out):
 # and dropped into inbox/ as the bank would send it, the way the selftest does — so each view
 # shows what it really shows: the files to get, what the import will add, what it asks, what
 # changed. The copy's "today" is the demo's own date, so "still needed" does not grow with the
-# calendar. panel.png and panel-zh.png (README) are the third view.
+# calendar. Only the view's card is taken, not the "Step N of 4" bar above it: the front page
+# says three things to do and a result (2026-11-17). panel.png and panel-zh.png (README) are the third view.
 PANEL_LANGS = (("en", "panel"), ("zh", "panel-zh"))
-PANEL_BOX = """() => { const top = document.getElementById('bars').getBoundingClientRect();
-  const card = [...document.querySelectorAll('.card.view')].find(c => c.offsetParent !== null).getBoundingClientRect();
-  const w = document.querySelector('.wrap').getBoundingClientRect();
-  return [w.x - 12, top.y - 6, w.width + 24, card.bottom - top.y + 18]; }"""
+PANEL_BOX = """() => { const c = [...document.querySelectorAll('.card.view')].find(c => c.offsetParent !== null).getBoundingClientRect();
+  return [c.x, c.y, c.width, c.height]; }"""
 
 
 def panel_shots(out, dst, browser):
