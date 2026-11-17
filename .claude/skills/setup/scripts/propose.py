@@ -114,6 +114,7 @@ def propose(root, inbox):
     files = sorted(f for f in os.listdir(inbox) if f not in IGNORE and not f.startswith("."))
     seen = []                       # what each file was read as, for the report
     stmts = {}                      # (inst, digits) -> the newest statement of that account
+    every = collections.defaultdict(list)   # (inst, digits) -> every statement of it, for averages
     first = {}                      # (inst, digits) -> the earliest month seen
     holdings = activities = None
     images, unknown, by_hand = [], [], []
@@ -137,6 +138,7 @@ def propose(root, inbox):
                 k = (inst, part["account"])
                 part = dict(part, _file=f, _inst=inst)
                 moves += part["rows"]
+                every[k].append(part)
                 if k not in stmts or part["period"]["to"] > stmts[k]["period"]["to"]:
                     stmts[k] = part
                 first[k] = min(first.get(k, part["period"]["to"][:7]), part["period"]["to"][:7])
@@ -172,6 +174,7 @@ def propose(root, inbox):
                             _nodigits=not named)
                 k = (inst, digits)
                 moves += part["rows"]
+                every[k].append(part)
                 if k not in stmts or part["period"]["to"] > stmts[k]["period"]["to"]:
                     stmts[k] = part
                 first[k] = min(first.get(k, part["period"]["to"][:7]), part["period"]["to"][:7])
@@ -194,6 +197,7 @@ def propose(root, inbox):
                 part = dict(part, parser="ofx", _file=f, _inst="OFX", _ofx=True,
                             closing=-part["closing"] if card else part["closing"])   # a card: owed, positive
                 moves += part["rows"]
+                every[k].append(part)
                 stmts[k] = part
                 first[k] = part["period"]["to"][:7]
                 seen.append((f, "an OFX download", f"{part['kind']} {part['cur']} …{part['account'][-4:]}, "
@@ -360,26 +364,45 @@ def propose(root, inbox):
                                                   f"Is {money(plan['invest'])} a month your standing investment?", "suggest": plan["invest"]})
     if "invest" not in plan:
         questions.append({"id": "invest", "q": "How much do you move to your broker each month?"})
-    spend = 0.0
-    for (inst, digits), s in stmts.items():
-        if (s.get("kind") or "") in scaffold.DEBT_KINDS:
-            rows = [r for r in s["rows"] if r["amount"] < 0 and not CARD_CREDIT.search(r["description"])]
-            # a PDF statement is one month; an OFX or CSV download can span many — the everyday
-            # figure is one month's, the last full one (nine months of purchases were offered as
-            # the monthly amount in the first simulation of an OFX setup, 2026-11-07)
-            if s.get("_ofx") or s.get("_csv"):
-                by_month = collections.defaultdict(float)
-                for r in rows:
-                    by_month[r["date"][:7]] += -r["amount"]
-                months_ = sorted(by_month)
-                pick = months_[-2] if len(months_) >= 2 else (months_[0] if months_ else None)
-                spend += by_month[pick] if pick else 0.0
-            else:
-                spend += sum(-r["amount"] for r in rows)
+    # The everyday figure is a month of card purchases, averaged over every month brought: three
+    # months of statements draft from three, not from the newest one (2026-11-12, user 001). A PDF
+    # statement is one month; an OFX or CSV download can span many, so it is split into calendar
+    # months and its first and last, usually partial, are left out when there are three or more
+    # (nine months of purchases were once offered as the monthly amount, 2026-11-07).
+    spend, n_months = 0.0, 0
+    for k, s in stmts.items():
+        if (s.get("kind") or "") not in scaffold.DEBT_KINDS:
+            continue
+        parts = every.get(k) or [s]
+        rows = {}
+        for part in parts:
+            for r in part["rows"]:
+                if r["amount"] < 0 and not CARD_CREDIT.search(r["description"]):
+                    rows[(r["date"], r["amount"], r["description"])] = r     # a row in two files once
+        if s.get("_ofx") or s.get("_csv"):
+            by_month = collections.defaultdict(float)
+            for r in rows.values():
+                by_month[r["date"][:7]] += -r["amount"]
+            months_ = sorted(by_month)
+            use = months_[1:-1] if len(months_) >= 3 else months_[:1]
+        else:
+            by_month = collections.defaultdict(float)
+            for part in parts:
+                by_month[part["period"]["to"]] += 0.0
+            for r in rows.values():
+                to = min((p["period"]["to"] for p in parts if p["period"]["to"] >= r["date"]), default=max(by_month))
+                by_month[to] += -r["amount"]
+            use = sorted(by_month)
+        if use:
+            spend += sum(by_month[m] for m in use) / len(use)
+            n_months = max(n_months, len(use))
     if spend:
         plan["everyday"] = int(round(spend / 50.0) * 50)
-        src("plan.everyday", f"{money(spend)} of card purchases on the newest statements, rounded")
-        questions.append({"id": "everyday", "q": f"Your cards show {money(spend)} of everyday spending this month. "
+        src("plan.everyday", f"{money(spend)} a month of card purchases, the average of {n_months} month(s), rounded"
+            if n_months > 1 else f"{money(spend)} of card purchases on the newest statements, rounded")
+        questions.append({"id": "everyday", "q": (f"Your cards show about {money(spend)} of everyday spending a month, "
+                                                  f"the average of {n_months} months. " if n_months > 1 else
+                                                  f"Your cards show {money(spend)} of everyday spending this month. ") +
                                                  f"Set the guilt-free everyday amount at {money(plan['everyday'])}?",
                           "suggest": plan["everyday"]})
     else:

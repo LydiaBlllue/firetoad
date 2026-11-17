@@ -825,6 +825,15 @@ const ymLabel = ym => MN[Number(ym.slice(5))-1] + (ym.slice(0,4) !== TODAY.slice
 const pc = (a,b) => b ? (a/b)*100 : 0;
 const cap1 = t => t.charAt(0).toUpperCase()+t.slice(1);
 const ymFull = ym => MN[Number(ym.slice(5))-1] + " " + ym.slice(0,4);
+// What a year's figures cover, said as the months they come from: two months of a year are
+// "Aug–Sep 2026", not "2026" (2026-11-12, user 001: "Income in 2026" over two months read as a
+// year's). A whole year is the year.
+const yrSpan = (yr, months) => {
+  const ms = [...new Set(months)].filter(m => m.startsWith(yr)).sort();
+  if(!ms.length || ms.length >= 12) return yr;
+  const a = MN[Number(ms[0].slice(5))-1], b = MN[Number(ms[ms.length-1].slice(5))-1];
+  return (a === b ? a : a + "\u2013" + b) + " " + yr;
+};
 // A month past what every statement reaches is open for one of two reasons, said apart: the
 // calendar has not finished it, or it has and a statement for it has not come yet.
 const notInYet = ym => {
@@ -1520,6 +1529,9 @@ function bandLab(){
   const b = (RULES.buckets || []).find(x => x.target);
   return !b || b.key === "dry" ? term("dry_powder", "Dry powder") : b.name;
 }
+// The band is the owner's own rule: with no bucket set there is no rule to measure against, and
+// "Dry powder 0.0%" beside the cash at the broker read as a contradiction (2026-11-12, user 001).
+const hasBand = () => (RULES.buckets || []).some(x => Array.isArray(x.target));
 function renderHome(){
   renderNwChart();
   const yr = TODAY.slice(0,4);
@@ -1542,7 +1554,7 @@ function renderHome(){
   const C = {
     port: () => card(term("portfolio", "Portfolio"),
       numx(fmt(PORTFOLIO), split(grow.by), "Every account you hold to grow. Set-aside accounts and bank cash are not in it.", true),
-      !INVEST.investable ? "Nothing invested yet" : bandLab()+" "+INVEST.dryPct+"%"),
+      !INVEST.investable ? "Nothing invested yet" : hasBand() ? bandLab()+" "+INVEST.dryPct+"%" : ""),
     yrs: () => { const S = SAVINGS, t = S.years && yrsTxt(S.years);
       return t ? card("Years to financial independence", "About "+t+" years", "At "+fmt(S.invest)+" a month invested · <a href=\"#\" onclick=\"setPage('fire');return false\">FIRE →</a>") : null; },
     inv: () => card(dep ? "Invested in "+ymLabel(dep.ym) : "Invested this month",
@@ -2176,7 +2188,7 @@ function renderCatPage(){
         diff === null ? "\u2014" : numx((diff >= 0 ? "+" : "\u2212") + fmt(Math.abs(diff)),
           [["This month", fmt(total)], ["A usual month", "\u2212"+fmt(usual)]],
           "A usual month is the average of the "+nWin+" full months before this one. Months you set aside as unusual are left out.", true),
-        diff === null ? "Needs three full months" : diff > 0 && drivers.length ? "Mostly " + drivers.slice(0,2).map(r => catName(r.k)).join(" and ") : "",
+        diff === null ? moreMonths() : diff > 0 && drivers.length ? "Mostly " + drivers.slice(0,2).map(r => catName(r.k)).join(" and ") : "",
         diff !== null && diff > 0 ? "hi" : "");
 
   const mx = Math.max(...rows.map(r => Math.abs(r.v)), 1);
@@ -2206,7 +2218,7 @@ function renderCatPage(){
           ["Share of the month", pct(sel.v)+"%"],
           ["Purchases", sel.items.length],
           sel.med === null
-            ? ["Against its usual month", "Needs three full months", "mut"]
+            ? ["Against its usual month", moreMonths(), "mut"]
             : ["Against its usual month",
                numx((over(sel) >= 0 ? "+" : "\u2212") + fmt(Math.abs(over(sel))), [["This month", fmt(sel.v)], ["A usual month", "\u2212"+fmt(sel.med)]],
                  "A usual month is this category\u2019s median over the last "+win.length+" full months.", true),
@@ -2227,9 +2239,9 @@ function renderYr(){
 
   renderYearInsights();
   $("yrStats").innerHTML =
-    StatCard("Total spent in "+viewYear, numx(fmt(spent), [], "After refunds.")) +
-    StatCard("Spent a month in "+viewYear, spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], "This year only, open months included. "+(usualMonth() ? "A usual month, from your last full months, is "+fmt(usualMonth().v)+"." : "")) : null) +
-    (() => { const mt = spendMonths.map(m => ({m, v: monthTotal(m)})).sort((a,b) => b.v - a.v)[0];
+    StatCard("Total spent in "+yrSpan(viewYear, spendMonths), numx(fmt(spent), [], "After refunds.")) +
+    StatCard("Spent a month in "+yrSpan(viewYear, spendMonths), spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], "This year only, open months included. "+(usualMonth() ? "A usual month, from your last full months, is "+fmt(usualMonth().v)+"." : "")) : null) +
+    (() => { const mt = spendMonths.length > 1 ? spendMonths.map(m => ({m, v: monthTotal(m)})).sort((a,b) => b.v - a.v)[0] : null;
              return StatCard("Biggest month", mt ? ymFull(mt.m) : null, mt ? fmt(mt.v) : "", {text: true}); })();
 
   const byCat = {};
@@ -2242,7 +2254,7 @@ function renderYr(){
 
   const inc = ICATS.map(c => [c.k, cfy.reduce((s,m)=>s+(m[c.f]||0),0), c.c]).filter(x => x[1] > 0);
   const icard = StatCard;
-  $("incLab").textContent = "Income in "+viewYear;
+  $("incLab").textContent = "Income in "+yrSpan(viewYear, cfy.map(m => m.ym));
   $("incBig").innerHTML = hasIncome ? numx(fmt(income), inc.map(x => [x[0], fmt(x[1])]), cfy.length+" month"+(cfy.length === 1 ? "" : "s")+" on record.", true) : "\u2014";
   const imx = Math.max(...inc.map(x => x[1]), 1);
   // What the month card used to say, said once for the year: investment income is income but
@@ -2330,6 +2342,13 @@ const MONTH_SKIP = {};
 const skipped = m => !!MONTH_SKIP[m];
 // Closed, and worth comparing against.
 const usableMonths = () => MONTHS.filter(m => m <= covEnd && !skipped(m));
+// What a card that needs three full months says until then: how many are still to come, so a
+// first month reads as on its way, not as broken (2026-11-12, user 001: "Needs three full
+// months" on four cards after a one-month setup).
+const moreMonths = () => {
+  const k = Math.max(1, 3 - usableMonths().length);
+  return "Ready after " + ["one more full month", "two more full months", "three more full months"][k - 1];
+};
 let baselineAvg = null;
 // A month only counts once EVERY card has reported it. Cards are on different statement cycles, so
 // Aug 2026 has MasterCard records but no Visa ones — folding that half-month into the average would
@@ -2364,8 +2383,8 @@ function renderBaseline(){
       '<div class="bm-row"><span>'+ymLabel(x.m)+' '+x.m.slice(0,4)+'</span><span class="num">'+fmt(x.v)+'</span></div>').join("");
   }else{
     $("baseHero").textContent = "—";
-    $("baseStats").innerHTML = StatCard(term("usual_month", "A usual month"), null, "Needs 3 full months of spending");
-    $("baseMonths").innerHTML = '<div class="empty">Needs 3 closed months with records ('+vals.length+' so far).</div>';
+    $("baseStats").innerHTML = StatCard(term("usual_month", "A usual month"), null, moreMonths());
+    $("baseMonths").innerHTML = '<div class="empty">'+moreMonths()+'. '+(vals.length ? (vals.length === 1 ? 'One' : 'Two')+' so far.' : 'None so far.')+'</div>';
   }
 }
 
@@ -2514,7 +2533,7 @@ function renderSafety(){
   $("safeStats").innerHTML =
     card(term("months_covered", "Months covered"),
       c.months === null ? "\u2014" : numx(monthsTxt(c.months), [["The money", fmt(c.money)], ["A usual month", fmt(c.cost)]], "The money \u00f7 a usual month.", false),
-      c.months === null ? "Needs three full months of spending to know a usual month."
+      c.months === null ? moreMonths() + ", when a usual month is known."
         : [state ? '<b style="color:var(--'+(state === "below" ? "rng-low" : state === "inside" ? "rng-ok" : "ink-2")+')">' + RANGE_SAYS[state] + '</b>' : "",
            c.abroadMonths !== null ? "With money abroad, " + monthsTxt(c.abroadMonths) + " months" : ""].filter(Boolean).join("<br>")) +
     card("The money",
@@ -3713,9 +3732,9 @@ function renderYearInsights(){
     ins.push({s:"w", t:"<b>"+topMer[0]+"</b> is "+Math.round(pc(topMer[1], din))+"% of Dining: "+fmt(topMer[1])+" of "+fmt(din)+"."});
   const mt = MONTHS.filter(m => m.startsWith(yr)).map(m => ({m, v: monthTotal(m)})).filter(x => x.v > 0);
   const win = usableMonths().slice(-12).map(monthTotal).filter(v => v > 0).sort((a,b)=>a-b);
-  if(mt.length > 1 && win.length){
-    const peak = mt.reduce((a,b) => b.v > a.v ? b : a);
-    const med = win[Math.floor(win.length/2)];
+  const peak = mt.length ? mt.reduce((a,b) => b.v > a.v ? b : a) : null, med = win.length ? win[Math.floor(win.length/2)] : 0;
+  // among two months one is always the bigger, and 1.0× a usual month is not standing out
+  if(mt.length >= 3 && med && peak.v / med >= 1.2){
     ins.push({s:"n", t:"<b>"+ymFull(peak.m)+"</b> was the biggest month: "+fmt(peak.v)+", "+(peak.v/med).toFixed(1)+"\u00d7 a usual month."});
   }
   $("yrInsights").innerHTML = insRows(ins, "Nothing stands out yet.");
@@ -3799,10 +3818,10 @@ const IV = (function(){
            numx(fmt(PORTFOLIO), FGN.rows.length ? [["At "+DATA.broker, fmt(cadInv)], ["Funds abroad", fmt(fgn)]] : [], "Bank cash and set-aside accounts are left out.", true),
            prev ? deltaLine(cadInv, prev.cadInv) : "")
     + stat(term("set_aside", "Set aside"), numx(fmt(earm), EARMARK.map(a => [a, fmt(accVal(a))]), "", true))
-    + stat(bandLab(),
+    + (!hasBand() ? "" : stat(bandLab(),
            cadInv ? numx(pctS(dryPct), [...DRY.map(y => [y, fmt(positions.filter(p => p.sym === y && !EARMARK.includes(p.account)).reduce((s,p) => s + p.mv, 0))]), ["Out of", fmt(cadInv)]],
                          "Measured at "+DATA.broker+", set-aside accounts left out."+dryWas) : "\u2014",
-           cap(cadInv ? "" : "Nothing invested yet"));
+           cap(cadInv ? "" : "Nothing invested yet")));
   }
   function renderMeta(){
     // No exchange rate is the supported way to say nothing is held in another currency (a
@@ -3820,7 +3839,7 @@ const IV = (function(){
   // ----- structure: the CAD side only, one denominator inside this chart
   const BCOL=["#2a78d6","#008300","#eda100","#b7bfba","#7a5cd6","#c96f9b"];
   const segs=[...BUCKETS.map((b,i)=>({k:b.name.split(" \u00b7 ")[0],v:B[b.key],c:BCOL[i%BCOL.length]})),
-              {k:"Idle cash",v:idle,c:"#d8dcd9"}];
+              {k:"Cash at the broker",v:idle,c:"#d8dcd9"}];
   function renderBarbell(){
     // Three cuts of the same portfolio (the owner, 2026-10-26): by the currency it is held in, by
     // what kind of asset it is, and by the buckets your rules are written in. Until then there was
@@ -3862,7 +3881,7 @@ const IV = (function(){
   // ----- holdings: by role or by account; P&L off by default because cost is not a decision input
   let showPL = false, view = "role";
   function roleView(){
-    const order=[...BUCKETS.map(b=>[b.name,b.key]),["Idle cash","cash"],["Held abroad","cn"],["Set aside","earm"]];
+    const order=[...BUCKETS.map(b=>[b.name,b.key]),["Cash at the broker","cash"],["Held abroad","cn"],["Set aside","earm"]];
     const buckets={cash:[],cn:[],earm:[]}; BUCKETS.forEach(b=>buckets[b.key]=[]);
     const agg={};
     for(const p of positions){
