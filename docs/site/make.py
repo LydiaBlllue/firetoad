@@ -43,75 +43,75 @@ EN = dict(
           "and see your spending, net worth and years to FIRE. No bank login, no account."),
     name="FIRE Toad",
     nav=[("#how", "How it works"), ("#banks", "Banks"), ("#faq", "Questions")],
-    h1="Your money on one page — for reaching financial independence in Canada.",
-    lede=("Once a month you drop your bank statements into a folder. FIRE Toad reads them on your "
-          "Mac, checks that every statement adds up, files every purchase and builds one page: what "
-          "you spent, what you own, how many years until financial independence."),
-    demo="Open the live demo", download="Download for Mac — free",
-    fine=(f"The demo is {DEMO['first']}'s money — a made-up {DEMO['age']}-year-old in {DEMO['city']}. "
-          "Nothing to install. The app is signed and notarised by Apple, in English and Chinese, free "
-          "and open source (MIT)."),
-    phone="The demo is built for a computer screen; on a phone, the pictures below show it.",
+    h1="See where your money goes, what you've built, and how many years until work is optional.",
+    lede=("Once a month, drop your bank statements into a folder. FIRE Toad reads them on your Mac, "
+          "checks that each one adds up, sorts every purchase, and builds one page: what you spent, "
+          "what you own, and how many years until financial independence."),
+    demo="Try the live demo", download="Download for Mac — free",
+    fine=(f"The demo shows {DEMO['first']}'s money — a made-up {DEMO['age']}-year-old in {DEMO['city']}. "
+          "Nothing to install. The app is signed and notarised by Apple, works in English and Chinese, "
+          "and is free and open source (MIT)."),
+    phone="The demo is made for a computer screen. On a phone, the pictures below show what it looks like.",
     hero_alt="The FIRE page: about 29 to 37 years to financial independence, and what investing more each month changes",
     points=[("No bank login.", "You download your statements; the app reads them on your computer. "
-                               "Nothing is uploaded, and there is no account to make."),
-            ("Every number adds up.", "A statement is let in only when it balances to the totals it prints."),
-            ("Your FIRE plan, not just a budget.", "Years to financial independence, how long the money "
-             "lasts, your TFSA, RRSP and FHSA, and money held abroad, in one net worth.")],
-    how_lab="How it works", how_h="Once a month, four steps",
-    steps=[("Get the files", "Download last month's statements from your bank's website. The app "
-                             "says which ones are still missing and how to get each.",
+                               "Nothing is uploaded, and there's no account to create."),
+            ("Every number adds up.", "A statement only gets in if it matches the totals printed on it."),
+            ("A FIRE plan, not just a budget.", "Years to financial independence, how long your money "
+             "will last, your TFSA, RRSP and FHSA, and accounts abroad — all in one net worth.")],
+    how_lab="How it works", how_h="Four steps, once a month",
+    steps=[("Get your files", "Download last month's statements from your bank. The app tells you "
+                              "which ones are missing and where to find each.",
             "Step 1 in the app: each account and what is still needed, and the files in the folder"),
-           ("Import", "Drop them in. Each is read on your Mac and let in only if it adds up.",
+           ("Import", "Drag them in. Each one is read on your Mac and only gets in if it adds up.",
             "Step 2: what the import will add, before anything is written"),
-           ("Categorize", "Answer what a program cannot decide: a shop seen for the first time, "
-                          "a transfer with no name. One tap each, remembered next time.",
+           ("Categorize", "You only answer what a program can't decide — a new shop, a transfer "
+                          "with no name. One tap each, and it remembers next time.",
             "Step 3: one question at a time, here a transfer with no sender"),
-           ("Done", "Your page is rebuilt with the new month.",
+           ("Done", "Your page updates with the new month.",
             "Step 4: what changed, with the net worth before and after")],
     panel="panel",
-    q_lab="What it answers",
-    qs=[("Where do I stand?", "Net worth across every account and currency: a row for what each part "
-                              "is for, its bar coloured by how easily you could reach it.",
-         "crop-home.png", "Home: net worth $65,655, years to financial independence, this month's investing and spending"),
-        ("Where did the money go?", "The year by category and month by month, with what stands out: "
-                                    "the biggest category, a subscription, the biggest month.",
+    q_lab="What it tells you",
+    qs=[("Where do I stand?", "Your net worth across every account and currency — each part labelled "
+                              "by what it's for, its bar coloured by how easily you can get to it.",
+         "crop-home.png", "Home: net worth, years to financial independence, this month's investing and spending"),
+        ("Where did my money go?", "Your year by category and by month, with what stands out: "
+                                   "the biggest category, subscriptions, the priciest month.",
          "crop-year.png", "The year: spending by category and what stands out"),
-        ("What do I own?", "Your portfolio by currency, by kind of asset and by your own buckets.",
+        ("What do I own?", "Your investments by currency, by type of asset, and by your own buckets.",
          "crop-port.png", "Portfolio: by currency, kind of asset and bucket"),
-        ("Is everything in?", "Which statement arrived which month, and what is still to bring.",
+        ("Is everything in?", "Which statements have arrived each month, and what's still missing.",
          "crop-src.png", "Statements: a dot for each month each statement arrived")],
-    banks_lab="What it reads", banks_h="Your bank's own files",
+    banks_lab="Banks it reads", banks_h="Straight from your bank's own files",
     banks=[("Read directly", ["RBC · PDF", "BMO · PDF", "Wealthsimple · exports"]),
-           ("Through an OFX or QFX download", ["TD", "Scotiabank", "CIBC", "Tangerine", "most other banks"]),
-           ("Anything else", "A balance you type once a month, read off the bank's app.")],
-    banks_more="Every bank and broker →", banks_doc="docs/banks.md",
+           ("Via an OFX or QFX download", ["TD", "Scotiabank", "CIBC", "Tangerine", "most other banks"]),
+           ("Anything else", "Type in the balance once a month, from your bank's app.")],
+    banks_more="See every bank and broker →", banks_doc="docs/banks.md",
     faq_lab="Questions", faq_h="Before you try it",
-    faq=[("Is it free?", "Yes, free and open source (MIT), nothing to subscribe to. There is no company "
-          "server behind it: the app runs on your Mac, so there is no account and nothing of yours for "
-          "anyone to sell. The code is public, so anyone can check."),
+    faq=[("Is it free?", "Yes — free and open source (MIT), with nothing to subscribe to. There's no "
+          "company server behind it: the app runs on your Mac, so there's no account and nothing of "
+          "yours to sell. The code is public, so anyone can check."),
          ("I already track my money in a spreadsheet. Why switch?", "Keep it if it works for you. "
-          "FIRE Toad does the part a spreadsheet leaves to you — typing in every row, sorting it into "
+          "FIRE Toad does the parts a spreadsheet leaves to you — typing in every row, sorting it into "
           "categories, checking it against the bank — and draws the charts. Everything it keeps is "
-          "plain CSV, so your spreadsheet can still read it."),
-         ("Does it connect to my bank?", "No. Once a month you sign in to your bank as you always do "
-          "and download your statements. FIRE Toad never signs in, so it never asks you to log in "
-          "again, and it never sees your bank password."),
-         ("Do I have to categorize everything myself?", "Mostly no. A shop you have filed once is "
-          "filed the same way every time after. Only a shop seen for the first time is asked — one "
-          "tap, with common Canadian chains already filled in for you to confirm, and \"Not sure\" "
-          "is an answer."),
-         ("Where does my data live?", "In a folder on your Mac: plain CSV and JSON files and one page. "
+          "plain CSV, so your spreadsheet can still open it."),
+         ("Does it connect to my bank?", "No. Once a month you sign in to your bank as usual and "
+          "download your statements. FIRE Toad never signs in, so it never makes you log in again — "
+          "and it never sees your bank password."),
+         ("Do I have to categorize everything myself?", "Mostly, no. Once you've categorized a shop, "
+          "it stays that way. Only a shop it hasn't seen before is asked — one tap, with common "
+          "Canadian chains already filled in for you to confirm. \"Not sure\" is an answer too."),
+         ("Where does my data live?", "In a folder on your Mac: plain CSV and JSON files, plus one page. "
           "Nothing is sent anywhere unless you turn on the optional AI suggestions, which send only "
-          "the names of shops. Backing the folder up is yours."),
-         ("Do I need Claude?", "No. The app works on its own. Claude Code is a second way in, for a "
-          "statement no parser reads, money held abroad, or a question in words."),
+          "shop names. Backing up the folder is up to you."),
+         ("Do I need Claude?", "No. The app works on its own. Claude Code is another way to use it — "
+          "for a statement the app can't read, accounts abroad, or a question in plain words."),
          ("Is there a Windows version?", "Not as a download yet. On Windows it runs from Python "
           "(python3 app.py)."),
-         ("My bank is not on the list.", "Download your transactions as OFX or QFX (the Quicken or "
-          "Money choice); most Canadian banks offer it. Failing that, a CSV, or the balance typed once a month.")],
+         ("My bank isn't on the list.", "Download your transactions as OFX or QFX (the Quicken or "
+          "Money option) — most Canadian banks offer it. If yours doesn't, use a CSV, or type in the "
+          "balance once a month.")],
     end_h="Try it on sample data first.",
-    foot=[(GH, "FIRE Toad on GitHub"), (GH + "/blob/main/docs/install.md", "Installing it")],
+    foot=[(GH, "FIRE Toad on GitHub"), (GH + "/blob/main/docs/install.md", "Install guide")],
 )
 
 ZH = dict(
