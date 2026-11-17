@@ -5,6 +5,9 @@
 
 writes OUT/index.html, OUT/zh/index.html, OUT/sitemap.xml and copies the demo
 (dashboards/finance_dashboard.html → OUT/dashboard.html), the logo and docs/screens/ beside them.
+When the site is the whole domain (a custom domain, no /<repo>/ path) it also writes
+OUT/robots.txt naming the sitemap; under a path it does not, because a search engine reads
+robots.txt only at the domain's root.
 The Pages workflow runs it; run it locally to look at the site before a release.
 
 The front page is the page a search finds, so everything on it is plain HTML, never written by a
@@ -19,6 +22,7 @@ import json
 import os
 import shutil
 import sys
+from urllib.parse import urlparse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
@@ -34,7 +38,7 @@ CITY_ZH = {"Ottawa": "渥太华", "Toronto": "多伦多", "Vancouver": "温哥�
 
 EN = dict(
     lang="en", path="", other="zh/", other_name="中文", other_lang="zh",
-    title="FIRE Toad — Budget and FIRE tracker for Canada, no bank login",
+    title="FIRE Toad — Free budget app for Canada, no bank login",
     desc=("Free, open-source Mac app for Canadians. Drop in your RBC, BMO or any bank's statements "
           "and see your spending, net worth and years to FIRE. No bank login, no account."),
     name="FIRE Toad",
@@ -79,9 +83,20 @@ EN = dict(
            ("Anything else", "A balance you type once a month, read off the bank's app.")],
     banks_more="Every bank and broker →", banks_doc="docs/banks.md",
     faq_lab="Questions", faq_h="Before you try it",
-    faq=[("Is it free?", "Yes. The app is free and open source (MIT). There is nothing to subscribe to."),
-         ("Does it connect to my bank?", "No. You download your statements yourself from your bank's "
-          "website. The app never sees your bank password."),
+    faq=[("Is it free?", "Yes, free and open source (MIT), nothing to subscribe to. There is no company "
+          "server behind it: the app runs on your Mac, so there is no account and nothing of yours for "
+          "anyone to sell. The code is public, so anyone can check."),
+         ("I already track my money in a spreadsheet. Why switch?", "Keep it if it works for you. "
+          "FIRE Toad does the part a spreadsheet leaves to you — typing in every row, sorting it into "
+          "categories, checking it against the bank — and draws the charts. Everything it keeps is "
+          "plain CSV, so your spreadsheet can still read it."),
+         ("Does it connect to my bank?", "No. Once a month you sign in to your bank as you always do "
+          "and download your statements. FIRE Toad never signs in, so it never asks you to log in "
+          "again, and it never sees your bank password."),
+         ("Do I have to categorize everything myself?", "Mostly no. A shop you have filed once is "
+          "filed the same way every time after. Only a shop seen for the first time is asked — one "
+          "tap, with common Canadian chains already filled in for you to confirm, and \"Not sure\" "
+          "is an answer."),
          ("Where does my data live?", "In a folder on your Mac: plain CSV and JSON files and one page. "
           "Nothing is sent anywhere unless you turn on the optional AI suggestions, which send only "
           "the names of shops. Backing the folder up is yours."),
@@ -97,7 +112,7 @@ EN = dict(
 
 ZH = dict(
     lang="zh-CN", path="zh/", other="../", other_name="English", other_lang="en",
-    title="FIRE蛙 FIRE Toad — 加拿大的记账和 FIRE 工具，不用登录银行",
+    title="FIRE蛙 FIRE Toad — 加拿大的免费记账 app，不用登录银行",
     desc=("给在加拿大的人的免费开源 Mac app。把 RBC、BMO 或任何银行的对账单放进来，看花了多少、净值多少、"
           "离财务自由还有几年。不用登录银行，不用注册。"),
     name="FIRE蛙 FIRE Toad",
@@ -134,8 +149,14 @@ ZH = dict(
            ("别的", "每月从银行 app 里看一眼余额，填一次。")],
     banks_more="每家银行和券商 →", banks_doc="docs/zh/banks.md",
     faq_lab="常见问题", faq_h="试之前想知道的",
-    faq=[("免费吗？", "免费。app 免费开源（MIT），没有订阅。"),
-         ("要连我的银行吗？", "不用。对账单你自己从银行网站下载，app 永远看不到你的银行密码。"),
+    faq=[("免费吗？", "免费，开源（MIT），没有订阅。背后没有公司的服务器：app 在你的 Mac 上跑，不用注册，"
+          "也就没有你的东西可以拿去卖。代码是公开的，谁都能查。"),
+         ("我已经在用表格记账了，为什么要换？", "用得顺手就接着用。表格要你自己做的那部分，一行行录、"
+          "一笔笔分类、跟银行对数，FIRE蛙替你做，图也画好。它存的都是普通的 CSV 文件，你的表格照样能读。"),
+         ("要连我的银行吗？", "不连。一个月一次，你照常登录网银、下载对账单。FIRE蛙从不登录，所以不会叫你"
+          "一遍遍重新验证，也从来见不到你的银行密码。"),
+         ("分类要我自己一条条弄吗？", "基本不用。你归过一次的店，以后每次都照样归。只有第一次见到的店才会"
+          "问你，点一下就行；常见的加拿大连锁店已经替你填好，你确认就行。「不确定」也算回答。"),
          ("数据放在哪？", "你 Mac 上的一个文件夹里：普通的 CSV、JSON 文件和一个页面。除非你打开可选的 AI 建议"
           "（只发送商户名），什么都不会发出去。文件夹要你自己备份。"),
          ("要用 Claude 吗？", "不用。app 自己就能用。Claude Code 是另一种用法，适合解析器读不了的对账单、国外的钱，"
@@ -343,6 +364,9 @@ def build(dst, base):
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
                 + "".join(f"  <url><loc>{base}/{p}</loc></url>\n" for p in ("", "zh/", "dashboard.html"))
                 + "</urlset>\n")
+    if not urlparse(base).path.strip("/"):
+        with open(os.path.join(dst, "robots.txt"), "w", encoding="utf-8") as f:
+            f.write(f"User-agent: *\nAllow: /\n\nSitemap: {base}/sitemap.xml\n")
     shutil.copy(os.path.join(REPO, "docs", "logo.svg"), dst)
     shutil.copy(os.path.join(REPO, "dashboards", "finance_dashboard.html"), os.path.join(dst, "dashboard.html"))
     shutil.copytree(os.path.join(REPO, "docs", "screens"), os.path.join(dst, "screens"), dirs_exist_ok=True)
