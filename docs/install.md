@@ -1,7 +1,8 @@
 # Installing the app on a Mac
 
 The download is signed with a Developer ID and notarised by Apple, so it opens with a
-double-click. (中文：[安装说明](zh/install.md))
+double-click. It runs on Macs with Apple silicon (M1 or newer); to check, Apple menu → About This
+Mac, the Chip line. (中文：[安装说明](zh/install.md))
 
 ## 1. Download and open
 

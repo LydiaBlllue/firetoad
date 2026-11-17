@@ -1,6 +1,6 @@
 # 在 Mac 上安装应用
 
-安装包已用 Apple 开发者身份签名并经 Apple 公证，双击就能打开。（English:
+安装包已用 Apple 开发者身份签名并经 Apple 公证，双击就能打开。需要 Apple 芯片的 Mac（M1 及以后）；查法：左上角苹果菜单 →「关于本机」，看「芯片」那一行。（English:
 [Installing the app](../install.md)）
 
 ## 1. 下载并打开
