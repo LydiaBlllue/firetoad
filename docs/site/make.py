@@ -47,7 +47,7 @@ EN = dict(
     desc=("Free, open-source Mac app for Canadians. Drop in your RBC, BMO or any bank's statements "
           "and see your spending, net worth and years to FIRE. No bank login, no account."),
     name="FIRE Toad",
-    nav=[("path/", "FIRE questions"), ("#how", "A month with the app"), ("#banks", "Banks"), ("#faq", "Questions")],
+    nav=[("path/", "FIRE questions"), ("#how", "A month with the app"), ("#banks", "Banks"), ("#faq", "FAQ")],
     h1="See where your money goes, what you've built, and how many years until work is optional.",
     lede=("Once a month, drop your bank statements into a folder. FIRE Toad reads them on your Mac, "
           "checks that each one adds up, sorts every purchase, and builds one page: what you spent, "
