@@ -5,6 +5,9 @@
 
 writes OUT/index.html, OUT/zh/index.html, OUT/sitemap.xml and copies the demo
 (dashboards/finance_dashboard.html → OUT/dashboard.html), the logo and docs/screens/ beside them.
+When the site is the whole domain (a custom domain, no /<repo>/ path) it also writes
+OUT/robots.txt naming the sitemap; under a path it does not, because a search engine reads
+robots.txt only at the domain's root.
 The Pages workflow runs it; run it locally to look at the site before a release.
 
 The front page is the page a search finds, so everything on it is plain HTML, never written by a
@@ -19,6 +22,7 @@ import json
 import os
 import shutil
 import sys
+from urllib.parse import urlparse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
@@ -360,6 +364,9 @@ def build(dst, base):
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
                 + "".join(f"  <url><loc>{base}/{p}</loc></url>\n" for p in ("", "zh/", "dashboard.html"))
                 + "</urlset>\n")
+    if not urlparse(base).path.strip("/"):
+        with open(os.path.join(dst, "robots.txt"), "w", encoding="utf-8") as f:
+            f.write(f"User-agent: *\nAllow: /\n\nSitemap: {base}/sitemap.xml\n")
     shutil.copy(os.path.join(REPO, "docs", "logo.svg"), dst)
     shutil.copy(os.path.join(REPO, "dashboards", "finance_dashboard.html"), os.path.join(dst, "dashboard.html"))
     shutil.copytree(os.path.join(REPO, "docs", "screens"), os.path.join(dst, "screens"), dirs_exist_ok=True)
