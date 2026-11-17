@@ -40,6 +40,7 @@ WORDS = {
                index_cta=("FIRE Toad works out your own number, your years to financial independence and your savings "
                           "rate from your statements. It runs on your Mac; your statements never leave it."),
                stages=["Get started", "Set a goal", "Stay on track", "After FIRE"],
+               anchors=["get-started", "set-a-goal", "stay-on-track", "after-fire"],
                stage_q=["Where does my money go, and will I be all right?", "How much do I need, and how long will it take?",
                         "How do I keep going each month?", "How do I live on it?"]),
     "zh": dict(road="我的 FIRE 之路", prev="上一站", next="下一站", why="为什么要紧", src="出处",
@@ -48,6 +49,7 @@ WORDS = {
                index_lede="走向财务自由要懂的事，一页一个问题，每页带出处。先上线了几页，其余的核对完出处一页一页加。",
                index_cta="FIRE Toad 用你的对账单算出你自己的目标、离财务自由几年和储蓄率。它在你的 Mac 上运行，对账单不会离开你的电脑。",
                stages=["开始理财", "定目标", "执行", "自由以后"],
+               anchors=["get-started", "set-a-goal", "stay-on-track", "after-fire"],
                stage_q=["钱花到哪去了？会不会翻车？", "我要多少？还差几年？", "每个月怎么走？", "不上班了，钱怎么取？"]),
 }
 
@@ -178,7 +180,7 @@ def stops(repo):
                     why="Once spending rises, the number you need rises with it, since it is 25 times a year’s spending. You lose twice.",
                     body=f"""<h2>A worked example</h2>
 <p>Take-home 100, spending 80: a savings rate of 20%, and {base:.0f} years from nothing at 5% a year after inflation. After a raise of 10:</p>
-<table class="tbl"><tr><th>What happens to the raise</th><th>Savings rate</th><th>Years of work</th></tr>{rows(["Spend it all", "Spend half", "Save it all"], " years")}</table>
+<div class="tblw"><table class="tbl"><tr><th>What happens to the raise</th><th>Savings rate</th><th>Years of work</th></tr>{rows(["Spend it all", "Spend half", "Save it all"], " years")}</table></div>
 <p>Spending all of it takes {years_to(110, 90) - base:.0f} years longer than before the raise: income rose, and so did what it has to pay for.</p>
 <div class="chart"><div class="slide">Of the raise, save <input type="range" id="keep" min="0" max="100" step="10" value="50"> <output id="keepo" data-words='{e(json.dumps({"yrs": " years", "sooner": "N years sooner than before the raise", "later": "N years later than before the raise", "same": "The same as before the raise"}))}'></output></div>
 <div class="read"><span>Savings rate <b id="lr"></b></span><span>Years of work <b id="ly"></b></span><span><b id="ld"></b></span></div></div>""",
@@ -192,7 +194,7 @@ def stops(repo):
                     why="开销一旦跟着涨上去，要攒的目标也跟着变大（目标是一年开销的 25 倍），等于两头吃亏。",
                     body=f"""<h2>算一个例子</h2>
 <p>到手 100，花 80，储蓄率 20%，按每年 5% 的实际回报，从零开始要 {base:.0f} 年。加薪 10 之后：</p>
-<table class="tbl"><tr><th>加薪的钱怎么用</th><th>储蓄率</th><th>要工作几年</th></tr>{rows(["全花掉", "花一半", "全存下"], " 年")}</table>
+<div class="tblw"><table class="tbl"><tr><th>加薪的钱怎么用</th><th>储蓄率</th><th>要工作几年</th></tr>{rows(["全花掉", "花一半", "全存下"], " 年")}</table></div>
 <p>全花掉反而比加薪前多 {years_to(110, 90) - base:.0f} 年：收入涨了，要养的开销也涨了。</p>
 <div class="chart"><div class="slide">加薪的钱存下 <input type="range" id="keep" min="0" max="100" step="10" value="50"> <output id="keepo" data-words='{e(json.dumps({"yrs": " 年", "sooner": "比加薪前早 N 年", "later": "比加薪前晚 N 年", "same": "跟加薪前一样"}, ensure_ascii=False))}'></output></div>
 <div class="read"><span>储蓄率 <b id="lr"></b></span><span>要工作 <b id="ly"></b></span><span><b id="ld"></b></span></div></div>""",
@@ -264,9 +266,9 @@ def stops(repo):
                     lede=f"CPP can start any time from 60 to 70, OAS from 65 to 70. Every month before 65, CPP pays 0.6% less; every month after, 0.7% more, for life. In today’s dollars, someone who starts at 60 is caught up by someone who starts at 65 at about {c['c6065']:.0f}.",
                     why="An early retiree lives on their investments until the pensions begin. Starting later raises the floor under every month of the later years, and it rises with prices: insurance against living a long time.",
                     body=f"""<h2>The rules</h2>
-<table class="tbl"><tr><th></th><th>Earliest</th><th>Standard</th><th>Latest</th><th>Earlier</th><th>Later</th></tr>
+<div class="tblw"><table class="tbl"><tr><th></th><th>Earliest</th><th>Standard</th><th>Latest</th><th>Earlier</th><th>Later</th></tr>
 <tr><td><b>CPP</b></td><td>60</td><td>65</td><td>70</td><td>0.6% less a month, 36% less at 60</td><td>0.7% more a month, 42% more at 70</td></tr>
-<tr><td><b>OAS</b></td><td>65</td><td>65</td><td>70</td><td>Cannot start early</td><td>0.6% more a month, 36% more at 70</td></tr></table>
+<tr><td><b>OAS</b></td><td>65</td><td>65</td><td>70</td><td>Cannot start early</td><td>0.6% more a month, 36% more at 70</td></tr></table></div>
 <p class="note">A full OAS needs 40 years in Canada after 18; fewer years pay a share, years ÷ 40. Quebec has the QPP, with similar but not identical rules.</p>
 <h2>Work it out: live to which age, and which pays more</h2>
 <div class="chart" id="chart"><div class="slide">Live to <input type="range" id="age" min="60" max="95" value="85"> <output id="ageo" data-unit=""></output></div>
@@ -284,9 +286,9 @@ def stops(repo):
                     lede=f"CPP 可以在 60 到 70 岁之间开始领，OAS 在 65 到 70 岁之间。比 65 岁每早一个月，CPP 少 0.6%；每晚一个月，多 0.7%，一辈子都是。按今天的钱算，60 岁开始领的人，累计领到的钱在 {c['c6065']:.0f} 岁左右被 65 岁开始领的人追上。",
                     why="提前退休的人，在养老金开始之前全靠自己的投资。晚领让后半辈子每月的保底更高，而且跟着物价涨，等于给「活得很久」上了一份保险。",
                     body=f"""<h2>规则</h2>
-<table class="tbl"><tr><th></th><th>最早</th><th>标准</th><th>最晚</th><th>早领</th><th>晚领</th></tr>
+<div class="tblw"><table class="tbl"><tr><th></th><th>最早</th><th>标准</th><th>最晚</th><th>早领</th><th>晚领</th></tr>
 <tr><td><b>CPP</b></td><td>60 岁</td><td>65 岁</td><td>70 岁</td><td>每早一个月少 0.6%，60 岁领少 36%</td><td>每晚一个月多 0.7%，70 岁领多 42%</td></tr>
-<tr><td><b>OAS</b></td><td>65 岁</td><td>65 岁</td><td>70 岁</td><td>不能早领</td><td>每晚一个月多 0.6%，70 岁领多 36%</td></tr></table>
+<tr><td><b>OAS</b></td><td>65 岁</td><td>65 岁</td><td>70 岁</td><td>不能早领</td><td>每晚一个月多 0.6%，70 岁领多 36%</td></tr></table></div>
 <p class="note">OAS 全额要 18 岁以后在加拿大住满 40 年；不满的按住的年数 ÷ 40 领一部分。魁北克用的是 QPP，规则相近但不相同。</p>
 <h2>算一算：活到几岁，哪种领得多</h2>
 <div class="chart" id="chart"><div class="slide">活到 <input type="range" id="age" min="60" max="95" value="85"> <output id="ageo" data-unit=" 岁"></output></div>
@@ -306,7 +308,12 @@ CSS = """
 .crumb, .art .crumb { font-size:14px; color:var(--muted); margin:36px 0 10px; }
 .crumb a { text-decoration:none; color:var(--ink-2); } .crumb a:hover { text-decoration:underline; }
 .pg { display:grid; grid-template-columns:minmax(0,760px) 240px; gap:56px; align-items:start; }
-@media (max-width:1100px) { .pg { grid-template-columns:1fr; } .side { display:none; } }
+.pg > * { min-width:0; }
+.side-n { display:none; margin:34px 0 0; font-size:15px; }
+.side-n h3 { font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 8px; }
+.side-n a { display:block; text-decoration:none; color:var(--ink-2); padding:8px 0 8px 12px; border-left:2px solid var(--grid); }
+.side-n a.on { color:var(--ink); font-weight:700; border-left-color:var(--btn); }
+@media (max-width:1100px) { .pg { grid-template-columns:1fr; } .side { display:none; } .side-n { display:block; } }
 .side { position:sticky; top:84px; margin-top:96px; font-size:15px; }
 .side h3 { font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 8px; }
 .side a { display:block; text-decoration:none; color:var(--ink-2); padding:6px 0 6px 12px; border-left:2px solid var(--grid); }
@@ -329,7 +336,8 @@ CSS = """
 .slide { display:flex; align-items:center; gap:14px; margin:4px 0 12px; font-weight:600; flex-wrap:wrap; }
 .slide input { flex:1; min-width:180px; accent-color:var(--btn); }
 .slide output { min-width:64px; text-align:right; font-variant-numeric:tabular-nums; }
-.tbl { width:100%; border-collapse:collapse; font-size:15px; margin:4px 0 8px; }
+.tblw { overflow-x:auto; margin:4px 0 8px; }
+.tbl { width:100%; border-collapse:collapse; font-size:15px; }
 .tbl th, .tbl td { text-align:left; padding:9px 10px 9px 0; border-top:1px solid var(--grid); vertical-align:top; }
 .tbl th { font-size:13px; color:var(--muted); font-weight:600; }
 .tbl td.n { font-variant-numeric:tabular-nums; }
@@ -380,7 +388,7 @@ def head(lang, title, desc, url, alt_en, alt_zh, up, css, ld=None):
 def top(lang, up, other_href, w):
     return f"""<header class="top"><div class="wrap">
   <a class="brand" href="{up}{'zh/' if lang == 'zh' else ''}"><img src="{up}logo.svg" alt="">FIRE Toad</a>
-  <nav><a class="sec" href="{up}{'zh/' if lang == 'zh' else ''}path/">{e(w['road'])}</a><a class="sec" href="{up}{'zh/' if lang == 'zh' else ''}#how">{e(w['how'])}</a><a href="{other_href}" hreflang="{'en' if lang == 'zh' else 'zh'}" lang="{'en' if lang == 'zh' else 'zh'}">{w['other']}</a></nav>
+  <nav><a class="road" href="{up}{'zh/' if lang == 'zh' else ''}path/">{e(w['road'])}</a><a class="sec" href="{up}{'zh/' if lang == 'zh' else ''}#how">{e(w['how'])}</a><a href="{other_href}" hreflang="{'en' if lang == 'zh' else 'zh'}" lang="{'en' if lang == 'zh' else 'zh'}">{w['other']}</a></nav>
 </div></header>"""
 
 
@@ -402,7 +410,7 @@ def stop_page(st, lang, base, css, published, download):
     other = f"../../{'../' if lang == 'zh' else 'zh/'}path/{st['slug']}/"
     return (head(lang, t["title"], t["desc"], url, alt_en, alt_zh, up, css, ld) + top(lang, up, other, w) + f"""
 <main class="wrap"><div class="pg"><div class="art">
-  <p class="crumb"><a href="../">{e(w['road'])}</a> › {e(w['stages'][st['stage']])}</p>
+  <p class="crumb"><a href="../">{e(w['road'])}</a> › <a href="../#{w['anchors'][st['stage']]}">{e(w['stages'][st['stage']])}</a></p>
   <h1>{e(t['title'])}</h1>
   <p class="lede">{e(t['lede'])}</p>
   <h2>{e(w['why'])}</h2><p>{e(t['why'])}</p>
@@ -410,6 +418,7 @@ def stop_page(st, lang, base, css, published, download):
   {f'<h2>{e(w["src"])}</h2><ul class="src">{src}</ul>' if src else ''}
   <h2>{e(w['limits'])}</h2><ul class="src">{lim}</ul>
   <div class="cta"><p>{e(w['cta'])}</p><div class="actions"><a class="btn primary" href="{download}">{e(w['download'])}</a><a class="btn secondary" href="{up}dashboard.html">{e(w['demo'])}</a></div></div>
+  <nav class="side-n"><h3>{e(w['stages'][st['stage']])}</h3>{side}</nav>
   <div class="pn">{pn}</div>
   <p class="checked">{e(CHECKED[lang])}</p>
 </div><aside class="side"><h3>{e(w['stages'][st['stage']])}</h3>{side}</aside></div></main>
@@ -429,7 +438,7 @@ def index_page(lang, base, css, published, download):
         rows = [s for s in published if s["stage"] == k]
         if rows:
             lis = "".join(f'<li><a href="{s["slug"]}/">{e(s[lang]["title"])}</a><span>{e(s[lang]["line"])}</span></li>' for s in rows)
-            parts.append(f'<section class="stage"><h2>{e(name)}</h2><p class="q">{e(w["stage_q"][k])}</p><ul class="stops">{lis}</ul></section>')
+            parts.append(f'<section class="stage" id="{w["anchors"][k]}"><h2>{e(name)}</h2><p class="q">{e(w["stage_q"][k])}</p><ul class="stops">{lis}</ul></section>')
     other = "../../path/" if lang == "zh" else "../zh/path/"
     return (head(lang, w["road"], w["index_lede"], url, f"{base}/path/", f"{base}/zh/path/", up, css) + top(lang, up, other, w) + f"""
 <main class="wrap"><div class="art" style="max-width:760px">

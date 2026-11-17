@@ -218,6 +218,10 @@ a { color:inherit; }
 .top nav a { text-decoration:none; }
 .top nav a:hover { color:var(--ink); }
 @media (max-width:760px) { .top nav .sec { display:none; } }
+/* "My way to FIRE" stays in the bar on a phone (2026-11-17): nothing in the bar wraps, and below
+   400px the wordmark gives way to the logo alone, which still goes home */
+.top a { white-space:nowrap; }
+@media (max-width:400px) { .top .brand { font-size:0; gap:0; } .top nav { gap:14px; font-size:14px; } }
 .lab { font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:0 0 10px; }
 .hero { display:grid; grid-template-columns:1fr 1.15fr; gap:48px; align-items:center; padding:64px 0 56px; }
 @media (max-width:980px) { .hero { grid-template-columns:1fr; gap:36px; padding:40px 0; } }
@@ -342,7 +346,7 @@ def page(t, base):
 <body>
 <header class="top"><div class="wrap">
   <a class="brand" href="{up or './'}"><img src="{up}logo.svg" alt="">{e(t['name'])}</a>
-  <nav>{''.join(f'<a class="sec" href="{h}">{e(n)}</a>' for h, n in t['nav'])}<a href="{t['other']}" hreflang="{t['other_lang']}" lang="{t['other_lang']}">{t['other_name']}</a></nav>
+  <nav>{''.join(f'<a class="{"road" if h == "path/" else "sec"}" href="{h}">{e(n)}</a>' for h, n in t['nav'])}<a href="{t['other']}" hreflang="{t['other_lang']}" lang="{t['other_lang']}">{t['other_name']}</a></nav>
 </div></header>
 <main class="wrap">
   <div class="hero">
