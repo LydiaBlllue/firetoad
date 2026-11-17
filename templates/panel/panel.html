@@ -106,6 +106,7 @@ pre.log.on{display:block}
 .kv .k{color:var(--muted)}
 .kv .v{font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
 .nt{display:flex;gap:8px;font-size:12.5px;padding:4px 0;color:var(--ink-2)}
+.tabnote{background:#fff7e0;border:1px solid #efd9a0;border-radius:10px;padding:10px 14px;margin:0 0 14px;font-size:14px;color:var(--ink)}
 .nt .ic{width:14px;flex-shrink:0;text-align:center;color:var(--ok)}
 .nt.warn .ic{color:var(--warn)}.nt.bad .ic{color:var(--bad)}
 .err{color:var(--bad);font-size:12.5px;margin-top:8px}
@@ -801,7 +802,22 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
       if (t && t.state === 'same') setTimeout(function(){ location.reload(); }, 1400);
     });
   };
-  setInterval(function(){ api('GET', '/api/ping').catch(function(){}); }, 30000);
+  // A tab that is no longer the one in use says so (feedback 58, user 001: two "This month's
+  // import" tabs side by side). Opened again while running, the newer tab tells the older ones;
+  // the server of an earlier launch gone, the ping fails twice and the tab says FIRE Toad closed.
+  function tabNote(text){
+    var n = $('tabnote'); if (!n) { n = el('div', 'tabnote'); n.id = 'tabnote'; var w = document.querySelector('.wrap'); w.insertBefore(n, w.firstChild); }
+    n.textContent = text;
+  }
+  try {
+    var bc = new BroadcastChannel('firetoad-panel');
+    bc.onmessage = function(e){ if (e.data === 'opened') tabNote(T.tab_newer); };
+    bc.postMessage('opened');
+  } catch (e) {}
+  var missed = 0;
+  setInterval(function(){
+    api('GET', '/api/ping').then(function(){ missed = 0; }).catch(function(){ if (++missed >= 2) tabNote(T.tab_closed); });
+  }, 30000);
   // after an import the next thing is what it left to categorize, or Done — not the files again
   function goTo(tag){ location.hash = tag; location.reload(); }
   var asked = location.hash.replace('#', '');

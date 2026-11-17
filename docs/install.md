@@ -1,11 +1,13 @@
 # Installing the app on a Mac
 
 The download is signed with a Developer ID and notarised by Apple, so it opens with a
-double-click. (中文：[安装说明](zh/install.md))
+double-click. There are two: one for Macs with Apple silicon (macOS 11 or later) and one for Intel
+Macs (macOS 10.15 or later); to check which you have, Apple menu → About This Mac, the Chip or
+Processor line. (中文：[安装说明](zh/install.md))
 
 ## 1. Download and open
 
-[Download the disk image](https://github.com/lydiablllue/firetoad/releases/latest/download/FIRE-Toad.dmg) — `FIRE-Toad.dmg`, always the newest version (older
+[Download the disk image](https://github.com/lydiablllue/firetoad/releases/latest/download/FIRE-Toad.dmg) — `FIRE-Toad.dmg`, or [`FIRE-Toad-Intel.dmg`](https://github.com/lydiablllue/firetoad/releases/latest/download/FIRE-Toad-Intel.dmg) on an Intel Mac; always the newest version (older
 ones are on the [releases page](https://github.com/lydiablllue/firetoad/releases)) — and double-click it. In the window that opens, **double-click FIRE
 Toad**. There is nothing to drag. The disk image also holds a short note with these same steps.
 

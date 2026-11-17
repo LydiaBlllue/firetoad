@@ -825,6 +825,15 @@ const ymLabel = ym => MN[Number(ym.slice(5))-1] + (ym.slice(0,4) !== TODAY.slice
 const pc = (a,b) => b ? (a/b)*100 : 0;
 const cap1 = t => t.charAt(0).toUpperCase()+t.slice(1);
 const ymFull = ym => MN[Number(ym.slice(5))-1] + " " + ym.slice(0,4);
+// What a year's figures cover, said as the months they come from: two months of a year are
+// "Aug–Sep 2026", not "2026" (2026-11-12, user 001: "Income in 2026" over two months read as a
+// year's). A whole year is the year.
+const yrSpan = (yr, months) => {
+  const ms = [...new Set(months)].filter(m => m.startsWith(yr)).sort();
+  if(!ms.length || ms.length >= 12) return yr;
+  const a = MN[Number(ms[0].slice(5))-1], b = MN[Number(ms[ms.length-1].slice(5))-1];
+  return (a === b ? a : a + "\u2013" + b) + " " + yr;
+};
 // A month past what every statement reaches is open for one of two reasons, said apart: the
 // calendar has not finished it, or it has and a statement for it has not come yet.
 const notInYet = ym => {
@@ -874,7 +883,7 @@ function setYear(y){
 const PROFILE = {};
 const BROKER = "";          // the institution that holds the portfolio, from accounts.json
 const CP = INVEST.counterparty || null;   // who pays money back, from cashflow.json
-const VERSION = "1.0.8";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
+const VERSION = "1.0.9";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
 // The brand is data, not markup: it used to be typed into the <title>, the sidebar and the link
 // between the two dashboards, which is three places to miss when someone makes this theirs.
 // FIRE Toad is the product; the owner's name is the instance. Both are shown, neither typed
@@ -1520,6 +1529,9 @@ function bandLab(){
   const b = (RULES.buckets || []).find(x => x.target);
   return !b || b.key === "dry" ? term("dry_powder", "Dry powder") : b.name;
 }
+// The band is the owner's own rule: with no bucket set there is no rule to measure against, and
+// "Dry powder 0.0%" beside the cash at the broker read as a contradiction (2026-11-12, user 001).
+const hasBand = () => (RULES.buckets || []).some(x => Array.isArray(x.target));
 function renderHome(){
   renderNwChart();
   const yr = TODAY.slice(0,4);
@@ -1542,7 +1554,7 @@ function renderHome(){
   const C = {
     port: () => card(term("portfolio", "Portfolio"),
       numx(fmt(PORTFOLIO), split(grow.by), "Every account you hold to grow. Set-aside accounts and bank cash are not in it.", true),
-      !INVEST.investable ? "Nothing invested yet" : bandLab()+" "+INVEST.dryPct+"%"),
+      !INVEST.investable ? "Nothing invested yet" : hasBand() ? bandLab()+" "+INVEST.dryPct+"%" : ""),
     yrs: () => { const S = SAVINGS, t = S.years && yrsTxt(S.years);
       return t ? card("Years to financial independence", "About "+t+" years", "At "+fmt(S.invest)+" a month invested · <a href=\"#\" onclick=\"setPage('fire');return false\">FIRE →</a>") : null; },
     inv: () => card(dep ? "Invested in "+ymLabel(dep.ym) : "Invested this month",
@@ -2176,7 +2188,7 @@ function renderCatPage(){
         diff === null ? "\u2014" : numx((diff >= 0 ? "+" : "\u2212") + fmt(Math.abs(diff)),
           [["This month", fmt(total)], ["A usual month", "\u2212"+fmt(usual)]],
           "A usual month is the average of the "+nWin+" full months before this one. Months you set aside as unusual are left out.", true),
-        diff === null ? "Needs three full months" : diff > 0 && drivers.length ? "Mostly " + drivers.slice(0,2).map(r => catName(r.k)).join(" and ") : "",
+        diff === null ? moreMonths() : diff > 0 && drivers.length ? "Mostly " + drivers.slice(0,2).map(r => catName(r.k)).join(" and ") : "",
         diff !== null && diff > 0 ? "hi" : "");
 
   const mx = Math.max(...rows.map(r => Math.abs(r.v)), 1);
@@ -2206,7 +2218,7 @@ function renderCatPage(){
           ["Share of the month", pct(sel.v)+"%"],
           ["Purchases", sel.items.length],
           sel.med === null
-            ? ["Against its usual month", "Needs three full months", "mut"]
+            ? ["Against its usual month", moreMonths(), "mut"]
             : ["Against its usual month",
                numx((over(sel) >= 0 ? "+" : "\u2212") + fmt(Math.abs(over(sel))), [["This month", fmt(sel.v)], ["A usual month", "\u2212"+fmt(sel.med)]],
                  "A usual month is this category\u2019s median over the last "+win.length+" full months.", true),
@@ -2227,9 +2239,9 @@ function renderYr(){
 
   renderYearInsights();
   $("yrStats").innerHTML =
-    StatCard("Total spent in "+viewYear, numx(fmt(spent), [], "After refunds.")) +
-    StatCard("Spent a month in "+viewYear, spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], "This year only, open months included. "+(usualMonth() ? "A usual month, from your last full months, is "+fmt(usualMonth().v)+"." : "")) : null) +
-    (() => { const mt = spendMonths.map(m => ({m, v: monthTotal(m)})).sort((a,b) => b.v - a.v)[0];
+    StatCard("Total spent in "+yrSpan(viewYear, spendMonths), numx(fmt(spent), [], "After refunds.")) +
+    StatCard("Spent a month in "+yrSpan(viewYear, spendMonths), spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], "This year only, open months included. "+(usualMonth() ? "A usual month, from your last full months, is "+fmt(usualMonth().v)+"." : "")) : null) +
+    (() => { const mt = spendMonths.length > 1 ? spendMonths.map(m => ({m, v: monthTotal(m)})).sort((a,b) => b.v - a.v)[0] : null;
              return StatCard("Biggest month", mt ? ymFull(mt.m) : null, mt ? fmt(mt.v) : "", {text: true}); })();
 
   const byCat = {};
@@ -2242,7 +2254,7 @@ function renderYr(){
 
   const inc = ICATS.map(c => [c.k, cfy.reduce((s,m)=>s+(m[c.f]||0),0), c.c]).filter(x => x[1] > 0);
   const icard = StatCard;
-  $("incLab").textContent = "Income in "+viewYear;
+  $("incLab").textContent = "Income in "+yrSpan(viewYear, cfy.map(m => m.ym));
   $("incBig").innerHTML = hasIncome ? numx(fmt(income), inc.map(x => [x[0], fmt(x[1])]), cfy.length+" month"+(cfy.length === 1 ? "" : "s")+" on record.", true) : "\u2014";
   const imx = Math.max(...inc.map(x => x[1]), 1);
   // What the month card used to say, said once for the year: investment income is income but
@@ -2304,7 +2316,12 @@ function drawDonut(svgId, centerId, legendId, rows, totalVal, emptyMsg, withPct,
     const large = (a1-a0) > Math.PI ? 1 : 0;
     const x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
     const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
-    paths += '<path d="M '+x0+' '+y0+' A '+r+' '+r+' 0 '+large+' 1 '+x1+' '+y1+'" fill="none" stroke="'+seg.col+'" stroke-width="'+sw+'" data-i="'+i+'"/>';
+    // one slice is the whole ring: an arc that ends where it starts draws nothing, so a portfolio
+    // all in one currency showed an empty ring (2026-11-17); two half arcs make the circle
+    const xm = cx + r*Math.cos(a0 + Math.PI), ym = cy + r*Math.sin(a0 + Math.PI);
+    const d = rows.length === 1 ? 'M '+x0+' '+y0+' A '+r+' '+r+' 0 1 1 '+xm+' '+ym+' A '+r+' '+r+' 0 1 1 '+x0+' '+y0
+                                : 'M '+x0+' '+y0+' A '+r+' '+r+' 0 '+large+' 1 '+x1+' '+y1;
+    paths += '<path d="'+d+'" fill="none" stroke="'+seg.col+'" stroke-width="'+sw+'" data-i="'+i+'"/>';
     a += span;
   });
   svg.innerHTML = paths;
@@ -2330,6 +2347,13 @@ const MONTH_SKIP = {};
 const skipped = m => !!MONTH_SKIP[m];
 // Closed, and worth comparing against.
 const usableMonths = () => MONTHS.filter(m => m <= covEnd && !skipped(m));
+// What a card that needs three full months says until then: how many are still to come, so a
+// first month reads as on its way, not as broken (2026-11-12, user 001: "Needs three full
+// months" on four cards after a one-month setup).
+const moreMonths = () => {
+  const k = Math.max(1, 3 - usableMonths().length);
+  return "Ready after " + ["one more full month", "two more full months", "three more full months"][k - 1];
+};
 let baselineAvg = null;
 // A month only counts once EVERY card has reported it. Cards are on different statement cycles, so
 // Aug 2026 has MasterCard records but no Visa ones — folding that half-month into the average would
@@ -2364,8 +2388,8 @@ function renderBaseline(){
       '<div class="bm-row"><span>'+ymLabel(x.m)+' '+x.m.slice(0,4)+'</span><span class="num">'+fmt(x.v)+'</span></div>').join("");
   }else{
     $("baseHero").textContent = "—";
-    $("baseStats").innerHTML = StatCard(term("usual_month", "A usual month"), null, "Needs 3 full months of spending");
-    $("baseMonths").innerHTML = '<div class="empty">Needs 3 closed months with records ('+vals.length+' so far).</div>';
+    $("baseStats").innerHTML = StatCard(term("usual_month", "A usual month"), null, moreMonths());
+    $("baseMonths").innerHTML = '<div class="empty">'+moreMonths()+'. '+(vals.length ? (vals.length === 1 ? 'One' : 'Two')+' so far.' : 'None so far.')+'</div>';
   }
 }
 
@@ -2514,7 +2538,7 @@ function renderSafety(){
   $("safeStats").innerHTML =
     card(term("months_covered", "Months covered"),
       c.months === null ? "\u2014" : numx(monthsTxt(c.months), [["The money", fmt(c.money)], ["A usual month", fmt(c.cost)]], "The money \u00f7 a usual month.", false),
-      c.months === null ? "Needs three full months of spending to know a usual month."
+      c.months === null ? moreMonths() + ", when a usual month is known."
         : [state ? '<b style="color:var(--'+(state === "below" ? "rng-low" : state === "inside" ? "rng-ok" : "ink-2")+')">' + RANGE_SAYS[state] + '</b>' : "",
            c.abroadMonths !== null ? "With money abroad, " + monthsTxt(c.abroadMonths) + " months" : ""].filter(Boolean).join("<br>")) +
     card("The money",
@@ -3713,9 +3737,9 @@ function renderYearInsights(){
     ins.push({s:"w", t:"<b>"+topMer[0]+"</b> is "+Math.round(pc(topMer[1], din))+"% of Dining: "+fmt(topMer[1])+" of "+fmt(din)+"."});
   const mt = MONTHS.filter(m => m.startsWith(yr)).map(m => ({m, v: monthTotal(m)})).filter(x => x.v > 0);
   const win = usableMonths().slice(-12).map(monthTotal).filter(v => v > 0).sort((a,b)=>a-b);
-  if(mt.length > 1 && win.length){
-    const peak = mt.reduce((a,b) => b.v > a.v ? b : a);
-    const med = win[Math.floor(win.length/2)];
+  const peak = mt.length ? mt.reduce((a,b) => b.v > a.v ? b : a) : null, med = win.length ? win[Math.floor(win.length/2)] : 0;
+  // among two months one is always the bigger, and 1.0× a usual month is not standing out
+  if(mt.length >= 3 && med && peak.v / med >= 1.2){
     ins.push({s:"n", t:"<b>"+ymFull(peak.m)+"</b> was the biggest month: "+fmt(peak.v)+", "+(peak.v/med).toFixed(1)+"\u00d7 a usual month."});
   }
   $("yrInsights").innerHTML = insRows(ins, "Nothing stands out yet.");
@@ -3752,7 +3776,7 @@ const IV = (function(){
   const PRIMARY  = BANDED[0] || null;
   const DRY      = PRIMARY ? (PRIMARY.symbols||[]) : [];
   FGN.rows = (FGN.funds||[]).map(f => ({
-    account:FGN.label + " \u00b7 " + f.inst, sym:f.sym, name:f.name, fgn:f.amount, amount:f.amount, qty:null, cn:1, class:f.class,
+    account:FGN.label + " \u00b7 " + f.inst, inst:f.inst, sym:f.sym, name:f.name, fgn:f.amount, amount:f.amount, qty:null, cn:1, class:f.class,
     mv:+(f.amount*FGN.cadPerUnit).toFixed(2), bv:+((f.amount-f.gain)*FGN.cadPerUnit).toFixed(2)
   }));
   FGN.amount = (FGN.funds||[]).reduce((s,f)=>s+f.amount,0);
@@ -3799,10 +3823,10 @@ const IV = (function(){
            numx(fmt(PORTFOLIO), FGN.rows.length ? [["At "+DATA.broker, fmt(cadInv)], ["Funds abroad", fmt(fgn)]] : [], "Bank cash and set-aside accounts are left out.", true),
            prev ? deltaLine(cadInv, prev.cadInv) : "")
     + stat(term("set_aside", "Set aside"), numx(fmt(earm), EARMARK.map(a => [a, fmt(accVal(a))]), "", true))
-    + stat(bandLab(),
+    + (!hasBand() ? "" : stat(bandLab(),
            cadInv ? numx(pctS(dryPct), [...DRY.map(y => [y, fmt(positions.filter(p => p.sym === y && !EARMARK.includes(p.account)).reduce((s,p) => s + p.mv, 0))]), ["Out of", fmt(cadInv)]],
                          "Measured at "+DATA.broker+", set-aside accounts left out."+dryWas) : "\u2014",
-           cap(cadInv ? "" : "Nothing invested yet"));
+           cap(cadInv ? "" : "Nothing invested yet")));
   }
   function renderMeta(){
     // No exchange rate is the supported way to say nothing is held in another currency (a
@@ -3817,14 +3841,12 @@ const IV = (function(){
     ]);
   }
 
-  // ----- structure: the CAD side only, one denominator inside this chart
-  const BCOL=["#2a78d6","#008300","#eda100","#b7bfba","#7a5cd6","#c96f9b"];
-  const segs=[...BUCKETS.map((b,i)=>({k:b.name.split(" \u00b7 ")[0],v:B[b.key],c:BCOL[i%BCOL.length]})),
-              {k:"Idle cash",v:idle,c:"#d8dcd9"}];
+  // ----- structure: three cuts of the whole portfolio
   function renderBarbell(){
     // Three cuts of the same portfolio (the owner, 2026-10-26): by the currency it is held in, by
-    // what kind of asset it is, and by the buckets your rules are written in. Until then there was
-    // only the third, titled "the Canadian side" though more than half of it was in US dollars.
+    // what kind of asset it is, and by the account it sits in — each account as the broker names
+    // it, a fund abroad by the institution that holds it (2026-11-17, the owner: "by account /
+    // broker", in place of the buckets, which are a rule of one owner's and not where money is).
     const port = positions.filter(p => !EARMARK.includes(p.account));
     const cut = (keyOf, order) => {
       const m = {};
@@ -3838,7 +3860,13 @@ const IV = (function(){
       [{id:"stocks", n:"Stocks", c:"#2a78d6"}, {id:"bonds", n:"Bonds & T-bills", c:"#eda100"},
        {id:"cash", n:"Cash", c:"#b7bfba"}, {id:"gold", n:"Gold", c:"#c98500"}, {id:"crypto", n:"Crypto", c:"#e87ba4"},
        {id:"none", n:"Not classified", c:"#d8dcd9"}]);
-    const byBucket = segs.filter(g => g.v > 0).map(g => ({k:g.k, v:g.v, col:g.c}));
+    const ACOL = ["#2a78d6","#1baf7a","#eda100","#7a5cd6","#c96f9b","#b7bfba"];
+    const byAcctM = {};
+    port.forEach(p => { const k = p.cn ? (p.inst || FGN.label) : p.account; byAcctM[k] = (byAcctM[k] || 0) + p.mv; });
+    let byAcct = Object.entries(byAcctM).filter(x => x[1] > 0).sort((a,b) => b[1] - a[1]);
+    // six slices at most: the rest are one, named for how many they are
+    if(byAcct.length > 6){ const rest = byAcct.slice(5); byAcct = byAcct.slice(0, 5).concat([["The other " + rest.length + " accounts", rest.reduce((s,x) => s + x[1], 0)]]); }
+    byAcct = byAcct.map((x, i) => ({k:x[0], v:x[1], col:ACOL[i % ACOL.length]}));
     const block = (id, title, centre) =>
       `<div><div class="sub">${title}</div><div class="donut-wrap"><div class="donut-box"><svg id="${id}" viewBox="0 0 170 170" width="170" height="170"></svg>`
       + `<div class="donut-center"><div class="t num" id="${id}T"></div><div class="s">${centre}</div></div></div>`
@@ -3848,21 +3876,21 @@ const IV = (function(){
       `<div class="split3">`
       + block("spCur", "By currency", "portfolio")
       + block("spType", "By kind of asset", "portfolio")
-      + block("bbDonut", "By " + term("bucket", "bucket"), "at " + DATA.broker)
+      + block("bbDonut", "By account", "portfolio")
       + `</div>`
       + (unclassed.length ? noteBox(unclassed.join(", ") + (unclassed.length > 1 ? " have" : " has") + " no kind of asset yet, so "
           + (unclassed.length > 1 ? "they sit" : "it sits") + " under Not classified. Say what " + (unclassed.length > 1 ? "they hold" : "it holds") + " and it moves.") : "");
     const empty = "Nothing invested yet. Your first broker report fills this.";
     drawDonut("spCur", "spCurT", "spCurL", byCur, portfolio, empty, true);
     drawDonut("spType", "spTypeT", "spTypeL", byType, portfolio, empty, true);
-    drawDonut("bbDonut", "bbDonutT", "bbDonutL", byBucket, cadInv, empty, true);
+    drawDonut("bbDonut", "bbDonutT", "bbDonutL", byAcct, portfolio, empty, true);
   }
 
 
   // ----- holdings: by role or by account; P&L off by default because cost is not a decision input
   let showPL = false, view = "role";
   function roleView(){
-    const order=[...BUCKETS.map(b=>[b.name,b.key]),["Idle cash","cash"],["Held abroad","cn"],["Set aside","earm"]];
+    const order=[...BUCKETS.map(b=>[b.name,b.key]),["Cash at the broker","cash"],["Held abroad","cn"],["Set aside","earm"]];
     const buckets={cash:[],cn:[],earm:[]}; BUCKETS.forEach(b=>buckets[b.key]=[]);
     const agg={};
     for(const p of positions){

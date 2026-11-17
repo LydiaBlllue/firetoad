@@ -1,11 +1,11 @@
 # 在 Mac 上安装应用
 
-安装包已用 Apple 开发者身份签名并经 Apple 公证，双击就能打开。（English:
+安装包已用 Apple 开发者身份签名并经 Apple 公证，双击就能打开。安装包有两个：Apple 芯片的 Mac 用一个（macOS 11 及以上），Intel 芯片的 Mac 用另一个（macOS 10.15 及以上）；查法：左上角苹果菜单 →「关于本机」，看「芯片」或「处理器」那一行。（English:
 [Installing the app](../install.md)）
 
 ## 1. 下载并打开
 
-[下载磁盘映像](https://github.com/lydiablllue/firetoad/releases/latest/download/FIRE-Toad.dmg)（`FIRE-Toad.dmg`，永远是最新版；旧版本在
+[下载磁盘映像](https://github.com/lydiablllue/firetoad/releases/latest/download/FIRE-Toad.dmg)（`FIRE-Toad.dmg`；Intel 芯片的 Mac 下载 [`FIRE-Toad-Intel.dmg`](https://github.com/lydiablllue/firetoad/releases/latest/download/FIRE-Toad-Intel.dmg)；永远是最新版；旧版本在
 [发布页](https://github.com/lydiablllue/firetoad/releases)上），双击它。在弹出的窗口里**双击 FIRE Toad**，不用拖。磁盘映像窗口里的字和说明是英文的（打开磁盘映像时还没有程序在运行，没法按系统语言显示）；之后应用会按系统语言显示。
 
 macOS 会问一次：*"FIRE Toad"是从互联网下载的应用。你确定要打开吗？* 点 **打开**。FIRE Toad 会把自己拷进

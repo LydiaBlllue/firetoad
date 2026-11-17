@@ -407,9 +407,9 @@ def type_row(ws, acc, desc, amt, when, holder=None):
         if other and other in getattr(ws, "own_elsewhere", ()):
             # an account the owner has already said is their own: the rule, not the question
             return "Transfer", f"Transfer {way} your own account …{other[-4:]}", None
-        return "Transfer", f"Transfer {way} an account not in the register", {
+        return "Transfer", f"Transfer {way} an account you haven't added", {
             "kind": "transfer",
-            "what": f"A {money(abs(amt))} transfer {way} an account the register does not have, on "
+            "what": f"A {money(abs(amt))} transfer {way} an account you haven't added, on "
                     f"{short(iso_to_date(when))} ({desc.strip()[:60]}).",
             "default": "Transfer", "facts": {"kind": "account", "amount": abs(amt), "date": when, "way": way,
                                              "desc": desc.strip()[:60], "other": other}}

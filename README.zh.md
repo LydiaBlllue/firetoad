@@ -20,7 +20,7 @@
 | | **应用**——不需要 Claude 会员 | **Claude Code** |
 |---|---|---|
 | 是什么 | Mac 上的 `FIRE Toad.app`：你的文件夹在浏览器里打开——建账是六屏向导，每月是四步面板，中英文可切 | 同一个文件夹，在 Claude 桌面应用的对话里操作 |
-| 需要 | 一台 Mac，和[安装包](https://github.com/lydiablllue/firetoad/releases/latest/download/FIRE-Toad.dmg)（已签名并经 Apple 公证：双击就能打开——[安装说明](docs/zh/install.md)） | 含 Claude Code 的会员（Pro、Max、Team 或 Enterprise）、Claude 桌面应用、Python 3 |
+| 需要 | 一台 Mac 和对应的安装包：[Apple 芯片](https://github.com/lydiablllue/firetoad/releases/latest/download/FIRE-Toad.dmg)（macOS 11 及以上），或 [Intel 芯片](https://github.com/lydiablllue/firetoad/releases/latest/download/FIRE-Toad-Intel.dmg)（macOS 10.15 及以上）（已签名并经 Apple 公证：双击就能打开——[安装说明](docs/zh/install.md)） | 含 Claude Code 的会员（Pro、Max、Team 或 Enterprise）、Claude 桌面应用、Python 3 |
 | 适合 | 银行是工具能读的（RBC、BMO，或任何银行的 OFX 下载），券商是 Wealthsimple | 解析器读不了的对账单、要配列的银行 CSV、境外账户、借给朋友的钱、想用说的 |
 
 两边跑的是同一套代码，只在你自己的电脑上，同一套检查保证结果一样。先用一种，另一种随时都在。
@@ -51,7 +51,7 @@
 
 **用应用**
 
-1. **[下载 FIRE Toad](https://github.com/lydiablllue/firetoad/releases/latest/download/FIRE-Toad.dmg)**，打开磁盘映像，双击里面的应用：它会自动装进"应用程序"并打开。安装包已签名并经 Apple 公证；
+1. **[下载 FIRE Toad](https://github.com/lydiablllue/firetoad/releases/latest/download/FIRE-Toad.dmg)**（[Intel 芯片的 Mac](https://github.com/lydiablllue/firetoad/releases/latest/download/FIRE-Toad-Intel.dmg)），打开磁盘映像，双击里面的应用：它会自动装进"应用程序"并打开。安装包已签名并经 Apple 公证；
    macOS 会问一次是否打开从互联网下载的应用，点「打开」（[安装说明](docs/zh/install.md)）。
 2. **点「新建文件夹」**：它会替你建在「文稿」里。浏览器会打开建账向导。
 3. **把上个月的文件拖到第二屏**，不要改文件名。

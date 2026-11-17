@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.0.9 — 2026-11-17
+
+- **An app for Intel Macs, and older macOS for both**: the download for Apple silicon now opens on
+  macOS 11 or later (it needed macOS 14), and a second download, for Intel Macs, on macOS 10.15 or
+  later. Each is built on the same Python 3.12, not on whatever Python the building Mac has.
+- **The front page, README and install guide say which Macs it runs on**, with how to check, and
+  link both downloads: Apple silicon (macOS 11 or later) and Intel (macOS 10.15 or later).
+- **The front page says what a month asks of you**: three things to do — get the files, import,
+  categorize — each with what you do and what the app does, and then the result. The panel's
+  pictures show only its card.
+- **A year with only a few months says which months**: "Income in Aug–Sep 2026", not "Income in
+  2026"; the biggest month is named only among three or more, and only when it stands out.
+- **A card that needs three full months says how long until it is ready**: "Ready after two more
+  full months", not "Needs three full months".
+- **The setup drafts the everyday amount from every month you bring**, averaged, not from the
+  newest statement alone.
+- **An old panel tab says it is no longer the one in use**: opened again in another tab, or
+  FIRE Toad closed since.
+- **Plainer words**: "Cash at the broker", not "Idle cash"; a transfer goes to "an account you
+  haven't added", not one "not in the register". With no investing bucket set, Home and Portfolio
+  no longer show "Dry powder 0.0%" beside the cash.
+- **Portfolio splits by account**: the third ring shows which account the money sits in, as your
+  broker names it, in place of the buckets.
+- **A ring with one slice is drawn whole**: a portfolio all in one currency showed an empty ring.
+
 ## 1.0.8 — 2026-11-17
 
 - **Download for Mac downloads the app**: the front page's button fetches the newest disk image

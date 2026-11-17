@@ -30,6 +30,7 @@ GH = "https://github.com/lydiablllue/firetoad"
 # Every Release carries the dmg twice: FIRE-Toad-X.Y.Z.dmg and FIRE-Toad.dmg, the same bytes under a
 # name that never changes (since 1.0.7), so the button downloads the newest one directly.
 DOWNLOAD = GH + "/releases/latest/download/FIRE-Toad.dmg"
+DOWNLOAD_INTEL = GH + "/releases/latest/download/FIRE-Toad-Intel.dmg"   # from 1.0.9 on
 
 # The demo's person is the one tools/demo.py invents; the page names her from there.
 sys.path.insert(0, os.path.join(REPO, "tools"))
@@ -48,6 +49,8 @@ EN = dict(
           "checks that each one adds up, sorts every purchase, and builds one page: what you spent, "
           "what you own, and how many years until financial independence."),
     demo="Try the live demo", download="Download for Mac — free",
+    mac=("For Macs with Apple silicon, macOS 11 or later. Intel Mac (macOS 10.15 or later)? ",
+         "Download the Intel version", "."),
     fine=(f"The demo shows {DEMO['first']}'s money — a made-up {DEMO['age']}-year-old in {DEMO['city']}. "
           "Nothing to install. The app is signed and notarised by Apple, works in English and Chinese, "
           "and is free and open source (MIT)."),
@@ -80,8 +83,8 @@ EN = dict(
         ("Where did my money go?", "Your year by category and by month, with what stands out: "
                                    "the biggest category, subscriptions, the priciest month.",
          "crop-year.png", "The year: spending by category and what stands out"),
-        ("What do I own?", "Your investments by currency, by type of asset, and by your own buckets.",
-         "crop-port.png", "Portfolio: by currency, kind of asset and bucket"),
+        ("What do I own?", "Your investments by currency, by type of asset, and by account.",
+         "crop-port.png", "Portfolio: by currency, kind of asset and account"),
         ("Is everything in?", "Which statements have arrived each month, and what's still missing.",
          "crop-src.png", "Statements: a dot for each month each statement arrived")],
     banks_lab="Banks it reads", banks_h="Straight from your bank's own files",
@@ -108,7 +111,9 @@ EN = dict(
           "shop names. Backing up the folder is up to you."),
          ("Do I need Claude?", "No. The app works on its own. Claude Code is another way to use it — "
           "for a statement the app can't read, accounts abroad, or a question in plain words."),
-         ("Is there a Windows version?", "Not as a download yet. On Windows it runs from Python "
+         ("Which computers does it run on?", "A Mac: one download for Apple silicon (macOS 11 or later), "
+          "one for Intel (macOS 10.15 or later). To check which you have: Apple menu → About This Mac, "
+          "the Chip or Processor line. There is no Windows download yet; there it runs from Python "
           "(python3 app.py)."),
          ("My bank isn't on the list.", "Download your transactions as OFX or QFX (the Quicken or "
           "Money option) — most Canadian banks offer it. If yours doesn't, use a CSV, or type in the "
@@ -128,6 +133,8 @@ ZH = dict(
     lede=("每个月把银行对账单放进一个文件夹。FIRE蛙在你的 Mac 上逐份读取、核对金额，把每笔消费分好类，"
           "生成一页总览：花了多少、有多少、还要几年财务自由。"),
     demo="看在线演示", download="免费下载 Mac 版",
+    mac=("适用于 Apple 芯片的 Mac，macOS 11 及以上。Intel 芯片的 Mac（macOS 10.15 及以上）请",
+         "下载 Intel 版", "。"),
     fine=(f"演示里是 {DEMO['first']} 的钱：一位住在{CITY_ZH.get(DEMO['city'], DEMO['city'])}的 {DEMO['age']} 岁上班族，"
           "人物是虚构的。不用安装，打开就能看（演示页面是英文的）。app 已通过 Apple 签名和公证，支持中英文，免费开源（MIT）。"),
     phone="演示适合在电脑上看；用手机的话，可以先看下面的截图。",
@@ -153,8 +160,8 @@ ZH = dict(
          "crop-home.png", "首页：净值、还要几年财务自由、这个月的投资和花销"),
         ("钱都花到哪了？", "按分类、按月份看一整年，并标出值得注意的：最大的分类、订阅、花得最多的月份。",
          "crop-year.png", "这一年：按分类的花销和值得注意的地方"),
-        ("我的投资怎么分布？", "投资组合按币种、资产类别和你自己的分组拆开看。",
-         "crop-port.png", "投资组合：按币种、资产类别和分组"),
+        ("我的投资怎么分布？", "投资组合按币种、资产类别和账户拆开看。",
+         "crop-port.png", "投资组合：按币种、资产类别和账户"),
         ("对账单都齐了吗？", "每份对账单哪个月到了、还差哪些，一目了然。",
          "crop-src.png", "对账单：每份每个月到了就是一个点")],
     banks_lab="支持哪些银行", banks_h="直接用银行提供的文件",
@@ -175,7 +182,9 @@ ZH = dict(
           "（只发送商户名称），否则什么都不会发出去。文件夹需要你自己备份。"),
          ("需要用 Claude 吗？", "不需要，app 可以单独使用。Claude Code 是另一种用法，适合处理 app 读不了的对账单、"
           "海外账户，或者想直接用一句话提问。"),
-         ("有 Windows 版吗？", "还没有安装包。在 Windows 上可以用 Python 运行（python3 app.py）。"),
+         ("哪些电脑能用？", "Mac 都能用：Apple 芯片的 Mac 一个安装包（macOS 11 及以上），Intel 芯片的 Mac 一个"
+          "（macOS 10.15 及以上）。查法：左上角苹果菜单 →「关于本机」，看「芯片」或「处理器」那一行。Windows 还没有"
+          "安装包，可以用 Python 运行（python3 app.py）。"),
          ("我的银行不在列表里怎么办？", "把交易记录下载成 OFX 或 QFX 格式（选 Quicken 或 Money 那一项），"
           "加拿大大多数银行都支持。实在不行，也可以用 CSV，或者每月手动填一次余额。")],
     end_h="先用示例数据试试看。",
@@ -337,6 +346,7 @@ def page(t, base):
       <h1>{e(t['h1'])}</h1>
       <p class="lede">{e(t['lede'])}</p>
       <div class="actions">{btns}</div>
+      <p class="fine">{e(t['mac'][0])}<a href="{DOWNLOAD_INTEL}">{e(t['mac'][1])}</a>{e(t['mac'][2])}</p>
       <p class="fine">{e(t['fine'])}</p>
       <p class="fine phone">{e(t['phone'])}</p>
     </div>
