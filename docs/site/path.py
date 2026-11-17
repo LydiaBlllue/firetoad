@@ -1,4 +1,4 @@
-"""path.py — "My way to FIRE" on the site: one page a stop, in English and Chinese, and an index.
+"""path.py — "FIRE questions" on the site (FIRE 问答; the knowledge map's "My way to FIRE"): one page a stop, in English and Chinese, and an index.
 
 A stop is one question someone would search for, answered in a sentence, with why it matters, a
 way to work it out, its sources and what to know before relying on it. The content is data
@@ -29,9 +29,9 @@ CHECKED = {"en": "Checked against these sources in November 2026.", "zh": "2026 
 
 # ---------------------------------------------------------------- what the site says around a stop
 WORDS = {
-    "en": dict(road="My way to FIRE", prev="Before this", next="Next stop", why="Why it matters",
+    "en": dict(road="FIRE questions", prev="Before this", next="Next stop", why="Why it matters",
                src="Sources", limits="Before you rely on it", download="Download for Mac — free",
-               demo="See it on sample data", other="中文", how="How it works",
+               demo="See it on sample data", other="中文", how="About the app",
                cta=("FIRE Toad works these out with your own numbers: your target, the age your pensions "
                     "start paying part of the bill, your savings rate. It runs on your Mac; your statements "
                     "never leave it."),
@@ -43,8 +43,8 @@ WORDS = {
                anchors=["get-started", "set-a-goal", "stay-on-track", "after-fire"],
                stage_q=["Where does my money go, and will I be all right?", "How much do I need, and how long will it take?",
                         "How do I keep going each month?", "How do I live on it?"]),
-    "zh": dict(road="我的 FIRE 之路", prev="上一站", next="下一站", why="为什么要紧", src="出处",
-               limits="用之前要知道", download="下载 Mac 版，免费", demo="先看演示数据", other="English", how="怎么用",
+    "zh": dict(road="FIRE 问答", prev="上一站", next="下一站", why="为什么要紧", src="出处",
+               limits="用之前要知道", download="下载 Mac 版，免费", demo="先看演示数据", other="English", how="关于这个 app",
                cta="FIRE Toad 用你自己的数算这些：你的目标、你的养老金几岁开始替组合付一部分开销、你的储蓄率。它在你的 Mac 上运行，对账单不会离开你的电脑。",
                index_lede="走向财务自由要懂的事，一页一个问题，每页带出处。先上线了几页，其余的核对完出处一页一页加。",
                index_cta="FIRE Toad 用你的对账单算出你自己的目标、离财务自由几年和储蓄率。它在你的 Mac 上运行，对账单不会离开你的电脑。",
@@ -388,7 +388,7 @@ def head(lang, title, desc, url, alt_en, alt_zh, up, css, ld=None):
 def top(lang, up, other_href, w):
     return f"""<header class="top"><div class="wrap">
   <a class="brand" href="{up}{'zh/' if lang == 'zh' else ''}"><img src="{up}logo.svg" alt="">FIRE Toad</a>
-  <nav><a class="road" href="{up}{'zh/' if lang == 'zh' else ''}path/">{e(w['road'])}</a><a class="sec" href="{up}{'zh/' if lang == 'zh' else ''}#how">{e(w['how'])}</a><a href="{other_href}" hreflang="{'en' if lang == 'zh' else 'zh'}" lang="{'en' if lang == 'zh' else 'zh'}">{w['other']}</a></nav>
+  <nav><a class="road" href="{up}{'zh/' if lang == 'zh' else ''}path/">{e(w['road'])}</a><a class="sec" href="{up}{'zh/' if lang == 'zh' else ''}">{e(w['how'])}</a><a href="{other_href}" hreflang="{'en' if lang == 'zh' else 'zh'}" lang="{'en' if lang == 'zh' else 'zh'}">{w['other']}</a></nav>
 </div></header>"""
 
 

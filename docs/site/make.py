@@ -3,7 +3,7 @@
 
     python3 docs/site/make.py OUT --base https://<owner>.github.io/<repo>
 
-writes OUT/index.html, OUT/zh/index.html, the stops of "My way to FIRE" (docs/site/path.py) under
+writes OUT/index.html, OUT/zh/index.html, the pages of "FIRE questions" (docs/site/path.py) under
 OUT/path/ and OUT/zh/path/, OUT/sitemap.xml and copies the demo
 (dashboards/finance_dashboard.html → OUT/dashboard.html), the logo and docs/screens/ beside them.
 When the site is the whole domain (a custom domain, no /<repo>/ path) it also writes
@@ -38,7 +38,7 @@ DOWNLOAD_INTEL = GH + "/releases/latest/download/FIRE-Toad-Intel.dmg"   # from 1
 sys.path.insert(0, os.path.join(REPO, "tools"))
 from demo import P as DEMO  # noqa: E402
 sys.path.insert(0, HERE)
-import path as road  # noqa: E402  "My way to FIRE": one page a stop, and an index
+import path as road  # noqa: E402  "FIRE questions": one page a question, and an index
 CITY_ZH = {"Ottawa": "渥太华", "Toronto": "多伦多", "Vancouver": "温哥华", "Montreal": "蒙特利尔", "Calgary": "卡尔加里"}
 
 EN = dict(
@@ -47,7 +47,7 @@ EN = dict(
     desc=("Free, open-source Mac app for Canadians. Drop in your RBC, BMO or any bank's statements "
           "and see your spending, net worth and years to FIRE. No bank login, no account."),
     name="FIRE Toad",
-    nav=[("path/", "My way to FIRE"), ("#how", "How it works"), ("#banks", "Banks"), ("#faq", "Questions")],
+    nav=[("path/", "FIRE questions"), ("#how", "A month with the app"), ("#banks", "Banks"), ("#faq", "Questions")],
     h1="See where your money goes, what you've built, and how many years until work is optional.",
     lede=("Once a month, drop your bank statements into a folder. FIRE Toad reads them on your Mac, "
           "checks that each one adds up, sorts every purchase, and builds one page: what you spent, "
@@ -65,7 +65,7 @@ EN = dict(
             ("Every number adds up.", "A statement only gets in if it matches the totals printed on it."),
             ("A FIRE plan, not just a budget.", "Years to financial independence, how long your money "
              "will last, your TFSA, RRSP and FHSA, and accounts abroad — all in one net worth.")],
-    how_lab="How it works", how_h="Once a month, three things to do", you="You", app="The app",
+    how_lab="A month with the app", how_h="Once a month, three things to do", you="You", app="The app",
     steps=[("Get your files", "Download last month's statements from your bank, plus your broker's export if you have one.",
             "Tells you which ones are still missing and where to find each.",
             "In the app: each account and what is still needed, and the files in the folder"),
@@ -132,7 +132,7 @@ ZH = dict(
     desc=("免费开源的 Mac 记账 app，为在加拿大生活的人做。放进 RBC、BMO 或其他银行的对账单，就能看到钱花在哪、"
           "净值多少、还要几年财务自由。不用连银行，也不用注册。"),
     name="FIRE蛙 FIRE Toad",
-    nav=[("path/", "我的 FIRE 之路"), ("#how", "怎么用"), ("#banks", "支持的银行"), ("#faq", "常见问题")],
+    nav=[("path/", "FIRE 问答"), ("#how", "每月怎么用"), ("#banks", "支持的银行"), ("#faq", "常见问题")],
     h1="钱花在哪、攒了多少、还要几年财务自由——一页看清。",
     lede=("每个月把银行对账单放进一个文件夹。FIRE蛙在你的 Mac 上逐份读取、核对金额，把每笔消费分好类，"
           "生成一页总览：花了多少、有多少、还要几年财务自由。"),
@@ -146,7 +146,7 @@ ZH = dict(
     points=[("不用连银行。", "对账单你自己下载，app 在你的电脑上读取，不上传任何东西，也不用注册。"),
             ("每个数都对得上。", "每份对账单都要和它自己印的合计一致，才会收进来。"),
             ("不只是记账，还有 FIRE 计划。", "还要几年财务自由、退休后钱能撑多久；TFSA、RRSP、FHSA 和海外账户，都算进同一个净值。")],
-    how_lab="怎么用", how_h="每个月，你只做三件事", you="你", app="app",
+    how_lab="每月怎么用", how_h="每个月，你只做三件事", you="你", app="app",
     steps=[("下载文件", "从网银下载上个月的对账单；有券商账户的话，再导出一份券商记录。",
             "提醒你还差哪几份、每份去哪下载。",
             "app 里：每个账户还差什么，文件夹里已经有哪些文件"),
@@ -218,7 +218,7 @@ a { color:inherit; }
 .top nav a { text-decoration:none; }
 .top nav a:hover { color:var(--ink); }
 @media (max-width:760px) { .top nav .sec { display:none; } }
-/* "My way to FIRE" stays in the bar on a phone (2026-11-17): nothing in the bar wraps, and below
+/* "FIRE questions" stays in the bar on a phone (2026-11-17): nothing in the bar wraps, and below
    400px the wordmark gives way to the logo alone, which still goes home */
 .top a { white-space:nowrap; }
 @media (max-width:400px) { .top .brand { font-size:0; gap:0; } .top nav { gap:14px; font-size:14px; } }

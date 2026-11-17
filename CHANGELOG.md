@@ -2,11 +2,12 @@
 
 ## 1.1.0 — unreleased
 
-- **The site has its first pages of "My way to FIRE"**: four questions people ask on the way to
+- **The site has its first "FIRE questions"**: four questions people ask on the way to
   financial independence, each answered on one page in English and Chinese, with its sources and a
   way to work it out — how much you need to retire early, whether 4% lasts 40 or 50 years, when to
   take CPP, and why a raise often doesn't raise your savings. More follow as each one's sources are
-  checked; nothing links to a page that isn't up.
+  checked; nothing links to a page that isn't up. The top bar says what each link is: FIRE
+  questions, A month with the app, and on a question's page, About the app.
 
 ## 1.0.9 — 2026-11-17
 
