@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.8 — unreleased
+## 1.0.8 — 2026-11-17
 
 - **Download for Mac downloads the app**: the front page's button fetches the newest disk image
   directly, instead of opening the list of releases; so do the links in the README and the install
