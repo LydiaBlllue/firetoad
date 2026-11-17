@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.9 — unreleased
+
+- **The front page says what a month asks of you**: three things to do — get the files, import,
+  categorize — each with what you do and what the app does, and then the result. The panel's
+  pictures show only its card.
+
 ## 1.0.8 — 2026-11-17
 
 - **Download for Mac downloads the app**: the front page's button fetches the newest disk image

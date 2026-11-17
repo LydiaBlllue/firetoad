@@ -58,17 +58,20 @@ EN = dict(
             ("Every number adds up.", "A statement only gets in if it matches the totals printed on it."),
             ("A FIRE plan, not just a budget.", "Years to financial independence, how long your money "
              "will last, your TFSA, RRSP and FHSA, and accounts abroad — all in one net worth.")],
-    how_lab="How it works", how_h="Four steps, once a month",
-    steps=[("Get your files", "Download last month's statements from your bank. The app tells you "
-                              "which ones are missing and where to find each.",
-            "Step 1 in the app: each account and what is still needed, and the files in the folder"),
-           ("Import", "Drag them in. Each one is read on your Mac and only gets in if it adds up.",
-            "Step 2: what the import will add, before anything is written"),
-           ("Categorize", "You only answer what a program can't decide — a new shop, a transfer "
-                          "with no name. One tap each, and it remembers next time.",
-            "Step 3: one question at a time, here a transfer with no sender"),
-           ("Done", "Your page updates with the new month.",
-            "Step 4: what changed, with the net worth before and after")],
+    how_lab="How it works", how_h="Once a month, three things to do", you="You", app="The app",
+    steps=[("Get your files", "Download last month's statements from your bank, plus your broker's export if you have one.",
+            "Tells you which ones are still missing and where to find each.",
+            "In the app: each account and what is still needed, and the files in the folder"),
+           ("Import", "Drag them in and press Import.",
+            "Reads each one on your Mac — nothing is uploaded — and only lets it in if it matches the "
+            "statement's own totals. You can undo it.",
+            "In the app: what the import will add, before anything is written"),
+           ("Categorize", "Answer what only you know: a new shop, an e-Transfer with no name. Some months "
+                          "there's nothing to ask.",
+            "Remembers every shop and sender you name.",
+            "In the app: one question at a time, here an e-Transfer with no sender")],
+    then_h="Then", then_p="Your page updates with the new month: what you spent, and where your net worth moved.",
+    then_alt="In the app: what changed, with the net worth before and after",
     panel="panel",
     q_lab="What it tells you",
     qs=[("Where do I stand?", "Your net worth across every account and currency — each part labelled "
@@ -132,15 +135,18 @@ ZH = dict(
     points=[("不用连银行。", "对账单你自己下载，app 在你的电脑上读取，不上传任何东西，也不用注册。"),
             ("每个数都对得上。", "每份对账单都要和它自己印的合计一致，才会收进来。"),
             ("不只是记账，还有 FIRE 计划。", "还要几年财务自由、退休后钱能撑多久；TFSA、RRSP、FHSA 和海外账户，都算进同一个净值。")],
-    how_lab="怎么用", how_h="每个月，四步搞定",
-    steps=[("下载文件", "从网银下载上个月的对账单。app 会提醒你还差哪几份、每份去哪下载。",
-            "app 里的第 1 步：每个账户还差什么，文件夹里已经有哪些文件"),
-           ("导入", "把文件拖进来。每份都在你的 Mac 上读取，金额核对无误才收进来。",
-            "第 2 步：写进去之前，先告诉你会加进来什么"),
-           ("归类", "只有程序判断不了的才问你，比如第一次出现的商户、没写付款人的转账。点一下就好，下次自动记住。",
-            "第 3 步：一次只问一件事，这里是一笔没写付款人的转账"),
-           ("完成", "你的总览页加上新的一个月，自动更新。",
-            "第 4 步：这次改了什么，净值前后各是多少")],
+    how_lab="怎么用", how_h="每个月，你只做三件事", you="你", app="app",
+    steps=[("下载文件", "从网银下载上个月的对账单；有券商账户的话，再导出一份券商记录。",
+            "提醒你还差哪几份、每份去哪下载。",
+            "app 里：每个账户还差什么，文件夹里已经有哪些文件"),
+           ("导入", "把文件拖进来，点「导入」。",
+            "在你的 Mac 上逐份读取，不上传；和对账单自己印的合计一致才收进来。导入后也可以撤销。",
+            "app 里：写进去之前，先告诉你会加进来什么"),
+           ("归类", "回答只有你知道的事，比如第一次出现的商户、没写付款人的 e-Transfer。有的月份一个问题都没有。",
+            "你说过的商户和付款人，它都会记住。",
+            "app 里：一次只问一件事，这里是一笔没写付款人的 e-Transfer")],
+    then_h="然后", then_p="你的总览页加上新的一个月：花了多少，净值怎么变。",
+    then_alt="app 里：这次改了什么，净值前后各是多少",
     panel="panel-zh",
     q_lab="它能回答",
     qs=[("我现在有多少家底？", "所有账户、所有币种合在一起的净值：每一行是这笔钱的用途，色条的颜色表示取用有多方便。",
@@ -224,17 +230,26 @@ h1 { font-size:clamp(30px,3.3vw,44px); line-height:1.1; letter-spacing:-.025em; 
 .points span { color:var(--ink-2); font-size:15px; }
 section { padding:72px 0 0; scroll-margin-top:60px; }
 h2 { font-size:clamp(24px,3vw,32px); letter-spacing:-.015em; line-height:1.2; margin:0 0 28px; }
-.steps { display:grid; grid-template-columns:1fr 1fr; gap:48px 40px; align-items:start;
-         margin:0; padding:0; list-style:none; counter-reset:s; }
-@media (max-width:760px) { .steps { grid-template-columns:1fr; gap:40px; } }
-.steps li { counter-increment:s; }
-.steps .st { position:relative; padding:0 0 18px 44px; min-height:92px; }
-@media (max-width:760px) { .steps .st { min-height:0; } }
-.steps .st::before { content:counter(s); position:absolute; left:0; top:0; width:28px; height:28px; border-radius:50%;
-                    background:var(--btn); color:#fff; font-weight:700; font-size:14px; display:flex;
-                    align-items:center; justify-content:center; }
-.steps b { display:block; font-size:17px; margin:2px 0 4px; }
-.steps span { color:var(--ink-2); font-size:15px; }
+/* Once a month, three things to do (2026-11-17, user 001): what you do is one short line, what the
+   app does the longer one under it; then the result, which asks nothing of you. */
+.walk { display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start; margin:0; padding:0; list-style:none; }
+@media (max-width:980px) { .walk { grid-template-columns:1fr; } }
+.wk { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px 22px 20px;
+      display:flex; flex-direction:column; gap:16px; }
+.wk h3 { display:flex; align-items:center; gap:12px; font-size:20px; margin:0; letter-spacing:-.01em; }
+.wk h3 i { flex:none; width:28px; height:28px; border-radius:50%; background:var(--btn); color:#fff; font-style:normal;
+           font-size:14px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; }
+.who { display:grid; grid-template-columns:auto 1fr; gap:8px 14px; margin:0; font-size:15.5px; line-height:1.5; }
+.who dt { color:var(--muted); font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+          padding-top:3px; white-space:nowrap; }
+.who dd { margin:0; color:var(--ink-2); }
+.who dd.you { color:var(--ink); }
+.wk .pic { margin:0; }
+.wk .pic img { display:block; width:100%; height:auto; border-radius:10px; border:1px solid var(--border);
+               box-shadow:0 1px 2px rgba(46,44,41,.05), 0 10px 28px rgba(46,44,41,.08); }
+.wk.then { background:#eaf1ea; border-color:rgba(30,122,70,.22); }
+.wk.then h3 i { background:var(--ok); }
+.wk.then p { margin:0; font-size:15.5px; color:var(--ink-2); }
 .qs { display:grid; gap:56px; }
 .q { display:grid; grid-template-columns:4fr 7fr; gap:40px; align-items:center; }
 .q:nth-child(even) { grid-template-columns:7fr 4fr; }
@@ -330,9 +345,11 @@ def page(t, base):
   <section id="how">
     <p class="lab">{e(t['how_lab'])}</p>
     <h2>{e(t['how_h'])}</h2>
-    <ol class="steps">{''.join(f'<li><div class="st"><b>{e(a)}</b><span>{e(b)}</span></div>'
-                               f'<figure class="shot">{img(panel(i), alt)}</figure></li>'
-                               for i, (a, b, alt) in enumerate(t['steps'], 1))}</ol>
+    <ol class="walk">{''.join(f'<li class="wk"><h3><i>{i}</i>{e(a)}</h3><dl class="who"><dt>{e(t["you"])}</dt>'
+                              f'<dd class="you">{e(y)}</dd><dt>{e(t["app"])}</dt><dd>{e(d)}</dd></dl>'
+                              f'<figure class="pic">{img(panel(i), alt)}</figure></li>'
+                              for i, (a, y, d, alt) in enumerate(t['steps'], 1))}<li class="wk then"><h3><i>✓</i>{e(t['then_h'])}</h3>
+      <p>{e(t['then_p'])}</p><figure class="pic">{img(panel(4), t['then_alt'])}</figure></li></ol>
   </section>
 
   <section>
