@@ -177,8 +177,12 @@ ZH = dict(
 )
 
 CSS = """
-:root { --page:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink-2:#52514e; --muted:#75736d;
-        --grid:#e6e4de; --border:rgba(11,11,11,.10); --pill:#efeeea; --ok:#1e7a46; }
+/* Warm grey (2026-11-17, user 001 chose it from three greys): the page and its cards a shade warmer
+   than the app's white, so the screenshots sit on it like paper; one deep warm grey for the main
+   button, the step numbers and the closing band. Every text colour is 4.5:1 or more on --page. */
+:root { --page:#eeece8; --surface:#f7f6f3; --ink:#2e2c29; --ink-2:#5c5853; --muted:#6b665f;
+        --grid:#dcd8d1; --border:rgba(46,44,41,.12); --pill:#e2ded7; --ok:#1e7a46;
+        --btn:#4d4842; --btn-hover:#3d3934; --band:#3a3733; }
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; }
 body { margin:0; background:var(--page); color:var(--ink);
@@ -186,7 +190,7 @@ body { margin:0; background:var(--page); color:var(--ink);
 a { color:inherit; }
 .wrap { max-width:1120px; margin:0 auto; padding:0 24px; }
 @media (max-width:600px) { .wrap { padding:0 16px; } }
-.top { position:sticky; top:0; z-index:5; background:rgba(249,249,247,.92); backdrop-filter:blur(8px);
+.top { position:sticky; top:0; z-index:5; background:rgba(238,236,232,.92); backdrop-filter:blur(8px);
        border-bottom:1px solid var(--border); }
 .top .wrap { display:flex; align-items:center; gap:22px; height:60px; }
 .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:17px; text-decoration:none; }
@@ -203,15 +207,15 @@ h1 { font-size:clamp(30px,3.3vw,44px); line-height:1.1; letter-spacing:-.025em; 
 .lede { color:var(--ink-2); font-size:18px; margin:0 0 26px; max-width:34em; }
 .actions { display:flex; flex-wrap:wrap; gap:10px; }
 .btn { display:inline-block; border-radius:9px; padding:12px 18px; font-size:16px; font-weight:600; text-decoration:none; }
-.primary { background:var(--ink); color:#fff; }
-.primary:hover { background:#2b2b2a; }
+.primary { background:var(--btn); color:#fff; }
+.primary:hover { background:var(--btn-hover); }
 .secondary { background:var(--pill); color:var(--ink); }
-.secondary:hover { background:#e4e2dc; }
+.secondary:hover { background:var(--grid); }
 .fine { color:var(--muted); font-size:14px; margin:14px 0 0; max-width:36em; }
 .phone { display:none; }
 @media (max-width:799px) { .phone { display:block; } }
 .shot { margin:0; background:var(--page); border:1px solid var(--border); border-radius:14px; overflow:hidden;
-        box-shadow:0 1px 2px rgba(11,11,11,.04), 0 12px 32px rgba(11,11,11,.07); }
+        box-shadow:0 1px 2px rgba(46,44,41,.05), 0 12px 32px rgba(46,44,41,.09); }
 .shot img { display:block; width:100%; height:auto; }
 .points { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:0; padding:0; list-style:none; }
 @media (max-width:760px) { .points { grid-template-columns:1fr; } }
@@ -227,7 +231,7 @@ h2 { font-size:clamp(24px,3vw,32px); letter-spacing:-.015em; line-height:1.2; ma
 .steps .st { position:relative; padding:0 0 18px 44px; min-height:92px; }
 @media (max-width:760px) { .steps .st { min-height:0; } }
 .steps .st::before { content:counter(s); position:absolute; left:0; top:0; width:28px; height:28px; border-radius:50%;
-                    background:var(--ink); color:#fff; font-weight:700; font-size:14px; display:flex;
+                    background:var(--btn); color:#fff; font-weight:700; font-size:14px; display:flex;
                     align-items:center; justify-content:center; }
 .steps b { display:block; font-size:17px; margin:2px 0 4px; }
 .steps span { color:var(--ink-2); font-size:15px; }
@@ -251,11 +255,11 @@ h2 { font-size:clamp(24px,3vw,32px); letter-spacing:-.015em; line-height:1.2; ma
 @media (max-width:760px) { .faq { grid-template-columns:1fr; } }
 .faq dt { font-weight:700; font-size:17px; margin:0 0 6px; }
 .faq dd { margin:0; color:var(--ink-2); font-size:15px; }
-.end { margin:88px 0 0; background:var(--ink); color:#fff; border-radius:18px; padding:44px 40px;
+.end { margin:88px 0 0; background:var(--band); color:#fff; border-radius:18px; padding:44px 40px;
        display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:20px; }
 .end h2 { margin:0; color:#fff; font-size:clamp(22px,2.6vw,28px); }
 .end .primary { background:#fff; color:var(--ink); }
-.end .primary:hover { background:#efeeea; }
+.end .primary:hover { background:var(--pill); }
 .end .secondary { background:rgba(255,255,255,.12); color:#fff; }
 .end .secondary:hover { background:rgba(255,255,255,.2); }
 @media (max-width:600px) { .end { padding:28px 20px; } }
