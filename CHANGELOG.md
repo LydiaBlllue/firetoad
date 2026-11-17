@@ -9,7 +9,8 @@
   link already shared still works; the README links go straight there.
 - **The front page answers what people ask before trying a budget app**: is it really free, why
   switch from a spreadsheet, does it make you log in to the bank again, do you sort every purchase.
-- **Download for Mac is the front page's main button**; the live demo is the second.
+- **Download for Mac is the front page's main button**; the live demo is the second. The front
+  page is in warm greys, so the pictures of the app sit on it like paper.
 - **Each of the four monthly steps has its own picture on the front page**, taken from the app on
   the demo's data at every release.
 - **The import panel counts in plain words**: "1 question", "3 statements", and the questions are
