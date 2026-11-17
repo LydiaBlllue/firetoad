@@ -4,6 +4,7 @@
     python3 build/build.py                      # dist/FIRE Toad.app (macOS) or dist/FIRE Toad/ (Windows, Linux)
     python3 build/build.py --sign "Developer ID Application: …" --notarize <keychain profile>
     python3 build/build.py --no-dmg             # skip the .dmg / .zip
+    python3 build/build.py --arch x86_64        # macOS: the app for Intel Macs (FIRE-Toad-<ver>-Intel.dmg)
 
 What goes in: app.py as the entry, the tool's copy exactly as tools/sync.py copies it into a
 workspace (SYNCED — the skills, templates, tools, tests, the governing documents), and
@@ -29,8 +30,18 @@ Signing for real, once per Mac:
   3. An app-specific password (account.apple.com → Sign-In and Security), then
      xcrun notarytool store-credentials firetoad --apple-id <the Apple ID> --team-id <team>
      which asks for that password and keeps it in the Keychain under the profile "firetoad".
-  4. python3 build/build.py --sign "Developer ID Application: <name> (<team>)" --notarize firetoad uv is used for
-PyInstaller when it is installed (a pinned, modern Python); otherwise this interpreter's.
+  4. python3 build/build.py --sign "Developer ID Application: <name> (<team>)" --notarize firetoad
+
+Python: with uv installed, PyInstaller runs on uv's own CPython (PYTHON, for the --arch chip),
+never whatever python3 the Mac has: the interpreter goes into the app, and the oldest macOS the
+app opens on is the oldest that interpreter supports. Xcode's Python 3.9 once went in and made
+macOS 14 the minimum (2026-11-17). Without uv, this interpreter's.
+
+Two Macs, two apps (2026-11-17): uv's Pythons are built for one chip each, so a single app for
+both is not possible from them. --arch arm64 (the default) is the app for Apple silicon,
+FIRE-Toad-<ver>.dmg; --arch x86_64 is the app for Intel Macs, FIRE-Toad-<ver>-Intel.dmg, built
+in dist/intel/ so the two never overwrite each other. An Apple-silicon Mac with Rosetta builds
+and runs both.
 """
 import argparse
 import json
@@ -47,6 +58,8 @@ sys.path.insert(0, HERE)   # dmg_art.py, the disk image window
 import sync  # noqa: E402  SYNCED: the one list of what the tool is
 
 NAME = "FIRE Toad"
+PYTHON = "3.12"     # uv's CPython for the app: one version, for both chips
+ARCH_UV = {"arm64": "aarch64", "x86_64": "x86_64"}
 DATA_EXTRA = ("LICENSE", "README.md")   # beside SYNCED: what a reader expects. No findata/: Create my folder
 # starts a folder with no one's data in it (2026-11-08), so the demo owner has no reason to ship
 EXCLUDE_DIRS = {"__pycache__", ".DS_Store"}
@@ -147,20 +160,25 @@ def imports_of(src_root):
     return out
 
 
-def pyinstaller_cmd():
+def pyinstaller_cmd(arch="arm64"):
     if shutil.which("uv"):
-        return ["uv", "run", "--with", "pyinstaller", "--with", "pypdf", "--with", "cryptography"] \
+        py = (f"cpython-{PYTHON}-macos-{ARCH_UV[arch]}-none" if sys.platform == "darwin" else PYTHON)
+        return ["uv", "run", "--no-project", "--managed-python", "--python", py,
+                "--with", "pyinstaller", "--with", "pypdf", "--with", "cryptography"] \
             + (["--with", "ocrmac", "--with", "Pillow"] if sys.platform == "darwin" else []) + ["pyinstaller"]
+    if sys.platform == "darwin" and arch != platform.machine():
+        die(f"--arch {arch} needs uv: this Python is {platform.machine()}")
     return [sys.executable, "-m", "PyInstaller"]
 
 
 def build(args):
     guard()
-    work = os.path.join(TOOL, "build", "work")
-    dist = os.path.join(TOOL, "dist")
+    intel = sys.platform == "darwin" and args.arch == "x86_64"
+    work = os.path.join(TOOL, "build", "work-intel" if intel else "work")
+    dist = os.path.join(TOOL, "dist", "intel") if intel else os.path.join(TOOL, "dist")
     src_root = stage(work)
     sep = ";" if sys.platform.startswith("win") else ":"
-    cmd = pyinstaller_cmd() + [
+    cmd = pyinstaller_cmd(args.arch) + [
         "--noconfirm", "--clean", "--onedir", "--windowed", "--name", NAME,
         "--distpath", dist, "--workpath", os.path.join(work, "pyi"), "--specpath", work,
         "--collect-all", "pypdf", "--hidden-import", "cryptography",
@@ -204,7 +222,7 @@ def build(args):
     ver = version()
     if not args.no_dmg:
         if sys.platform == "darwin":
-            dmg = os.path.join(dist, f"FIRE-Toad-{ver}.dmg")
+            dmg = os.path.join(TOOL, "dist", f"FIRE-Toad-{ver}{'-Intel' if intel else ''}.dmg")
             if os.path.exists(dmg):
                 os.remove(dmg)
             make_dmg(out, dmg)
@@ -366,6 +384,8 @@ def main(argv):
     ap.add_argument("--sign", help='a Developer ID Application identity (macOS); "-" is the same signing ad hoc, a local test')
     ap.add_argument("--notarize", help="a notarytool keychain profile; implies --sign")
     ap.add_argument("--no-dmg", action="store_true")
+    ap.add_argument("--arch", choices=("arm64", "x86_64"), default="arm64",
+                    help="macOS: the chip the app is for — arm64 (Apple silicon, the default) or x86_64 (Intel)")
     a = ap.parse_args(argv)
     if a.notarize and not a.sign:
         die("--notarize needs --sign")
