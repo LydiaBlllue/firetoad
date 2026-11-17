@@ -593,9 +593,99 @@ def screenshots(out):
             x, y, w, h = pg.evaluate(CROP_BOX, [key, n]); m = 16
             pg.screenshot(path=os.path.join(dst, fn), clip={"x": x - m, "y": y, "width": w + 2 * m, "height": h + 6})
             pg.close()
+        srv.shutdown()
+        n = panel_shots(out, dst, b)
         b.close()
-    srv.shutdown()
-    print(f"  screenshots: {len(SHOTS)} pages and {len(CROPS)} crops written to docs/screens/")
+    print(f"  screenshots: {len(SHOTS)} pages, {len(CROPS)} crops and {n} panel views written to docs/screens/")
+
+
+# The monthly panel's four views, in English and Chinese, for the front page's "Once a month,
+# four steps" (2026-11-17, user 001). They are taken from the app itself on a throwaway copy of
+# the demo set one month back — the newest statement of every document taken out of findata/
+# and dropped into inbox/ as the bank would send it, the way the selftest does — so each view
+# shows what it really shows: the files to get, what the import will add, what it asks, what
+# changed. The copy's "today" is the demo's own date, so "still needed" does not grow with the
+# calendar. panel.png and panel-zh.png (README) are the third view.
+PANEL_LANGS = (("en", "panel"), ("zh", "panel-zh"))
+PANEL_BOX = """() => { const top = document.getElementById('bars').getBoundingClientRect();
+  const card = [...document.querySelectorAll('.card.view')].find(c => c.offsetParent !== null).getBoundingClientRect();
+  const w = document.querySelector('.wrap').getBoundingClientRect();
+  return [w.x - 12, top.y - 6, w.width + 24, card.bottom - top.y + 18]; }"""
+
+
+def panel_shots(out, dst, browser):
+    import importlib.util, re, shutil, subprocess, tempfile, threading
+    sk = os.path.join(out, ".claude", "skills")
+    srv = os.path.join(sk, "local-app", "scripts", "server.py")
+    if not os.path.exists(srv):
+        return 0
+    spec = importlib.util.spec_from_file_location("selftest", os.path.join(sk, "workspace-checks", "scripts", "selftest.py"))
+    st = importlib.util.module_from_spec(spec); spec.loader.exec_module(st)
+    _sys.path.insert(0, os.path.join(sk, "update-dashboard", "scripts"))
+    from clock import clock
+    pin = clock(out)[0].isoformat()
+    tmp = tempfile.mkdtemp(prefix="firetoad-panel-"); ws = os.path.join(tmp, "ws")
+    shutil.copytree(out, ws, ignore=shutil.ignore_patterns(".git", "dist", "work", "__pycache__", "_fixtures"))
+    try:
+        fd = lambda n: os.path.join(ws, "findata", "register" if n == "profile.json" else "history", n)
+        pr = json.load(open(fd("profile.json"), encoding="utf-8")); pr["demo"] = False
+        json.dump(pr, open(fd("profile.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+        dj = json.load(open(fd("decisions.json"), encoding="utf-8"))   # the import asks its own
+        dj["decisions"] = [d for d in dj["decisions"] if d.get("status") != "open"]
+        json.dump(dj, open(fd("decisions.json"), "w", encoding="utf-8"), indent=2, ensure_ascii=False)
+        newest = {}
+        for m in st.fixtures_for(ws) or []:
+            newest[m["doc"]] = max(newest.get(m["doc"], m), m, key=lambda x: os.path.basename(x["file"]))
+        for m in newest.values():
+            st.strip_statement(ws, m)
+        subprocess.run([_sys.executable, os.path.join(sk, "update-dashboard", "scripts", "rebuild.py"), ".", "--write"],
+                       cwd=ws, capture_output=True)
+        here = os.path.dirname(srv)
+        boot = (f"import sys, datetime, functools, runpy; sys.argv = ['server.py', '.', '--port', '0']; "
+                f"sys.path.insert(0, {os.path.join(sk, 'monthly-import', 'scripts')!r}); sys.path.insert(0, {here!r}); "
+                f"import status; status.run = functools.partial(status.run, today=datetime.date.fromisoformat({pin!r})); "
+                f"runpy.run_path({srv!r}, run_name='__main__')")
+        proc = subprocess.Popen([_sys.executable, "-c", boot], cwd=ws, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        try:
+            line = ""
+            for _ in range(200):
+                line = proc.stdout.readline()
+                if "http://127.0.0.1:" in line or not line:
+                    break
+            m = re.search(r"(http://127\.0\.0\.1:\d+/t/[^/\s]+/panel)", line)
+            if not m:
+                print("  panel: SKIPPED (the app did not start)"); return 0
+            url = m.group(1)
+            threading.Thread(target=proc.stdout.read, daemon=True).start()   # keep its log from filling the pipe
+
+            def shot(pg, name):
+                pg.wait_for_timeout(1200)          # the card fades in
+                x, y, w, h = pg.evaluate(PANEL_BOX)
+                pg.screenshot(path=os.path.join(dst, name), clip={"x": x, "y": max(y, 0), "width": w, "height": h})
+
+            def view(pg, i):
+                pg.eval_on_selector_all("a[data-go]", f"a => a[{i - 1}].click()")
+
+            pages = {}
+            for lang, stem in PANEL_LANGS:             # before the import: the files, then what it will add
+                pg = browser.new_page(viewport={"width": 640, "height": 1000}, device_scale_factor=2)   # narrow, so it reads at half a page
+                pg.goto(f"{url}?lang={lang}"); pg.wait_for_selector("#go", state="visible", timeout=120000)
+                shot(pg, f"{stem}-2.png")
+                view(pg, 1); shot(pg, f"{stem}-1.png")
+                pages[lang] = pg
+            pg = pages["en"]; view(pg, 2); pg.wait_for_timeout(500)
+            pg.click("#go"); pg.wait_for_selector("#step4.show", timeout=300000)
+            for lang, stem in PANEL_LANGS:             # after it: what it asks, what changed
+                pg = pages[lang]; pg.goto(f"{url}?lang={lang}"); pg.wait_for_selector("#step4.show", timeout=60000)
+                shot(pg, f"{stem}-3.png")
+                view(pg, 4); shot(pg, f"{stem}-4.png")
+                shutil.copy(os.path.join(dst, f"{stem}-3.png"), os.path.join(dst, f"{stem}.png"))
+                pg.close()
+            return 8
+        finally:
+            proc.terminate(); proc.wait(timeout=10)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 if __name__ == "__main__":

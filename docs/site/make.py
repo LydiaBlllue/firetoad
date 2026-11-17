@@ -12,8 +12,8 @@ The Pages workflow runs it; run it locally to look at the site before a release.
 
 The front page is the page a search finds, so everything on it is plain HTML, never written by a
 script. One layout, two tables of words: the two languages say the same things in the same order.
-The screenshots are the demo owner's, retaken at every release by tools/demo.py (the panel's are
-taken from the app). Facts only: nothing here that the tool does not do today — no phone app, no
+The screenshots are the demo owner's, retaken at every release by tools/demo.py (the panel's from
+the app itself, on a copy of the demo set one month back). Facts only: nothing here that the tool does not do today — no phone app, no
 bank connection, no Windows download.
 """
 import argparse
@@ -60,12 +60,16 @@ EN = dict(
              "lasts, your TFSA, RRSP and FHSA, and money held abroad, in one net worth.")],
     how_lab="How it works", how_h="Once a month, four steps",
     steps=[("Get the files", "Download last month's statements from your bank's website. The app "
-                             "says which ones are still missing and how to get each."),
-           ("Import", "Drop them in. Each is read on your Mac and let in only if it adds up."),
+                             "says which ones are still missing and how to get each.",
+            "Step 1 in the app: each account and what is still needed, and the files in the folder"),
+           ("Import", "Drop them in. Each is read on your Mac and let in only if it adds up.",
+            "Step 2: what the import will add, before anything is written"),
            ("Categorize", "Answer what a program cannot decide: a shop seen for the first time, "
-                          "a transfer with no name. One tap each, remembered next time."),
-           ("Done", "Your page is rebuilt with the new month.")],
-    panel_img="panel.png", panel_alt="The monthly import in the app, at step 3: what was a $200 e-Transfer with no sender?",
+                          "a transfer with no name. One tap each, remembered next time.",
+            "Step 3: one question at a time, here a transfer with no sender"),
+           ("Done", "Your page is rebuilt with the new month.",
+            "Step 4: what changed, with the net worth before and after")],
+    panel="panel",
     q_lab="What it answers",
     qs=[("Where do I stand?", "Net worth across every account and currency: a row for what each part "
                               "is for, its bar coloured by how easily you could reach it.",
@@ -129,11 +133,15 @@ ZH = dict(
             ("每个数都对得上。", "一份对账单要和它自己印的合计对平，才会收进来。"),
             ("不只是记账，还有 FIRE 计划。", "离财务自由几年、钱能撑多久；TFSA、RRSP、FHSA 和国外的钱，都算进一个净值。")],
     how_lab="怎么用", how_h="每个月，四步",
-    steps=[("拿文件", "从银行网站下载上个月的对账单。app 会告诉你还差哪几份、每份怎么拿。"),
-           ("导入", "把文件放进来。每份都在你的 Mac 上读，对平了才收。"),
-           ("归类", "程序定不了的才问你：第一次出现的商户、没有名字的转账。点一下就好，下次记得。"),
-           ("完成", "你的页面带上新的一个月，重新生成。")],
-    panel_img="panel-zh.png", panel_alt="app 里的月度导入，第 3 步：一笔没写是谁的 $200 e-Transfer 是什么？",
+    steps=[("拿文件", "从银行网站下载上个月的对账单。app 会告诉你还差哪几份、每份怎么拿。",
+            "app 里的第 1 步：每个账户还差什么，文件夹里已经有哪些文件"),
+           ("导入", "把文件放进来。每份都在你的 Mac 上读，对平了才收。",
+            "第 2 步：写进去之前，先告诉你会加进来什么"),
+           ("归类", "程序定不了的才问你：第一次出现的商户、没有名字的转账。点一下就好，下次记得。",
+            "第 3 步：一次问一件事，这里是一笔没写是谁的转账"),
+           ("完成", "你的页面带上新的一个月，重新生成。",
+            "第 4 步：这次改了什么，净值前后各是多少")],
+    panel="panel-zh",
     q_lab="它回答什么",
     qs=[("我现在在哪？", "所有账户、所有币种算在一起的净值：每一行是这部分钱的用途，色条按多容易拿到上色。",
          "crop-home.png", "首页：净值 $65,655、离财务自由几年、这个月的投资和花销"),
@@ -212,14 +220,15 @@ h1 { font-size:clamp(30px,3.3vw,44px); line-height:1.1; letter-spacing:-.025em; 
 .points span { color:var(--ink-2); font-size:15px; }
 section { padding:72px 0 0; scroll-margin-top:60px; }
 h2 { font-size:clamp(24px,3vw,32px); letter-spacing:-.015em; line-height:1.2; margin:0 0 28px; }
-.how { display:grid; grid-template-columns:4fr 7fr; gap:40px; align-items:start; }
-@media (max-width:980px) { .how { grid-template-columns:1fr; } }
-.steps { margin:0; padding:0; list-style:none; counter-reset:s; }
-.steps li { counter-increment:s; position:relative; padding:0 0 22px 44px; }
-.steps li::before { content:counter(s); position:absolute; left:0; top:0; width:28px; height:28px; border-radius:50%;
+.steps { display:grid; grid-template-columns:1fr 1fr; gap:48px 40px; align-items:start;
+         margin:0; padding:0; list-style:none; counter-reset:s; }
+@media (max-width:760px) { .steps { grid-template-columns:1fr; gap:40px; } }
+.steps li { counter-increment:s; }
+.steps .st { position:relative; padding:0 0 18px 44px; min-height:92px; }
+@media (max-width:760px) { .steps .st { min-height:0; } }
+.steps .st::before { content:counter(s); position:absolute; left:0; top:0; width:28px; height:28px; border-radius:50%;
                     background:var(--ink); color:#fff; font-weight:700; font-size:14px; display:flex;
                     align-items:center; justify-content:center; }
-.steps li:not(:last-child)::after { content:""; position:absolute; left:13.5px; top:32px; bottom:4px; width:1px; background:var(--grid); }
 .steps b { display:block; font-size:17px; margin:2px 0 4px; }
 .steps span { color:var(--ink-2); font-size:15px; }
 .qs { display:grid; gap:56px; }
@@ -263,10 +272,11 @@ def page(t, base):
           "operatingSystem": "macOS", "applicationCategory": "FinanceApplication",
           "description": t["desc"], "url": url, "downloadUrl": DOWNLOAD, "inLanguage": t["lang"],
           "offers": {"@type": "Offer", "price": "0", "priceCurrency": "CAD"}}
+    panel = lambda i: f"{t['panel']}-{i}.png"   # the app's monthly panel at step i, taken by tools/demo.py
     img = lambda f, alt, lazy=True: (f'<img src="{up}screens/{f}" alt="{e(alt)}"'
                                      + (' loading="lazy"' if lazy else "") + ">")
-    btns = (f'<a class="btn primary" href="{up}dashboard.html">{e(t["demo"])}</a>'
-            f'<a class="btn secondary" href="{DOWNLOAD}">{e(t["download"])}</a>')
+    btns = (f'<a class="btn primary" href="{DOWNLOAD}">{e(t["download"])}</a>'
+            f'<a class="btn secondary" href="{up}dashboard.html">{e(t["demo"])}</a>')
     out = [f"""<!doctype html>
 <!-- Built by docs/site/make.py; edit that, not this. -->
 <html lang="{t['lang']}">
@@ -316,10 +326,9 @@ def page(t, base):
   <section id="how">
     <p class="lab">{e(t['how_lab'])}</p>
     <h2>{e(t['how_h'])}</h2>
-    <div class="how">
-      <ol class="steps">{''.join(f'<li><b>{e(a)}</b><span>{e(b)}</span></li>' for a, b in t['steps'])}</ol>
-      <figure class="shot">{img(t['panel_img'], t['panel_alt'])}</figure>
-    </div>
+    <ol class="steps">{''.join(f'<li><div class="st"><b>{e(a)}</b><span>{e(b)}</span></div>'
+                               f'<figure class="shot">{img(panel(i), alt)}</figure></li>'
+                               for i, (a, b, alt) in enumerate(t['steps'], 1))}</ol>
   </section>
 
   <section>

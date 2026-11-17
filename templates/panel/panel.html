@@ -416,7 +416,9 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
   }
   function keep(it, c){ answers[it.n] = c; if (it.id != null) { pending['id:' + it.id] = c; flush(); } }
   var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function fmtS(s, o){ return String(s).replace(/\{(\w+)\}/g, function(_, k){ return o[k] == null ? '' : o[k]; }); }
+  // a count says its own plural: "{n} statement(s)" reads "1 statement", "3 statements"
+  function fmtS(s, o){ var r = String(s).replace(/\{(\w+)\}/g, function(_, k){ return o[k] == null ? '' : o[k]; });
+    return o.n == null ? r : r.replace(/\(s\)/g, +o.n === 1 ? '' : 's'); }
   // "Primary Chequing statement to Jul 5, Jun 17": the import writes where a row came from in one
   // fixed shape; in Chinese it is said from its parts (1.0.7, feedback 89). The account's name stays.
   var MON = {Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12};
