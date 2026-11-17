@@ -2,9 +2,9 @@
 # English and Chinese that says what the tool is, so a search can find it, with the demo one click
 # away. docs/site/make.py builds the site; dashboards/ is what the template and findata/ build (T1),
 # so nothing is rebuilt here. The site's own address goes into the pages and sitemap.xml, so a fork
-# publishes its own address, not this one. (No robots.txt: a project site lives under /<repo>/, and
-# search engines read robots.txt only at the domain root; the sitemap is submitted in Search
-# Console instead.)
+# publishes its own address, not this one. robots.txt, naming the sitemap, is written only when the
+# site has a domain of its own: search engines read it only at the domain's root, never under
+# /<repo>/.
 name: Live demo
 
 # Every push to main redeploys, whatever it changed (2026-10-29, user 001): a release is a
