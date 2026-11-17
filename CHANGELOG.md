@@ -5,6 +5,8 @@
 - **Download for Mac downloads the app**: the front page's button fetches the newest disk image
   directly, instead of opening the list of releases; so do the links in the README and the install
   guides, which keep the releases page for older versions.
+- **The site has its own address**: https://firetoad.app. The old one forwards to it, so every
+  link already shared still works; the README links go straight there.
 
 ## 1.0.7 — 2026-11-16
 
