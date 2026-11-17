@@ -7,6 +7,8 @@
   guides, which keep the releases page for older versions.
 - **The site has its own address**: https://firetoad.app. The old one forwards to it, so every
   link already shared still works; the README links go straight there.
+- **The front page answers what people ask before trying a budget app**: is it really free, why
+  switch from a spreadsheet, does it make you log in to the bank again, do you sort every purchase.
 
 ## 1.0.7 — 2026-11-16
 
