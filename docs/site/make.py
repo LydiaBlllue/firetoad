@@ -91,6 +91,9 @@ EN = dict(
          "crop-port.png", "Portfolio: by currency, kind of asset and account"),
         ("Is everything in?", "Which statements have arrived each month, and what's still missing.",
          "crop-src.png", "Statements: a dot for each month each statement arrived")],
+    road_lab="FIRE questions", road_h="What to know on the way to financial independence",
+    road_lede="One question a page, answered in a sentence, with the sources and a calculator you can try.",
+    road_more="See all FIRE questions →",
     banks_lab="Banks it reads", banks_h="Straight from your bank's own files",
     banks=[("Read directly", ["RBC · PDF", "BMO · PDF", "Wealthsimple · exports"]),
            ("Via an OFX or QFX download", ["TD", "Scotiabank", "CIBC", "Tangerine", "most other banks"]),
@@ -168,6 +171,9 @@ ZH = dict(
          "crop-port.png", "投资组合：按币种、资产类别和账户"),
         ("对账单都齐了吗？", "每份对账单哪个月到了、还差哪些，一目了然。",
          "crop-src.png", "对账单：每份每个月到了就是一个点")],
+    road_lab="FIRE 问答", road_h="走向财务自由，要先弄懂的几个问题",
+    road_lede="一页一个问题，一句话答案，带出处，还有可以自己试的计算器。",
+    road_more="看全部 FIRE 问答 →",
     banks_lab="支持哪些银行", banks_h="直接用银行提供的文件",
     banks=[("直接读取", ["RBC · PDF", "BMO · PDF", "Wealthsimple · 导出"]),
            ("下载成 OFX 或 QFX 格式", ["TD", "Scotiabank", "CIBC", "Tangerine", "大多数其他银行"]),
@@ -277,6 +283,16 @@ h2 { font-size:clamp(24px,3vw,32px); letter-spacing:-.015em; line-height:1.2; ma
                            .q:nth-child(even) .qt { order:0; } }
 .q h3 { font-size:24px; letter-spacing:-.01em; margin:0 0 8px; }
 .q p { color:var(--ink-2); margin:0; font-size:16px; }
+/* FIRE questions (2026-11-17, user 001): the published pages in the road's order, four at most,
+   each its question and its one-line answer, read from path.py so a page not yet written is never linked */
+.road-lede { color:var(--ink-2); font-size:17px; margin:-14px 0 24px; max-width:40em; }
+.roads { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:0; padding:0; list-style:none; }
+@media (max-width:760px) { .roads { grid-template-columns:1fr; } }
+.roads a { display:block; height:100%; background:var(--surface); border:1px solid var(--border); border-radius:12px;
+           padding:18px 20px; text-decoration:none; }
+.roads a:hover { border-color:rgba(46,44,41,.28); }
+.roads b { display:block; font-size:17px; margin-bottom:6px; }
+.roads span { color:var(--ink-2); font-size:15px; }
 .banks { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
 @media (max-width:760px) { .banks { grid-template-columns:1fr; } }
 .bank { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; }
@@ -382,6 +398,14 @@ def page(t, base):
     </div>
   </section>
 
+  <section id="road">
+    <p class="lab">{e(t['road_lab'])}</p>
+    <h2>{e(t['road_h'])}</h2>
+    <p class="road-lede">{e(t['road_lede'])}</p>
+    <ul class="roads">{''.join(f'<li><a href="path/{s["slug"]}/"><b>{e(s[t["lang"][:2]]["title"])}</b><span>{e(s[t["lang"][:2]]["line"])}</span></a></li>' for s in road_stops()[:4])}</ul>
+    <a class="more" href="path/">{e(t['road_more'])}</a>
+  </section>
+
   <section id="banks">
     <p class="lab">{e(t['banks_lab'])}</p>
     <h2>{e(t['banks_h'])}</h2>
@@ -402,6 +426,11 @@ def page(t, base):
 </html>
 """)
     return "".join(out)
+
+
+def road_stops():
+    """The published FIRE questions in the road's order, the same order path.py writes them in."""
+    return sorted(road.stops(REPO), key=lambda s: [int(x) for x in s["id"].split(".")])
 
 
 def build(dst, base):

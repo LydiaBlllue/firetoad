@@ -8,6 +8,8 @@
   take CPP, and why a raise often doesn't raise your savings. More follow as each one's sources are
   checked; nothing links to a page that isn't up. The top bar says what each link is: FIRE
   questions, A month with the app, and on a question's page, About the app.
+- **The front page shows the FIRE questions too**: a section after "What it tells you" with the
+  questions that are up, each with its one-line answer, and a link to all of them.
 
 ## 1.0.9 — 2026-11-17
 
