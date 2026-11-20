@@ -2590,7 +2590,7 @@ const AI_SENT = "What is sent: the merchant as the statement prints it, and the 
 const aiSvc = id => ((AI_ST && AI_ST.services) || []).find(x => x.id === id) || {};
 const setRowH = (n, why, ctl, meta) => '<div class="set-row"><div><div class="n">' + n + '</div><div class="why">' + why + '</div></div>'
   + '<div class="set-ctl">' + ctl + (meta ? '<div class="set-meta">' + meta + '</div>' : "") + '</div></div>';
-const toggleH = (on, off) => '<button class="tg' + (on ? " on" : "") + '" role="switch" aria-checked="' + on + '" aria-label="AI assist" data-ai="tg"' + (off ? " disabled" : "") + '><i></i></button>';
+const toggleH = (on, off) => '<button class="tg' + (on ? " on" : "") + '" role="switch" aria-checked="' + on + '" aria-label="Use AI assist" data-ai="tg"' + (off ? " disabled" : "") + '><i></i></button>';
 const timesH = n => n === 0 ? "Not yet" : n === 1 ? "Once" : n === 2 ? "Twice" : n + " times";
 function aiPost(path, body){
   aiBusy = true;
@@ -2603,7 +2603,7 @@ function renderAI(){
   const el = $("aiPane");
   let h = '<h2>AI assist</h2>';
   if(SET_MODE !== "save"){
-    el.innerHTML = h + setRowH("AI assist", AI_WHAT, toggleH(false, true), "") + '<p class="fine">AI assist works when this page is opened with the FIRE Toad app on your computer.</p>';
+    el.innerHTML = h + setRowH("Use AI assist", AI_WHAT, toggleH(false, true), "") + '<p class="fine">AI assist works when this page is opened with the FIRE Toad app on your computer.</p>';
     return;
   }
   if(!AI_ST){
@@ -2618,13 +2618,13 @@ function renderAI(){
   const st = AI_ST, cur = st.provider && st.provider !== "none" ? st.provider : null;
   const on = !!(aiDraft || st.enabled), svc = aiDraft ? aiDraft.svc : cur;
   const s = aiSvc(svc), ollama = st.ollama || [];
-  h += setRowH("AI assist", AI_WHAT, toggleH(on, aiBusy),
+  h += setRowH("Use AI assist", AI_WHAT, toggleH(on, aiBusy),
     st.enabled && !aiDraft ? (s.key ? "Turning it off deletes the key" : "") : on ? (s.key ? "Paste a key to finish" : "") : "");
   if(on){
     const opts = (st.services || []).filter(x => x.id !== "ollama" || ollama.length || svc === "ollama");
     // a service set from the chat (any other OpenAI-compatible one) is shown as itself
     if(svc && !opts.some(x => x.id === svc)) opts.unshift({id: svc, label: "Another service"});
-    h += setRowH("Service", svc === "ollama" ? "Works on this computer. Nothing is sent." : "Who is asked.",
+    h += setRowH("Service", svc === "ollama" ? "Works on this computer. Nothing is sent." : "The AI service your merchant names are sent to.",
       '<select class="set-in" data-ai="svc" aria-label="Service">' + opts.map(x => '<option value="'+x.id+'"'+(x.id === svc ? " selected" : "")+'>'+x.label+'</option>').join("") + '</select>');
     if(svc === "ollama"){
       h += setRowH("Model", "Installed in Ollama on this computer.",
