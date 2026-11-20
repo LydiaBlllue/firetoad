@@ -6,6 +6,7 @@
   page beside it as the answer, in English and Chinese. Its title says a free FIRE tracker for
   Canada. A new question for someone not planning to retire early; "Do I need Claude?" moved to
   the install guide. The line about accounts abroad is gone until the app can set them up.
+  A fourth point says AI assist is there if you want it, and two answers name it.
 
 ## 1.0.9 — 2026-11-17
 

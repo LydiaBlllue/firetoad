@@ -60,7 +60,9 @@ EN = dict(
              "invest, and what $100 more a month would change. Your TFSA, RRSP and FHSA in one net worth."),
             ("Every number adds up.", "A statement only gets in if it matches the totals printed on it."),
             ("No bank login.", "You download your statements; the app reads them on your computer. "
-                               "Nothing is uploaded, and there's no account to create.")],
+                               "Nothing is uploaded, and there's no account to create."),
+            ("AI assist, if you want it.", "A shop the app doesn't know gets a suggested category from "
+             "Claude, ChatGPT or DeepSeek, with your own key. Only the shop's name is sent, and you still choose.")],
     how_lab="How it works", how_h="Once a month, three things to do", you="You", app="The app",
     steps=[("Get your files", "Download last month's statements from your bank, plus your broker's export if you have one.",
             "Tells you which ones are still missing and where to find each.",
@@ -105,9 +107,10 @@ EN = dict(
           "and it never sees your bank password."),
          ("Do I have to categorize everything myself?", "Mostly, no. Once you've categorized a shop, "
           "it stays that way. Only a shop it hasn't seen before is asked — one tap, with common "
-          "Canadian chains already filled in for you to confirm. \"Not sure\" is an answer too."),
+          "Canadian chains already filled in for you to confirm. \"Not sure\" is an answer too. With AI "
+          "assist on, a shop it hasn't seen comes with a suggestion too."),
          ("Where does my data live?", "In a folder on your Mac: plain CSV and JSON files, plus one page. "
-          "Nothing is sent anywhere unless you turn on the optional AI suggestions, which send only "
+          "Nothing is sent anywhere unless you turn on AI assist, which sends only "
           "shop names. Backing up the folder is up to you."),
          ("I'm not planning to retire early. Is it for me?", "Yes. Without a goal, it's your spending, what "
           "you keep each month, and how long your savings would last without a paycheque. The years to "
@@ -143,7 +146,9 @@ ZH = dict(
     points=[("不只是记账，是还要几年。", "按你实际投进去的钱，算还要几年财务自由，每月多投 100 元能早多少。"
              "TFSA、RRSP、FHSA 都算进同一个净值。"),
             ("每个数都对得上。", "每份对账单都要和它自己印的合计一致，才会收进来。"),
-            ("不用连银行。", "对账单你自己下载，app 在你的电脑上读取，不上传任何东西，也不用注册。")],
+            ("不用连银行。", "对账单你自己下载，app 在你的电脑上读取，不上传任何东西，也不用注册。"),
+            ("想用的话，有 AI 辅助。", "app 不认识的商户，由 Claude、ChatGPT 或 DeepSeek 建议一个分类，用你自己的 key。"
+             "只发商户名，最后还是你定。")],
     how_lab="怎么用", how_h="每个月，你只做三件事", you="你", app="app",
     steps=[("下载文件", "从网银下载上个月的对账单；有券商账户的话，再导出一份券商记录。",
             "提醒你还差哪几份、每份去哪下载。",
@@ -179,8 +184,9 @@ ZH = dict(
          ("需要连接我的银行吗？", "不需要。每月一次，你像平时一样登录网银、下载对账单。FIRE蛙从不登录银行，"
           "所以不会让你反复验证，也永远拿不到你的银行密码。"),
          ("分类要我一条条自己弄吗？", "基本不用。归过一次类的商户，之后都会自动归到同一类。只有第一次出现的商户才会"
-          "问你，点一下就行；常见的加拿大连锁店已经预先填好，你确认一下即可。选「不确定」也可以。"),
-         ("数据存在哪里？", "存在你 Mac 上的一个文件夹里：普通的 CSV、JSON 文件和一个页面。除非你开启可选的 AI 建议"
+          "问你，点一下就行；常见的加拿大连锁店已经预先填好，你确认一下即可。选「不确定」也可以。"
+          "打开 AI 辅助的话，没见过的商户也会先给一个建议。"),
+         ("数据存在哪里？", "存在你 Mac 上的一个文件夹里：普通的 CSV、JSON 文件和一个页面。除非你开启 AI 辅助"
           "（只发送商户名称），否则什么都不会发出去。文件夹需要你自己备份。"),
          ("我没打算提前退休，也能用吗？", "能。不设目标，它就是你花了多少、每月存下多少、没了工资存款能撑多久。"
           "想看还要几年财务自由的时候，它一直在。"),
@@ -234,7 +240,7 @@ h1 { font-size:clamp(30px,3.3vw,44px); line-height:1.1; letter-spacing:-.025em; 
 .shot { margin:0; background:var(--page); border:1px solid var(--border); border-radius:14px; overflow:hidden;
         box-shadow:0 1px 2px rgba(46,44,41,.05), 0 12px 32px rgba(46,44,41,.09); }
 .shot img { display:block; width:100%; height:auto; }
-.points { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:0; padding:0; list-style:none; }
+.points { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:0; padding:0; list-style:none; }
 @media (max-width:760px) { .points { grid-template-columns:1fr; } }
 .points li { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; }
 .points b { display:block; font-size:17px; margin-bottom:6px; }
