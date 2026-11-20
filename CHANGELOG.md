@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 — unreleased
+
+- **The front page leads with the years**: "How many years until work is optional?", with the FIRE
+  page beside it as the answer, in English and Chinese. Its title says a free FIRE tracker for
+  Canada. A new question for someone not planning to retire early; "Do I need Claude?" moved to
+  the install guide. The line about accounts abroad is gone until the app can set them up.
+
 ## 1.0.9 — 2026-11-17
 
 - **An app for Intel Macs, and older macOS for both**: the download for Apple silicon now opens on

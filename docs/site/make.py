@@ -39,15 +39,15 @@ CITY_ZH = {"Ottawa": "渥太华", "Toronto": "多伦多", "Vancouver": "温哥�
 
 EN = dict(
     lang="en", path="", other="zh/", other_name="中文", other_lang="zh",
-    title="FIRE Toad — Free budget app for Canada, no bank login",
-    desc=("Free, open-source Mac app for Canadians. Drop in your RBC, BMO or any bank's statements "
-          "and see your spending, net worth and years to FIRE. No bank login, no account."),
+    title="FIRE Toad — Free FIRE tracker for Canada, no bank login",
+    desc=("Free, open-source Mac app for Canadians: how many years until financial independence, worked "
+          "out from your own RBC, BMO or other bank statements. No bank login, no account."),
     name="FIRE Toad",
     nav=[("#how", "How it works"), ("#banks", "Banks"), ("#faq", "Questions")],
-    h1="See where your money goes, what you've built, and how many years until work is optional.",
+    h1="How many years until work is optional?",
     lede=("Once a month, drop your bank statements into a folder. FIRE Toad reads them on your Mac, "
-          "checks that each one adds up, sorts every purchase, and builds one page: what you spent, "
-          "what you own, and how many years until financial independence."),
+          "checks that each one adds up, and works out what you spend, what you keep, and how many years "
+          "until financial independence — then how long the money lasts once you stop, with CPP and OAS counted."),
     demo="Try the live demo", download="Download for Mac — free",
     mac=("For Macs with Apple silicon, macOS 11 or later. Intel Mac (macOS 10.15 or later)? ",
          "Download the Intel version", "."),
@@ -55,12 +55,12 @@ EN = dict(
           "Nothing to install. The app is signed and notarised by Apple, works in English and Chinese, "
           "and is free and open source (MIT)."),
     phone="The demo is made for a computer screen. On a phone, the pictures below show what it looks like.",
-    hero_alt="The FIRE page: about 29 to 37 years to financial independence, and what investing more each month changes",
-    points=[("No bank login.", "You download your statements; the app reads them on your computer. "
-                               "Nothing is uploaded, and there's no account to create."),
+    hero_alt="The FIRE page: how many years to financial independence, and what investing more each month changes",
+    points=[("Years, not just a budget.", "How many years until financial independence at what you really "
+             "invest, and what $100 more a month would change. Your TFSA, RRSP and FHSA in one net worth."),
             ("Every number adds up.", "A statement only gets in if it matches the totals printed on it."),
-            ("A FIRE plan, not just a budget.", "Years to financial independence, how long your money "
-             "will last, your TFSA, RRSP and FHSA, and accounts abroad — all in one net worth.")],
+            ("No bank login.", "You download your statements; the app reads them on your computer. "
+                               "Nothing is uploaded, and there's no account to create.")],
     how_lab="How it works", how_h="Once a month, three things to do", you="You", app="The app",
     steps=[("Get your files", "Download last month's statements from your bank, plus your broker's export if you have one.",
             "Tells you which ones are still missing and where to find each.",
@@ -109,8 +109,9 @@ EN = dict(
          ("Where does my data live?", "In a folder on your Mac: plain CSV and JSON files, plus one page. "
           "Nothing is sent anywhere unless you turn on the optional AI suggestions, which send only "
           "shop names. Backing up the folder is up to you."),
-         ("Do I need Claude?", "No. The app works on its own. Claude Code is another way to use it — "
-          "for a statement the app can't read, accounts abroad, or a question in plain words."),
+         ("I'm not planning to retire early. Is it for me?", "Yes. Without a goal, it's your spending, what "
+          "you keep each month, and how long your savings would last without a paycheque. The years to "
+          "financial independence are there when you want them."),
          ("Which computers does it run on?", "A Mac: one download for Apple silicon (macOS 11 or later), "
           "one for Intel (macOS 10.15 or later). To check which you have: Apple menu → About This Mac, "
           "the Chip or Processor line. There is no Windows download yet; there it runs from Python "
@@ -124,24 +125,25 @@ EN = dict(
 
 ZH = dict(
     lang="zh-CN", path="zh/", other="../", other_name="English", other_lang="en",
-    title="FIRE蛙 FIRE Toad — 加拿大免费记账 app，不用连银行",
-    desc=("免费开源的 Mac 记账 app，为在加拿大生活的人做。放进 RBC、BMO 或其他银行的对账单，就能看到钱花在哪、"
-          "净值多少、还要几年财务自由。不用连银行，也不用注册。"),
+    title="FIRE蛙 FIRE Toad — 加拿大免费 FIRE 工具，不用连银行",
+    desc=("免费开源的 Mac app，为在加拿大想财务自由的人做：用你自己的 RBC、BMO 或其他银行对账单，"
+          "算出还要几年财务自由。不用连银行，也不用注册。"),
     name="FIRE蛙 FIRE Toad",
     nav=[("#how", "怎么用"), ("#banks", "支持的银行"), ("#faq", "常见问题")],
-    h1="钱花在哪、攒了多少、还要几年财务自由——一页看清。",
-    lede=("每个月把银行对账单放进一个文件夹。FIRE蛙在你的 Mac 上逐份读取、核对金额，把每笔消费分好类，"
-          "生成一页总览：花了多少、有多少、还要几年财务自由。"),
+    h1="还要几年，工作就成了可选项？",
+    lede=("每个月把银行对账单放进一个文件夹。FIRE蛙在你的 Mac 上逐份读取、核对金额，算出你花多少、存下多少、"
+          "还要几年财务自由，再算停工以后钱能撑多久，CPP 和 OAS 也算进去。"),
     demo="看在线演示", download="免费下载 Mac 版",
     mac=("适用于 Apple 芯片的 Mac，macOS 11 及以上。Intel 芯片的 Mac（macOS 10.15 及以上）请",
          "下载 Intel 版", "。"),
     fine=(f"演示里是 {DEMO['first']} 的钱：一位住在{CITY_ZH.get(DEMO['city'], DEMO['city'])}的 {DEMO['age']} 岁上班族，"
           "人物是虚构的。不用安装，打开就能看（演示页面是英文的）。app 已通过 Apple 签名和公证，支持中英文，免费开源（MIT）。"),
     phone="演示适合在电脑上看；用手机的话，可以先看下面的截图。",
-    hero_alt="FIRE 页：离财务自由大约 29 到 37 年，每月多投一点会怎样",
-    points=[("不用连银行。", "对账单你自己下载，app 在你的电脑上读取，不上传任何东西，也不用注册。"),
+    hero_alt="FIRE 页：还要几年财务自由，每月多投一点会怎样",
+    points=[("不只是记账，是还要几年。", "按你实际投进去的钱，算还要几年财务自由，每月多投 100 元能早多少。"
+             "TFSA、RRSP、FHSA 都算进同一个净值。"),
             ("每个数都对得上。", "每份对账单都要和它自己印的合计一致，才会收进来。"),
-            ("不只是记账，还有 FIRE 计划。", "还要几年财务自由、退休后钱能撑多久；TFSA、RRSP、FHSA 和海外账户，都算进同一个净值。")],
+            ("不用连银行。", "对账单你自己下载，app 在你的电脑上读取，不上传任何东西，也不用注册。")],
     how_lab="怎么用", how_h="每个月，你只做三件事", you="你", app="app",
     steps=[("下载文件", "从网银下载上个月的对账单；有券商账户的话，再导出一份券商记录。",
             "提醒你还差哪几份、每份去哪下载。",
@@ -156,7 +158,7 @@ ZH = dict(
     then_alt="app 里：这次改了什么，净值前后各是多少",
     panel="panel-zh",
     q_lab="它能回答",
-    qs=[("我现在有多少家底？", "所有账户、所有币种合在一起的净值：每一行是这笔钱的用途，色条的颜色表示取用有多方便。",
+    qs=[("我现在的净值是多少？", "所有账户、所有币种合在一起的净值：每一行是这笔钱的用途，色条的颜色表示取用有多方便。",
          "crop-home.png", "首页：净值、还要几年财务自由、这个月的投资和花销"),
         ("钱都花到哪了？", "按分类、按月份看一整年，并标出值得注意的：最大的分类、订阅、花得最多的月份。",
          "crop-year.png", "这一年：按分类的花销和值得注意的地方"),
@@ -180,8 +182,8 @@ ZH = dict(
           "问你，点一下就行；常见的加拿大连锁店已经预先填好，你确认一下即可。选「不确定」也可以。"),
          ("数据存在哪里？", "存在你 Mac 上的一个文件夹里：普通的 CSV、JSON 文件和一个页面。除非你开启可选的 AI 建议"
           "（只发送商户名称），否则什么都不会发出去。文件夹需要你自己备份。"),
-         ("需要用 Claude 吗？", "不需要，app 可以单独使用。Claude Code 是另一种用法，适合处理 app 读不了的对账单、"
-          "海外账户，或者想直接用一句话提问。"),
+         ("我没打算提前退休，也能用吗？", "能。不设目标，它就是你花了多少、每月存下多少、没了工资存款能撑多久。"
+          "想看还要几年财务自由的时候，它一直在。"),
          ("哪些电脑能用？", "Mac 都能用：Apple 芯片的 Mac 一个安装包（macOS 11 及以上），Intel 芯片的 Mac 一个"
           "（macOS 10.15 及以上）。查法：左上角苹果菜单 →「关于本机」，看「芯片」或「处理器」那一行。Windows 还没有"
           "安装包，可以用 Python 运行（python3 app.py）。"),
