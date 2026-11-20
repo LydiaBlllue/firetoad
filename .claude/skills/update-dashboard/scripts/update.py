@@ -72,7 +72,7 @@ import rebuild  # noqa: E402
 import verbs  # noqa: E402
 import jlock  # noqa: E402  one writer at a time, both doors
 import loans  # noqa: E402  what a borrower still owes (loans.py)
-import ai  # noqa: E402  a model, by choice, where the maps miss (ai.py; off unless the owner set one)
+import ai  # noqa: E402  AI assist, where the maps miss (ai.py; off unless the owner turned it on)
 sys.path.insert(0, CHECKS)
 from check_data import merchant_key, refund_pool  # noqa: E402  the one definition of "the same merchant"
 
@@ -460,6 +460,7 @@ class Plan:
         self.new_merchants = collections.OrderedDict()  # key -> (category, source)
         self.cat_used = {}                              # key -> the category its rows got
         self.decisions = []
+        self.ai_ask = []                                # (merchant, its question, filed as) for AI assist
         self.judged = []
         self.by_hand = []
         self.stopped = []
@@ -976,13 +977,9 @@ def note_merchant(plan, key, cat, how, when, src, root=None):
         item = {"kind": "merchant", "match": key, "what": f"{key}, seen for the first time.",
                 "default": cat, "source": f"{src}, {short(iso_to_date(when))}",
                 "facts": {"kind": "merchant", "merchant": key, "starter": None, "date": when}}
-        # A model, only where every map missed and only if the owner set one (ai.py): its answer
-        # is the question's suggestion, never the category — Other stays until the owner says.
-        if root and ai.enabled(root):
-            sug, by = ai.categorise(root, key)
-            if sug and sug != cat:
-                item["suggest"], item["suggestBy"] = sug, "model"
-                item["what"] += f" A model suggests {sug}."
+        # AI assist, only where every map missed: kept here and asked once for the whole import,
+        # just before it is written (ask_ai) — never while only looking.
+        plan.ai_ask.append((key, item, cat))
         plan.decisions.append(item)
     elif how == "brand" and key not in plan.new_merchants:
         plan.new_merchants[key] = (cat, src)
@@ -990,6 +987,33 @@ def note_merchant(plan, key, cat, how, when, src, root=None):
     elif how == "rows" and key not in plan.new_merchants:
         plan.new_merchants[key] = (cat, src)
         plan.judged.append(f"Filed {key} as {cat}, as its earlier charges were.")
+
+
+def ask_ai(root, plan, say):
+    """AI assist, when the owner turned it on: every merchant this import asks about, in one
+    request (ai.suggest_many). Its answer is the question's suggestion, never the category — Other
+    stays until the owner says. Returns what happened, for the panel; None when it is off."""
+    if not plan.ai_ask or not ai.enabled(root):
+        return None
+    found, info = ai.suggest_many(root, [k for k, _item, _cat in plan.ai_ask])
+    n = 0
+    for key, item, cat in plan.ai_ask:
+        sug = found.get(key)
+        if sug and sug != cat:
+            item["suggest"], item["suggestBy"] = sug, "model"
+            item["what"] += f" AI assist suggests {sug}."
+            say(f"  ? {key}: AI assist suggests {sug}")
+            n += 1
+    if info.get("error") == "not running":
+        say(f"  AI assist: {info['label']} was not open, so it was not asked this time.")
+    elif info.get("error"):
+        say(f"  AI assist: {info['label']} did not answer; the merchants are asked without a suggestion.")
+    else:
+        say(f"  AI assist: {info['sent']} merchant(s) sent to {info['label']} in {info['requests']} request(s); {n} suggestion(s).")
+    if info.get("left"):
+        say(f"  AI assist: {info['left']} more merchant(s) were not sent (at most {ai.MAX_PER_IMPORT} an import).")
+    info["withSuggestion"] = n
+    return info
 
 
 def plan_export(ws, plan, path, doc):
@@ -1574,6 +1598,8 @@ def _import(root, write, hand, balance, say, leave_unnamed=False):
         say("\n  Nothing written. Re-run with --write to apply.")
         return 0, summary
 
+    summary["ai"] = ask_ai(root, plan, say)
+    summary["asked"] = [d["what"] for d in plan.decisions]
     snap = snapshot(ws, plan)
     try:
         before, sp_before = derive(root), spending_by_month(root)

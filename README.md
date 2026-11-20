@@ -97,11 +97,12 @@ merchant filed wrong is changed from the list under that step. English or Chines
 in the header. The Mac build is signed and notarised, so it [opens with a
 double-click](docs/install.md); Windows has no build yet (`python3 app.py` works there).
 
-A model is optional and **off by default**. Turned on in the panel's settings — with your own
-key to an OpenAI-compatible service or Anthropic, or Ollama on this computer — it is asked one
-thing only: which category a merchant none of the maps know belongs to. It receives the
-merchant string and the fifteen category names, nothing else, and its answer is a suggestion
-you confirm, never the filing. Every exchange is logged in your folder.
+AI assist is optional and **off by default**. Turned on in Settings — Claude, ChatGPT or
+DeepSeek with your own API key, or Ollama if it already runs on this computer — it is asked one
+thing only: which category a merchant none of the maps know belongs to. It receives the merchant
+strings and the fifteen category names, nothing else, once an import. Its answer is a suggestion
+you confirm, never the filing. Settings shows how often it was asked, how many of its
+suggestions you kept, and every merchant sent; turning it off deletes the key.
 
 Claude Code stays the other door: the chat, a statement no parser reads, the setup questions
 the screens do not cover (anything held abroad, a loan to a friend, your investing buckets).
@@ -115,8 +116,10 @@ the screens do not cover (anything held abroad, a loan to a friend, your investi
 - **A statement a parser reads never goes to Anthropic.** What Claude does read is the import's
   summary, a merchant it has not seen, and your answers, the way anything you say in Claude Code does.
 - **It stays out of git**: setup keeps your data out of commits, and a guard refuses one that would carry it.
-- **A model is never on unless you turn it on.** On, it sees a merchant name and the fifteen
-  category names, nothing else, and every exchange is logged in your folder.
+- **AI assist is never on unless you turn it on.** On, it sees merchant names and the fifteen
+  category names, nothing else. With Claude, ChatGPT or DeepSeek those leave your computer, and
+  how that service keeps them is up to its terms; Settings lists every one sent. With Ollama
+  nothing leaves.
 
 **Your numbers**
 

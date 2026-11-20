@@ -99,9 +99,11 @@
     what does not serve the page's question moves to the page that asks it, or goes; a long
     table starts with its newest rows and offers the rest. A reference page (the Glossary) is
     exempt and marked `ref`.
-  - **Updates, Statements, the Glossary and Settings sit at the foot**, above the version, under
-    no heading: what each update changed, which statements are in, a reference for reading the
-    page, and the numbers that are the owner's to choose. None of them belongs to a stage.
+  - **Updates, Statements and the Glossary sit at the foot**, under no heading: what each update
+    changed, which statements are in, and a reference for reading the page. **Settings is the
+    last row of the sidebar**, on its own with a gear, below the way to the monthly import and
+    above the version (1.1.0, the owner: "like the Claude app"): what is the owner's to choose is
+    not a page to read. None of them belongs to a stage.
   - **Dots**: `pageFlags()` hangs a 6px dot on a sidebar entry when its page has something on
     it — amber `#c98500` = look at this, red `#d03b3b` = a rule is broken or something is due.
     A new rule is wired into it.
@@ -131,7 +133,7 @@
   | Set a goal | FIRE |
   | Stay on track | Budget · Portfolio · Performance · Holdings · Investment income |
   | After FIRE | Drawdown & care |
-  | — | Updates, Statements, the Glossary and Settings: records, reference and the owner's own numbers, for every stage, at the foot of the sidebar, under the pages still waiting for their data |
+  | — | Updates, Statements and the Glossary: records and reference, for every stage, at the foot of the sidebar, under the pages still waiting for their data; then Settings, alone, with a gear |
 
   **What a page waits for** (`WAITS`): Income and Emergency fund a chequing statement; Portfolio,
   Performance and Holdings a broker's holdings; Investment income a broker's activity; FIRE a FIRE
@@ -345,9 +347,22 @@
 
 ### Settings
 
-- At the foot of the sidebar, in no group (1.0.5, FINANCE.md §8e): the numbers that are the
-  owner's to choose, one row each — its name, one line of what it is, and the control — grouped
-  under the four stage names. The rows are `settings.py`'s table; the page lists nothing itself.
+- The last row of the sidebar, with a gear (1.1.0). **Two sections, listed on the left the way
+  the Claude app lists its settings** — below 1120px, a row of tabs on top —
+  each a title and rows: a name, one line of what it is, the control on the right.
+- **Your numbers** (1.0.5, FINANCE.md §8e): the numbers that are the owner's to choose, one row
+  each, under the four stage names as small headings. The rows are `settings.py`'s table; the
+  page lists nothing itself.
+- **AI assist** (1.1.0): a switch, and — on — a *Service* menu (Claude, ChatGPT, DeepSeek, and
+  *Ollama on this computer* only when it is running here, without its cloud models), the *API
+  key* (pasted, then shown as *Saved* with *Replace*; for Ollama a *Model* menu instead),
+  *Usage* (asked this month, on since, merchants it suggested, suggestions you kept) and *What
+  was sent* (each request: the day, the service, the merchants). The owner chooses a name and
+  pastes a key, never an address or a model name. Before a key is saved, three grey lines say
+  what is sent, that the service's own terms decide what it keeps, and that a key is paid for
+  in advance. Turning it off deletes the key. What it is set to lives with the app
+  (`.firetoad/`), never in the page or in `findata/`, so the section asks the app when it is
+  opened; opened as a file or as the demo, it says it works with the app.
 - **A change is saved as it is made.** No save button and no draft: the number shows at once,
   the local app writes it, and the page loads again when every change has been answered and
   nothing is being typed. A row that differs from its default says the day it was changed and
@@ -602,6 +617,16 @@ spending is sorted. Money sent that is big or repeats (`confirm.py` `ASK_FIRST`)
 asked before the line is called reached, since it may be spending nobody counted; then the page shows *That is enough*, what is left — the small
 merchants, what was answered not sure, the money questions — and the way on or out. A short
 list has no line and is simply gone through.
+
+**AI assist on the panel** (1.1.0). It is set in Settings, never on the panel. When AI assist is
+off and there are merchants nobody knows, one box above the cards says so in one sentence —
+`The app does not know 5 of these merchants. AI assist can suggest a category for each.` —
+with *Turn on AI assist* (it opens AI assist in Settings) and *Not now* (it is not asked again),
+and one grey line: `Nothing is sent unless you turn it on.` Turned on in the middle of
+categorizing, the service is asked once for the open merchants when the panel loads again. On a
+card its answer is a suggestion: its button comes first, edged in the purple the panel uses for
+a suggestion, and one line under the buttons says `AI assist's suggestion: Grocery`. It is never
+chosen for the owner, and there is no *Accept all*.
 
 ## 7. Principles for presenting data
 

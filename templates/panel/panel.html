@@ -135,9 +135,14 @@ ul.files li:first-child{border-top:0}
 ul.files li.bad{color:var(--bad)}
 .ok{color:var(--ok)}
 .dot{color:#6250d6;font-size:9px;margin-left:4px;vertical-align:middle}
-.ai select,.ai input{font:inherit;font-size:12.5px;padding:5px 8px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--ink)}
-.aif{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.aif input{flex:1 1 150px;min-width:0}
+/* AI assist (DESIGN.md 6a): the first-time question above the cards, and a suggestion on a card,
+   in the purple the panel already uses for a suggestion */
+.aiask{border:1px solid var(--border);border-left:3px solid #6250d6;border-radius:8px;background:#fff;padding:10px 12px;margin:4px 0 12px}
+.aiask .w{font-size:13.5px}
+.aiask .act{margin-top:8px}
+.aiask .hint{font-size:12px;color:var(--muted);margin-top:6px}
+.cq .aisug{font-size:12px;color:#6250d6;margin-top:6px}
+.cq .pl.big.ai{border-color:#6250d6;box-shadow:inset 0 0 0 1px #6250d6}
 details.settings{margin-top:18px}
 details.settings summary{font-size:12px;color:var(--muted);cursor:pointer;text-align:center}
 .ver{font-size:10.5px;color:var(--muted);letter-spacing:.04em;margin-top:14px;text-align:center}
@@ -251,9 +256,8 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
     <h2>{{V4_H}}</h2>{{STEP5}}
   </div>
 
-  <!-- The model setting is not on the panel (2026-11-13, user 001): three developer fields in a
-       drawer of their own, never tried against a real service, and no design. `ai.py . set`
-       still sets it; it comes back when it has been designed. -->
+  <!-- AI assist is set in the dashboard's Settings, not here: the panel only asks once, above
+       the cards, and shows a suggestion on a card (DESIGN.md 6a). -->
   <div class="ver">v{{VERSION}}</div>
 </div>
 <script>
@@ -451,7 +455,7 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
     var limit = big ? (order.length <= 5 ? order.length : 4) : order.length, more = null;
     var lab = function(c){ return (it.labels && it.labels[c]) || (Q.catLabels && Q.catLabels[c]) || c; };
     order.forEach(function(c, i){
-      var b = el('button', 'pl' + (big ? ' big' : '') + (c === selected ? ' sel' : ''), esc(lab(c))); b.type = 'button';
+      var b = el('button', 'pl' + (big ? ' big' : '') + (c === selected ? ' sel' : ''), esc(lab(c))); b.type = 'button'; b.setAttribute('data-c', c);
       if (big && i >= limit) { b.style.display = 'none'; b.setAttribute('data-more', '1'); }
       b.onclick = function(){ wrap.querySelectorAll('.pl').forEach(function(x){ x.classList.remove('sel'); }); b.classList.add('sel'); onPick(c); };
       wrap.appendChild(b);
@@ -499,6 +503,30 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
     var useLine = merch.length && (smallM.length + moneyRest.length) && Q.items.length > 6;
     var deckItems = useLine ? firsts.concat(bigM, moneyFirst, [ENOUGH]) : firsts.concat(merch, moneyQ);
     var qd = $('qdeck'), qof = $('qof'), qend = $('qend'), idx = 0, answered = 0;
+    // AI assist (DESIGN.md 6a): the merchants nobody knows and nobody has asked AI assist about.
+    // Off and never declined: one question above the cards, whose button opens AI assist in
+    // Settings. On (turned on since the import ran): the service is asked once, for all of them.
+    var noSug = merch.filter(function(m){ return !m.suggest && !m.aiAsked; }), AI = Q.ai || {};
+    if (noSug.length && !AI.on && !AI.declined) {
+      var ask = el('div', 'aiask');
+      ask.appendChild(el('div', 'w', esc(noSug.length === 1 ? T.ai_ask1 : fmtS(T.ai_ask, {n: noSug.length}))));
+      var aa = el('div', 'act');
+      var on = el('a', 'btn sm primary', esc(T.ai_turn_on)); on.href = base + '/#p=set&ss=ai'; on.target = '_blank'; on.rel = 'noopener';
+      // back from Settings: the panel loads again, and asks the service if it was turned on
+      on.onclick = function(){ window.addEventListener('focus', function(){ location.reload(); }, {once: true}); };
+      var no = el('button', 'btn sm', esc(T.ai_not_now)); no.type = 'button';
+      no.onclick = function(){ api('POST', '/api/ai/decline', {}); ask.remove(); };
+      aa.appendChild(on); aa.appendChild(no); ask.appendChild(aa);
+      ask.appendChild(el('div', 'hint', esc(T.ai_nothing_sent)));
+      qof.parentNode.insertBefore(ask, qof);
+    } else if (noSug.length && AI.on) {
+      var wait0 = el('p', 'hint', esc(T.ai_asking)); qof.parentNode.insertBefore(wait0, qof);
+      api('POST', '/api/ai/suggest', {}).then(function(r){
+        if (!r.ok) { wait0.remove(); return; }
+        var poll = function(){ api('GET', '/api/job').then(function(j){ if (j.ok && j.data && j.data.done) location.reload(); else setTimeout(poll, 500); }); };
+        poll();
+      }).catch(function(){ wait0.remove(); });
+    }
     var prog = el('div', 'prog'); qd.appendChild(prog);
     var deck = el('div', 'deck'); qd.appendChild(deck);
     saveMsg = el('span', 'hint');
@@ -621,6 +649,13 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
         var ps = pills(it, answers[it.n] || null, true, function(ch){ answer(it, ch); });
         if (it.kind === 'merchant' || it.kind === 'transfer') ps.appendChild(notSure());
         c.appendChild(ps);
+        // AI assist's answer is a suggestion: its button first and marked, and said under the
+        // buttons; it is never chosen for the owner, and there is no "accept all" (DESIGN.md 6a)
+        if (it.kind === 'merchant' && it.suggestBy === 'model' && it.suggest) {
+          var sb2 = ps.querySelector('[data-c="' + it.suggest + '"]');
+          if (sb2) sb2.classList.add('ai');
+          c.appendChild(el('div', 'aisug', esc(fmtS(T.ai_sug, {cat: L(it.suggest)}))));
+        }
       } else c.appendChild(el('div', 'for', esc(T.in_ledger)));
       if (it.members) c.appendChild(el('div', 'for', esc(fmtS(T.q_one_answer, {n: it.members.length}))));
       if (it.default && it.kind !== 'merchant') c.appendChild(el('div', 'for', esc(fmtS(T.q_for_now, {cat: L(it.default)}))));
@@ -763,37 +798,6 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
       inp.value = '';
     };
   });
-  var aiprov = $('aiprov');
-  if (aiprov) {
-    var notes = JSON.parse(document.querySelector('.ai').getAttribute('data-notes'));
-    function aiShow(fill){
-      var p = aiprov.value, on = p !== 'none';
-      $('aif').style.display = on ? 'flex' : 'none';
-      $('ainote').textContent = on ? (notes[p].note || '') : '';
-      if (on && fill) { $('aiurl').value = notes[p].baseUrl; $('aimodel').value = notes[p].model; }
-      $('aikey').style.display = on && notes[p].key ? '' : 'none';
-    }
-    aiprov.onchange = function(){ aiShow(true); };
-    aiShow(false);
-    $('aisave').onclick = function(){
-      var body = {provider: aiprov.value, baseUrl: $('aiurl').value, model: $('aimodel').value, key: $('aikey').value};
-      $('aimsg').textContent = '…';
-      api('POST', '/api/ai', body).then(function(r){
-        if (!r.ok) { $('aimsg').textContent = r.error && r.error.text || 'failed'; return; }
-        $('aikey').value = '';
-        $('aimsg').textContent = r.data.enabled ? T.ai_on + ': ' + r.data.provider + ', ' + r.data.model : (r.data.provider === 'none' ? T.ai_off : T.ai_nokey);
-        $('aitest').disabled = !r.data.enabled;
-      }).catch(function(e){ $('aimsg').textContent = String(e); });
-    };
-    $('aitest').onclick = function(){
-      var m = prompt(T.ai_try_q, 'STARBUCKS 1234 TORONTO ON');
-      if (!m) return;
-      $('aimsg').textContent = T.ai_asking;
-      api('POST', '/api/ai/test', {merchant: m}).then(function(r){
-        $('aimsg').textContent = !r.ok ? (r.error && r.error.text || 'failed') : (r.data.category ? m + ' → ' + r.data.category + ' (' + r.data.how + ')' : T.ai_noanswer.replace('{how}', r.data.how));
-      });
-    };
-  }
   var sb = $('syncbtn');
   if (sb) sb.onclick = function(){
     start('/api/sync', {}, T.refresh_running, function(job){

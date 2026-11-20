@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.1.0 — unreleased
+
+- **AI assist** (AI 辅助), off until you turn it on: for a merchant the app does not know, it
+  suggests a category, and you still choose. In Settings you pick Claude, ChatGPT or DeepSeek and
+  paste your own API key, or pick Ollama if it already runs on this computer — no address, no
+  model name. It is asked once an import, with the merchant names and the fifteen category names
+  and nothing else, never about more than 50 merchants. Settings shows how often it was asked,
+  how many of its suggestions you kept, and every merchant sent. Turning it off deletes the key.
+- **The panel asks once**: when there are merchants nobody knows, one box offers to turn AI assist
+  on, or not. On a card, AI assist's suggestion is the first button, marked, with one line under
+  the buttons; it is never chosen for you, and nothing accepts them all at once.
+- **Models that think before they answer get room to answer**: they came back empty before.
+- **Settings in two sections, Your numbers and AI assist**, listed on the left (tabs on a narrow
+  window), and **Settings is the last row of the sidebar**, with a gear.
+
 ## 1.0.9 — 2026-11-17
 
 - **An app for Intel Macs, and older macOS for both**: the download for Apple silicon now opens on

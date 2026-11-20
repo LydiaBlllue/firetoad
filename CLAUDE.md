@@ -230,16 +230,25 @@ builds are signed with a Developer ID and notarised (`build/build.py --sign … 
 wizard — the setup skill's interview in six screens, in English or Chinese like the panel, drafted by `setup/scripts/wizard.py` from
 `propose.py`'s draft and written back into `setup-answers.json`, then scaffold, rebuild, first
 import; the selftest's *local app setup* check builds the same workspace through the app and
-through `wizard.py --apply` and expects identical `findata/`. **A model, by choice** (steps 3–4): `ai.py` in the
-update-dashboard scripts, off unless the owner sets a provider (OpenAI-compatible, Anthropic,
-or Ollama on this computer) with `ai.py . set` — its card left the panel on 2026-11-13, until it is designed; asked at one place
-only — a merchant every map misses, in `note_merchant` — with the merchant string and the
-fifteen category names and nothing else; its answer is validated against the fifteen, written
-as the question's `suggest` with `suggestBy: model`, never as the category (Other stays until
-the owner confirms); the key in the Keychain, the choice in `.firetoad/settings.json`, every
-exchange in `.firetoad/log/ai.jsonl`. The selftest's *model side-car* check runs an import against a
-loopback mock: off means no call, on means suggestions and still Other, and only merchant
-strings and category names on the wire. The second door is complete; what follows is a Windows
+through `wizard.py --apply` and expects identical `findata/`. **AI assist** (AI 辅助, 1.1.0; steps 3–4): `ai.py` in the
+update-dashboard scripts, off unless the owner turns it on in the dashboard's Settings (or
+`ai.py . set` in the chat): Claude, ChatGPT or DeepSeek by name with the owner's own API key —
+the address and the model are the tool's — or Ollama when it runs on this computer (its
+`-cloud` models never listed); any other OpenAI-compatible service from the chat only. Asked at
+one place — a merchant every map misses — only when an import writes: every such merchant in
+one request to a cloud service (`update.ask_ai`), one at a time to Ollama, at most 50 an
+import, a cached answer never sent again, a failure never retried; with the merchant strings
+and the fifteen category names and nothing else. Room for an answer is 1,000 tokens (models
+that think first came back empty with 40); the gpt-5 family gets `max_completion_tokens` and no
+temperature. Its answer is validated against the fifteen, written as the question's `suggest`
+with `suggestBy: model`, never as the category (Other stays until the owner confirms); it never
+joins an "accept all". The key in the Keychain (never touched when `FIRETOAD_AI_NO_KEYCHAIN` or
+a key in the environment is set — the Keychain is the whole computer's), the choice in
+`.firetoad/settings.json`, every request in `.firetoad/log/ai.jsonl`, which Settings shows with
+how many suggestions were kept (from `decisions.json`); turning it off deletes the key. The
+selftest's *model side-car* check runs an import against a loopback mock that thinks before it
+answers: off means no call, on means one request, suggestions and still Other, only merchant
+strings and category names on the wire, and off deletes the key. The second door is complete; what follows is a Windows
 build and signing.
 
 ## Nothing in a dashboard is typed by hand

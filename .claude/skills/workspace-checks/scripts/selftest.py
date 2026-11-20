@@ -2688,13 +2688,15 @@ def local_app_setup_check(root, base):
 
 
 def ai_sidecar_check(root, base):
-    """A model, by choice (ai.py, 2026-11-06). On a fresh workspace built from two card statements
-    (every merchant new), a mock OpenAI-shaped server on loopback answers every merchant
-    "Travel": with no provider set the import must not call it at all and the new merchants are
-    asked as before; with the provider
-    set to the mock, the merchants nobody knows carry a model's suggestion and are STILL filed
-    Other until the owner says, the mock saw only merchant strings and category names, and the
-    exchange is in .firetoad/log/ai.jsonl."""
+    """AI assist (ai.py; 1.1.0). On a fresh workspace built from two card statements (every
+    merchant new), a mock OpenAI-shaped server on loopback answers every merchant "Travel" — and,
+    like the models that think before they answer, spends 300 tokens thinking and 30 on each answer,
+    so a request with less room than that comes back empty (with the 40 tokens ai.py used to give). With no
+    service set the import must not call it at all; with it set, the import asks once for all its
+    new merchants, they carry the suggestion and are STILL filed Other until the owner says, the
+    mock saw only merchant strings and category names, the exchange is in .firetoad/log/ai.jsonl,
+    and turning it off deletes the key. Every run here keeps away from the Keychain, which is the
+    whole computer's (FIRETOAD_AI_NO_KEYCHAIN)."""
     import http.server, threading
     upd = os.path.normpath(os.path.join(os.path.dirname(HERE), "..", "update-dashboard", "scripts", "update.py"))
     aip = os.path.join(os.path.dirname(upd), "ai.py")
@@ -2710,7 +2712,13 @@ def ai_sidecar_check(root, base):
             n = int(self.headers.get("Content-Length") or 0)
             body = json.loads(self.rfile.read(n).decode("utf-8")) if n else {}
             seen.append({"path": self.path, "auth": self.headers.get("Authorization"), "body": body})
-            out = json.dumps({"choices": [{"message": {"content": "Travel"}}]}).encode()
+            room = body.get("max_completion_tokens") or body.get("max_tokens") or 0
+            user = ((body.get("messages") or [{}])[-1].get("content") or "")
+            nums = re.findall(r"(?m)^(\d+)\. ", user)
+            ans = json.dumps({k: "Travel" for k in nums}) if nums else "Travel"
+            out = json.dumps({"choices": [{"message": {"reasoning_content": "thinking " * 60,
+                                                       # 300 tokens of thought, then 30 for each answer
+                                                       "content": ans if room >= 300 + 30 * max(1, len(nums)) else ""}}]}).encode()
             self.send_response(200); self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(out))); self.end_headers(); self.wfile.write(out)
     httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Mock)
@@ -2745,12 +2753,13 @@ def ai_sidecar_check(root, base):
             # the demo's merchants are the common chains the starter map knows; emptied in this
             # copy, every one of them is a merchant nobody has decided — the model's case
             json.dump({"patterns": []}, open(os.path.join(sk, "setup", "data", "starter_merchants.json"), "w", encoding="utf-8"))
-            env = dict(os.environ, JADE_AI_KEY="selftest-key")
+            env = dict(os.environ, JADE_AI_KEY="selftest-key", FIRETOAD_AI_NO_KEYCHAIN="1")
             # the staged copy's own scripts, so the emptied starter map is the one update.py reads
             upd_ws = os.path.join(sk, "update-dashboard", "scripts", "update.py")
             if mode == "on":
                 subprocess.run([sys.executable, os.path.join(sk, "update-dashboard", "scripts", "ai.py"), ".", "set", "openai",
-                                "--base-url", url, "--model", "mock"], cwd=ws, capture_output=True)
+                                "--base-url", url, "--model", "mock", "--key", "selftest-key"], cwd=ws, capture_output=True,
+                               env=dict(os.environ, FIRETOAD_AI_NO_KEYCHAIN="1"))
             before = len(seen)
             r = subprocess.run([sys.executable, upd_ws, ".", "--write"], cwd=ws, capture_output=True, text=True, timeout=300, env=env)
             if r.returncode != 0:
@@ -2786,15 +2795,25 @@ def ai_sidecar_check(root, base):
             lp = os.path.join(ws, ".firetoad", "log", "ai.jsonl")
             if not os.path.exists(lp) or len(open(lp, encoding="utf-8").read().splitlines()) < len(calls):
                 bad.append("on: .firetoad/log/ai.jsonl does not hold every exchange")
-            if "suggests Travel" not in r.stdout:
-                bad.append("on: the run's summary does not say the model suggested")
+            if "AI assist suggests Travel" not in r.stdout:
+                bad.append("on: the run's summary does not say AI assist suggested")
+            if len(calls) != 1:
+                bad.append(f"on: {len(calls)} request(s) for one import's merchants; a cloud service is asked once")
+            elif len((calls[0]["body"].get("messages") or [{}])[-1].get("content", "").splitlines()) != len(dec):
+                bad.append("on: the one request does not carry every merchant asked about")
+            # off is off, and the key goes with it
+            subprocess.run([sys.executable, os.path.join(sk, "update-dashboard", "scripts", "ai.py"), ".", "off"], cwd=ws,
+                           capture_output=True, env=dict(os.environ, FIRETOAD_AI_NO_KEYCHAIN="1"))
+            if any(f.endswith(".key") for f in os.listdir(os.path.join(ws, ".firetoad"))):
+                bad.append("off: the key is still stored after AI assist was turned off")
             n_calls, n_model = len(calls), len(with_model)
     finally:
         httpd.shutdown()
     if bad:
         return ["  ✗ model side-car: " + x for x in bad[:6]]
-    return [f"  ✓ model side-car: off → not one call; on → {n_model} merchant(s) carry the model's suggestion over {n_calls} call(s), "
-            f"filed Other until confirmed, nothing but merchant strings and category names sent, every exchange logged"]
+    return [f"  ✓ model side-car: off → not one call; on → {n_model} merchant(s) carry AI assist's suggestion from {n_calls} request "
+            f"to a model that thinks first, filed Other until confirmed, nothing but merchant strings and category names sent, "
+            f"every exchange logged, off deletes the key"]
 
 
 def merchant_key_of(note):

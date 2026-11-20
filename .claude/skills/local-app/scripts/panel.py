@@ -32,7 +32,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SKILLS = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(SKILLS, "update-dashboard", "scripts"))
 sys.path.insert(0, os.path.join(SKILLS, "update-dashboard"))
-import ai  # noqa: E402  which model is set, for the settings card
+import ai  # noqa: E402  whether AI assist is on, for the first-time question and the cards
 import categories  # noqa: E402
 import confirm  # noqa: E402  INCOMING: what money in from no named sender can be
 import preflight  # noqa: E402  names the files in inbox/
@@ -280,7 +280,7 @@ def doc_names(root):
     return {short: ks[0] for short, ks in out.items() if len(ks) == 1 and ks[0] != short}
 
 
-def qdata(q, lang="en", names=None):
+def qdata(q, lang="en", names=None, root=None):
     """What step 4 draws: every open item with its choices, and the spending totals the Other
     share is computed from. The page groups them — money first, then the merchants with a
     suggestion, then the unknown ones as cards by amount."""
@@ -302,7 +302,10 @@ def qdata(q, lang="en", names=None):
             # the open merchants come to (the share still to sort) and what was answered "not sure"
             "catUse": (q or {}).get("catUse") or {}, "openOther": (q or {}).get("openOther") or 0,
             "unsure": (q or {}).get("unsure") or {"n": 0, "total": 0},
-            "catLabels": {c: categories.label(c, lang) for c in categories.CATEGORIES}}
+            "catLabels": {c: categories.label(c, lang) for c in categories.CATEGORIES},
+            # AI assist (DESIGN.md 6a): on, or declined — the panel asks once, and asks the service
+            # once for the open merchants when it was turned on in the middle of categorizing
+            "ai": {"on": ai.enabled(root) if root else False, "declined": bool(ai.settings(root).get("declined")) if root else False}}
 
 
 def step4(lang, q):
@@ -371,27 +374,6 @@ def step5(lang, rec, base):
     out.append(f'<div class="act"><a class="btn primary" href="{e(base)}/" target="_blank" rel="noopener">{e(t(lang, "open_dash"))}</a>'
                f'<button type="button" class="lnk hint" id="undo">{e(t(lang, "undo"))}</button></div>')
     return "".join(out)
-
-
-# ---------------------------------------------------------------- the model, by choice
-def ai_card(lang, root):
-    st = ai.status(root)
-    opts = "".join(f'<option value="{e(k)}"{" selected" if k == st["provider"] else ""}>{e(v["label"])}</option>' for k, v in st["providers"].items())
-    notes = json.dumps({k: {"note": v["note"], "baseUrl": v["baseUrl"], "model": v["model"], "key": v["key"]} for k, v in st["providers"].items()})
-    on = st["provider"] != "none"
-    msg = (e(t(lang, "ai_on")) + ": " + e(st["provider"]) + ", " + e(st["model"] or "")) if st["enabled"] else (e(t(lang, "ai_nokey")) if on else e(t(lang, "ai_off")))
-    return (f'<div class="ai" data-notes="{e(notes)}">'
-            f'<div class="qs">{e(t(lang, "ai_intro"))}</div>'
-            f'<div class="act"><select id="aiprov"><option value="none"{"" if on else " selected"}>{e(t(lang, "ai_off"))}</option>{opts}</select>'
-            f'<span class="hint" id="ainote"></span></div>'
-            f'<div class="aif" id="aif" style="display:{"flex" if on else "none"}">'
-            f'<input id="aiurl" placeholder="base URL" value="{e(st["baseUrl"] or "")}">'
-            f'<input id="aimodel" placeholder="model" value="{e(st["model"] or "")}">'
-            f'<input id="aikey" type="password" placeholder="{e(t(lang, "ai_key_kept") if st["keyStored"] and on else t(lang, "ai_key_ph"))}" autocomplete="off">'
-            f'</div>'
-            f'<div class="act"><button type="button" class="btn sm primary" id="aisave">{e(t(lang, "save"))}</button>'
-            f'<button type="button" class="btn sm" id="aitest"{"" if st["enabled"] else " disabled"}>{e(t(lang, "ai_try"))}</button>'
-            f'<span class="hint" id="aimsg">{msg}</span></div></div>')
 
 
 # ---------------------------------------------------------------- the page
@@ -508,7 +490,7 @@ def render(base, root, st, q, rec, job, held, tool=None, lang="en", first=False)
             "{{BUSY}}": busy,
             "{{SETTINGS}}": e(t(lang, "settings")), "{{MORE}}": e(t(lang, "more_h")),
             "{{JS}}": json.dumps(js_strings(lang), ensure_ascii=False).replace("</", "<\\/"),
-            "{{QDATA}}": json.dumps(qdata(q, lang, doc_names(root)), ensure_ascii=False).replace("</", "<\\/"),
+            "{{QDATA}}": json.dumps(qdata(q, lang, doc_names(root), root), ensure_ascii=False).replace("</", "<\\/"),
             "{{VERSION}}": e((tool or {}).get("version") or "")}
     for k, v in fill.items():
         tpl = tpl.replace(k, v)
