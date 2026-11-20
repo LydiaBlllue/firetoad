@@ -622,7 +622,7 @@ list has no line and is simply gone through.
 off and there are merchants nobody knows, one box above the cards says so in one sentence —
 `The app does not know 5 of these merchants. AI assist can suggest a category for each.` —
 with *Turn on AI assist* (it opens AI assist in Settings) and *Not now* (it is not asked again),
-and one grey line: `Nothing is sent unless you turn it on.` Turned on in the middle of
+and one grey line that says what turning it on would send: `Turned on, only these merchant names go to the service you choose. No amounts, dates or accounts.` Turned on in the middle of
 categorizing, the service is asked once for the open merchants when the panel loads again. On a
 card its answer is a suggestion: its button comes first, edged in the purple the panel uses for
 a suggestion, and one line under the buttons says `AI assist's suggestion: Grocery`. It is never
