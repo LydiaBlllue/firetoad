@@ -211,6 +211,19 @@ S = {
                         "zh": "打开后，只把这几个商户名发给你选的服务，不发金额、日期和账户。"},
     "ai_asking": {"en": "Asking AI assist…", "zh": "正在问 AI 辅助…"},
     "ai_sug": {"en": "AI assist's suggestion: {cat}", "zh": "AI 辅助的建议：{cat}"},
+    # why AI assist gave no suggestion, and the one thing to do about it (ai.py WHY says the same in the import's lines)
+    "ai_fail_key": {"en": "{svc} did not accept the key. Put in a new one in Settings, under AI assist.",
+                    "zh": "{svc} 不接受这个密钥。到「设置」的「AI 辅助」里换一个。"},
+    "ai_fail_credit": {"en": "The {svc} account has no credit left. Add credit on its website.",
+                       "zh": "{svc} 账户里没有余额了。到它的网站充值。"},
+    "ai_fail_busy": {"en": "{svc} is busy right now. Try again in a few minutes.", "zh": "{svc} 现在很忙。过几分钟再试。"},
+    "ai_fail_network": {"en": "{svc} could not be reached. Check the internet connection.", "zh": "连不上 {svc}。看一下网络。"},
+    "ai_fail_closed": {"en": "{svc} is not open on this computer. Open it first.", "zh": "这台电脑上的 {svc} 没有打开。先打开它。"},
+    "ai_fail_error": {"en": "{svc} did not answer.", "zh": "{svc} 没有回答。"},
+    "ai_fail_cut": {"en": "{svc}'s answer was cut short, so some merchants have no suggestion.",
+                    "zh": "{svc} 的回答没说完，有些商户没有建议。"},
+    "ai_fail_go_on": {"en": "You can go on without suggestions.", "zh": "没有建议也可以接着答。"},
+    "ai_again": {"en": "Ask again", "zh": "再问一次"},
     "settings": {"en": "Settings", "zh": "设置"},
     # — the panel, one step at a time (2026-11-12): what each view is called and says
     "first_last": {"en": "Last step: what the files could not say", "zh": "最后一步：文件里看不出来的"},
@@ -367,6 +380,7 @@ def js_strings(lang):
             "undo_done", "undo_none", "failed_lines", "saving", "saved_rebuilt", "not_saved", "saved", "already", "refused",
             "cands_note", "cands_none", "near", "date_read", "refresh_running", "refresh_done", "refresh_failed",
             "ai_ask", "ai_ask1", "ai_turn_on", "ai_not_now", "ai_nothing_sent", "ai_asking", "ai_sug",
+            "ai_fail_key", "ai_fail_credit", "ai_fail_busy", "ai_fail_network", "ai_fail_closed", "ai_fail_error", "ai_fail_cut", "ai_fail_go_on", "ai_again",
             "err_h", "err_copy", "err_copied", "err_log", "err_code", "err_run", "err_safe", "err_stopped_h",
             "err_try", "err_close", "err_show", "err_details")
     return {k: t(lang, k) for k in keys}

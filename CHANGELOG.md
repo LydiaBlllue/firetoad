@@ -12,6 +12,10 @@
   on, or not. On a card, AI assist's suggestion is the first button, marked, with one line under
   the buttons; it is never chosen for you, and nothing accepts them all at once.
 - **Models that think before they answer get room to answer**: they came back empty before.
+- **When AI assist cannot answer, it says why**: the key was not accepted, the account has no
+  credit, the service is busy, or there is no connection, with the one thing to do about it. The
+  merchants are asked again once that is put right. An answer cut short still gives the
+  suggestions it got to.
 - **Settings in two sections, Your numbers and AI assist**, listed on the left (tabs on a narrow
   window), and **Settings is the last row of the sidebar**, with a gear.
 

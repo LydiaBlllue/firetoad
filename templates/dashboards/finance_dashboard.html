@@ -2651,7 +2651,7 @@ function renderAI(){
     const label = id => (aiSvc(id).label || id);
     h += '<h3>What was sent</h3><table class="dt"><tr><th>Day</th><th class="l">Sent to</th><th class="l">What</th></tr>'
       + hist.map(x => '<tr><td class="nw">' + dLong(x.at) + '</td><td class="l">' + label(x.service) + '</td><td class="what">'
-        + x.merchants.length + (x.merchants.length === 1 ? " merchant" : " merchants") + (x.ok ? "" : ", no answer")
+        + x.merchants.length + (x.merchants.length === 1 ? " merchant" : " merchants") + (x.ok ? (x.cut ? ", answer cut short" : "") : ", " + ({key: "key not accepted", credit: "no credit left", busy: "service busy", network: "no connection"}[x.why] || "no answer"))
         + '<small>' + x.merchants.slice(0, 3).map(esc).join(", ") + (x.merchants.length > 3 ? ", and " + (x.merchants.length - 3) + " more" : "") + '</small></td></tr>').join("")
       + '</table><p class="fine">The names of the 15 categories went with each one.</p>';
   }
