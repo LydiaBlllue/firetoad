@@ -538,7 +538,10 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
             if (!why || why === 'nothing to ask') { location.reload(); return; }
             var key = {key: 'ai_fail_key', credit: 'ai_fail_credit', busy: 'ai_fail_busy', network: 'ai_fail_network',
                        'not running': 'ai_fail_closed', cut: 'ai_fail_cut'}[why] || 'ai_fail_error';
-            wait0.textContent = fmtS(T[key], {svc: res.label || 'AI assist'}) + ' ' + T.ai_fail_go_on + ' ';
+            // the reason and how to put it right first; choosing yourself is the way on (a cut
+            // answer's own sentence already says to ask again, so only the way on follows it)
+            var gap = LANG === 'zh' ? '' : ' ';   // Chinese sentences meet without a space
+            wait0.textContent = fmtS(T[key], {svc: res.label || 'AI assist'}) + gap + (why === 'cut' ? T.ai_fail_go_on_cut : T.ai_fail_go_on) + ' ';
             var again = el('button', 'btn sm', esc(T.ai_again)); again.type = 'button';
             again.onclick = askAI; wait0.appendChild(again);
           }); };

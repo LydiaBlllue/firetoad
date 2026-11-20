@@ -222,7 +222,11 @@ S = {
     "ai_fail_error": {"en": "{svc} did not answer.", "zh": "{svc} 没有回答。"},
     "ai_fail_cut": {"en": "{svc}'s answer reached its length limit before it got to every merchant. Ask again to send only the rest.",
                     "zh": "{svc} 的回答超过了长度上限，没写完，有些商户还没有建议。点「再问一次」，只问剩下的。"},
-    "ai_fail_go_on": {"en": "You can still choose the categories yourself and carry on.", "zh": "没有建议，也可以自己选类别，接着往下做。"},
+    # after the reason: putting it right comes first, choosing yourself is the way on (2026-11-20, the owner)
+    "ai_fail_go_on": {"en": "Once it is put right, press Ask again. If you'd rather not wait, you can choose the categories yourself and carry on.",
+                      "zh": "修好以后点「再问一次」。不想等的话，也可以自己选类别，接着往下做。"},
+    "ai_fail_go_on_cut": {"en": "If you'd rather not wait, you can choose the categories yourself and carry on.",
+                          "zh": "不想等的话，也可以自己选类别，接着往下做。"},
     "ai_again": {"en": "Ask again", "zh": "再问一次"},
     "settings": {"en": "Settings", "zh": "设置"},
     # — the panel, one step at a time (2026-11-12): what each view is called and says
@@ -380,7 +384,7 @@ def js_strings(lang):
             "undo_done", "undo_none", "failed_lines", "saving", "saved_rebuilt", "not_saved", "saved", "already", "refused",
             "cands_note", "cands_none", "near", "date_read", "refresh_running", "refresh_done", "refresh_failed",
             "ai_ask", "ai_ask1", "ai_turn_on", "ai_not_now", "ai_nothing_sent", "ai_asking", "ai_sug",
-            "ai_fail_key", "ai_fail_credit", "ai_fail_busy", "ai_fail_network", "ai_fail_closed", "ai_fail_error", "ai_fail_cut", "ai_fail_go_on", "ai_again",
+            "ai_fail_key", "ai_fail_credit", "ai_fail_busy", "ai_fail_network", "ai_fail_closed", "ai_fail_error", "ai_fail_cut", "ai_fail_go_on", "ai_fail_go_on_cut", "ai_again",
             "err_h", "err_copy", "err_copied", "err_log", "err_code", "err_run", "err_safe", "err_stopped_h",
             "err_try", "err_close", "err_show", "err_details")
     return {k: t(lang, k) for k in keys}
