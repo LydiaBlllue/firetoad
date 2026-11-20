@@ -12,6 +12,8 @@
   on, or not. On a card, AI assist's suggestion is the first button, marked, with one line under
   the buttons; it is never chosen for you, and nothing accepts them all at once.
 - **Models that think before they answer get room to answer**: they came back empty before.
+- **A negative amount is written −$991.30 in the setup and the panel**, never $-991.30: a credit
+  card's balance on the setup's accounts screen showed the minus after the dollar sign.
 - **The front page says how to set up**: a section before the monthly steps — bring 1–3 months,
   check what the app filled in, build your page — with a picture of each screen, and an entry in
   the top bar (Setting up / 建账).

@@ -136,7 +136,8 @@ table.cm input{width:100%}
   function fmt(s, o){ return String(s).replace(/\{(\w+)\}/g, function(_, k){ return o[k] == null ? '' : o[k]; }); }
   function el(tag, cls, html){ var d = document.createElement(tag); if (cls) d.className = cls; if (html != null) d.innerHTML = html; return d; }
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-  function money(v){ return v == null ? '' : '$' + Number(v).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+  // money is written one way (DESIGN.md 5b′): a real minus before the dollar sign, −$991.30, never $-991.30
+  function money(v){ return v == null ? '' : (Number(v) < 0 ? '\u2212$' : '$') + Math.abs(Number(v)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
   function api(method, path, body){
     return fetch(base + path, {method: method, headers: body instanceof FormData ? {} : {'Content-Type': 'application/json'},
                                body: body instanceof FormData ? body : (body ? JSON.stringify(body) : undefined)})
@@ -399,7 +400,7 @@ table.cm input{width:100%}
         var kept = pay - fixed - num(ev.value);
         keptHint.className = ''; keptHint.textContent = '';
         if (pay && String(ev.value).trim()) {
-          keptVal.textContent = (kept < 0 ? '-$' : '$') + Math.abs(Math.round(kept)).toLocaleString();
+          keptVal.textContent = (kept < 0 ? '\u2212$' : '$') + Math.abs(Math.round(kept)).toLocaleString();
           rateVal.textContent = Math.round(kept / pay * 100) + '%';
           if (kept < 0) { keptHint.textContent = W.w_kept_neg; keptHint.className = 'bad'; }
         } else { keptVal.textContent = '—'; rateVal.textContent = '—'; }
@@ -408,7 +409,7 @@ table.cm input{width:100%}
           invHint.textContent = over ? W.w_invest_over : W.w_from_files; invHint.className = over ? 'warn' : '';
         }
       }
-      function whole(v){ return '$' + Math.round(+v).toLocaleString(); }
+      function whole(v){ return (Math.round(+v) < 0 ? '\u2212$' : '$') + Math.abs(Math.round(+v)).toLocaleString(); }
       [th, inv, ev].forEach(function(x){ x.addEventListener('input', calc); }); calc();
       nav(card, true, function(){
         A.money.takeHome = th.value; A.money.invest = hasInv ? inv.value : ''; A.money.everyday = ev.value;
@@ -484,7 +485,7 @@ table.cm input{width:100%}
       line(W.w_sum_name, A.owner);
       line(W.w_sum_born, A.born);
       line(W.w_sum_accounts, String(scr.accounts.rows.length + added));
-      function whole(v){ return v ? '$' + Math.round(+v).toLocaleString() : ''; }
+      function whole(v){ return v ? (Math.round(+v) < 0 ? '\u2212$' : '$') + Math.abs(Math.round(+v)).toLocaleString() : ''; }
       line(W.w_sum_take, whole(A.money.takeHome));
       line(W.w_sum_invest, whole(A.money.invest));
       line(W.w_sum_every, whole(A.money.everyday));

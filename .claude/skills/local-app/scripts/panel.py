@@ -225,7 +225,8 @@ def choices_for(item):
 
 def money_s(v):
     try:
-        return "$" + format(float(v), ",.2f")
+        f = float(v)
+        return ("\u2212$" if f < 0 else "$") + format(abs(f), ",.2f")   # −$48.15, never $-48.15 (DESIGN.md 5b′)
     except (TypeError, ValueError):
         return str(v)
 
