@@ -43,7 +43,7 @@ EN = dict(
     desc=("Free, open-source Mac app for Canadians. Drop in your RBC, BMO or any bank's statements "
           "and see your spending, net worth and years to FIRE. No bank login, no account."),
     name="FIRE Toad",
-    nav=[("#how", "How it works"), ("#banks", "Banks"), ("#faq", "Questions")],
+    nav=[("#setup", "Setting up"), ("#how", "How it works"), ("#ai", "AI assist"), ("#banks", "Banks"), ("#faq", "Questions")],
     h1="See where your money goes, what you've built, and how many years until work is optional.",
     lede=("Once a month, drop your bank statements into a folder. FIRE Toad reads them on your Mac, "
           "checks that each one adds up, sorts every purchase, and builds one page: what you spent, "
@@ -61,6 +61,18 @@ EN = dict(
             ("Every number adds up.", "A statement only gets in if it matches the totals printed on it."),
             ("A FIRE plan, not just a budget.", "Years to financial independence, how long your money "
              "will last, your TFSA, RRSP and FHSA, and accounts abroad — all in one net worth.")],
+    setup_lab="The first time", setup_h="Set up in 20–30 minutes", setup_img="setup",
+    setup=[("Bring 1–3 months", "Download your last one to three months of statements, plus your broker's export "
+            "if you have one, and drop them in.",
+            "Recognises each file and drafts your accounts from them.",
+            "In the app: the files dropped in, and three accounts drafted from them"),
+           ("Check what it filled in", "Change only what's wrong: your accounts, your income and everyday spending, "
+            "whether to track FIRE, the day you'll import each month.",
+            "Fills in every screen from your files: each account and its balance, your pay, what your cards spend.",
+            "In the app: each account filled in, with its balance and what it is for"),
+           ("Build your page", "Press Build it, then categorize the shops it couldn't place.",
+            "Reads every file, checks each one adds up, and makes your page. Common Canadian chains are already filed.",
+            "In the app: everything you set, checked once before the page is built")],
     how_lab="How it works", how_h="Once a month, three things to do", you="You", app="The app",
     steps=[("Get your files", "Download last month's statements from your bank, plus your broker's export if you have one.",
             "Tells you which ones are still missing and where to find each.",
@@ -76,6 +88,15 @@ EN = dict(
     then_h="Then", then_p="Your page updates with the new month: what you spent, and where your net worth moved.",
     then_alt="In the app: what changed, with the net worth before and after",
     panel="panel",
+    ai_lab="AI assist — optional", ai_h="A shop it doesn't know? AI suggests, you choose.",
+    ai=[("Suggests, never decides", "A shop the app has never seen comes with a suggested category: the first "
+         "button on its card, marked as AI assist's. You still tap the answer, and nothing accepts them all at once.",
+         "ai-card.png", "A card in the panel: AI assist's suggestion is the first button"),
+        ("Your AI, and you see what it got", "Claude, ChatGPT or DeepSeek with your own API key, or Ollama if it "
+         "already runs on your Mac. Only shop names go out, once a month — never an amount, a date or an account. "
+         "Settings lists every one sent and how many suggestions you kept. Off until you turn it on; off again "
+         "deletes the key.",
+         "ai-settings.png", "Settings, AI assist: the service, the key, how often it was asked, what was sent")],
     q_lab="What it tells you",
     qs=[("Where do I stand?", "Your net worth across every account and currency — each part labelled "
                               "by what it's for, its bar coloured by how easily you can get to it.",
@@ -105,10 +126,11 @@ EN = dict(
           "and it never sees your bank password."),
          ("Do I have to categorize everything myself?", "Mostly, no. Once you've categorized a shop, "
           "it stays that way. Only a shop it hasn't seen before is asked — one tap, with common "
-          "Canadian chains already filled in for you to confirm. \"Not sure\" is an answer too."),
+          "Canadian chains already filled in for you to confirm. \"Not sure\" is an answer too. Turn on "
+          "AI assist and the rest come with a suggestion as well."),
          ("Where does my data live?", "In a folder on your Mac: plain CSV and JSON files, plus one page. "
-          "Nothing is sent anywhere unless you turn on the optional AI suggestions, which send only "
-          "shop names. Backing up the folder is up to you."),
+          "Nothing is sent anywhere unless you turn on AI assist, which sends only shop names, to the "
+          "AI you choose. Backing up the folder is up to you."),
          ("Do I need Claude?", "No. The app works on its own. Claude Code is another way to use it — "
           "for a statement the app can't read, accounts abroad, or a question in plain words."),
          ("Which computers does it run on?", "A Mac: one download for Apple silicon (macOS 11 or later), "
@@ -128,7 +150,7 @@ ZH = dict(
     desc=("免费开源的 Mac 记账 app，为在加拿大生活的人做。放进 RBC、BMO 或其他银行的对账单，就能看到钱花在哪、"
           "净值多少、还要几年财务自由。不用连银行，也不用注册。"),
     name="FIRE蛙 FIRE Toad",
-    nav=[("#how", "怎么用"), ("#banks", "支持的银行"), ("#faq", "常见问题")],
+    nav=[("#setup", "建账"), ("#how", "怎么用"), ("#ai", "AI 辅助"), ("#banks", "支持的银行"), ("#faq", "常见问题")],
     h1="钱花在哪、攒了多少、还要几年财务自由——一页看清。",
     lede=("每个月把银行对账单放进一个文件夹。FIRE蛙在你的 Mac 上逐份读取、核对金额，把每笔消费分好类，"
           "生成一页总览：花了多少、有多少、还要几年财务自由。"),
@@ -142,6 +164,16 @@ ZH = dict(
     points=[("不用连银行。", "对账单你自己下载，app 在你的电脑上读取，不上传任何东西，也不用注册。"),
             ("每个数都对得上。", "每份对账单都要和它自己印的合计一致，才会收进来。"),
             ("不只是记账，还有 FIRE 计划。", "还要几年财务自由、退休后钱能撑多久；TFSA、RRSP、FHSA 和海外账户，都算进同一个净值。")],
+    setup_lab="第一次", setup_h="建账，20–30 分钟", setup_img="setup-zh",
+    setup=[("带上 1–3 个月的文件", "从网银下载最近一到三个月的对账单；有券商账户的话，再导出一份券商记录，一起拖进来。",
+            "认出每份文件，用它们替你起好账户。",
+            "app 里：拖进来的文件，和据此起好的三个账户"),
+           ("核对它填好的", "只改不对的：你的账户、每月收入和日常开销、要不要跟踪 FIRE、每月哪天导入。",
+            "每一屏都从你的文件里填好：每个账户和余额、你的工资、卡上每月花多少。",
+            "app 里：每个账户都已填好，带余额和用途"),
+           ("生成你的页面", "点「开始生成」，再给它认不出的商户归类。",
+            "读每份文件、核对合计，做出你的页面。常见的加拿大连锁店已经归好类。",
+            "app 里：生成之前，把你定的都核对一遍")],
     how_lab="怎么用", how_h="每个月，你只做三件事", you="你", app="app",
     steps=[("下载文件", "从网银下载上个月的对账单；有券商账户的话，再导出一份券商记录。",
             "提醒你还差哪几份、每份去哪下载。",
@@ -155,6 +187,14 @@ ZH = dict(
     then_h="然后", then_p="你的总览页加上新的一个月：花了多少，净值怎么变。",
     then_alt="app 里：这次改了什么，净值前后各是多少",
     panel="panel-zh",
+    ai_lab="AI 辅助——可选", ai_h="不认得的商户？AI 给建议，你来选。",
+    ai=[("只建议，不替你定", "第一次出现的商户会带一个建议的类别：卡片上第一个按钮，标明是 AI 辅助的建议。"
+         "还是你自己点，也没有「全部接受」。",
+         "ai-card-zh.png", "面板里的一张卡片：AI 辅助的建议是第一个按钮"),
+        ("用你自己的 AI，发了什么都看得到", "Claude、ChatGPT 或 DeepSeek，用你自己的 API key；或者 Mac 上已经装好的 Ollama。"
+         "每月一次，只发商户名，从不发金额、日期和账户。设置里列着发过的每一个、它的建议你收下了几个。"
+         "默认关闭；关掉时 key 一起删掉。",
+         "ai-settings.png", "设置里的 AI 辅助：服务、key、问过几次、发了什么")],
     q_lab="它能回答",
     qs=[("我现在有多少家底？", "所有账户、所有币种合在一起的净值：每一行是这笔钱的用途，色条的颜色表示取用有多方便。",
          "crop-home.png", "首页：净值、还要几年财务自由、这个月的投资和花销"),
@@ -177,9 +217,9 @@ ZH = dict(
          ("需要连接我的银行吗？", "不需要。每月一次，你像平时一样登录网银、下载对账单。FIRE蛙从不登录银行，"
           "所以不会让你反复验证，也永远拿不到你的银行密码。"),
          ("分类要我一条条自己弄吗？", "基本不用。归过一次类的商户，之后都会自动归到同一类。只有第一次出现的商户才会"
-          "问你，点一下就行；常见的加拿大连锁店已经预先填好，你确认一下即可。选「不确定」也可以。"),
-         ("数据存在哪里？", "存在你 Mac 上的一个文件夹里：普通的 CSV、JSON 文件和一个页面。除非你开启可选的 AI 建议"
-          "（只发送商户名称），否则什么都不会发出去。文件夹需要你自己备份。"),
+          "问你，点一下就行；常见的加拿大连锁店已经预先填好，你确认一下即可。选「不确定」也可以。打开 AI 辅助的话，其余的也会带一个建议。"),
+         ("数据存在哪里？", "存在你 Mac 上的一个文件夹里：普通的 CSV、JSON 文件和一个页面。除非你打开 AI 辅助"
+          "（只把商户名发给你选的 AI），否则什么都不会发出去。文件夹需要你自己备份。"),
          ("需要用 Claude 吗？", "不需要，app 可以单独使用。Claude Code 是另一种用法，适合处理 app 读不了的对账单、"
           "海外账户，或者想直接用一句话提问。"),
          ("哪些电脑能用？", "Mac 都能用：Apple 芯片的 Mac 一个安装包（macOS 11 及以上），Intel 芯片的 Mac 一个"
@@ -331,7 +371,7 @@ def page(t, base):
 <script>
   // An old link to a page of the demo (…/firetoad/#fire) still opens that page.
   if (location.hash.length > 1 && !document.getElementById(location.hash.slice(1)) &&
-      !/^#(how|banks|faq)$/.test(location.hash)) location.replace('{up}dashboard.html' + location.hash);
+      !/^#(setup|how|ai|banks|faq)$/.test(location.hash)) location.replace('{up}dashboard.html' + location.hash);
 </script>
 <style>{CSS}</style>
 </head>
@@ -354,6 +394,15 @@ def page(t, base):
   </div>
   <ul class="points">{''.join(f'<li><b>{e(a)}</b><span>{e(b)}</span></li>' for a, b in t['points'])}</ul>
 
+  <section id="setup">
+    <p class="lab">{e(t['setup_lab'])}</p>
+    <h2>{e(t['setup_h'])}</h2>
+    <ol class="walk">{''.join(f'<li class="wk"><div class="txt"><h3><i>{i}</i>{e(a)}</h3><dl class="who"><dt>{e(t["you"])}</dt>'
+                              f'<dd class="you">{e(y)}</dd><dt>{e(t["app"])}</dt><dd>{e(d)}</dd></dl></div>'
+                              f'<figure class="pic">{img(t["setup_img"] + f"-{i}.png", alt)}</figure></li>'
+                              for i, (a, y, d, alt) in enumerate(t['setup'], 1))}</ol>
+  </section>
+
   <section id="how">
     <p class="lab">{e(t['how_lab'])}</p>
     <h2>{e(t['how_h'])}</h2>
@@ -362,6 +411,12 @@ def page(t, base):
                               f'<figure class="pic">{img(panel(i), alt)}</figure></li>'
                               for i, (a, y, d, alt) in enumerate(t['steps'], 1))}<li class="wk then"><div class="txt"><h3><i>✓</i>{e(t['then_h'])}</h3>
       <p>{e(t['then_p'])}</p></div><figure class="pic">{img(panel(4), t['then_alt'])}</figure></li></ol>
+  </section>
+
+  <section id="ai">
+    <p class="lab">{e(t['ai_lab'])}</p>
+    <h2>{e(t['ai_h'])}</h2>
+    <div class="qs">{''.join(f'<div class="q"><div class="qt"><h3>{e(h)}</h3><p>{e(p)}</p></div><figure class="shot">{img(f, alt)}</figure></div>' for h, p, f, alt in t['ai'])}</div>
   </section>
 
   <section>

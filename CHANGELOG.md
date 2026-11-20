@@ -12,6 +12,12 @@
   on, or not. On a card, AI assist's suggestion is the first button, marked, with one line under
   the buttons; it is never chosen for you, and nothing accepts them all at once.
 - **Models that think before they answer get room to answer**: they came back empty before.
+- **The front page says how to set up**: a section before the monthly steps — bring 1–3 months,
+  check what the app filled in, build your page — with a picture of each screen, and an entry in
+  the top bar (Setting up / 建账).
+- **The front page and both READMEs have a section on AI assist**: what it does, which AI, what it
+  costs, what is sent and how often, and what you can check — with a card and the Settings section
+  as pictures. Two answers under Questions say it too.
 - **Settings in two sections, Your numbers and AI assist**, listed on the left (tabs on a narrow
   window), and **Settings is the last row of the sidebar**, with a gear.
 
