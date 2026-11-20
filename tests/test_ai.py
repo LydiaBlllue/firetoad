@@ -178,6 +178,12 @@ class Calls(unittest.TestCase):
         self.assertEqual([d.get("suggest") for d in got], ["Dining", None])
         self.assertTrue(all(d.get("aiAsked") for d in got))   # answered, even with nothing usable: not asked again
 
+    def test_what_was_sent_names_who_received_it(self):
+        for svc in ("claude", "chatgpt", "ollama", "openai"):
+            ai._log(self.ws, {"fn": "suggest", "service": svc, "sent": {"merchants": ["A"]}})
+        self.assertEqual([h["to"] for h in ai.history(self.ws)][::-1], ["Anthropic", "OpenAI", "Ollama on this computer", "Another service"])
+        self.assertEqual([s["menu"] for s in ai.status(self.ws)["services"]][:3], ["Claude", "ChatGPT (OpenAI)", "DeepSeek"])
+
     def test_plain_http_only_to_this_computer(self):
         for url, ok in (("https://api.example.test/v1", True), ("http://localhost:11434/v1", True), ("http://127.0.0.1:8080/v1", True),
                         ("http://localhost.example.test/v1", False), ("http://127.0.0.1.example.test/v1", False),

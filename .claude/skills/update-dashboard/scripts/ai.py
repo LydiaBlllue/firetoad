@@ -57,7 +57,9 @@ SERVICE = "Jade Toad"   # not renamed with the product (2026-11-12): saved keys 
 PROVIDERS = {
     "claude":   {"label": "Claude", "company": "Anthropic", "kind": "anthropic", "cloud": True, "key": True,
                  "baseUrl": "https://api.anthropic.com", "model": "claude-haiku-5-5", "keyUrl": "https://console.anthropic.com/settings/keys"},
-    "chatgpt":  {"label": "ChatGPT", "company": "OpenAI", "kind": "openai", "cloud": True, "key": True,
+    # `menu` is what the Service menu calls it when the name people know is not the company the
+    # key comes from: a ChatGPT plan is not an OpenAI API key
+    "chatgpt":  {"label": "ChatGPT", "menu": "ChatGPT (OpenAI)", "company": "OpenAI", "kind": "openai", "cloud": True, "key": True,
                  "baseUrl": "https://api.openai.com/v1", "model": "gpt-5.4-mini", "keyUrl": "https://platform.openai.com/api-keys"},
     "deepseek": {"label": "DeepSeek", "company": "DeepSeek", "kind": "openai", "cloud": True, "key": True,
                  "baseUrl": "https://api.deepseek.com", "model": "deepseek-flash", "keyUrl": "https://platform.deepseek.com/api_keys"},
@@ -596,7 +598,9 @@ def suggest_open(root, say=None):
 
 # ---------------------------------------------------------------- what the Settings page shows
 def history(root):
-    """Every request, newest first: the day, the service, the merchants sent, whether it answered."""
+    """Every request, newest first: the day, the service and who received it (`to`: the company,
+    since that is whose terms apply; for Ollama and a service of the owner's own, its name), the
+    merchants sent, whether it answered."""
     out = []
     try:
         with open(os.path.join(layout.state_dir(root), "log", "ai.jsonl"), encoding="utf-8") as fh:
@@ -610,7 +614,10 @@ def history(root):
             continue
         sent = r.get("sent") or {}
         ms = sent.get("merchants") or ([sent["merchant"]] if sent.get("merchant") else [])
-        out.append({"at": (r.get("at") or "")[:10], "service": OLD_NAMES.get(r.get("service"), r.get("service") or ""),
+        svc = OLD_NAMES.get(r.get("service"), r.get("service") or "")
+        spec = PROVIDERS.get(svc) or {}
+        out.append({"at": (r.get("at") or "")[:10], "service": svc,
+                    "to": (spec.get("label") if spec.get("hidden") or not spec.get("company") else spec["company"]) or svc,
                     "merchants": ms, "ok": not r.get("error"), "why": r.get("why") if r.get("error") else None, "cut": bool(r.get("cut"))})
     return out[::-1]
 
@@ -638,7 +645,8 @@ def status(root):
     return {"provider": p, "enabled": enabled(root), "keyStored": key_stored(root, p) if p in PROVIDERS else False,
             "model": s.get("model") if p in ("ollama", "openai") else PROVIDERS.get(p, {}).get("model"),
             "since": s.get("since"), "declined": s.get("declined"),
-            "services": [{"id": k, **{x: PROVIDERS[k][x] for x in ("label", "company", "cloud", "key", "keyUrl")}} for k in SHOWN],
+            "services": [{"id": k, "menu": PROVIDERS[k].get("menu") or PROVIDERS[k]["label"],
+                          **{x: PROVIDERS[k][x] for x in ("label", "company", "cloud", "key", "keyUrl")}} for k in SHOWN],
             "ollama": ollama_models(),
             "askedThisMonth": sum(1 for h in hist if h["at"][:7] == month),
             "suggested": suggested, "kept": kept_n, "history": hist[:24]}

@@ -2625,7 +2625,7 @@ function renderAI(){
     // a service set from the chat (any other OpenAI-compatible one) is shown as itself
     if(svc && !opts.some(x => x.id === svc)) opts.unshift({id: svc, label: "Another service"});
     h += setRowH("Service", svc === "ollama" ? "Works on this computer. Nothing is sent." : "The AI service your merchant names are sent to.",
-      '<select class="set-in" data-ai="svc" aria-label="Service">' + opts.map(x => '<option value="'+x.id+'"'+(x.id === svc ? " selected" : "")+'>'+x.label+'</option>').join("") + '</select>');
+      '<select class="set-in" data-ai="svc" aria-label="Service">' + opts.map(x => '<option value="'+x.id+'"'+(x.id === svc ? " selected" : "")+'>'+(x.menu || x.label)+'</option>').join("") + '</select>');
     if(svc === "ollama"){
       h += setRowH("Model", "Installed in Ollama on this computer.",
         ollama.length ? '<select class="set-in" data-ai="model" aria-label="Model" style="min-width:140px">' + ollama.map(m => '<option'+(m === st.model ? " selected" : "")+'>'+m+'</option>').join("") + '</select>'
@@ -2648,9 +2648,8 @@ function renderAI(){
       ["Merchants it suggested", String(st.suggested || 0)], ["Suggestions you kept", String(st.kept || 0)]]);
   const hist = (st.history || []).filter(x => x.merchants.length);
   if(hist.length && !aiDraft){
-    const label = id => (aiSvc(id).label || id);
     h += '<h3>What was sent</h3><table class="dt"><tr><th>Day</th><th class="l">Sent to</th><th class="l">What</th></tr>'
-      + hist.map(x => '<tr><td class="nw">' + dLong(x.at) + '</td><td class="l">' + label(x.service) + '</td><td class="what">'
+      + hist.map(x => '<tr><td class="nw">' + dLong(x.at) + '</td><td class="l">' + esc(x.to || x.service) + '</td><td class="what">'
         + x.merchants.length + (x.merchants.length === 1 ? " merchant" : " merchants") + (x.ok ? (x.cut ? ", answer cut short" : "") : ", " + ({key: "key not accepted", credit: "no credit left", busy: "service busy", network: "no connection"}[x.why] || "no answer"))
         + '<small>' + x.merchants.slice(0, 3).map(esc).join(", ") + (x.merchants.length > 3 ? ", and " + (x.merchants.length - 3) + " more" : "") + '</small></td></tr>').join("")
       + '</table><p class="fine">The names of the 15 categories went with each one.</p>';
