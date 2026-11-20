@@ -57,7 +57,7 @@ EN = dict(
     phone="The demo is made for a computer screen. On a phone, the pictures below show what it looks like.",
     hero_alt="The FIRE page: how many years to financial independence, and what investing more each month changes",
     points=[("Years, not just a budget.", "How many years until financial independence at what you really "
-             "invest, and what $100 more a month would change. Your TFSA, RRSP and FHSA in one net worth."),
+             "invest, and what $400 more a month would change. Your TFSA, RRSP and FHSA in one net worth."),
             ("Every number adds up.", "A statement only gets in if it matches the totals printed on it."),
             ("No bank login.", "You download your statements; the app reads them on your computer. "
                                "Nothing is uploaded, and there's no account to create."),
@@ -143,7 +143,7 @@ ZH = dict(
           "人物是虚构的。不用安装，打开就能看（演示页面是英文的）。app 已通过 Apple 签名和公证，支持中英文，免费开源（MIT）。"),
     phone="演示适合在电脑上看；用手机的话，可以先看下面的截图。",
     hero_alt="FIRE 页：还要几年财务自由，每月多投一点会怎样",
-    points=[("不只是记账，是还要几年。", "按你实际投进去的钱，算还要几年财务自由，每月多投 100 元能早多少。"
+    points=[("不只是记账，是还要几年。", "按你实际投进去的钱，算还要几年财务自由，每月多投 400 元能早多少。"
              "TFSA、RRSP、FHSA 都算进同一个净值。"),
             ("每个数都对得上。", "每份对账单都要和它自己印的合计一致，才会收进来。"),
             ("不用连银行。", "对账单你自己下载，app 在你的电脑上读取，不上传任何东西，也不用注册。"),
