@@ -55,10 +55,10 @@ SERVICE = "Jade Toad"   # not renamed with the product (2026-11-12): saved keys 
 # the merchants leave this computer, so they are asked in one request; `company` is who receives
 # them, as the Settings page says it.
 PROVIDERS = {
-    "claude":   {"label": "Claude", "company": "Anthropic", "kind": "anthropic", "cloud": True, "key": True,
-                 "baseUrl": "https://api.anthropic.com", "model": "claude-haiku-5-5", "keyUrl": "https://console.anthropic.com/settings/keys"},
     # `menu` is what the Service menu calls it when the name people know is not the company the
-    # key comes from: a ChatGPT plan is not an OpenAI API key
+    # key comes from: a Claude or ChatGPT plan is not that company's API key
+    "claude":   {"label": "Claude", "menu": "Claude (Anthropic)", "company": "Anthropic", "kind": "anthropic", "cloud": True, "key": True,
+                 "baseUrl": "https://api.anthropic.com", "model": "claude-haiku-5-5", "keyUrl": "https://console.anthropic.com/settings/keys"},
     "chatgpt":  {"label": "ChatGPT", "menu": "ChatGPT (OpenAI)", "company": "OpenAI", "kind": "openai", "cloud": True, "key": True,
                  "baseUrl": "https://api.openai.com/v1", "model": "gpt-5.4-mini", "keyUrl": "https://platform.openai.com/api-keys"},
     "deepseek": {"label": "DeepSeek", "company": "DeepSeek", "kind": "openai", "cloud": True, "key": True,

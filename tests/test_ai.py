@@ -182,7 +182,7 @@ class Calls(unittest.TestCase):
         for svc in ("claude", "chatgpt", "ollama", "openai"):
             ai._log(self.ws, {"fn": "suggest", "service": svc, "sent": {"merchants": ["A"]}})
         self.assertEqual([h["to"] for h in ai.history(self.ws)][::-1], ["Anthropic", "OpenAI", "Ollama on this computer", "Another service"])
-        self.assertEqual([s["menu"] for s in ai.status(self.ws)["services"]][:3], ["Claude", "ChatGPT (OpenAI)", "DeepSeek"])
+        self.assertEqual([s["menu"] for s in ai.status(self.ws)["services"]][:3], ["Claude (Anthropic)", "ChatGPT (OpenAI)", "DeepSeek"])
 
     def test_plain_http_only_to_this_computer(self):
         for url, ok in (("https://api.example.test/v1", True), ("http://localhost:11434/v1", True), ("http://127.0.0.1:8080/v1", True),
