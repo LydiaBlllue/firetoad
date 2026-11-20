@@ -469,7 +469,7 @@ WHY = {
     "network": "{svc} could not be reached. Check the internet connection.",
     "not running": "{svc} is not open on this computer. Open it first.",
     "error": "{svc} did not answer.",
-    "cut": "{svc}'s answer was cut short, so some merchants have no suggestion.",
+    "cut": "{svc}'s answer reached its length limit before it got to every merchant. Ask again to send only the rest.",
 }
 
 

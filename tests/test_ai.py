@@ -128,6 +128,24 @@ class Calls(unittest.TestCase):
         with open(os.path.join(ai.layout.state_dir(self.ws), "log", "ai.jsonl"), encoding="utf-8") as fh:
             self.assertTrue(json.loads(fh.readlines()[-1])["cut"])
 
+    def test_ask_again_after_a_cut_sends_only_the_rest(self):
+        # the panel's "Ask again" (suggest_open): what the cut answer got to is kept and not sent again
+        self.other()
+        p = self.decisions(["A CAFE", "B MARKET", "C THING"])
+        ai._post = lambda url, headers, body: {"choices": [{"finish_reason": "length", "message": {"content": '{"1": "Dining", "2": "Gro'}}]}
+        out = ai.suggest_open(self.ws)
+        self.assertEqual((out["cut"], out["suggested"]), (True, 1))
+        sent = []
+
+        def whole(url, headers, body):
+            sent.append(body["messages"][-1]["content"].splitlines())
+            return {"choices": [{"message": {"content": '{"1": "Grocery", "2": "Shopping"}'}}]}
+        ai._post = whole
+        out = ai.suggest_open(self.ws)
+        self.assertEqual(sent, [["1. B MARKET", "2. C THING"]])
+        with open(p, encoding="utf-8") as fh:
+            self.assertEqual([d.get("suggest") for d in json.load(fh)["decisions"]], ["Dining", "Grocery", "Shopping"])
+
     def test_claude_says_cut_its_own_way(self):
         ai.save_settings(self.ws, {"provider": "claude"})
         ai._post = lambda url, headers, body: {"stop_reason": "max_tokens", "content": [{"type": "thinking", "thinking": "…"}]}

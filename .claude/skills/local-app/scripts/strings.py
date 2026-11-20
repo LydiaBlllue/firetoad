@@ -220,9 +220,9 @@ S = {
     "ai_fail_network": {"en": "{svc} could not be reached. Check the internet connection.", "zh": "连不上 {svc}。看一下网络。"},
     "ai_fail_closed": {"en": "{svc} is not open on this computer. Open it first.", "zh": "这台电脑上的 {svc} 没有打开。先打开它。"},
     "ai_fail_error": {"en": "{svc} did not answer.", "zh": "{svc} 没有回答。"},
-    "ai_fail_cut": {"en": "{svc}'s answer was cut short, so some merchants have no suggestion.",
-                    "zh": "{svc} 的回答没说完，有些商户没有建议。"},
-    "ai_fail_go_on": {"en": "You can go on without suggestions.", "zh": "没有建议也可以接着答。"},
+    "ai_fail_cut": {"en": "{svc}'s answer reached its length limit before it got to every merchant. Ask again to send only the rest.",
+                    "zh": "{svc} 的回答超过了长度上限，没写完，有些商户还没有建议。点「再问一次」，只问剩下的。"},
+    "ai_fail_go_on": {"en": "You can still choose the categories yourself and carry on.", "zh": "没有建议，也可以自己选类别，接着往下做。"},
     "ai_again": {"en": "Ask again", "zh": "再问一次"},
     "settings": {"en": "Settings", "zh": "设置"},
     # — the panel, one step at a time (2026-11-12): what each view is called and says
