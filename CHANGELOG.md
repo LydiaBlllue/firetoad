@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 — unreleased
+
+- **The demo owner is on her way to retiring early**: Emma's pay has had a raise, and the raise
+  goes to the broker — $2,300 a month, with her rent and everyday amount as they were. The demo
+  now says about 15 to 18 years to financial independence, in her late forties; at $700 a month
+  it said 29 to 37, later than an ordinary retirement.
+
 ## 1.0.9 — 2026-11-17
 
 - **An app for Intel Macs, and older macOS for both**: the download for Apple silicon now opens on
