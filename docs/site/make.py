@@ -54,7 +54,8 @@ EN = dict(
     fine=(f"The demo shows {DEMO['first']}'s money — a made-up {DEMO['age']}-year-old in {DEMO['city']}. "
           "Nothing to install. The app is signed and notarised by Apple, works in English and Chinese, "
           "and is free and open source (MIT)."),
-    phone="The demo is made for a computer screen. On a phone, the pictures below show what it looks like.",
+    phone=("FIRE Toad is a Mac app. To download it or try the demo, open {site} on your computer.",
+           "Send yourself the link", "Link copied"),
     hero_alt="The FIRE page: how many years to financial independence, and what investing more each month changes",
     points=[("Years, not just a budget.", "How many years until financial independence at what you really "
              "invest, and what $400 more a month would change. Your TFSA, RRSP and FHSA in one net worth."),
@@ -141,7 +142,8 @@ ZH = dict(
          "下载 Intel 版", "。"),
     fine=(f"演示里是 {DEMO['first']} 的钱：一位住在{CITY_ZH.get(DEMO['city'], DEMO['city'])}的 {DEMO['age']} 岁上班族，"
           "人物是虚构的。不用安装，打开就能看（演示页面是英文的）。app 已通过 Apple 签名和公证，支持中英文，免费开源（MIT）。"),
-    phone="演示适合在电脑上看；用手机的话，可以先看下面的截图。",
+    phone=("FIRE蛙是 Mac 上的 app。要下载或看在线演示，请在电脑上打开 {site}。",
+           "把链接发给自己", "链接已复制"),
     hero_alt="FIRE 页：还要几年财务自由，每月多投一点会怎样",
     points=[("不只是记账，是还要几年。", "按你实际投进去的钱，算还要几年财务自由，每月多投 400 元能早多少。"
              "TFSA、RRSP、FHSA 都算进同一个净值。"),
@@ -235,8 +237,22 @@ h1 { font-size:clamp(30px,3.3vw,44px); line-height:1.1; letter-spacing:-.025em; 
 .secondary { background:var(--pill); color:var(--ink); }
 .secondary:hover { background:var(--grid); }
 .fine { color:var(--muted); font-size:14px; margin:14px 0 0; max-width:36em; }
+/* On a phone (2026-11-21): nothing here can be installed and the demo wants a wide screen, so the
+   buttons give way to one line saying to open the site on a computer, a button that sends the link
+   on (the phone's share sheet, else the clipboard), and the picture moves up under the question. */
 .phone { display:none; }
-@media (max-width:799px) { .phone { display:block; } }
+.phone p { margin:0 0 12px; font-size:16px; color:var(--ink); }
+.phone button { font:inherit; border:0; cursor:pointer; }
+@media (max-width:799px) {
+  .phone { display:block; margin:22px 0 0; }
+  .actions, .mac { display:none; }
+  .hero { display:flex; flex-direction:column; gap:0; padding:28px 0 36px; }
+  .hero > div { display:contents; }
+  .hero > div > * { order:3; }
+  .hero > div > h1 { order:1; }
+  .hero .shot { order:2; margin:0 0 22px; }
+  .hero .lede { margin:0; }
+}
 .shot { margin:0; background:var(--page); border:1px solid var(--border); border-radius:14px; overflow:hidden;
         box-shadow:0 1px 2px rgba(46,44,41,.05), 0 12px 32px rgba(46,44,41,.09); }
 .shot img { display:block; width:100%; height:auto; }
@@ -297,6 +313,8 @@ h2 { font-size:clamp(24px,3vw,32px); letter-spacing:-.015em; line-height:1.2; ma
 .end .secondary { background:rgba(255,255,255,.12); color:#fff; }
 .end .secondary:hover { background:rgba(255,255,255,.2); }
 @media (max-width:600px) { .end { padding:28px 20px; } }
+.end .phone { margin:0; }
+.end .phone p { color:#fff; }
 footer { padding:36px 0 48px; color:var(--muted); font-size:14px; display:flex; flex-wrap:wrap; gap:20px; }
 footer a { color:var(--ink-2); }
 """
@@ -315,6 +333,10 @@ def page(t, base):
                                      + (' loading="lazy"' if lazy else "") + ">")
     btns = (f'<a class="btn primary" href="{DOWNLOAD}">{e(t["download"])}</a>'
             f'<a class="btn secondary" href="{up}dashboard.html">{e(t["demo"])}</a>')
+    site = base.split("//", 1)[-1]
+    onphone = (f'<div class="phone"><p>{e(t["phone"][0].format(site=site))}</p>'
+               f'<button class="btn primary" type="button" data-url="{url}" data-done="{e(t["phone"][2])}">'
+               f'{e(t["phone"][1])}</button></div>')
     out = [f"""<!doctype html>
 <!-- Built by docs/site/make.py; edit that, not this. -->
 <html lang="{t['lang']}">
@@ -342,6 +364,16 @@ def page(t, base):
       !/^#(how|banks|faq)$/.test(location.hash)) location.replace('{up}dashboard.html' + location.hash);
 </script>
 <style>{CSS}</style>
+<script>
+  // "Send yourself the link": the phone's share sheet where there is one, else copy it.
+  document.addEventListener('click', ev => {{
+    const b = ev.target.closest('.phone button'); if (!b) return;
+    const url = b.dataset.url, done = () => {{ b.textContent = b.dataset.done; }};
+    if (navigator.share) navigator.share({{url}}).catch(() => {{}});
+    else if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, () => prompt('', url));
+    else prompt('', url);
+  }});
+</script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -354,9 +386,9 @@ def page(t, base):
       <h1>{e(t['h1'])}</h1>
       <p class="lede">{e(t['lede'])}</p>
       <div class="actions">{btns}</div>
-      <p class="fine">{e(t['mac'][0])}<a href="{DOWNLOAD_INTEL}">{e(t['mac'][1])}</a>{e(t['mac'][2])}</p>
+      {onphone}
+      <p class="fine mac">{e(t['mac'][0])}<a href="{DOWNLOAD_INTEL}">{e(t['mac'][1])}</a>{e(t['mac'][2])}</p>
       <p class="fine">{e(t['fine'])}</p>
-      <p class="fine phone">{e(t['phone'])}</p>
     </div>
     <figure class="shot">{img('crop-fire.png', t['hero_alt'], lazy=False)}</figure>
   </div>
@@ -395,7 +427,7 @@ def page(t, base):
     <dl class="faq">{''.join(f'<div><dt>{e(q)}</dt><dd>{e(a)}</dd></div>' for q, a in t['faq'])}</dl>
   </section>
 
-  <div class="end"><h2>{e(t['end_h'])}</h2><div class="actions">{btns}</div></div>
+  <div class="end"><h2>{e(t['end_h'])}</h2><div class="actions">{btns}</div>{onphone}</div>
   <footer>{''.join(f'<a href="{h}">{e(n)}</a>' for h, n in t['foot'])}<a href="{t['other']}" hreflang="{t['other_lang']}" lang="{t['other_lang']}">{t['other_name']}</a></footer>
 </main>
 </body>
