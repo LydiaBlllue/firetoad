@@ -7,9 +7,11 @@
   Canada. A new question for someone not planning to retire early; "Do I need Claude?" moved to
   the install guide. The line about accounts abroad is gone until the app can set them up.
   A fourth point says AI assist is there if you want it, and two answers name it.
-- **On a phone, the front page says to open it on a computer**: the picture comes right under the
-  question, and the download and demo buttons give way to one line and a button that sends the
-  link on (the phone's share sheet, or a copy). Same in the closing band.
+- **On a phone, the front page says it is a download for Mac only**: the picture comes right under
+  the question, and the download and demo buttons give way to that line (no phone or Windows
+  version yet; the demo opens in any computer's browser and is too narrow on a phone), a button
+  that sends the link on (the phone's share sheet, or a copy) and a small link to the demo anyway.
+  Same in the closing band.
 
 ## 1.0.9 — 2026-11-17
 

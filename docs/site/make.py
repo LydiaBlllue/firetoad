@@ -54,8 +54,9 @@ EN = dict(
     fine=(f"The demo shows {DEMO['first']}'s money — a made-up {DEMO['age']}-year-old in {DEMO['city']}. "
           "Nothing to install. The app is signed and notarised by Apple, works in English and Chinese, "
           "and is free and open source (MIT)."),
-    phone=("FIRE Toad is a Mac app. To download it or try the demo, open {site} on your computer.",
-           "Send yourself the link", "Link copied"),
+    phone=("For now, FIRE Toad is a download for Mac only.", "There is no phone or Windows version yet. "
+           "The live demo opens in any computer's browser; on a phone it is too narrow and scrolls sideways.",
+           "Send yourself the link", "Link copied", "Open the demo anyway"),
     hero_alt="The FIRE page: how many years to financial independence, and what investing more each month changes",
     points=[("Years, not just a budget.", "How many years until financial independence at what you really "
              "invest, and what $400 more a month would change. Your TFSA, RRSP and FHSA in one net worth."),
@@ -142,8 +143,8 @@ ZH = dict(
          "下载 Intel 版", "。"),
     fine=(f"演示里是 {DEMO['first']} 的钱：一位住在{CITY_ZH.get(DEMO['city'], DEMO['city'])}的 {DEMO['age']} 岁上班族，"
           "人物是虚构的。不用安装，打开就能看（演示页面是英文的）。app 已通过 Apple 签名和公证，支持中英文，免费开源（MIT）。"),
-    phone=("FIRE蛙是 Mac 上的 app。要下载或看在线演示，请在电脑上打开 {site}。",
-           "把链接发给自己", "链接已复制"),
+    phone=("目前只支持 Mac 下载。", "还没有手机版和 Windows 版。在线演示用任何电脑的浏览器都能看；手机屏幕太窄，要左右滑动。",
+           "把链接发给自己", "链接已复制", "仍在手机上看演示"),
     hero_alt="FIRE 页：还要几年财务自由，每月多投一点会怎样",
     points=[("不只是记账，是还要几年。", "按你实际投进去的钱，算还要几年财务自由，每月多投 400 元能早多少。"
              "TFSA、RRSP、FHSA 都算进同一个净值。"),
@@ -243,6 +244,8 @@ h1 { font-size:clamp(30px,3.3vw,44px); line-height:1.1; letter-spacing:-.025em; 
 .phone { display:none; }
 .phone p { margin:0 0 12px; font-size:16px; color:var(--ink); }
 .phone button { font:inherit; border:0; cursor:pointer; }
+.phone .anyway { display:block; margin:14px 0 0; font-size:14px; color:var(--ink-2); }
+.end .phone .anyway { color:rgba(255,255,255,.75); }
 @media (max-width:799px) {
   .phone { display:block; margin:22px 0 0; }
   .actions, .mac { display:none; }
@@ -333,10 +336,11 @@ def page(t, base):
                                      + (' loading="lazy"' if lazy else "") + ">")
     btns = (f'<a class="btn primary" href="{DOWNLOAD}">{e(t["download"])}</a>'
             f'<a class="btn secondary" href="{up}dashboard.html">{e(t["demo"])}</a>')
-    site = base.split("//", 1)[-1]
-    onphone = (f'<div class="phone"><p>{e(t["phone"][0].format(site=site))}</p>'
-               f'<button class="btn primary" type="button" data-url="{url}" data-done="{e(t["phone"][2])}">'
-               f'{e(t["phone"][1])}</button></div>')
+    onphone = (f'<div class="phone"><p><b>{e(t["phone"][0])}</b>{"" if t["lang"].startswith("zh") else " "}'
+               f'{e(t["phone"][1])}</p>'
+               f'<button class="btn primary" type="button" data-url="{url}" data-done="{e(t["phone"][3])}">'
+               f'{e(t["phone"][2])}</button>'
+               f'<a class="anyway" href="{up}dashboard.html">{e(t["phone"][4])}</a></div>')
     out = [f"""<!doctype html>
 <!-- Built by docs/site/make.py; edit that, not this. -->
 <html lang="{t['lang']}">
