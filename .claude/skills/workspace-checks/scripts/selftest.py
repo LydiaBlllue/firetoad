@@ -452,8 +452,8 @@ def m_broker_gift_no_deposit(r):
     edit_json(r, layout.rel("plan.json"), lambda d: d.update(brokerGifts=[
         {"date": "2026-02-03", "amount": 12345.67, "currency": "CAD", "why": "planted"}]))
 def m_setting_out_of_range(r):
-    # The emergency range with its ends swapped, typed into the file past setting.py's own check.
-    edit_json(r, layout.rel("plan.json"), lambda d: d.update(emergency={"low": 9, "high": 3}))
+    # A return after inflation no setting allows, typed into the file past setting.py's own check.
+    edit_json(r, layout.rel("plan.json"), lambda d: d.update(growth=50))
 def m_decision_no_default(r):
     # An empty queue (an owner with nothing waiting) gets one item planted without its default;
     # this used to index [0] and crash the whole selftest in such a workspace (2026-09-10).
@@ -2364,7 +2364,7 @@ def local_app_check(root, base):
     # one of the owner's numbers, changed the same on both sides (FINANCE.md §8e)
     stg = os.path.join(os.path.dirname(upd), "setting.py")
     if os.path.exists(stg):
-        r = subprocess.run([sys.executable, stg, ".", "emergency", "6", "9", "--write"], cwd=copies["cli"],
+        r = subprocess.run([sys.executable, stg, ".", "growth", "6", "--write"], cwd=copies["cli"],
                            capture_output=True, text=True, timeout=120)
         if r.returncode not in (0, 2):
             bad.append(f"setting.py exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:]))
@@ -2456,11 +2456,11 @@ def local_app_check(root, base):
             if st != 200 or not (body.get("data") or {}).get("error"):
                 bad.append(f"POST /api/ocr with junk answered {st} without a reason")
         if os.path.exists(stg):
-            st, body = req("POST", tok + "/api/setting", {"key": "emergency", "value": [9, 6]})
+            st, body = req("POST", tok + "/api/setting", {"key": "growth", "value": 50})
             plan_now = json.load(open(layout.path(ws, "plan.json"), encoding="utf-8"))
-            if st != 400 or "emergency" in plan_now:
-                bad.append(f"a range with its ends swapped got {st} from POST /api/setting, not a refusal")
-            st, body = req("POST", tok + "/api/setting", {"key": "emergency", "value": [6, 9]})
+            if st != 400 or plan_now.get("growth") == 50:
+                bad.append(f"a return of 50% got {st} from POST /api/setting, not a refusal")
+            st, body = req("POST", tok + "/api/setting", {"key": "growth", "value": 6})
             if st != 200 or not (body.get("data") or {}).get("written"):
                 bad.append(f"POST /api/setting answered {st}: {str(body)[:120]}")
         st, body = req("POST", tok + "/api/import", {"write": True})

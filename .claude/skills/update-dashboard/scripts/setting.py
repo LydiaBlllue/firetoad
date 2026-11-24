@@ -5,13 +5,13 @@ settings.py is the table of them; this is the write, as a verb, so the Settings 
 the local app) and a chat change a number the same way:
 
     python3 .claude/skills/update-dashboard/scripts/setting.py .                        # every setting, as it stands
-    python3 .claude/skills/update-dashboard/scripts/setting.py . emergency 6 9          # say what would change
-    python3 .claude/skills/update-dashboard/scripts/setting.py . emergency 6 9 --write
+    python3 .claude/skills/update-dashboard/scripts/setting.py . importDay 26           # say what would change
+    python3 .claude/skills/update-dashboard/scripts/setting.py . importDay 26 --write
     python3 .claude/skills/update-dashboard/scripts/setting.py . planBase 3600 --write
-    python3 .claude/skills/update-dashboard/scripts/setting.py . emergency --reset --write   # back to the default
+    python3 .claude/skills/update-dashboard/scripts/setting.py . importDay --reset --write  # back to the default
 
-The value is checked against its row (a range with its lower end first, a day every month has,
-money that is not negative) and refused otherwise; nothing is written for a refused value. A
+The value is checked against its row (a day every month has, money that is not negative,
+a percent inside its bounds) and refused otherwise; nothing is written for a refused value. A
 written value lands where it already lives in findata/register/, the day goes beside it in
 plan.json `changed`, the page is rebuilt and the money checks run, as after every write.
 """
@@ -40,8 +40,6 @@ def load(root):
 def show(v, kind):
     if v is None:
         return "not set"
-    if kind == "months":
-        return f"{v[0]:g} to {v[1]:g} months"
     if kind == "day":
         return f"day {int(v)}"
     return f"${v:,.2f}".replace(".00", "")
@@ -115,7 +113,7 @@ def main(argv):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("root")
     ap.add_argument("key", nargs="?", help="the setting's key; none lists them all")
-    ap.add_argument("value", nargs="*", help="the new value; a range takes two numbers")
+    ap.add_argument("value", nargs="*", help="the new value")
     ap.add_argument("--reset", action="store_true", help="back to the default")
     ap.add_argument("--write", action="store_true")
     a = ap.parse_args(argv)

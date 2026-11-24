@@ -28,13 +28,12 @@ import layout                              # where each findata file lives (sche
 import loans                               # what a borrower still owes, read from the ledgers -- one place
 import categories                          # the spending categories and their groups -- one place
 import verbs                               # the shape run() returns, shared by every script a month goes through
-import usual                               # a usual month and the emergency fund's months -- computed once, here
+import usual                               # a usual month -- computed once, here
 import settings                            # the numbers that are the owner's to choose -- one table
 import fixed                               # which spending rows are a declared committed payment
 import fire                                # the FIRE target, progress and months to go -- computed once, here
 import savings                             # the savings rate and the years it takes -- computed once, here
 import drawdown                            # living on the portfolio and late-life care, at the plan's own ages
-import debts as debt_rules                 # when a debt has to be paid: now, or over time
 
 MAIN_NAMES = ("ly_finance_dashboard.html", "finance_dashboard.html")   # an owner's copy, or the template's
 INV_NAME = "investment_dashboard.html"
@@ -792,40 +791,11 @@ def derive(d):
                                "accts": part_accounts(role, where, part_value(role, where))})
     out["REACH"] = [{"k": lab, "r": r, "v": by_reach[r], "c": c, "d": desc.get("reach", {}).get(lab, generic_reach[lab])}
                     for r, lab, c in REACH_ROWS if r in reach_present]
-    # The Emergency fund (FINANCE.md §8d): the money it counts is Home's own "Spendable today" row,
-    # less what is owed on no asset, so the two pages cannot disagree. Money abroad is a line of
-    # its own and investments are never in it. What a month costs is the page's: the spending
-    # baseline, measured there, plus the repayments the plan pays today.
-    def listed(rows, total):
-        rows = sorted((one_account(a, v) for a, v in rows if round(v)), key=lambda x: -x["v"])
-        if rows:
-            rows[0]["v"] += total - sum(x["v"] for x in rows)
-        return rows
-    # A TFSA is spendable today, but it is invested: Spendable today less what in it is held to
-    # grow, so the step from Home's row to this one is on the page.
-    # What is taken off the money is what is due now (a card's bill). A debt paid over time is
-    # not taken off: its monthly payment is in what a month costs (debts.py, FINANCE.md §8d).
-    due_now, due_later = debt_rules.unsecured(liabs, by_key)
-    unsecured = round(sum(v for _, v in due_now))
-    ft = flow_totals(d["funds"]["plan"])
-    paid = debt_rules.paid_by(d["funds"]["plan"].get("flows"))
-    inv_today = round(sum(v for a, v in ca if a.get("reach") == "today" and a.get("role") == "grow"))
-    out["SAFETY"] = {"today": by_reach["today"], "invested": inv_today, "abroad": by_reach["abroad"], "unsecured": unsecured,
-                     "accts": listed([(a, v) for a, v in ca if a.get("reach") == "today" and a.get("role") != "grow"],
-                                     by_reach["today"] - inv_today),
-                     "debts": listed(due_now, unsecured),
-                     # paid over time: listed, not subtracted; `paid` says the plan carries its payment
-                     "later": [dict(one_account(a, v), paid=a["key"] in paid) for a, v in sorted(due_later, key=lambda x: -x[1]) if round(v)],
-                     "repay": ft["repayNow"],
-                     "repayRows": [{"n": f.get("name") or f.get("pays"), "v": f.get("amount") or 0}
-                                   for f in ft["committedNow"] if f.get("pays")]}
-    # A usual month, as of every month the page can be turned to, and what the emergency fund
-    # comes to on today's (usual.py). Both were the page's own arithmetic until 1.0.5; computed
-    # here, a checker or a second front end reads the same numbers the page shows.
+    # A usual month, as of every month the page can be turned to (usual.py). It was the page's
+    # own arithmetic until 1.0.5; computed here, a checker or a second front end reads the same
+    # number the page shows.
     out["USUAL"] = usual.measured(out["SPENDING"], out["STMT_END"], out["MONTH_SKIP"], today,
                                   [c["k"] for c in out["CATS"] if c.get("noFire")])
-    out["SAFETY"].update(usual.runway(by_reach["today"], inv_today, unsecured, by_reach["abroad"], ft["repayNow"],
-                                      out["USUAL"]["month"].get(today[:7])))
     # The numbers that are the owner's to choose, each with its value now (settings.py).
     out["SETTINGS"] = settings.rows({"plan.json": plan, "funds.json": d["funds"], "profile.json": prof})
     # What each card statement charged in interest (1.0.1): a fact the import keeps, one row per

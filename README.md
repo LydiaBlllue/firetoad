@@ -167,8 +167,8 @@ the screens do not cover (anything held abroad, a loan to a friend, your investi
   one, and how to download each.
 - **[Release roadmap](RELEASE-ROADMAP.md)** and **[Changelog](CHANGELOG.md)**.
 
-<!-- LINT:NAV main=19/4 minwidth=800 -->
-The page is 19 pages in 4 sidebar groups —
+<!-- LINT:NAV main=18/4 minwidth=800 -->
+The page is 18 pages in 4 sidebar groups —
 Home · Get started · Set a goal · Stay on track · After FIRE · Updates · Statements · Glossary · Settings
 — desktop only, at least 800px wide.
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## Next — unreleased (after 1.1.0; the number is set at release)
+
+- **The Emergency fund page is gone, and so is Home's Months covered card.** It counted every
+  account that could be spent today, so next month's rent in chequing read as an emergency fund,
+  and a person with nothing set aside could read as inside their range. Saving toward an
+  emergency fund stays a line of the plan, like any other goal. The emergency range left the
+  Settings page with it; a range already stored is kept in `plan.json` and read by nothing.
+
 ## 1.1.0 — unreleased
 
 - **AI assist** (AI 辅助), off until you turn it on: for a merchant the app does not know, it

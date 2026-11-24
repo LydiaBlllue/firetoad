@@ -376,37 +376,16 @@ Mapping today's `feeds` onto the axes: Portfolio → asset · grow · today (reg
 accounts: costs); Earmarked → asset · set-aside · spoken; Bank cash → asset · buffer · today;
 Debts → liability; a foreign-currency account → asset · abroad, role per account.
 
-### 8d. The FIRE goal, the Emergency fund and card interest (1.0.1)
+### 8d. The FIRE goal and card interest (1.0.1)
 
 - **The FIRE goal is a declaration**: `plan.json` `fire` `{goal, asked}`. Setup asks once, in plain
   words, whether retiring early is something they are working toward; skipped leaves it out. It
   changes by saying so. Never answered reads as yes for someone with money invested, so no page
   an investor had disappears, and as no otherwise; the next import asks once.
-- **Emergency fund**, how long the money would last without income:
-
-  > **months covered = (Spendable today − what is invested in it − what is due now) ÷ a usual month**
-
-  The money starts from Home's own *Spendable today* row, so the two pages cannot disagree, and
-  takes out what in it is invested (a TFSA can be spent today, but it is held to grow). **What is
-  due now** is the unsecured debt that has to be paid at once: a card's balance, which is this
-  month's bill. A debt **paid over time** — a loan, a line of credit — is not taken off (1.0.5):
-  what leaves each month is its payment, and that is in what a month costs. Taking the whole
-  balance off as well charged it twice, and read zero months for anyone who owed more than they
-  held in cash. Which one a debt is, is the register's `due` (`now` · `later`), defaulting from
-  its kind — a credit card is `now`, everything else `later` — and the owner's to change
-  (`debts.py`). A debt secured on an asset was never in this sum. The page lists the debts paid
-  over time beside the others, and says so of one the plan carries no payment for. **A usual
-  month** = the average of up to twelve full months of spending (the Monthly spending page) + the repayments the plan pays today (active
-  committed flows with `pays`, `flows.py` `repayNow`). Rent and bills paid today are in
-  `spending.csv` already, so they are not added; `COMMITTED_KEEP` is not used, because it holds
-  rent that starts only at FIRE. Money abroad is its own line, never in the headline. Below zero
-  is 0; without three closed months the page says so instead of a figure. Both numbers are
-  computed at build time (`usual.py`), so the page and the checkers read the same ones.
-  **The range is the owner's** (1.0.5): `plan.json` `emergency` `{low, high}`, in months, three
-  to six until they say otherwise (§8e). The page says where the months covered sit against it:
-  below it, with how much more reaches the lower end; inside it, and nothing more; above it,
-  with how much is beyond the upper end. It states that and stops: it never says what to do
-  with money beyond the range, and it has no opinion on which range is right.
+- **The page measures no emergency fund.** Counting every account that could be spent today
+  counted next month's rent as an emergency fund. Money saved toward one is a saving flow in the
+  plan (§8b), like any other goal. A debt's `due` (`now` · `later`, `debts.py`) stays in the
+  register, checked by D19, for when debts are modelled; nothing on the page reads it today.
 - **Card interest** is a fact, never a verdict: the Interest total each card statement prints,
   which the card parsers already read to reconcile, kept one row per statement in
   `card_interest.csv` (0.00 included). Never read off a merchant name. The first import after
@@ -430,7 +409,7 @@ Debts → liability; a foreign-currency account → asset · abroad, role per ac
 
 ### 8e. The owner's settings (1.0.5)
 
-Some numbers are no statement's to state: how many months an emergency fund should cover, what a
+Some numbers are no statement's to state: what a
 month is planned to cost, what goes to the broker, the day of the import. They are declarations,
 and `settings.py` is the one table of them — each row a key, where the value already lives in
 `findata/register/`, its kind, its legal range and, where one exists, a default.
@@ -441,11 +420,11 @@ and `settings.py` is the one table of them — each row a key, where the value a
 - **Changed as it is made.** There is no draft and no save button. The page recomputes at once
   and hands the value to the local app, which writes it through `setting.py` — the same script a
   chat calls — under the one lock, rebuilds, and runs the money checks. The day goes beside it in
-  `plan.json` `changed`. A row with a default can go back to it, which removes the stored value.
+  `plan.json` `changed`. A row with a default can go back to it.
 - **Read-only without the app.** A page opened as a file has nothing to write for it, so it
   shows the values and says to open it with the app. It never keeps a change it cannot save.
 - **A sum is not one number.** A plan figure made of several flows (two paycheques) is shown and
   not editable as one: which line a new total would change is the owner's to say.
 - D31 holds every stored value to the table's range.
-- The rows: the emergency range, the import day, planning spend, the return after inflation
+- The rows: the import day, planning spend, the return after inflation
   (`growth`, §1a), take-home pay, what goes to the broker, the everyday amount.

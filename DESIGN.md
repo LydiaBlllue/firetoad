@@ -121,21 +121,21 @@
   hand-aligned table heading written outside them; the two grouped tables not yet moved (Accounts,
   Statements) say so on their line. In 2.0 the two become the component library's Card and Table.
 
-<!-- LINT:PAGES pages=19 sections=4 -->
-- **The pages**: 19 pages under 4 sidebar sections, **one per stage of the way to FIRE** (2026-11-13, user 001: grouped by how far along the owner is, not by topic; until then the sections were Money in & out, Plan, Investing and Monthly import). **Lint rule S4 checks this table against
+<!-- LINT:PAGES pages=18 sections=4 -->
+- **The pages**: 18 pages under 4 sidebar sections, **one per stage of the way to FIRE** (2026-11-13, user 001: grouped by how far along the owner is, not by topic; until then the sections were Money in & out, Plan, Investing and Monthly import). **Lint rule S4 checks this table against
   `NAV`**, so changing the navigation means changing this table too — and the page count, the
   sidebar list and the minimum width stated in `README.md`, and every path the README hands the
   reader:
   | Section | Pages |
   |---|---|
   | — | Home (four cards, net worth in one card, net worth over time). It belongs to no stage |
-  | Get started | Accounts · This month · Year · Income · Subscriptions · Monthly spending · Emergency fund |
+  | Get started | Accounts · This month · Year · Income · Subscriptions · Monthly spending |
   | Set a goal | FIRE |
   | Stay on track | Budget · Portfolio · Performance · Holdings · Investment income |
   | After FIRE | Drawdown & care |
   | — | Updates, Statements and the Glossary: records and reference, for every stage, at the foot of the sidebar, under the pages still waiting for their data; then Settings, alone, with a gear |
 
-  **What a page waits for** (`WAITS`): Income and Emergency fund a chequing statement; Portfolio,
+  **What a page waits for** (`WAITS`): Income a chequing statement; Portfolio,
   Performance and Holdings a broker's holdings; Investment income a broker's activity; FIRE a FIRE
   goal or a number for it (years to financial independence: a target and money reaching the
   broker, 1.0.5); Drawdown & care a FIRE goal and something invested. A page that waits is folded under
@@ -166,7 +166,7 @@
   purchase, otherwise the newest one the statements reach. What is left of Everyday is This
   month's to say, 2026-11-03). Invested, no goal: Portfolio · Years · Invested. Nothing invested:
   Years, when there is a number for it. The rest fill from one list, in order, taking only a card with a
-  number: Card interest (only when a statement charged some) · Total spent in \<month\> · Months covered ·
+  number: Card interest (only when a statement charged some) · Total spent in \<month\> ·
   Kept this year · A year of subscriptions · Biggest category. So no owner sees an empty card.
 - **Net worth in one card, cut both ways at once**: one row per `role`, cash split by where it
   is — For FIRE / Set aside / Cash / Cash in \<abroad\> / Owed to you / Other assets (only for
@@ -236,15 +236,8 @@
 
 ### Plan
 
-- **Emergency fund** (1.0.1): three cards — Months covered, The money, A usual month — each
-  opening its sum, then where the money is, what is *Due now* (taken off the money) and what is
-  *Paid over time* (listed, not taken off: its payment is in a usual month); money abroad only in
-  the line under Months covered (FINANCE.md §8d). Since 1.0.5 a fourth block, **Your range**: the
-  owner's own months (three to six until changed), drawn as a band on one scale with a mark where
-  the money stands, and changeable in place. Under Months covered the page says *Below your
-  range*, *Inside your range* or *Above your range*; below, one line says how much more reaches
-  the lower end, above, how much is beyond the upper end. Nothing else: no advice on what to do
-  with it, and no colour beyond the one word.
+- **No Emergency fund page** (2026-11-24): counting everything that could be spent today
+  counted next month's rent as an emergency fund. Saving toward one is a line of the plan.
 
 - **Budget** — *is my plan holding?* It follows the month cursor and the year (1.0.6). First the
   answer, **Everyday, month by month** (everyday spending against today's everyday amount, the
@@ -288,7 +281,7 @@
   American history and the stretches overlap. Only the years of taking money out are replayed;
   the first day's pot is the steady path's.
 - **One name for a month's spending** (2026-11-05, the owner): **A usual month** is the average of
-  up to twelve full months, unusual ones left out — on Monthly spending, Emergency fund, Investment
+  up to twelve full months, unusual ones left out — on Monthly spending, Investment
   income and This month's comparison. *Spent a month in <year>* (Year) is only that year's
   average and says so; the **Planning figure** is the one the FIRE target is built on.
 - **Monthly spending** (was Spending baseline): *A usual month* on top, then the planning figure against what is really spent, with a 12-month bar
@@ -368,8 +361,7 @@
   nothing is being typed. A row that differs from its default says the day it was changed and
   offers the way back; a refused or unsaved change puts the old number back and says why in one
   line at the foot of the window.
-- **The same control on the number's own page.** The emergency range is changed on Emergency
-  fund, planning spend on Monthly spending, the two plan figures on Budget — one value, one
+- **The same control on the number's own page.** Planning spend is changed on Monthly spending, the two plan figures on Budget — one value, one
   script, wherever it is typed.
 - **Opened as a file, the numbers are read, not changed**: the controls are greyed and one line
   says to open the page with the app. The demo is nobody's data, so there a change is shown and

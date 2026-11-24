@@ -136,8 +136,8 @@ Claude Code 仍是另一扇门：对话、解析器读不了的对账单、向�
 - **[支持的银行和券商](docs/zh/banks.md)**：能读哪些银行、券商的哪些文件、该用哪种、哪些已用真实文件确认、每种怎么下载。
 - **[发布路线图](RELEASE-ROADMAP.md)** 和 **[更新记录](CHANGELOG.md)**。
 
-<!-- LINT:NAV main=19/4 minwidth=800 -->
-页面共 19 页、4 个侧栏分组 ——
+<!-- LINT:NAV main=18/4 minwidth=800 -->
+页面共 18 页、4 个侧栏分组 ——
 Home · Get started · Set a goal · Stay on track · After FIRE · Updates · Statements · Glossary · Settings
 —— 仅桌面端，至少 800px 宽。
 

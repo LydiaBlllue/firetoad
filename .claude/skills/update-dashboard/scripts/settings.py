@@ -1,7 +1,6 @@
 """settings.py — the numbers that are the owner's to choose, as one table (FINANCE.md §8e).
 
-How many months an emergency fund should cover, what a month is planned to cost, what goes to
-the broker: none of these is a fact a statement carries. They are declarations, and until
+What a month is planned to cost, what goes to the broker, the day the statements are all out: none of these is a fact a statement carries. They are declarations, and until
 1.0.5 each one lived its own way — some asked once by the setup and editable only by hand, some
 dragged on the page and kept in the browser, some written into the page code. This is the one
 list of them. The Settings page, the setup's questions, the check on a stored value (D31) and
@@ -10,7 +9,6 @@ a row here and nowhere else.
 
 The table points at where each value already lives — it moves no data:
 
-    emergency   plan.json `emergency` {low, high}      months; absent means the default
     importDay   profile.json `importDay`
     planBase    plan.json `planBase`
     growth      plan.json `growth`                     percent a year after inflation
@@ -28,10 +26,6 @@ import flows
 STAGES = ("start", "goal", "track", "after")
 
 TABLE = [
-    {"key": "emergency", "kind": "months", "stage": "start", "default": [3, 6], "min": 0, "max": 36,
-     "en": "Emergency fund", "zh": "应急金",
-     "whyEn": "How many months of your usual spending you want within reach.",
-     "whyZh": "想留出够花几个月的、随时能用的钱。"},
     {"key": "importDay", "kind": "day", "stage": "start", "default": 1, "min": 1, "max": 28,
      "en": "Import day", "zh": "导入日",
      "whyEn": "The day of the month your statements are all out.",
@@ -98,9 +92,6 @@ def locked(key, files):
 
 def stored(key, files):
     """The value the files carry, or None when the owner never gave one."""
-    if key == "emergency":
-        e = _plan(files).get("emergency")
-        return [_num(e["low"]), _num(e["high"])] if isinstance(e, dict) and "low" in e and "high" in e else None
     if key == "importDay":
         return (files.get("profile.json") or {}).get("importDay")
     if key in ("planBase", "growth"):
@@ -120,7 +111,7 @@ def value(key, files):
 
 def check(key, raw):
     """(value, None) when `raw` is a legal value for this row, else (None, why). `raw` is what a
-    form or a command line hands over: a number, a string, or for a range two of them."""
+    form or a command line hands over: a number or a string."""
     row = BY_KEY.get(key)
     if row is None:
         return None, f"no setting called {key!r}"
@@ -137,16 +128,9 @@ def check(key, raw):
         return _num(x)
 
     try:
-        if row["kind"] == "months":
-            if isinstance(raw, str):
-                raw = raw.replace("to", " ").replace("-", " ").replace(",", " ").split()
-            a, b = (one(x) for x in raw)
-            if not (lo <= a <= b <= hi) or b <= 0:
-                return None, f"{row['en']}: a range inside {lo} to {hi} months, the lower number first"
-            return [a, b], None
         v = one(raw)
     except (TypeError, ValueError):
-        return None, f"{row['en']}: {raw!r} is not a number" if row["kind"] != "months" else f"{row['en']}: two numbers of months are needed"
+        return None, f"{row['en']}: {raw!r} is not a number"
     if row["kind"] == "day" and v != int(v):
         return None, f"{row['en']}: a whole day of the month"
     if not lo <= v <= hi:
@@ -162,9 +146,7 @@ def write(key, v, files, today):
         raise ValueError(f"{BY_KEY[key]['en']} is the sum of several lines of the plan; change the line in funds.json")
     plan = files.setdefault("plan.json", {})
     touched = {"plan.json"}
-    if key == "emergency":
-        plan["emergency"] = {"low": v[0], "high": v[1]}
-    elif key == "importDay":
+    if key == "importDay":
         files.setdefault("profile.json", {})["importDay"] = int(v)
         touched.add("profile.json")
     elif key in ("planBase", "growth"):
@@ -186,13 +168,6 @@ def reset(key, files, today):
     row = BY_KEY[key]
     if row["default"] is None:
         raise ValueError(f"{row['en']} has no default to go back to")
-    plan = files.setdefault("plan.json", {})
-    if key == "emergency":
-        plan.pop("emergency", None)
-        (plan.get("changed") or {}).pop(key, None)
-        if plan.get("changed") == {}:
-            plan.pop("changed")
-        return ["plan.json"]
     return write(key, row["default"], files, today)
 
 
@@ -208,10 +183,3 @@ def rows(files):
                     "changed": changed.get(r["key"]), "locked": locked(r["key"], files)})
     return out
 
-
-def emergency_state(months, band):
-    """Where the months covered sit against the owner's range: below / inside / above, or None
-    when the months cannot be known yet. The edges belong to the range."""
-    if months is None or not band:
-        return None
-    return "below" if months < band[0] else "above" if months > band[1] else "inside"

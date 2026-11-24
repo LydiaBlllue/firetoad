@@ -18,7 +18,6 @@
   --c-fees:#1f3f74; --c-education:#b07ad6; --c-rest:#a8a69e;
   --c-other:#4a3aa7;   /* the plan's own parts (DESIGN.md §3), not a category */
   --bar:#2a78d6; --bar-dim:#9ec5f4;
-  --rng-ok:#0f6e56; --rng-fill:#cfeee2; --rng-low:#854f0b;   /* the owner's own range (Emergency fund) */
   --headh:92px;   /* sidebar wordmark and page header share this so their rules line up */
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -181,12 +180,6 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
   .set-pane .set-row:has(.tg){flex-wrap:nowrap}
   .set-pane .set-in.w-k{width:200px}
 }
-.rng{position:relative;height:50px;margin:22px 0 2px}
-.rng .track{position:absolute;left:0;right:0;top:10px;height:12px;border-radius:6px;background:var(--pill)}
-.rng .band{position:absolute;top:10px;height:12px;background:var(--rng-fill);border-left:2px solid var(--rng-ok);border-right:2px solid var(--rng-ok)}
-.rng .you{position:absolute;top:3px;width:3px;height:26px;background:var(--ink);transform:translateX(-50%)}
-.rng .you span{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);font-size:11.5px;font-weight:600;white-space:nowrap}
-.rng .tk{position:absolute;top:30px;transform:translateX(-50%);font-size:11px;color:var(--muted)}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13px;padding:9px 14px;border-radius:8px;z-index:50;max-width:560px}
 .ctl{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)}
 .ctl:last-of-type{border-bottom:0}
@@ -674,12 +667,6 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
   </div>
 </section>
 
-<section data-pg="safe" hidden>
-  <div class="grid-stats" id="safeStats"></div>
-  <div class="card" id="safeRange" style="margin-bottom:10px"></div>
-  <div class="card" id="safeAccts"></div>
-</section>
-
 <section data-pg="set" hidden>
   <div id="setNote"></div>
   <div class="set-wrap">
@@ -957,8 +944,7 @@ const NAV = [
                            {k:"trends",n:"Year",             t:"The year",             d:""},
                            {k:"income",n:"Income",t:"Income", d:""},
                            {k:"subs",  n:"Subscriptions",    t:"Subscriptions",        d:""},
-                           {k:"base",  n:"Monthly spending", t:"Monthly spending",     d:""},
-                           {k:"safe",  n:"Emergency fund",       t:"Emergency fund",           d:""}]},
+                           {k:"base",  n:"Monthly spending", t:"Monthly spending",     d:""}]},
   // Set a goal: how much is needed, and how far off it is.
   {sec:"Set a goal", items:[{k:"fire", n:"FIRE",             t:"FIRE",                 d:""}]},
   // Stay on track: the monthly plan and the investments, month after month.
@@ -1027,7 +1013,6 @@ const WAITS = {
   port:   () => INVESTED() ? "" : "a broker's holdings",
   perf:   () => INVESTED() ? "" : "a broker's holdings",
   hold:   () => INVESTED() ? "" : "a broker's holdings",
-  safe:   () => (INVEST.cashflow || []).length ? "" : "a chequing statement",
   // The FIRE pages wait for a goal, not for money (1.0.1): someone saving toward FIRE with
   // nothing invested yet still has a target to read. Drawdown also waits for something invested,
   // so nobody with nothing invested reads that the money runs out.
@@ -1241,9 +1226,7 @@ const GLOSSARY = {
   committed:      {own:1, w:"committed payment", pos:"on this page", def:"A payment made every month before anything is chosen, such as rent, a mortgage or a loan.", also:["planning_figure"]},
   fund:           {own:1, w:"fund", pos:"on this page", def:"A name you put on part of the money in one of your accounts, for something you are saving toward. Nothing is moved: the money stays where it is, and the plan can add to it each month.", also:["unallocated"]},
   unallocated:    {own:1, w:"Unallocated", pos:"on this page", def:"What is left of income once every line of the plan is paid. It stays where the income landed.", also:["everyday"]},
-  safety_net:     {own:1, w:"Emergency fund", pos:"on this page", def:"Money you can reach at once, to live on if your income stops or a large bill arrives. This page shows how much you have and how many months it would last. A common guide is three to six months of spending.", also:["months_covered","spendable_today"]},
-  usual_month:    {own:1, w:"A usual month", pos:"on this page", def:"What a month usually costs you: everything spent, averaged over your last full months, up to twelve, leaving out months you marked as unusual. A yearly charge counts as a twelfth each month.", also:["months_covered","planning_figure"]},
-  months_covered: {own:1, w:"Months covered", pos:"on this page", def:"How many months of your usual spending the money you can reach today would pay for, after what is due now. A debt paid over time is not taken off; its monthly payment is part of a usual month.", f:"(spendable today − what is due now) ÷ a usual month", also:["safety_net","spendable_today"]},
+  usual_month:    {own:1, w:"A usual month", pos:"on this page", def:"What a month usually costs you: everything spent, averaged over your last full months, up to twelve, leaving out months you marked as unusual. A yearly charge counts as a twelfth each month.", also:["planning_figure"]},
   complete_to:    {own:1, w:"Complete to", pos:"on this page", def:"The day every account’s numbers are in up to. After it, some accounts are still waiting for their next statement."},
 };
 // The register's axes in the page's own words (Home's net-worth card, the Accounts table).
@@ -1411,7 +1394,6 @@ function render(){
   renderYr();
   renderIncChart();
   renderCatPage();
-  renderSafety();
   renderSettings();
   renderSubs();
   renderYear();
@@ -1631,12 +1613,6 @@ function renderHome(){
         numx(fmt2(ci.total), Object.entries(ci.by).filter(e => e[1] > 0.005).map(e => [e[0], fmt2(e[1])]), "What your card statements charged in interest, the last 12 months.", true),
         ci.latest ? "Newest statement: " + fmt2(ci.latest.v) : "");
     },
-    covered: () => {
-      if(waitsFor("safe")) return null;
-      const s = safetyCalc();
-      return s.months === null ? null : card(term("months_covered", "Months covered"),
-        numx(monthsTxt(s.months), [["The money", fmt(s.money)], ["A usual month", fmt(s.cost)]], "From the Emergency fund page."), "Without income");
-    },
     kept: () => {
       if(SAVINGS.rate !== undefined) return null;   // the savings rate card says it, measured the one way
       const cfy = (INVEST.cashflow || []).filter(m => m.ym.startsWith(yr));
@@ -1663,7 +1639,7 @@ function renderHome(){
     },
   };
   const first = INVESTED() ? (GOAL() ? ["port", "yrs", "inv", "spent"] : ["port", "yrs", "inv"]) : ["yrs"];
-  const FILL = ["interest", "spent", "covered", "kept", "subs", "bigcat"];
+  const FILL = ["interest", "spent", "kept", "subs", "bigcat"];
   const shown = [];
   for(const k of first.concat(FILL)){
     if(shown.length >= 4 || shown.some(s => s.k === k)) continue;
@@ -2182,7 +2158,7 @@ function catMedian(cat, ym){ const u = catUsual(ym); return u ? (u.cats[cat] || 
 // spread over its twelve months, averaged over the full months before `ym` — up to twelve, the
 // months set aside as unusual left out. Big months are in it, because they happen. Unlike the
 // planning figure's calibration it keeps the categories that end before FIRE: today they are
-// still paid. Emergency fund, Investment income, This month and Monthly spending all read this.
+// still paid. Investment income, This month and Monthly spending all read this.
 // Computed at build time since 1.0.5 (usual.py), one answer per month the page can be turned to,
 // so the page and everything outside it read the same number.
 const USUAL = {};
@@ -2455,14 +2431,6 @@ function cardInterest(){
           charging: Object.values(newest).some(r => r.v > 0)};
 }
 
-// ===== Emergency fund (1.0.1): how long the money would last without a paycheque =====
-// months covered = (Spendable today − what is owed on no asset) ÷ a usual month. The money is
-// Home's own "Spendable today" row, so the two pages cannot disagree; investments are never in
-// it, and money abroad is a line of its own. A usual month is the monthly spending average plus the
-// repayments the plan pays today: rent and bills paid today are in the spending already. The
-// range it is held against is the owner's own (SETTINGS `emergency`, FINANCE.md §8d, §8e): the
-// page says below, inside or above it, and never what to do about it.
-const SAFETY = {};
 // The numbers that are the owner's to choose, each with its value now (settings.py, FINANCE.md §8e).
 const SETTINGS = [];
 // ===== Settings (1.0.5) =====
@@ -2523,12 +2491,11 @@ function changeSetting(k, v, reset){
       })
       .then(() => { setPending--; reloadWhenIdle(); }));
 }
-const setShow = (r, v) => v === null ? "Not set" : r.kind === "months" ? v[0] + " to " + v[1] + " months" : r.kind === "day" ? "the " + ordinal(v) : r.kind === "percent" ? v + "% a year" : fmt(v);
+const setShow = (r, v) => v === null ? "Not set" : r.kind === "day" ? "the " + ordinal(v) : r.kind === "percent" ? v + "% a year" : fmt(v);
 function setControl(r){
   if(r.locked) return '<span class="num">' + setShow(r, r.v) + '</span>';
   const inp = (i, v, cls, more) => '<input class="set-in '+cls+'" type="number" data-sk="'+r.key+'" data-si="'+i+'" value="'+(v === null ? "" : v)
     + '" min="'+r.min+'" max="'+r.max+'" '+more+(cantChange(r.key) ? " disabled" : "")+' aria-label="'+r.n+'">';
-  if(r.kind === "months") return inp(0, r.v[0], "w-m", 'step="1"') + "to" + inp(1, r.v[1], "w-m", 'step="1"') + "months";
   if(r.kind === "day") return "Day" + inp(0, r.v, "w-m", 'step="1"');
   if(r.kind === "percent") return inp(0, r.v, "w-m", 'step="0.5"') + "% a year";
   return "$" + inp(0, r.v, "w-c", 'step="50" placeholder="Not set"');
@@ -2540,17 +2507,12 @@ function setMeta(r){
   if(r.def !== null && !r.isDef && !cantChange(r.key)) parts.push('<button data-sreset="'+r.key+'">Back to ' + setShow(r, r.def) + '</button>');
   return parts.join(" \u00b7 ");
 }
-// The controls of one setting, wherever they are drawn: the Settings page and the number's own page.
+// The controls of one setting on the Settings page.
 function wireSettings(root){
   root.querySelectorAll("input.set-in").forEach(inp => inp.onchange = () => {
     const r = SET[inp.dataset.sk], n = Number(inp.value);
-    if(inp.value === "" || !isFinite(n) || n < r.min || n > r.max || ((r.kind === "months" || r.kind === "day") && n !== Math.round(n))){ render(); return; }
-    if(r.kind !== "months"){ changeSetting(r.key, n); return; }
-    // the end that was typed stays; the other one follows it rather than refusing
-    const v = r.v.slice(); v[Number(inp.dataset.si)] = n;
-    if(v[0] > v[1]) v[1 - Number(inp.dataset.si)] = n;
-    if(v[1] <= 0){ render(); return; }
-    changeSetting(r.key, v);
+    if(inp.value === "" || !isFinite(n) || n < r.min || n > r.max || (r.kind === "day" && n !== Math.round(n))){ render(); return; }
+    changeSetting(r.key, n);
   });
   root.querySelectorAll("[data-sreset]").forEach(b => b.onclick = () => changeSetting(b.dataset.sreset, null, true));
 }
@@ -2676,63 +2638,6 @@ function renderAI(){
   };
   if(q("key")) q("key").onkeydown = ev => { if(ev.key === "Enter") q("save").click(); };
 }
-// Where the months covered sit against the owner's own range (settings.py emergency_state).
-const RANGE_SAYS = {below: "Below your range", inside: "Inside your range", above: "Above your range"};
-const rangeState = (months, band) => months === null || !band ? null : months < band[0] ? "below" : months > band[1] ? "above" : "inside";
-function safetyCalc(){
-  // the money, what a month costs and the months covered are worked out at build time (usual.py)
-  const S = SAFETY, n = k => S[k] === undefined ? null : S[k];
-  return {money: S.money || 0, cost: n("cost"), months: n("months"), abroadMonths: n("abroadMonths")};
-}
-const monthsTxt = m => (Math.round(m * 10) / 10).toFixed(1);
-function renderSafety(){
-  const S = SAFETY, c = safetyCalc();
-  const card = StatCard;
-  const er = SET.emergency, band = er ? er.v : null, state = rangeState(c.months, band);
-  const costRows = [["Spending", usualMonth() ? fmt(usualMonth().v) : "\u2014"]].concat((S.repayRows || []).map(r => [r.n, fmt(r.v)]));
-  $("safeStats").innerHTML =
-    card(term("months_covered", "Months covered"),
-      c.months === null ? "\u2014" : numx(monthsTxt(c.months), [["The money", fmt(c.money)], ["A usual month", fmt(c.cost)]], "The money \u00f7 a usual month.", false),
-      c.months === null ? moreMonths() + ", when a usual month is known."
-        : [state ? '<b style="color:var(--'+(state === "below" ? "rng-low" : state === "inside" ? "rng-ok" : "ink-2")+')">' + RANGE_SAYS[state] + '</b>' : "",
-           c.abroadMonths !== null ? "With money abroad, " + monthsTxt(c.abroadMonths) + " months" : ""].filter(Boolean).join("<br>")) +
-    card("The money",
-      numx(fmt(c.money), [[term("spendable_today", "Spendable today"), fmt(S.today || 0)]]
-          .concat(S.invested ? [["Less what is invested", "\u2212"+fmt(S.invested)]] : [])
-          .concat(S.unsecured ? [["Less what is due now", "\u2212"+fmt(S.unsecured)]] : []),
-        "What you could spend today, less what is due now. Investments are not in it, and a debt paid over time is not taken off: its payment is in a usual month.", true),
-      S.abroad > 0 ? "Not counting " + fmt(S.abroad) + " " + term("held_abroad", "held abroad") : "") +
-    card(term("usual_month", "A usual month"),
-      c.cost === null ? "\u2014" : numx(fmt(c.cost), costRows, "What you usually spend, plus the repayments your plan pays today. Rent and bills are already in the spending.", true),
-      "");
-  // Your range: the owner's own months, where the money sits against them, and the one fact
-  // that follows — how much more reaches the lower end, or how much is beyond the upper one.
-  // Never what to do about it (FINANCE.md §8d).
-  $("safeRange").style.display = er ? "" : "none";
-  if(er){
-    const top = Math.max(12, Math.ceil((Math.max(band[1], c.months || 0) + 1) / 3) * 3), step = top <= 12 ? 3 : top <= 24 ? 6 : 12;
-    const x = m => (Math.min(m, top) / top * 100).toFixed(2) + "%";
-    const ticks = []; for(let m = 0; m <= top; m += step) ticks.push('<div class="tk" style="left:'+x(m)+'">'+m+'</div>');
-    const meta = setMeta(er), lock = cantChange("emergency");
-    $("safeRange").innerHTML = '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px"><div class="lab">Your range</div>'
-      + '<div class="set-ctl">' + setControl(er) + (meta ? '<div class="set-meta">' + meta + '</div>' : lock ? '<div class="set-meta">' + lock + '</div>' : "") + '</div></div>'
-      + '<div class="rng"><div class="track"></div><div class="band" style="left:'+x(band[0])+';width:'+((Math.min(band[1], top) - Math.min(band[0], top)) / top * 100).toFixed(2)+'%"></div>'
-      + (c.months === null ? "" : '<div class="you" style="left:'+x(c.months)+'"><span>You: '+monthsTxt(c.months)+'</span></div>') + ticks.join("") + '</div>'
-      + (state === "below" ? '<div class="cap">' + fmt(band[0] * c.cost - c.money) + " more reaches " + band[0] + " months.</div>"
-        : state === "above" ? '<div class="cap">' + fmt(c.money - band[1] * c.cost) + " is beyond " + band[1] + " months.</div>" : "");
-    wireSettings($("safeRange"));
-  }
-  const row = a => '<div class="both-acct"><span>'+(a.i ? '<span class="i">'+a.i+'</span>' : "")+a.n+(a.cur ? '<span class="a">'+a.cur+'</span>' : "")+(a.note ? '<span class="a">'+a.note+'</span>' : "")+'</span><span class="v num">'+fmt(a.v)+'</span></div>';
-  $("safeAccts").innerHTML = '<div class="lab">Where the money is</div>'
-    + ((S.accts || []).length ? (S.accts || []).map(row).join("") : '<div class="empty">No account you could spend from today.</div>')
-    + ((S.debts || []).length ? '<div class="lab" style="margin-top:12px">Due now</div>' + S.debts.map(row).join("") : "")
-    // A debt paid over time is listed and not taken off the money: what leaves each month is its
-    // payment, and that is in what a month costs. One the plan carries no payment for says so.
-    + ((S.later || []).length ? '<div class="lab" style="margin-top:12px">Paid over time</div>'
-        + S.later.map(a => row(a.paid ? a : Object.assign({}, a, {cur: (a.cur ? a.cur + " \u00b7 " : "") + "no payment in your plan"}))).join("")
-        + '<div class="cap" style="margin-top:6px">Not taken off the money. What you pay each month is part of a usual month.</div>' : "");
-}
-
 const TREND_INC = "#2a78d6", TREND_SP = "#eb6834";
 
 function renderSubs(){

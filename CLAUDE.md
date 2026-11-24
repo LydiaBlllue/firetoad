@@ -64,7 +64,7 @@ The rest of `findata/`, and what each carries:
 | `banks.json` | one balance and one as-of date per bank account |
 | `profile.json` | the owner (shown under the FIRE Toad wordmark and in the tab), the year of birth, the import day |
 | `funds.json` | the monthly plan as **flows** — `income`, `committed` (rent, a mortgage, a loan), `saving` (to the broker), `everyday`, each with an amount and, where it applies, `until`, `afterFire`, `pays`, `starts`, `to`; and `funds`, the owner's own funds, each a label on money in one account |
-| `plan.json` | planning spend, months excluded from comparisons, deposits into the broker that were gifts (`brokerGifts`), the retirement assumptions, the owner's one-line descriptions of the net-worth parts; and, since 1.0.5, the owner's settings that live nowhere else: `emergency` `{low, high}` (the months an emergency fund should cover, absent means three to six) and `changed` (the day each setting was last changed) |
+| `plan.json` | planning spend, months excluded from comparisons, deposits into the broker that were gifts (`brokerGifts`), the retirement assumptions, the owner's one-line descriptions of the net-worth parts; and, since 1.0.5, the owner's settings that live nowhere else: `changed` (the day each setting was last changed); an `emergency` `{low, high}` left from before 2026-11-24 is kept and read by nothing |
 | `rules.json` | the investing buckets and their target bands, the owner's theses (`notes`) and `checkpoints`, `assetClass` — what each ETF holds (stocks / bonds / cash / gold / crypto), the one thing the broker's export cannot say — and `principles`, the owner's high-level rules, each naming a check the Investing overview runs today (with `placement`, which account each holding belongs in) |
 | `merchants.json` | merchant → category |
 | `senders.json` | who sends money by e-Transfer → what it is (Payroll / Gift / Other / Transfer / Repayment), answered once; the import types the next one by it and does not ask — the rule an owner used to keep in prose, as data both doors read (2026-11-07) |
@@ -122,7 +122,7 @@ Net worth used to be five words in `feeds` added up in `rebuild.py`, so every ne
 mortgage got a net worth with the loan in it and the house nowhere. Each account row is now a
 **balance item with five orthogonal axes**, and each derived total reads exactly one of them:
 
-- `side` — asset / liability → net worth = Σ assets − Σ liabilities; a liability may also say `due` (now / later, from its kind: a card is now) — the Emergency fund takes off only what is due now
+- `side` — asset / liability → net worth = Σ assets − Σ liabilities; a liability may also say `due` (now / later, from its kind: a card is now), kept for when debts are modelled
 - `role` — grow / set-aside / buffer / owed / none → Portfolio is `grow`; net worth by purpose is one
   slice per role; `owed` is money lent (FINANCE.md §8a)
 - `reach` — today / costs / spoken / lent / locked / abroad → the reach table
@@ -218,7 +218,7 @@ script, and the panel follows. Two verbs came with the panel and serve this chat
 ledger, by register key, the register's copy following (D14, D20), refused for an account with
 a ledger (D7) or a loan (D23) — and **`ocr.py`** reads a phone screenshot with Apple Vision on
 this computer and ranks its amounts by the account's `capture` line; it offers, never writes.
-**`setting.py`** (1.0.5) changes one of the numbers that are the owner's to choose — `settings.py` is the one table of them (FINANCE.md §8e): the emergency range, the import day, planning spend, take-home, what goes to the broker, the everyday amount. The dashboard's Settings page posts to it through the app (`POST /api/setting`, answered when the value is written and the page rebuilt); a chat calls the same script; a page opened as a file only shows the values. D31 holds every stored value to its row's range.
+**`setting.py`** (1.0.5) changes one of the numbers that are the owner's to choose — `settings.py` is the one table of them (FINANCE.md §8e): the import day, planning spend, take-home, what goes to the broker, the everyday amount. The dashboard's Settings page posts to it through the app (`POST /api/setting`, answered when the value is written and the page rebuilt); a chat calls the same script; a page opened as a file only shows the values. D31 holds every stored value to its row's range.
 **Packaged** (1d, `build/build.py` → `dist/FIRE Toad.app`, PyInstaller, one folder, the tool
 and never anyone's data), the same `app.py` is the entry: the first launch asks for the
 folder or makes one — a made one holds the tool and a profile.json marked `blank`, no demo data (remembered in the system's application-support folder, outside the
@@ -253,9 +253,9 @@ build and signing.
 
 ## Nothing in a dashboard is typed by hand
 
-<!-- LINT:CONSTS n=56 -->
+<!-- LINT:CONSTS n=55 -->
 `rebuild.py` builds the dashboard from `templates/dashboards/` and `findata/`, deriving
-**56 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CARD_INTEREST, CATS, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DEBT_ACCTS, DECISIONS, DOC_LATEST, DRAWDOWN, FGN, FIRE, FIRE_GOAL, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PENSIONS, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SAFETY, SAVINGS, SETTINGS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, USUAL, WSDEP, WSINC. It compares without writing by default; `--write`
+**55 constants**: ACCT, ANCHOR_Y, BOOKV, BORN, BROKER, CARD_INTEREST, CATS, CHEQUING, COAST_R, COMMITTED_KEEP, DATA, DEBT_NOTE, DEBT_ACCTS, DECISIONS, DOC_LATEST, DRAWDOWN, FGN, FIRE, FIRE_GOAL, FOREIGN, FUNDS, FX, GAPS, HIST, HOME_CARE, IMPORTS, IMPORT_DAY, INVEST, LEDGER_THRU, LIFE_TO, LOANS, LTC_TIERS, MONTH_SKIP, NWPARTS, NW_DEBT, NW_HISTORY, PENSIONS, PERF, PLAN_BASE_DEFAULT, PORT_HISTORY, PROFILE, REACH, RET_HIST, RULES, SAFETY, SAVINGS, SETTINGS, SPENDING, STMT_END, SUBMITTED, SUB_KEYS, TASKS, TODAY, USUAL, WSDEP, WSINC. It compares without writing by default; `--write`
 applies, and it is idempotent. `--template DIR` writes the page with every constant emptied,
 which is what the template *is*: page code and nobody's numbers.
 
