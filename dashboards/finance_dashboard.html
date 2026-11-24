@@ -2590,7 +2590,7 @@ const AI_SENT = "What is sent: the merchant as the statement prints it, and the 
 const aiSvc = id => ((AI_ST && AI_ST.services) || []).find(x => x.id === id) || {};
 const setRowH = (n, why, ctl, meta) => '<div class="set-row"><div><div class="n">' + n + '</div><div class="why">' + why + '</div></div>'
   + '<div class="set-ctl">' + ctl + (meta ? '<div class="set-meta">' + meta + '</div>' : "") + '</div></div>';
-const toggleH = (on, off) => '<button class="tg' + (on ? " on" : "") + '" role="switch" aria-checked="' + on + '" aria-label="AI assist" data-ai="tg"' + (off ? " disabled" : "") + '><i></i></button>';
+const toggleH = (on, off) => '<button class="tg' + (on ? " on" : "") + '" role="switch" aria-checked="' + on + '" aria-label="Use AI assist" data-ai="tg"' + (off ? " disabled" : "") + '><i></i></button>';
 const timesH = n => n === 0 ? "Not yet" : n === 1 ? "Once" : n === 2 ? "Twice" : n + " times";
 function aiPost(path, body){
   aiBusy = true;
@@ -2603,7 +2603,7 @@ function renderAI(){
   const el = $("aiPane");
   let h = '<h2>AI assist</h2>';
   if(SET_MODE !== "save"){
-    el.innerHTML = h + setRowH("AI assist", AI_WHAT, toggleH(false, true), "") + '<p class="fine">AI assist works when this page is opened with the FIRE Toad app on your computer.</p>';
+    el.innerHTML = h + setRowH("Use AI assist", AI_WHAT, toggleH(false, true), "") + '<p class="fine">AI assist works when this page is opened with the FIRE Toad app on your computer.</p>';
     return;
   }
   if(!AI_ST){
@@ -2618,14 +2618,14 @@ function renderAI(){
   const st = AI_ST, cur = st.provider && st.provider !== "none" ? st.provider : null;
   const on = !!(aiDraft || st.enabled), svc = aiDraft ? aiDraft.svc : cur;
   const s = aiSvc(svc), ollama = st.ollama || [];
-  h += setRowH("AI assist", AI_WHAT, toggleH(on, aiBusy),
+  h += setRowH("Use AI assist", AI_WHAT, toggleH(on, aiBusy),
     st.enabled && !aiDraft ? (s.key ? "Turning it off deletes the key" : "") : on ? (s.key ? "Paste a key to finish" : "") : "");
   if(on){
     const opts = (st.services || []).filter(x => x.id !== "ollama" || ollama.length || svc === "ollama");
     // a service set from the chat (any other OpenAI-compatible one) is shown as itself
     if(svc && !opts.some(x => x.id === svc)) opts.unshift({id: svc, label: "Another service"});
-    h += setRowH("Service", svc === "ollama" ? "Works on this computer. Nothing is sent." : "Who is asked.",
-      '<select class="set-in" data-ai="svc" aria-label="Service">' + opts.map(x => '<option value="'+x.id+'"'+(x.id === svc ? " selected" : "")+'>'+x.label+'</option>').join("") + '</select>');
+    h += setRowH("Service", svc === "ollama" ? "Works on this computer. Nothing is sent." : "The AI service your merchant names are sent to.",
+      '<select class="set-in" data-ai="svc" aria-label="Service">' + opts.map(x => '<option value="'+x.id+'"'+(x.id === svc ? " selected" : "")+'>'+(x.menu || x.label)+'</option>').join("") + '</select>');
     if(svc === "ollama"){
       h += setRowH("Model", "Installed in Ollama on this computer.",
         ollama.length ? '<select class="set-in" data-ai="model" aria-label="Model" style="min-width:140px">' + ollama.map(m => '<option'+(m === st.model ? " selected" : "")+'>'+m+'</option>').join("") + '</select>'
@@ -2648,10 +2648,9 @@ function renderAI(){
       ["Merchants it suggested", String(st.suggested || 0)], ["Suggestions you kept", String(st.kept || 0)]]);
   const hist = (st.history || []).filter(x => x.merchants.length);
   if(hist.length && !aiDraft){
-    const label = id => (aiSvc(id).label || id);
     h += '<h3>What was sent</h3><table class="dt"><tr><th>Day</th><th class="l">Sent to</th><th class="l">What</th></tr>'
-      + hist.map(x => '<tr><td class="nw">' + dLong(x.at) + '</td><td class="l">' + label(x.service) + '</td><td class="what">'
-        + x.merchants.length + (x.merchants.length === 1 ? " merchant" : " merchants") + (x.ok ? "" : ", no answer")
+      + hist.map(x => '<tr><td class="nw">' + dLong(x.at) + '</td><td class="l">' + esc(x.to || x.service) + '</td><td class="what">'
+        + x.merchants.length + (x.merchants.length === 1 ? " merchant" : " merchants") + (x.ok ? (x.cut ? ", answer cut short" : "") : ", " + ({key: "key not accepted", credit: "no credit left", busy: "service busy", network: "no connection"}[x.why] || "no answer"))
         + '<small>' + x.merchants.slice(0, 3).map(esc).join(", ") + (x.merchants.length > 3 ? ", and " + (x.merchants.length - 3) + " more" : "") + '</small></td></tr>').join("")
       + '</table><p class="fine">The names of the 15 categories went with each one.</p>';
   }

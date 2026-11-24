@@ -20,6 +20,10 @@
 - **The front page and both READMEs have a section on AI assist**: what it does, which AI, what it
   costs, what is sent and how often, and what you can check — with a card and the Settings section
   as pictures. Two answers under Questions say it too.
+- **When AI assist cannot answer, it says why**: the key was not accepted, the account has no
+  credit, the service is busy, or there is no connection, with the one thing to do about it. The
+  merchants are asked again once that is put right. An answer cut short still gives the
+  suggestions it got to.
 - **Settings in two sections, Your numbers and AI assist**, listed on the left (tabs on a narrow
   window), and **Settings is the last row of the sidebar**, with a gear.
 

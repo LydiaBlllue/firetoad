@@ -238,7 +238,7 @@ the address and the model are the tool's — or Ollama when it runs on this comp
 one place — a merchant every map misses — only when an import writes: every such merchant in
 one request to a cloud service (`update.ask_ai`), one at a time to Ollama, at most 50 an
 import, a cached answer never sent again, a failure never retried; with the merchant strings
-and the fifteen category names and nothing else. Room for an answer is 1,000 tokens (models
+and the fifteen category names and nothing else. Room for an answer is 2,000 tokens and 60 more a merchant (models
 that think first came back empty with 40); the gpt-5 family gets `max_completion_tokens` and no
 temperature. Its answer is validated against the fifteen, written as the question's `suggest`
 with `suggestBy: model`, never as the category (Other stays until the owner confirms); it never

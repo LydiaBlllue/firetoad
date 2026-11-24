@@ -42,6 +42,7 @@ import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -54,9 +55,11 @@ SERVICE = "Jade Toad"   # not renamed with the product (2026-11-12): saved keys 
 # the merchants leave this computer, so they are asked in one request; `company` is who receives
 # them, as the Settings page says it.
 PROVIDERS = {
-    "claude":   {"label": "Claude", "company": "Anthropic", "kind": "anthropic", "cloud": True, "key": True,
+    # `menu` is what the Service menu calls it when the name people know is not the company the
+    # key comes from: a Claude or ChatGPT plan is not that company's API key
+    "claude":   {"label": "Claude", "menu": "Claude (Anthropic)", "company": "Anthropic", "kind": "anthropic", "cloud": True, "key": True,
                  "baseUrl": "https://api.anthropic.com", "model": "claude-haiku-5-5", "keyUrl": "https://console.anthropic.com/settings/keys"},
-    "chatgpt":  {"label": "ChatGPT", "company": "OpenAI", "kind": "openai", "cloud": True, "key": True,
+    "chatgpt":  {"label": "ChatGPT", "menu": "ChatGPT (OpenAI)", "company": "OpenAI", "kind": "openai", "cloud": True, "key": True,
                  "baseUrl": "https://api.openai.com/v1", "model": "gpt-5.4-mini", "keyUrl": "https://platform.openai.com/api-keys"},
     "deepseek": {"label": "DeepSeek", "company": "DeepSeek", "kind": "openai", "cloud": True, "key": True,
                  "baseUrl": "https://api.deepseek.com", "model": "deepseek-flash", "keyUrl": "https://platform.deepseek.com/api_keys"},
@@ -72,12 +75,49 @@ OLLAMA = "http://127.0.0.1:11434"
 TIMEOUT = 60
 MAX_PER_IMPORT = 50
 # Room for the answer. Models that think before they answer spend part of it thinking, and with
-# 40 they came back empty (measured 2026-11-20); a batch gets a little more for each merchant.
-ANSWER_TOKENS = 1000
+# 40 they came back empty (measured 2026-11-20); a batch gets more for each merchant. It is a
+# ceiling, not a cost — only what the model writes is billed — so it is generous: an answer cut
+# off at the ceiling is the failure to avoid (it used to yield no suggestion and no word of why).
+ANSWER_TOKENS = 2000
 
 
 def budget(n=1):
-    return ANSWER_TOKENS + 30 * max(0, n - 1)
+    return ANSWER_TOKENS + 60 * max(0, n - 1)
+
+
+class Failed(RuntimeError):
+    """A request that did not get an answer, with the reason the owner can act on: `key` (the
+    service refused it), `credit` (the account has none), `busy` (rate limit, overload, a server
+    error), `network` (no connection, a timeout), or `error`. The text is for the log and never
+    carries the service's own message, which can quote part of the key."""
+
+    def __init__(self, why, detail=""):
+        super().__init__(detail or why)
+        self.why = why
+
+
+def _error_kind(text):
+    """The service's own name for an error, from its JSON body: a type or a code, never the message."""
+    try:
+        err = json.loads(text).get("error")
+    except (ValueError, AttributeError):
+        return ""
+    if isinstance(err, dict):
+        return str(err.get("type") or err.get("code") or "")[:60]
+    return ""
+
+
+def http_why(code, text):
+    """Which of Failed's reasons an HTTP error is. Services say "no credit" under several codes:
+    402, or a 400 / 403 / 429 whose body speaks of credit, balance, billing or quota."""
+    low = (text or "").lower()
+    if code == 402 or any(w in low for w in ("credit balance", "insufficient_quota", "insufficient balance", "billing", "exceeded your current quota")):
+        return "credit"
+    if code in (401, 403):
+        return "key"
+    if code == 429 or code >= 500:
+        return "busy"
+    return "error"
 
 
 # ---------------------------------------------------------------- settings and the key
@@ -189,6 +229,18 @@ def enabled(root):
     return key_stored(root, p)
 
 
+def address_ok(url):
+    """https to anywhere, or plain http to this computer and nowhere else. The host is read out
+    of the address: a prefix test let http://localhost.example.com through, and a key would
+    have gone to it unencrypted."""
+    try:
+        u = urllib.parse.urlsplit(url or "")
+        host = (u.hostname or "").lower()
+    except ValueError:
+        return False
+    return bool(host) and (u.scheme == "https" or (u.scheme == "http" and host in ("127.0.0.1", "localhost", "::1")))
+
+
 def turn_on(root, provider, key=None, model=None, base_url=None):
     """Choose a service. A key, when given, is stored; a key for another service is deleted, so
     only the service in use ever holds one. The address and model are the tool's, except for
@@ -209,7 +261,7 @@ def turn_on(root, provider, key=None, model=None, base_url=None):
     if provider == "openai":
         if not (base_url and model):
             raise ValueError("another service needs its address and model (--base-url, --model)")
-        if not base_url.startswith(("https://", "http://127.0.0.1", "http://localhost")):
+        if not address_ok(base_url):
             raise ValueError("the address has to be https, or this computer")
         s["baseUrl"], s["model"] = base_url.rstrip("/"), model
     keep = {k: v for k, v in now.items() if k in ("declined",)}
@@ -291,19 +343,41 @@ def openai_body(model, system, user, max_tokens):
     return body
 
 
-def chat(root, system, user, max_tokens=ANSWER_TOKENS):
-    """The model's reply to one exchange, or raise. Only the request's shape differs by service."""
+def _ask(url, headers, body):
+    """_post, with a failure turned into Failed and its reason."""
+    try:
+        return _post(url, headers, body)
+    except urllib.error.HTTPError as e:
+        try:
+            text = e.read().decode("utf-8", "replace")[:2000]
+        except Exception:  # noqa: BLE001  a body that cannot be read says nothing
+            text = ""
+        raise Failed(http_why(e.code, text), f"HTTP {e.code} {_error_kind(text)}".strip()) from None
+    except (urllib.error.URLError, OSError) as e:
+        raise Failed("network", type(e).__name__) from None
+
+
+def exchange(root, system, user, max_tokens=ANSWER_TOKENS):
+    """(reply, cut): the model's reply to one exchange, and whether it stopped at the ceiling
+    with more to say. Raises Failed. Only the request's shape differs by service."""
     p, spec, base, model = _target(root)
     key = key_get(root, p) if spec["key"] else None
     if spec["key"] and not key:
-        raise RuntimeError(f"no key stored for {p}")
+        raise Failed("key", f"no key stored for {p}")
     if spec["kind"] == "anthropic":
-        out = _post(base + "/v1/messages", {"x-api-key": key, "anthropic-version": "2023-06-01"},
-                    {"model": model, "max_tokens": max_tokens, "system": system, "messages": [{"role": "user", "content": user}]})
-        return "".join(b.get("text", "") for b in out.get("content", []) if b.get("type") == "text").strip()
+        out = _ask(base + "/v1/messages", {"x-api-key": key, "anthropic-version": "2023-06-01"},
+                   {"model": model, "max_tokens": max_tokens, "system": system, "messages": [{"role": "user", "content": user}]})
+        text = "".join(b.get("text", "") for b in out.get("content", []) if b.get("type") == "text").strip()
+        return text, out.get("stop_reason") == "max_tokens"
     headers = {"Authorization": f"Bearer {key}"} if key else {}
-    out = _post(base + "/chat/completions", headers, openai_body(model, system, user, max_tokens))
-    return (((out.get("choices") or [{}])[0].get("message") or {}).get("content") or "").strip()
+    out = _ask(base + "/chat/completions", headers, openai_body(model, system, user, max_tokens))
+    choice = (out.get("choices") or [{}])[0]
+    return ((choice.get("message") or {}).get("content") or "").strip(), choice.get("finish_reason") == "length"
+
+
+def chat(root, system, user, max_tokens=ANSWER_TOKENS):
+    """The model's reply to one exchange, or raise."""
+    return exchange(root, system, user, max_tokens)[0]
 
 
 def _log(root, rec):
@@ -327,16 +401,16 @@ def _cache_save(root, cache):
 
 
 def pick_category(text):
-    """The one category a reply names, or None: exact first, then the first category word the
-    reply contains. Anything else is not an answer."""
+    """The one category a reply names, or None: the name alone, or a sentence that names exactly
+    one. Anything else is not an answer."""
     t = (text or "").strip().strip(".\"'").lower()
     for c in CATEGORIES:
         if t == c.lower():
             return c
-    for c in CATEGORIES:
-        if re.search(r"\b" + re.escape(c.lower()) + r"\b", t):
-            return c
-    return None
+    # a sentence that names one category is that category; one that names two ("not Dining, it
+    # is Grocery") is not an answer — which was meant cannot be read off the order of a list
+    named = [c for c in CATEGORIES if re.search(r"\b" + re.escape(c.lower()) + r"\b", t)]
+    return named[0] if len(named) == 1 else None
 
 
 SYSTEM = ("You file a merchant string from a bank statement into exactly one spending category. "
@@ -352,8 +426,8 @@ def many_prompt(merchants):
 
 def parse_many(reply, n):
     """{index (1-based): category} from a batch reply: a JSON object, perhaps inside a code fence
-    or after some thinking; else lines like "3. Dining". An answer that is not one of the fifteen
-    is dropped."""
+    or after some thinking; else the pairs of one that was cut off; else lines like "3. Dining".
+    An answer that is not one of the fifteen is dropped."""
     out, text = {}, reply or ""
     for m in re.finditer(r"\{[^{}]*\}", text):
         try:
@@ -369,6 +443,12 @@ def parse_many(reply, n):
         if got:
             out = got
     if not out:
+        # no whole object: a reply cut off before its closing brace still has every pair it got to
+        for m in re.finditer(r'"(\d+)"\s*:\s*"([^"\n]*)"', text):
+            c = pick_category(m.group(2))
+            if 1 <= int(m.group(1)) <= n and c:
+                out[int(m.group(1))] = c
+    if not out:
         for m in re.finditer(r"(?m)^\s*(\d+)\s*[.:)\-]\s*(.+?)\s*$", text):
             i = int(m.group(1))
             c = pick_category(m.group(2).split("→")[-1].split(":")[-1])
@@ -377,7 +457,29 @@ def parse_many(reply, n):
     return out
 
 
-ERRORS = (urllib.error.URLError, urllib.error.HTTPError, OSError, ValueError, RuntimeError)
+ERRORS = (urllib.error.URLError, urllib.error.HTTPError, OSError, ValueError, RuntimeError)   # Failed is a RuntimeError
+
+
+# What a failure is called for the owner: what happened, then the one thing they can do about it.
+# The panel says the same in the owner's language (strings.py, ai_fail_*).
+WHY = {
+    "key": "{svc} did not accept the key. Put in a new one in Settings, under AI assist.",
+    "credit": "The {svc} account has no credit left. Add credit on its website.",
+    "busy": "{svc} is busy right now. Try again in a few minutes.",
+    "network": "{svc} could not be reached. Check the internet connection.",
+    "not running": "{svc} is not open on this computer. Open it first.",
+    "error": "{svc} did not answer.",
+    "cut": "{svc}'s answer reached its length limit before it got to every merchant. Ask again to send only the rest.",
+}
+
+
+def why_text(why, label):
+    return WHY.get(why, WHY["error"]).format(svc=label or "The service")
+
+
+def why_of(e):
+    """The reason to tell the owner (Failed's), or `error` for anything else that went wrong."""
+    return getattr(e, "why", None) or "error"
 
 
 def categorise(root, merchant):
@@ -394,7 +496,8 @@ def categorise(root, merchant):
     try:
         reply = chat(root, SYSTEM, f"Merchant: {merchant}")
     except ERRORS as e:
-        _log(root, {"fn": "categorise", "service": p, "sent": sent, "error": f"{type(e).__name__}: {e}", "took": round(time.monotonic() - t0, 2)})
+        _log(root, {"fn": "categorise", "service": p, "sent": sent, "error": f"{type(e).__name__}: {e}", "why": why_of(e),
+                    "took": round(time.monotonic() - t0, 2)})
         return None, "error"
     cat = pick_category(reply)
     _log(root, {"fn": "categorise", "service": p, "sent": sent, "got": reply, "found": {merchant: cat} if cat else {},
@@ -411,7 +514,8 @@ def suggest_many(root, merchants):
     all of them in one request; Ollama one at a time. Cached answers are not sent again; past
     MAX_PER_IMPORT the rest are not asked. Never raises: a failure is said in `info` and the
     questions go on without a suggestion."""
-    info = {"service": settings(root).get("provider"), "label": "", "requests": 0, "sent": 0, "suggested": 0, "left": 0, "error": None}
+    info = {"service": settings(root).get("provider"), "label": "", "requests": 0, "sent": 0, "suggested": 0, "left": 0, "error": None,
+            "cut": False, "answered": []}        # answered: the merchants a request came back for, whatever it said
     if not enabled(root):
         info["error"] = "off"
         return {}, info
@@ -436,18 +540,22 @@ def suggest_many(root, merchants):
         info["sent"] += len(group)
         try:
             if len(group) == 1:
-                reply = chat(root, SYSTEM, f"Merchant: {group[0]}")
+                reply, cut = exchange(root, SYSTEM, f"Merchant: {group[0]}")
                 c = pick_category(reply)
                 found = {group[0]: c} if c else {}
             else:
-                reply = chat(root, SYSTEM_MANY, many_prompt(group), budget(len(group)))
+                reply, cut = exchange(root, SYSTEM_MANY, many_prompt(group), budget(len(group)))
                 found = {group[i - 1]: c for i, c in parse_many(reply, len(group)).items()}
         except ERRORS as e:
-            _log(root, {"fn": "suggest", "service": p, "sent": sent, "error": f"{type(e).__name__}: {e}",
+            _log(root, {"fn": "suggest", "service": p, "sent": sent, "error": f"{type(e).__name__}: {e}", "why": why_of(e),
                         "took": round(time.monotonic() - t0, 2)})
-            info["error"] = "error"
+            info["error"] = why_of(e)
             break                               # never retried: the rest are asked without a suggestion
-        _log(root, {"fn": "suggest", "service": p, "sent": sent, "got": reply, "found": found, "took": round(time.monotonic() - t0, 2)})
+        _log(root, {"fn": "suggest", "service": p, "sent": sent, "got": reply, "found": found, "took": round(time.monotonic() - t0, 2),
+                    **({"cut": True} if cut else {})})
+        info["cut"] = info["cut"] or cut
+        # a reply cut short answered only the merchants it got to: the others can be asked again
+        info["answered"] += [m for m in group if not cut or m in found]
         cache.update(found)
         out.update(found)
     _cache_save(root, cache)
@@ -457,8 +565,9 @@ def suggest_many(root, merchants):
 
 def suggest_open(root, say=None):
     """The open merchant questions with no suggestion yet, asked once (the panel, after AI assist
-    was turned on in the middle of categorizing). Each one asked is marked, so it is not asked
-    again whatever the answer. Writes decisions.json only."""
+    was turned on in the middle of categorizing). Each one a request came back for is marked, so
+    it is not asked again whatever the answer; a request that failed marks nothing. Writes
+    decisions.json only."""
     say = say or (lambda *a, **k: None)
     p = layout.path(root, "decisions.json")
     with open(p, encoding="utf-8") as fh:
@@ -466,23 +575,32 @@ def suggest_open(root, say=None):
     todo = [d for d in dec.get("decisions", []) if d.get("kind") == "merchant" and d.get("status") == "open"
             and not d.get("suggest") and not d.get("aiAsked") and d.get("match")]
     if not todo or not enabled(root):
-        return {"asked": 0, "suggested": 0, "error": None if todo else "nothing to ask"}
+        return {"asked": 0, "suggested": 0, "error": None if todo else "nothing to ask", "cut": False, "label": ""}
     found, info = suggest_many(root, [d["match"] for d in todo])
     n = 0
+    answered = set(info["answered"]) | set(found)
     for d in todo[:MAX_PER_IMPORT]:
+        # marked only when an answer came back: after a refused key or a lost connection the
+        # same merchants are asked again once that is put right
+        if d["match"] not in answered:
+            continue
         d["aiAsked"] = datetime.date.today().isoformat()
         c = found.get(d["match"])
         if c and c != d.get("default"):
             d["suggest"], d["suggestBy"] = c, "model"
             n += 1
     _write_json(p, dec)
-    say(f"  AI assist: {info['sent']} merchant(s) asked, {n} with a suggestion" + (f" ({info['error']})" if info["error"] else ""))
-    return {"asked": info["sent"], "suggested": n, "error": info["error"]}
+    say(f"  AI assist: {info['sent']} merchant(s) asked, {n} with a suggestion")
+    if info["error"] or info["cut"]:
+        say("  AI assist: " + why_text(info["error"] or "cut", info["label"]))
+    return {"asked": info["sent"], "suggested": n, "error": info["error"], "cut": info["cut"], "label": info["label"]}
 
 
 # ---------------------------------------------------------------- what the Settings page shows
 def history(root):
-    """Every request, newest first: the day, the service, the merchants sent, whether it answered."""
+    """Every request, newest first: the day, the service and who received it (`to`: the company,
+    since that is whose terms apply; for Ollama and a service of the owner's own, its name), the
+    merchants sent, whether it answered."""
     out = []
     try:
         with open(os.path.join(layout.state_dir(root), "log", "ai.jsonl"), encoding="utf-8") as fh:
@@ -496,8 +614,11 @@ def history(root):
             continue
         sent = r.get("sent") or {}
         ms = sent.get("merchants") or ([sent["merchant"]] if sent.get("merchant") else [])
-        out.append({"at": (r.get("at") or "")[:10], "service": OLD_NAMES.get(r.get("service"), r.get("service") or ""),
-                    "merchants": ms, "ok": not r.get("error")})
+        svc = OLD_NAMES.get(r.get("service"), r.get("service") or "")
+        spec = PROVIDERS.get(svc) or {}
+        out.append({"at": (r.get("at") or "")[:10], "service": svc,
+                    "to": (spec.get("label") if spec.get("hidden") or not spec.get("company") else spec["company"]) or svc,
+                    "merchants": ms, "ok": not r.get("error"), "why": r.get("why") if r.get("error") else None, "cut": bool(r.get("cut"))})
     return out[::-1]
 
 
@@ -524,7 +645,8 @@ def status(root):
     return {"provider": p, "enabled": enabled(root), "keyStored": key_stored(root, p) if p in PROVIDERS else False,
             "model": s.get("model") if p in ("ollama", "openai") else PROVIDERS.get(p, {}).get("model"),
             "since": s.get("since"), "declined": s.get("declined"),
-            "services": [{"id": k, **{x: PROVIDERS[k][x] for x in ("label", "company", "cloud", "key", "keyUrl")}} for k in SHOWN],
+            "services": [{"id": k, "menu": PROVIDERS[k].get("menu") or PROVIDERS[k]["label"],
+                          **{x: PROVIDERS[k][x] for x in ("label", "company", "cloud", "key", "keyUrl")}} for k in SHOWN],
             "ollama": ollama_models(),
             "askedThisMonth": sum(1 for h in hist if h["at"][:7] == month),
             "suggested": suggested, "kept": kept_n, "history": hist[:24]}

@@ -2,13 +2,17 @@
 or it is nothing; what is sent is the merchants and the category names and no more; off means no
 call at all, and the key goes with it; a model that thinks first gets room to answer; a cloud
 service is asked once an import, and never about more than fifty merchants; a key never lives in
-the workspace's data, and a test never touches the Keychain.
+the workspace's data, and a test never touches the Keychain; an answer cut off at the ceiling
+still gives what it got to; a request that failed says why and leaves the merchants to be asked
+again; a key goes over plain http to this computer and nowhere else.
 """
+import io
 import json
 import os
 import shutil
 import tempfile
 import unittest
+import urllib.error
 
 import _paths  # noqa: F401
 import ai
@@ -21,6 +25,9 @@ class Picking(unittest.TestCase):
 
     def test_a_sentence_that_names_one(self):
         self.assertEqual(ai.pick_category("This looks like Transport (a taxi)."), "Transport")
+
+    def test_a_sentence_that_names_two_is_nothing(self):
+        self.assertIsNone(ai.pick_category("Not Dining, it is Grocery"))
 
     def test_anything_else_is_nothing(self):
         self.assertIsNone(ai.pick_category("Groceries and snacks"))   # not a category name, whole
@@ -108,6 +115,101 @@ class Calls(unittest.TestCase):
         ai.categorise(self.ws, "ROOMY")
         self.assertGreaterEqual(self.calls[-1][2]["max_tokens"], 1000)
 
+    def test_an_answer_cut_off_still_gives_what_it_got_to(self):
+        whole = json.dumps({str(i): "Dining" for i in range(1, 11)})
+        self.assertEqual(len(ai.parse_many(whole[:len(whole) // 2], 10)), 5)
+        self.assertEqual(len(ai.parse_many('{\n  "1": "Dining",\n  "2": "Groc', 10)), 1)
+
+    def test_a_cut_answer_is_said_and_the_rest_can_be_asked_again(self):
+        self.other()
+        ai._post = lambda url, headers, body: {"choices": [{"finish_reason": "length", "message": {"content": '{"1": "Dining", "2": "Gro'}}]}
+        found, info = ai.suggest_many(self.ws, ["A CAFE", "B MARKET", "C THING"])
+        self.assertEqual((found, info["cut"], info["answered"]), ({"A CAFE": "Dining"}, True, ["A CAFE"]))
+        with open(os.path.join(ai.layout.state_dir(self.ws), "log", "ai.jsonl"), encoding="utf-8") as fh:
+            self.assertTrue(json.loads(fh.readlines()[-1])["cut"])
+
+    def test_ask_again_after_a_cut_sends_only_the_rest(self):
+        # the panel's "Ask again" (suggest_open): what the cut answer got to is kept and not sent again
+        self.other()
+        p = self.decisions(["A CAFE", "B MARKET", "C THING"])
+        ai._post = lambda url, headers, body: {"choices": [{"finish_reason": "length", "message": {"content": '{"1": "Dining", "2": "Gro'}}]}
+        out = ai.suggest_open(self.ws)
+        self.assertEqual((out["cut"], out["suggested"]), (True, 1))
+        sent = []
+
+        def whole(url, headers, body):
+            sent.append(body["messages"][-1]["content"].splitlines())
+            return {"choices": [{"message": {"content": '{"1": "Grocery", "2": "Shopping"}'}}]}
+        ai._post = whole
+        out = ai.suggest_open(self.ws)
+        self.assertEqual(sent, [["1. B MARKET", "2. C THING"]])
+        with open(p, encoding="utf-8") as fh:
+            self.assertEqual([d.get("suggest") for d in json.load(fh)["decisions"]], ["Dining", "Grocery", "Shopping"])
+
+    def test_claude_says_cut_its_own_way(self):
+        ai.save_settings(self.ws, {"provider": "claude"})
+        ai._post = lambda url, headers, body: {"stop_reason": "max_tokens", "content": [{"type": "thinking", "thinking": "…"}]}
+        self.assertEqual(ai.exchange(self.ws, "s", "u"), ("", True))
+
+    def refuse(self, code, body):
+        def refused(url, headers, text):
+            self.calls.append(url)
+            raise urllib.error.HTTPError(url, code, "no", {}, io.BytesIO(json.dumps(body).encode()))
+        ai._post = refused
+
+    def test_a_failure_says_why(self):
+        self.other()
+        for code, body, why in ((401, {"error": {"type": "authentication_error", "message": "bad key sk-…abcd"}}, "key"),
+                                (402, {"error": {"message": "Insufficient Balance"}}, "credit"),
+                                (400, {"error": {"type": "invalid_request_error", "message": "Your credit balance is too low"}}, "credit"),
+                                (429, {"error": {"code": "insufficient_quota", "message": "You exceeded your current quota"}}, "credit"),
+                                (429, {"error": {"type": "rate_limit_error"}}, "busy"),
+                                (529, {"error": {"type": "overloaded_error"}}, "busy"),
+                                (404, {"error": {"type": "not_found_error"}}, "error")):
+            self.refuse(code, body)
+            self.assertEqual(ai.suggest_many(self.ws, [f"SHOP {code} {why}"])[1]["error"], why, (code, body))
+        with open(os.path.join(ai.layout.state_dir(self.ws), "log", "ai.jsonl"), encoding="utf-8") as fh:
+            log = fh.read()
+        self.assertIn("HTTP 401 authentication_error", log)
+        self.assertNotIn("abcd", log)                 # the service's own message can quote the key: never kept
+
+    def decisions(self, names):
+        p = ai.layout.path(self.ws, "decisions.json")
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        with open(p, "w", encoding="utf-8") as fh:
+            json.dump({"decisions": [{"kind": "merchant", "status": "open", "match": m, "default": "Other"} for m in names]}, fh)
+        return p
+
+    def test_after_a_refused_key_the_same_merchants_are_asked_again(self):
+        self.other()
+        p = self.decisions(["A CAFE", "B MARKET"])
+        self.refuse(401, {"error": {"type": "authentication_error"}})
+        out = ai.suggest_open(self.ws)
+        self.assertEqual((out["error"], out["suggested"]), ("key", 0))
+        with open(p, encoding="utf-8") as fh:
+            self.assertFalse(any(d.get("aiAsked") for d in json.load(fh)["decisions"]))
+        ai._post = lambda url, headers, body: {"choices": [{"message": {"content": '{"1": "Dining", "2": "Spaceships"}'}}]}
+        out = ai.suggest_open(self.ws)                # the key put right
+        self.assertEqual((out["error"], out["suggested"]), (None, 1))
+        with open(p, encoding="utf-8") as fh:
+            got = json.load(fh)["decisions"]
+        self.assertEqual([d.get("suggest") for d in got], ["Dining", None])
+        self.assertTrue(all(d.get("aiAsked") for d in got))   # answered, even with nothing usable: not asked again
+
+    def test_what_was_sent_names_who_received_it(self):
+        for svc in ("claude", "chatgpt", "ollama", "openai"):
+            ai._log(self.ws, {"fn": "suggest", "service": svc, "sent": {"merchants": ["A"]}})
+        self.assertEqual([h["to"] for h in ai.history(self.ws)][::-1], ["Anthropic", "OpenAI", "Ollama on this computer", "Another service"])
+        self.assertEqual([s["menu"] for s in ai.status(self.ws)["services"]][:3], ["Claude (Anthropic)", "ChatGPT (OpenAI)", "DeepSeek"])
+
+    def test_plain_http_only_to_this_computer(self):
+        for url, ok in (("https://api.example.test/v1", True), ("http://localhost:11434/v1", True), ("http://127.0.0.1:8080/v1", True),
+                        ("http://localhost.example.test/v1", False), ("http://127.0.0.1.example.test/v1", False),
+                        ("http://example.test/v1", False), ("ftp://localhost/v1", False), ("localhost:11434", False), ("", False)):
+            self.assertEqual(ai.address_ok(url), ok, url)
+        with self.assertRaises(ValueError):
+            ai.turn_on(self.ws, "openai", key="k", model="m", base_url="http://localhost.example.test/v1")
+
     def test_gpt5_takes_its_own_budget_and_no_temperature(self):
         body = ai.openai_body("gpt-5.4-mini", "s", "u", 1000)
         self.assertEqual(body["max_completion_tokens"], 1000)
@@ -141,7 +243,7 @@ class Calls(unittest.TestCase):
             raise OSError("down")
         ai._post = broken
         found, info = ai.suggest_many(self.ws, ["A", "B"])
-        self.assertEqual((found, info["error"], len(self.calls)), ({}, "error", 1))
+        self.assertEqual((found, info["error"], info["answered"], len(self.calls)), ({}, "network", [], 1))
 
     def test_ollamas_cloud_models_are_not_on_this_computer(self):
         self.assertTrue(ai.is_cloud_model("gpt-oss:120b-cloud"))

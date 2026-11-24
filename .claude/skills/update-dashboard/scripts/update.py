@@ -1004,12 +1004,13 @@ def ask_ai(root, plan, say):
             item["what"] += f" AI assist suggests {sug}."
             say(f"  ? {key}: AI assist suggests {sug}")
             n += 1
-    if info.get("error") == "not running":
-        say(f"  AI assist: {info['label']} was not open, so it was not asked this time.")
-    elif info.get("error"):
-        say(f"  AI assist: {info['label']} did not answer; the merchants are asked without a suggestion.")
+    if info.get("error"):
+        # why, and what the owner can do about it (a refused key, no credit, no connection)
+        say(f"  AI assist: {ai.why_text(info['error'], info['label'])} The merchants are asked without a suggestion.")
     else:
         say(f"  AI assist: {info['sent']} merchant(s) sent to {info['label']} in {info['requests']} request(s); {n} suggestion(s).")
+        if info.get("cut"):
+            say(f"  AI assist: {ai.why_text('cut', info['label'])}")
     if info.get("left"):
         say(f"  AI assist: {info['left']} more merchant(s) were not sent (at most {ai.MAX_PER_IMPORT} an import).")
     info["withSuggestion"] = n

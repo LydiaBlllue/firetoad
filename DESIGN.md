@@ -353,7 +353,7 @@
 - **Your numbers** (1.0.5, FINANCE.md §8e): the numbers that are the owner's to choose, one row
   each, under the four stage names as small headings. The rows are `settings.py`'s table; the
   page lists nothing itself.
-- **AI assist** (1.1.0): a switch, and — on — a *Service* menu (Claude, ChatGPT, DeepSeek, and
+- **AI assist** (1.1.0): a switch, and — on — a *Service* menu (Claude (Anthropic), ChatGPT (OpenAI), DeepSeek, and
   *Ollama on this computer* only when it is running here, without its cloud models), the *API
   key* (pasted, then shown as *Saved* with *Replace*; for Ollama a *Model* menu instead),
   *Usage* (asked this month, on since, merchants it suggested, suggestions you kept) and *What
