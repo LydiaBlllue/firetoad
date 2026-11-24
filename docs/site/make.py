@@ -107,9 +107,9 @@ EN = dict(
           "it stays that way. Only a shop it hasn't seen before is asked — one tap, with common "
           "Canadian chains already filled in for you to confirm. \"Not sure\" is an answer too."),
          ("Where does my data live?", "In a folder on your Mac: plain CSV and JSON files, plus one page. "
-          "FIRE Toad sends your financial data to no one. There is one exception: if you turn on AI "
-          "assist yourself and use an online AI, shop names are sent to it. If the AI runs on your "
-          "own computer, nothing is sent. Backing up the folder is up to you."),
+          "FIRE Toad never sends your financial data to anyone. The only exception is if you turn on "
+          "AI assist and choose an online AI. Then your shop names are sent to it. If the AI runs "
+          "on your own computer, nothing is sent. Backing up the folder is up to you."),
          ("Do I need Claude?", "No. The app works on its own. Claude Code is another way to use it — "
           "for a statement the app can't read, accounts abroad, or a question in plain words."),
          ("Which computers does it run on?", "A Mac: one download for Apple silicon (macOS 11 or later), "
