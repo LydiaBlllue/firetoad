@@ -107,8 +107,9 @@ EN = dict(
           "it stays that way. Only a shop it hasn't seen before is asked — one tap, with common "
           "Canadian chains already filled in for you to confirm. \"Not sure\" is an answer too."),
          ("Where does my data live?", "In a folder on your Mac: plain CSV and JSON files, plus one page. "
-          "Nothing is sent anywhere unless you turn on the optional AI suggestions, which send only "
-          "shop names. Backing up the folder is up to you."),
+          "FIRE Toad sends your financial data to no one. There is one exception: if you turn on AI "
+          "assist yourself and use an online AI, shop names are sent to it. If the AI runs on your "
+          "own computer, nothing is sent. Backing up the folder is up to you."),
          ("Do I need Claude?", "No. The app works on its own. Claude Code is another way to use it — "
           "for a statement the app can't read, accounts abroad, or a question in plain words."),
          ("Which computers does it run on?", "A Mac: one download for Apple silicon (macOS 11 or later), "
@@ -178,8 +179,9 @@ ZH = dict(
           "所以不会让你反复验证，也永远拿不到你的银行密码。"),
          ("分类要我一条条自己弄吗？", "基本不用。归过一次类的商户，之后都会自动归到同一类。只有第一次出现的商户才会"
           "问你，点一下就行；常见的加拿大连锁店已经预先填好，你确认一下即可。选「不确定」也可以。"),
-         ("数据存在哪里？", "存在你 Mac 上的一个文件夹里：普通的 CSV、JSON 文件和一个页面。除非你开启可选的 AI 建议"
-          "（只发送商户名称），否则什么都不会发出去。文件夹需要你自己备份。"),
+         ("数据存在哪里？", "存在你 Mac 上的一个文件夹里：普通的 CSV、JSON 文件和一个页面。FIRE蛙不会把你的财务数据"
+          "发给任何人。只有一种情况例外：你自己开了 AI 辅助，而且用的是网上的 AI。这时商户名字会发给它。"
+          "如果 AI 装在你自己的电脑上，就什么都不会发出去。文件夹需要你自己备份。"),
          ("需要用 Claude 吗？", "不需要，app 可以单独使用。Claude Code 是另一种用法，适合处理 app 读不了的对账单、"
           "海外账户，或者想直接用一句话提问。"),
          ("哪些电脑能用？", "Mac 都能用：Apple 芯片的 Mac 一个安装包（macOS 11 及以上），Intel 芯片的 Mac 一个"
