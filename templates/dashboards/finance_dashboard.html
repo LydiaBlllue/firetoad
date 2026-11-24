@@ -1538,7 +1538,7 @@ function renderHome(){
   const invested = INVEST.portfolio;   // every account held to grow, the foreign funds included; 0 until the first holdings export
   // Four questions, one per section: is the money growing, how far along, did this month's rule
   // hold, and what the month cost. Net worth is the header line; "reach" is the table.
-  const dep = (WSDEP||[]).slice(-1)[0] || null, half = FUNDS.plan.invest/2;
+  const dep = (WSDEP||[]).slice(-1)[0] || null;
   const curYM = TODAY.slice(0,7);
   const gross = NWPARTS.reduce((a,r) => a + r.v, 0);
   const grow = NWPARTS.find(r => r.role === "grow") || {by: []};
@@ -1559,7 +1559,7 @@ function renderHome(){
       return t ? card("Years to financial independence", "About "+t+" years", "At "+fmt(S.invest)+" a month invested · <a href=\"#\" onclick=\"setPage('fire');return false\">FIRE →</a>") : null; },
     inv: () => card(dep ? "Invested in "+ymLabel(dep.ym) : "Invested this month",
       unset("invest") ? (dep ? numx(fmt(dep.amt), [], "Counted the day "+BROKER+" receives it. The plan has no investing amount yet.") : notSet("invest"))
-        : dep ? numx(fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>', [["Planned", fmt(FUNDS.plan.invest)], ["Arrived", fmt(dep.amt)]], "Two transfers of "+fmt(half)+", counted the day "+BROKER+" receives them.") : "\u2014",
+        : dep ? numx(fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>', [["Planned", fmt(FUNDS.plan.invest)], ["Arrived", fmt(dep.amt)]], "Counted the day "+BROKER+" receives it.") : "\u2014",
       // judged by what arrived, not by how many transfers were exactly half the plan (1.0.7: more than the
       // plan arrived and the page still said "No transfer arrived yet")
       dep && !unset("invest") ? (dep.amt >= FUNDS.plan.invest - 0.5
@@ -1604,7 +1604,7 @@ function renderHome(){
       const subs = SPENDING.filter(e => e.date.startsWith(yr) && e.sub), ytd = subs.reduce((a,e) => a + e.amount, 0);
       if(!(ytd > 0)) return null;
       const closed = MONTHS.filter(m => m <= covEnd && m.startsWith(yr)).length || 1;
-      return card("A year of "+term("subscription", "subscriptions"), numx(fmt(ytd/closed*12), [["Per month", fmt(ytd/closed)], ["Months", "12"]], "Every charge that repeats, at this year's rate."), "");
+      return card("A year of "+term("subscription", "subscriptions"), numx(fmt(ytd/closed*12), [["Per month", fmt(ytd/closed)], ["Months", "12"]], "Every charge that repeats, at the rate of "+yr+"."), "");
     },
     bigcat: () => {
       const by = {};
@@ -1763,7 +1763,7 @@ function planAlloc(){
         + (f.until ? " Ends " + ymFull(f.until) + "." : "")
         + (f.afterFire === "drop" ? " Stops after FIRE." : "")})).concat([
     {k:"Invest",   v:INVM,          c:"#2a78d6", pk:"invm", tm:"pay_yourself_first",
-     d:"Two transfers of "+fmt(FUNDS.plan.invest/2)+" to "+BROKER+". It comes off the top before anything else, which is the whole point of pay-yourself-first."},
+     d:fmt(FUNDS.plan.invest)+" a month to "+BROKER+". It comes off the top before anything else, which is the whole point of pay-yourself-first."},
   ].concat(OTHER_SAVING.map(f => ({k:savingName(f), v:f.amount || 0,
       c:FUND_LIST.some(x => x.key === f.to) ? fundColor(f.to) : "#3d6f9e", pk:null,
       tm:FUND_LIST.some(x => x.key === f.to) ? "fund" : null,
@@ -2201,7 +2201,7 @@ function renderCatPage(){
       + '<span class="bar-wrap"><span class="bar" style="width:'+(Math.max(r.v,0)/mx*100)+'%;background:'+r.col+'"></span></span>'
       + '<span class="v num'+(isHigh(r) ? " hi" : "")+'">'+fmt2(r.v)+'</span>'
       + '</button>').join("")
-    : '<div class="empty">No spending recorded in '+ymLabel(viewYM)+' '+viewYM.slice(0,4)+'.</div>';
+    : '<div class="empty">No spending recorded in '+ymFull(viewYM)+'.</div>';
   $("catRows").querySelectorAll(".cat-row").forEach(b => b.onclick = () => {
     catSel = b.dataset.k;
     renderCatPage(); drawFlow();
@@ -2212,7 +2212,7 @@ function renderCatPage(){
   const win = {length: (catUsual(viewYM) || {n: 0}).n};
   $("catDetLab").textContent = sel ? catName(sel.k) : "Detail";
   $("catDetail").innerHTML = !sel
-    ? '<div class="empty">Nothing to show for '+ymLabel(viewYM)+' '+viewYM.slice(0,4)+'.</div>'
+    ? '<div class="empty">Nothing to show for '+ymFull(viewYM)+'.</div>'
     : '<div class="big num" style="margin-bottom:8px">'+fmt2(sel.v)+'</div>'
       + metaList([
           ["Share of the month", pct(sel.v)+"%"],
@@ -2240,7 +2240,7 @@ function renderYr(){
   renderYearInsights();
   $("yrStats").innerHTML =
     StatCard("Total spent in "+yrSpan(viewYear, spendMonths), numx(fmt(spent), [], "After refunds.")) +
-    StatCard("Spent a month in "+yrSpan(viewYear, spendMonths), spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], "This year only, open months included. "+(usualMonth() ? "A usual month, from your last full months, is "+fmt(usualMonth().v)+"." : "")) : null) +
+    StatCard("Spent a month in "+yrSpan(viewYear, spendMonths), spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], viewYear+" only, open months included. "+(usualMonth() ? "A usual month, from your last full months, is "+fmt(usualMonth().v)+"." : "")) : null) +
     (() => { const mt = spendMonths.length > 1 ? spendMonths.map(m => ({m, v: monthTotal(m)})).sort((a,b) => b.v - a.v)[0] : null;
              return StatCard("Biggest month", mt ? ymFull(mt.m) : null, mt ? fmt(mt.v) : "", {text: true}); })();
 
@@ -3331,7 +3331,7 @@ function renderSubStats(){
   const base = PLAN_BASE;
   const card = StatCard;
   $("subStats").innerHTML =
-    card(term("subscription", "Subscriptions")+" in "+yr, numx(fmt(ytd), [], "Every charge that repeats, this year."), "") +
+    card(term("subscription", "Subscriptions")+" in "+yr, numx(fmt(ytd), [], "Every charge that repeats, in "+yr+"."), "") +
     card("A full year", numx(fmt(perMo*12), [["Per month", fmt(perMo)], ["Months", "12"]], "Subscriptions renew whether or not you use them."),
       base ? Math.round(pc(perMo, base))+"% of your "+term("planning_figure") : "") +
     StatCard("Biggest one", byBrand && byBrand.v ? byBrand.name : null,
@@ -3368,7 +3368,7 @@ function renderAccounts(){
   $("acctStats").innerHTML =
     // The money, cut the way Home cuts it (1.0.1): the four numbers this table opens up. How
     // many accounts and how old a balance is are in the table itself, not in a card.
-    StatCard(term("net_worth", "Net worth"), fmt(NW_GLOBAL), A.length + " accounts at " + insts.length + " institutions")
+    StatCard(term("net_worth", "Net worth"), fmt(NW_GLOBAL), A.length + " account" + (A.length === 1 ? "" : "s") + " at " + insts.length + " institution" + (insts.length === 1 ? "" : "s"))
     + StatCard(term("cash", "Cash"), fmt(NWPARTS.filter(r => r.role === "buffer").reduce((s, r) => s + r.v, 0)))
     + StatCard(term("portfolio", "Invested"), fmt(PORTFOLIO))
     + StatCard("You owe", fmt(NW_DEBT), bad ? bad + " gap" + (bad === 1 ? "" : "s") + " affect net worth" : "");
@@ -3671,7 +3671,7 @@ function renderUpdates(){
   const age = d => Math.round((new Date(TODAY) - new Date(d))/864e5);
   const nFiles = r => r.files.length ? r.files.length + " file" + (r.files.length === 1 ? "" : "s") : "";
   $("updStats").innerHTML =
-    StatCard("Last update", last ? dLong(last.date) : null, last ? (age(last.date) === 0 ? "Today" : age(last.date)+" days ago") : "Nothing filed yet") +
+    StatCard("Last update", last ? dLong(last.date) : null, last ? (age(last.date) === 0 ? "Today" : age(last.date)+" day"+(age(last.date) === 1 ? "" : "s")+" ago") : "Nothing filed yet") +
     (() => {
       const [y, m, d] = TODAY.split("-").map(Number);
       const next = d < IMPORT_DAY ? new Date(y, m - 1, IMPORT_DAY) : new Date(y, m, IMPORT_DAY);
@@ -3720,7 +3720,7 @@ function renderYearInsights(){
   const top = Object.entries(byCat).sort((a,b) => b[1]-a[1])[0];
   if(top) ins.push({s:"n", t:"<b>"+catName(top[0])+"</b> is the biggest category: "+fmt(top[1])+", "+Math.round(pc(top[1], ytd))+"% of the year."});
   const ciYr = CARD_INTEREST.filter(r => r.d.startsWith(yr)).reduce((s,r) => s + r.v, 0);
-  if(ciYr > 0.005) ins.push({s:"w", t:"<b>"+term("card_interest", "Card interest")+"</b> cost "+fmt2(ciYr)+" this year."});
+  if(ciYr > 0.005) ins.push({s:"w", t:"<b>"+term("card_interest", "Card interest")+"</b> cost "+fmt2(ciYr)+" in "+yr+"."});
   // The charges that repeat (`sub`, measured at build time), and the biggest of them.
   const byBrand = {};
   yes.filter(e => e.sub).forEach(e => { byBrand[e.sub] = (byBrand[e.sub]||0) + e.amount; });

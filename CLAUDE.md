@@ -308,7 +308,9 @@ python3 .claude/skills/workspace-checks/scripts/checks.py . --level release
   the screen; in a 700 and 800px-tall window every sidebar entry can be reached (R6); and the
   page drawn for every kind of owner — invested or not, a FIRE goal or not, cards only — with
   each page drawing, Home's cards all carrying a number, and nothing in the sidebar that owner
-  has no data for (R7). And the page's own FIRE sums — it keeps them to redraw while a number
+  has no data for; and the words read back for owners a sentence forgets — one account, an
+  update made yesterday, an earlier year — with no "1 accounts", no year printed twice, and no
+  earlier year called "this year" (R7). And the page's own FIRE sums — it keeps them to redraw while a number
   is being changed — and its drawdown at the ages it starts from are the ones `fire.py` and `drawdown.py` computed
   at build time (R8). And a page past a screen and a half lists its sections in
   the sidebar (R9, a warning). Needs

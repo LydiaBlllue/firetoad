@@ -162,17 +162,46 @@ async () => {
   window.addEventListener('error', e => errs.push(String(e.message)));
   const main = [...document.querySelectorAll('#sideNav > .grp button')].map(b => b.dataset.k);
   const fold = [...document.querySelectorAll('#sideNav details.wait button')].map(b => b.dataset.k);
-  const bad = [];
-  for (const k of main.concat(fold)) {
+  const bad = [], said = [];
+  // What a sentence gets wrong when it was written with one owner's data in mind: a count of one
+  // with a plural after it, a year printed twice, an earlier year called "this year".
+  const ONE = /(?:^|[^\d.,$%\u2019'-])1 ([a-z]{2,}s)\b/g, NOT_PLURAL = new Set(['was', 'has', 'its', 'yes', 'less', 'plus', 'this', 'does', 'always', 'times', 'pass', 'across', 'unless', 'perhaps']);
+  // What is on the screen, and what each number says when it is opened (its data-calc note).
+  const read = s => s.innerText + '\n' + [...s.querySelectorAll('[data-calc]')].map(e => {
+    try { const c = JSON.parse(e.dataset.calc); return (c.n + ' | ' + c.r.map(r => r.join(' ')).join(' | ')).replace(/<[^>]+>/g, ' '); }
+    catch (x) { return ''; } }).join('\n') + '\n' + [...s.querySelectorAll('[data-tip]')].map(e => e.dataset.tip).join('\n')
+    + '\n' + [...s.querySelectorAll('svg text, svg title')].map(e => e.textContent).join('\n');
+  const words = (where, text, earlier) => {
+    const seen = new Set(said.map(x => x.split(': ')[1]));
+    const add = m => { if (!seen.has(m)) { seen.add(m); said.push(where + ': ' + m); } };
+    for (const m of text.matchAll(ONE)) if (!NOT_PLURAL.has(m[1])) add('"1 ' + m[1] + '"');
+    for (const m of text.matchAll(/[\u2019']\d\d,? \d{4}\b/g)) add('"' + m[0] + '" (a year twice)');
+    if (earlier) for (const m of text.matchAll(/[^.\n]{0,40}\bthis year\b[^.\n]{0,20}/gi)) add('"' + m[0].trim() + '" (an earlier year)');
+  };
+  // every entry in the sidebar, the ones outside a group (Updates) too
+  const every = [...new Set(main.concat(fold, [...document.querySelectorAll('#sideNav button[data-k]')].map(b => b.dataset.k)))];
+  for (const k of every) {
     setPage(k);
     await new Promise(r => setTimeout(r, 40));
     const s = document.querySelector('section[data-pg="' + k + '"]');
     const junk = (s.innerText.match(/\b(undefined|NaN|\[object Object\])\b/g) || []);
     if (junk.length) bad.push(k + ' shows "' + junk[0] + '"');
+    words(k, read(s), false);
+  }
+  // An earlier year: every page again, and nothing may still call it "this year".
+  const now = TODAY.slice(0, 4), was = viewYear;
+  for (const y of YEARS.filter(y => y < now).slice(-1)) {
+    setYear(y);
+    for (const k of every) {
+      setPage(k);
+      await new Promise(r => setTimeout(r, 40));
+      words(k + ' in ' + y, read(document.querySelector('section[data-pg="' + k + '"]')), true);
+    }
+    setYear(was);
   }
   setPage('home');
   const cards = [...document.querySelectorAll('#homeStats .card')].map(c => (c.querySelector('.big') || {}).innerText || '');
-  return {main, fold, cards, bad, errs};
+  return {main, fold, cards, bad, said, errs};
 }
 """
 
@@ -214,6 +243,16 @@ def states(src):
     out.append(("a goal, nothing invested", put(base, "FIRE_GOAL", True), {"port", "perf", "hold", "coast"}))
     out.append(("no goal, nothing invested", put(base, "FIRE_GOAL", False), {"port", "perf", "hold", "coast"} | fire_waits))
     # cards only: no income, nothing reaching a broker — no years, so no FIRE page without a goal
+    # Owners a sentence forgets (1.1.0): one of a thing, and an update made yesterday. The page was
+    # written looking at one owner's data, where every count was more than one.
+    acct = get(src, "ACCT")
+    if len(acct.get("accounts") or []) > 1:
+        out.append(("one account", put(src, "ACCT", dict(acct, accounts=acct["accounts"][:1])), None))
+    imp = get(src, "IMPORTS")
+    if imp:
+        import datetime as _d
+        nxt = (_d.date.fromisoformat(max(r["date"] for r in imp)) + _d.timedelta(days=1)).isoformat()
+        out.append(("updated yesterday", put(src, "TODAY", nxt), None))
     out.append(("cards only", put(put(card_only(src), "SAVINGS", {}), "FIRE_GOAL", None), {"port", "perf", "hold", "fire", "coast", "income", "safe", "wsinc"}))
     return out
 
@@ -359,11 +398,18 @@ def check(path):
     if not any(reach.values()):
         note("R6", f"every sidebar entry reachable at {' and '.join(map(str, SHORT))}px tall")
     # -- R7 every kind of owner gets a page that draws, cards with numbers, and the right pages ---
+    told = set()
     for name, waits, r in made:
         for e in r["errs"]:
             err("R7", f"{name}: uncaught error — {e[:110]}")
         for b_ in r["bad"]:
             err("R7", f"{name}: {b_}")
+        for w_ in r.get("said", []):
+            if w_ not in told:          # the same sentence is wrong for every owner: say it once
+                told.add(w_)
+                err("R7", f"{name}: {w_}", "conform")
+        if waits is None:       # made to test the words only: its pages and cards are not this owner's
+            continue
         shown = [k for k in r["main"] if k in waits]
         if shown:
             err("R7", f"{name}: {', '.join(shown)} shown in the sidebar, but this owner has nothing for them yet", "conform")
