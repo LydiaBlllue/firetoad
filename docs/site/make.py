@@ -54,7 +54,7 @@ EN = dict(
     fine=(f"The demo shows {DEMO['first']}'s money — a made-up {DEMO['age']}-year-old in {DEMO['city']}. "
           "Nothing to install. The app is signed and notarised by Apple, works in English and Chinese, "
           "and is free and open source (MIT)."),
-    phone=("For now, FIRE Toad is a download for Mac only.", "There is no phone or Windows version yet. "
+    phone=("For now, FIRE Toad is a download for Mac only.", "There is no phone or Windows version. "
            "The live demo opens in any computer's browser; on a phone it is too narrow and scrolls sideways.",
            "Send yourself the link", "Link copied", "Open the demo anyway",
            "Paste it into a message or an email to yourself, then open it on your Mac."),
@@ -144,7 +144,7 @@ ZH = dict(
          "下载 Intel 版", "。"),
     fine=(f"演示里是 {DEMO['first']} 的钱：一位住在{CITY_ZH.get(DEMO['city'], DEMO['city'])}的 {DEMO['age']} 岁上班族，"
           "人物是虚构的。不用安装，打开就能看（演示页面是英文的）。app 已通过 Apple 签名和公证，支持中英文，免费开源（MIT）。"),
-    phone=("目前只支持 Mac 下载。", "还没有手机版和 Windows 版。在线演示用任何电脑的浏览器都能看；手机屏幕太窄，要左右滑动。",
+    phone=("目前只支持 Mac 下载。", "目前没有手机版和 Windows 版。在线演示用任何电脑的浏览器都能看；手机屏幕太窄，要左右滑动。",
            "把链接发给自己", "链接已复制", "仍在手机上看演示",
            "粘贴到微信或邮件里发给自己，再在 Mac 上打开。"),
     hero_alt="FIRE 页：还要几年财务自由，每月多投一点会怎样",

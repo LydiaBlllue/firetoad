@@ -9,7 +9,7 @@
   A fourth point says AI assist is there if you want it, and two answers name it.
 - **On a phone, the front page says it is a download for Mac only**: the picture comes right under
   the question, and the download and demo buttons give way to that line (no phone or Windows
-  version yet; the demo opens in any computer's browser and is too narrow on a phone), a button
+  version; the demo opens in any computer's browser and is too narrow on a phone), a button
   that sends the link on (the phone's share sheet, or a copy that says where to paste it) and a
   small link to the demo anyway.
   Same in the closing band.
