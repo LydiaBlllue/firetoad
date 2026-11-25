@@ -24,11 +24,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  # Two jobs, as GitHub's own Pages workflow has them (2026-11-25): with the upload and the deploy
+  # in one job, the deploy asked for the artifact a fraction of a second after it was uploaded and
+  # was told there was none, three times in about forty runs. A second job starts only once the
+  # first has finished, by when the artifact can be found.
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - id: pages
@@ -37,5 +38,13 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
