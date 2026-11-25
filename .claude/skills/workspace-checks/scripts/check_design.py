@@ -558,6 +558,52 @@ def check(path):
                           "about your money, never about itself (DESIGN.md §5b).")
                 break
 
+    # -- S11 every sentence in both languages (2026-11-25, the page in two languages) ----
+    # The page's words live in templates/dashboards/strings.json, {"key": {"en", "zh"}}, read
+    # through T() / TN() / data-t. A key the code reads that the table lacks shows the key itself
+    # on screen; a row with one language missing shows English on the Chinese page; a placeholder
+    # in one language and not the other drops a number. The table's English is page copy too, so
+    # the S8 tells are read on it as well.
+    sp = os.path.join(root, "templates", "dashboards", "strings.json")
+    if is_main and os.path.exists(sp) and os.path.exists(tpl):
+        strs = json.load(open(sp, encoding="utf-8"))
+        used = set()
+        for kind, k in re.findall(r'\b(T|TN)\(\s*"([^"]+)"\s*[,)]', code):
+            if kind == "TN":
+                forms = [k + "_one", k + ".one", k + "_many", k + ".many", k]
+                if not any(f in strs for f in forms):
+                    err("S11", f'the page reads TN("{k}", …), and strings.json has no {k}_one / {k}_many / {k}')
+                used.update(f for f in forms if f in strs)
+            else:
+                if k not in strs:
+                    err("S11", f'the page reads T("{k}"), which strings.json does not have')
+                used.add(k)
+        for k in re.findall(r'data-t(?:-title|-aria|-ph)?="([^"]+)"', code):
+            if k not in strs:
+                err("S11", f'data-t="{k}" names a key strings.json does not have')
+            used.add(k)
+        ph = lambda t: sorted(set(re.findall(r"\{(\w+)\}", t or "")))
+        for k, row in strs.items():
+            en, zh = (row or {}).get("en"), (row or {}).get("zh")
+            if not en or not zh:
+                err("S11", f'strings.json "{k}" has no {"English" if not en else "Chinese"}')
+                continue
+            if ph(en) != ph(zh):
+                err("S11", f'strings.json "{k}": the English fills {ph(en)}, the Chinese {ph(zh)}')
+            if "仪表盘" in zh:
+                err("S11", f'strings.json "{k}": 仪表盘 — the dashboard is 看板 (NAMES.md, 2026-11-24)')
+            for pat, why in VOICE:
+                m = re.search(pat, en)
+                if m:
+                    err("S8", f'strings.json "{k}": "{en[:80]}" — {why} ({m.group(0)!r}). The page talks '
+                              "about your money, never about itself (DESIGN.md §5b).")
+                    break
+        # Keys reached by a computed name (T("nav." + k)) are not seen here, so an unused key is a note.
+        unused = sorted(k for k in strs if k not in used)
+        if unused:
+            note("S11", f"{len(unused)} key(s) in strings.json are not read by name in the page "
+                        f"(some are reached by a computed name): {', '.join(unused[:8])}" + (" …" if len(unused) > 8 else ""))
+
     # -- §5b one fact per line, no "·" chains -------------------------------
     for line, s in js_strings(src):
         if re.search(r'<[a-z/]', s) or "class=" in s:

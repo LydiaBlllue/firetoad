@@ -451,6 +451,12 @@ def m_chequing_no_spend_tag(r):
 def m_broker_gift_no_deposit(r):
     edit_json(r, layout.rel("plan.json"), lambda d: d.update(brokerGifts=[
         {"date": "2026-02-03", "amount": 12345.67, "currency": "CAD", "why": "planted"}]))
+def m_string_no_zh(r):
+    # A sentence added to the page in English only: the Chinese page would show English (S11).
+    def f(t):
+        d = json.loads(t); d["shell.hdr_net_worth"].pop("zh", None)
+        return json.dumps(d, ensure_ascii=False, indent=1)
+    edit(r, "templates/dashboards/strings.json", f)
 def m_setting_out_of_range(r):
     # A return after inflation no setting allows, typed into the file past setting.py's own check.
     edit_json(r, layout.rel("plan.json"), lambda d: d.update(growth=50))
@@ -581,6 +587,7 @@ CASES = [
     ("D29", "a gift declared in the broker with no such deposit", m_broker_gift_no_deposit, "find"),
     ("D30", "a chequing bill that never reached spending",  m_chequing_no_spend_tag, "find"),
     ("D31", "a setting outside the range its row allows",   m_setting_out_of_range, "find"),
+    ("S11", "a page sentence with no Chinese",              m_string_no_zh,       "dash"),
     ("R3", "a chart pinned to a fixed height",              m_render_chart_capped,"render"),
     ("R6", "the sidebar cannot scroll in a short window",   m_render_sidebar_stuck,"render"),
     ("R7", "Home shows a card with no number",              m_render_empty_card,  "render"),
