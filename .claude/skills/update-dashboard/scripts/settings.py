@@ -42,7 +42,7 @@ TABLE = [
      "whyEn": "What your investments grow a year after inflation, in the years-to-go figures.",
      "whyZh": "算还要几年时，投资每年扣掉通胀后长多少。"},
     {"key": "takeHome", "kind": "money", "stage": "track", "default": None, "min": 0, "max": 1_000_000,
-     "en": "Take-home pay a month", "zh": "每月到手工资",
+     "en": "Take-home pay a month", "zh": "每月税后收入",
      "whyEn": "What reaches your account after tax.",
      "whyZh": "扣完税实际到账的钱。"},
     {"key": "invest", "kind": "money", "stage": "track", "default": None, "min": 0, "max": 1_000_000,
