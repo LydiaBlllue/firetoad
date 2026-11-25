@@ -755,6 +755,15 @@ function T(k, v){
   if(v) s = s.replace(/\{(\w+)\}/g, (m, n) => (n in v ? v[n] : m));
   return s;
 }
+// A label the owner typed (a plan line, a savings goal, a holding group, a care tier, an account
+// kind…) is shown as typed, unless the record carries its own Chinese beside it:
+// {"name": "Emergency fund", "zh": {"name": "应急金"}}. own(o, field) is o.zh[field] when the page
+// is in Chinese and that exists, else o[field]. Optional and additive: data without zh is unchanged.
+function own(o, f){
+  if(!o) return undefined;
+  const z = LANG === "zh" && o.zh && typeof o.zh === "object" ? o.zh[f] : null;
+  return z != null && z !== "" ? z : o[f];
+}
 // ===== The words helpers: every page reads its words and dates through these, never by hand =====
 //   T(key, vars)        the string for LANG, {name} filled from vars.
 //   TN(key, n, vars)    a count: key_one / key.one when n is 1, else key_many / key.many (the
@@ -1544,7 +1553,7 @@ function renderPerf(){
   const stat = (lab, val, note, col) => StatCard(lab, val, note, {color: col});
   $("perfStats").innerHTML =
       stat(T("perf.growth_accounts", {broker: BROKER}), numx(fmt(P.end), [], T("perf.growth_accounts_sum", {broker: BROKER, date: dLong(P.to)})), "")
-    + stat(T("perf.same_money_in", {symbol: term("benchmark", P.symbol)}), numx(fmt(P.shadow), [], T("perf.same_money_sum", {fund_name: P.name, why: P.why, broker: BROKER})), "")
+    + stat(T("perf.same_money_in", {symbol: term("benchmark", P.symbol)}), numx(fmt(P.shadow), [], T("perf.same_money_sum", {fund_name: own(P, "name"), why: own(P, "why"), broker: BROKER})), "")
     + stat(T("perf.difference"), numx((diff >= 0 ? "+" : "\u2212") + fmt(Math.abs(diff)), [[T("perf.growth_accounts", {broker: BROKER}), fmt(P.end)], [T("perf.same_money_in", {symbol: P.symbol}), "\u2212" + fmt(P.shadow)]], "", true),
            T(diff >= 0 ? "perf.ahead_by" : "perf.behind_by", {pct: pct1(Math.abs(pc(diff, P.shadow))), span: span}), diff < 0 ? "#d03b3b" : "");
   // the chart: the benchmark's daily line, the snapshots as dots on an ink line
@@ -1656,7 +1665,7 @@ function renderNwChart(){
 // word for her safe end, and an owner with a bond band reads "Bonds" (2026-11-03).
 function bandLab(){
   const b = (RULES.buckets || []).find(x => x.target);
-  return !b || b.key === "dry" ? term("dry_powder", T("port.dry_powder")) : b.name;
+  return !b || b.key === "dry" ? term("dry_powder", T("port.dry_powder")) : own(b, "name");
 }
 // The band is the owner's own rule: with no bucket set there is no rule to measure against, and
 // "Dry powder 0.0%" beside the cash at the broker read as a contradiction (2026-11-12, user 001).
@@ -1675,7 +1684,7 @@ function renderHome(){
   // a piece by reach is [label, value, colour, reach]: its words are the reach row's
   const split = by => by.map(b => [b[3] ? T("reach." + b[3]) : b[0], fmt(b[1])]);
   // the line under a row: the owner's words, else its accounts by institution
-  const partDesc = r => r.dg ? r.dg.map(g => T("nw.accounts_at", {accounts: listJoin(g[1]), institution: g[0]})).join(LANG === "zh" ? "；" : "; ") : r.d;
+  const partDesc = r => r.dg ? r.dg.map(g => T("nw.accounts_at", {accounts: listJoin(g[1]), institution: g[0]})).join(LANG === "zh" ? "；" : "; ") : own(r, "d");
   // Four cards, each a label, a number and at most one fact (DESIGN.md §5b′). How a number is
   // made opens from the number; what a word means opens from the word.
   const card = StatCard;
@@ -1776,7 +1785,7 @@ function renderHome(){
       + '</span><span class="v num">'+numx(fmt(r.v), by.length > 1 ? split(by) : [], partDesc(r), true)+'</span><span class="p num">'+Math.round(pc(r.v, gross))+'%</span></div>' + (ac.length ? acctList(ac, r.v) : "");
   }).join("")
     + '<div class="both-row sum"><span class="nm">'+term("assets", T("home.total_assets"))+'</span><span></span><span class="v num">'+fmt(gross)+'</span><span class="p"></span></div>'
-    + '<div class="both-row"'+opens(DEBT_ACCTS.length)+'><span class="nm">'+caret(DEBT_ACCTS.length)+T("home.less_owe")+'</span><span></span><span class="v num">'+numx("\u2212"+fmt(NW_DEBT), [], typeof DEBT_NOTE === "string" ? DEBT_NOTE : T(DEBT_NOTE.t, {debts: listAnd(DEBT_NOTE.debts || [])}))+'</span><span class="p"></span></div>'
+    + '<div class="both-row"'+opens(DEBT_ACCTS.length)+'><span class="nm">'+caret(DEBT_ACCTS.length)+T("home.less_owe")+'</span><span></span><span class="v num">'+numx("\u2212"+fmt(NW_DEBT), [], typeof DEBT_NOTE === "string" ? DEBT_NOTE : DEBT_NOTE.t ? T(DEBT_NOTE.t, {debts: listAnd(DEBT_NOTE.debts || [])}) : own(DEBT_NOTE, "s"))+'</span><span class="p"></span></div>'
     + (DEBT_ACCTS.length ? acctList(DEBT_ACCTS, NW_DEBT) : "");
   $("bothRows").querySelectorAll('.both-row[role=button]').forEach(row => {
     const flip = () => { const open = row.getAttribute("aria-expanded") !== "true";
@@ -1785,7 +1794,7 @@ function renderHome(){
     row.onkeydown = e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); flip(); } };
   });
   $("bothKey").innerHTML = '<div class="both-sum">' + REACH.map(r =>
-    '<span class="it"><i style="background:'+r.c+'"></i>'+term(REACH_TERM[r.r], T(r.t || r.k))+' '+numx(fmt(r.v), [], r.dt ? T(r.dt) : r.d)+'</span>').join("") + '</div>';
+    '<span class="it"><i style="background:'+r.c+'"></i>'+term(REACH_TERM[r.r], T(r.t || r.k))+' '+numx(fmt(r.v), [], r.dt ? T(r.dt) : own(r, "d"))+'</span>').join("") + '</div>';
 }
 
 
@@ -1796,7 +1805,7 @@ function renderHome(){
 // ONE number to stay under. No category caps, because a category cap is a small guilt machine --
 // it asks you to justify dinner while saying nothing about whether the month was fine overall.
 // findata/funds.json is the source of truth for every number below; check_data D12 checks it.
-const FUNDS = {"asof_note": "The guilt-free plan: pay-yourself-first, one everyday amount. The dashboard's FUNDS constant is a copy of this file (check_data D13). Fields that render on the page are English.", "plan": {"start": "2026-08", "flows": [{"key": "pay", "kind": "income", "name": "Take-home pay", "amount": 5800, "note": "Payroll of $2,900 twice a month. Investment income stays with the broker and is not counted."}, {"key": "rent", "kind": "committed", "name": "Rent", "amount": 1450, "afterFire": "keep", "note": "Pre-authorized on the 1st, from chequing. Still there after FIRE."}, {"key": "invest", "kind": "saving", "name": "Invest", "amount": 2300, "to": "broker", "note": "Off the top, before anything else — pay-yourself-first."}, {"key": "emergency", "kind": "saving", "name": "Emergency fund", "amount": 300, "to": "bmo-sav-9032", "note": "To savings on the 5th."}, {"key": "everyday", "kind": "everyday", "name": "Everyday", "amount": 1500, "note": "The guilt-free line. No categories and no caps below it."}]}};
+const FUNDS = {"asof_note": "The guilt-free plan: pay-yourself-first, one everyday amount. The dashboard's FUNDS constant is a copy of this file (check_data D13). Fields that render on the page are English.", "plan": {"start": "2026-08", "flows": [{"key": "pay", "kind": "income", "name": "Take-home pay", "amount": 5800, "note": "Payroll of $2,900 twice a month. Investment income stays with the broker and is not counted.", "zh": {"name": "税后收入", "note": "工资每月发放两次，每次 $2,900。投资收入留在券商账户中，不计入。"}}, {"key": "rent", "kind": "committed", "name": "Rent", "amount": 1450, "afterFire": "keep", "note": "Pre-authorized on the 1st, from chequing. Still there after FIRE.", "zh": {"name": "房租", "note": "每月 1 日从支票账户预授权扣款。实现 FIRE 后仍需支付。"}}, {"key": "invest", "kind": "saving", "name": "Invest", "amount": 2300, "to": "broker", "note": "Off the top, before anything else — pay-yourself-first.", "zh": {"name": "投资", "note": "收入到账后最先划转，先于其他各项，即先存后花。"}}, {"key": "emergency", "kind": "saving", "name": "Emergency fund", "amount": 300, "to": "bmo-sav-9032", "note": "To savings on the 5th.", "zh": {"name": "应急金", "note": "每月 5 日转入储蓄账户。"}}, {"key": "everyday", "kind": "everyday", "name": "Everyday", "amount": 1500, "note": "The guilt-free line. No categories and no caps below it.", "zh": {"name": "日常支出", "note": "可自由支配的部分，不再细分类别，也不设上限。"}}]}};
 const PLAN  = FUNDS.plan;
 // The plan as flows (schema 5): what comes in, what is paid before anything is chosen, what is
 // moved out to be saved, what is free. The scalars this page reads are sums of them, so a row
@@ -1818,10 +1827,10 @@ const FUND_FLOWS = FLOWS.filter(f => f.kind === "saving" && flowNow(f) && FUND_L
 // Every saving flow that does not go to the broker is a line of the split, a fund's or an
 // account's, and it always has a name: a row drawn as "\u2014" with $0 was a flow with none (#38).
 const OTHER_SAVING = FLOWS.filter(f => f.kind === "saving" && flowNow(f) && (f.to || "broker") !== "broker");
-const savingName = f => f.name || (FUND_LIST.find(x => x.key === f.to) || {}).name
+const savingName = f => own(f, "name") || own(FUND_LIST.find(x => x.key === f.to), "name")
   || ((typeof ACCT === "object" && (ACCT.accounts || []).find(a => a.key === f.to)) || {}).name || T("budget.saving.name_default");
 const FUND_NOW   = FUND_FLOWS.reduce((s, f) => s + (f.amount || 0), 0);
-PLAN.takeHomeNote = (FLOWS.find(f => f.kind === "income") || {}).note || "";
+PLAN.takeHomeNote = own(FLOWS.find(f => f.kind === "income"), "note") || "";
 // A number the owner never gave is null in the plan, not 0: the first setup that skipped its
 // questions showed take-home pay of $0 and a birth year of 1990 as if they were facts (2026-10-28,
 // first user). Wherever one of these would be shown, the page says Not set and how to set it.
@@ -1886,8 +1895,8 @@ function renderFree(){
 function planAlloc(){
   // Committed first: rent, a mortgage, a loan -- paid before anything is chosen, so they sit at
   // the top of the bar in the neutral colour, one row each.
-  return COMMITTED.map(f => ({k:f.name, v:f.amount, c:"var(--muted)", pk:null, tm:"committed",
-      d:(f.note || T("budget.committed.note_default"))
+  return COMMITTED.map(f => ({k:own(f, "name"), v:f.amount, c:"var(--muted)", pk:null, tm:"committed",
+      d:(own(f, "note") || T("budget.committed.note_default"))
         + (f.until ? " " + T("budget.committed.ends", {month: ymFull(f.until)}) : "")
         + (f.afterFire === "drop" ? " " + T("budget.committed.stops_after_fire") : "")})).concat([
     {k:T("budget.invest.label"), v:INVM, c:"#2a78d6", pk:"invm", tm:"pay_yourself_first",
@@ -1895,7 +1904,7 @@ function planAlloc(){
   ].concat(OTHER_SAVING.map(f => ({k:savingName(f), v:f.amount || 0,
       c:FUND_LIST.some(x => x.key === f.to) ? fundColor(f.to) : "#3d6f9e", pk:null,
       tm:FUND_LIST.some(x => x.key === f.to) ? "fund" : null,
-      d:(f.note || T("budget.saving.note_default"))})), [
+      d:(own(f, "note") || T("budget.saving.note_default"))})), [
     {k:T("cat.everyday"), v:EVERYDAY, c:"var(--c-dining)", pk:"everyday", tm:"everyday",
      d:T("budget.everyday.note")},
   ]));
@@ -1919,8 +1928,8 @@ function renderFunds(){
     const late = at && at !== "reached" && fd.by && at > fd.by;
     const bar = goal ? '<div style="height:8px;border-radius:4px;background:var(--pill);overflow:hidden;margin:6px 0 8px">'
       + '<div style="height:100%;width:' + Math.min(100, pc(saved, goal)).toFixed(1) + '%;background:' + fundColor(fd.key) + '"></div></div>' : "";
-    return '<div style="margin-bottom:14px"><div style="font-weight:600">' + fd.name + '</div>'
-      + (fd.why ? '<div class="cap">' + fd.why + '</div>' : "") + bar
+    return '<div style="margin-bottom:14px"><div style="font-weight:600">' + own(fd, "name") + '</div>'
+      + (fd.why ? '<div class="cap">' + own(fd, "why") + '</div>' : "") + bar
       + metaList([
         [T("budget.fund.saved"), asof ? T("budget.fund.saved_value", {amount: fmt(saved), date: dLong(asof), year: asof.slice(0, 4)}) : fmt(saved)],
         [T("budget.fund.added"), monthly > 0 ? fmt(monthly) : T("budget.fund.nothing_yet"), monthly > 0 ? "" : "mut"],
@@ -2274,7 +2283,7 @@ const usualMonth = () => usualMonthAt(TODAY.slice(0, 7));
 const TX_COLS = [
   {h:T("cat.tx_col_date"), c: e => dLong(e.date), m:1, nw:1},
   {h:T("cat.tx_col_description"), c: e => e.note, a:"l", num:false},
-  {h:T("cat.tx_col_account"), c: e => e.acct || T("cat.tx_card_fallback"), m:1, nw:1, num:false},
+  {h:T("cat.tx_col_account"), c: e => (e.acct && own((ACCT.accounts || []).find(a => a.stmtLabel === e.acct), "stmtLabel")) || e.acct || T("cat.tx_card_fallback"), m:1, nw:1, num:false},
   {h:T("cat.tx_col_amount"), c: e => e.amount < 0 ? '<span class="tx-neg">\u2212'+fmt2(Math.abs(e.amount))+'</span>' : fmt2(e.amount), nw:1}];
 
 // A month's spending, each row in exactly one part (FINANCE.md §3a), so the parts add up to the total.
@@ -2473,10 +2482,10 @@ function drawDonut(svgId, centerId, legendId, rows, totalVal, emptyMsg, withPct,
 // shown on the page rather than buried here.
 // These months still count in totals -- they happened. They are left out of COMPARISONS only:
 // the baseline average, "typical month", and the vs-typical figures on Spending by category.
-const MONTH_SKIP = {"2025-12": "Only the tail of the first card statement — 11 days, not a month"};
+const MONTH_SKIP = {"2025-12": "Only the tail of the first card statement — 11 days, not a month", "zh": {"2025-12": "仅有第一份信用卡对账单的最后 11 天，不足一个月"}};
 const skipped = m => !!MONTH_SKIP[m];
 // why a month is left out: the owner's own words, or the page's sentence (a key) written at build time
-const skipReason = m => { const v = MONTH_SKIP[m]; return v && v.t ? T(v.t, {accounts: listJoin(v.accounts || [])}) : v; };
+const skipReason = m => { const v = MONTH_SKIP[m]; return v && v.t ? T(v.t, {accounts: listJoin(v.accounts || [])}) : own(MONTH_SKIP, m); };
 // Closed, and worth comparing against.
 const usableMonths = () => MONTHS.filter(m => m <= covEnd && !skipped(m));
 // What a card that needs three full months says until then: how many are still to come, so a
@@ -2826,7 +2835,7 @@ const FOREIGN_CAD = Math.round(FOREIGN.total * FOREIGN.cadPerUnit);   // indicat
 // worth, which also holds a first-home fund, a chequing buffer and money abroad (the owner,
 // 2026-09-10). Net worth stays as the standard reference line in the header and the tables.
 const PORTFOLIO = INVEST.portfolio;
-const PERF = {"symbol": "VT", "name": "Vanguard Total World Stock ETF", "why": "The whole world's stocks in one fund: what the same money would have earned with no choices at all.", "from": "2026-06-15", "to": "2026-09-06", "start": 83050, "end": 90000, "put": 6900, "flows": [["2026-06-17", 1150.0], ["2026-07-02", 1150.0], ["2026-07-17", 1150.0], ["2026-08-02", 1150.0], ["2026-08-17", 1150.0], ["2026-09-02", 1150.0]], "shadow": 91078, "benchRet": 0.0123, "path": [["2026-06-15", 83050], ["2026-06-16", 82751], ["2026-06-17", 83296], ["2026-06-18", 84847], ["2026-06-22", 84979], ["2026-06-23", 83461], ["2026-06-24", 83622], ["2026-06-25", 83765], ["2026-06-26", 83173], ["2026-06-29", 84307], ["2026-06-30", 84937], ["2026-07-01", 84488], ["2026-07-02", 85493], ["2026-07-06", 86622], ["2026-07-07", 85694], ["2026-07-08", 85253], ["2026-07-09", 85874], ["2026-07-10", 86079], ["2026-07-13", 85079], ["2026-07-14", 85137], ["2026-07-15", 85304], ["2026-07-16", 84609], ["2026-07-17", 84884], ["2026-07-20", 84857], ["2026-07-21", 86125], ["2026-07-22", 86016], ["2026-07-23", 85043], ["2026-07-24", 85043], ["2026-07-27", 85307], ["2026-07-28", 85180], ["2026-07-29", 83891], ["2026-07-30", 85251], ["2026-07-31", 85568], ["2026-08-03", 87691], ["2026-08-04", 89520], ["2026-08-05", 89097], ["2026-08-06", 88907], ["2026-08-07", 89194], ["2026-08-10", 89005], ["2026-08-11", 88827], ["2026-08-12", 89238], ["2026-08-13", 89765], ["2026-08-14", 89282], ["2026-08-17", 90137], ["2026-08-18", 89305], ["2026-08-19", 89243], ["2026-08-20", 88564], ["2026-08-21", 88868], ["2026-08-24", 89025], ["2026-08-25", 89501], ["2026-08-26", 89673], ["2026-08-27", 89966], ["2026-08-28", 89829], ["2026-08-31", 89430], ["2026-09-01", 88931], ["2026-09-02", 90316], ["2026-09-03", 90759], ["2026-09-04", 91078]], "actual": [["2026-06-15", 83050], ["2026-08-05", 87580], ["2026-09-06", 90000]], "pricesAsof": "2026-09-06", "source": {"benchmark": "Yahoo Finance, adjusted close (dividends included)", "usdcad": "Bank of Canada, daily average rate"}};   // the benchmark comparison, from prices.json and the snapshots (rebuild.py benchmark_run)
+const PERF = {"symbol": "VT", "name": "Vanguard Total World Stock ETF", "why": "The whole world's stocks in one fund: what the same money would have earned with no choices at all.", "zh": {"why": "一只基金覆盖全球股票，代表不做任何选择时同样的资金可获得的回报。"}, "from": "2026-06-15", "to": "2026-09-06", "start": 83050, "end": 90000, "put": 6900, "flows": [["2026-06-17", 1150.0], ["2026-07-02", 1150.0], ["2026-07-17", 1150.0], ["2026-08-02", 1150.0], ["2026-08-17", 1150.0], ["2026-09-02", 1150.0]], "shadow": 91078, "benchRet": 0.0123, "path": [["2026-06-15", 83050], ["2026-06-16", 82751], ["2026-06-17", 83296], ["2026-06-18", 84847], ["2026-06-22", 84979], ["2026-06-23", 83461], ["2026-06-24", 83622], ["2026-06-25", 83765], ["2026-06-26", 83173], ["2026-06-29", 84307], ["2026-06-30", 84937], ["2026-07-01", 84488], ["2026-07-02", 85493], ["2026-07-06", 86622], ["2026-07-07", 85694], ["2026-07-08", 85253], ["2026-07-09", 85874], ["2026-07-10", 86079], ["2026-07-13", 85079], ["2026-07-14", 85137], ["2026-07-15", 85304], ["2026-07-16", 84609], ["2026-07-17", 84884], ["2026-07-20", 84857], ["2026-07-21", 86125], ["2026-07-22", 86016], ["2026-07-23", 85043], ["2026-07-24", 85043], ["2026-07-27", 85307], ["2026-07-28", 85180], ["2026-07-29", 83891], ["2026-07-30", 85251], ["2026-07-31", 85568], ["2026-08-03", 87691], ["2026-08-04", 89520], ["2026-08-05", 89097], ["2026-08-06", 88907], ["2026-08-07", 89194], ["2026-08-10", 89005], ["2026-08-11", 88827], ["2026-08-12", 89238], ["2026-08-13", 89765], ["2026-08-14", 89282], ["2026-08-17", 90137], ["2026-08-18", 89305], ["2026-08-19", 89243], ["2026-08-20", 88564], ["2026-08-21", 88868], ["2026-08-24", 89025], ["2026-08-25", 89501], ["2026-08-26", 89673], ["2026-08-27", 89966], ["2026-08-28", 89829], ["2026-08-31", 89430], ["2026-09-01", 88931], ["2026-09-02", 90316], ["2026-09-03", 90759], ["2026-09-04", 91078]], "actual": [["2026-06-15", 83050], ["2026-08-05", 87580], ["2026-09-06", 90000]], "pricesAsof": "2026-09-06", "source": {"benchmark": "Yahoo Finance, adjusted close (dividends included)", "usdcad": "Bank of Canada, daily average rate"}};   // the benchmark comparison, from prices.json and the snapshots (rebuild.py benchmark_run)
 const PORT_HISTORY = [{"ym": "2026-06", "v": 83050}, {"ym": "2026-08", "v": 87580}, {"ym": "2026-09", "v": 90000}];   // one portfolio value per month, from investment_history.json
 const NW_GLOBAL = INVEST.netWorth + FOREIGN_CAD;             // net worth  (2026-08-14: the owner)
 
@@ -2842,7 +2851,7 @@ const NW_GLOBAL = INVEST.netWorth + FOREIGN_CAD;             // net worth  (2026
 const COMMITTED_KEEP = 0;
 // The owner's buckets (findata/rules.json): which symbols are dry powder, and how holdings group.
 // No band or cap is judged on the page since 2026-10-28.
-const RULES = {"buckets": [{"key": "bonds", "name": "Bonds", "symbols": ["ZAG"], "target": [15, 25]}, {"key": "stocks", "name": "Stocks", "symbols": ["VEQT", "XAW"]}, {"key": "other", "name": "Anything else", "catchAll": true}], "maxHoldings": 10, "assetClass": {"VEQT": "stocks", "XAW": "stocks", "ZAG": "bonds"}, "notes": [{"status": "ok", "name": "Three funds, nothing to pick", "text": "Every deposit buys VEQT in the TFSA. Once a year, in January, new money goes to whichever side is under its target until bonds are back near a fifth."}], "checkpoints": [{"title": "Rebalance", "date": "2027-01-15", "label": "Mid-January", "why": "Bonds back to about a fifth of the portfolio"}, {"title": "RRSP deadline", "date": "2027-03-01", "label": "Mar 1, 2027", "why": "Decide the RRSP contribution once the year's pay slips are in"}], "benchmark": {"symbol": "VT", "name": "Vanguard Total World Stock ETF", "why": "The whole world's stocks in one fund: what the same money would have earned with no choices at all.", "asof": "2026-10-27"}};
+const RULES = {"buckets": [{"key": "bonds", "name": "Bonds", "symbols": ["ZAG"], "target": [15, 25], "zh": {"name": "债券"}}, {"key": "stocks", "name": "Stocks", "symbols": ["VEQT", "XAW"], "zh": {"name": "股票"}}, {"key": "other", "name": "Anything else", "catchAll": true, "zh": {"name": "其他"}}], "maxHoldings": 10, "assetClass": {"VEQT": "stocks", "XAW": "stocks", "ZAG": "bonds"}, "notes": [{"status": "ok", "name": "Three funds, nothing to pick", "text": "Every deposit buys VEQT in the TFSA. Once a year, in January, new money goes to whichever side is under its target until bonds are back near a fifth."}], "checkpoints": [{"title": "Rebalance", "date": "2027-01-15", "label": "Mid-January", "why": "Bonds back to about a fifth of the portfolio"}, {"title": "RRSP deadline", "date": "2027-03-01", "label": "Mar 1, 2027", "why": "Decide the RRSP contribution once the year's pay slips are in"}], "benchmark": {"symbol": "VT", "name": "Vanguard Total World Stock ETF", "why": "The whole world's stocks in one fund: what the same money would have earned with no choices at all.", "zh": {"why": "一只基金覆盖全球股票，代表不做任何选择时同样的资金可获得的回报。"}, "asof": "2026-10-27"}};
 
 const PLAN_BASE_DEFAULT = 2950;
 const DRIFT_FLAG = 0.10;                  // measured vs planned gap that is worth flagging
@@ -2871,7 +2880,7 @@ function renderFi(){
     : S.paceMonths ? TN("fire.say_pace_"+of, S.paceMonths, sayV) : T("fire.say_pace_"+of+"_plan", sayV))
     .replace(/planned spending|规划支出/, w => term("planning_figure", w));
   if(S.rate !== undefined){
-    const parts = S.jobs.map((j, i) => [i ? j[0] : T("fire.job_invested"), j[1], i ? "#9a9890" : "var(--ink)"]).concat(S.free > 0.5 ? [[T("fire.no_job"), S.free, "#e8c27a"]] : []);
+    const parts = S.jobs.map((j, i) => [i ? own(FLOWS.find(f => f.kind === "saving" && f.name === j[0]), "name") || j[0] : T("fire.job_invested"), j[1], i ? "#9a9890" : "var(--ink)"]).concat(S.free > 0.5 ? [[T("fire.no_job"), S.free, "#e8c27a"]] : []);
     const tot = Math.max(S.keep, parts.reduce((a,p) => a + p[1], 0)) || 1;
     $("fiKept").innerHTML = '<div class="sl">'+T("fire.kept_line", {keep: "<b>"+fmt(S.keep)+"</b>", pct: "<b>"+Math.round(S.rate*100)+"</b>"}).replace(/savings rate|储蓄率/, w => term("savings_rate", w))+'</div>'
       + '<div class="kb">'+parts.filter(p => p[1] > 0).map(p => '<span style="width:'+(p[1]/tot*100)+'%;background:'+p[2]+'"></span>').join("")+'</div>'
@@ -3046,13 +3055,13 @@ const PH = {grow:"#2a78d6", coast:"#1baf7a", draw:"#eda100", care:"#4a3aa7", ltc
 // also the financially sane rule — past light care, staying home costs several times a bed.
 // Care is labour, and labour outruns the general price level (Baumol). Everything else here is
 // in today's money at a real return, so care carries a REAL escalation on top.
-const HOME_CARE = {"k": "Light care at home", "v": 4200, "esc": 0.015, "d": "Around 4 hours a day of a PSW at roughly $35/hr — meals, cleaning, some personal care. Bought by the hour, so it climbs with wages"};
+const HOME_CARE = {"k": "Light care at home", "v": 4200, "esc": 0.015, "d": "Around 4 hours a day of a PSW at roughly $35/hr — meals, cleaning, some personal care. Bought by the hour, so it climbs with wages", "zh": {"k": "居家轻度护理", "d": "每天约 4 小时的个人护理员（PSW）服务，每小时约 $35，包括备餐、清洁和部分个人护理。按小时计费，因此随工资上涨"}};
 
 // A public long-term-care bed is priced by the province, not by the market. Two things follow:
 // the co-payment is capped, AND it is indexed to OAS rather than to wages — so unlike home care
 // it does not outrun general inflation. Moving is not just cheaper, it removes the escalation
 // risk. The trade is the waitlist, which runs months to years and does not respect your plan.
-const LTC_TIERS = [{"k": "Public · basic", "v": 2100, "esc": 0.003, "d": "Shared room in a public long-term-care home. Province-set co-payment for accommodation only — the care itself is publicly funded. A rate reduction exists if income is low. Long waitlist"}, {"k": "Public · private", "v": 3000, "esc": 0.003, "d": "Private room in the same public system. Same capped pricing, longer wait"}, {"k": "Private home", "v": 6500, "esc": 0.015, "d": "Private retirement residence with a care package. No waitlist and no subsidy, and priced like any other private service, so it climbs with wages"}];
+const LTC_TIERS = [{"k": "Public · basic", "v": 2100, "esc": 0.003, "d": "Shared room in a public long-term-care home. Province-set co-payment for accommodation only — the care itself is publicly funded. A rate reduction exists if income is low. Long waitlist", "zh": {"k": "公立 · 多人间", "d": "公立长期护理院的多人间。仅住宿费用按省政府规定的标准自付，护理本身由政府出资。低收入者可申请减免。轮候时间长"}}, {"k": "Public · private", "v": 3000, "esc": 0.003, "d": "Private room in the same public system. Same capped pricing, longer wait", "zh": {"k": "公立 · 单人间", "d": "同一公立体系中的单人间。同样实行限价，轮候时间更长"}}, {"k": "Private home", "v": 6500, "esc": 0.015, "d": "Private retirement residence with a care package. No waitlist and no subsidy, and priced like any other private service, so it climbs with wages", "zh": {"k": "私立机构", "d": "提供护理服务的私立养老院。无需轮候，也没有补贴，价格与其他私人服务一样随工资上涨"}}];
 const CARE_ESC = HOME_CARE.esc;
 
 // ===== Net worth, split two ways =====
@@ -3136,7 +3145,7 @@ function extraNeeded(run, drawM, careA, ltcA, ltc){
 // month. Both rise with inflation, as the model's returns are real, so they stay flat here. They
 // pay part of what is taken out, spending and care alike, from the age each starts; a pension
 // that starts before the drawdown does not add to the pot.
-const PENSIONS = [{"k": "CPP", "v": 760, "from": 65, "asof": "2025-12-20", "src": "My Service Canada estimate"}, {"k": "OAS", "v": 740, "from": 65, "asof": "2025-12-20", "src": "My Service Canada estimate"}];
+const PENSIONS = [{"k": "CPP", "v": 760, "from": 65, "asof": "2025-12-20", "src": "My Service Canada estimate", "zh": {"src": "加拿大服务局 My Service Canada 账户中的估算"}}, {"k": "OAS", "v": 740, "from": 65, "asof": "2025-12-20", "src": "My Service Canada estimate", "zh": {"src": "加拿大服务局 My Service Canada 账户中的估算"}}];
 const pensionAt = age => PENSIONS.reduce((s, p) => s + (age >= p.from ? p.v : 0), 0);
 const takeOut = (age, spend) => spend > 0 ? Math.max(0, spend - pensionAt(age)) : 0;
 // Two stages, each with its own real escalation, because they are priced by different things.
@@ -3178,7 +3187,7 @@ function renderCoast(target, annualSpend){
   $("ltcAgeV").textContent = ltcAge >= LIFE_TO ? T("draw.ltc_never") : ageTxt(ltcAge);
   const ltc = LTC_TIERS[ltcTier];
   $("carePills").innerHTML = LTC_TIERS.map((t,i) =>
-    '<button class="pill num'+(i===ltcTier?" sel":"")+'" data-i="'+i+'" title="'+t.d+'">'+t.k+'</button>').join("");
+    '<button class="pill num'+(i===ltcTier?" sel":"")+'" data-i="'+i+'" title="'+own(t, "d")+'">'+own(t, "k")+'</button>').join("");
   $("carePills").querySelectorAll(".pill").forEach(b => b.onclick = () => {
     ltcTier = Number(b.dataset.i); renderFire();
   });
@@ -3229,9 +3238,9 @@ function renderCoast(target, annualSpend){
     !lasts && !empty && run.short > 0 ? [term("shortfall", T("money.shortfall_label", {age: Math.floor(run.dead), end: LIFE_TO})),
       numx(fmt(run.short), [], T("money.shortfall_note")), "hi"] : null
   ].concat(PENSIONS.length
-    ? PENSIONS.map(p => [term(p.k === "OAS" ? "oas" : p.k === "CPP" ? "cpp" : "", T("money.pension_label", {pension: p.k, age: p.from})),
+    ? PENSIONS.map(p => [term(p.k === "OAS" ? "oas" : p.k === "CPP" ? "cpp" : "", T("money.pension_label", {pension: own(p, "k"), age: p.from})),
         numx(T("common.a_month", {amount: fmt(p.v)}), [], T(p.asof ? "money.pension_note_dated" : "money.pension_note",
-          {source: p.src || T("money.pension_source_default"), date: p.asof ? dFull(p.asof) : ""}))])
+          {source: own(p, "src") || T("money.pension_source_default"), date: p.asof ? dFull(p.asof) : ""}))])
     : [[T("money.pensions_label"), numx(T("money.pensions_not_counted"), [], T("money.pensions_not_counted_note"))]]));
 
   // What the care assumption actually costs, in today's money.
@@ -3248,10 +3257,10 @@ function renderCoast(target, annualSpend){
     const early = brokeBefore(run, careAge), extra = early ? null : extraNeeded(run, drawM, careAge, ltcA, ltc);
     $("careMeta").innerHTML = metaList([
       [term("long_term_care", T("care.home_label", {age: careAge})), numx(T("common.a_month", {amount: fmt(atHome)}), [[T("care.today"), fmt(HOME_CARE.v)], [T("care.at_age", {age: careAge}), fmt(atHome)]],
-        T("care.rising_note", {description: HOME_CARE.d, pct: (HOME_CARE.esc*100).toFixed(1)+"%"}))],
+        T("care.rising_note", {description: own(HOME_CARE, "d"), pct: (HOME_CARE.esc*100).toFixed(1)+"%"}))],
       ltcA === null ? [T("care.move_label"), T("care.move_never"), "mut"]
-        : [T("care.ltc_label", {tier: ltc.k, age: ltcAge}), numx(T("common.a_month", {amount: fmt(atLtc)}), [[T("care.today"), fmt(ltc.v)], [T("care.at_age", {age: ltcAge}), fmt(atLtc)]],
-            T("care.rising_note", {description: ltc.d, pct: (ltc.esc*100).toFixed(1)+"%"}))],
+        : [T("care.ltc_label", {tier: own(ltc, "k"), age: ltcAge}), numx(T("common.a_month", {amount: fmt(atLtc)}), [[T("care.today"), fmt(ltc.v)], [T("care.at_age", {age: ltcAge}), fmt(atLtc)]],
+            T("care.rising_note", {description: own(ltc, "d"), pct: (ltc.esc*100).toFixed(1)+"%"}))],
       [T("care.whole_bill", {age: careAge, end: LIFE_TO}), fmt(bill)],
       [T("care.extra_label", {age: careAge}), early ? T("care.extra_broke", {age: Math.floor(run.dead)}) : extra === null ? "\u2014" : extra === 0 ? T("care.extra_none") : numx(fmt(extra), [], T("care.extra_note", {age: careAge, end: LIFE_TO})), extra ? "hi" : ""],
     ]) + (ltcA === null ? "" : '<div class="cap" style="margin-top:8px">'+T("care.ltc_cap", {age: ltcAge})+'</div>');
@@ -3526,7 +3535,7 @@ function renderSubStats(){
 // from four data files every time it was asked for, which is exactly how an account goes missing.
 // findata/accounts.json is the registry; balances there are copies and check_data D14 re-derives
 // them from banks.json / holdings_latest.csv / foreign.json and errors when they drift.
-const ACCT = {"asof_note": "The register of every place money sits (`accounts`) and every file dropped each month (`documents`). Balances here are COPIES of banks.json / holdings_latest.csv; check_data D14 re-derives them. Change the source file, not this one.", "accounts": [{"inst": "BMO", "id": "…4471", "name": "Primary Chequing", "kind": "Chequing", "cur": "CAD", "balance": 7544.93, "asof": "2026-09-05", "src": "banks.json", "side": "asset", "value": "statement", "role": "buffer", "reach": "today", "ledger": "chequing.csv", "feeds": "Income, Cash flow, Spending", "key": "bmo-chq-4471", "spendTag": "BMO4471", "stmtTag": "BMOCHQ4471", "stmtLabel": "BMO chq"}, {"inst": "BMO", "id": "…9032", "name": "Savings Amplifier", "kind": "Savings", "cur": "CAD", "balance": 6911.16, "asof": "2026-09-05", "src": "banks.json", "side": "asset", "value": "statement", "role": "buffer", "reach": "today", "ledger": "bmo_savings.csv", "feeds": "Cash flow", "key": "bmo-sav-9032", "stmtTag": "BMOSAV9032"}, {"inst": "BMO", "id": "…5518", "name": "MasterCard", "kind": "Credit card", "cur": "CAD", "balance": -991.3, "asof": "2026-08-20", "src": "banks.json", "side": "liability", "value": "statement", "ledger": null, "feeds": "Spending", "key": "bmo-mc-5518", "spendTag": "BMO5518", "stmtLabel": "MC"}, {"inst": "Wealthsimple", "id": "HQ7TF4A21CAD", "name": "TFSA", "kind": "TFSA", "cur": "CAD", "balance": 68670.0, "asof": "2026-09-06", "src": "holdings_latest.csv", "side": "asset", "value": "export", "role": "grow", "reach": "today", "ledger": null, "feeds": "", "key": "ws-tfsa"}, {"inst": "Wealthsimple", "id": "HQ7RR9B33CAD", "name": "RRSP", "kind": "RRSP", "cur": "CAD", "balance": 21330.0, "asof": "2026-09-06", "src": "holdings_latest.csv", "side": "asset", "value": "export", "role": "grow", "reach": "costs", "ledger": null, "feeds": "", "key": "ws-rrsp"}], "gaps": [], "missing": [], "documents": [{"key": "Chequing 4471", "ep": "BMO", "file": "<Month D, YYYY>.pdf", "closes": "5th", "feeds": "Pay, transfers, cash flow", "covers": ["bmo-chq-4471"], "tags": ["BMO_CHQ4471"], "into": "chequing.csv", "reconcile": "opening + in - out = closing", "parser": "bmo_banking"}, {"key": "Savings 9032", "ep": "BMO", "file": "<Month D, YYYY>-2.pdf", "closes": "5th", "feeds": "Balance and savings ledger", "covers": ["bmo-sav-9032"], "tags": ["BMO_SAV9032"], "into": "bmo_savings.csv", "reconcile": "balance chain closes", "parser": "bmo_banking", "from": "2026-01"}, {"key": "MasterCard 5518", "ep": "BMO", "file": "<Month D, YYYY>.pdf", "closes": "20th", "feeds": "Spending, plan, baseline", "covers": ["bmo-mc-5518"], "tags": ["BMO_MC5518"], "into": "spending.csv", "reconcile": "parsed total = Purchases and other charges + interest + Fees", "parser": "bmo_mastercard"}, {"key": "Holdings", "ep": "Wealthsimple", "file": "holdings-report-<date>.csv", "closes": "any time", "feeds": "Portfolio, net worth", "covers": ["ws-tfsa", "ws-rrsp"], "tags": ["WS_HOLDINGS"], "into": "holdings_latest.csv", "reconcile": "replaced wholesale", "from": "2026-06"}, {"key": "Activities", "ep": "Wealthsimple", "file": "activities-export-<date>.csv", "closes": "any time", "feeds": "Dividends, trades, deposits", "covers": ["ws-tfsa", "ws-rrsp"], "tags": ["WS"], "into": "ws_activities.csv", "reconcile": "deposits, distributions and trades", "from": "2026-06"}], "archive_note": "Processed files are moved to archive/ as YYYYMMDD_<tag>_<original name>; the tag is documents[].tags."};
+const ACCT = {"asof_note": "The register of every place money sits (`accounts`) and every file dropped each month (`documents`). Balances here are COPIES of banks.json / holdings_latest.csv; check_data D14 re-derives them. Change the source file, not this one.", "accounts": [{"inst": "BMO", "id": "…4471", "name": "Primary Chequing", "kind": "Chequing", "cur": "CAD", "balance": 7544.93, "asof": "2026-09-05", "src": "banks.json", "side": "asset", "value": "statement", "role": "buffer", "reach": "today", "ledger": "chequing.csv", "feeds": "Income, Cash flow, Spending", "key": "bmo-chq-4471", "spendTag": "BMO4471", "stmtTag": "BMOCHQ4471", "stmtLabel": "BMO chq", "zh": {"kind": "支票账户", "stmtLabel": "BMO 支票账户"}}, {"inst": "BMO", "id": "…9032", "name": "Savings Amplifier", "kind": "Savings", "cur": "CAD", "balance": 6911.16, "asof": "2026-09-05", "src": "banks.json", "side": "asset", "value": "statement", "role": "buffer", "reach": "today", "ledger": "bmo_savings.csv", "feeds": "Cash flow", "key": "bmo-sav-9032", "stmtTag": "BMOSAV9032", "zh": {"kind": "储蓄账户"}}, {"inst": "BMO", "id": "…5518", "name": "MasterCard", "kind": "Credit card", "cur": "CAD", "balance": -991.3, "asof": "2026-08-20", "src": "banks.json", "side": "liability", "value": "statement", "ledger": null, "feeds": "Spending", "key": "bmo-mc-5518", "spendTag": "BMO5518", "stmtLabel": "MC", "zh": {"kind": "信用卡"}}, {"inst": "Wealthsimple", "id": "HQ7TF4A21CAD", "name": "TFSA", "kind": "TFSA", "cur": "CAD", "balance": 68670.0, "asof": "2026-09-06", "src": "holdings_latest.csv", "side": "asset", "value": "export", "role": "grow", "reach": "today", "ledger": null, "feeds": "", "key": "ws-tfsa"}, {"inst": "Wealthsimple", "id": "HQ7RR9B33CAD", "name": "RRSP", "kind": "RRSP", "cur": "CAD", "balance": 21330.0, "asof": "2026-09-06", "src": "holdings_latest.csv", "side": "asset", "value": "export", "role": "grow", "reach": "costs", "ledger": null, "feeds": "", "key": "ws-rrsp"}], "gaps": [], "missing": [], "documents": [{"key": "Chequing 4471", "ep": "BMO", "file": "<Month D, YYYY>.pdf", "closes": "5th", "feeds": "Pay, transfers, cash flow", "covers": ["bmo-chq-4471"], "tags": ["BMO_CHQ4471"], "into": "chequing.csv", "reconcile": "opening + in - out = closing", "parser": "bmo_banking", "zh": {"key": "支票账户 4471"}}, {"key": "Savings 9032", "ep": "BMO", "file": "<Month D, YYYY>-2.pdf", "closes": "5th", "feeds": "Balance and savings ledger", "covers": ["bmo-sav-9032"], "tags": ["BMO_SAV9032"], "into": "bmo_savings.csv", "reconcile": "balance chain closes", "parser": "bmo_banking", "from": "2026-01", "zh": {"key": "储蓄账户 9032"}}, {"key": "MasterCard 5518", "ep": "BMO", "file": "<Month D, YYYY>.pdf", "closes": "20th", "feeds": "Spending, plan, baseline", "covers": ["bmo-mc-5518"], "tags": ["BMO_MC5518"], "into": "spending.csv", "reconcile": "parsed total = Purchases and other charges + interest + Fees", "parser": "bmo_mastercard"}, {"key": "Holdings", "ep": "Wealthsimple", "file": "holdings-report-<date>.csv", "closes": "any time", "feeds": "Portfolio, net worth", "covers": ["ws-tfsa", "ws-rrsp"], "tags": ["WS_HOLDINGS"], "into": "holdings_latest.csv", "reconcile": "replaced wholesale", "from": "2026-06", "zh": {"key": "持仓报告"}}, {"key": "Activities", "ep": "Wealthsimple", "file": "activities-export-<date>.csv", "closes": "any time", "feeds": "Dividends, trades, deposits", "covers": ["ws-tfsa", "ws-rrsp"], "tags": ["WS"], "into": "ws_activities.csv", "reconcile": "deposits, distributions and trades", "from": "2026-06", "zh": {"key": "交易记录导出"}}], "archive_note": "Processed files are moved to archive/ as YYYYMMDD_<tag>_<original name>; the tag is documents[].tags."};
 // The ledger payroll lands in -- where pay-yourself-first is judged. Read off feeds, not named here.
 const PAY_LEDGER = ((ACCT.accounts||[]).find(a => /Income/.test(a.feeds||"")) || {}).key;
 const CURSYM = {CAD:"$", USD:"US$", [FOREIGN.currency || "XXX"]: FOREIGN.symbol || ""};
@@ -3594,10 +3603,10 @@ function renderAccounts(){
       const tiny = a.balance !== null && Math.abs(cad(a)) < 1;
       const l = loanOf(a);
       const note = l ? T(l.last ? "acct.loan_note_last" : "acct.loan_note", {amount: money2(l.agreed, l.cur), date: dShort(l.since),
-                         back: money2(l.back, l.cur), last: l.last ? dShort(l.last) : ""}) : a.note;
+                         back: money2(l.back, l.cur), last: l.last ? dShort(l.last) : ""}) : own(a, "note");
       // A long number (a broker's account id) is shortened to its last four; the whole one is on hover.
       const id = a.id && a.id !== "\u2014" ? (a.id.replace(/^[…\.]+/, "").length > 8 ? '<span title="' + a.id + '">\u2026' + a.id.replace(/[^A-Za-z0-9]/g, "").replace(/(CAD|USD|CNY)$/, "").slice(-4) + '</span>' : a.id) : "";
-      const sub = [a.kind, id].filter(Boolean).join(" \u00b7 ");
+      const sub = [own(a, "kind"), id].filter(Boolean).join(" \u00b7 ");
       out += '<tr' + (tiny ? ' class="tiny"' : '') + '><td style="text-align:left"><div class="an">' + a.name + '</div>'
         + (sub ? '<div class="as">' + sub + '</div>' : '') + '</td>'
         + '<td class="opt" style="text-align:left;font-size:12px">' + roleOf(a) + '</td>'
@@ -3650,7 +3659,7 @@ const SUBMITTED = {"MasterCard 5518": ["2026-01", "2026-02", "2026-03", "2026-04
 // in three places -- ACCT, SOURCES and a dead IMPORTS constant nobody rendered -- and they had
 // already drifted apart. `src` keeps the old field name because SUBMITTED is keyed on it.
 const esc = t => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const SOURCES = ACCT.documents.map(d => Object.assign({}, d, {src: d.key, file: esc(d.file)}));
+const SOURCES = ACCT.documents.map(d => Object.assign({}, d, {src: d.key, nm: own(d, "key"), file: esc(d.file)}));
 const GAPS = [];
 // Facts about the cash-flow table that only a person knows. Shown under the table.
 // Footnotes under the cash-flow table, from cashflow.json `notes`: a label, the text, and an
@@ -3690,14 +3699,14 @@ function renderTracker(){
       else { cells += cell(ym,"miss",nowYM); miss++; }
     }
     const last = DOC_LATEST[r.src], age = last ? Math.round((new Date(TODAY) - new Date(last))/864e5) : null;
-    out += '<tr><td class="nm">'+r.src+'</td>'+cells
+    out += '<tr><td class="nm">'+r.nm+'</td>'+cells
         +  '<td class="cnt" style="text-align:right;white-space:nowrap">'+(last ? dLong(last) : T("src.no_date"))
         +  (age !== null && age > 30 ? ' <span style="color:#c98500;font-weight:700">'+T("src.age_days", {n: age})+'</span>' : '')+'</td></tr>';
   });
   out += '</table>';
   $("tracker").innerHTML = out;
   const missing = missingSources(trackYear);
-  $("trackBring").innerHTML = missing.length ? T("src.still_to_bring", {year: trackYear, sources: listJoin(missing.map(r => r.src))}) : T("src.all_in", {year: trackYear});
+  $("trackBring").innerHTML = missing.length ? T("src.still_to_bring", {year: trackYear, sources: listJoin(missing.map(r => r.nm))}) : T("src.all_in", {year: trackYear});
   $("trackCap").innerHTML = '<div class="cap" style="margin-top:8px">'+T("src.legend")+'</div>';
 }
 function renderSources(){
@@ -3710,7 +3719,7 @@ function renderSources(){
     + SOURCES.map(r => {
         const d = last[r.src], a = d ? age(d) : null, ok = a === null || a <= 30;
         const head = r.ep !== ep ? (ep = r.ep, '<tr class="grp"><td colspan="6" style="text-align:left;font-weight:700;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:9px">'+r.ep+'</td></tr>') : "";
-        return head + '<tr><td style="text-align:left">'+r.src+'</td>'
+        return head + '<tr><td style="text-align:left">'+r.nm+'</td>'
           +'<td style="text-align:left"><span style="font-size:11.5px;color:var(--muted)">'+r.file+'</span></td>'
           +'<td class="num" style="padding-right:16px">'+r.closes+'</td><td style="text-align:left;font-size:12.5px">'+r.feeds+'</td>'
           +'<td class="num">'+(d ? dLong(d) : "—")+'</td>'
@@ -4079,7 +4088,7 @@ const IV = (function(){
   // ----- holdings: by role or by account; P&L off by default because cost is not a decision input
   let showPL = false, view = "role";
   function roleView(){
-    const order=[...BUCKETS.map(b=>[b.name,b.key]),[T("inv.grp_cash_broker"),"cash"],[T("inv.grp_held_abroad"),"cn"],[T("inv.grp_set_aside"),"earm"]];
+    const order=[...BUCKETS.map(b=>[own(b,"name"),b.key]),[T("inv.grp_cash_broker"),"cash"],[T("inv.grp_held_abroad"),"cn"],[T("inv.grp_set_aside"),"earm"]];
     const buckets={cash:[],cn:[],earm:[]}; BUCKETS.forEach(b=>buckets[b.key]=[]);
     const agg={};
     for(const p of positions){

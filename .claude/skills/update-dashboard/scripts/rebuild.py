@@ -342,7 +342,8 @@ def benchmark_run(d):
     while fi < len(flows):
         units += flows[fi][1] / cad(flows[fi][0]); fi += 1
     shadow = round(units * cad(t1))
-    return {"symbol": sym, "name": bench.get("name", sym), "why": bench.get("why", ""),
+    zh = {k: v for k, v in (bench.get("zh") or {}).items() if k in ("name", "why") and v}   # DESIGN.md §5b″
+    return {"symbol": sym, "name": bench.get("name", sym), "why": bench.get("why", ""), **({"zh": zh} if zh else {}),
             "from": t0, "to": t1, "start": round(snaps[0]["cadInv"]), "end": round(snaps[-1]["cadInv"]),
             "put": round(sum(f[1] for f in flows)), "flows": flows, "shadow": shadow,
             "benchRet": round(cad(t1) / cad(t0) - 1, 4), "path": path,
@@ -466,8 +467,12 @@ def derive(d):
     out["HOME_CARE"] = ret.get("homeCare", {})
     # Government pensions (1.0.1): CPP and OAS as the owner's own statement estimates them, in
     # today's dollars a month, from the age each starts. They pay part of what the drawdown takes.
+    # An owner label may carry its Chinese beside it ({"zh": {"source": "…"}}, DESIGN.md §5b″); the
+    # page's own() picks it in Chinese. Renamed fields keep their zh under the page's names.
+    zh_as = lambda o, names: ({"zh": {k: o["zh"][f] for f, k in names.items() if (o.get("zh") or {}).get(f)}}
+                              if any((o.get("zh") or {}).get(f) for f in names) else {})
     out["PENSIONS"] = [{"k": p["name"], "v": p["monthly"], "from": p.get("from", 65), "asof": p.get("asof", ""),
-                        "src": p.get("source", "")}
+                        "src": p.get("source", ""), **zh_as(p, {"name": "k", "source": "src"})}
                        for p in ret.get("pensions", []) if p.get("monthly") is not None]
     out["LTC_TIERS"] = ret.get("ltcTiers", [])
 
@@ -715,6 +720,9 @@ def derive(d):
     debts = [a["name"] for a, _ in liabs]
     # Without the owner's words it is a key and the names, so the page says it in its language.
     out["DEBT_NOTE"] = plan.get("descriptions", {}).get("debt") or ({"t": "nw.debt_note", "debts": debts} if debts else {"t": "nw.debt_none"})
+    _debt_zh = ((plan.get("descriptions") or {}).get("zh") or {}).get("debt")
+    if isinstance(out["DEBT_NOTE"], str) and _debt_zh:
+        out["DEBT_NOTE"] = {"s": out["DEBT_NOTE"], "zh": {"s": _debt_zh}}
     fgn_label = fj.get("label") or "Foreign"
 
     # One line under each row. The owner's own words if plan.json carries them (keyed by the
@@ -802,14 +810,17 @@ def derive(d):
             continue
         lab = lab.replace("{abroad}", fgn_label)
         own = desc.get("nwparts", {}).get(lab)
+        own_zh = (desc.get("nwparts", {}).get("zh") or {}).get(lab) if own else None
         out["NWPARTS"].append({"k": lab, "t": PART_KEY[(role, where)], "qt": PART_KEY[(role, where)] + ".def",
                                "role": role, "v": part_value(role, where), "c": c, "q": q,
-                               "d": own or names,
+                               "d": own or names, **({"zh": {"d": own_zh}} if own_zh else {}),
                                **({} if own or role == "owed" else {"dg": accounts_by_inst(role, where)}),
                                "by": part_by_reach(role, where, part_value(role, where)),
                                "accts": part_accounts(role, where, part_value(role, where))})
     out["REACH"] = [{"k": lab, "t": "reach." + r, "r": r, "v": by_reach[r], "c": c,
-                     **({"d": desc["reach"][lab]} if lab in desc.get("reach", {}) else {"d": generic_reach[lab], "dt": "reach." + r + ".desc"})}
+                     **({"d": desc["reach"][lab], **({"zh": {"d": desc["reach"]["zh"][lab]}}
+                                                    if (desc["reach"].get("zh") or {}).get(lab) else {})}
+                        if lab in desc.get("reach", {}) else {"d": generic_reach[lab], "dt": "reach." + r + ".desc"})}
                     for r, lab, c in REACH_ROWS if r in reach_present]
     # A usual month, as of every month the page can be turned to (usual.py). It was the page's
     # own arithmetic until 1.0.5; computed here, a checker or a second front end reads the same

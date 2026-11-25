@@ -268,6 +268,9 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
 (function(){
   var base = document.body.getAttribute('data-base');
   var T = {{JS}};
+  // In Chinese, the dashboard's words for the lines an import writes (strings.json upd.rec.*, the
+  // month names, the categories): {} in English, where the line stays the sentence it stored.
+  var REC = {{REC}};
   var $ = function(id){ return document.getElementById(id); };
   var log = $('log'), go = $('go'), undo = $('undo'), ihint = $('ihint'), ierr = $('ierr');
   var running = false;
@@ -294,6 +297,25 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
   function setBusy(on){ running = on; [go, undo, $('save')].forEach(function(b){ if (b) b.disabled = on; }); }
   // step 3's result as a card from the summary the import returns; its lines stay under a fold
   var rbox = document.createElement('div'); rbox.className = 'rcard'; log.parentNode.insertBefore(rbox, log);
+  // A changed or noticed line by the key and values the import recorded (update.py keyed), the
+  // way the dashboard's Updates page says it (recT): a day as 10月5日, a month as 10月, or
+  // 25年10月 outside the record's year, a category by its name. No key, no Chinese: as stored.
+  var MKEYS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  function recSay(o, en, today){
+    var S = REC.s || {};
+    if (!o || !o.t || !S[o.t]) return en;
+    var mon = function(m){ return S['common.month_' + MKEYS[m - 1]] || m; };
+    var val = function(k, v){
+      if (typeof v !== 'string') return v;
+      if (k === 'cat') return (REC.cat || {})[v] || v;
+      var m = /^(\d{4})-(\d{2})(?:-(\d{2}))?$/.exec(v);
+      if (!m) return v;
+      if (m[3]) return mon(+m[2]) + fmtS(S['common.ordinal'] || '{n}', {n: +m[3]});
+      return m[1] === String(today || '').slice(0, 4) ? mon(+m[2]) : fmtS(S['common.month_year_short'] || '{yy}/{mon}', {mon: mon(+m[2]), yy: m[1].slice(2)});
+    };
+    var v = {}; Object.keys(o).forEach(function(k){ v[k] = val(k, o[k]); });
+    return fmtS(S[o.t], v);
+  }
   function resultCard(res, written, err){
     rbox.innerHTML = '';
     if (!res) return;
@@ -312,8 +334,9 @@ table.tbl td small{display:block;font-size:11.5px;font-weight:400;color:var(--mu
     notes.forEach(function(n){ rbox.appendChild(el('div', 'nt ' + n[0], '<span class="ic">' + (n[0] === 'ok' ? '✓' : '!') + '</span>' + esc(n[1]))); });
     if (!written && (res.stopped || []).length) rbox.appendChild(el('p', 'hint', esc(T.r_nothing_written)));
     if (written) {
-      (res.changed || []).forEach(function(c){ rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(c.label) + '</span><span class="v">' + esc(c.from) + ' → ' + esc(c.to) + '</span>')); });
-      (res.noticed || []).forEach(function(n){ rbox.appendChild(el('div', 'nt ' + (n.sev || 'ok'), '<span class="ic">' + (n.sev === 'ok' ? '✓' : '!') + '</span>' + esc(n.text))); });
+      var day = (res.record || {}).date || new Date().toISOString().slice(0, 10);
+      (res.changed || []).forEach(function(c){ rbox.appendChild(el('div', 'kv', '<span class="k">' + esc(recSay(c, c.label, day)) + '</span><span class="v">' + esc(c.from) + ' → ' + esc(c.to) + '</span>')); });
+      (res.noticed || []).forEach(function(n){ rbox.appendChild(el('div', 'nt ' + (n.sev || 'ok'), '<span class="ic">' + (n.sev === 'ok' ? '✓' : '!') + '</span>' + esc(recSay(n, n.text, day)))); });
       if ((res.findings || []).length) { rbox.appendChild(el('div', 'qh', esc(T.r_findings))); res.findings.forEach(function(f){ rbox.appendChild(el('div', 'nt warn', '<span class="ic">!</span>' + esc(f))); }); }
       else rbox.appendChild(el('div', 'nt ok', '<span class="ic">✓</span>' + esc(T.r_clean)));
     }

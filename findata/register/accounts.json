@@ -19,7 +19,11 @@
       "key": "bmo-chq-4471",
       "spendTag": "BMO4471",
       "stmtTag": "BMOCHQ4471",
-      "stmtLabel": "BMO chq"
+      "stmtLabel": "BMO chq",
+      "zh": {
+        "kind": "支票账户",
+        "stmtLabel": "BMO 支票账户"
+      }
     },
     {
       "inst": "BMO",
@@ -37,7 +41,10 @@
       "ledger": "bmo_savings.csv",
       "feeds": "Cash flow",
       "key": "bmo-sav-9032",
-      "stmtTag": "BMOSAV9032"
+      "stmtTag": "BMOSAV9032",
+      "zh": {
+        "kind": "储蓄账户"
+      }
     },
     {
       "inst": "BMO",
@@ -54,7 +61,10 @@
       "feeds": "Spending",
       "key": "bmo-mc-5518",
       "spendTag": "BMO5518",
-      "stmtLabel": "MC"
+      "stmtLabel": "MC",
+      "zh": {
+        "kind": "信用卡"
+      }
     },
     {
       "inst": "Wealthsimple",
@@ -108,7 +118,10 @@
       ],
       "into": "chequing.csv",
       "reconcile": "opening + in - out = closing",
-      "parser": "bmo_banking"
+      "parser": "bmo_banking",
+      "zh": {
+        "key": "支票账户 4471"
+      }
     },
     {
       "key": "Savings 9032",
@@ -125,7 +138,10 @@
       "into": "bmo_savings.csv",
       "reconcile": "balance chain closes",
       "parser": "bmo_banking",
-      "from": "2026-01"
+      "from": "2026-01",
+      "zh": {
+        "key": "储蓄账户 9032"
+      }
     },
     {
       "key": "MasterCard 5518",
@@ -158,7 +174,10 @@
       ],
       "into": "holdings_latest.csv",
       "reconcile": "replaced wholesale",
-      "from": "2026-06"
+      "from": "2026-06",
+      "zh": {
+        "key": "持仓报告"
+      }
     },
     {
       "key": "Activities",
@@ -175,7 +194,10 @@
       ],
       "into": "ws_activities.csv",
       "reconcile": "deposits, distributions and trades",
-      "from": "2026-06"
+      "from": "2026-06",
+      "zh": {
+        "key": "交易记录导出"
+      }
     }
   ],
   "archive_note": "Processed files are moved to archive/ as YYYYMMDD_<tag>_<original name>; the tag is documents[].tags."

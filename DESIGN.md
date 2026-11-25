@@ -463,7 +463,10 @@ too, and the import writes them to the same rules (update-dashboard, Step 7).
   POSTs `api/lang`, so the panel follows. **R10** draws every page in Chinese at the narrowest and
   widest widths: no key names on screen, no undefined, no sideways scroll.
 - What the owner typed (account names, plan lines, holding groups, care tiers) is shown as typed,
-  in either language.
+  in either language — unless the record carries its own Chinese beside it, an optional
+  `"zh": {"<field>": "<中文>"}` (`{"name": "Emergency fund", "zh": {"name": "应急金"}}`; in a map
+  such as `skipMonths` the zh object is keyed like the map). The page's `own(o, field)` shows it
+  in Chinese; without it nothing changes. The demo owner's labels carry one (`tools/demo.py`).
 
 ## 5b′. Words on a card
 

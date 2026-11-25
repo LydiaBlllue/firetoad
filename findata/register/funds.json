@@ -8,7 +8,11 @@
         "kind": "income",
         "name": "Take-home pay",
         "amount": 5800,
-        "note": "Payroll of $2,900 twice a month. Investment income stays with the broker and is not counted."
+        "note": "Payroll of $2,900 twice a month. Investment income stays with the broker and is not counted.",
+        "zh": {
+          "name": "税后收入",
+          "note": "工资每月发放两次，每次 $2,900。投资收入留在券商账户中，不计入。"
+        }
       },
       {
         "key": "rent",
@@ -16,7 +20,11 @@
         "name": "Rent",
         "amount": 1450,
         "afterFire": "keep",
-        "note": "Pre-authorized on the 1st, from chequing. Still there after FIRE."
+        "note": "Pre-authorized on the 1st, from chequing. Still there after FIRE.",
+        "zh": {
+          "name": "房租",
+          "note": "每月 1 日从支票账户预授权扣款。实现 FIRE 后仍需支付。"
+        }
       },
       {
         "key": "invest",
@@ -24,7 +32,11 @@
         "name": "Invest",
         "amount": 2300,
         "to": "broker",
-        "note": "Off the top, before anything else — pay-yourself-first."
+        "note": "Off the top, before anything else — pay-yourself-first.",
+        "zh": {
+          "name": "投资",
+          "note": "收入到账后最先划转，先于其他各项，即先存后花。"
+        }
       },
       {
         "key": "emergency",
@@ -32,14 +44,22 @@
         "name": "Emergency fund",
         "amount": 300,
         "to": "bmo-sav-9032",
-        "note": "To savings on the 5th."
+        "note": "To savings on the 5th.",
+        "zh": {
+          "name": "应急金",
+          "note": "每月 5 日转入储蓄账户。"
+        }
       },
       {
         "key": "everyday",
         "kind": "everyday",
         "name": "Everyday",
         "amount": 1500,
-        "note": "The guilt-free line. No categories and no caps below it."
+        "note": "The guilt-free line. No categories and no caps below it.",
+        "zh": {
+          "name": "日常支出",
+          "note": "可自由支配的部分，不再细分类别，也不设上限。"
+        }
       }
     ]
   }

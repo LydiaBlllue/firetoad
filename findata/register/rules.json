@@ -10,7 +10,10 @@
       "target": [
         15,
         25
-      ]
+      ],
+      "zh": {
+        "name": "债券"
+      }
     },
     {
       "key": "stocks",
@@ -18,12 +21,18 @@
       "symbols": [
         "VEQT",
         "XAW"
-      ]
+      ],
+      "zh": {
+        "name": "股票"
+      }
     },
     {
       "key": "other",
       "name": "Anything else",
-      "catchAll": true
+      "catchAll": true,
+      "zh": {
+        "name": "其他"
+      }
     }
   ],
   "maxHoldings": 10,
@@ -57,6 +66,9 @@
     "symbol": "VT",
     "name": "Vanguard Total World Stock ETF",
     "why": "The whole world's stocks in one fund: what the same money would have earned with no choices at all.",
+    "zh": {
+      "why": "一只基金覆盖全球股票，代表不做任何选择时同样的资金可获得的回报。"
+    },
     "asof": "2026-10-27"
   }
 }
