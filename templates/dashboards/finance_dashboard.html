@@ -605,20 +605,20 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <section data-pg="fire" hidden>
   <div class="card" style="margin-bottom:12px" id="fiCard">
-    <div class="lab">Years to financial independence</div>
+    <div class="lab" data-t="fire.years_to_fi">Years to financial independence</div>
     <div class="baseline-hero num" id="fiBig"></div>
     <div class="say" id="fiSay"></div>
     <div class="kept" id="fiKept"></div>
   </div>
   <div class="card" style="margin-bottom:12px" id="fiMoreCard">
-    <div class="ctl"><span class="cl">Invest more each month</span><input type="range" id="fiMore" min="0" max="1000" step="50" aria-label="Invest more each month"><span class="cv num" id="fiMoreV"></span></div>
+    <div class="ctl"><span class="cl" data-t="fire.more_ctl">Invest more each month</span><input type="range" id="fiMore" min="0" max="1000" step="50" aria-label="Invest more each month" data-t-aria="fire.invest_more"><span class="cv num" id="fiMoreV"></span></div>
     <div class="say" id="fiRes"></div>
-    <svg class="year-svg" id="fiChart" viewBox="0 0 940 260" preserveAspectRatio="xMidYMid meet" role="img" aria-label="What you have invested, growing to the target"></svg>
+    <svg class="year-svg" id="fiChart" viewBox="0 0 940 260" preserveAspectRatio="xMidYMid meet" role="img" aria-label="What you have invested, growing to the target" data-t-aria="fire.chart_aria"></svg>
     <div class="cap" id="fiCap"></div>
   </div>
   <div class="grid-stats" id="fireStats"></div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab">If you stopped adding today</div>
+    <div class="lab" data-t="fire.stopped_adding">If you stopped adding today</div>
     <div class="say" id="coastSay"></div>
     <div id="coastFire"></div>
   </div>
@@ -629,22 +629,22 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
   <div class="card" style="margin-bottom:10px">
     <div class="say" id="drawSay"></div>
     <div style="margin:10px 0 2px">
-      <div class="ctl"><span class="cl">Stop adding at</span><input type="range" id="stopAge" min="26" max="65" step="1"><span class="cv" id="stopAgeV"></span></div>
-      <div class="ctl"><span class="cl">Start taking at</span><input type="range" id="drawAge" min="27" max="75" step="1"><span class="cv" id="drawAgeV"></span></div>
-      <div class="ctl"><span class="cl">Light care at home</span><input type="range" id="careAge" min="60" max="95" step="1"><span class="cv" id="careAgeV"></span></div>
-      <div class="ctl"><span class="cl">Move to a home at</span><input type="range" id="ltcAge" min="60" max="95" step="1"><span class="cv" id="ltcAgeV"></span></div>
-      <div class="ctl"><span class="cl">Which home</span><div class="pills" id="carePills" style="margin:0;flex:1"></div></div>
+      <div class="ctl"><span class="cl" data-t="coast.stop_at">Stop adding at</span><input type="range" id="stopAge" min="26" max="65" step="1"><span class="cv" id="stopAgeV"></span></div>
+      <div class="ctl"><span class="cl" data-t="coast.start_at">Start taking at</span><input type="range" id="drawAge" min="27" max="75" step="1"><span class="cv" id="drawAgeV"></span></div>
+      <div class="ctl"><span class="cl" data-t="coast.light_care">Light care at home</span><input type="range" id="careAge" min="60" max="95" step="1"><span class="cv" id="careAgeV"></span></div>
+      <div class="ctl"><span class="cl" data-t="coast.ltc_at">Move to a home at</span><input type="range" id="ltcAge" min="60" max="95" step="1"><span class="cv" id="ltcAgeV"></span></div>
+      <div class="ctl"><span class="cl" data-t="coast.which_home">Which home</span><div class="pills" id="carePills" style="margin:0;flex:1"></div></div>
     </div>
     <svg class="year-svg" id="coastChart" viewBox="0 0 940 300" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="phase-key" id="coastKey"></div>
     <div id="coastNote"></div>
   </div>
   <div class="paths" style="margin-bottom:10px">
-    <div class="card anchor" id="secMoney"><div class="lab">The money</div><div id="coastMeta"></div></div>
-    <div class="card anchor" id="secCare"><div class="lab">Care</div><div id="careMeta"></div></div>
+    <div class="card anchor" id="secMoney"><div class="lab" data-t="coast.sec_money">The money</div><div id="coastMeta"></div></div>
+    <div class="card anchor" id="secCare"><div class="lab" data-t="coast.sec_care">Care</div><div id="careMeta"></div></div>
   </div>
   <div class="card anchor" id="secLasted" style="margin-bottom:10px">
-    <div class="lab" id="btLab">Would it have lasted?</div>
+    <div class="lab" id="btLab" data-t="coast.sec_lasted">Would it have lasted?</div>
     <div class="grid-stats" id="btStats" style="margin:8px 0 4px"></div>
     <svg class="year-svg" id="btChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="phase-key" id="btKey"></div>
@@ -1064,7 +1064,7 @@ const PAGES = NAV.flatMap(g => g.items);
 // element on the page, the section's own heading]. Kept beside NAV, not in it, so NAV stays one
 // flat list of pages.
 const PAGE_SECS = {
-  coast: [["secMoney", "The money"], ["secCare", "Care"], ["secLasted", "Would it have lasted?"]],
+  coast: [["secMoney", T("coast.sec_money")], ["secCare", T("coast.sec_care")], ["secLasted", T("coast.sec_lasted")]],
   acct:  [["secAccts", "Every account, by institution"], ["secGaps", "What no file shows yet"], ["secRows", "Every row in your bank accounts"]]
 
 };
@@ -2840,44 +2840,43 @@ function renderFi(){
   $("fiCard").hidden = $("fiMoreCard").hidden = !on;
   if(!on) return;
   const txt = yrsTxt(S.years), done = S.years[2] !== null && S.years[2] < 0.5, g = Math.round(S.growth*10)/10;
-  $("fiBig").textContent = done ? "Already there" : txt ? "About "+txt+" years" : "Not at this pace";
-  const of = S.fromPlan ? "what you spend" : "your "+term("planning_figure", "planning figure");
-  $("fiSay").innerHTML = done ? "What you have invested already covers 25 years of "+of+" ("+fmt(S.target)+")."
-    : !txt ? "Nothing reaches "+BROKER+" each month yet, so what you have invested only grows on its own."
-    : "At the <b>"+fmt(S.invest)+"</b> a month that "+(S.paceMonths ? "reached "+BROKER+" over the last "+S.paceMonths+" month"+(S.paceMonths === 1 ? "" : "s") : "your plan sends to "+BROKER)
-      + ", until what you have invested covers 25 years of "+of+" ("+fmt(S.target)+").";
+  $("fiBig").textContent = done ? T("fire.already_there") : txt ? T("home.yrs_value", {years: txt}) : T("fire.not_at_pace");
+  const of = S.fromPlan ? "spend" : "planfig", sayV = {amount: "<b>"+fmt(S.invest)+"</b>", broker: BROKER, target: fmt(S.target)};
+  $("fiSay").innerHTML = done ? T(S.fromPlan ? "fire.say_done_spend" : "fire.say_done_plan", sayV)
+    : !txt ? T("fire.say_no_pace", sayV)
+    : S.paceMonths ? TN("fire.say_pace_"+of, S.paceMonths, sayV) : T("fire.say_pace_"+of+"_plan", sayV);
   if(S.rate !== undefined){
-    const parts = S.jobs.map((j, i) => [j[0], j[1], i ? "#9a9890" : "var(--ink)"]).concat(S.free > 0.5 ? [["No job yet", S.free, "#e8c27a"]] : []);
+    const parts = S.jobs.map((j, i) => [j[0], j[1], i ? "#9a9890" : "var(--ink)"]).concat(S.free > 0.5 ? [[T("fire.no_job"), S.free, "#e8c27a"]] : []);
     const tot = Math.max(S.keep, parts.reduce((a,p) => a + p[1], 0)) || 1;
-    $("fiKept").innerHTML = '<div class="sl">Of the <b>'+fmt(S.keep)+'</b> you keep each month — <b>'+Math.round(S.rate*100)+'%</b> of what you earn, your '+term("savings_rate", "savings rate")+':</div>'
+    $("fiKept").innerHTML = '<div class="sl">'+T("fire.kept_line", {keep: "<b>"+fmt(S.keep)+"</b>", pct: "<b>"+Math.round(S.rate*100)+"</b>"})+'</div>'
       + '<div class="kb">'+parts.filter(p => p[1] > 0).map(p => '<span style="width:'+(p[1]/tot*100)+'%;background:'+p[2]+'"></span>').join("")+'</div>'
       + '<div class="kk">'+parts.map(p => '<span><i style="background:'+p[2]+'"></i>'+p[0]+' <b>'+fmt(p[1])+'</b></span>').join("")+'</div>'
-      + (S.free < -0.5 ? '<div class="cap">You set aside '+fmt(-S.free)+' a month more than you keep; it comes out of what you already have.</div>' : "");
+      + (S.free < -0.5 ? '<div class="cap">'+T("fire.overcommit", {amount: fmt(-S.free)})+'</div>' : "");
   } else $("fiKept").innerHTML = "";
   $("fiMoreCard").hidden = done;
   if(done) return;
   const inp = $("fiMore");
   if(!inp.dataset.set){ inp.value = S.free > 25 ? Math.min(1000, Math.round(S.free/50)*50) : 200; inp.dataset.set = "1"; inp.oninput = renderFi; }
   const more = Number(inp.value), M = S.more.find(x => x.more === more) || S.more[0];
-  $("fiMoreV").textContent = "+"+fmt(more);
+  $("fiMoreV").textContent = T("fire.more_value", {amount: fmt(more)});
   const sooner = S.years[1] !== null && M.years[1] !== null ? Math.round(S.years[1] - M.years[1]) : null;
-  $("fiRes").innerHTML = !more ? "Move the slider to see what investing a little more is worth."
-    : "Investing "+fmt(more)+" more a month: about <b>"+yrsTxt(M.years)+" years</b>"
-      + (sooner > 0 ? " — <b style=\"color:#006300\">about "+sooner+" year"+(sooner === 1 ? "" : "s")+" sooner</b>" : "")
-      + (S.free > 25 && Math.abs(more - S.free) < 50 ? ". That is about what has no job yet." : ".");
-  const lines = [[S.invest, S.years, "var(--ink)", "Now", ""], [S.invest + more, M.years, "#006300", "+"+fmt(more)+" a month", "4 3"]]
+  $("fiRes").innerHTML = !more ? (txt ? T("fire.more_zero", {years: "<b>"+txt+"</b>"}) : T("fire.not_at_pace"))
+    : T("fire.more_res" + (sooner > 0 ? (sooner === 1 ? "_sooner_one" : "_sooner_many") : "")
+        + (S.free > 25 && Math.abs(more - S.free) < 50 ? "_free" : ""),
+        {amount: fmt(more), years: "<b>"+yrsTxt(M.years)+"</b>", n: '<b style="color:#006300">'+sooner+'</b>'});
+  const lines = [[S.invest, S.years, "var(--ink)", T("fire.line_now"), "", 1], [S.invest + more, M.years, "#006300", T("fire.line_more", {amount: fmt(more)}), "4 3", 0]]
     .filter((l, i) => (i === 0 || more) && l[1][1] !== null);
   const ymax = Math.min(60, Math.ceil(Math.max(10, ...lines.map(l => l[1][0] || l[1][1] || 0)) / 5) * 5 + 5);
-  const [W, H] = fit("fiChart", 260), pl = 58, pr = 14, pt = 18, pb = 26, T = S.target, vmax = T * 1.12;
+  const [W, H] = fit("fiChart", 260), pl = 58, pr = 14, pt = 18, pb = 26, TG = S.target, vmax = TG * 1.12;
   const x = t => pl + t/ymax*(W-pl-pr), y = v => pt + (1 - Math.min(v, vmax)/vmax)*(H-pt-pb);
   const grow = (cm, r) => { const out = []; let v = S.portfolio; for(let t = 0; t <= ymax; t++){ out.push(v); v = v*(1+r) + cm*12; } return out; };
-  let out = '<defs><clipPath id="fiBelow"><rect x="'+pl+'" y="'+y(T)+'" width="'+(W-pl-pr)+'" height="'+(H-pb-y(T))+'"/></clipPath></defs>';
-  const step = T > 1.6e6 ? 500000 : T > 600000 ? 250000 : T > 250000 ? 100000 : 50000;
-  for(let v = 0; v <= vmax; v += step) if(Math.abs(y(v) - y(T)) > 14)
-    out += '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--grid)"/><text x="'+(pl-6)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--muted)">$'+Math.round(v/1000)+'k</text>';
-  for(let t = 0; t <= ymax; t += 10) out += '<text x="'+x(t)+'" y="'+(H-8)+'" text-anchor="'+(t ? "middle" : "start")+'" font-size="11" fill="var(--muted)">'+(t ? "+"+t+" y" : "now")+'</text>';
-  out += '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(T)+'" y2="'+y(T)+'" stroke="var(--ink)" stroke-dasharray="5 4"/>'
-    + '<text x="'+(pl-6)+'" y="'+(y(T)+4)+'" text-anchor="end" font-size="11" font-weight="600" fill="var(--ink)">Target</text><g clip-path="url(#fiBelow)">';
+  let out = '<defs><clipPath id="fiBelow"><rect x="'+pl+'" y="'+y(TG)+'" width="'+(W-pl-pr)+'" height="'+(H-pb-y(TG))+'"/></clipPath></defs>';
+  const step = TG > 1.6e6 ? 500000 : TG > 600000 ? 250000 : TG > 250000 ? 100000 : 50000;
+  for(let v = 0; v <= vmax; v += step) if(Math.abs(y(v) - y(TG)) > 14)
+    out += '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--grid)"/><text x="'+(pl-6)+'" y="'+(y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--muted)">'+T("fire.axis_k", {n: Math.round(v/1000)})+'</text>';
+  for(let t = 0; t <= ymax; t += 10) out += '<text x="'+x(t)+'" y="'+(H-8)+'" text-anchor="'+(t ? "middle" : "start")+'" font-size="11" fill="var(--muted)">'+(t ? T("fire.axis_years", {n: t}) : T("fire.axis_now"))+'</text>';
+  out += '<line x1="'+pl+'" x2="'+(W-pr)+'" y1="'+y(TG)+'" y2="'+y(TG)+'" stroke="var(--ink)" stroke-dasharray="5 4"/>'
+    + '<text x="'+(pl-6)+'" y="'+(y(TG)+4)+'" text-anchor="end" font-size="11" font-weight="600" fill="var(--ink)">'+T("fire.target_line")+'</text><g clip-path="url(#fiBelow)">';
   const pts = a => a.map((v,t) => x(t).toFixed(1)+","+y(v).toFixed(1)).join(" "), R = S.returns;
   lines.forEach(([cm, , col, , dash]) => {
     const hi = grow(cm, R[2]), lo = grow(cm, R[0]);
@@ -2886,21 +2885,20 @@ function renderFi(){
   });
   out += '</g>';
   // each line is named where it reaches the target (direct labels, no legend)
-  lines.forEach(([, Y, col, name]) => {
+  lines.forEach(([, Y, col, name, , right]) => {
     if(Y[1] > ymax) return;
-    const cx = x(Y[1]), right = name === "Now";
-    out += '<circle cx="'+cx+'" cy="'+y(T)+'" r="4.5" fill="'+col+'"/>'
-      + '<text x="'+(right ? cx + 8 : cx - 8)+'" y="'+(y(T)-8)+'" text-anchor="'+(right ? "start" : "end")+'" font-size="11.5" font-weight="600" fill="'+col+'">'+name+' · '+Math.round(Y[1])+' y</text>';
+    const cx = x(Y[1]);
+    out += '<circle cx="'+cx+'" cy="'+y(TG)+'" r="4.5" fill="'+col+'"/>'
+      + '<text x="'+(right ? cx + 8 : cx - 8)+'" y="'+(y(TG)-8)+'" text-anchor="'+(right ? "start" : "end")+'" font-size="11.5" font-weight="600" fill="'+col+'">'+T("fire.line_label", {name: name, n: Math.round(Y[1])})+'</text>';
   });
   $("fiChart").innerHTML = out;
-  $("fiCap").innerHTML = "The dashed line is the target. Each line is what you have invested, growing "+g+"% a year after inflation ("
-    + '<a href="#" onclick="setPage(\'set\');return false">your setting</a>); the shading is '+Math.round(R[0]*100)+"% to "+Math.round(R[2]*100)+"%. Roughly, not a date." + mixPast();
+  $("fiCap").innerHTML = T("fire.chart_cap", {g: g, lo: Math.round(R[0]*100), hi: Math.round(R[2]*100)}) + mixPast();
 }
 function renderFire(){
   renderFi();
   if(unset("planBase")){
     // No planning figure, no target: every number on these pages is a share of it.
-    $("fireStats").innerHTML = StatCard(term("fire_target", "Target"), notSet("planBase"));
+    $("fireStats").innerHTML = StatCard(term("fire_target", T("fire.target")), notSet("planBase"));
   }
   const I = INVEST;
   const adjBase = PLAN_BASE;
@@ -2908,10 +2906,10 @@ function renderFire(){
   const fcard = StatCard;
   if(!unset("planBase")){
   $("fireStats").innerHTML =
-      fcard(term("fire", "FIRE")+" progress", numx(pct+"%", [["Portfolio", fmt(PORTFOLIO)], ["Target", fmt(target)]], "The portfolio as a share of the target."),
+      fcard(T("fire.progress").replace("FIRE", term("fire", "FIRE")), numx(pct+"%", [[T("fire.portfolio"), fmt(PORTFOLIO)], [T("fire.target"), fmt(target)]], T("fire.progress_sum")),
             '<div class="fire-track" style="margin-top:8px"><div class="fire-fill" style="width:'+Math.min(pct, 100)+'%"></div></div>', {raw: true})
-    + fcard("Still to go", numx(fmt(gap), [["Target", fmt(target)], ["Portfolio", "\u2212"+fmt(PORTFOLIO)]], "", true))
-    + fcard(term("fire_target", "Target"), numx(fmt(target), [[term("planning_figure", "Planning figure"), fmt(adjBase)+" a month"], ["A year of it", fmt(adjBase*12)], ["Times 25", fmt(target)]], "25 years of spending, from the 4% rule."));
+    + fcard(T("fire.still_to_go"), numx(fmt(gap), [[T("fire.target"), fmt(target)], [T("fire.portfolio"), "\u2212"+fmt(PORTFOLIO)]], "", true))
+    + fcard(term("fire_target", T("fire.target")), numx(fmt(target), [[term("planning_figure", T("fire.planning_figure")), T("fire.a_month", {amount: fmt(adjBase)})], [T("fire.a_year_of_it"), fmt(adjBase*12)], [T("fire.times_25"), fmt(target)]], T("fire.target_sum")));
   }
   const baseLock = cantChange("planBase");
   $("baseHero").innerHTML = '<span class="'+(baseLock ? "" : "plan-edit ")+'num" id="planEdit" title="'+(baseLock || "Click to change")+'">'
@@ -2968,11 +2966,11 @@ function renderFire(){
   };
   drawOff(unset("planBase") || unset("born"));
   if(unset("planBase")){
-    $("drawSay").innerHTML = "Whether the money lasts is measured against a "+term("planning_figure", "planning figure")+": "+notSet("planBase");
+    $("drawSay").innerHTML = T("fire.draw_need_plan");
     return;
   }
   if(unset("born")){
-    $("drawSay").innerHTML = "The drawdown runs by age: "+notSet("born");
+    $("drawSay").innerHTML = T("fire.draw_need_born");
     return;
   }
   renderCoast(target, adjBase*12);
@@ -3145,14 +3143,14 @@ function renderCoast(target, annualSpend){
   drawAge = Math.max(stopAge+1, drawAge);
   $("stopAge").min = AGE_NOW; $("stopAge").value = stopAge;
   $("drawAge").min = AGE_NOW+1; $("drawAge").value = drawAge;
-  $("stopAgeV").textContent = stopAge === AGE_NOW ? "now, "+AGE_NOW : stopAge;
-  $("drawAgeV").textContent = drawAge;
+  $("stopAgeV").textContent = stopAge === AGE_NOW ? T("draw.stop_now", {age: AGE_NOW}) : ageTxt(stopAge);
+  $("drawAgeV").textContent = ageTxt(drawAge);
   careAge = Math.max(drawAge, careAge);
   ltcAge = Math.max(careAge, ltcAge);
   $("careAge").min = drawAge; $("careAge").value = careAge;
   $("ltcAge").min = careAge; $("ltcAge").value = ltcAge;
-  $("careAgeV").textContent = careAge;
-  $("ltcAgeV").textContent = ltcAge >= LIFE_TO ? "never" : ltcAge;
+  $("careAgeV").textContent = ageTxt(careAge);
+  $("ltcAgeV").textContent = ltcAge >= LIFE_TO ? T("draw.ltc_never") : ageTxt(ltcAge);
   const ltc = LTC_TIERS[ltcTier];
   $("carePills").innerHTML = LTC_TIERS.map((t,i) =>
     '<button class="pill num'+(i===ltcTier?" sel":"")+'" data-i="'+i+'" title="'+t.d+'">'+t.k+'</button>').join("");
@@ -3190,25 +3188,26 @@ function renderCoast(target, annualSpend){
   // Coast is a FIRE question (when do you get there), so it is answered on the FIRE page.
   const rPct = (COAST_R*100).toFixed(0)+"%";
   $("coastSay").innerHTML = PORTFOLIO <= 0
-    ? "Nothing is invested yet, so nothing grows toward the target on its own."
+    ? T("coast.say_nothing_invested")
     : reach === null
-    ? "Left alone at "+rPct+" a year, today\u2019s <b>"+fmt(PORTFOLIO)+"</b> does not reach the "+fmt(target)+" target within your lifetime."
-    : "If you never added another dollar, today\u2019s <b>"+fmt(PORTFOLIO)+"</b> would grow into the <b>"+fmt(target)+"</b> target on its own by about <b>age "+Math.ceil(reach)+"</b>.";
+    ? T("coast.say_never_reaches", {pct: rPct, amount: "<b>"+fmt(PORTFOLIO)+"</b>", target: fmt(target)})
+    : T("coast.say_reaches", {amount: "<b>"+fmt(PORTFOLIO)+"</b>", target: "<b>"+fmt(target)+"</b>", age: "<b>"+Math.ceil(reach)+"</b>"});
   $("coastFire").innerHTML = metaList([
-    reach === null ? null : ["The year", String(Number(TODAY.slice(0,4)) + Math.ceil(reach - AGE_NOW))],
-    [term("real_return", "Return assumed"), rPct+" a year"]
+    reach === null ? null : [T("coast.meta_year"), yrTxt(Number(TODAY.slice(0,4)) + Math.ceil(reach - AGE_NOW))],
+    [term("real_return", T("coast.meta_return")), T("common.pct_a_year", {pct: rPct})]
   ]);
 
   $("coastMeta").innerHTML = metaList([
-    ["Pot at "+drawAge+", when you start taking", fmt(atDraw)],
-    ["Taken each year", fmt(annualSpend)],
-    [term("withdrawal_rate", "Withdrawal rate")+" at "+drawAge, empty ? "\u2014" : numx(safeRate.toFixed(1)+"%", [["Taken each year", fmt(annualSpend)], ["Pot", fmt(atDraw)]], "")],
-    !lasts && !empty && run.short > 0 ? [term("shortfall", "Shortfall")+", "+Math.floor(run.dead)+" to "+LIFE_TO,
-      numx(fmt(run.short), [], "What is still to pay after the money has run out \u2014 spending and care, less any pensions \u2014 added up in today\u2019s money. It says how much is missing, not where it would come from."), "hi"] : null
+    [T("money.pot_at_start", {age: drawAge}), fmt(atDraw)],
+    [T("money.taken_each_year"), fmt(annualSpend)],
+    [term("withdrawal_rate", T("money.withdrawal_rate_at", {age: drawAge})), empty ? "\u2014" : numx(safeRate.toFixed(1)+"%", [[T("money.taken_each_year"), fmt(annualSpend)], [T("money.pot"), fmt(atDraw)]], "")],
+    !lasts && !empty && run.short > 0 ? [term("shortfall", T("money.shortfall_label", {age: Math.floor(run.dead), end: LIFE_TO})),
+      numx(fmt(run.short), [], T("money.shortfall_note")), "hi"] : null
   ].concat(PENSIONS.length
-    ? PENSIONS.map(p => [term(p.k === "OAS" ? "oas" : p.k === "CPP" ? "cpp" : "", p.k)+" from "+p.from,
-        numx(fmt(p.v)+" a month", [], "From "+(p.src || "your own statement")+(p.asof ? ", "+p.asof : "")+", in today\u2019s dollars. It pays part of what is taken out from that age.")])
-    : [["Government pensions", numx("Not counted", [], "CPP and OAS are not in this plan yet. Give Claude the estimates your My Service Canada account shows, and they pay part of what is taken out from the age each starts.")]]));
+    ? PENSIONS.map(p => [term(p.k === "OAS" ? "oas" : p.k === "CPP" ? "cpp" : "", T("money.pension_label", {pension: p.k, age: p.from})),
+        numx(T("common.a_month", {amount: fmt(p.v)}), [], T(p.asof ? "money.pension_note_dated" : "money.pension_note",
+          {source: p.src || T("money.pension_source_default"), date: p.asof ? dFull(p.asof) : ""}))])
+    : [[T("money.pensions_label"), numx(T("money.pensions_not_counted"), [], T("money.pensions_not_counted_note"))]]));
 
   // What the care assumption actually costs, in today's money.
   {
@@ -3223,27 +3222,26 @@ function renderCoast(target, annualSpend){
     const stayEnd   = runStayHome.dead === null ? null : Math.floor(runStayHome.dead);
     const early = brokeBefore(run, careAge), extra = early ? null : extraNeeded(run, drawM, careAge, ltcA, ltc);
     $("careMeta").innerHTML = metaList([
-      [term("long_term_care", "Light care at home")+", from "+careAge, numx(fmt(atHome)+" a month", [["Today", fmt(HOME_CARE.v)], ["At "+careAge, fmt(atHome)]],
-        HOME_CARE.d+". Rising "+(HOME_CARE.esc*100).toFixed(1)+"% a year above inflation.")],
-      ltcA === null ? ["Moving to a home", "Never", "mut"]
-        : ["Then "+ltc.k+", from "+ltcAge, numx(fmt(atLtc)+" a month", [["Today", fmt(ltc.v)], ["At "+ltcAge, fmt(atLtc)]],
-            ltc.d+". Rising "+(ltc.esc*100).toFixed(1)+"% a year above inflation.")],
-      ["Whole care bill, "+careAge+" to "+LIFE_TO, fmt(bill)],
-      ["Extra needed at "+careAge, early ? "The money runs out at "+Math.floor(run.dead)+", before care starts" : extra === null ? "\u2014" : extra === 0 ? "None" : numx(fmt(extra), [], "The smallest lump at "+careAge+" that keeps the pot alive to "+LIFE_TO+"."), extra ? "hi" : ""],
-    ]) + (ltcA === null ? "" : '<div class="cap" style="margin-top:8px">From '+ltcAge+' the care-home fee is charged on top of the whole planning figure, so the plan has more room after '+ltcAge+' than the chart shows.</div>');
+      [term("long_term_care", T("care.home_label", {age: careAge})), numx(T("common.a_month", {amount: fmt(atHome)}), [[T("care.today"), fmt(HOME_CARE.v)], [T("care.at_age", {age: careAge}), fmt(atHome)]],
+        T("care.rising_note", {description: HOME_CARE.d, pct: (HOME_CARE.esc*100).toFixed(1)+"%"}))],
+      ltcA === null ? [T("care.move_label"), T("care.move_never"), "mut"]
+        : [T("care.ltc_label", {tier: ltc.k, age: ltcAge}), numx(T("common.a_month", {amount: fmt(atLtc)}), [[T("care.today"), fmt(ltc.v)], [T("care.at_age", {age: ltcAge}), fmt(atLtc)]],
+            T("care.rising_note", {description: ltc.d, pct: (ltc.esc*100).toFixed(1)+"%"}))],
+      [T("care.whole_bill", {age: careAge, end: LIFE_TO}), fmt(bill)],
+      [T("care.extra_label", {age: careAge}), early ? T("care.extra_broke", {age: Math.floor(run.dead)}) : extra === null ? "\u2014" : extra === 0 ? T("care.extra_none") : numx(fmt(extra), [], T("care.extra_note", {age: careAge, end: LIFE_TO})), extra ? "hi" : ""],
+    ]) + (ltcA === null ? "" : '<div class="cap" style="margin-top:8px">'+T("care.ltc_cap", {age: ltcAge})+'</div>');
   }
 
   const line = empty
-    ? "Nothing is invested yet, so there is no pot to draw from. Money added each month, or a first broker report, fills this page."
+    ? T("draw.line_empty")
     : !lasts
-    ? "The pot does not reach "+LIFE_TO+"."+(atDraw >= annualSpend ? " It peaks at "+peakR.toFixed(1)+"% around age "+Math.floor(peakA) : " On the day you start taking money out it holds less than a year of spending")
-      +" and runs out at "+Math.floor(run.dead)+"."
+    ? (atDraw >= annualSpend ? T("draw.line_runs_out_peak", {end: LIFE_TO, pct: peakR.toFixed(1)+"%", peak_age: Math.floor(peakA), age: Math.floor(run.dead)})
+      : T("draw.line_runs_out_small", {end: LIFE_TO, age: Math.floor(run.dead)}))
     : peakR <= 4
-    ? "Through age "+(LIFE_TO-HORIZON)+" the rate never goes above "+peakR.toFixed(1)+"%."
-    : "The rate starts at "+safeRate.toFixed(1)+"% and peaks at "+peakR.toFixed(1)+"% around age "+Math.floor(peakA)
-      +", above the 4% rule. That stretch has no slack.";
+    ? T("draw.line_safe", {age: LIFE_TO-HORIZON, pct: peakR.toFixed(1)+"%"})
+    : T("draw.line_peak", {pct: safeRate.toFixed(1)+"%", peak_pct: peakR.toFixed(1)+"%", age: Math.floor(peakA)});
   $("coastNote").innerHTML = (lasts && peakR <= 4 ? '<div class="say" style="margin-top:10px">'+line+'</div>' : noteBox(line))
-    + '<div class="cap" style="margin-top:6px">Every figure is in today\u2019s money, so the '+fmt(MONTHLY_CONTRIB)+' a month has to rise with inflation each year to stay on this line.</div>';
+    + '<div class="cap" style="margin-top:6px">'+T("draw.inflation_cap", {amount: fmt(MONTHLY_CONTRIB)})+'</div>';
 
   const bt = backtest(atDraw, drawM, drawAge, careAge, ltcA, ltc);
   if($("sumMoney")) $("sumMoney").innerHTML = empty ? "Nothing to draw from yet"
@@ -3254,21 +3252,21 @@ function renderCoast(target, annualSpend){
     : RET_HIST.years ? "Nothing to replay yet" : "No history on record yet";
   // The answer is two cards, side by side (2026-11-15, user 001): what a steady return gives,
   // and how often real history did as well. The sliders and the chart are the next card.
-  const steady = lasts ? "Lasts to "+LIFE_TO : "Runs out at "+Math.floor(run.dead);
+  const steady = lasts ? T("draw.lasts_to", {end: LIFE_TO}) : T("draw.runs_out_at", {age: Math.floor(run.dead)});
   const okShare = bt ? bt.ok / bt.n : null;
-  $("drawAns").innerHTML = empty ? StatCard("Will the money last?", "Nothing to draw from yet", "", {text: true})
-    : StatCard("At a steady "+rPct+" a year", steady, "Taking "+fmt(annualSpend/12)+" a month from "+drawAge+". "+rPct+' is <a href="#" onclick="setPage(\'set\');return false">your setting</a>.', {text: true})
-      + (bt ? StatCard("In real history, since "+bt.from, "Lasted in "+bt.ok+" of "+bt.n, "Every start year on record, your mix today, year by year.", {text: true, color: okShare < 0.9 ? "#c98500" : null}) : "");
-  $("drawSay").innerHTML = empty ? "" : "Move the ages to see when the money runs out, and what care does to it.";
+  $("drawAns").innerHTML = empty ? StatCard(T("draw.ans_label_empty"), T("draw.nothing_yet"), "", {text: true})
+    : StatCard(T("draw.ans_steady_label", {pct: rPct}), steady, T("draw.ans_steady_cap", {amount: fmt(annualSpend/12), age: drawAge}), {text: true})
+      + (bt ? StatCard(T("draw.ans_hist_label", {year: bt.from}), T("draw.ans_hist_value", {ok: bt.ok, n: bt.n}), T("draw.ans_hist_cap"), {text: true, color: okShare < 0.9 ? "#c98500" : null}) : "");
+  $("drawSay").innerHTML = empty ? "" : T("draw.say");
   renderBacktest(bt, atDraw);
 
   // only show a colour that is actually on the chart
   $("coastKey").innerHTML =
-    (stopAge > AGE_NOW ? '<span><i style="background:'+PH.grow+'"></i>Still adding money</span>' : "")
-   +'<span><i style="background:'+PH.coast+'"></i>Growing on its own</span>'
-   +'<span><i style="background:'+PH.draw+'"></i>Taking money out</span>'
-   +'<span><i style="background:'+PH.care+'"></i>Light care at home</span>'
-   +(ltcA === null ? "" : '<span><i style="background:'+PH.ltc+'"></i>In a care home</span>');
+    (stopAge > AGE_NOW ? '<span><i style="background:'+PH.grow+'"></i>'+T("key.still_adding")+'</span>' : "")
+   +'<span><i style="background:'+PH.coast+'"></i>'+T("key.growing")+'</span>'
+   +'<span><i style="background:'+PH.draw+'"></i>'+T("key.taking")+'</span>'
+   +'<span><i style="background:'+PH.care+'"></i>'+T("key.home_care")+'</span>'
+   +(ltcA === null ? "" : '<span><i style="background:'+PH.ltc+'"></i>'+T("key.care_home")+'</span>');
   drawCoast(run, target, atDraw, careAge, ltcA);
   saveState();
 }
@@ -3301,8 +3299,8 @@ function renderBacktest(bt, pot0){
   if(!bt){
     card.querySelector("#btStats").innerHTML = "";
     $("btChart").innerHTML = ""; $("btKey").innerHTML = ""; $("btMeta").innerHTML = "";
-    $("btNote").innerHTML = '<div class="empty">'+(RET_HIST.years ? "Nothing to replay: the pot never reaches the day you start taking money out."
-      : "No history of returns yet. It is fetched with the next update.")+'</div>';
+    $("btNote").innerHTML = '<div class="empty">'+(RET_HIST.years ? T("bt.empty_never")
+      : T("bt.empty_no_history"))+'</div>';
     return;
   }
   const fails = bt.runs.filter(r => r.dead !== null);
@@ -3310,11 +3308,11 @@ function renderBacktest(bt, pot0){
                              : bt.runs.reduce((a,r) => r.end < a.end ? r : a);
   const rate = Math.round(bt.ok / bt.n * 100);
   const med = [...bt.runs].map(r => r.end).sort((a,b) => a-b)[Math.floor(bt.n/2)];
-  $("btLab").textContent = "Would it have lasted?";
+  $("btLab").textContent = T("bt.title");
   $("btStats").innerHTML =
     // how many lasted is the answer card's at the top of the page; here, the worst and the middle
-    StatCard(fails.length ? "Worst start" : "Closest call", worst.y, fails.length ? "runs out at "+Math.floor(worst.dead) : fmt(worst.end)+" left at "+LIFE_TO) +
-    StatCard("Left at "+LIFE_TO+", middle case", fmt(med));
+    StatCard(fails.length ? T("bt.worst_start") : T("bt.closest_call"), worst.y, fails.length ? T("bt.worst_cap", {age: Math.floor(worst.dead)}) : T("bt.left_at", {amount: fmt(worst.end), end: LIFE_TO})) +
+    StatCard(T("bt.middle", {end: LIFE_TO}), fmt(med));
   // One bar per start year: green above the line is what is left at the end, red below is how
   // many years short the money fell.
   const [W, H] = fit("btChart", 220), padL=58, padR=8, padT=12, padB=28, mid = padT + (H-padT-padB)*0.7;
@@ -3339,20 +3337,20 @@ function renderBacktest(bt, pot0){
   const svg = $("btChart"); svg.innerHTML = out;
   svg.querySelectorAll("rect[data-i]").forEach(el => {
     const r = bt.runs[Number(el.dataset.i)];
-    hoverable(el, "Start taking in "+r.y+"<br>"+(r.dead === null ? fmt(r.end)+" left at "+LIFE_TO : "runs out at "+Math.floor(r.dead)));
+    hoverable(el, r.dead === null ? T("bt.tip_lasted", {year: r.y, amount: fmt(r.end), end: LIFE_TO}) : T("bt.tip_ran_out", {year: r.y, age: Math.floor(r.dead)}));
   });
-  $("btKey").innerHTML = '<span><i style="background:#1baf7a"></i>Lasted: what is left at '+LIFE_TO+'</span>'
-    + (fails.length ? '<span><i style="background:#d03b3b"></i>Ran out: the longer the bar, the earlier</span>' : "");
+  $("btKey").innerHTML = '<span><i style="background:#1baf7a"></i>'+T("bt.key_lasted", {end: LIFE_TO})+'</span>'
+    + (fails.length ? '<span><i style="background:#d03b3b"></i>'+T("bt.key_ran_out")+'</span>' : "");
   const mix = RET_HIST.mix || {};
-  const nm = {stocks:"stocks", bonds:"bonds", cash:"cash", gold:"gold"};
+  const nm = {stocks:T("bt.asset_stocks"), bonds:T("bt.asset_bonds"), cash:T("bt.asset_cash"), gold:T("bt.asset_gold")};
   $("btMeta").innerHTML = metaList([
-    [term("backtest", "Each stretch"), numx(bt.N+" years, age "+drawAge+" to "+LIFE_TO, [], "Starting in that year with the pot the steady path gives you at "+drawAge+"; every year after earns what the market really earned, after inflation.")],
-    ["Mixed like the portfolio today", numx(Object.keys(mix).sort((a,b) => mix[b]-mix[a]).map(k => Math.round(mix[k]*100)+"% "+(nm[k]||k)).join(" \u00b7 "), [],
-      "Stocks earn the S&P 500, bonds the 10-year Treasury, cash the 3-month T-bill. Crypto has no century of history and counts as stocks.")],
-    ["Years on record", RET_HIST.years[0][0]+"\u2013"+RET_HIST.years[RET_HIST.years.length-1][0]]
+    [term("backtest", T("bt.stretch_label")), numx(T("bt.stretch_value", {n: bt.N, age: drawAge, end: LIFE_TO}), [], T("bt.stretch_note", {age: drawAge, pct: (COAST_R*100).toFixed(0)+"%"}))],
+    [T("bt.mix_label"), numx(Object.keys(mix).sort((a,b) => mix[b]-mix[a]).map(k => T("bt.mix_item", {pct: Math.round(mix[k]*100)+"%", asset: nm[k]||k})).join(" \u00b7 "), [],
+      T("bt.mix_note"))],
+    [T("bt.years_label"), RET_HIST.years[0][0]+"\u2013"+RET_HIST.years[RET_HIST.years.length-1][0]]
   ]);
-  $("btNote").innerHTML = '<div class="cap" style="margin-top:8px">American history, the best stock market of the century, and the stretches overlap: read the rate as the friendly end of the range.</div>'
-    + (rate < 90 ? noteBox("<b>Under 90% leans on luck.</b> Starting later, spending less or holding more at the start all raise it.") : "");
+  $("btNote").innerHTML = '<div class="cap" style="margin-top:8px">'+T("bt.caveat")+'</div>'
+    + (rate < 90 ? noteBox(T("bt.warn")) : "");
 }
 function drawCoast(run, target, atDraw, careA, ltcA){
   const [W, H] = fit("coastChart", 300), padL=58, padR=10, padT=18, padB=30;
@@ -3373,12 +3371,12 @@ function drawCoast(run, target, atDraw, careA, ltcA){
     // a decade too close to today's age, which is written at the start, is a line without its number
     const room = ageX(a) - padL > 28;
     out += '<line x1="'+ageX(a)+'" y1="'+padT+'" x2="'+ageX(a)+'" y2="'+(H-padB)+'" stroke="var(--grid)"/>'
-        +  (room ? '<text x="'+ageX(a)+'" y="'+(H-10)+'" text-anchor="middle" font-size="12" class="num" fill="var(--muted)">'+a+'</text>' : '');
+        +  (room ? '<text x="'+ageX(a)+'" y="'+(H-10)+'" text-anchor="middle" font-size="12" class="num" fill="var(--muted)">'+ageTxt(a)+'</text>' : '');
   }
   out += '<line x1="'+padL+'" y1="'+(H-padB)+'" x2="'+(W-padR)+'" y2="'+(H-padB)+'" stroke="var(--grid)"/>';
-  out += '<text x="'+padL+'" y="'+(H-10)+'" text-anchor="start" font-size="12" class="num" fill="var(--muted)">'+AGE_NOW+'</text>';
+  out += '<text x="'+padL+'" y="'+(H-10)+'" text-anchor="start" font-size="12" class="num" fill="var(--muted)">'+ageTxt(AGE_NOW)+'</text>';
   out += '<line x1="'+padL+'" y1="'+y(target)+'" x2="'+(W-padR)+'" y2="'+y(target)+'" stroke="#d03b3b" stroke-width="2" stroke-dasharray="6 4"/>'
-      +  '<text x="'+(W-padR)+'" y="'+(y(target)-7)+'" text-anchor="end" font-size="12" class="num" fill="#d03b3b" font-weight="700">Target '+fmt(target)+'</text>';
+      +  '<text x="'+(W-padR)+'" y="'+(y(target)-7)+'" text-anchor="end" font-size="12" class="num" fill="#d03b3b" font-weight="700">'+T("chart.target", {amount: fmt(target)})+'</text>';
   // one polyline per phase so the colour itself says which stage you are in
   const seg = (from,to,col) => {
     let d="";
@@ -3390,16 +3388,16 @@ function drawCoast(run, target, atDraw, careA, ltcA){
   out += seg(0,sM,PH.grow) + seg(sM,dM,PH.coast) + seg(dM,Math.min(cM,n),PH.draw)
        + (careA===null ? "" : seg(cM,Math.min(lM,n),PH.care))
        + (ltcA===null  ? "" : seg(lM,n,PH.ltc));
-  [[stopAge,"Stop adding",PH.coast],[drawAge,"Start taking",PH.draw]]
-    .concat(careA===null?[]:[[careA,"Care at home",PH.care]])
-    .concat(ltcA===null?[]:[[ltcA,"Care home",PH.ltc]]).forEach(([a,lab,c]) => {
-    if(a<=AGE_NOW && lab==="Stop adding") return;
+  [[stopAge,"chart.stop",PH.coast],[drawAge,"chart.start",PH.draw]]
+    .concat(careA===null?[]:[[careA,"chart.care_at_home",PH.care]])
+    .concat(ltcA===null?[]:[[ltcA,"chart.care_home",PH.ltc]]).forEach(([a,lab,c]) => {
+    if(a<=AGE_NOW && lab==="chart.stop") return;
     // Each label on its own row: at the right edge the two care lines and the target sit close.
-    const row = lab==="Care at home" ? 1 : lab==="Care home" ? 2 : lab==="Start taking" && drawAge - stopAge < 8 && stopAge > AGE_NOW ? 1 : 0;
+    const row = lab==="chart.care_at_home" ? 1 : lab==="chart.care_home" ? 2 : lab==="chart.start" && drawAge - stopAge < 8 && stopAge > AGE_NOW ? 1 : 0;
     // near the right edge a label reads leftward from its line, so it is never cut off
     const nearR = ageX(a) > W - padR - 90;
     out += '<line x1="'+ageX(a)+'" y1="'+padT+'" x2="'+ageX(a)+'" y2="'+(H-padB)+'" stroke="'+c+'" stroke-width="1.5" stroke-dasharray="3 3"/>'
-        +  '<text x="'+(nearR ? ageX(a)-5 : ageX(a)+5)+'" y="'+(padT+11+row*14)+'" text-anchor="'+(nearR ? "end" : "start")+'" font-size="11.5" fill="'+c+'" font-weight="700">'+lab+'</text>';
+        +  '<text x="'+(nearR ? ageX(a)-5 : ageX(a)+5)+'" y="'+(padT+11+row*14)+'" text-anchor="'+(nearR ? "end" : "start")+'" font-size="11.5" fill="'+c+'" font-weight="700">'+T(lab)+'</text>';
   });
   out += '<circle cx="'+ageX(drawAge)+'" cy="'+y(atDraw)+'" r="4.5" fill="'+PH.draw+'" stroke="var(--surface)" stroke-width="2"/>';
   out += '<rect x="'+padL+'" y="'+padT+'" width="'+(W-padL-padR)+'" height="'+(H-padT-padB)+'" fill="rgba(0,0,0,0)" id="coastHit"/>';
@@ -3408,7 +3406,7 @@ function drawCoast(run, target, atDraw, careA, ltcA){
   hit.addEventListener("mousemove", ev => {
     const r = svg.getBoundingClientRect();
     const i = Math.max(0, Math.min(n, Math.round(((ev.clientX-r.left)/r.width*W - padL)/(W-padL-padR)*n)));
-    showTip(ev, "Age "+Math.floor(AGE_NOW+i/12)+"<br>"+fmt(run.series[i]));
+    showTip(ev, T("chart.tip", {age: Math.floor(AGE_NOW+i/12), amount: fmt(run.series[i])}));
   });
   hit.addEventListener("mouseleave", hideTip);
 }
