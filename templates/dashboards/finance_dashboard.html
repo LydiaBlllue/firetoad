@@ -734,6 +734,36 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <script>
 // ===== Data (regenerated from data/spending.csv on every "update dashboards") =====
+// The page in two languages (2026-11-25): every sentence is a key in STR with both languages side
+// by side (templates/dashboards/strings.json, baked in by rebuild.py) and is read through T().
+// The page opens in ?lang= when its address carries one (the panel's link does), else the one
+// this browser last switched to, else the panel's language when the page was built. The switch
+// under Settings reloads the page in the other language; served by the app, it tells the app
+// first (POST api/lang), so the panel follows.
+const STR = {};
+const LANG_DEFAULT = "";
+const LANGS = ["en", "zh"];
+const LANG = (() => {
+  try { const q = new URLSearchParams(location.search).get("lang"); if(LANGS.includes(q)) return q; } catch(e) {}
+  try { const s = localStorage.getItem("ftLang"); if(LANGS.includes(s)) return s; } catch(e) {}
+  return LANGS.includes(LANG_DEFAULT) ? LANG_DEFAULT : "en";
+})();
+document.documentElement.lang = LANG === "zh" ? "zh-CN" : "en";
+function T(k, v){
+  const r = STR[k];
+  let s = r ? (r[LANG] != null ? r[LANG] : r.en) : k;
+  if(v) s = s.replace(/\{(\w+)\}/g, (m, n) => (n in v ? v[n] : m));
+  return s;
+}
+function setLang(l){
+  if(!LANGS.includes(l) || l === LANG) return;
+  try { localStorage.setItem("ftLang", l); } catch(e) {}
+  const u = new URL(location.href); u.searchParams.set("lang", l);
+  const go = () => location.replace(u.toString());
+  if(location.protocol.startsWith("http") && /\/t\/[^/]+\//.test(location.pathname))
+    fetch("api/lang", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({lang: l})}).finally(go);
+  else go();
+}
 const SPENDING = [];
 const CHEQUING = [];
 const INVEST = {};
@@ -914,36 +944,6 @@ function setYear(y){
 }
 // page tabs — pills apply to Overview & Transactions; year view & investments are month-independent
 const PROFILE = {};
-// The page in two languages (2026-11-25): every sentence is a key in STR with both languages side
-// by side (templates/dashboards/strings.json, baked in by rebuild.py) and is read through T().
-// The page opens in ?lang= when its address carries one (the panel's link does), else the one
-// this browser last switched to, else the panel's language when the page was built. The switch
-// under Settings reloads the page in the other language; served by the app, it tells the app
-// first (POST api/lang), so the panel follows.
-const STR = {};
-const LANG_DEFAULT = "en";
-const LANGS = ["en", "zh"];
-const LANG = (() => {
-  try { const q = new URLSearchParams(location.search).get("lang"); if(LANGS.includes(q)) return q; } catch(e) {}
-  try { const s = localStorage.getItem("ftLang"); if(LANGS.includes(s)) return s; } catch(e) {}
-  return LANGS.includes(LANG_DEFAULT) ? LANG_DEFAULT : "en";
-})();
-document.documentElement.lang = LANG === "zh" ? "zh-CN" : "en";
-function T(k, v){
-  const r = STR[k];
-  let s = r ? (r[LANG] != null ? r[LANG] : r.en) : k;
-  if(v) s = s.replace(/\{(\w+)\}/g, (m, n) => (n in v ? v[n] : m));
-  return s;
-}
-function setLang(l){
-  if(!LANGS.includes(l) || l === LANG) return;
-  try { localStorage.setItem("ftLang", l); } catch(e) {}
-  const u = new URL(location.href); u.searchParams.set("lang", l);
-  const go = () => location.replace(u.toString());
-  if(location.protocol.startsWith("http") && /\/t\/[^/]+\//.test(location.pathname))
-    fetch("api/lang", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({lang: l})}).finally(go);
-  else go();
-}
 const BROKER = "";          // the institution that holds the portfolio, from accounts.json
 const CP = INVEST.counterparty || null;   // who pays money back, from cashflow.json
 const VERSION = "1.0.9";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch

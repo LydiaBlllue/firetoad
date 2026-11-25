@@ -178,6 +178,7 @@ def load(root):
         raise SystemExit(f"findata/ is schema {have}, newer than this tool ({SCHEMA}) — sync a newer tool")
     d["card_interest"] = rd("card_interest.csv")   # absent until the first import after 1.0.1
     d["clock"] = clock(root)[0].isoformat()     # the date age is measured from (clock.py)
+    d["strings"] = page_strings(root)            # the page's sentences, both languages, and its language
     return d
 
 
@@ -351,6 +352,7 @@ def clean(obj):
 # ---------------------------------------------------------------- derivations
 def derive(d):
     out, rate = {}, d["rate"]
+    out["STR"], out["LANG_DEFAULT"] = d["strings"]
     accs = d["accounts"]["accounts"]
     port, earm, dry = account_sets(d)
     mv, bv, sym = holdings_by_account(d)
@@ -1078,7 +1080,6 @@ def run(root, write=False, template=None, say=None):
     root = os.path.abspath(root)
     res = {"constants": 0, "changes": 0, "written": [], "skipped": []}
     out = derive(load(root))
-    out["STR"], out["LANG_DEFAULT"] = page_strings(root)
     res["constants"] = len(out)
 
     files = []
