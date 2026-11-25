@@ -444,7 +444,7 @@ W = {
     "w_roles_h": {"en": "What do these mean?", "zh": "这些是什么意思？"},
     "role_not-mine": {"en": "Not mine", "zh": "不是我的"}, "role_not-mine_why": {"en": "someone else's money: left out of every figure", "zh": "别人的钱：不算进任何数字"},
     "role_debt_why": {"en": "subtracted from what you own", "zh": "从你的资产里扣掉"},
-    "role_buffer": {"en": "Everyday money", "zh": "日常用的钱"}, "role_buffer_why": {"en": "cash I spend from or keep on hand", "zh": "平时花的、手头留的现金"},
+    "role_buffer": {"en": "Cash on hand", "zh": "手头现金"}, "role_buffer_why": {"en": "cash I spend from or keep on hand", "zh": "平时花的、手头留的现金"},
     "role_grow": {"en": "Growing", "zh": "在增值的"}, "role_grow_why": {"en": "invested for the long run — the portfolio", "zh": "长期投资——投资组合"},
     "role_set-aside": {"en": "Set aside", "zh": "专款专用"}, "role_set-aside_why": {"en": "already has a purpose: a first home, an emergency fund", "zh": "已经有用途：首付、应急金"},
     "role_none": {"en": "Owned, not money", "zh": "资产，不是钱"}, "role_none_why": {"en": "a home, a car — counted, neither growing nor spent", "zh": "房、车——算进来，但既不增值也不花"},
@@ -464,7 +464,7 @@ W = {
     "w_keep": {"en": "continues after FIRE", "zh": "退休后还要付"}, "w_ends": {"en": "ends by then", "zh": "到那时已付完"},
     "w_add_one": {"en": "+ Add one", "zh": "+ 加一项"},
     "w_rent": {"en": "Monthly costs that start once you stop working", "zh": "不工作之后每月新增的开销"},
-    "w_planbase": {"en": "Planning spend a month, for the FIRE target (the everyday figure is the usual start)", "zh": "算 FIRE 目标用的每月规划支出（通常从日常额度起步）"},
+    "w_planbase": {"en": "Planning spend a month, for the FIRE target (the everyday figure is the usual start)", "zh": "算 FIRE 目标用的每月规划开销（通常从日常额度起步）"},
     # 5 goal
     "w_goal_h": {"en": "Choose whether to track this", "zh": "选择要不要跟踪这个"},
     "w_goal_q": {"en": "Do you want to see when your investments could pay for your spending?", "zh": "想看看投资什么时候够你花吗？"},

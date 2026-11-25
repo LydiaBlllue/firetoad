@@ -7,6 +7,9 @@
   and a person with nothing set aside could read as inside their range. Saving toward an
   emergency fund stays a line of the plan, like any other goal. The emergency range left the
   Settings page with it; a range already stored is kept in `plan.json` and read by nothing.
+- **Setup and the panel call everyday accounts Cash on hand** (手头现金), the name the dashboard
+  uses for that money, in place of Everyday money, which read like the plan's Everyday line. In
+  Chinese, Planning spend on the Settings page is now 每月规划开销, matching 每月开销 and 日常开销.
 
 ## 1.1.0 — unreleased
 

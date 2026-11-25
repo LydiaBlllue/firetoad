@@ -34,7 +34,7 @@ import scaffold  # noqa: E402
 import propose  # noqa: E402
 import ready  # noqa: E402
 
-ROLES = [("buffer", "Everyday money", "cash I spend from or keep on hand"),
+ROLES = [("buffer", "Cash on hand", "cash I spend from or keep on hand"),
          ("grow", "Growing", "invested for the long run — the portfolio"),
          ("set-aside", "Set aside", "already has a purpose: a first home, an emergency fund"),
          ("none", "Owned, not money", "a home, a car — counted, neither growing nor spent")]
