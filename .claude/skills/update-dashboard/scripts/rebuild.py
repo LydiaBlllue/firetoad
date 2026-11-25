@@ -917,6 +917,29 @@ def derive(d):
     return out
 
 
+def page_strings(root):
+    """Every sentence the page shows, in both languages (templates/dashboards/strings.json, one
+    row per key: {"en": ..., "zh": ...}), and the language the page opens in: the panel's
+    (.firetoad/settings.json `lang`), else profile.json `lang`, else English. The page can still
+    be switched in place; ?lang= on its address wins (the panel's link carries it)."""
+    sp = os.path.join(root, "templates", "dashboards", "strings.json")
+    try:
+        table = json.load(open(sp, encoding="utf-8"))
+    except (OSError, ValueError):
+        table = {}
+    lang = None
+    for p in (os.path.join(layout.state_dir(root), "settings.json"),
+              os.path.join(root, "findata", "register", "profile.json")):
+        try:
+            v = json.load(open(p, encoding="utf-8")).get("lang")
+        except (OSError, ValueError, AttributeError):
+            v = None
+        if v in ("en", "zh"):
+            lang = v
+            break
+    return table, lang or "en"
+
+
 # Which file each constant lives in. Everything not listed is the main dashboard's.
 # Since 2026-09-10 the investing pages live in the main dashboard, so every constant is the main
 # page's. The "inv" path below is kept for a workspace whose template still has a second file.
@@ -1055,6 +1078,7 @@ def run(root, write=False, template=None, say=None):
     root = os.path.abspath(root)
     res = {"constants": 0, "changes": 0, "written": [], "skipped": []}
     out = derive(load(root))
+    out["STR"], out["LANG_DEFAULT"] = page_strings(root)
     res["constants"] = len(out)
 
     files = []

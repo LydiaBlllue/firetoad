@@ -33,6 +33,7 @@ body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system
 /* Settings on its own at the foot of the sidebar, with a gear (1.1.0) */
 .side .side-set{margin-top:12px}
 .side .side-set svg{width:16px;height:16px;flex-shrink:0}
+.side .side-lang{margin-top:2px}
 .side .brand{display:flex;align-items:flex-end;gap:9px;width:100%;height:var(--headh);padding:0 10px 15px;
   background:none;border:none;border-bottom:1px solid var(--border);font-family:inherit;font-size:21px;
   font-weight:700;letter-spacing:-.4px;color:var(--ink);cursor:pointer;text-align:left;margin-bottom:20px}
@@ -429,6 +430,7 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
   <nav id="sideNav"></nav>
     <a id="toPanel" class="to-panel" href="panel" hidden>Monthly import →</a>
     <button id="sideSet" class="side-set" data-k="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></button>
+    <button id="sideLang" class="side-set side-lang" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><span id="sideLangText"></span></button>
     <div id="ver" class="ver"></div>
 </aside>
 <main class="main">
@@ -912,6 +914,36 @@ function setYear(y){
 }
 // page tabs — pills apply to Overview & Transactions; year view & investments are month-independent
 const PROFILE = {};
+// The page in two languages (2026-11-25): every sentence is a key in STR with both languages side
+// by side (templates/dashboards/strings.json, baked in by rebuild.py) and is read through T().
+// The page opens in ?lang= when its address carries one (the panel's link does), else the one
+// this browser last switched to, else the panel's language when the page was built. The switch
+// under Settings reloads the page in the other language; served by the app, it tells the app
+// first (POST api/lang), so the panel follows.
+const STR = {};
+const LANG_DEFAULT = "en";
+const LANGS = ["en", "zh"];
+const LANG = (() => {
+  try { const q = new URLSearchParams(location.search).get("lang"); if(LANGS.includes(q)) return q; } catch(e) {}
+  try { const s = localStorage.getItem("ftLang"); if(LANGS.includes(s)) return s; } catch(e) {}
+  return LANGS.includes(LANG_DEFAULT) ? LANG_DEFAULT : "en";
+})();
+document.documentElement.lang = LANG === "zh" ? "zh-CN" : "en";
+function T(k, v){
+  const r = STR[k];
+  let s = r ? (r[LANG] != null ? r[LANG] : r.en) : k;
+  if(v) s = s.replace(/\{(\w+)\}/g, (m, n) => (n in v ? v[n] : m));
+  return s;
+}
+function setLang(l){
+  if(!LANGS.includes(l) || l === LANG) return;
+  try { localStorage.setItem("ftLang", l); } catch(e) {}
+  const u = new URL(location.href); u.searchParams.set("lang", l);
+  const go = () => location.replace(u.toString());
+  if(location.protocol.startsWith("http") && /\/t\/[^/]+\//.test(location.pathname))
+    fetch("api/lang", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({lang: l})}).finally(go);
+  else go();
+}
 const BROKER = "";          // the institution that holds the portfolio, from accounts.json
 const CP = INVEST.counterparty || null;   // who pays money back, from cashflow.json
 const VERSION = "1.0.9";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
@@ -923,6 +955,9 @@ const PRODUCT = "FIRE Toad";
 document.title = PRODUCT + (PROFILE.owner ? " · " + PROFILE.owner : "");
 addEventListener("DOMContentLoaded", () => {
   const b = document.getElementById("brandText"); if(b) b.textContent = PRODUCT;
+  // The switch names the other language in that language, as the panel's does.
+  const sl = document.getElementById("sideLang"), other = LANG === "zh" ? "en" : "zh";
+  if(sl){ document.getElementById("sideLangText").textContent = other === "zh" ? "中文" : "English"; sl.onclick = () => setLang(other); }
   const o = document.getElementById("brandOwner"); if(o) o.textContent = PROFILE.owner || "";
   const v = document.getElementById("ver");   if(v) v.textContent = "v" + VERSION;
   // served by the local app (its address carries /t/<token>/): the way back to the panel sits
