@@ -445,7 +445,7 @@ W = {
     "role_not-mine": {"en": "Not mine", "zh": "不是我的"}, "role_not-mine_why": {"en": "someone else's money: left out of every figure", "zh": "别人的钱：不算进任何数字"},
     "role_debt_why": {"en": "subtracted from what you own", "zh": "从你的资产里扣掉"},
     "role_buffer": {"en": "Cash on hand", "zh": "日常资金"}, "role_buffer_why": {"en": "cash I spend from or keep on hand", "zh": "日常收支用的银行账户和现金"},
-    "role_grow": {"en": "Growing", "zh": "长期投资"}, "role_grow_why": {"en": "invested for the long run — the portfolio", "zh": "为长期增值持有，计入投资组合"},
+    "role_grow": {"en": "Long-term investments", "zh": "长期投资"}, "role_grow_why": {"en": "invested for the long run — the portfolio", "zh": "为长期增值持有，计入投资组合"},
     "role_set-aside": {"en": "Set aside", "zh": "专款专用"}, "role_set-aside_why": {"en": "already has a purpose: a first home, an emergency fund", "zh": "已经有用途：首付、应急金"},
     "role_none": {"en": "Non-financial assets", "zh": "非金融资产"}, "role_none_why": {"en": "a home, a car — counted, neither growing nor spent", "zh": "房产、汽车等，计入净值，不算投资，也不算日常资金"},
     # 4 money
