@@ -125,6 +125,9 @@ EN = dict(
            ("Via an OFX or QFX download", ["TD", "Scotiabank", "CIBC", "Tangerine", "most other banks"]),
            ("Anything else", "Type in the balance once a month, from your bank's app.")],
     banks_more="See every bank and broker →", banks_doc="docs/banks.md",
+    install_more="Install guide →", install_doc="docs/install.md",
+    # the words that open the code, where the page says it is open: "anyone can check" is a promise
+    code_links=["open source", "anyone can check"],
     faq_lab="Questions", faq_h="Before you try it",
     faq=[("Is it free?", "Yes — free and open source (MIT), with nothing to subscribe to. There's no "
           "company server behind it: the app runs on your Mac, so there's no account and nothing of "
@@ -231,6 +234,8 @@ ZH = dict(
            ("下载成 OFX 或 QFX 格式", ["TD", "Scotiabank", "CIBC", "Tangerine", "大多数其他银行"]),
            ("其他", "每月看一眼银行 app 里的余额，手动填一次。")],
     banks_more="查看所有银行和券商 →", banks_doc="docs/zh/banks.md",
+    install_more="安装说明 →", install_doc="docs/zh/install.md",
+    code_links=["开源", "谁都可以检查"],
     faq_lab="常见问题", faq_h="试用之前，你可能想知道",
     faq=[("免费吗？", "免费、开源（MIT），没有订阅。背后没有公司服务器：app 在你的 Mac 上运行，不用注册，"
           "也就没有你的数据可以拿去卖。代码公开，谁都可以检查。"),
@@ -392,6 +397,10 @@ footer a { color:var(--ink-2); }
 
 
 def page(t, base):
+    def code(text, k):
+        """The words that say the code is open link to it, once, where they are said."""
+        w = html.escape(t["code_links"][k])
+        return text.replace(w, f'<a href="{GH}">{w}</a>', 1)
     e = html.escape
     up = "../" if t["path"] else ""
     url = f"{base}/{t['path']}"
@@ -462,7 +471,7 @@ def page(t, base):
       <div class="actions">{btns}</div>
       {onphone}
       <p class="fine mac">{e(t['mac'][0])}<a href="{DOWNLOAD_INTEL}">{e(t['mac'][1])}</a>{e(t['mac'][2])}</p>
-      <p class="fine">{e(t['fine'])}</p>
+      <p class="fine">{code(e(t['fine']), 0)}</p>
     </div>
     <figure class="shot">{img('crop-fire.png', t['hero_alt'], lazy=False)}</figure>
   </div>
@@ -482,6 +491,7 @@ def page(t, base):
                               f'<dd class="you">{e(y)}</dd><dt>{e(t["app"])}</dt><dd>{e(d)}</dd></dl></div>'
                               f'<figure class="pic">{img(t["setup_img"] + f"-{i}.png", alt)}</figure></li>'
                               for i, (a, y, d, alt) in enumerate(t['setup'], 1))}</ol>
+    <a class="more" href="{GH}/blob/main/{t['install_doc']}">{e(t['install_more'])}</a>
   </section>
 
   <section id="how">
@@ -518,7 +528,7 @@ def page(t, base):
   <section id="faq">
     <p class="lab">{e(t['faq_lab'])}</p>
     <h2>{e(t['faq_h'])}</h2>
-    <dl class="faq">{''.join(f'<div><dt>{e(q)}</dt><dd>{e(a)}</dd></div>' for q, a in t['faq'])}</dl>
+    <dl class="faq">{''.join(f'<div><dt>{e(q)}</dt><dd>{code(e(a), 1)}</dd></div>' for q, a in t['faq'])}</dl>
   </section>
 
   <div class="end"><h2>{e(t['end_h'])}</h2><div class="actions">{btns}</div>{onphone}</div>
