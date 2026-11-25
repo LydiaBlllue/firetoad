@@ -47,7 +47,7 @@ EN = dict(
     desc=("Free, open-source Mac app for Canadians: how many years until financial independence, worked "
           "out from your own RBC, BMO or other bank statements. No bank login, no account."),
     name="FIRE Toad",
-    nav=[("path/", "FIRE questions"), ("#setup", "Setting up"), ("#how", "A month with the app"), ("#ai", "AI assist"), ("#banks", "Banks"), ("#faq", "FAQ")],
+    nav=[("path/", "FIRE questions"), ("#setup", "Setting up"), ("#how", "A month with the app"), ("#banks", "Banks"), ("#ai", "AI assist"), ("#faq", "FAQ")],
     h1="How many years until work is optional?",
     lede=("Once a month, drop your bank statements into a folder. FIRE Toad reads them on your Mac, "
           "checks that each one adds up, and works out what you spend, what you keep, and how many years "
@@ -125,6 +125,9 @@ EN = dict(
            ("Via an OFX or QFX download", ["TD", "Scotiabank", "CIBC", "Tangerine", "most other banks"]),
            ("Anything else", "Type in the balance once a month, from your bank's app.")],
     banks_more="See every bank and broker →", banks_doc="docs/banks.md",
+    install_more="Install guide →", install_doc="docs/install.md",
+    # the words that open the code, where the page says it is open: "anyone can check" is a promise
+    code_links=["open source", "anyone can check"],
     faq_lab="Questions", faq_h="Before you try it",
     faq=[("Is it free?", "Yes — free and open source (MIT), with nothing to subscribe to. There's no "
           "company server behind it: the app runs on your Mac, so there's no account and nothing of "
@@ -164,7 +167,7 @@ ZH = dict(
     desc=("免费开源的 Mac app，为在加拿大想财务自由的人做：用你自己的 RBC、BMO 或其他银行对账单，"
           "算出还要几年财务自由。不用连银行，也不用注册。"),
     name="FIRE蛙 FIRE Toad",
-    nav=[("path/", "FIRE 问答"), ("#setup", "建账"), ("#how", "每月怎么用"), ("#ai", "AI 辅助"), ("#banks", "支持的银行"), ("#faq", "常见问题")],
+    nav=[("path/", "FIRE 问答"), ("#setup", "建账"), ("#how", "每月怎么用"), ("#banks", "支持的银行"), ("#ai", "AI 辅助"), ("#faq", "常见问题")],
     h1="还要几年，工作就成了可选项？",
     lede=("每个月把银行对账单放进一个文件夹。FIRE蛙在你的 Mac 上逐份读取、核对金额，算出你花多少、存下多少、"
           "还要几年财务自由，再算停工以后钱能撑多久，CPP 和 OAS 也算进去。"),
@@ -231,6 +234,8 @@ ZH = dict(
            ("下载成 OFX 或 QFX 格式", ["TD", "Scotiabank", "CIBC", "Tangerine", "大多数其他银行"]),
            ("其他", "每月看一眼银行 app 里的余额，手动填一次。")],
     banks_more="查看所有银行和券商 →", banks_doc="docs/zh/banks.md",
+    install_more="安装说明 →", install_doc="docs/zh/install.md",
+    code_links=["开源", "谁都可以检查"],
     faq_lab="常见问题", faq_h="试用之前，你可能想知道",
     faq=[("免费吗？", "免费、开源（MIT），没有订阅。背后没有公司服务器：app 在你的 Mac 上运行，不用注册，"
           "也就没有你的数据可以拿去卖。代码公开，谁都可以检查。"),
@@ -392,6 +397,10 @@ footer a { color:var(--ink-2); }
 
 
 def page(t, base):
+    def code(text, k):
+        """The words that say the code is open link to it, once, where they are said."""
+        w = html.escape(t["code_links"][k])
+        return text.replace(w, f'<a href="{GH}">{w}</a>', 1)
     e = html.escape
     up = "../" if t["path"] else ""
     url = f"{base}/{t['path']}"
@@ -462,11 +471,18 @@ def page(t, base):
       <div class="actions">{btns}</div>
       {onphone}
       <p class="fine mac">{e(t['mac'][0])}<a href="{DOWNLOAD_INTEL}">{e(t['mac'][1])}</a>{e(t['mac'][2])}</p>
-      <p class="fine">{e(t['fine'])}</p>
+      <p class="fine">{code(e(t['fine']), 0)}</p>
     </div>
     <figure class="shot">{img('crop-fire.png', t['hero_alt'], lazy=False)}</figure>
   </div>
   <ul class="points">{''.join(f'<li><b>{e(a)}</b><span>{e(b)}</span></li>' for a, b in t['points'])}</ul>
+
+  <!-- In the order a visitor decides (2026-11-25, the owner): what it tells you, then the work it
+       asks (setting up, a month), the banks it reads, the optional AI, the FIRE questions, the rest. -->
+  <section>
+    <p class="lab">{e(t['q_lab'])}</p>
+    <div class="qs">{''.join(f'<div class="q"><div class="qt"><h3>{e(h)}</h3><p>{e(p)}</p></div><figure class="shot">{img(f, alt)}</figure></div>' for h, p, f, alt in t['qs'])}</div>
+  </section>
 
   <section id="setup">
     <p class="lab">{e(t['setup_lab'])}</p>
@@ -475,6 +491,7 @@ def page(t, base):
                               f'<dd class="you">{e(y)}</dd><dt>{e(t["app"])}</dt><dd>{e(d)}</dd></dl></div>'
                               f'<figure class="pic">{img(t["setup_img"] + f"-{i}.png", alt)}</figure></li>'
                               for i, (a, y, d, alt) in enumerate(t['setup'], 1))}</ol>
+    <a class="more" href="{GH}/blob/main/{t['install_doc']}">{e(t['install_more'])}</a>
   </section>
 
   <section id="how">
@@ -487,20 +504,17 @@ def page(t, base):
       <p>{e(t['then_p'])}</p></div><figure class="pic">{img(panel(4), t['then_alt'])}</figure></li></ol>
   </section>
 
+  <section id="banks">
+    <p class="lab">{e(t['banks_lab'])}</p>
+    <h2>{e(t['banks_h'])}</h2>
+    <div class="banks">{''.join(f'<div class="bank"><b>{e(h)}</b>' + (f'<p>{e(xs)}</p>' if isinstance(xs, str) else '<ul class="chips">' + ''.join(f'<li>{e(x)}</li>' for x in xs) + '</ul>') + '</div>' for h, xs in t['banks'])}</div>
+    <a class="more" href="{GH}/blob/main/{t['banks_doc']}">{e(t['banks_more'])}</a>
+  </section>
+
   <section id="ai">
     <p class="lab">{e(t['ai_lab'])}</p>
     <h2>{e(t['ai_h'])}</h2>
     <div class="qs">{''.join(f'<div class="q"><div class="qt"><h3>{e(h)}</h3><p>{e(p)}</p></div><figure class="shot">{img(f, alt)}</figure></div>' for h, p, f, alt in t['ai'])}</div>
-  </section>
-
-  <section>
-    <p class="lab">{e(t['q_lab'])}</p>
-    <div class="qs">"""]
-    for h, p, f, alt in t["qs"]:
-        out.append(f"""
-      <div class="q"><div class="qt"><h3>{e(h)}</h3><p>{e(p)}</p></div><figure class="shot">{img(f, alt)}</figure></div>""")
-    out.append(f"""
-    </div>
   </section>
 
   <section id="road">
@@ -511,17 +525,10 @@ def page(t, base):
     <a class="more" href="path/">{e(t['road_more'])}</a>
   </section>
 
-  <section id="banks">
-    <p class="lab">{e(t['banks_lab'])}</p>
-    <h2>{e(t['banks_h'])}</h2>
-    <div class="banks">{''.join(f'<div class="bank"><b>{e(h)}</b>' + (f'<p>{e(xs)}</p>' if isinstance(xs, str) else '<ul class="chips">' + ''.join(f'<li>{e(x)}</li>' for x in xs) + '</ul>') + '</div>' for h, xs in t['banks'])}</div>
-    <a class="more" href="{GH}/blob/main/{t['banks_doc']}">{e(t['banks_more'])}</a>
-  </section>
-
   <section id="faq">
     <p class="lab">{e(t['faq_lab'])}</p>
     <h2>{e(t['faq_h'])}</h2>
-    <dl class="faq">{''.join(f'<div><dt>{e(q)}</dt><dd>{e(a)}</dd></div>' for q, a in t['faq'])}</dl>
+    <dl class="faq">{''.join(f'<div><dt>{e(q)}</dt><dd>{code(e(a), 1)}</dd></div>' for q, a in t['faq'])}</dl>
   </section>
 
   <div class="end"><h2>{e(t['end_h'])}</h2><div class="actions">{btns}</div>{onphone}</div>
@@ -529,7 +536,7 @@ def page(t, base):
 </main>
 </body>
 </html>
-""")
+"""]
     return "".join(out)
 
 
