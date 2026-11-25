@@ -33,7 +33,7 @@ TABLE = [
     {"key": "planBase", "kind": "money", "stage": "goal", "default": None, "min": 0, "max": 1_000_000,
      "en": "Planning spend a month", "zh": "每月规划支出",
      "whyEn": "What a month costs, for the FIRE target.",
-     "whyZh": "算 FIRE 目标时，一个月按多少花销算。"},
+     "whyZh": "计算 FIRE 目标时采用的每月支出。"},
     # 5% unless the owner says otherwise: about a 60/40 portfolio's century after inflation
     # (returns.json: 5.2%), and the figure KNOWLEDGE 0.6's source assumes; drawn 1 point either side
     # (2026-11-15, user 001: "回报可以高一点", then a setting so an all-stocks owner can say 7)

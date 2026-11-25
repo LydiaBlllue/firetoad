@@ -2426,7 +2426,7 @@ function renderChq(){
   $("chqTable").innerHTML = DataTable([
       {h:T("acct.col_date"), c: r => dShort(r.date), nw:1},
       {h:T("acct.col_what"), c: r => r.raw ? '<span title="'+esc(r.raw)+'">'+esc(r.desc)+'</span>' : esc(r.desc), a:"l", num:false},
-      {h:T("acct.col_type"), c: r => esc(r.type), a:"l", m:1, num:false}]
+      {h:T("acct.col_type"), c: r => esc(STR["ledger.type." + r.type] ? T("ledger.type." + r.type) : r.type), a:"l", m:1, num:false}]
       .concat(accts.length > 1 ? [{h:T("acct.col_account"), c: r => esc(r.src), a:"l", m:1, nw:1, num:false}] : [])
       .concat([{h:T("acct.col_amount"), c: r => fmt2(r.amount), nw:1}]),
     rows.slice(0, chqN), {inner: true, empty: CHEQUING.length ? T("acct.no_match") : T("acct.no_statement")});

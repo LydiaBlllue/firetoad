@@ -3107,17 +3107,53 @@
   "en": "Taking money out",
   "zh": "提取资金"
  },
+ "ledger.type.Bill": {
+  "en": "Bill",
+  "zh": "账单"
+ },
+ "ledger.type.CC payment": {
+  "en": "CC payment",
+  "zh": "信用卡还款"
+ },
+ "ledger.type.Debit purchase": {
+  "en": "Debit purchase",
+  "zh": "借记卡消费"
+ },
+ "ledger.type.Fee": {
+  "en": "Fee",
+  "zh": "手续费"
+ },
+ "ledger.type.Interest": {
+  "en": "Interest",
+  "zh": "利息"
+ },
+ "ledger.type.Other": {
+  "en": "Other",
+  "zh": "其他"
+ },
+ "ledger.type.Payroll": {
+  "en": "Payroll",
+  "zh": "工资"
+ },
+ "ledger.type.Rent": {
+  "en": "Rent",
+  "zh": "房租"
+ },
+ "ledger.type.Transfer": {
+  "en": "Transfer",
+  "zh": "转账"
+ },
  "money.pension_label": {
   "en": "{pension} from {age}",
   "zh": "{pension}，{age} 岁起"
  },
  "money.pension_note": {
   "en": "From {source}, in today’s dollars. From that age, it pays part of your spending and care, so less is withdrawn from your portfolio.",
-  "zh": "来自{source}，按当前币值计算。从该年龄起，养老金支付部分支出和护理费用，从投资组合中提取的金额相应减少。"
+  "zh": "来源：{source}。按当前币值计算。从该年龄起，养老金支付部分支出和护理费用，从投资组合中提取的金额相应减少。"
  },
  "money.pension_note_dated": {
   "en": "From {source}, {date}, in today’s dollars. From that age, it pays part of your spending and care, so less is withdrawn from your portfolio.",
-  "zh": "来自{source}（{date}），按当前币值计算。从该年龄起，养老金支付部分支出和护理费用，从投资组合中提取的金额相应减少。"
+  "zh": "来源：{source}（{date}）。按当前币值计算。从该年龄起，养老金支付部分支出和护理费用，从投资组合中提取的金额相应减少。"
  },
  "money.pension_source_default": {
   "en": "your own statement",
@@ -3257,7 +3293,7 @@
  },
  "nw.accounts_at": {
   "en": "{accounts} at {institution}",
-  "zh": "{institution}的 {accounts}"
+  "zh": "{institution}：{accounts}"
  },
  "nw.credit_note": {
   "en": "Credit balance",
