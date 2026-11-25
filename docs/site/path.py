@@ -417,7 +417,7 @@ def stop_page(st, lang, base, css, published, download):
   {t['body']}
   {f'<h2>{e(w["src"])}</h2><ul class="src">{src}</ul>' if src else ''}
   <h2>{e(w['limits'])}</h2><ul class="src">{lim}</ul>
-  <div class="cta"><p>{e(w['cta'])}</p><div class="actions"><a class="btn primary" href="{download}">{e(w['download'])}</a><a class="btn secondary" href="{up}dashboard.html">{e(w['demo'])}</a></div></div>
+  <div class="cta"><p>{e(w['cta'])}</p><div class="actions"><a class="btn primary" href="{download}">{e(w['download'])}</a><a class="btn secondary" href="{up}dashboard.html?lang={lang}">{e(w['demo'])}</a></div></div>
   <nav class="side-n"><h3>{e(w['stages'][st['stage']])}</h3>{side}</nav>
   <div class="pn">{pn}</div>
   <p class="checked">{e(CHECKED[lang])}</p>
@@ -446,7 +446,7 @@ def index_page(lang, base, css, published, download):
   <h1>{e(w['road'])}</h1>
   <p class="lede">{e(w['index_lede'])}</p>
   {''.join(parts)}
-  <div class="cta" style="margin-bottom:56px"><p>{e(w['index_cta'])}</p><div class="actions"><a class="btn primary" href="{download}">{e(w['download'])}</a><a class="btn secondary" href="{up}dashboard.html">{e(w['demo'])}</a></div></div>
+  <div class="cta" style="margin-bottom:56px"><p>{e(w['index_cta'])}</p><div class="actions"><a class="btn primary" href="{download}">{e(w['download'])}</a><a class="btn secondary" href="{up}dashboard.html?lang={lang}">{e(w['demo'])}</a></div></div>
 </div></main>
 </body>
 </html>

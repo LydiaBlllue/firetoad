@@ -175,7 +175,7 @@ ZH = dict(
     mac=("适用于 Apple 芯片的 Mac，macOS 11 及以上。Intel 芯片的 Mac（macOS 10.15 及以上）请",
          "下载 Intel 版", "。"),
     fine=(f"演示里是 {DEMO['first']} 的钱：一位住在{CITY_ZH.get(DEMO['city'], DEMO['city'])}的 {DEMO['age']} 岁上班族，"
-          "人物是虚构的。不用安装，打开就能看（演示页面是英文的）。app 已通过 Apple 签名和公证，支持中英文，免费开源（MIT）。"),
+          "人物是虚构的。不用安装，打开就能看。app 已通过 Apple 签名和公证，支持中英文，免费开源（MIT）。"),
     phone=("目前只支持 Mac 下载。", "目前没有手机版和 Windows 版。在线演示用任何电脑的浏览器都能看；手机屏幕太窄，要左右滑动。",
            "把链接发给自己", "链接已复制", "仍在手机上看演示",
            "粘贴到微信或邮件里发给自己，再在 Mac 上打开。"),
@@ -403,6 +403,8 @@ def page(t, base):
         return text.replace(w, f'<a href="{GH}">{w}</a>', 1)
     e = html.escape
     up = "../" if t["path"] else ""
+    # The demo opens in the page's own language (2026-11-25, the dashboard in two languages).
+    demo = f"{up}dashboard.html?lang={'zh' if t['lang'].startswith('zh') else 'en'}"
     url = f"{base}/{t['path']}"
     ld = {"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "FIRE Toad",
           "operatingSystem": "macOS", "applicationCategory": "FinanceApplication",
@@ -412,12 +414,12 @@ def page(t, base):
     img = lambda f, alt, lazy=True: (f'<img src="{up}screens/{f}" alt="{e(alt)}"'
                                      + (' loading="lazy"' if lazy else "") + ">")
     btns = (f'<a class="btn primary" href="{DOWNLOAD}">{e(t["download"])}</a>'
-            f'<a class="btn secondary" href="{up}dashboard.html">{e(t["demo"])}</a>')
+            f'<a class="btn secondary" href="{demo}">{e(t["demo"])}</a>')
     onphone = (f'<div class="phone"><p><b>{e(t["phone"][0])}</b>{"" if t["lang"].startswith("zh") else " "}'
                f'{e(t["phone"][1])}</p>'
                f'<button class="btn primary" type="button" data-url="{url}" data-done="{e(t["phone"][3])}">'
                f'{e(t["phone"][2])}</button><p class="copied" hidden>{e(t["phone"][5])}</p>'
-               f'<a class="anyway" href="{up}dashboard.html">{e(t["phone"][4])}</a></div>')
+               f'<a class="anyway" href="{demo}">{e(t["phone"][4])}</a></div>')
     out = [f"""<!doctype html>
 <!-- Built by docs/site/make.py; edit that, not this. -->
 <html lang="{t['lang']}">
@@ -442,7 +444,7 @@ def page(t, base):
 <script>
   // An old link to a page of the demo (…/firetoad/#fire) still opens that page.
   if (location.hash.length > 1 && !document.getElementById(location.hash.slice(1)) &&
-      !/^#(setup|how|ai|banks|faq)$/.test(location.hash)) location.replace('{up}dashboard.html' + location.hash);
+      !/^#(setup|how|ai|banks|faq)$/.test(location.hash)) location.replace('{demo}' + location.hash);
 </script>
 <style>{CSS}</style>
 <script>

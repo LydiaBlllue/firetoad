@@ -2,6 +2,21 @@
 
 ## Next — unreleased (after 1.1.0; the number is set at release)
 
+- **The dashboard in Chinese** (看板中文). Every page, chart, hover, empty state, Glossary entry and
+  Settings row has its English and Chinese side by side in `templates/dashboards/strings.json`
+  (about 1,100 sentences); the page reads them through `T()`. It opens in the language the panel
+  uses, and a switch under Settings (中文 / English) changes it in place and tells the app, so the
+  panel follows. The live demo opens in the language of the site page it was opened from. Dates,
+  months, plurals and lists are written each language's way; the 15 categories use their Chinese
+  names. What the owner typed is shown as typed.
+- **The English was read again on the way**: one name for one thing (Portfolio, Fixed costs,
+  Planned spending, Cash on hand, Monthly average, Surplus, Savings goals, Data as of, Cash to
+  invest, Available now, Taxable on withdrawal…), no metaphors (pot, dry powder, no slack), and
+  finance terms a newcomer may not know get a Glossary entry (asset allocation, percentage point).
+  Facts checked against canada.ca: non-registered gains are taxed when sold, unused FHSA room
+  carries forward only up to $8,000, an RRSP closes by 71.
+- **New checks**: S11 (every sentence in both languages, same placeholders) and R10 (every page
+  drawn in Chinese at 800 and 1760px); selftest plants a sentence with no Chinese.
 - **The Emergency fund page is gone, and so is Home's Months covered card.** It counted every
   account that could be spent today, so next month's rent in chequing read as an emergency fund,
   and a person with nothing set aside could read as inside their range. Saving toward an

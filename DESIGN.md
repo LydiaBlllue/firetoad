@@ -133,7 +133,7 @@
   | Set a goal | FIRE |
   | Stay on track | Budget · Portfolio · Performance · Holdings · Investment income |
   | After FIRE | Drawdown & care |
-  | — | Updates, Statements and the Glossary: records and reference, for every stage, at the foot of the sidebar, under the pages still waiting for their data; then Settings, alone, with a gear |
+  | — | Updates, Statements and the Glossary: records and reference, for every stage, at the foot of the sidebar, under the pages still waiting for their data; then Settings, alone, with a gear; under it the language switch (a globe and the other language's own name, 中文 or English — 2026-11-25) |
 
   **What a page waits for** (`WAITS`): Income a chequing statement; Portfolio,
   Performance and Holdings a broker's holdings; Investment income a broker's activity; FIRE a FIRE
@@ -445,6 +445,25 @@ the owner's own prose in the data:
 
 The prose fields of `imports.json`, `decisions.json`, `plan.json` and `rules.json` reach the page
 too, and the import writes them to the same rules (update-dashboard, Step 7).
+
+## 5b″. Two languages (2026-11-25)
+
+- Every sentence the page shows is a key in `templates/dashboards/strings.json` with `en` and `zh`
+  side by side, read through `T(key, vars)` / `TN(key, n, vars)` (plurals: `_one` / `_many`) or a
+  `data-t` attribute on static markup. Nothing on screen is typed into the page code. **S11** holds
+  it: every key the page reads exists, both languages are there, both fill the same placeholders.
+- Never build a Chinese sentence from English pieces: the whole sentence is one key, values go in
+  as `{placeholders}`. Dates and lists go through the helpers (`dLong`, `ymFull`, `listJoin`…),
+  never `MN + " " + year`.
+- Chinese is written the way a bank or brokerage app writes it, not spoken (the owner,
+  2026-11-25): 支出 not 开销, 尚未 not 还没, 看板 never 仪表盘. A finance term a newcomer may not know
+  is used and given a Glossary entry, not paraphrased.
+- The page opens in `?lang=`, else the language this browser last switched to, else the panel's
+  language at build time (`LANG_DEFAULT`). Switching reloads the page; served by the app it first
+  POSTs `api/lang`, so the panel follows. **R10** draws every page in Chinese at the narrowest and
+  widest widths: no key names on screen, no undefined, no sideways scroll.
+- What the owner typed (account names, plan lines, holding groups, care tiers) is shown as typed,
+  in either language.
 
 ## 5b′. Words on a card
 
