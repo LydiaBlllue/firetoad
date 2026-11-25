@@ -178,6 +178,7 @@ def rows(files):
     for r in TABLE:
         v, s = value(r["key"], files), stored(r["key"], files)
         out.append({"key": r["key"], "kind": r["kind"], "stage": r["stage"], "n": r["en"], "why": r["whyEn"],
+                    "nZh": r["zh"], "whyZh": r["whyZh"],
                     "v": v, "def": r["default"], "min": r["min"], "max": r["max"],
                     "isDef": r["default"] is not None and (s is None or s == r["default"]),
                     "changed": changed.get(r["key"]), "locked": locked(r["key"], files)})

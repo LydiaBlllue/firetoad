@@ -524,23 +524,23 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <section data-pg="budget" hidden>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab" id="everydayYrLab">Everyday, month by month</div>
+    <div class="lab" id="everydayYrLab" data-t="budget.everyday_by_month">Everyday, month by month</div>
     <svg class="year-svg" id="everydayYrChart" viewBox="0 0 940 220" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="cap" id="everydayYrCap"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab" id="splitLab">How each month's income is split</div>
+    <div class="lab" id="splitLab" data-t="budget.split">How each month's income is split</div>
     <div class="split" id="splitBar"></div>
     <div id="splitRows"></div>
     <div id="splitNote"></div>
   </div>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab" id="flowLab">Where the income went</div>
-    <svg id="flowSvg" class="flow" role="img" aria-label="How income splits, and where everyday money went"></svg>
+    <div class="lab" id="flowLab" data-t="budget.flow">Where the income went</div>
+    <svg id="flowSvg" class="flow" role="img" aria-label="How income splits, and where everyday money went" data-t-aria="budget.flow_aria"></svg>
     <div class="cap" id="flowCap"></div>
   </div>
   <div class="card" style="margin-bottom:10px" id="fundCard" hidden>
-    <div class="lab">Funds</div>
+    <div class="lab" data-t="budget.funds">Funds</div>
     <div id="fundRows"></div>
   </div>
 </section>
@@ -718,7 +718,7 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 </section>
 <section data-pg="src" hidden>
   <div class="card" style="margin-bottom:10px">
-    <div class="lab">Filed each month</div>
+    <div class="lab" data-t="src.filed_each_month">Filed each month</div>
     <div class="pills" id="srcYears" style="margin:0 0 12px"></div>
     <div class="say" id="trackBring" style="margin-bottom:10px"></div>
     <div id="tracker"></div>
@@ -1808,23 +1808,21 @@ const FUND_FLOWS = FLOWS.filter(f => f.kind === "saving" && flowNow(f) && FUND_L
 // account's, and it always has a name: a row drawn as "\u2014" with $0 was a flow with none (#38).
 const OTHER_SAVING = FLOWS.filter(f => f.kind === "saving" && flowNow(f) && (f.to || "broker") !== "broker");
 const savingName = f => f.name || (FUND_LIST.find(x => x.key === f.to) || {}).name
-  || ((typeof ACCT === "object" && (ACCT.accounts || []).find(a => a.key === f.to)) || {}).name || "Saving";
+  || ((typeof ACCT === "object" && (ACCT.accounts || []).find(a => a.key === f.to)) || {}).name || T("budget.saving.name_default");
 const FUND_NOW   = FUND_FLOWS.reduce((s, f) => s + (f.amount || 0), 0);
 PLAN.takeHomeNote = (FLOWS.find(f => f.kind === "income") || {}).note || "";
 // A number the owner never gave is null in the plan, not 0: the first setup that skipped its
 // questions showed take-home pay of $0 and a birth year of 1990 as if they were facts (2026-10-28,
 // first user). Wherever one of these would be shown, the page says Not set and how to set it.
 // Read at render time: PLAN_BASE_DEFAULT and BORN are declared further down.
-const UNSET_HOW = {takeHome:"your income a month", invest:"what goes to investing each month",
-  everyday:"your everyday amount", planBase:"the monthly spending to plan FIRE on",
-  born:"the year you were born"};
+const UNSET_HOW = {takeHome:"take_home", invest:"invest", everyday:"everyday", planBase:"plan_base", born:"born"};
 const unset = k =>
     k === "takeHome" ? FLOWS.some(f => f.kind === "income" && flowNow(f) && f.amount == null)
   : k === "invest"   ? FLOWS.some(f => f.kind === "saving" && (f.to || "broker") === "broker" && f.amount == null)
   : k === "everyday" ? FLOWS.some(f => f.kind === "everyday" && f.amount == null)
   : k === "planBase" ? PLAN_BASE_DEFAULT === null && !(PLAN_BASE > 0)
   : k === "born"     ? BORN === null : false;
-const notSet = k => numx('<span class="unset">Not set</span>', [], "Never given. Say "+UNSET_HOW[k]+" to set it.");
+const notSet = k => numx('<span class="unset">'+T("budget.unset.value")+'</span>', [], T("budget.unset.tip."+UNSET_HOW[k]));
 const COMMITTED     = FLOWS.filter(f => f.kind === "committed" && flowNow(f));
 const COMMITTED_NOW = COMMITTED.reduce((s, f) => s + f.amount, 0);
 // Editable in the page. Since 1.0.5 an edit is a setting (FINANCE.md §8e): it is written to
@@ -1878,21 +1876,21 @@ function planAlloc(){
   // Committed first: rent, a mortgage, a loan -- paid before anything is chosen, so they sit at
   // the top of the bar in the neutral colour, one row each.
   return COMMITTED.map(f => ({k:f.name, v:f.amount, c:"var(--muted)", pk:null, tm:"committed",
-      d:(f.note || "Paid every month before anything is chosen.")
-        + (f.until ? " Ends " + ymFull(f.until) + "." : "")
-        + (f.afterFire === "drop" ? " Stops after FIRE." : "")})).concat([
-    {k:"Invest",   v:INVM,          c:"#2a78d6", pk:"invm", tm:"pay_yourself_first",
-     d:"Two transfers of "+fmt(FUNDS.plan.invest/2)+" to "+BROKER+". It comes off the top before anything else, which is the whole point of pay-yourself-first."},
+      d:(f.note || T("budget.committed.note_default"))
+        + (f.until ? " " + T("budget.committed.ends", {month: ymFull(f.until)}) : "")
+        + (f.afterFire === "drop" ? " " + T("budget.committed.stops_after_fire") : "")})).concat([
+    {k:T("budget.invest.label"), v:INVM, c:"#2a78d6", pk:"invm", tm:"pay_yourself_first",
+     d:T("budget.invest.note", {amount: fmt(FUNDS.plan.invest), broker: BROKER})},
   ].concat(OTHER_SAVING.map(f => ({k:savingName(f), v:f.amount || 0,
       c:FUND_LIST.some(x => x.key === f.to) ? fundColor(f.to) : "#3d6f9e", pk:null,
       tm:FUND_LIST.some(x => x.key === f.to) ? "fund" : null,
-      d:(f.note || "Set aside each month.")})), [
-    {k:"Everyday", v:EVERYDAY,           c:"var(--c-dining)", pk:"everyday", tm:"everyday",
-     d:"Groceries, dining, transport, subscriptions, shopping \u2014 everything but bills and housing."},
+      d:(f.note || T("budget.saving.note_default"))})), [
+    {k:T("cat.everyday"), v:EVERYDAY, c:"var(--c-dining)", pk:"everyday", tm:"everyday",
+     d:T("budget.everyday.note")},
   ]));
 }
-const UNALLOC = v => ({k:"Unallocated", v, c:"var(--pill)", pk:null, tm:"unallocated",
-    d:"Nothing in the plan names this. It stays where the income landed."});
+const UNALLOC = v => ({k:T("budget.unallocated.label"), v, c:"var(--pill)", pk:null, tm:"unallocated",
+    d:T("budget.unallocated.note")});
 
 // Each fund: what is set aside, what the plan adds, and when the goal is reached at that pace.
 // "Set aside" is the owner's own figure with its date: nothing is moved into a fund, so no
@@ -1913,11 +1911,11 @@ function renderFunds(){
     return '<div style="margin-bottom:14px"><div style="font-weight:600">' + fd.name + '</div>'
       + (fd.why ? '<div class="cap">' + fd.why + '</div>' : "") + bar
       + metaList([
-        ["Set aside", fmt(saved) + (asof ? " on " + dLong(asof) + ", " + asof.slice(0, 4) : "")],
-        ["Added each month", monthly > 0 ? fmt(monthly) : "Nothing yet", monthly > 0 ? "" : "mut"],
-        goal ? ["Goal", fmt(goal) + (fd.by ? " by " + ymFull(fd.by) : "")] : null,
-        goal ? ["At this pace", at === "reached" ? "Reached" : at ? ymFull(at) + (late ? ", after " + ymFull(fd.by) : "") : "Never, with nothing added", late || (!at && left) ? "hi" : ""] : null,
-        acct ? ["Held in", (acct.inst ? acct.inst + " " : "") + acct.name] : null
+        [T("budget.fund.saved"), asof ? T("budget.fund.saved_value", {amount: fmt(saved), date: dLong(asof), year: asof.slice(0, 4)}) : fmt(saved)],
+        [T("budget.fund.added"), monthly > 0 ? fmt(monthly) : T("budget.fund.nothing_yet"), monthly > 0 ? "" : "mut"],
+        goal ? [T("budget.fund.goal"), fd.by ? T("budget.fund.goal_by", {amount: fmt(goal), month: ymFull(fd.by)}) : fmt(goal)] : null,
+        goal ? [T("budget.fund.at_pace"), at === "reached" ? T("budget.fund.reached") : at ? (late ? T("budget.fund.late", {month: ymFull(at), by: ymFull(fd.by)}) : ymFull(at)) : T("budget.fund.never"), late || (!at && left) ? "hi" : ""] : null,
+        acct ? [T("budget.fund.held_in"), (acct.inst ? acct.inst + " " : "") + acct.name] : null
       ]) + '</div>';
   }).join("");
 }
@@ -1928,31 +1926,28 @@ function renderSplit(){
   const rest = PLAN.takeHome - used;
   const segs = alloc.filter(a => a.v > 0).concat(rest > 0 ? [UNALLOC(rest)] : []);
   const denom = Math.max(used, PLAN.takeHome);
-  $("splitLab").textContent = PLAN.takeHome > 0 || unset("takeHome") ? "How each month's income is split" : "How each month is planned";
+  $("splitLab").textContent = PLAN.takeHome > 0 || unset("takeHome") ? T("budget.split.label") : T("budget.split.label_no_income");
   $("splitBar").innerHTML = segs.map(a =>
     '<div style="width:' + pc(a.v, denom) + '%;background:' + a.c + '" data-k="' + a.k + '"></div>').join("");
   $("splitBar").querySelectorAll("div[data-k]").forEach(el => {
     const a = segs.find(x => x.k === el.dataset.k);
-    hoverable(el, a.k + "<br>" + fmt(a.v) + " a month<br>" + Math.round(pc(a.v, PLAN.takeHome)) + "% of income");
+    hoverable(el, T("budget.split.hover", {name: a.k, amount: fmt(a.v), pct: Math.round(pc(a.v, PLAN.takeHome))}));
   });
   const rows = alloc.concat(rest > 0 ? [UNALLOC(rest)] : []);
   $("splitRows").innerHTML = metaList(
-    [["Income a month", unset("takeHome") ? notSet("takeHome") : numx(fmt(PLAN.takeHome), [], PLAN.takeHomeNote)]].concat(
+    [[T("budget.split.income_a_month"), unset("takeHome") ? notSet("takeHome") : numx(fmt(PLAN.takeHome), [], PLAN.takeHomeNote)]].concat(
     rows.map(a => ['<span style="display:inline-block;width:9px;height:9px;border-radius:3px;background:'
         + a.c + ';margin-right:7px;vertical-align:middle"></span>' + (a.tm ? term(a.tm, a.k) : a.k),
-      a.pk ? '<span class="bud-edit num" data-pk="' + a.pk + '">' + (a.v === 0 && unset(a.pk === "everyday" ? "everyday" : a.pk === "invm" ? "invest" : "") ? '<span class="unset">Not set</span>' : fmt(a.v)) + '</span>' : numx(fmt(a.v), [], a.d)]))
+      a.pk ? '<span class="bud-edit num" data-pk="' + a.pk + '">' + (a.v === 0 && unset(a.pk === "everyday" ? "everyday" : a.pk === "invm" ? "invest" : "") ? '<span class="unset">'+T("budget.unset.value")+'</span>' : fmt(a.v)) + '</span>' : numx(fmt(a.v), [], a.d)]))
   );
   const edited = [EVERYDAY !== PLAN.everyday, INVM !== PLAN.invest].filter(Boolean).length;
   $("splitNote").innerHTML =
     (used > PLAN.takeHome && !unset("takeHome")
       ? noteBox(PLAN.takeHome === 0
-          ? "No pay comes in on this plan, so the <b>" + fmt(used) + "</b> a month comes from savings."
-          : "This split asks for <b>" + fmt(used) + "</b> a month against income of <b>"
-            + fmt(PLAN.takeHome) + "</b>. The <b>" + fmt(used - PLAN.takeHome)
-            + "</b> gap comes from savings; lower Everyday or the investing transfer to close it.")
+          ? T("budget.split.warn_no_pay", {amount: fmt(used)})
+          : T("budget.split.warn_over", {used: fmt(used), income: fmt(PLAN.takeHome), gap: fmt(used - PLAN.takeHome)}))
       : "")
-    + (edited ? noteBox(edited + (edited > 1 ? " numbers were" : " number was") + " changed on this page and will "
-          + "reset at the next update. Say the new number to keep it.") : "");
+    + (edited ? noteBox(TN("budget.split.edited", edited)) : "");
 }
 
 // The plan drawn as flows, with the step a bar cannot show: where the everyday amount actually went in
@@ -1969,7 +1964,7 @@ function drawFlow(){
   const alloc = planAlloc(), used = alloc.reduce((s,a) => s + a.v, 0), rest = PLAN.takeHome - used;
   // A plan above take-home is not a paycheque being split, so the chart does not call it one.
   const short = rest < 0;
-  $("flowLab").textContent = short ? "Where the plan sends the money" : ym ? "Where the income went" : "Where the income goes";
+  $("flowLab").textContent = short ? T("budget.flow.label.short") : ym ? T("budget.flow.label.month") : T("budget.flow.label.plan");
   const segs = alloc.filter(a => a.v > 0).concat(rest > 0 ? [UNALLOC(rest)] : []);
   const ev = ym ? monthOf(ym).filter(inEveryday) : [];
   const net = CATS.map(c => ({k:c.k, n:c.n, c:c.c, v:ev.filter(e => e.category === c.k).reduce((s,e) => s + e.amount, 0)}));
@@ -1978,13 +1973,13 @@ function drawFlow(){
   const gross = byCat.reduce((s,c) => s + c.v, 0), spent = gross - back;
   const everydayNode = segs.find(a => a.pk === "everyday");
   const over = everydayNode && spent > EVERYDAY ? spent - EVERYDAY : 0;
-  const left = [{k:short ? "Planned" : "Income", v:Math.max(PLAN.takeHome, used), c:"var(--ink)"}];
-  if(everydayNode && back > 0.5) left.push({k:"Refunds", v:back, c:"#9a9890", tip:"Refunds that came back in " + ymFull(ym)});
-  if(over) left.push({k:"From savings", v:over, c:"#c98500",
-                      tip:fmt(over) + " over Everyday in " + ymFull(ym)});
+  const left = [{k:short ? T("budget.flow.node.planned") : T("budget.flow.node.income"), v:Math.max(PLAN.takeHome, used), c:"var(--ink)"}];
+  if(everydayNode && back > 0.5) left.push({k:T("budget.flow.node.refunds"), v:back, c:"#9a9890", tip:T("budget.flow.tip.refunds", {month: ymFull(ym)})});
+  if(over) left.push({k:T("budget.flow.node.from_savings"), v:over, c:"#c98500",
+                      tip:T("budget.flow.tip.over", {amount: fmt(over), month: ymFull(ym)})});
   const mid = segs.map(a => Object.assign({}, a, {v: a === everydayNode ? a.v + back + over : a.v}));
   const right = !everydayNode || !byCat.length ? [] : byCat.concat(spent < EVERYDAY
-      ? [{k:open ? "Not spent yet" : "Left over", v:EVERYDAY - spent, c:"var(--pill)", rest:true}] : []);
+      ? [{k:open ? T("budget.flow.node.not_spent") : T("budget.flow.node.left_over"), v:EVERYDAY - spent, c:"var(--pill)", rest:true}] : []);
   // A node is drawn at its size but laid out in a slot tall enough for its two-line label, so a
   // $130 line never sits on top of the one below it.
   // Drawn at the width it is shown, up to 980 (DESIGN.md: a chart is drawn at the size it is
@@ -2012,7 +2007,7 @@ function drawFlow(){
   // stacked under take-home's share in the order they sit on the left
   mid.forEach(n => {
     const h = (n === a ? EVERYDAY : n.v) * k;
-    if(h > 0) g += band(X[0] + NW, left[0].y + off, X[1], n.y, h, n.c, n.k + "<br>" + fmt(n === a ? EVERYDAY : n.v) + " a month");
+    if(h > 0) g += band(X[0] + NW, left[0].y + off, X[1], n.y, h, n.c, T("budget.flow.tip.band", {name: n.k, amount: fmt(n === a ? EVERYDAY : n.v)}));
     off += h;
   });
   let into = a ? a.y + EVERYDAY * k : 0;
@@ -2020,7 +2015,8 @@ function drawFlow(){
   if(right.length){
     let o = 0;
     right.forEach(n => { g += band(X[1] + NW, a.y + o, X[2], n.y, n.h, n.c,
-      (n.n || n.k) + "<br>" + fmt(n.v) + " in " + ymFull(ym) + (n.rest ? "" : "<br>Click to see each purchase"),
+      n.rest ? T("budget.flow.tip.rest", {name: n.k, amount: fmt(n.v), month: ymFull(ym)})
+        : T("budget.flow.tip.category", {category: n.n || n.k, amount: fmt(n.v), month: ymFull(ym)}),
       n.rest ? "" : "hit" + (n.k === catSel ? " on" : "")); o += n.h; });
   }
   const node = (n, x, lab) => '<rect x="'+x+'" y="'+n.y+'" width="'+NW+'" height="'+n.h+'" rx="2" fill="'+n.c+'"/>' + lab;
@@ -2028,7 +2024,7 @@ function drawFlow(){
     + '<text class="v num" x="'+x+'" y="'+(y+13)+'" text-anchor="'+an+'">'+val+'</text>';
   left.forEach(n => g += node(n, X[0], lbl(X[0] - 8, n.y + n.h/2, "end", n.k, fmt(n.v))));
   mid.forEach(n => g += node(n, X[1], lbl(X[1] + NW + 8, n.y + n.h/2, "start", n.k,
-    n === a && ym ? fmt(EVERYDAY) + " planned · " + fmt(spent) + " spent" : fmt(n.v) + (ym ? " planned" : ""))));
+    n === a && ym ? T("budget.flow.mid.everyday", {planned: fmt(EVERYDAY), spent: fmt(spent)}) : ym ? T("budget.flow.mid.planned", {amount: fmt(n.v)}) : fmt(n.v))));
   right.forEach(n => g += node(n, X[2], lbl(X[2] + NW + 8, n.y + n.h/2, "start", n.n || n.k, fmt(n.v), n.rest ? null : n.k)));
   svg.setAttribute("viewBox", "0 0 " + W + " " + H);
   svg.innerHTML = g;
@@ -2037,8 +2033,9 @@ function drawFlow(){
   const cats = right.filter(n => !n.rest).map(n => n.k);
   svg.querySelectorAll("path.hit").forEach((p, i) => p.onclick = () => pickCat(cats[i]));
   svg.querySelectorAll("text.hit").forEach(t => t.onclick = () => pickCat(t.dataset.k));
-  $("flowCap").innerHTML = [short ? "The plan asks for " + fmt(used) + " a month against income of " + fmt(PLAN.takeHome) : "",
-    a && over ? "Over Everyday by " + fmt(over) : ""].filter(Boolean).join(" · ");
+  $("flowCap").innerHTML = short && a && over ? T("budget.flow.cap.both", {used: fmt(used), income: fmt(PLAN.takeHome), amount: fmt(over)})
+    : short ? T("budget.flow.cap.short", {used: fmt(used), income: fmt(PLAN.takeHome)})
+    : a && over ? T("budget.flow.cap.over", {amount: fmt(over)}) : "";
 }
 function pickCat(k){
   catSel = k; renderCatPage(); drawFlow();
@@ -2145,7 +2142,7 @@ function renderYear(){
 function renderAlwYear(){
   const YM12 = MONTHS_IN(viewYear), svg = $("everydayYrChart");
   const has = YM12.filter(m => MONTHS.includes(m));
-  if(!has.length){ svg.innerHTML = '<text x="470" y="110" text-anchor="middle" font-size="13" fill="var(--muted)">No spending recorded in '+viewYear+' yet.</text>'; $("everydayYrCap").textContent = ""; return; }
+  if(!has.length){ svg.innerHTML = '<text x="470" y="110" text-anchor="middle" font-size="13" fill="var(--muted)">'+T("budget.everyday_year.empty", {year: viewYear})+'</text>'; $("everydayYrCap").textContent = ""; return; }
   const [W, H] = fit("everydayYrChart", 220), padB=26, padT=26, step=W/12, bw=Math.min(52, step*0.5);
   const ev = YM12.map(m => MONTHS.includes(m) ? everydayOf(m) : null);
   const mx = Math.max(EVERYDAY * 1.15, ...ev.filter(v => v !== null));
@@ -2164,14 +2161,15 @@ function renderAlwYear(){
     meta.push({m, v, open});
   });
   out += '<line x1="0" y1="'+y(EVERYDAY)+'" x2="'+W+'" y2="'+y(EVERYDAY)+'" stroke="var(--ink)" stroke-width="1" stroke-dasharray="4 4"/>'
-    + '<text x="'+(W-4)+'" y="'+(y(EVERYDAY)-5)+'" text-anchor="end" font-size="11" fill="var(--muted)">set '+fmt(EVERYDAY)+'</text>';
+    + '<text x="'+(W-4)+'" y="'+(y(EVERYDAY)-5)+'" text-anchor="end" font-size="11" fill="var(--muted)">'+T("budget.everyday_year.line_label", {amount: fmt(EVERYDAY)})+'</text>';
   svg.innerHTML = out;
   svg.querySelectorAll("rect[data-i]").forEach(r => { const d = meta[Number(r.dataset.i)];
-    hoverable(r, ymFull(d.m)+"<br>Everyday "+fmt(d.v)+"<br>"+(d.v > EVERYDAY ? fmt(d.v-EVERYDAY)+" over" : fmt(EVERYDAY-d.v)+" under")+" the "+fmt(EVERYDAY)+" set"+(d.open ? "<br>Still open" : "")); });
+    hoverable(r, T(d.v > EVERYDAY ? "budget.everyday_year.tip.over" : "budget.everyday_year.tip.under",
+      {month: ymFull(d.m), amount: fmt(d.v), diff: fmt(Math.abs(d.v-EVERYDAY)), everyday: fmt(EVERYDAY)})+(d.open ? "<br>"+T("budget.everyday_year.tip.open") : "")); });
   const closed = meta.filter(d => !d.open), kept = closed.filter(d => d.v <= EVERYDAY);
   // Only months since the plan began had a fund behind them to pay for an overspend.
   const overSum = closed.filter(d => d.m >= PLAN.start).reduce((s,d) => s + Math.max(d.v - EVERYDAY, 0), 0);
-  $("everydayYrCap").textContent = closed.length ? "Inside it in " + kept.length + " of " + closed.length + " closed months" : "No month has closed yet";
+  $("everydayYrCap").textContent = closed.length ? T("budget.everyday_year.cap", {kept: kept.length, n: closed.length}) : T("budget.everyday_year.cap_none");
 }
 
 // ===== Income month-by-month: stacked by source (blue family = income domain) =====
@@ -2538,12 +2536,15 @@ const SET = Object.fromEntries(SETTINGS.map(r => [r.key, r]));
 const SET_MODE = location.protocol.startsWith("http") && /\/t\/[^/]+\//.test(location.pathname) ? "save" : PROFILE.demo ? "demo" : "read";
 const SET_STAGE = Object.fromEntries(["start", "goal", "track", "after"].map((k, i) => [k, (NAV.filter(g => g.sec)[i] || {}).sec || ""]));
 const sameVal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+// A setting's name and its line of what it is, in the page's language (settings.py TABLE carries both).
+const setName = r => LANG === "zh" && r.nZh ? r.nZh : r.n;
+const setWhy = r => LANG === "zh" && r.whyZh ? r.whyZh : r.why;
 // Why this number cannot be changed here, or "" when it can.
 function cantChange(k){
   const r = SET[k];
   if(!r) return "";
-  if(r.locked) return "Made of several lines of your plan";
-  return SET_MODE === "read" ? "Open this page with the FIRE Toad app to change it" : "";
+  if(r.locked) return T("set.locked");
+  return SET_MODE === "read" ? T("set.need_app") : "";
 }
 function toast(msg){
   document.querySelectorAll(".toast").forEach(el => el.remove());
@@ -2582,26 +2583,27 @@ function changeSetting(k, v, reset){
       .then(() => { setSaved = true; })
       .catch(e => {
         applySetting(k, was.v); r.isDef = was.isDef; r.changed = was.changed; render();
-        toast(e.type === "Busy" ? "Not saved: an import is running. Change it again when the import is done."
-            : "Not saved" + (e.text ? ": " + e.text : ". The app did not answer."));
+        toast(e.type === "Busy" ? T("set.toast_busy")
+            : e.text ? T("set.toast_error", {error: e.text}) : T("set.toast_no_answer"));
       })
       .then(() => { setPending--; reloadWhenIdle(); }));
 }
-const setShow = (r, v) => v === null ? "Not set" : r.kind === "day" ? "the " + ordinal(v) : r.kind === "percent" ? v + "% a year" : fmt(v);
+const setShow = (r, v) => v === null ? T("set.not_set") : r.kind === "day" ? T("set.show_day", {day: LANG === "zh" ? v : ordinal(v)})
+  : r.kind === "percent" ? T("set.show_percent", {pct: v}) : fmt(v);
 function setControl(r){
   if(r.locked) return '<span class="num">' + setShow(r, r.v) + '</span>';
   const inp = (i, v, cls, more) => '<input class="set-in '+cls+'" type="number" data-sk="'+r.key+'" data-si="'+i+'" value="'+(v === null ? "" : v)
-    + '" min="'+r.min+'" max="'+r.max+'" '+more+(cantChange(r.key) ? " disabled" : "")+' aria-label="'+r.n+'">';
-  if(r.kind === "day") return "Day" + inp(0, r.v, "w-m", 'step="1"');
-  if(r.kind === "percent") return inp(0, r.v, "w-m", 'step="0.5"') + "% a year";
-  return "$" + inp(0, r.v, "w-c", 'step="50" placeholder="Not set"');
+    + '" min="'+r.min+'" max="'+r.max+'" '+more+(cantChange(r.key) ? " disabled" : "")+' aria-label="'+setName(r)+'">';
+  if(r.kind === "day") return T("set.ctl_day", {input: inp(0, r.v, "w-m", 'step="1"')});
+  if(r.kind === "percent") return T("set.ctl_percent", {input: inp(0, r.v, "w-m", 'step="0.5"')});
+  return "$" + inp(0, r.v, "w-c", 'step="50" placeholder="'+T("set.not_set")+'"');
 }
 function setMeta(r){
   if(r.locked) return cantChange(r.key);
   const parts = [];
-  if(r.changed && !r.isDef) parts.push("Changed " + dLong(r.changed));
-  if(r.def !== null && !r.isDef && !cantChange(r.key)) parts.push('<button data-sreset="'+r.key+'">Back to ' + setShow(r, r.def) + '</button>');
-  return parts.join(" \u00b7 ");
+  if(r.changed && !r.isDef) parts.push(T("set.changed", {date: dLong(r.changed)}));
+  if(r.def !== null && !r.isDef && !cantChange(r.key)) parts.push('<button data-sreset="'+r.key+'">' + T("set.back_to", {value: setShow(r, r.def)}) + '</button>');
+  return parts.join("<br>");
 }
 // The controls of one setting on the Settings page.
 function wireSettings(root){
@@ -2617,8 +2619,8 @@ function wireSettings(root){
 let setSec = ST.ss === "ai" ? "ai" : "num";
 const SET_SECS = [["num", "Your numbers"], ["ai", "AI assist"]];
 function renderSettings(){
-  $("setNote").innerHTML = SET_MODE === "read" ? noteBox("These can be read here, not changed. Open this page with the FIRE Toad app to change them.")
-    : SET_MODE === "demo" ? noteBox("This is the demo: a change here is shown and not kept.") : "";
+  $("setNote").innerHTML = SET_MODE === "read" ? noteBox(T("set.note_read"))
+    : SET_MODE === "demo" ? noteBox(T("set.note_demo")) : "";
   $("setNote").style.marginBottom = SET_MODE === "save" ? "0" : "10px";
   $("setNav").innerHTML = SET_SECS.map(([k, n]) => '<button data-ss="'+k+'" class="'+(k === setSec ? "on" : "")+'">'+n+'</button>').join("");
   $("setNav").querySelectorAll("[data-ss]").forEach(b => b.onclick = () => { setSec = b.dataset.ss; saveState(); renderSettings(); });
@@ -2628,7 +2630,7 @@ function renderSettings(){
     const rows = SETTINGS.filter(r => r.stage === st);
     return rows.length ? '<div class="set-grp"><h3>' + SET_STAGE[st] + '</h3>' + rows.map(r => {
       const meta = setMeta(r);
-      return '<div class="set-row"><div><div class="n">' + r.n + '</div><div class="why">' + r.why + (r.key === "growth" ? mixPast() : "") + '</div></div>'
+      return '<div class="set-row"><div><div class="n">' + setName(r) + '</div><div class="why">' + setWhy(r) + (r.key === "growth" ? mixPast() : "") + '</div></div>'
         + '<div class="set-ctl">' + setControl(r) + (meta ? '<div class="set-meta">' + meta + '</div>' : "") + '</div></div>';
     }).join("") + '</div>' : "";
   }).join("");
@@ -2832,8 +2834,8 @@ const baseDrift = () => { const m = measuredBase(); return m === null || !(PLAN_
 // number is savings.py's (SAVINGS); the lines in the chart are drawn from the same returns.
 // What the portfolio's mix today earned a year after inflation over the whole record (RET_HIST.avg),
 // said beside the return setting: a fact about the past, never advice (1.0.7, the owner).
-const mixPast = () => RET_HIST.avg == null || !RET_HIST.years ? "" : " Your mix today earned about "
-  + (Math.round(RET_HIST.avg * 1000) / 10) + "% a year after inflation from " + RET_HIST.years[0][0] + " to " + RET_HIST.years[RET_HIST.years.length - 1][0] + ".";
+const mixPast = () => RET_HIST.avg == null || !RET_HIST.years ? "" : " " + T("set.mix_past",
+  {pct: Math.round(RET_HIST.avg * 1000) / 10, year_from: RET_HIST.years[0][0], year_to: RET_HIST.years[RET_HIST.years.length - 1][0]});
 const yrsTxt = y => y[0] === null ? null : y[2] < 0.5 ? "0" : Math.round(y[2]) === Math.round(y[0]) ? String(Math.round(y[1])) : Math.round(y[2])+"–"+Math.round(y[0]);
 function renderFi(){
   const S = SAVINGS, on = S.target !== undefined;
@@ -3638,9 +3640,9 @@ function renderTracker(){
     '<button class="pill num'+(y===trackYear?" sel":"")+'" data-y="'+y+'">'+y+'</button>').join("");
   $("srcYears").querySelectorAll(".pill").forEach(b => b.onclick = () => { trackYear = b.dataset.y; renderTracker(); });
   const nowYM = TODAY.slice(0,7);
-  let ep = "", out = '<table class="trk"><tr><th class="nm">Source</th>'
-    + MN.map((m,i) => '<th class="'+(trackYear+"-"+String(i+1).padStart(2,"0") === nowYM ? "now":"")+'">'+m[0]+'</th>').join("")
-    + '<th class="nm" style="text-align:right;padding-right:2px">Last in</th></tr>';
+  let ep = "", out = '<table class="trk"><tr><th class="nm">'+T("src.th_source")+'</th>'
+    + MN1.map((m,i) => '<th class="'+(trackYear+"-"+String(i+1).padStart(2,"0") === nowYM ? "now":"")+'">'+m+'</th>').join("")
+    + '<th class="nm" style="text-align:right;padding-right:2px">'+T("src.th_last_in")+'</th></tr>';
   SOURCES.forEach(r => {
     if(r.optional) return;          // on demand, not monthly — a grid of empty circles says nothing
     if(r.ep !== ep){ ep = r.ep; out += '<tr class="grp"><td colspan="14">'+ep+'</td></tr>'; }
@@ -3663,14 +3665,14 @@ function renderTracker(){
     }
     const last = DOC_LATEST[r.src], age = last ? Math.round((new Date(TODAY) - new Date(last))/864e5) : null;
     out += '<tr><td class="nm">'+r.src+'</td>'+cells
-        +  '<td class="cnt" style="text-align:right;white-space:nowrap">'+(last ? dLong(last) : "\u2014")
-        +  (age !== null && age > 30 ? ' <span style="color:#c98500;font-weight:700">'+age+'d</span>' : '')+'</td></tr>';
+        +  '<td class="cnt" style="text-align:right;white-space:nowrap">'+(last ? dLong(last) : T("src.no_date"))
+        +  (age !== null && age > 30 ? ' <span style="color:#c98500;font-weight:700">'+T("src.age_days", {n: age})+'</span>' : '')+'</td></tr>';
   });
   out += '</table>';
   $("tracker").innerHTML = out;
   const missing = missingSources(trackYear);
-  $("trackBring").innerHTML = missing.length ? '<b>Still to bring for '+trackYear+':</b> '+missing.map(r => r.src).join(", ")+'.' : 'Everything due in '+trackYear+' is in.';
-  $("trackCap").innerHTML = '<div class="cap" style="margin-top:8px">A filled dot is a month that is in; a hollow amber one is due and not filed yet; a small grey one is not owed yet. A date in amber is more than a month old.</div>';
+  $("trackBring").innerHTML = missing.length ? T("src.still_to_bring", {year: trackYear, sources: listJoin(missing.map(r => r.src))}) : T("src.all_in", {year: trackYear});
+  $("trackCap").innerHTML = '<div class="cap" style="margin-top:8px">'+T("src.legend")+'</div>';
 }
 function renderSources(){
   renderTracker();
@@ -3824,36 +3826,35 @@ function renderUpdates(){
   setTimeout(() => document.querySelectorAll(".upd-pick").forEach(a => a.onclick = e => { e.preventDefault(); updAt = Number(a.dataset.i); renderUpdates(); window.scrollTo({top: 0}); }), 0);
   const last = IMPORTS[0] || null;
   const age = d => Math.round((new Date(TODAY) - new Date(d))/864e5);
-  const nFiles = r => r.files.length ? r.files.length + " file" + (r.files.length === 1 ? "" : "s") : "";
   $("updStats").innerHTML =
-    StatCard("Last update", last ? dLong(last.date) : null, last ? (age(last.date) === 0 ? "Today" : age(last.date)+" days ago") : "Nothing filed yet") +
+    StatCard(T("upd.stat_last"), last ? dLong(last.date) : null, last ? (age(last.date) === 0 ? T("upd.stat_last_today") : TN("upd.stat_last_days_ago", age(last.date))) : T("upd.stat_last_none")) +
     (() => {
       const [y, m, d] = TODAY.split("-").map(Number);
       const next = d < IMPORT_DAY ? new Date(y, m - 1, IMPORT_DAY) : new Date(y, m, IMPORT_DAY);
       const iso = next.getFullYear()+"-"+String(next.getMonth()+1).padStart(2,"0")+"-"+String(next.getDate()).padStart(2,"0");
       const owe = overdueSources().length;
-      return StatCard("Next update", dLong(iso), owe ? owe+" statement"+(owe === 1 ? "" : "s")+" still to bring" : "Everything due is in");
+      return StatCard(T("upd.stat_next"), dLong(iso), owe ? TN("upd.next_owe", owe) : T("upd.next_all_in"));
     })();
   const SYM = {bad:["\u2717","bad"], warn:["\u26a0","warn"], ok:["\u2713","ok"]};
   // The newest update in full: what changed, what it noticed, what it decided for you. What it
   // asked is one line — how many, and how many still wait. Earlier updates are a line each.
   const waiting = (DECISIONS || []).filter(d => !d.resolved).length;
   const shown = IMPORTS[updAt] || IMPORTS[0];
-  const latest = r => '<div class="card" style="margin-bottom:10px"><div class="lab">'+dLong(r.date)+(r === IMPORTS[0] ? ' \u2014 the newest update' : '')+'</div>'
+  const latest = r => '<div class="card" style="margin-bottom:10px"><div class="lab">'+(r === IMPORTS[0] ? T("upd.newest_suffix", {date: dLong(r.date)}) : dLong(r.date))+'</div>'
     + (r.changed.length ? metaList(r.changed.map(c => [c.label, c.from+" \u2192 "+c.to])) : "")
     + r.noticed.map(x => { const g = SYM[x.sev] || SYM.warn; return '<div class="alert-row"><span class="sym '+g[1]+'">'+g[0]+'</span><span>'+x.text+'</span></div>'; }).join("")
-    + (r.judged.length ? '<div class="cap" style="margin-top:8px">Decided without asking</div>' + r.judged.map(t => '<div class="alert-row"><span class="sym" style="color:var(--muted)">\u25cf</span><span>'+t+'</span></div>').join("") : "")
-    + (r.asked.length ? '<div class="alert-row" style="margin-top:6px"><span class="sym" style="color:#c98500">?</span><span>Asked you '+r.asked.length+' question'+(r.asked.length === 1 ? "" : "s")+(r === IMPORTS[0] ? ' \u2014 '+(waiting ? waiting+' still waiting' : 'none still waiting') : '')+'.</span></div>' : "")
-    + (r.files.length ? '<div class="cap" style="margin-top:8px">'+nFiles(r)+': '+r.files.join(" \u00b7 ")+'</div>' : "") + '</div>';
+    + (r.judged.length ? '<div class="cap" style="margin-top:8px">'+T("upd.decided")+'</div>' + r.judged.map(t => '<div class="alert-row"><span class="sym" style="color:var(--muted)">\u25cf</span><span>'+t+'</span></div>').join("") : "")
+    + (r.asked.length ? '<div class="alert-row" style="margin-top:6px"><span class="sym" style="color:#c98500">?</span><span>'+TN(r !== IMPORTS[0] ? "upd.asked_older" : waiting ? "upd.asked_latest_waiting" : "upd.asked_latest_none", r.asked.length, {w: waiting})+'</span></div>' : "")
+    + (r.files.length ? '<div class="cap" style="margin-top:8px">'+TN("upd.files", r.files.length, {files: r.files.join(" \u00b7 ")})+'</div>' : "") + '</div>';
   const nw = r => { const c = r.changed.find(c => /net worth/i.test(c.label)); return c ? c.from+" \u2192 "+c.to : "\u2014"; };
   $("updList").innerHTML = IMPORTS.length ? latest(shown)
-    + (IMPORTS.length > 1 ? '<div class="card upd-all" style="margin-bottom:10px"><div class="lab">Every update</div>'
+    + (IMPORTS.length > 1 ? '<div class="card upd-all" style="margin-bottom:10px"><div class="lab">'+T("upd.every")+'</div>'
       + DataTable([
-          {h:"Date", c: r => '<a href="#" class="upd-pick" data-i="'+IMPORTS.indexOf(r)+'"'+(r === shown ? ' style="font-weight:700"' : '')+'>'+dLong(r.date)+'</a>'+(r === shown ? ' \u25b4' : ''), num:false},
-          {h:"Net worth", c: r => nw(r), a:"l"},
-          {h:"Files", c: r => String(r.files.length)}], IMPORTS)
-      + '<div class="cap">Choose an update to read it above.</div></div>' : "")
-    : '<div class="card"><div class="empty">No updates yet. Drop your first statements into inbox and say \u201cupdate dashboards\u201d.</div></div>';
+          {h:T("upd.col_date"), c: r => '<a href="#" class="upd-pick" data-i="'+IMPORTS.indexOf(r)+'"'+(r === shown ? ' style="font-weight:700"' : '')+'>'+dLong(r.date)+'</a>'+(r === shown ? ' \u25b4' : ''), num:false},
+          {h:T("upd.col_net_worth"), c: r => nw(r), a:"l"},
+          {h:T("upd.col_files"), c: r => String(r.files.length)}], IMPORTS)
+      + '</div>' : "")
+    : '<div class="card"><div class="empty">'+T("upd.empty")+'</div></div>';
 }
 
 // What stands out: recomputed from the data on every load, nothing hand-written. Three homes,
