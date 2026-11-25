@@ -244,7 +244,7 @@
   "zh": "未计入：{reason}"
  },
  "base.chart_usual_line": {
-  "en": "a usual month {amount}",
+  "en": "monthly average {amount}",
   "zh": "月均支出 {amount}"
  },
  "base.every_month": {
@@ -860,7 +860,7 @@
   "zh": "说明"
  },
  "cat.vs_usual_label": {
-  "en": "Against a usual month",
+  "en": "Against the monthly average",
   "zh": "与月均支出相比"
  },
  "cat.vs_usual_note": {
@@ -3952,7 +3952,7 @@
   "zh": "暂无突出项目。"
  },
  "spend.ins_peak_month": {
-  "en": "<b>{month}</b> was the biggest month: {amount}, {x}× a usual month.",
+  "en": "<b>{month}</b> was the biggest month: {amount}, {x}× the monthly average.",
   "zh": "<b>{month}</b>是支出最多的月份：{amount}，为月均支出的 {x} 倍。"
  },
  "spend.ins_subs": {
