@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0 — unreleased
+## 1.1.0 — 2026-11-25
 
 - **AI assist** (AI 辅助), off until you turn it on: for a merchant the app does not know, it
   suggests a category, and you still choose. In Settings you pick Claude, ChatGPT or DeepSeek and
@@ -49,6 +49,11 @@
   that sends the link on (the phone's share sheet, or a copy that says where to paste it) and a
   small link to the demo anyway.
   Same in the closing band.
+- **The page's sentences fit every owner**: "1 account at 1 institution", "1 day ago", and a past
+  year's notes no longer say "this year"; card interest, an empty month and the monthly transfer
+  to the broker read right whatever the numbers. The page check now draws the page for an owner
+  with one account, for an update made yesterday and for an earlier year, reads every word back,
+  hover text and chart labels included, and stops on a sentence like these.
 
 ## 1.0.9 — 2026-11-17
 
