@@ -1184,8 +1184,12 @@
   "zh": "已投资金额增长至目标的走势"
  },
  "fire.chart_cap": {
-  "en": "The dashed line is the FIRE target. Each line shows your portfolio at a real return of {g}% a year (your setting). The shaded band covers real returns from {lo}% to {hi}% a year. The years are estimates, not exact dates.",
-  "zh": "虚线是 FIRE 目标。每条线表示投资组合按每年 {g}% 的实际回报率增长（见设置）。阴影区域为每年 {lo}% 至 {hi}% 的实际回报率范围。年数为估算，并非确切日期。"
+  "en": "The dashed line is the FIRE target. Each line shows your portfolio at a real return of {g}% a year ({setting}). The shaded band covers real returns from {lo}% to {hi}% a year. The years are estimates, not exact dates.",
+  "zh": "虚线是 FIRE 目标。每条线表示投资组合按每年 {g}% 的实际回报率增长（见{setting}）。阴影区域为每年 {lo}% 至 {hi}% 的实际回报率范围。年数为估算，并非确切日期。"
+ },
+ "fire.chart_cap_setting": {
+  "en": "your setting",
+  "zh": "设置"
  },
  "fire.click_to_change": {
   "en": "Click to change",
@@ -4254,6 +4258,166 @@
  "upd.next_owe_one": {
   "en": "{n} statement still to bring",
   "zh": "尚缺 {n} 份对账单"
+ },
+ "upd.rec.all_arrived": {
+  "en": "Every statement due has arrived. The next to close is the {doc} on {on}.",
+  "zh": "应到对账单均已到齐。下一份对账单为 {doc}，将于 {on}截止。"
+ },
+ "upd.rec.bonds_inside": {
+  "en": "Bonds are {pct}% of the portfolio, inside your {lo}–{hi}% band.",
+  "zh": "债券占投资组合的 {pct}%，在 {lo}–{hi}% 的目标区间内。"
+ },
+ "upd.rec.broker_kept": {
+  "en": "The rule held in {month}: {amount} reached the broker.",
+  "zh": "{month}按计划执行：{amount} 已转入券商。"
+ },
+ "upd.rec.broker_kept_more": {
+  "en": "The rule held in {month}: {amount} reached the broker, {more} more than the {planned} planned.",
+  "zh": "{month}按计划执行：{amount} 已转入券商，比计划的 {planned} 多 {more}。"
+ },
+ "upd.rec.broker_short": {
+  "en": "{amount} reached the broker in {month}, against the {planned} you planned. Move the rest when you can.",
+  "zh": "{month}转入券商 {amount}，计划为 {planned}。请尽快补足差额。"
+ },
+ "upd.rec.chg_dry_powder": {
+  "en": "Dry powder",
+  "zh": "待投现金"
+ },
+ "upd.rec.chg_holdings": {
+  "en": "Holdings",
+  "zh": "持仓数量"
+ },
+ "upd.rec.chg_net_worth": {
+  "en": "Net worth",
+  "zh": "净值"
+ },
+ "upd.rec.chg_portfolio": {
+  "en": "Portfolio",
+  "zh": "投资组合"
+ },
+ "upd.rec.chg_spending": {
+  "en": "Spending in {month}",
+  "zh": "{month}支出"
+ },
+ "upd.rec.deposits_kept": {
+  "en": "The rule held in {month}: two deposits of {amount} reached the {acct} on {d1} and {d2}.",
+  "zh": "{month}按计划执行：两笔各 {amount} 的存款已于 {d1}和{d2}转入 {acct}。"
+ },
+ "upd.rec.dry_inside": {
+  "en": "Dry powder is {pct}%, inside your {lo}–{hi}% band.",
+  "zh": "待投现金占 {pct}%，在 {lo}–{hi}% 的目标区间内。"
+ },
+ "upd.rec.dry_outside": {
+  "en": "Dry powder is {pct}%, outside your {lo}–{hi}% band. Rebalance when you next add money.",
+  "zh": "待投现金占 {pct}%，超出 {lo}–{hi}% 的目标区间。下次投入资金时请进行再平衡。"
+ },
+ "upd.rec.f_activities": {
+  "en": "Activities export of {on}",
+  "zh": "{on}的交易记录导出"
+ },
+ "upd.rec.f_chq_sav": {
+  "en": "Chequing and savings statements to {upto}",
+  "zh": "截至 {upto}的支票账户和储蓄账户对账单"
+ },
+ "upd.rec.f_holdings": {
+  "en": "Holdings report of {on}",
+  "zh": "{on}的持仓报告"
+ },
+ "upd.rec.f_ledger": {
+  "en": "{who}’s ledger of {on}",
+  "zh": "{who} 的往来记录（{on}）"
+ },
+ "upd.rec.f_statement": {
+  "en": "{doc} statement to {upto}",
+  "zh": "截至 {upto}的 {doc} 对账单"
+ },
+ "upd.rec.f_statement_again": {
+  "en": "{doc} statement to {upto} (again)",
+  "zh": "截至 {upto}的 {doc} 对账单（重复提交）"
+ },
+ "upd.rec.holdings_many": {
+  "en": "{n} holdings: past {max} the Holdings page draws slowly.",
+  "zh": "共 {n} 项持仓。超过 {max} 项时，持仓页面加载较慢。"
+ },
+ "upd.rec.j_already": {
+  "en": "The {doc} statement to {upto} was already in the books; nothing was written twice.",
+  "zh": "截至 {upto}的 {doc} 对账单此前已入账，未重复录入。"
+ },
+ "upd.rec.j_bill": {
+  "en": "Filed the {payee} payment as a bill.",
+  "zh": "{payee} 的付款已归为账单。"
+ },
+ "upd.rec.j_brand": {
+  "en": "Filed {merchant} as {cat}, like the other {brand} charges.",
+  "zh": "{merchant} 已归入{cat}，与其他 {brand} 消费一致。"
+ },
+ "upd.rec.j_by_eye": {
+  "en": "The {doc} statement to {upto} was read by eye and transcribed; the rows add up to what it prints.",
+  "zh": "截至 {upto}的 {doc} 对账单已人工识读并录入，各笔金额与对账单所列合计一致。"
+ },
+ "upd.rec.j_chain": {
+  "en": "Filed {merchant} as {cat}, a common chain.",
+  "zh": "{merchant} 为常见连锁商户，已归入{cat}。"
+ },
+ "upd.rec.j_header": {
+  "en": "{ledger}: its header now names the type and label columns its rows already carry.",
+  "zh": "{ledger}：表头已补上各行已有的 type 和 label 列。"
+ },
+ "upd.rec.j_named_contents": {
+  "en": "{file} carried no account in its name; the statement itself says it is the {doc} statement.",
+  "zh": "{file} 的文件名未注明账户；根据对账单内容，确认为 {doc} 对账单。"
+ },
+ "upd.rec.j_named_printed": {
+  "en": "{file} has the name of the {doc} statement, but it prints the {printed} account; filed as that.",
+  "zh": "{file} 的文件名属于 {doc} 对账单，但内容为 {printed} 账户，已按 {printed} 归档。"
+ },
+ "upd.rec.j_refund": {
+  "en": "Took the {amount} {merchant} refund ({doc} statement to {upto}, {on}) off {cat}, where its purchase of {bought} was.",
+  "zh": "{on}的 {merchant} 退款 {amount}（截至 {upto}的 {doc} 对账单）已从{cat}中扣除，对应 {bought}的原消费。"
+ },
+ "upd.rec.j_repeated": {
+  "en": "The {acct} rows of the {doc} file repeated {n} already in the books; they were left out.",
+  "zh": "{doc} 文件中 {acct} 的 {n} 笔记录此前已入账，未重复录入。"
+ },
+ "upd.rec.j_reward": {
+  "en": "Filed the {amount} ‘{desc}’ ({doc} statement to {upto}, {on}) as a reward: income, not pay.",
+  "zh": "{on}的 {amount}「{desc}」（截至 {upto}的 {doc} 对账单）已记为返现：属于收入，不计为工资。"
+ },
+ "upd.rec.j_rows": {
+  "en": "Filed {merchant} as {cat}, as its earlier charges were.",
+  "zh": "{merchant} 已归入{cat}，与其以往消费一致。"
+ },
+ "upd.rec.purchases": {
+  "en": "Purchases in {month} come to {amount} against the {everyday} everyday.",
+  "zh": "{month}消费合计 {amount}，日常支出额度为 {everyday}。"
+ },
+ "upd.rec.stale_statement": {
+  "en": "The {inst} {name} statement is {n} days old. The next one is ready to download.",
+  "zh": "{inst} {name} 的对账单已过 {n} 天，下一份已可下载。"
+ },
+ "upd.rec.unregistered_both_many": {
+  "en": "Money moved to or from account …{acct} ({n} times, {amt_in} in and {amt_out} out), which is not one of your accounts. If it is yours, add it, so net worth counts it.",
+  "zh": "有资金进出账户 …{acct}（{n} 次，转入 {amt_in}，转出 {amt_out}），该账户不在您的账户中。如属于您，请添加该账户，以便计入净值。"
+ },
+ "upd.rec.unregistered_both_one": {
+  "en": "Money moved to or from account …{acct} ({n} time, {amt_in} in and {amt_out} out), which is not one of your accounts. If it is yours, add it, so net worth counts it.",
+  "zh": "有资金进出账户 …{acct}（{n} 次，转入 {amt_in}，转出 {amt_out}），该账户不在您的账户中。如属于您，请添加该账户，以便计入净值。"
+ },
+ "upd.rec.unregistered_in_many": {
+  "en": "Money moved to or from account …{acct} ({n} times, {amt_in} in), which is not one of your accounts. If it is yours, add it, so net worth counts it.",
+  "zh": "有资金进出账户 …{acct}（{n} 次，转入 {amt_in}），该账户不在您的账户中。如属于您，请添加该账户，以便计入净值。"
+ },
+ "upd.rec.unregistered_in_one": {
+  "en": "Money moved to or from account …{acct} ({n} time, {amt_in} in), which is not one of your accounts. If it is yours, add it, so net worth counts it.",
+  "zh": "有资金进出账户 …{acct}（{n} 次，转入 {amt_in}），该账户不在您的账户中。如属于您，请添加该账户，以便计入净值。"
+ },
+ "upd.rec.unregistered_out_many": {
+  "en": "Money moved to or from account …{acct} ({n} times, {amt_out} out), which is not one of your accounts. If it is yours, add it, so net worth counts it.",
+  "zh": "有资金进出账户 …{acct}（{n} 次，转出 {amt_out}），该账户不在您的账户中。如属于您，请添加该账户，以便计入净值。"
+ },
+ "upd.rec.unregistered_out_one": {
+  "en": "Money moved to or from account …{acct} ({n} time, {amt_out} out), which is not one of your accounts. If it is yours, add it, so net worth counts it.",
+  "zh": "有资金进出账户 …{acct}（{n} 次，转出 {amt_out}），该账户不在您的账户中。如属于您，请添加该账户，以便计入净值。"
  },
  "upd.stat_last": {
   "en": "Last update",

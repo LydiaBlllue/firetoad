@@ -2866,13 +2866,14 @@ function renderFi(){
   const txt = yrsTxt(S.years), done = S.years[2] !== null && S.years[2] < 0.5, g = Math.round(S.growth*10)/10;
   $("fiBig").textContent = done ? T("fire.already_there") : txt ? T("home.yrs_value", {years: txt}) : T("fire.not_at_pace");
   const of = S.fromPlan ? "spend" : "planfig", sayV = {amount: "<b>"+fmt(S.invest)+"</b>", broker: BROKER, target: fmt(S.target)};
-  $("fiSay").innerHTML = done ? T(S.fromPlan ? "fire.say_done_spend" : "fire.say_done_plan", sayV)
+  $("fiSay").innerHTML = (done ? T(S.fromPlan ? "fire.say_done_spend" : "fire.say_done_plan", sayV)
     : !txt ? T("fire.say_no_pace", sayV)
-    : S.paceMonths ? TN("fire.say_pace_"+of, S.paceMonths, sayV) : T("fire.say_pace_"+of+"_plan", sayV);
+    : S.paceMonths ? TN("fire.say_pace_"+of, S.paceMonths, sayV) : T("fire.say_pace_"+of+"_plan", sayV))
+    .replace(/planned spending|规划支出/, w => term("planning_figure", w));
   if(S.rate !== undefined){
     const parts = S.jobs.map((j, i) => [i ? j[0] : T("fire.job_invested"), j[1], i ? "#9a9890" : "var(--ink)"]).concat(S.free > 0.5 ? [[T("fire.no_job"), S.free, "#e8c27a"]] : []);
     const tot = Math.max(S.keep, parts.reduce((a,p) => a + p[1], 0)) || 1;
-    $("fiKept").innerHTML = '<div class="sl">'+T("fire.kept_line", {keep: "<b>"+fmt(S.keep)+"</b>", pct: "<b>"+Math.round(S.rate*100)+"</b>"})+'</div>'
+    $("fiKept").innerHTML = '<div class="sl">'+T("fire.kept_line", {keep: "<b>"+fmt(S.keep)+"</b>", pct: "<b>"+Math.round(S.rate*100)+"</b>"}).replace(/savings rate|储蓄率/, w => term("savings_rate", w))+'</div>'
       + '<div class="kb">'+parts.filter(p => p[1] > 0).map(p => '<span style="width:'+(p[1]/tot*100)+'%;background:'+p[2]+'"></span>').join("")+'</div>'
       + '<div class="kk">'+parts.map(p => '<span><i style="background:'+p[2]+'"></i>'+p[0]+' <b>'+fmt(p[1])+'</b></span>').join("")+'</div>'
       + (S.free < -0.5 ? '<div class="cap">'+T("fire.overcommit", {amount: fmt(-S.free)})+'</div>' : "");
@@ -2916,7 +2917,8 @@ function renderFi(){
       + '<text x="'+(right ? cx + 8 : cx - 8)+'" y="'+(y(TG)-8)+'" text-anchor="'+(right ? "start" : "end")+'" font-size="11.5" font-weight="600" fill="'+col+'">'+T("fire.line_label", {name: name, n: Math.round(Y[1])})+'</text>';
   });
   $("fiChart").innerHTML = out;
-  $("fiCap").innerHTML = T("fire.chart_cap", {g: g, lo: Math.round(R[0]*100), hi: Math.round(R[2]*100)}) + mixPast();
+  $("fiCap").innerHTML = T("fire.chart_cap", {g: g, lo: Math.round(R[0]*100), hi: Math.round(R[2]*100),
+    setting: '<a href="#" onclick="setPage(\'set\');return false">'+T("fire.chart_cap_setting")+'</a>'}) + mixPast();
 }
 function renderFire(){
   renderFi();
@@ -2989,7 +2991,7 @@ function renderFire(){
   };
   drawOff(unset("planBase") || unset("born"));
   if(unset("planBase")){
-    $("drawSay").innerHTML = T("fire.draw_need_plan");
+    $("drawSay").innerHTML = T("fire.draw_need_plan").replace(/planned spending|规划支出/, w => term("planning_figure", w));
     return;
   }
   if(unset("born")){
@@ -3624,7 +3626,7 @@ function renderAccounts(){
   const totEq = Math.round(totCad + ownCad) === NW_GLOBAL, totDiff = fmt(Math.abs(Math.round(totCad + ownCad) - NW_GLOBAL));
   out += '<tr class="tot"><td style="text-align:left">'+T("acct.tot_all")+'</td><td class="opt"></td>'
        + '<td class="sub" style="text-align:left">'
-       + (ownCad ? (totEq ? T("acct.tot_plus_own_equal", {amount: fmt(ownCad)}) : T("acct.tot_plus_own_apart", {amount: fmt(ownCad), diff: totDiff}))
+       + (ownCad ? (totEq ? T("acct.tot_plus_own_equal", {amount: fmt(ownCad)}) : T("acct.tot_plus_own_apart", {amount: fmt(ownCad), diff: totDiff})).replace(/non-financial assets|非金融资产/, w => term("other_assets", w))
                  : totEq ? T("acct.tot_equal") : T("acct.tot_apart", {amount: totDiff}))
        + '</td><td class="num">' + numx(fmt(Math.round(totCad)), byCurAll.map(([c,v]) => [money2(v,c), money2(v*RATE[c], "CAD")]),
            (rateNote ? rateNote + (zh ? "。" : ". ") : "") + (missing ? TN("acct.tot_missing", missing) : ""), true) + '</td></tr>';
@@ -3845,6 +3847,14 @@ function headerLine(){
     + (last ? T("shell.header_updated", {date: dLong(last)}) : "") + waiting;
 }
 
+// A sentence an import wrote: by its key and values when the record carries them (records since
+// 2026-11-25), else in the English the record stored. Values come as the import wrote them:
+// amounts formatted, a day or a month as ISO (written here in LANG), a category by its key.
+const recVal = (k, v) => typeof v !== "string" ? v : k === "cat" ? catName(v)
+  : /^\d{4}-\d{2}-\d{2}$/.test(v) ? dLong(v) : /^\d{4}-\d{2}$/.test(v) ? ymLabel(v) : v;
+const recT = (o, en) => o && o.t && STR[o.t]
+  ? T(o.t, Object.fromEntries(Object.entries(o).map(([k, v]) => [k, recVal(k, v)]))) : en;
+
 function renderUpdates(){
   if(!$("updStats")) return;
   setTimeout(() => document.querySelectorAll(".upd-pick").forEach(a => a.onclick = e => { e.preventDefault(); updAt = Number(a.dataset.i); renderUpdates(); window.scrollTo({top: 0}); }), 0);
@@ -3865,11 +3875,11 @@ function renderUpdates(){
   const waiting = (DECISIONS || []).filter(d => !d.resolved).length;
   const shown = IMPORTS[updAt] || IMPORTS[0];
   const latest = r => '<div class="card" style="margin-bottom:10px"><div class="lab">'+(r === IMPORTS[0] ? T("upd.newest_suffix", {date: dLong(r.date)}) : dLong(r.date))+'</div>'
-    + (r.changed.length ? metaList(r.changed.map(c => [c.label, c.from+" \u2192 "+c.to])) : "")
-    + r.noticed.map(x => { const g = SYM[x.sev] || SYM.warn; return '<div class="alert-row"><span class="sym '+g[1]+'">'+g[0]+'</span><span>'+x.text+'</span></div>'; }).join("")
-    + (r.judged.length ? '<div class="cap" style="margin-top:8px">'+T("upd.decided")+'</div>' + r.judged.map(t => '<div class="alert-row"><span class="sym" style="color:var(--muted)">\u25cf</span><span>'+t+'</span></div>').join("") : "")
+    + (r.changed.length ? metaList(r.changed.map(c => [recT(c, c.label), c.from+" \u2192 "+c.to])) : "")
+    + r.noticed.map(x => { const g = SYM[x.sev] || SYM.warn; return '<div class="alert-row"><span class="sym '+g[1]+'">'+g[0]+'</span><span>'+recT(x, x.text)+'</span></div>'; }).join("")
+    + (r.judged.length ? '<div class="cap" style="margin-top:8px">'+T("upd.decided")+'</div>' + r.judged.map((t, i) => '<div class="alert-row"><span class="sym" style="color:var(--muted)">\u25cf</span><span>'+recT((r.judgedT || [])[i], t)+'</span></div>').join("") : "")
     + (r.asked.length ? '<div class="alert-row" style="margin-top:6px"><span class="sym" style="color:#c98500">?</span><span>'+TN(r !== IMPORTS[0] ? "upd.asked_older" : waiting ? "upd.asked_latest_waiting" : "upd.asked_latest_none", r.asked.length, {w: waiting})+'</span></div>' : "")
-    + (r.files.length ? '<div class="cap" style="margin-top:8px">'+TN("upd.files", r.files.length, {files: r.files.join(" \u00b7 ")})+'</div>' : "") + '</div>';
+    + (r.files.length ? '<div class="cap" style="margin-top:8px">'+TN("upd.files", r.files.length, {files: r.files.map((f, i) => recT((r.filesT || [])[i], f)).join(" \u00b7 ")})+'</div>' : "") + '</div>';
   const nw = r => { const c = r.changed.find(c => /net worth/i.test(c.label)); return c ? c.from+" \u2192 "+c.to : "\u2014"; };
   $("updList").innerHTML = IMPORTS.length ? latest(shown)
     + (IMPORTS.length > 1 ? '<div class="card upd-all" style="margin-bottom:10px"><div class="lab">'+T("upd.every")+'</div>'

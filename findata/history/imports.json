@@ -13,26 +13,42 @@
         {
           "label": "Portfolio",
           "from": "$87,580",
-          "to": "$90,000"
+          "to": "$90,000",
+          "t": "upd.rec.chg_portfolio"
         },
         {
           "label": "Spending in August",
           "from": "$0",
-          "to": "$2,171"
+          "to": "$2,171",
+          "t": "upd.rec.chg_spending",
+          "month": "2026-08"
         }
       ],
       "noticed": [
         {
           "sev": "ok",
-          "text": "Bonds are 16.6% of the portfolio, inside your 15–25% band."
+          "text": "Bonds are 16.6% of the portfolio, inside your 15–25% band.",
+          "t": "upd.rec.bonds_inside",
+          "pct": 16.6,
+          "lo": 15,
+          "hi": 25
         },
         {
           "sev": "ok",
-          "text": "August kept the rule: two deposits of $1,150 reached the TFSA on Aug 2 and Aug 17."
+          "text": "August kept the rule: two deposits of $1,150 reached the TFSA on Aug 2 and Aug 17.",
+          "t": "upd.rec.deposits_kept",
+          "month": "2026-08",
+          "amount": "$1,150",
+          "acct": "TFSA",
+          "d1": "2026-08-02",
+          "d2": "2026-08-17"
         },
         {
           "sev": "ok",
-          "text": "Every statement due has arrived. The next to close is the MasterCard on Sep 20."
+          "text": "Every statement due has arrived. The next to close is the MasterCard on Sep 20.",
+          "t": "upd.rec.all_arrived",
+          "doc": "MasterCard",
+          "on": "2026-09-20"
         }
       ],
       "judged": [
@@ -40,6 +56,31 @@
       ],
       "asked": [
         "What the unnamed $200 e-Transfer of Aug 11 was."
+      ],
+      "judgedT": [
+        {
+          "t": "upd.rec.j_bill",
+          "payee": "Hydro Ottawa"
+        }
+      ],
+      "filesT": [
+        {
+          "t": "upd.rec.f_statement",
+          "doc": "MasterCard",
+          "upto": "2026-08-20"
+        },
+        {
+          "t": "upd.rec.f_chq_sav",
+          "upto": "2026-09-05"
+        },
+        {
+          "t": "upd.rec.f_holdings",
+          "on": "2026-09-06"
+        },
+        {
+          "t": "upd.rec.f_activities",
+          "on": "2026-09-06"
+        }
       ]
     }
   ]

@@ -884,7 +884,10 @@ def derive(d):
     # the story of an update lives in the record and nowhere else on the page.
     out["IMPORTS"] = sorted(
         [{"date": r["date"], "files": r.get("files", []), "changed": r.get("changed", []),
-          "noticed": r.get("noticed", []), "judged": r.get("judged", []), "asked": r.get("asked", [])}
+          "noticed": r.get("noticed", []), "judged": r.get("judged", []), "asked": r.get("asked", []),
+          # the same sentences as keys and values, by position (records since 2026-11-25); the page
+          # says a sentence by its key when it has one, else in the English the record stored
+          **{k: r[k] for k in ("judgedT", "filesT") if r.get(k)}}
          for r in d["imports"]["imports"]], key=lambda r: r["date"], reverse=True)
     out["DECISIONS"] = [{k: v for k, v in x.items()} for x in d["decisions"]["decisions"]]
 

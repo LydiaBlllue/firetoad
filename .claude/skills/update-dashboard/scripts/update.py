@@ -470,11 +470,33 @@ class Plan:
         self.rewards = []                               # rewards.csv rows: cash back a card paid
         self.interest = []                              # card_interest.csv rows: what a statement charged
         self.files = []                                 # sentences, the way the owner knows them
+        # The same sentences as a key and its values, by position in judged / files, so the
+        # dashboard can say them in either language (2026-11-25); the English stays for the chat
+        # and for every older reader.
+        self.judged_t = {}
+        self.files_t = {}
         self.reach = ""                                 # the newest statement's closing day read
         self.holdings = None                            # (src path, asof)
         self.activities = None
         self.friend = None
         self.counts = collections.Counter()
+
+    def judge(self, text, t, **v):
+        """Something decided without asking: the English sentence, and its key with the values."""
+        self.judged_t[len(self.judged)] = dict(t=t, **v)
+        self.judged.append(text)
+
+    def file(self, text, t, **v):
+        """A file that came in, the way the owner knows it, and its key with the values."""
+        self.files_t[len(self.files)] = dict(t=t, **v)
+        self.files.append(text)
+
+
+def keyed(line, t, **v):
+    """A changed or noticed line with the key (strings.json) the dashboard says it by, and the
+    values that fill it: amounts already formatted, dates and months as ISO for the page to write."""
+    line.update(t=t, **v)
+    return line
 
 
 def classify_inbox(ws, plan):
@@ -520,8 +542,9 @@ def classify_inbox(ws, plan):
         if sum(1 for d in ws.docs if d.get("file") == doc.get("file")) > 1:
             printed = name_by_contents(ws, plan, f["path"], quiet=True)
             if printed is not None and printed is not doc:
-                plan.judged.append(f"{os.path.basename(f['name'])} has the name of the {ws.doc_name(doc)} statement, but it "
-                                   f"prints the {ws.doc_name(printed)} account; filed as that.")
+                plan.judge(f"{os.path.basename(f['name'])} has the name of the {ws.doc_name(doc)} statement, but it "
+                           f"prints the {ws.doc_name(printed)} account; filed as that.", "upd.rec.j_named_printed",
+                           file=os.path.basename(f['name']), doc=ws.doc_name(doc), printed=ws.doc_name(printed))
                 doc = printed
         named.append((f["path"], doc))
     return named
@@ -554,8 +577,9 @@ def name_by_contents(ws, plan, path, quiet=False):
     if len(hits) != 1:
         return None
     if not quiet:
-        plan.judged.append(f"{os.path.basename(path)} carried no account in its name; the statement itself says it is "
-                           f"the {ws.doc_name(hits[0])} statement.")
+        plan.judge(f"{os.path.basename(path)} carried no account in its name; the statement itself says it is "
+                   f"the {ws.doc_name(hits[0])} statement.", "upd.rec.j_named_contents",
+                   file=os.path.basename(path), doc=ws.doc_name(hits[0]))
     return hits[0]
 
 
@@ -585,8 +609,9 @@ def plan_statement(ws, plan, path, doc):
         res = hand_result(ws, plan, doc, plan.hand[name])
         if res is None:
             return
-        plan.judged.append(f"The {ws.doc_name(doc)} statement to {short(iso_to_date(res['period']['to']))} was read by eye and transcribed; "
-                           f"the rows add up to what it prints.")
+        plan.judge(f"The {ws.doc_name(doc)} statement to {short(iso_to_date(res['period']['to']))} was read by eye and transcribed; "
+                   f"the rows add up to what it prints.", "upd.rec.j_by_eye",
+                   doc=ws.doc_name(doc), upto=iso_to_date(res['period']['to']).isoformat())
     parts = res.get("accounts") or [res]
     end = iso_to_date(parts[0]["period"]["to"])
     tag = doc["tags"][0]
@@ -628,7 +653,8 @@ def plan_statement(ws, plan, path, doc):
         plan.filed[pdoc["key"]].add(month)
         filed_any = True
         plan.counts["statements"] += 1
-        plan.files.append(f"{ws.doc_name(pdoc)} statement to {short(p_end)}" + (" (again)" if redrop else ""))
+        plan.file(f"{ws.doc_name(pdoc)} statement to {short(p_end)}" + (" (again)" if redrop else ""),
+                  "upd.rec.f_statement_again" if redrop else "upd.rec.f_statement", doc=ws.doc_name(pdoc), upto=p_end.isoformat())
         plan.reach = max(plan.reach, p_end.isoformat())
     if not filed_any:
         plan.archive.pop()
@@ -724,8 +750,8 @@ def csv_fit_part(ws, plan, doc, acc, res):
                         or (r["date"] == last["date"] and (r["date"], f"{r['amount']:.2f}") not in on_last)]
     dropped = len(rows) - len(keep)
     if dropped:
-        plan.judged.append(f"The {acc['name']} rows of the {ws.doc_name(doc)} file repeated {dropped} already in the books; "
-                           f"they were left out.")
+        plan.judge(f"The {acc['name']} rows of the {ws.doc_name(doc)} file repeated {dropped} already in the books; "
+                   f"they were left out.", "upd.rec.j_repeated", acct=acc['name'], doc=ws.doc_name(doc), n=dropped)
     res = dict(res, rows=keep)
     if keep:
         res["period"] = {"from": keep[0]["date"], "to": keep[-1]["date"]}
@@ -828,7 +854,8 @@ def plan_ledger(ws, plan, acc, doc, part, end):
     existing = csv_rows(ws.fd(ledger)) + [dict(zip(LEDGER_COLS, r)) for r in plan.ledger.get(ledger, [])]
     tag = f"{acc['stmtTag']}/{stamp(end)}"
     if any(r.get("statement") == tag for r in existing):
-        plan.judged.append(f"The {ws.doc_name(doc)} statement to {short(end)} was already in the books; nothing was written twice.")
+        plan.judge(f"The {ws.doc_name(doc)} statement to {short(end)} was already in the books; nothing was written twice.",
+                   "upd.rec.j_already", doc=ws.doc_name(doc), upto=end.isoformat())
         return 0
     rows = part["rows"]
     if not rows:
@@ -913,7 +940,8 @@ def plan_card(ws, plan, acc, doc, part, end):
     existing = csv_rows(ws.fd("spending.csv"))
     tagend = f"[{acc['spendTag']}/{stamp(end)}]"
     if any(r["note"].rstrip().endswith(tagend) for r in existing + csv_rows(ws.fd("rewards.csv"))):
-        plan.judged.append(f"The {ws.doc_name(doc)} statement to {short(end)} was already in the books; nothing was written twice.")
+        plan.judge(f"The {ws.doc_name(doc)} statement to {short(end)} was already in the books; nothing was written twice.",
+                   "upd.rec.j_already", doc=ws.doc_name(doc), upto=end.isoformat())
         return 0
     table = {e["match"]: e for e in ws.merchants.get("merchants", [])}
     src = f"{ws.doc_name(doc)} statement to {short(end)}"
@@ -925,12 +953,15 @@ def plan_card(ws, plan, acc, doc, part, end):
             if REWARD.search(desc):
                 # cash back is income the card paid, not a refund and not a stranger's credit
                 plan.rewards.append([r["date"], f"{amt:.2f}", acc.get("cur", "CAD"), f"{desc} {tagend}"])
-                plan.judged.append(f"Filed the {money(amt)} {desc[:40]!r} ({src}, {short(iso_to_date(r['date']))}) as a reward: income, not pay.")
+                plan.judge(f"Filed the {money(amt)} {desc[:40]!r} ({src}, {short(iso_to_date(r['date']))}) as a reward: income, not pay.",
+                           "upd.rec.j_reward", amount=money(amt), desc=desc[:40], doc=ws.doc_name(doc), upto=end.isoformat(),
+                           on=r['date'])
                 continue
             if re.search(r"PAYMENT|THANK YOU|AUTOPAY|TRSF FROM|TRANSFER FROM", desc, re.I):   # a card payment, not a refund
                 plan.moves.append({"description": desc, "amount": amt})
                 continue
-            if not plan_refund(plan, existing, acc, desc, amt, r["date"], src, tagend):
+            if not plan_refund(plan, existing, acc, desc, amt, r["date"], src, tagend,
+                               srcv=dict(doc=ws.doc_name(doc), upto=end.isoformat())):
                 plan.credits.append((src, r["date"], desc, amt))
             continue
         cat, how, key = categorise(ws, desc, table)
@@ -941,7 +972,7 @@ def plan_card(ws, plan, acc, doc, part, end):
     return n
 
 
-def plan_refund(plan, existing, acc, desc, amt, when, src, tagend):
+def plan_refund(plan, existing, acc, desc, amt, when, src, tagend, srcv=None):
     """A credit on a card that gives back a purchase is a negative spending row in that
     purchase's category, so every total on the page is net of it (FINANCE.md §3c). It has to
     point at something: an earlier purchase at the same merchant on the same card — or, for a fee
@@ -956,8 +987,11 @@ def plan_refund(plan, existing, acc, desc, amt, when, src, tagend):
     last = max(bought, key=lambda x: x["date"])
     plan.spend.append([when, f"{-amt:.2f}", acc.get("cur", "CAD"), last["category"], f"{desc} {tagend}"])
     plan.counts["refunds"] += 1
-    plan.judged.append(f"Took the {amt:,.2f} {merchant_key(desc).title()} refund ({src}, {short(iso_to_date(when))}) "
-                       f"off {last['category']}, where its purchase of {short(iso_to_date(last['date']))} was.")
+    plan.judge(f"Took the {amt:,.2f} {merchant_key(desc).title()} refund ({src}, {short(iso_to_date(when))}) "
+               f"off {last['category']}, where its purchase of {short(iso_to_date(last['date']))} was.", "upd.rec.j_refund",
+               amount=f"${amt:,.2f}", merchant=merchant_key(desc).title(), on=when, cat=last['category'],
+               **(srcv or {"doc": src, "upto": ""}),
+               bought=last['date'])
     return True
 
 
@@ -971,7 +1005,7 @@ def note_merchant(plan, key, cat, how, when, src, root=None):
         # ended with 27 questions had 13 of these in it, each already answered (2026-11-12, user
         # 001). The owner changes one from the merchant list, like any other.
         plan.new_merchants[key] = (cat, src)
-        plan.judged.append(f"Filed {key} as {cat}, a common chain.")
+        plan.judge(f"Filed {key} as {cat}, a common chain.", "upd.rec.j_chain", merchant=key, cat=cat)
     elif how == "new" and key not in plan.new_merchants:
         plan.new_merchants[key] = (cat, src)
         item = {"kind": "merchant", "match": key, "what": f"{key}, seen for the first time.",
@@ -983,10 +1017,11 @@ def note_merchant(plan, key, cat, how, when, src, root=None):
         plan.decisions.append(item)
     elif how == "brand" and key not in plan.new_merchants:
         plan.new_merchants[key] = (cat, src)
-        plan.judged.append(f"Filed {key} as {cat}, like the other {key.split()[0]} charges.")
+        plan.judge(f"Filed {key} as {cat}, like the other {key.split()[0]} charges.", "upd.rec.j_brand",
+                   merchant=key, cat=cat, brand=key.split()[0])
     elif how == "rows" and key not in plan.new_merchants:
         plan.new_merchants[key] = (cat, src)
-        plan.judged.append(f"Filed {key} as {cat}, as its earlier charges were.")
+        plan.judge(f"Filed {key} as {cat}, as its earlier charges were.", "upd.rec.j_rows", merchant=key, cat=cat)
 
 
 def ask_ai(root, plan, say):
@@ -1045,7 +1080,7 @@ def plan_export(ws, plan, path, doc):
     plan.filed[doc["key"]].add(asof[:7])
     if into == "holdings_latest.csv":
         plan.holdings = (path, asof)
-        plan.files.append(f"Holdings report of {short(iso_to_date(asof))}")
+        plan.file(f"Holdings report of {short(iso_to_date(asof))}", "upd.rec.f_holdings", on=asof[:10])
     elif into == "ws_activities.csv":
         extra = activities_columns(ws, path)
         if extra:
@@ -1054,10 +1089,11 @@ def plan_export(ws, plan, path, doc):
             plan.archive.pop()
             return
         plan.activities = (path, asof)
-        plan.files.append(f"Activities export of {short(iso_to_date(asof))}")
+        plan.file(f"Activities export of {short(iso_to_date(asof))}", "upd.rec.f_activities", on=asof[:10])
     elif doc.get("counterparty"):
         plan.friend = (path, asof)
-        plan.files.append(f"{doc['counterparty']}'s ledger of {short(iso_to_date(asof))}")
+        plan.file(f"{doc['counterparty']}'s ledger of {short(iso_to_date(asof))}", "upd.rec.f_ledger",
+                  who=doc['counterparty'], on=asof[:10])
     else:
         plan.by_hand.append((name, f"lands in {into}, which nothing here knows how to write; transcribe it and hand the rows back with --hand"))
         plan.archive.pop()
@@ -1078,7 +1114,8 @@ def write_plan(ws, plan):
             if body and body[0] != LEDGER_COLS and LEDGER_COLS[:len(body[0])] == body[0]:
                 with open(p, "w", encoding="utf-8", newline="") as fh:
                     csv.writer(fh).writerows([LEDGER_COLS] + body[1:])
-                plan.judged.append(f"{ledger}: its header now names the type and label columns its rows already carry.")
+                plan.judge(f"{ledger}: its header now names the type and label columns its rows already carry.",
+                           "upd.rec.j_header", ledger=ledger)
         with open(p, "a", encoding="utf-8", newline="") as fh:
             w = csv.writer(fh)
             if new:
@@ -1318,15 +1355,16 @@ def changed_lines(before, after, sp_before, sp_after):
     out = []
     b, a = before["INVEST"], after["INVEST"]
     if b["netWorth"] != a["netWorth"]:
-        out.append({"label": "Net worth", "from": money(b["netWorth"]), "to": money(a["netWorth"])})
+        out.append(keyed({"label": "Net worth", "from": money(b["netWorth"]), "to": money(a["netWorth"])}, "upd.rec.chg_net_worth"))
     if b["dryPct"] != a["dryPct"]:
-        out.append({"label": "Dry powder", "from": f"{b['dryPct']}%", "to": f"{a['dryPct']}%"})
+        out.append(keyed({"label": "Dry powder", "from": f"{b['dryPct']}%", "to": f"{a['dryPct']}%"}, "upd.rec.chg_dry_powder"))
     if b["holdings"] != a["holdings"]:
-        out.append({"label": "Holdings", "from": b["holdings"], "to": a["holdings"]})
+        out.append(keyed({"label": "Holdings", "from": b["holdings"], "to": a["holdings"]}, "upd.rec.chg_holdings"))
     for ym in sorted(set(sp_after) | set(sp_before)):
         if round(sp_before.get(ym, 0)) != round(sp_after.get(ym, 0)):
             d = datetime.date(int(ym[:4]), int(ym[5:]), 1)
-            out.append({"label": f"Spending in {LONG[d.month - 1]}", "from": money(sp_before.get(ym, 0)), "to": money(sp_after.get(ym, 0))})
+            out.append(keyed({"label": f"Spending in {LONG[d.month - 1]}", "from": money(sp_before.get(ym, 0)),
+                              "to": money(sp_after.get(ym, 0))}, "upd.rec.chg_spending", month=ym))
     return out
 
 
@@ -1337,14 +1375,16 @@ def noticed_lines(ws, out, plan):
         if bkt.get("target") and bkt.get("key") == "dry":
             lo, hi = bkt["target"]
             ok = lo <= inv["dryPct"] <= hi
-            lines.append({"sev": "ok" if ok else "warn",
-                          "text": f"Dry powder is {inv['dryPct']}%, {'inside' if ok else 'outside'} your {lo}–{hi}% band."
-                                  + ("" if ok else " Rebalance when you next add money.")})
+            lines.append(keyed({"sev": "ok" if ok else "warn",
+                                "text": f"Dry powder is {inv['dryPct']}%, {'inside' if ok else 'outside'} your {lo}–{hi}% band."
+                                        + ("" if ok else " Rebalance when you next add money.")},
+                               "upd.rec.dry_inside" if ok else "upd.rec.dry_outside", pct=inv['dryPct'], lo=lo, hi=hi))
     # No limit on how many holdings is the owner's (2026-10-26, again 2026-11-16): the page says
     # how many and judges nothing. Only a count no page was built for is said, as a fact about
     # the page, never as a rule about the portfolio.
     if inv["holdings"] > TECH_MAX_HOLDINGS:
-        lines.append({"sev": "warn", "text": f"{inv['holdings']} holdings: past {TECH_MAX_HOLDINGS} the Holdings page draws slowly."})
+        lines.append(keyed({"sev": "warn", "text": f"{inv['holdings']} holdings: past {TECH_MAX_HOLDINGS} the Holdings page draws slowly."},
+                           "upd.rec.holdings_many", n=inv['holdings'], max=TECH_MAX_HOLDINGS))
     dep = out.get("WSDEP") or []
     ym = (ws.today.replace(day=1) - datetime.timedelta(days=1)).strftime("%Y-%m")
     last = next((d for d in dep if d["ym"] == ym), None)
@@ -1356,23 +1396,30 @@ def noticed_lines(ws, out, plan):
         plan_m, got = half * 2, last["amt"]
         if got >= plan_m - 0.5:
             more = f", {money(got - plan_m)} more than the {money(plan_m)} planned" if got > plan_m + 0.5 else ""
-            lines.append({"sev": "ok", "text": f"{mon} kept the rule: {money(got)} reached the broker{more}."})
+            lines.append(keyed({"sev": "ok", "text": f"{mon} kept the rule: {money(got)} reached the broker{more}."},
+                               "upd.rec.broker_kept_more" if more else "upd.rec.broker_kept", month=ym, amount=money(got),
+                               more=money(got - plan_m), planned=money(plan_m)))
         else:
-            lines.append({"sev": "warn", "text": f"{mon} shows {money(got)} reaching the broker against the {money(plan_m)} you planned. Move the rest when you can."})
+            lines.append(keyed({"sev": "warn", "text": f"{mon} shows {money(got)} reaching the broker against the {money(plan_m)} you planned. Move the rest when you can."},
+                               "upd.rec.broker_short", month=ym, amount=money(got), planned=money(plan_m)))
     everyday = rebuild.flow_totals(ws.funds["plan"]).get("everyday")
     sp = spending_by_month(ws.root, rebuild.flow_totals(ws.funds["plan"])["committedNow"], jload(ws.fd("plan.json"), {}))
     if everyday and sp:
         m = max(sp)
         mon = LONG[int(m[5:]) - 1]
         over = sp[m] > everyday
-        lines.append({"sev": "warn" if over else "ok",
-                      "text": f"Purchases in {mon} come to {money(sp[m])} against the {money(everyday)} everyday."})
+        lines.append(keyed({"sev": "warn" if over else "ok",
+                            "text": f"Purchases in {mon} come to {money(sp[m])} against the {money(everyday)} everyday."},
+                           "upd.rec.purchases", month=m, amount=money(sp[m]), everyday=money(everyday)))
     # an account these statements move money to or from, that the register does not have
     mine = [digits(a.get("id")) for a in ws.accounts] + [digits(x.get("id") or x.get("account")) for x in ws.reg.get("notOwned", [])]
     for n, (c, i, o) in sorted(seen_accounts.unregistered(plan.moves, mine).items()):
         flow = " and ".join(x for x in (f"{money(i)} in" if i else "", f"{money(o)} out" if o else "") if x)
-        lines.append({"sev": "warn", "text": f"Money moved to or from account …{n} ({c} time{'s' if c > 1 else ''}, {flow}), which is "
-                                             f"not one of your accounts. If it is yours, add it, so net worth counts it."})
+        way = "both" if i and o else "in" if i else "out"
+        lines.append(keyed({"sev": "warn", "text": f"Money moved to or from account …{n} ({c} time{'s' if c > 1 else ''}, {flow}), which is "
+                                                   f"not one of your accounts. If it is yours, add it, so net worth counts it."},
+                           f"upd.rec.unregistered_{way}_{'one' if c == 1 else 'many'}", acct=n, n=c,
+                           amt_in=money(i) if i else "", amt_out=money(o) if o else ""))
     for g in ws.reg.get("gaps", []):
         if g.get("sev") in ("warn", "bad"):
             lines.append({"sev": g["sev"], "text": f"{g.get('what', '')}. {g.get('fix', '')}".strip()})
@@ -1380,7 +1427,8 @@ def noticed_lines(ws, out, plan):
         if a.get("src") == "banks.json" and a.get("asof") and a.get("kind") != "Savings":
             age = (ws.today - iso_to_date(a["asof"])).days
             if age > 45:
-                lines.append({"sev": "warn", "text": f"The {a['inst']} {a['name']} statement is {age} days old. The next one is ready to download."})
+                lines.append(keyed({"sev": "warn", "text": f"The {a['inst']} {a['name']} statement is {age} days old. The next one is ready to download."},
+                                   "upd.rec.stale_statement", inst=a['inst'], name=a['name'], n=age))
     return lines
 
 
@@ -1392,6 +1440,9 @@ def record(ws, plan, changed, noticed, seconds=None):
         asked.append(f"What the {money(abs(amt))} on {short(iso_to_date(d))} ({desc[:40]}) was.")
     rec = {"date": ws.today.isoformat(), "files": plan.files, "changed": changed, "noticed": noticed,
            "judged": plan.judged, "asked": asked,
+           # judged and files as keys and values, by position, for the dashboard in either language
+           "judgedT": [plan.judged_t.get(i) for i in range(len(plan.judged))],
+           "filesT": [plan.files_t.get(i) for i in range(len(plan.files))],
            # what the Done screen says, as facts any language can say (1.0.7, feedback 89)
            "facts": {"files": len(plan.files), "reach": plan.reach or None}}
     if seconds:
