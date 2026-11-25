@@ -40,7 +40,7 @@ card and marked as AI assist's. You still choose: nothing is filed for you, and 
 | | |
 |---|---|
 | **Which AI** | Claude, ChatGPT or DeepSeek, with your own API key; or Ollama, if it already runs on your Mac. You pick a name and paste the key: no address, no model name |
-| **What it costs** | an API key is paid in advance (a Claude Pro or ChatGPT Plus plan does not include one); a month of shops costs less than a cent. Ollama is free |
+| **What it costs** | FIRE Toad charges nothing. The AI company you pick does: you add credit with it first (a Claude Pro or ChatGPT Plus plan doesn't include this), and each time FIRE Toad asks, a little is taken from that credit, by how much text goes back and forth, at that company's prices. It asks once a month, during the import. Ollama is free |
 | **What is sent** | the shop names as your statement prints them, and the 15 category names. Never an amount, a date or an account. With Ollama nothing leaves your Mac |
 | **How often** | once a month, during the import: one request with that month's new shops, at most 50. A shop answered once is never sent again |
 | **What you can check** | Settings → AI assist: how often it was asked, how many of its suggestions you kept, and every shop it was sent |
