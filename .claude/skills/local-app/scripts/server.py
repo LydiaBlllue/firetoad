@@ -48,9 +48,11 @@ Routes (every API answer is {"ok": bool, "data" | "error": …, "took": seconds}
   POST /api/open-log       —                            shows the app's log in the file manager
   GET  /api/setup          wizard.state()               the setup screens, drafted from inbox/ (demo folders)
   POST /api/setup          wizard.apply(answers, write) the answers file, scaffold, rebuild, first import (a job)
-  GET  /api/ai             ai.status()                  which model is set, and whether a key is stored (never the key)
-  POST /api/ai             ai.save_settings / key_set   {"provider", "baseUrl", "model", "key"?}; provider "none" turns it off
-  POST /api/ai/test        ai.categorise(merchant)      one merchant string, the category back — or the error
+  GET  /api/ai             ai.status()                  AI assist: the service, on or not, the usage, what was sent (never the key)
+  POST /api/ai             ai.turn_on()                 {"service", "key"?, "model"?}: a service by name; the address and model are the tool's
+  POST /api/ai/off         ai.turn_off()                off, and the key deleted
+  POST /api/ai/decline     ai.decline()                 the panel's "Not now": the first-time question is not asked again
+  POST /api/ai/suggest     ai.suggest_open()            a job: the open merchants with no suggestion, asked once
   GET  /api/tool           —                            how the folder's copy of the tool compares with the
                                                         app's (app.py tool_state: same / differs / newer)
   POST /api/sync           tools/sync.py                refreshes the folder's copy from the app's (a job)
@@ -413,26 +415,31 @@ class App:
         return {"log": applog.shown_path()}
 
     def do_ai(self, body):
-        prov = body.get("provider") or "none"
-        if prov == "none":
-            ai.save_settings(self.root, {"provider": "none"})
-            return ai.status(self.root)
-        if prov not in ai.PROVIDERS:
-            raise ValueError(f"unknown provider {prov!r}")
-        st = {"provider": prov, "baseUrl": (body.get("baseUrl") or ai.PROVIDERS[prov]["baseUrl"]).strip(),
-              "model": (body.get("model") or ai.PROVIDERS[prov]["model"]).strip(), "since": dt.date.today().isoformat()}
-        if not st["baseUrl"].startswith(("https://", "http://127.0.0.1", "http://localhost")):
-            raise ValueError("the base URL has to be https, or this computer")
-        ai.save_settings(self.root, st)
-        key = (body.get("key") or "").strip()
-        if key:
-            ai.key_set(self.root, prov, key)
-            log.info("ai: key stored for %s", prov)
+        """AI assist from the Settings page: a service by name, and its key when it needs one.
+        The address and the model are the tool's (ai.PROVIDERS); Ollama's model is one installed
+        here. Never answers with the key."""
+        svc = (body.get("service") or "").strip()
+        if svc not in ai.SHOWN:
+            raise ValueError(f"unknown service {svc!r}")
+        key = (body.get("key") or "").strip() or None
+        if ai.PROVIDERS[svc]["key"] and not key and not (ai.settings(self.root).get("provider") == svc and ai.key_stored(self.root, svc)):
+            raise ValueError("paste a key first")
+        ai.turn_on(self.root, svc, key=key, model=(body.get("model") or "").strip() or None)
+        log.info("ai: %s chosen%s", svc, ", key stored" if key else "")
         return ai.status(self.root)
 
-    def do_ai_test(self, merchant):
-        cat, how = ai.categorise(self.root, (merchant or "STARBUCKS 1234 TORONTO ON").strip()[:80])
-        return {"category": cat, "how": how}
+    def do_ai_off(self):
+        ai.turn_off(self.root)
+        log.info("ai: off, key deleted")
+        return ai.status(self.root)
+
+    def do_ai_decline(self):
+        ai.decline(self.root)
+        return ai.status(self.root)
+
+    def do_ai_suggest(self):
+        """The open merchants with no suggestion, asked once (AI assist turned on mid-categorizing)."""
+        return self.start_job("suggest", True, lambda say: ai.suggest_open(self.root, say=say))
 
     def lang(self, q=None):
         """The panel's language: ?lang= on the request (remembered in .firetoad/settings.json),
@@ -712,8 +719,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 job, busy = app.do_setup(body.get("answers") or {})
             elif path == "/api/ai":
                 return self._json(200, True, app.do_ai(body), t0)
-            elif path == "/api/ai/test":
-                return self._json(200, True, app.do_ai_test(body.get("merchant")), t0)
+            elif path == "/api/ai/off":
+                return self._json(200, True, app.do_ai_off(), t0)
+            elif path == "/api/ai/decline":
+                return self._json(200, True, app.do_ai_decline(), t0)
+            elif path == "/api/ai/suggest":
+                job, busy = app.do_ai_suggest()
             else:
                 return self._not_found()
             if busy:

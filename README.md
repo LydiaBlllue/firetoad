@@ -30,6 +30,27 @@ result. Start with one; the other is always there.
 
 ![The monthly panel in the app](docs/screens/panel.png)
 
+## AI assist — optional
+
+Each month the app asks you about one kind of thing it cannot know: a shop it has never seen.
+Turn on **AI assist** and each of those comes with a suggested category, the first button on its
+card and marked as AI assist's. You still choose: nothing is filed for you, and there is no
+"accept all".
+
+| | |
+|---|---|
+| **Which AI** | Claude, ChatGPT or DeepSeek, with your own API key; or Ollama, if it already runs on your Mac. You pick a name and paste the key: no address, no model name |
+| **What it costs** | an API key is paid in advance (a Claude Pro or ChatGPT Plus plan does not include one); a month of shops costs less than a cent. Ollama is free |
+| **What is sent** | the shop names as your statement prints them, and the 15 category names. Never an amount, a date or an account. With Ollama nothing leaves your Mac |
+| **How often** | once a month, during the import: one request with that month's new shops, at most 50. A shop answered once is never sent again |
+| **What you can check** | Settings → AI assist: how often it was asked, how many of its suggestions you kept, and every shop it was sent |
+| **Off** | is the default. Turning it off deletes the key |
+
+<p>
+  <img src="docs/screens/ai-card.png" alt="A card in the panel: AI assist's suggestion is the first button" width="48%">
+  <img src="docs/screens/ai-settings.png" alt="Settings, AI assist: the service, the key, how often it was asked, what was sent" width="48%">
+</p>
+
 ## What you need
 
 | | |
@@ -97,11 +118,8 @@ merchant filed wrong is changed from the list under that step. English or Chines
 in the header. The Mac build is signed and notarised, so it [opens with a
 double-click](docs/install.md); Windows has no build yet (`python3 app.py` works there).
 
-A model is optional and **off by default**. Turned on in the panel's settings — with your own
-key to an OpenAI-compatible service or Anthropic, or Ollama on this computer — it is asked one
-thing only: which category a merchant none of the maps know belongs to. It receives the
-merchant string and the fifteen category names, nothing else, and its answer is a suggestion
-you confirm, never the filing. Every exchange is logged in your folder.
+AI assist (above) is turned on in the dashboard's Settings; the panel asks once when there are
+shops it could help with.
 
 Claude Code stays the other door: the chat, a statement no parser reads, the setup questions
 the screens do not cover (anything held abroad, a loan to a friend, your investing buckets).
@@ -115,8 +133,10 @@ the screens do not cover (anything held abroad, a loan to a friend, your investi
 - **A statement a parser reads never goes to Anthropic.** What Claude does read is the import's
   summary, a merchant it has not seen, and your answers, the way anything you say in Claude Code does.
 - **It stays out of git**: setup keeps your data out of commits, and a guard refuses one that would carry it.
-- **A model is never on unless you turn it on.** On, it sees a merchant name and the fifteen
-  category names, nothing else, and every exchange is logged in your folder.
+- **AI assist is never on unless you turn it on.** On, it sees merchant names and the fifteen
+  category names, nothing else. With Claude, ChatGPT or DeepSeek those leave your computer, and
+  how that service keeps them is up to its terms; Settings lists every one sent. With Ollama
+  nothing leaves.
 
 **Your numbers**
 
@@ -140,8 +160,8 @@ the screens do not cover (anything held abroad, a loan to a friend, your investi
 
 - **[How it works](docs/how-it-works.md)**: every page, the monthly run, the folder, and the
   checkers that keep the numbers honest.
-<!-- LINT:FAULTS n=68 -->
-  Four checkers hold every figure to its source; a selftest plants 68 faults to prove they still catch them.
+<!-- LINT:FAULTS n=70 -->
+  Four checkers hold every figure to its source; a selftest plants 70 faults to prove they still catch them.
 - **[Installing the app](docs/install.md)**: the download, the first launch, and what to do if macOS still asks.
 - **[Supported banks and brokers](docs/banks.md)**: which to use, which banks' files are read, which are confirmed on a real
   one, and how to download each.

@@ -19,11 +19,11 @@
 |---|---|---|---|
 | plan_base | Planning spend | $2,950 /mo | `PLAN_BASE_DEFAULT`, set by hand |
 | fire_target | FIRE target | $885,000 | planning spend × 12 × 25 |
-| net_worth | Net worth | $65,655 | `INVEST.netWorth` + `FOREIGN_CAD`, all currencies |
-| portfolio | Portfolio | $51,290 | `INVEST.portfolio` — the number FIRE is measured on |
-| progress | Progress | 5.8% | portfolio ÷ target |
-| gap | Gap | $833,710 | target − portfolio |
-| invest_monthly | Monthly contribution | $700 | `funds.json` flows: `saving` to the broker |
+| net_worth | Net worth | $103,465 | `INVEST.netWorth` + `FOREIGN_CAD`, all currencies |
+| portfolio | Portfolio | $90,000 | `INVEST.portfolio` — the number FIRE is measured on |
+| progress | Progress | 10.2% | portfolio ÷ target |
+| gap | Gap | $795,000 | target − portfolio |
+| invest_monthly | Monthly contribution | $2,300 | `funds.json` flows: `saving` to the broker |
 | everyday | Everyday | $1,500 | `funds.json` flows: `everyday` |
 | dry_powder | Dry powder | 16.6% | `INVEST.dryPct`, band 40–45% |
 <!-- LINT:FIGURES:END -->

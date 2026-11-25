@@ -280,7 +280,7 @@ def run(root, write=False, ok=False, sets=(), say=None):
                              # what the item can be answered with (the panel's pills, local-app/panel.py):
                              # money in from no named sender, or a transfer out that may be spending
                              "credit": bool(d.get("credit")), "spent": bool(d.get("row")),
-                             "suggestBy": d.get("suggestBy"),
+                             "suggestBy": d.get("suggestBy"), "aiAsked": d.get("aiAsked"),
                              "amount": total.get(k) if k else None, "brand": kin.pop() if len(kin) == 1 else None,
                              "facts": d.get("facts"), "source": d.get("source"),
                              "bank": bool(k and k in from_bank),

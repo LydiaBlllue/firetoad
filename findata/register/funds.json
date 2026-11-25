@@ -7,8 +7,8 @@
         "key": "pay",
         "kind": "income",
         "name": "Take-home pay",
-        "amount": 4300,
-        "note": "Payroll of $2,150 twice a month. Investment income stays with the broker and is not counted."
+        "amount": 5800,
+        "note": "Payroll of $2,900 twice a month. Investment income stays with the broker and is not counted."
       },
       {
         "key": "rent",
@@ -22,7 +22,7 @@
         "key": "invest",
         "kind": "saving",
         "name": "Invest",
-        "amount": 700,
+        "amount": 2300,
         "to": "broker",
         "note": "Off the top, before anything else — pay-yourself-first."
       },

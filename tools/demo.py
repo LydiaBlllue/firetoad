@@ -37,8 +37,12 @@ TODAY = "2026-09-08"
 FX = 1.3712                      # USD/CAD used everywhere below
 SEED = 20260908
 
+# Her pay has had a raise and the raise went to the broker, not to her spending: rent and the
+# everyday amount are what they were. That is what puts financial independence in her late
+# forties (2026-11-20, user 001): at the old pay and $700 a month the demo said 61 to 69, later
+# than an ordinary retirement, on the front page of a tool for retiring early.
 P = dict(first="Emma", last="Roy", name="Emma Roy", initials="ER", upper="EMMA ROY", age=32,
-         city="Ottawa", pay=2150.00, rent=1450.00, invest=700, emergency=300, everyday=1500)
+         city="Ottawa", pay=2900.00, rent=1450.00, invest=2300, emergency=300, everyday=1500)
 
 ID = dict(bmo_chq="4471", bmo_sav="9032", bmo_mc="5518", tfsa="HQ7TF4A21CAD", rrsp="HQ7RR9B33CAD")
 
@@ -194,9 +198,14 @@ SEC = {"CAD": "CURRENCY"}
 ACCTS = [("TFSA", "tfsa"), ("RRSP", "rrsp")]
 # account, symbol, target CAD market value, book value as a ratio of market value
 TARGETS = [
- ("TFSA", "VEQT", 27500, 1/1.16), ("TFSA", "XAW", 6200, 1/1.12), ("TFSA", "ZAG", 5200, 1.02), ("TFSA", "CAD", 210, 1),
- ("RRSP", "VEQT", 8800, 1/1.14), ("RRSP", "ZAG", 3300, 1.02), ("RRSP", "CAD", 80, 1),
+ ("TFSA", "VEQT", 48300, 1/1.16), ("TFSA", "XAW", 10900, 1/1.12), ("TFSA", "ZAG", 9100, 1.02), ("TFSA", "CAD", 370, 1),
+ ("RRSP", "VEQT", 15400, 1/1.14), ("RRSP", "ZAG", 5800, 1.02), ("RRSP", "CAD", 130, 1),
 ]
+# The two earlier updates, counted back from the newest. Every deposit since buys stocks, so the
+# portfolio was smaller by those deposits and a little growth, and the bonds by a little drift.
+# Jun 15 to Sep 6 saw six half-month deposits, Aug 5 to Sep 6 two.
+BACK = {"2026-06-15": dict(port=3 * P["invest"] + 50, bonds=0.019, cash=1450),
+        "2026-08-05": dict(port=P["invest"] + 120, bonds=0.007, cash=380)}
 PORT_ACCTS = {"TFSA", "RRSP"}
 EARM_ACCTS = set()
 BONDS = {"ZAG"}
@@ -447,12 +456,15 @@ def build(out):
                                    ("accounts", []), ("summary", dict(cash=0, invested=0, cash_share_pct=0))]))
     fxp = layout.path(out, "fx.json")
     if os.path.exists(fxp): os.remove(fxp)      # no US dollars held: absent means none
-    hist = [dict(date="2026-06-15", cadInv=r2(invested - 2150), dry=r2(dry - 160), dryPct=round((dry - 160) / (invested - 2150) * 1000) / 10, tickers=3, foreign=None),
-            dict(date="2026-08-05", cadInv=r2(invested - 820), dry=r2(dry - 60), dryPct=round((dry - 60) / (invested - 820) * 1000) / 10, tickers=3, foreign=None),
-            dict(date="2026-09-06", cadInv=r2(invested), dry=r2(dry), dryPct=dry_pct, tickers=len(tickers), foreign=None)]
+    hist = []
+    for d, b in BACK.items():
+        inv_then, dry_then = invested - b["port"], round(dry * (1 - b["bonds"]))
+        hist.append(dict(date=d, cadInv=r2(inv_then), dry=r2(dry_then), dryPct=round(dry_then / inv_then * 1000) / 10, tickers=3, foreign=None))
+    hist.append(dict(date="2026-09-06", cadInv=r2(invested), dry=r2(dry), dryPct=dry_pct, tickers=len(tickers), foreign=None))
     J("investment_history.json", OrderedDict([("note", "One snapshot per 'update dashboards'. Portfolio = the accounts marked Portfolio in accounts.json; dry / dryPct is the share of the bucket with a target band."), ("snapshots", hist)]))
     J("networth_history.json", OrderedDict([("note", "One net-worth point per month, appended on every 'update dashboards' when the holdings export reaches a new month."),
-                                            ("snapshots", [dict(ym="2026-06", v=net_worth - 3900), dict(ym="2026-08", v=net_worth - 1300), dict(ym="2026-09", v=net_worth)])]))
+                                            ("snapshots", [dict(ym=d[:7], v=net_worth - b["port"] - b["cash"]) for d, b in BACK.items()]
+                                                          + [dict(ym="2026-09", v=net_worth)])]))
 
     # --------------------------------------------------- what an import writes
     J("filings.json", OrderedDict([
@@ -472,7 +484,7 @@ def build(out):
             ("date", "2026-09-06"),
             ("files", ["MasterCard statement to Aug 20", "Chequing and savings statements to Sep 5",
                        "Holdings report of Sep 6", "Activities export of Sep 6"]),
-            ("changed", [{"label": "Portfolio", "from": f"${invested - 820:,.0f}", "to": f"${invested:,.0f}"},
+            ("changed", [{"label": "Portfolio", "from": f"${invested - BACK['2026-08-05']['port']:,.0f}", "to": f"${invested:,.0f}"},
                          {"label": "Spending in August", "from": "$0", "to": f"${aug:,.0f}"}]),
             ("noticed", [
                 dict(sev="ok", text=f"Bonds are {dry_pct}% of the portfolio, inside your 15–25% band."),

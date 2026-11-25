@@ -63,17 +63,21 @@ wizard instead — Files · Accounts · Money in and out · Goal · Day · Build
 and, on *Build it*, writes `setup-answers.json` in the skill's own shape, runs the scaffold, the
 rebuild and the first import. A question skipped stays unanswered (the skill's rule); what the
 screens do not cover (anything abroad, a counterparty, the buckets, a CSV or OFX nobody could
-name) is listed on the last screen as left for the chat. **A model, by choice** (steps 3 and 4, 2026-11-06): one setting, set with `ai.py . set` (its card left the panel on 2026-11-13, until it is designed) —
-Off · With my own key (an OpenAI-compatible service, or Anthropic) · On this computer (Ollama).
-Off is the default and means not one call. On, `ai.py` in the update-dashboard scripts is asked
-at exactly one place: a merchant that merchants.json, the earlier rows, the brand and the
-starter map all miss. It sends the merchant string and the fifteen category names, nothing
-else; the answer has to be one of the fifteen or it is dropped; it becomes the question's
-*suggestion* (a dot marks it on the panel) and never the filing — Other stays until the owner
-confirms. The key lives in the macOS Keychain (service "Jade Toad", the product's first name, kept so a key already saved is still found), never in the workspace;
-the choice in .firetoad/settings.json; every exchange in .firetoad/log/ai.jsonl; one merchant costs
-one call (.firetoad/ai_cache.json). The same setting from this chat:
-`python3 .claude/skills/update-dashboard/scripts/ai.py . status | set <provider> … | off | test "<merchant>"`.
+name) is listed on the last screen as left for the chat. **AI assist** (AI 辅助, 1.1.0): off by default, turned on in the
+dashboard's Settings → AI assist — Claude, ChatGPT or DeepSeek with the owner's own API key, or
+Ollama when it runs on this computer; the owner never types an address or a model name. Off means
+not one call. On, `ai.py` in the update-dashboard scripts is asked at exactly one place: a
+merchant that merchants.json, the earlier rows, the brand and the starter map all miss — once an
+import, all of them in one request (at most 50), with the merchant strings and the fifteen
+category names, nothing else. The answer has to be one of the fifteen or it is dropped; it
+becomes the question's *suggestion* (its button first, marked, with a line under the buttons) and
+never the filing — Other stays until the owner confirms. When it is off and merchants are
+waiting, the panel asks once (*Turn on AI assist* / *Not now*). The key lives in the macOS
+Keychain (service "Jade Toad", the product's first name, kept so a key already saved is still
+found), never in the workspace, and is deleted when it is turned off; the choice in
+.firetoad/settings.json; every request in .firetoad/log/ai.jsonl, which Settings lists; a merchant
+answered once is not sent again (.firetoad/ai_cache.json). The same from this chat:
+`python3 .claude/skills/update-dashboard/scripts/ai.py . status | set claude|chatgpt|deepseek|ollama … | off | test "<merchant>"`.
 What it cannot yet: download a statement (the owner does that, or this chat does with
 `fetch-statements`). OCR needs `ocrmac`
 (`pip3 install --user ocrmac`; on the system Python 3.9, `pyobjc-core<11` first); without it the

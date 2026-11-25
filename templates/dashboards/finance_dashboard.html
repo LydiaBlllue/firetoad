@@ -31,6 +31,9 @@ body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system
 .ver{margin-top:18px;font-size:10.5px;letter-spacing:.04em;color:var(--muted)}
 .to-panel{display:block;margin:18px 10px 0;font-size:12.5px;font-weight:600;color:var(--ink);text-decoration:none;border:1px solid var(--border);border-radius:8px;padding:7px 10px;background:var(--surface)}
 .to-panel:hover{background:var(--pill)}
+/* Settings on its own at the foot of the sidebar, with a gear (1.1.0) */
+.side .side-set{margin-top:12px}
+.side .side-set svg{width:16px;height:16px;flex-shrink:0}
 .side .brand{display:flex;align-items:flex-end;gap:9px;width:100%;height:var(--headh);padding:0 10px 15px;
   background:none;border:none;border-bottom:1px solid var(--border);font-family:inherit;font-size:21px;
   font-weight:700;letter-spacing:-.4px;color:var(--ink);cursor:pointer;text-align:left;margin-bottom:20px}
@@ -142,6 +145,42 @@ section[data-pg]:not([hidden]){animation:pageIn .12s ease-out}
 .set-in.w-m{width:62px}.set-in.w-c{width:112px}
 .set-meta{font-size:11.5px;color:var(--muted);margin-top:4px}
 .set-meta button{font:inherit;color:var(--bar);background:none;border:0;cursor:pointer;padding:0}
+/* Settings in sections (1.1.0, the owner: "like the Claude app"): the list on the left, on a
+   narrow window a row of tabs on top; each section a title and rows. Your numbers, AI assist. */
+.set-wrap{display:flex;gap:32px;align-items:flex-start}
+.set-nav{width:184px;flex:none;display:flex;flex-direction:column;gap:2px;position:sticky;top:16px}
+.set-nav button{text-align:left;font:inherit;font-size:13.5px;padding:7px 11px;border-radius:8px;border:0;background:none;color:var(--ink-2);cursor:pointer}
+.set-nav button:hover{background:var(--pill)}
+.set-nav button.on{background:var(--pill);color:var(--ink);font-weight:600}
+.set-pane{flex:1;min-width:0;max-width:760px}
+.set-pane h2{font-size:17px;font-weight:700;letter-spacing:-.2px;margin:4px 0 6px}
+.set-pane h3{font-size:13.5px;font-weight:700;margin:26px 0 2px}
+.set-pane .set-grp{margin-top:0}
+.set-pane .set-grp h3 + .set-row,.set-pane h2 + .set-row{border-top:0}
+.set-pane .why a{color:var(--bar);text-decoration:none;white-space:nowrap}
+.set-pane .fine{font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5}
+.set-pane .fine + .fine{margin-top:4px}
+.set-pane .meta{margin-top:4px;max-width:none}
+.set-pane .dt{margin-top:6px}
+.set-pane .dt th{white-space:nowrap}
+.set-pane .dt td.what{text-align:left;padding-left:12px;white-space:normal}
+.set-pane .dt td.what small{display:block;color:var(--muted);font-size:11.5px}
+.set-pane select.set-in{text-align:left;min-width:200px}
+.set-pane .set-in.w-k{width:250px;text-align:left}
+.set-ctl .row2{display:flex;gap:6px;align-items:center;justify-content:flex-end}
+.set-pane .pill.go{background:var(--ink);color:var(--page);border-color:var(--ink);font-weight:600}
+.tg{display:inline-block;width:38px;height:22px;border-radius:11px;background:#d9d7d0;position:relative;vertical-align:middle;cursor:pointer;border:0;padding:0}
+.tg i{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .12s ease-out}
+.tg.on{background:var(--ink)}.tg.on i{left:18px}
+.tg:disabled{opacity:.45;cursor:default}
+@media (max-width:1119px){
+  .set-wrap{flex-direction:column;gap:14px}
+  .set-nav{flex-direction:row;flex-wrap:wrap;position:static;width:auto;gap:4px;border-bottom:1px solid var(--grid);padding-bottom:10px;align-self:stretch}
+  .set-pane{align-self:stretch;max-width:none}
+  .set-pane .set-row{flex-wrap:wrap}
+  .set-pane .set-row:has(.tg){flex-wrap:nowrap}
+  .set-pane .set-in.w-k{width:200px}
+}
 .rng{position:relative;height:50px;margin:22px 0 2px}
 .rng .track{position:absolute;left:0;right:0;top:10px;height:12px;border-radius:6px;background:var(--pill)}
 .rng .band{position:absolute;top:10px;height:12px;background:var(--rng-fill);border-left:2px solid var(--rng-ok);border-right:2px solid var(--rng-ok)}
@@ -396,6 +435,7 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
   </button>
   <nav id="sideNav"></nav>
     <a id="toPanel" class="to-panel" href="panel" hidden>Monthly import →</a>
+    <button id="sideSet" class="side-set" data-k="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></button>
     <div id="ver" class="ver"></div>
 </aside>
 <main class="main">
@@ -642,7 +682,10 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <section data-pg="set" hidden>
   <div id="setNote"></div>
-  <div class="card" id="setList"></div>
+  <div class="set-wrap">
+    <nav class="set-nav" id="setNav"></nav>
+    <div class="set-pane"><div id="setList"></div><div id="aiPane" hidden></div></div>
+  </div>
 </section>
 
 <section data-pg="upd" hidden>
@@ -765,6 +808,7 @@ function saveState(){
   const st = {p:curPage, ym:viewYM, stop:stopAge, draw:drawAge,
               care:careAge, ltc:ltcAge, home:ltcTier};
   if(navShut.size) st.shut = [...navShut].join(",");
+  if(setSec !== "num") st.ss = setSec;
   Object.entries(stBuilt).forEach(([k,v]) => { st["of_"+k] = v; });
   try{ localStorage.setItem("ly_state", JSON.stringify(st)); }catch(e){}
   try{ history.replaceState(null, "", "#" + Object.entries(st)
@@ -883,7 +927,7 @@ function setYear(y){
 const PROFILE = {};
 const BROKER = "";          // the institution that holds the portfolio, from accounts.json
 const CP = INVEST.counterparty || null;   // who pays money back, from cashflow.json
-const VERSION = "1.0.9";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
+const VERSION = "1.1.0";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
 // The brand is data, not markup: it used to be typed into the <title>, the sidebar and the link
 // between the two dashboards, which is three places to miss when someone makes this theirs.
 // FIRE Toad is the product; the owner's name is the instance. Both are shown, neither typed
@@ -927,11 +971,12 @@ const NAV = [
   {sec:"After FIRE", items:[{k:"coast",n:"Drawdown & care",  t:"Drawdown and care",    d:""}]},
   // Records and reference, for every stage, at the foot of the sidebar under the pages still
   // waiting for their data: what each update changed, which statements are in, the Glossary, and
-  // Settings — the numbers that are the owner's to choose.
+  // Settings — what is the owner's to choose. Settings is drawn on its own at the very foot of
+  // the sidebar, with a gear, below the way to the monthly import (1.1.0, #sideSet).
   {sec:"",          items:[{k:"upd",   n:"Updates",          t:"Updates",              d:""},
                            {k:"src",   n:"Statements",       t:"Statements",           d:""},
                            {k:"gloss", n:"Glossary",         t:"Glossary",             d:"", ref:1},
-                           {k:"set",   n:"Settings",         t:"Settings",             d:"The numbers that are yours to choose. A change is saved as you make it."}]}
+                           {k:"set",   n:"Settings",         t:"Settings",             d:"What is yours to choose. A change is saved as you make it."}]}
 ];
 const PAGES = NAV.flatMap(g => g.items);
 // The sections of a long page, listed under it in the sidebar (DESIGN.md §4): [the id of the
@@ -1012,7 +1057,7 @@ function drawNav(){
     + '<div class="grp">' + waiting.map(i => '<button data-k="'+i.k+'" class="'+(i.k===curPage?"sel":"")+'"><span>'+i.n
       + '<small>with '+waitsFor(i.k)+'</small></span></button>').join("") + '</div></details>';
   $("sideNav").innerHTML = NAV.map((g, gi) => {
-    if(gi === NAV.length - 1) return fold + '<div class="grp foot">' + g.items.map(btn).join("") + '</div>';
+    if(gi === NAV.length - 1) return fold + '<div class="grp foot">' + g.items.filter(i => i.k !== "set").map(btn).join("") + '</div>';
     const items = g.items.filter(i => !waitsFor(i.k));
     if(!items.length) return "";
     // A stage folds to its heading; the one the current page is in never does.
@@ -1024,6 +1069,8 @@ function drawNav(){
   const det = $("sideNav").querySelector("details.wait");
   if(det) det.ontoggle = () => { waitOpen = det.open; };
   $("sideNav").querySelectorAll("button[data-k]").forEach(b => b.onclick = () => setPage(b.dataset.k));
+  const ss = $("sideSet");
+  if(ss){ ss.classList.toggle("sel", curPage === "set"); ss.onclick = () => setPage("set"); }
   $("sideNav").querySelectorAll("[data-tog]").forEach(t => t.onclick = ev => {
     ev.stopPropagation();
     const k = t.dataset.tog; if(navShut.has(k)) navShut.delete(k); else navShut.add(k);
@@ -1538,7 +1585,7 @@ function renderHome(){
   const invested = INVEST.portfolio;   // every account held to grow, the foreign funds included; 0 until the first holdings export
   // Four questions, one per section: is the money growing, how far along, did this month's rule
   // hold, and what the month cost. Net worth is the header line; "reach" is the table.
-  const dep = (WSDEP||[]).slice(-1)[0] || null, half = FUNDS.plan.invest/2;
+  const dep = (WSDEP||[]).slice(-1)[0] || null;
   const curYM = TODAY.slice(0,7);
   const gross = NWPARTS.reduce((a,r) => a + r.v, 0);
   const grow = NWPARTS.find(r => r.role === "grow") || {by: []};
@@ -1559,7 +1606,7 @@ function renderHome(){
       return t ? card("Years to financial independence", "About "+t+" years", "At "+fmt(S.invest)+" a month invested · <a href=\"#\" onclick=\"setPage('fire');return false\">FIRE →</a>") : null; },
     inv: () => card(dep ? "Invested in "+ymLabel(dep.ym) : "Invested this month",
       unset("invest") ? (dep ? numx(fmt(dep.amt), [], "Counted the day "+BROKER+" receives it. The plan has no investing amount yet.") : notSet("invest"))
-        : dep ? numx(fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>', [["Planned", fmt(FUNDS.plan.invest)], ["Arrived", fmt(dep.amt)]], "Two transfers of "+fmt(half)+", counted the day "+BROKER+" receives them.") : "\u2014",
+        : dep ? numx(fmt(dep.amt)+' <span class="cap-v">of '+fmt(FUNDS.plan.invest)+'</span>', [["Planned", fmt(FUNDS.plan.invest)], ["Arrived", fmt(dep.amt)]], "Counted the day "+BROKER+" receives it.") : "\u2014",
       // judged by what arrived, not by how many transfers were exactly half the plan (1.0.7: more than the
       // plan arrived and the page still said "No transfer arrived yet")
       dep && !unset("invest") ? (dep.amt >= FUNDS.plan.invest - 0.5
@@ -1604,7 +1651,7 @@ function renderHome(){
       const subs = SPENDING.filter(e => e.date.startsWith(yr) && e.sub), ytd = subs.reduce((a,e) => a + e.amount, 0);
       if(!(ytd > 0)) return null;
       const closed = MONTHS.filter(m => m <= covEnd && m.startsWith(yr)).length || 1;
-      return card("A year of "+term("subscription", "subscriptions"), numx(fmt(ytd/closed*12), [["Per month", fmt(ytd/closed)], ["Months", "12"]], "Every charge that repeats, at this year's rate."), "");
+      return card("A year of "+term("subscription", "subscriptions"), numx(fmt(ytd/closed*12), [["Per month", fmt(ytd/closed)], ["Months", "12"]], "Every charge that repeats, at the rate of "+yr+"."), "");
     },
     bigcat: () => {
       const by = {};
@@ -1763,7 +1810,7 @@ function planAlloc(){
         + (f.until ? " Ends " + ymFull(f.until) + "." : "")
         + (f.afterFire === "drop" ? " Stops after FIRE." : "")})).concat([
     {k:"Invest",   v:INVM,          c:"#2a78d6", pk:"invm", tm:"pay_yourself_first",
-     d:"Two transfers of "+fmt(FUNDS.plan.invest/2)+" to "+BROKER+". It comes off the top before anything else, which is the whole point of pay-yourself-first."},
+     d:fmt(FUNDS.plan.invest)+" a month to "+BROKER+". It comes off the top before anything else, which is the whole point of pay-yourself-first."},
   ].concat(OTHER_SAVING.map(f => ({k:savingName(f), v:f.amount || 0,
       c:FUND_LIST.some(x => x.key === f.to) ? fundColor(f.to) : "#3d6f9e", pk:null,
       tm:FUND_LIST.some(x => x.key === f.to) ? "fund" : null,
@@ -2201,7 +2248,7 @@ function renderCatPage(){
       + '<span class="bar-wrap"><span class="bar" style="width:'+(Math.max(r.v,0)/mx*100)+'%;background:'+r.col+'"></span></span>'
       + '<span class="v num'+(isHigh(r) ? " hi" : "")+'">'+fmt2(r.v)+'</span>'
       + '</button>').join("")
-    : '<div class="empty">No spending recorded in '+ymLabel(viewYM)+' '+viewYM.slice(0,4)+'.</div>';
+    : '<div class="empty">No spending recorded in '+ymFull(viewYM)+'.</div>';
   $("catRows").querySelectorAll(".cat-row").forEach(b => b.onclick = () => {
     catSel = b.dataset.k;
     renderCatPage(); drawFlow();
@@ -2212,7 +2259,7 @@ function renderCatPage(){
   const win = {length: (catUsual(viewYM) || {n: 0}).n};
   $("catDetLab").textContent = sel ? catName(sel.k) : "Detail";
   $("catDetail").innerHTML = !sel
-    ? '<div class="empty">Nothing to show for '+ymLabel(viewYM)+' '+viewYM.slice(0,4)+'.</div>'
+    ? '<div class="empty">Nothing to show for '+ymFull(viewYM)+'.</div>'
     : '<div class="big num" style="margin-bottom:8px">'+fmt2(sel.v)+'</div>'
       + metaList([
           ["Share of the month", pct(sel.v)+"%"],
@@ -2240,7 +2287,7 @@ function renderYr(){
   renderYearInsights();
   $("yrStats").innerHTML =
     StatCard("Total spent in "+yrSpan(viewYear, spendMonths), numx(fmt(spent), [], "After refunds.")) +
-    StatCard("Spent a month in "+yrSpan(viewYear, spendMonths), spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], "This year only, open months included. "+(usualMonth() ? "A usual month, from your last full months, is "+fmt(usualMonth().v)+"." : "")) : null) +
+    StatCard("Spent a month in "+yrSpan(viewYear, spendMonths), spendMonths.length ? numx(fmt(spent/spendMonths.length), [["Spent", fmt(spent)], ["Months", spendMonths.length]], viewYear+" only, open months included. "+(usualMonth() ? "A usual month, from your last full months, is "+fmt(usualMonth().v)+"." : "")) : null) +
     (() => { const mt = spendMonths.length > 1 ? spendMonths.map(m => ({m, v: monthTotal(m)})).sort((a,b) => b.v - a.v)[0] : null;
              return StatCard("Biggest month", mt ? ymFull(mt.m) : null, mt ? fmt(mt.v) : "", {text: true}); })();
 
@@ -2507,19 +2554,127 @@ function wireSettings(root){
   });
   root.querySelectorAll("[data-sreset]").forEach(b => b.onclick = () => changeSetting(b.dataset.sreset, null, true));
 }
+// Settings in sections (1.1.0): Your numbers — the rows above, under the four stage names — and
+// AI assist. The section shown is kept with the page's state (ss), so the panel can link to AI assist.
+let setSec = ST.ss === "ai" ? "ai" : "num";
+const SET_SECS = [["num", "Your numbers"], ["ai", "AI assist"]];
 function renderSettings(){
-  $("setNote").innerHTML = SET_MODE === "read" ? noteBox("These numbers can be read here, not changed. Open this page with the FIRE Toad app to change them.")
+  $("setNote").innerHTML = SET_MODE === "read" ? noteBox("These can be read here, not changed. Open this page with the FIRE Toad app to change them.")
     : SET_MODE === "demo" ? noteBox("This is the demo: a change here is shown and not kept.") : "";
   $("setNote").style.marginBottom = SET_MODE === "save" ? "0" : "10px";
-  $("setList").innerHTML = Object.keys(SET_STAGE).map(st => {
+  $("setNav").innerHTML = SET_SECS.map(([k, n]) => '<button data-ss="'+k+'" class="'+(k === setSec ? "on" : "")+'">'+n+'</button>').join("");
+  $("setNav").querySelectorAll("[data-ss]").forEach(b => b.onclick = () => { setSec = b.dataset.ss; saveState(); renderSettings(); });
+  $("setList").hidden = setSec !== "num";
+  $("aiPane").hidden = setSec !== "ai";
+  $("setList").innerHTML = '<h2>Your numbers</h2>' + Object.keys(SET_STAGE).map(st => {
     const rows = SETTINGS.filter(r => r.stage === st);
-    return rows.length ? '<div class="set-grp"><div class="lab">' + SET_STAGE[st] + '</div>' + rows.map(r => {
+    return rows.length ? '<div class="set-grp"><h3>' + SET_STAGE[st] + '</h3>' + rows.map(r => {
       const meta = setMeta(r);
       return '<div class="set-row"><div><div class="n">' + r.n + '</div><div class="why">' + r.why + (r.key === "growth" ? mixPast() : "") + '</div></div>'
         + '<div class="set-ctl">' + setControl(r) + (meta ? '<div class="set-meta">' + meta + '</div>' : "") + '</div></div>';
     }).join("") + '</div>' : "";
   }).join("");
   wireSettings($("setList"));
+  if(setSec === "ai") renderAI();
+}
+
+// ===== AI assist (1.1.0) =====
+// Off unless the owner turns it on. It suggests a category for a merchant nothing else knows, and
+// the owner still chooses. What it is set to lives with the app on this computer, never in the
+// page or in the data: so the page asks the app (api/ai) when this section is opened, and opened
+// as a file or as the demo it can only say where it works. The owner picks a service by name and
+// pastes a key; the address and the model are the tool's.
+let AI_ST = null, aiDraft = null, aiBusy = false;
+const AI_WHAT = "Suggests a category for a merchant the app does not know. You still choose each one.";
+const AI_SENT = "What is sent: the merchant as the statement prints it, and the names of the 15 categories. Never an amount, a date or an account.";
+const aiSvc = id => ((AI_ST && AI_ST.services) || []).find(x => x.id === id) || {};
+const setRowH = (n, why, ctl, meta) => '<div class="set-row"><div><div class="n">' + n + '</div><div class="why">' + why + '</div></div>'
+  + '<div class="set-ctl">' + ctl + (meta ? '<div class="set-meta">' + meta + '</div>' : "") + '</div></div>';
+const toggleH = (on, off) => '<button class="tg' + (on ? " on" : "") + '" role="switch" aria-checked="' + on + '" aria-label="Use AI assist" data-ai="tg"' + (off ? " disabled" : "") + '><i></i></button>';
+const timesH = n => n === 0 ? "Not yet" : n === 1 ? "Once" : n === 2 ? "Twice" : n + " times";
+function aiPost(path, body){
+  aiBusy = true;
+  return fetch(path, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body || {})})
+    .then(res => res.json().then(j => { if(!res.ok || !j.ok) throw j.error || {}; AI_ST = j.data; aiDraft = null; }))
+    .catch(e => toast("Not saved" + (e.text ? ": " + e.text : ". The app did not answer.")))
+    .then(() => { aiBusy = false; renderAI(); });
+}
+function renderAI(){
+  const el = $("aiPane");
+  let h = '<h2>AI assist</h2>';
+  if(SET_MODE !== "save"){
+    el.innerHTML = h + setRowH("Use AI assist", AI_WHAT, toggleH(false, true), "") + '<p class="fine">AI assist works when this page is opened with the FIRE Toad app on your computer.</p>';
+    return;
+  }
+  if(!AI_ST){
+    el.innerHTML = h;
+    const noAnswer = '<p class="fine">The app did not answer.</p>';
+    fetch("api/ai")
+      .then(res => res.json())
+      .then(j => { AI_ST = j.data || {}; renderAI(); })
+      .catch(() => { el.innerHTML = h + noAnswer; });
+    return;
+  }
+  const st = AI_ST, cur = st.provider && st.provider !== "none" ? st.provider : null;
+  const on = !!(aiDraft || st.enabled), svc = aiDraft ? aiDraft.svc : cur;
+  const s = aiSvc(svc), ollama = st.ollama || [];
+  h += setRowH("Use AI assist", AI_WHAT, toggleH(on, aiBusy),
+    st.enabled && !aiDraft ? (s.key ? "Turning it off deletes the key" : "") : on ? (s.key ? "Paste a key to finish" : "") : "");
+  if(on){
+    const opts = (st.services || []).filter(x => x.id !== "ollama" || ollama.length || svc === "ollama");
+    // a service set from the chat (any other OpenAI-compatible one) is shown as itself
+    if(svc && !opts.some(x => x.id === svc)) opts.unshift({id: svc, label: "Another service"});
+    h += setRowH("Service", svc === "ollama" ? "Works on this computer. Nothing is sent." : "The AI service your merchant names are sent to.",
+      '<select class="set-in" data-ai="svc" aria-label="Service">' + opts.map(x => '<option value="'+x.id+'"'+(x.id === svc ? " selected" : "")+'>'+(x.menu || x.label)+'</option>').join("") + '</select>');
+    if(svc === "ollama"){
+      h += setRowH("Model", "Installed in Ollama on this computer.",
+        ollama.length ? '<select class="set-in" data-ai="model" aria-label="Model" style="min-width:140px">' + ollama.map(m => '<option'+(m === st.model ? " selected" : "")+'>'+m+'</option>').join("") + '</select>'
+          : '<span class="num" style="color:var(--muted)">Ollama is not open</span>');
+    } else if(s.key){
+      const saved = st.enabled && cur === svc && st.keyStored && !(aiDraft && aiDraft.replace);
+      h += setRowH("API key", "From " + s.company + "." + (svc === "claude" ? " A Claude Pro plan does not come with one." : svc === "chatgpt" ? " A ChatGPT Plus plan does not come with one." : svc === "deepseek" ? " Its servers are in China." : "")
+          + (saved || !s.keyUrl ? "" : ' <a href="' + s.keyUrl + '" target="_blank" rel="noopener noreferrer">Get a key ↗</a>'),
+        saved ? '<div class="row2"><span class="num" style="color:var(--muted)">Saved</span><button class="pill" data-ai="replace">Replace</button></div>'
+          : '<div class="row2"><input class="set-in w-k" type="password" autocomplete="off" data-ai="key" placeholder="Paste your ' + s.company + ' API key" aria-label="API key"><button class="pill go" data-ai="save">Save</button></div>');
+    }
+    if(svc && svc !== "ollama" && !(st.enabled && cur === svc && !aiDraft))
+      h += '<p class="fine">Once it is on, a merchant the app does not know is sent to ' + s.company + ' by name, to ask which category fits. Amounts, dates and accounts are not sent.</p>'
+        + '<p class="fine">How ' + s.company + ' keeps what it receives is up to its own terms. FIRE Toad cannot control that.</p>'
+        + '<p class="fine">A key is paid for in advance: you add credit first, and a month of merchants costs less than a cent.</p>';
+    if(svc === "ollama") h += '<p class="fine">Ollama has to be open when you import. When it is not, the import goes on without it.</p>';
+  } else h += '<p class="fine">' + AI_SENT + '</p>';
+  if(st.enabled && !aiDraft)
+    h += '<h3>Usage</h3>' + metaList([["Asked this month", timesH(st.askedThisMonth || 0)], st.since ? ["On since", dLong(st.since)] : null,
+      ["Merchants it suggested", String(st.suggested || 0)], ["Suggestions you kept", String(st.kept || 0)]]);
+  const hist = (st.history || []).filter(x => x.merchants.length);
+  if(hist.length && !aiDraft){
+    h += '<h3>What was sent</h3><table class="dt"><tr><th>Day</th><th class="l">Sent to</th><th class="l">What</th></tr>'
+      + hist.map(x => '<tr><td class="nw">' + dLong(x.at) + '</td><td class="l">' + esc(x.to || x.service) + '</td><td class="what">'
+        + x.merchants.length + (x.merchants.length === 1 ? " merchant" : " merchants") + (x.ok ? (x.cut ? ", answer cut short" : "") : ", " + ({key: "key not accepted", credit: "no credit left", busy: "service busy", network: "no connection"}[x.why] || "no answer"))
+        + '<small>' + x.merchants.slice(0, 3).map(esc).join(", ") + (x.merchants.length > 3 ? ", and " + (x.merchants.length - 3) + " more" : "") + '</small></td></tr>').join("")
+      + '</table><p class="fine">The names of the 15 categories went with each one.</p>';
+  }
+  el.innerHTML = h;
+  const q = k => el.querySelector('[data-ai="' + k + '"]');
+  if(q("tg")) q("tg").onclick = () => {
+    if(aiBusy) return;
+    if(st.enabled && !aiDraft){ aiPost("api/ai/off"); return; }
+    if(aiDraft){ aiDraft = null; renderAI(); return; }
+    aiDraft = {svc: (st.services || [])[0].id}; renderAI();
+  };
+  if(q("svc")) q("svc").onchange = () => {
+    const v = q("svc").value;
+    if(v === "ollama"){ if(ollama.length) aiPost("api/ai", {service: "ollama", model: ollama[0]}); else { aiDraft = {svc: v}; renderAI(); } return; }
+    aiDraft = v === cur && st.enabled ? null : {svc: v}; renderAI();
+  };
+  if(q("model")) q("model").onchange = () => aiPost("api/ai", {service: "ollama", model: q("model").value});
+  if(q("replace")) q("replace").onclick = () => { aiDraft = {svc: svc, replace: true}; renderAI(); };
+  if(q("save")) q("save").onclick = () => {
+    const k = q("key").value.trim();
+    if(!k){ q("key").focus(); return; }
+    aiPost("api/ai", {service: svc, key: k});
+  };
+  if(q("key")) q("key").onkeydown = ev => { if(ev.key === "Enter") q("save").click(); };
 }
 // Where the months covered sit against the owner's own range (settings.py emergency_state).
 const RANGE_SAYS = {below: "Below your range", inside: "Inside your range", above: "Above your range"};
@@ -3331,7 +3486,7 @@ function renderSubStats(){
   const base = PLAN_BASE;
   const card = StatCard;
   $("subStats").innerHTML =
-    card(term("subscription", "Subscriptions")+" in "+yr, numx(fmt(ytd), [], "Every charge that repeats, this year."), "") +
+    card(term("subscription", "Subscriptions")+" in "+yr, numx(fmt(ytd), [], "Every charge that repeats, in "+yr+"."), "") +
     card("A full year", numx(fmt(perMo*12), [["Per month", fmt(perMo)], ["Months", "12"]], "Subscriptions renew whether or not you use them."),
       base ? Math.round(pc(perMo, base))+"% of your "+term("planning_figure") : "") +
     StatCard("Biggest one", byBrand && byBrand.v ? byBrand.name : null,
@@ -3368,7 +3523,7 @@ function renderAccounts(){
   $("acctStats").innerHTML =
     // The money, cut the way Home cuts it (1.0.1): the four numbers this table opens up. How
     // many accounts and how old a balance is are in the table itself, not in a card.
-    StatCard(term("net_worth", "Net worth"), fmt(NW_GLOBAL), A.length + " accounts at " + insts.length + " institutions")
+    StatCard(term("net_worth", "Net worth"), fmt(NW_GLOBAL), A.length + " account" + (A.length === 1 ? "" : "s") + " at " + insts.length + " institution" + (insts.length === 1 ? "" : "s"))
     + StatCard(term("cash", "Cash"), fmt(NWPARTS.filter(r => r.role === "buffer").reduce((s, r) => s + r.v, 0)))
     + StatCard(term("portfolio", "Invested"), fmt(PORTFOLIO))
     + StatCard("You owe", fmt(NW_DEBT), bad ? bad + " gap" + (bad === 1 ? "" : "s") + " affect net worth" : "");
@@ -3671,7 +3826,7 @@ function renderUpdates(){
   const age = d => Math.round((new Date(TODAY) - new Date(d))/864e5);
   const nFiles = r => r.files.length ? r.files.length + " file" + (r.files.length === 1 ? "" : "s") : "";
   $("updStats").innerHTML =
-    StatCard("Last update", last ? dLong(last.date) : null, last ? (age(last.date) === 0 ? "Today" : age(last.date)+" days ago") : "Nothing filed yet") +
+    StatCard("Last update", last ? dLong(last.date) : null, last ? (age(last.date) === 0 ? "Today" : age(last.date)+" day"+(age(last.date) === 1 ? "" : "s")+" ago") : "Nothing filed yet") +
     (() => {
       const [y, m, d] = TODAY.split("-").map(Number);
       const next = d < IMPORT_DAY ? new Date(y, m - 1, IMPORT_DAY) : new Date(y, m, IMPORT_DAY);
@@ -3720,7 +3875,7 @@ function renderYearInsights(){
   const top = Object.entries(byCat).sort((a,b) => b[1]-a[1])[0];
   if(top) ins.push({s:"n", t:"<b>"+catName(top[0])+"</b> is the biggest category: "+fmt(top[1])+", "+Math.round(pc(top[1], ytd))+"% of the year."});
   const ciYr = CARD_INTEREST.filter(r => r.d.startsWith(yr)).reduce((s,r) => s + r.v, 0);
-  if(ciYr > 0.005) ins.push({s:"w", t:"<b>"+term("card_interest", "Card interest")+"</b> cost "+fmt2(ciYr)+" this year."});
+  if(ciYr > 0.005) ins.push({s:"w", t:"<b>"+term("card_interest", "Card interest")+"</b> cost "+fmt2(ciYr)+" in "+yr+"."});
   // The charges that repeat (`sub`, measured at build time), and the biggest of them.
   const byBrand = {};
   yes.filter(e => e.sub).forEach(e => { byBrand[e.sub] = (byBrand[e.sub]||0) + e.amount; });

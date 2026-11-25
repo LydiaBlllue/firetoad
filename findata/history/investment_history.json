@@ -3,24 +3,24 @@
   "snapshots": [
     {
       "date": "2026-06-15",
-      "cadInv": 49140.0,
-      "dry": 8340.0,
-      "dryPct": 17.0,
+      "cadInv": 83050.0,
+      "dry": 14617.0,
+      "dryPct": 17.6,
       "tickers": 3,
       "foreign": null
     },
     {
       "date": "2026-08-05",
-      "cadInv": 50470.0,
-      "dry": 8440.0,
-      "dryPct": 16.7,
+      "cadInv": 87580.0,
+      "dry": 14796.0,
+      "dryPct": 16.9,
       "tickers": 3,
       "foreign": null
     },
     {
       "date": "2026-09-06",
-      "cadInv": 51290.0,
-      "dry": 8500.0,
+      "cadInv": 90000.0,
+      "dry": 14900.0,
       "dryPct": 16.6,
       "tickers": 3,
       "foreign": null
