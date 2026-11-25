@@ -113,7 +113,7 @@ the day work stops: past it, working is a choice.
 
 ## 3. The budget method: pay-yourself-first
 
-- The `saving` flow to the broker in `funds.json` goes out each month in **two transfers of half that**,
+- The `saving` flow to the broker in `funds.json` goes out each month in **one or more transfers**,
   before anything else is spent.
 - Whether the rule held is judged on the EFTs reaching the broker's chequing account in the
   activities export (`WSDEP`), because they run ahead of the bank statement.
