@@ -30,6 +30,14 @@
   goes to the broker — $2,300 a month, with her rent and everyday amount as they were. The demo
   now says about 15 to 18 years to financial independence, in her late forties; at $700 a month
   it said 29 to 37, later than an ordinary retirement.
+- **The site has its first "FIRE questions"**: four questions people ask on the way to
+  financial independence, each answered on one page in English and Chinese, with its sources and a
+  way to work it out — how much you need to retire early, whether 4% lasts 40 or 50 years, when to
+  take CPP, and why a raise often doesn't raise your savings. More follow as each one's sources are
+  checked; nothing links to a page that isn't up. The top bar says what each link is: FIRE
+  questions, A month with the app, and on a question's page, About the app.
+- **The front page shows the FIRE questions too**: a section after "What it tells you" with the
+  questions that are up, each with its one-line answer, and a link to all of them.
 
 ## 1.0.9 — 2026-11-17
 
