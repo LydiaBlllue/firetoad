@@ -47,7 +47,7 @@ EN = dict(
     desc=("Free, open-source Mac app for Canadians: how many years until financial independence, worked "
           "out from your own RBC, BMO or other bank statements. No bank login, no account."),
     name="FIRE Toad",
-    nav=[("path/", "FIRE questions"), ("#setup", "Setting up"), ("#how", "A month with the app"), ("#ai", "AI assist"), ("#banks", "Banks"), ("#faq", "FAQ")],
+    nav=[("path/", "FIRE questions"), ("#setup", "Setting up"), ("#how", "A month with the app"), ("#banks", "Banks"), ("#ai", "AI assist"), ("#faq", "FAQ")],
     h1="How many years until work is optional?",
     lede=("Once a month, drop your bank statements into a folder. FIRE Toad reads them on your Mac, "
           "checks that each one adds up, and works out what you spend, what you keep, and how many years "
@@ -164,7 +164,7 @@ ZH = dict(
     desc=("免费开源的 Mac app，为在加拿大想财务自由的人做：用你自己的 RBC、BMO 或其他银行对账单，"
           "算出还要几年财务自由。不用连银行，也不用注册。"),
     name="FIRE蛙 FIRE Toad",
-    nav=[("path/", "FIRE 问答"), ("#setup", "建账"), ("#how", "每月怎么用"), ("#ai", "AI 辅助"), ("#banks", "支持的银行"), ("#faq", "常见问题")],
+    nav=[("path/", "FIRE 问答"), ("#setup", "建账"), ("#how", "每月怎么用"), ("#banks", "支持的银行"), ("#ai", "AI 辅助"), ("#faq", "常见问题")],
     h1="还要几年，工作就成了可选项？",
     lede=("每个月把银行对账单放进一个文件夹。FIRE蛙在你的 Mac 上逐份读取、核对金额，算出你花多少、存下多少、"
           "还要几年财务自由，再算停工以后钱能撑多久，CPP 和 OAS 也算进去。"),
@@ -468,6 +468,13 @@ def page(t, base):
   </div>
   <ul class="points">{''.join(f'<li><b>{e(a)}</b><span>{e(b)}</span></li>' for a, b in t['points'])}</ul>
 
+  <!-- In the order a visitor decides (2026-11-25, the owner): what it tells you, then the work it
+       asks (setting up, a month), the banks it reads, the optional AI, the FIRE questions, the rest. -->
+  <section>
+    <p class="lab">{e(t['q_lab'])}</p>
+    <div class="qs">{''.join(f'<div class="q"><div class="qt"><h3>{e(h)}</h3><p>{e(p)}</p></div><figure class="shot">{img(f, alt)}</figure></div>' for h, p, f, alt in t['qs'])}</div>
+  </section>
+
   <section id="setup">
     <p class="lab">{e(t['setup_lab'])}</p>
     <h2>{e(t['setup_h'])}</h2>
@@ -487,20 +494,17 @@ def page(t, base):
       <p>{e(t['then_p'])}</p></div><figure class="pic">{img(panel(4), t['then_alt'])}</figure></li></ol>
   </section>
 
+  <section id="banks">
+    <p class="lab">{e(t['banks_lab'])}</p>
+    <h2>{e(t['banks_h'])}</h2>
+    <div class="banks">{''.join(f'<div class="bank"><b>{e(h)}</b>' + (f'<p>{e(xs)}</p>' if isinstance(xs, str) else '<ul class="chips">' + ''.join(f'<li>{e(x)}</li>' for x in xs) + '</ul>') + '</div>' for h, xs in t['banks'])}</div>
+    <a class="more" href="{GH}/blob/main/{t['banks_doc']}">{e(t['banks_more'])}</a>
+  </section>
+
   <section id="ai">
     <p class="lab">{e(t['ai_lab'])}</p>
     <h2>{e(t['ai_h'])}</h2>
     <div class="qs">{''.join(f'<div class="q"><div class="qt"><h3>{e(h)}</h3><p>{e(p)}</p></div><figure class="shot">{img(f, alt)}</figure></div>' for h, p, f, alt in t['ai'])}</div>
-  </section>
-
-  <section>
-    <p class="lab">{e(t['q_lab'])}</p>
-    <div class="qs">"""]
-    for h, p, f, alt in t["qs"]:
-        out.append(f"""
-      <div class="q"><div class="qt"><h3>{e(h)}</h3><p>{e(p)}</p></div><figure class="shot">{img(f, alt)}</figure></div>""")
-    out.append(f"""
-    </div>
   </section>
 
   <section id="road">
@@ -509,13 +513,6 @@ def page(t, base):
     <p class="road-lede">{e(t['road_lede'])}</p>
     <ul class="roads">{''.join(f'<li><a href="path/{s["slug"]}/"><b>{e(s[t["lang"][:2]]["title"])}</b><span>{e(s[t["lang"][:2]]["line"])}</span></a></li>' for s in road_stops()[:4])}</ul>
     <a class="more" href="path/">{e(t['road_more'])}</a>
-  </section>
-
-  <section id="banks">
-    <p class="lab">{e(t['banks_lab'])}</p>
-    <h2>{e(t['banks_h'])}</h2>
-    <div class="banks">{''.join(f'<div class="bank"><b>{e(h)}</b>' + (f'<p>{e(xs)}</p>' if isinstance(xs, str) else '<ul class="chips">' + ''.join(f'<li>{e(x)}</li>' for x in xs) + '</ul>') + '</div>' for h, xs in t['banks'])}</div>
-    <a class="more" href="{GH}/blob/main/{t['banks_doc']}">{e(t['banks_more'])}</a>
   </section>
 
   <section id="faq">
@@ -529,7 +526,7 @@ def page(t, base):
 </main>
 </body>
 </html>
-""")
+"""]
     return "".join(out)
 
 
