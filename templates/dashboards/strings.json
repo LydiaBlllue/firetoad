@@ -1685,7 +1685,7 @@
  },
  "gloss.drawdown.w": {
   "en": "drawdown",
-  "zh": "取钱"
+  "zh": "提取"
  },
  "gloss.dry_powder.def": {
   "en": "Cash or near-cash kept ready to invest when prices fall.",
@@ -3177,11 +3177,11 @@
  },
  "nav.coast": {
   "en": "Drawdown & care",
-  "zh": "取钱和护理"
+  "zh": "退休提取与护理"
  },
  "nav.coast_title": {
   "en": "Drawdown and care",
-  "zh": "取钱和护理"
+  "zh": "退休提取与护理"
  },
  "nav.fire": {
   "en": "FIRE",
@@ -4048,7 +4048,7 @@
   "zh": "{year}年月均金额乘以 12。"
  },
  "subs.full_year_status": {
-  "en": "{pct}% of your planning figure",
+  "en": "{pct}% of your planned spending",
   "zh": "占规划支出的 {pct}%"
  },
  "subs.full_year_sum_months": {

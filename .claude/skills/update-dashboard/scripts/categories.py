@@ -51,9 +51,9 @@ CATEGORIES = [k for k, *_ in TABLE]
 
 # What each category is called on a screen in the owner's language. The key stays English in the
 # data (merchants.json, spending.csv, the page's constants); only what is shown changes.
-LABEL_ZH = {"Grocery": "买菜", "Dining": "外食", "Housing": "住房", "Shopping": "购物", "Transport": "交通",
+LABEL_ZH = {"Grocery": "食品杂货", "Dining": "餐饮", "Housing": "住房", "Shopping": "购物", "Transport": "交通",
             "Software": "软件工具", "Bills": "账单", "Travel": "旅行", "Entertainment": "娱乐", "Health": "健康",
-            "Family": "家人礼物", "Cash": "现金", "Fees": "手续费利息", "Education": "教育", "Other": "其他"}
+            "Family": "家人赠与", "Cash": "现金", "Fees": "手续费与利息", "Education": "教育", "Other": "其他"}
 
 
 def label(key, lang="en"):

@@ -3513,7 +3513,7 @@ function renderSubStats(){
   $("subStats").innerHTML =
     card(T("subs.ytd_label", {year: yr}).replace(/Subscriptions|订阅/, w => term("subscription", w)), numx(fmt(ytd), [], T("subs.ytd_note", {year: yr})), "") +
     card(T("subs.full_year_label"), numx(fmt(perMo*12), [[T("subs.full_year_sum_per_month"), fmt(perMo)], [T("subs.full_year_sum_months"), "12"]], T("subs.full_year_note", {year: yr})),
-      base ? T("subs.full_year_status", {pct: Math.round(pc(perMo, base))}).replace(/planning figure|规划支出/, w => term("planning_figure", w)) : "") +
+      base ? T("subs.full_year_status", {pct: Math.round(pc(perMo, base))}).replace(/planned spending|规划支出/, w => term("planning_figure", w)) : "") +
     StatCard(T("subs.biggest_label"), byBrand && byBrand.v ? byBrand.name : null,
       byBrand && byBrand.v ? T("subs.biggest_status", {amount: fmt(byBrand.v), pct: Math.round(pc(byBrand.v, ytd))}) : "", {text: true});
 }
