@@ -35,6 +35,11 @@ browser opens on the setup: six screens,
 starting with where to drop last month's statements — **[how long the first time takes](../README.md#get-started)**.
 Every later launch opens the same folder straight away.
 
+## Do I need Claude?
+
+No. The app works on its own. Claude Code is another way to use it — for a statement the app
+can't read, accounts abroad, or a question in plain words.
+
 ## What the signature means
 
 Apple checked the download for known malware and recorded who made it; it did not review what
