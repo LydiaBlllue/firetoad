@@ -87,6 +87,12 @@ PART_ROWS = (
     ("none", "all", "Other assets", "#b7bfba",
      "Things you own that are not money, such as a home or a car, at the value you last stated."),
 )
+# The page reads each row's words from the string table (templates/dashboards/strings.json) by key:
+# `t` the label, `qt` the definition; "k" stays the English label, which plan.json's descriptions
+# are keyed by. A reach row's key is "reach.<value>", its generic line "reach.<value>.desc".
+PART_KEY = {("grow", "all"): "nw.part.for_fire", ("set-aside", "all"): "nw.part.set_aside",
+            ("buffer", "home"): "nw.part.cash", ("buffer", "abroad"): "nw.part.cash_abroad",
+            ("owed", "all"): "nw.part.owed", ("none", "all"): "nw.part.other"}
 REACH_ROWS = (("today", "Spendable today", "#1baf7a"), ("costs", "Taxed to take out", "#eda100"),
               ("spoken", "Promised to a goal", "#eb6834"), ("lent", "Lent out", "#e87ba4"),
               ("locked", "In property", "#c98500"), ("abroad", "Held abroad", "#4a3aa7"))
@@ -707,8 +713,8 @@ def derive(d):
     # debts by name. It used to read "MasterCard and Visa, both inside the grace period" for
     # everyone, mortgage holders included (2026-09-10, found by a test owner with a mortgage).
     debts = [a["name"] for a, _ in liabs]
-    dn = (", ".join(debts[:-1]) + " and " + debts[-1]) if len(debts) > 1 else (debts[0] if debts else "")
-    out["DEBT_NOTE"] = plan.get("descriptions", {}).get("debt") or ((dn + " — the balances owed today") if dn else "Nothing owed")
+    # Without the owner's words it is a key and the names, so the page says it in its language.
+    out["DEBT_NOTE"] = plan.get("descriptions", {}).get("debt") or ({"t": "nw.debt_note", "debts": debts} if debts else {"t": "nw.debt_none"})
     fgn_label = fj.get("label") or "Foreign"
 
     # One line under each row. The owner's own words if plan.json carries them (keyed by the
@@ -746,6 +752,13 @@ def derive(d):
         for a, _ in rows:
             by.setdefault(a["inst"], []).append(a.get("label") or a["name"])
         return "; ".join(", ".join(v) + " at " + k for k, v in by.items())
+    def accounts_by_inst(role, where):
+        """The same accounts as [institution, [names]] pairs, which the page words as nw.accounts_at."""
+        by = collections.OrderedDict()
+        for a, v in assets:
+            if a.get("role") == role and (where == "all" or (a.get("reach") == "abroad") == (where == "abroad")):
+                by.setdefault(a["inst"], []).append(a.get("label") or a["name"])
+        return [[k, v] for k, v in by.items()]
     def part_value(role, where):
         return by_role[role] if where == "all" else (role_ca[role] if where == "home" else role_ab.get(role, 0))
     reach_lab = {r: (lab, c) for r, lab, c in REACH_ROWS}
@@ -788,11 +801,15 @@ def derive(d):
         if not names:
             continue
         lab = lab.replace("{abroad}", fgn_label)
-        out["NWPARTS"].append({"k": lab, "role": role, "v": part_value(role, where), "c": c, "q": q,
-                               "d": desc.get("nwparts", {}).get(lab, names),
+        own = desc.get("nwparts", {}).get(lab)
+        out["NWPARTS"].append({"k": lab, "t": PART_KEY[(role, where)], "qt": PART_KEY[(role, where)] + ".def",
+                               "role": role, "v": part_value(role, where), "c": c, "q": q,
+                               "d": own or names,
+                               **({} if own or role == "owed" else {"dg": accounts_by_inst(role, where)}),
                                "by": part_by_reach(role, where, part_value(role, where)),
                                "accts": part_accounts(role, where, part_value(role, where))})
-    out["REACH"] = [{"k": lab, "r": r, "v": by_reach[r], "c": c, "d": desc.get("reach", {}).get(lab, generic_reach[lab])}
+    out["REACH"] = [{"k": lab, "t": "reach." + r, "r": r, "v": by_reach[r], "c": c,
+                     **({"d": desc["reach"][lab]} if lab in desc.get("reach", {}) else {"d": generic_reach[lab], "dt": "reach." + r + ".desc"})}
                     for r, lab, c in REACH_ROWS if r in reach_present]
     # A usual month, as of every month the page can be turned to (usual.py). It was the page's
     # own arithmetic until 1.0.5; computed here, a checker or a second front end reads the same
