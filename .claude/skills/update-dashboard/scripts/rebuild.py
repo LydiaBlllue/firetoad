@@ -558,7 +558,8 @@ def derive(d):
         m0 = spend[0]["date"][:7]
         late = sorted({e["acct"] for e in spend if e["date"].startswith(m0) and e.get("acct") and start.get(e["acct"], "") > m0 + "-01"})
         if late and m0 not in out["MONTH_SKIP"]:
-            out["MONTH_SKIP"] = dict(out["MONTH_SKIP"], **{m0: "Not every statement covers it from the 1st (" + ", ".join(late) + ")"})
+            # the page's own sentence, as a key the page reads in its language (the owner's reasons are strings)
+            out["MONTH_SKIP"] = dict(out["MONTH_SKIP"], **{m0: {"t": "base.skip_partial_first", "accounts": late}})
     by_key = {a["key"]: a for a in accs}
     acts_latest = max((r["effective_date"] for r in d["acts"]), default=None)
     bank_asof = {x["account"]: x.get("asof") for x in bank["assets"] + bank["debts"]}
