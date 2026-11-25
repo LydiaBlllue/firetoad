@@ -1007,7 +1007,7 @@ function setYear(y){
 const PROFILE = {};
 const BROKER = "";          // the institution that holds the portfolio, from accounts.json
 const CP = INVEST.counterparty || null;   // who pays money back, from cashflow.json
-const VERSION = "1.0.9";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
+const VERSION = "1.1.0";   // MAJOR.MINOR.PATCH — a change of technology moves the major, everything else the minor or the patch
 // The brand is data, not markup: it used to be typed into the <title>, the sidebar and the link
 // between the two dashboards, which is three places to miss when someone makes this theirs.
 // FIRE Toad is the product; the owner's name is the instance. Both are shown, neither typed
@@ -1734,7 +1734,7 @@ function renderHome(){
       const subs = SPENDING.filter(e => e.date.startsWith(yr) && e.sub), ytd = subs.reduce((a,e) => a + e.amount, 0);
       if(!(ytd > 0)) return null;
       const closed = MONTHS.filter(m => m <= covEnd && m.startsWith(yr)).length || 1;
-      return card(term("subscription", T("home.subs_label")), numx(fmt(ytd/closed*12), [[T("home.subs_per_month"), fmt(ytd/closed)], [T("home.subs_months"), "12"]], T("home.subs_sum")), "");
+      return card(term("subscription", T("home.subs_label")), numx(fmt(ytd/closed*12), [[T("home.subs_per_month"), fmt(ytd/closed)], [T("home.subs_months"), "12"]], T("home.subs_sum", {year: yr})), "");
     },
     bigcat: () => {
       const by = {};
@@ -3509,8 +3509,8 @@ function renderSubStats(){
   const base = PLAN_BASE;
   const card = StatCard;
   $("subStats").innerHTML =
-    card(T("subs.ytd_label", {year: yr}).replace(/Subscriptions|订阅/, w => term("subscription", w)), numx(fmt(ytd), [], T("subs.ytd_note")), "") +
-    card(T("subs.full_year_label"), numx(fmt(perMo*12), [[T("subs.full_year_sum_per_month"), fmt(perMo)], [T("subs.full_year_sum_months"), "12"]], T("subs.full_year_note")),
+    card(T("subs.ytd_label", {year: yr}).replace(/Subscriptions|订阅/, w => term("subscription", w)), numx(fmt(ytd), [], T("subs.ytd_note", {year: yr})), "") +
+    card(T("subs.full_year_label"), numx(fmt(perMo*12), [[T("subs.full_year_sum_per_month"), fmt(perMo)], [T("subs.full_year_sum_months"), "12"]], T("subs.full_year_note", {year: yr})),
       base ? T("subs.full_year_status", {pct: Math.round(pc(perMo, base))}).replace(/planning figure|规划支出/, w => term("planning_figure", w)) : "") +
     StatCard(T("subs.biggest_label"), byBrand && byBrand.v ? byBrand.name : null,
       byBrand && byBrand.v ? T("subs.biggest_status", {amount: fmt(byBrand.v), pct: Math.round(pc(byBrand.v, ytd))}) : "", {text: true});

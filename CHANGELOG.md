@@ -16,7 +16,7 @@
   investing does not know what a bucket is. `rules.json` still calls them `buckets`; nothing moves.
   How it works said the Portfolio page splits by bucket; it has split by account since 1.0.9.
 
-## 1.1.0 — unreleased
+## 1.1.0 — 2026-11-25
 
 - **AI assist** (AI 辅助), off until you turn it on: for a merchant the app does not know, it
   suggests a category, and you still choose. In Settings you pick Claude, ChatGPT or DeepSeek and
@@ -46,6 +46,30 @@
   goes to the broker — $2,300 a month, with her rent and everyday amount as they were. The demo
   now says about 15 to 18 years to financial independence, in her late forties; at $700 a month
   it said 29 to 37, later than an ordinary retirement.
+- **The site has its first "FIRE questions"**: four questions people ask on the way to
+  financial independence, each answered on one page in English and Chinese, with its sources and a
+  way to work it out — how much you need to retire early, whether 4% lasts 40 or 50 years, when to
+  take CPP, and why a raise often doesn't raise your savings. More follow as each one's sources are
+  checked; nothing links to a page that isn't up. The top bar says what each link is: FIRE
+  questions, A month with the app, and on a question's page, About the app.
+- **The front page shows the FIRE questions too**: a section after "What it tells you" with the
+  questions that are up, each with its one-line answer, and a link to all of them.
+- **The front page leads with the years**: "How many years until work is optional?", with the FIRE
+  page beside it as the answer, in English and Chinese. Its title says a free FIRE tracker for
+  Canada. A new question for someone not planning to retire early; "Do I need Claude?" moved to
+  the install guide. The line about accounts abroad is gone until the app can set them up.
+  A fourth point says AI assist is there if you want it, and two answers name it.
+- **On a phone, the front page says it is a download for Mac only**: the picture comes right under
+  the question, and the download and demo buttons give way to that line (no phone or Windows
+  version; the demo opens in any computer's browser and is too narrow on a phone), a button
+  that sends the link on (the phone's share sheet, or a copy that says where to paste it) and a
+  small link to the demo anyway.
+  Same in the closing band.
+- **The page's sentences fit every owner**: "1 account at 1 institution", "1 day ago", and a past
+  year's notes no longer say "this year"; card interest, an empty month and the monthly transfer
+  to the broker read right whatever the numbers. The page check now draws the page for an owner
+  with one account, for an update made yesterday and for an earlier year, reads every word back,
+  hover text and chart labels included, and stops on a sentence like these.
 
 ## 1.0.9 — 2026-11-17
 

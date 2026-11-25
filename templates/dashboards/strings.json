@@ -2784,8 +2784,8 @@
   "zh": "每月"
  },
  "home.subs_sum": {
-  "en": "Every charge that repeats, at this year's rate.",
-  "zh": "所有定期扣款项目，按今年的扣款水平折算为全年金额。"
+  "en": "Every charge that repeats, at the rate of {year}.",
+  "zh": "所有定期扣款项目，按 {year}年的扣款水平折算为全年金额。"
  },
  "home.total_assets": {
   "en": "Total assets",
@@ -4040,8 +4040,8 @@
   "zh": "全年估算"
  },
  "subs.full_year_note": {
-  "en": "The average per month this year, multiplied by twelve.",
-  "zh": "今年平均每月金额乘以 12。"
+  "en": "The average per month in {year}, multiplied by twelve.",
+  "zh": "{year}年月均金额乘以 12。"
  },
  "subs.full_year_status": {
   "en": "{pct}% of your planning figure",
@@ -4108,8 +4108,8 @@
   "zh": "{year}年订阅"
  },
  "subs.ytd_note": {
-  "en": "Every charge that repeats, this year.",
-  "zh": "今年所有重复出现的扣款。"
+  "en": "Every charge that repeats, in {year}.",
+  "zh": "{year}年所有定期扣款。"
  },
  "trends.biggest_month_label": {
   "en": "Biggest month",
@@ -4149,7 +4149,7 @@
  },
  "trends.stands_out": {
   "en": "What stands out",
-  "zh": "本年突出变化"
+  "zh": "值得注意的变化"
  },
  "trends.total_spent_label": {
   "en": "Total spent in {span}",

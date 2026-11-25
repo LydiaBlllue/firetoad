@@ -3,7 +3,8 @@
 
     python3 docs/site/make.py OUT --base https://<owner>.github.io/<repo>
 
-writes OUT/index.html, OUT/zh/index.html, OUT/sitemap.xml and copies the demo
+writes OUT/index.html, OUT/zh/index.html, the pages of "FIRE questions" (docs/site/path.py) under
+OUT/path/ and OUT/zh/path/, OUT/sitemap.xml and copies the demo
 (dashboards/finance_dashboard.html → OUT/dashboard.html), the logo and docs/screens/ beside them.
 When the site is the whole domain (a custom domain, no /<repo>/ path) it also writes
 OUT/robots.txt naming the sitemap; under a path it does not, because a search engine reads
@@ -20,6 +21,7 @@ import argparse
 import html
 import json
 import os
+import re
 import shutil
 import sys
 from urllib.parse import urlparse
@@ -35,32 +37,39 @@ DOWNLOAD_INTEL = GH + "/releases/latest/download/FIRE-Toad-Intel.dmg"   # from 1
 # The demo's person is the one tools/demo.py invents; the page names her from there.
 sys.path.insert(0, os.path.join(REPO, "tools"))
 from demo import P as DEMO  # noqa: E402
+sys.path.insert(0, HERE)
+import path as road  # noqa: E402  "FIRE questions": one page a question, and an index
 CITY_ZH = {"Ottawa": "渥太华", "Toronto": "多伦多", "Vancouver": "温哥华", "Montreal": "蒙特利尔", "Calgary": "卡尔加里"}
 
 EN = dict(
     lang="en", path="", other="zh/", other_name="中文", other_lang="zh",
-    title="FIRE Toad — Free budget app for Canada, no bank login",
-    desc=("Free, open-source Mac app for Canadians. Drop in your RBC, BMO or any bank's statements "
-          "and see your spending, net worth and years to FIRE. No bank login, no account."),
+    title="FIRE Toad — Free FIRE tracker for Canada, no bank login",
+    desc=("Free, open-source Mac app for Canadians: how many years until financial independence, worked "
+          "out from your own RBC, BMO or other bank statements. No bank login, no account."),
     name="FIRE Toad",
-    nav=[("#setup", "Setting up"), ("#how", "How it works"), ("#ai", "AI assist"), ("#banks", "Banks"), ("#faq", "Questions")],
-    h1="See where your money goes, what you've built, and how many years until work is optional.",
+    nav=[("path/", "FIRE questions"), ("#setup", "Setting up"), ("#how", "A month with the app"), ("#ai", "AI assist"), ("#banks", "Banks"), ("#faq", "FAQ")],
+    h1="How many years until work is optional?",
     lede=("Once a month, drop your bank statements into a folder. FIRE Toad reads them on your Mac, "
-          "checks that each one adds up, sorts every purchase, and builds one page: what you spent, "
-          "what you own, and how many years until financial independence."),
+          "checks that each one adds up, and works out what you spend, what you keep, and how many years "
+          "until financial independence — then how long the money lasts once you stop, with CPP and OAS counted."),
     demo="Try the live demo", download="Download for Mac — free",
     mac=("For Macs with Apple silicon, macOS 11 or later. Intel Mac (macOS 10.15 or later)? ",
          "Download the Intel version", "."),
     fine=(f"The demo shows {DEMO['first']}'s money — a made-up {DEMO['age']}-year-old in {DEMO['city']}. "
           "Nothing to install. The app is signed and notarised by Apple, works in English and Chinese, "
           "and is free and open source (MIT)."),
-    phone="The demo is made for a computer screen. On a phone, the pictures below show what it looks like.",
-    hero_alt="The FIRE page: about 29 to 37 years to financial independence, and what investing more each month changes",
-    points=[("No bank login.", "You download your statements; the app reads them on your computer. "
-                               "Nothing is uploaded, and there's no account to create."),
+    phone=("For now, FIRE Toad is a download for Mac only.", "There is no phone or Windows version. "
+           "The live demo opens in any computer's browser; on a phone it is too narrow and scrolls sideways.",
+           "Send yourself the link", "Link copied", "Open the demo anyway",
+           "Paste it into a message or an email to yourself, then open it on your Mac."),
+    hero_alt="The FIRE page: how many years to financial independence, and what investing more each month changes",
+    points=[("Years, not just a budget.", "How many years until financial independence at what you really "
+             "invest, and what $400 more a month would change. Your TFSA, RRSP and FHSA in one net worth."),
             ("Every number adds up.", "A statement only gets in if it matches the totals printed on it."),
-            ("A FIRE plan, not just a budget.", "Years to financial independence, how long your money "
-             "will last, your TFSA, RRSP and FHSA, and accounts abroad — all in one net worth.")],
+            ("No bank login.", "You download your statements; the app reads them on your computer. "
+                               "Nothing is uploaded, and there's no account to create."),
+            ("AI assist, if you want it.", "A shop the app doesn't know gets a suggested category from "
+             "Claude, ChatGPT or DeepSeek, with your own key. Only the shop's name is sent, and you still choose.")],
     setup_lab="The first time", setup_h="Set up in 20–30 minutes", setup_img="setup",
     setup=[("Bring 1–3 months", "Download your last one to three months of statements, plus your broker's export "
             "if you have one, and drop them in.",
@@ -73,7 +82,7 @@ EN = dict(
            ("Build your page", "Press Build it, then categorize the shops it couldn't place.",
             "Reads every file, checks each one adds up, and makes your page. Common Canadian chains are already filed.",
             "In the app: everything you set, checked once before the page is built")],
-    how_lab="How it works", how_h="Once a month, three things to do", you="You", app="The app",
+    how_lab="A month with the app", how_h="Once a month, three things to do", you="You", app="The app",
     steps=[("Get your files", "Download last month's statements from your bank, plus your broker's export if you have one.",
             "Tells you which ones are still missing and where to find each.",
             "In the app: each account and what is still needed, and the files in the folder"),
@@ -108,6 +117,9 @@ EN = dict(
          "crop-port.png", "Portfolio: by currency, kind of asset and account"),
         ("Is everything in?", "Which statements have arrived each month, and what's still missing.",
          "crop-src.png", "Statements: a dot for each month each statement arrived")],
+    road_lab="FIRE questions", road_h="What to know on the way to financial independence",
+    road_lede="One question a page, answered in a sentence, with the sources and a calculator you can try.",
+    road_more="See all FIRE questions →",
     banks_lab="Banks it reads", banks_h="Straight from your bank's own files",
     banks=[("Read directly", ["RBC · PDF", "BMO · PDF", "Wealthsimple · exports"]),
            ("Via an OFX or QFX download", ["TD", "Scotiabank", "CIBC", "Tangerine", "most other banks"]),
@@ -132,8 +144,9 @@ EN = dict(
           "FIRE Toad never sends your financial data to anyone. The only exception is if you turn on "
           "AI assist and choose an online AI. Then your shop names are sent to it. If the AI runs "
           "on your own computer, nothing is sent. Backing up the folder is up to you."),
-         ("Do I need Claude?", "No. The app works on its own. Claude Code is another way to use it — "
-          "for a statement the app can't read, accounts abroad, or a question in plain words."),
+         ("I'm not planning to retire early. Is it for me?", "Yes. Without a goal, it's your spending, what "
+          "you keep each month, and how long your savings would last without a paycheque. The years to "
+          "financial independence are there when you want them."),
          ("Which computers does it run on?", "A Mac: one download for Apple silicon (macOS 11 or later), "
           "one for Intel (macOS 10.15 or later). To check which you have: Apple menu → About This Mac, "
           "the Chip or Processor line. There is no Windows download yet; there it runs from Python "
@@ -147,24 +160,29 @@ EN = dict(
 
 ZH = dict(
     lang="zh-CN", path="zh/", other="../", other_name="English", other_lang="en",
-    title="FIRE蛙 FIRE Toad — 加拿大免费记账 app，不用连银行",
-    desc=("免费开源的 Mac 记账 app，为在加拿大生活的人做。放进 RBC、BMO 或其他银行的对账单，就能看到钱花在哪、"
-          "净值多少、还要几年财务自由。不用连银行，也不用注册。"),
+    title="FIRE蛙 FIRE Toad — 加拿大免费 FIRE 工具，不用连银行",
+    desc=("免费开源的 Mac app，为在加拿大想财务自由的人做：用你自己的 RBC、BMO 或其他银行对账单，"
+          "算出还要几年财务自由。不用连银行，也不用注册。"),
     name="FIRE蛙 FIRE Toad",
-    nav=[("#setup", "建账"), ("#how", "怎么用"), ("#ai", "AI 辅助"), ("#banks", "支持的银行"), ("#faq", "常见问题")],
-    h1="钱花在哪、攒了多少、还要几年财务自由——一页看清。",
-    lede=("每个月把银行对账单放进一个文件夹。FIRE蛙在你的 Mac 上逐份读取、核对金额，把每笔消费分好类，"
-          "生成一页总览：花了多少、有多少、还要几年财务自由。"),
+    nav=[("path/", "FIRE 问答"), ("#setup", "建账"), ("#how", "每月怎么用"), ("#ai", "AI 辅助"), ("#banks", "支持的银行"), ("#faq", "常见问题")],
+    h1="还要几年，工作就成了可选项？",
+    lede=("每个月把银行对账单放进一个文件夹。FIRE蛙在你的 Mac 上逐份读取、核对金额，算出你花多少、存下多少、"
+          "还要几年财务自由，再算停工以后钱能撑多久，CPP 和 OAS 也算进去。"),
     demo="看在线演示", download="免费下载 Mac 版",
     mac=("适用于 Apple 芯片的 Mac，macOS 11 及以上。Intel 芯片的 Mac（macOS 10.15 及以上）请",
          "下载 Intel 版", "。"),
     fine=(f"演示里是 {DEMO['first']} 的钱：一位住在{CITY_ZH.get(DEMO['city'], DEMO['city'])}的 {DEMO['age']} 岁上班族，"
           "人物是虚构的。不用安装，打开就能看（演示页面是英文的）。app 已通过 Apple 签名和公证，支持中英文，免费开源（MIT）。"),
-    phone="演示适合在电脑上看；用手机的话，可以先看下面的截图。",
-    hero_alt="FIRE 页：离财务自由大约 29 到 37 年，每月多投一点会怎样",
-    points=[("不用连银行。", "对账单你自己下载，app 在你的电脑上读取，不上传任何东西，也不用注册。"),
+    phone=("目前只支持 Mac 下载。", "目前没有手机版和 Windows 版。在线演示用任何电脑的浏览器都能看；手机屏幕太窄，要左右滑动。",
+           "把链接发给自己", "链接已复制", "仍在手机上看演示",
+           "粘贴到微信或邮件里发给自己，再在 Mac 上打开。"),
+    hero_alt="FIRE 页：还要几年财务自由，每月多投一点会怎样",
+    points=[("不只是记账，是还要几年。", "按你实际投进去的钱，算还要几年财务自由，每月多投 400 元能早多少。"
+             "TFSA、RRSP、FHSA 都算进同一个净值。"),
             ("每个数都对得上。", "每份对账单都要和它自己印的合计一致，才会收进来。"),
-            ("不只是记账，还有 FIRE 计划。", "还要几年财务自由、退休后钱能撑多久；TFSA、RRSP、FHSA 和海外账户，都算进同一个净值。")],
+            ("不用连银行。", "对账单你自己下载，app 在你的电脑上读取，不上传任何东西，也不用注册。"),
+            ("想用的话，有 AI 辅助。", "app 不认识的商户，由 Claude、ChatGPT 或 DeepSeek 建议一个分类，用你自己的 key。"
+             "只发商户名，最后还是你定。")],
     setup_lab="第一次", setup_h="建账，20–30 分钟", setup_img="setup-zh",
     setup=[("带上 1–3 个月的文件", "从网银下载最近一到三个月的对账单；有券商账户的话，再导出一份券商记录，一起拖进来。",
             "认出每份文件，用它们替你起好账户。",
@@ -175,7 +193,7 @@ ZH = dict(
            ("生成你的页面", "点「开始生成」，再给它认不出的商户归类。",
             "读每份文件、核对合计，做出你的页面。常见的加拿大连锁店已经归好类。",
             "app 里：生成之前，把你定的都核对一遍")],
-    how_lab="怎么用", how_h="每个月，你只做三件事", you="你", app="app",
+    how_lab="每月怎么用", how_h="每个月，你只做三件事", you="你", app="app",
     steps=[("下载文件", "从网银下载上个月的对账单；有券商账户的话，再导出一份券商记录。",
             "提醒你还差哪几份、每份去哪下载。",
             "app 里：每个账户还差什么，文件夹里已经有哪些文件"),
@@ -197,7 +215,7 @@ ZH = dict(
          "默认关闭；关掉时 key 一起删掉。",
          "ai-settings.png", "设置里的 AI 辅助：服务、key、问过几次、发了什么")],
     q_lab="它能回答",
-    qs=[("我现在有多少家底？", "所有账户、所有币种合在一起的净值：每一行是这笔钱的用途，色条的颜色表示取用有多方便。",
+    qs=[("我现在的净值是多少？", "所有账户、所有币种合在一起的净值：每一行是这笔钱的用途，色条的颜色表示取用有多方便。",
          "crop-home.png", "首页：净值、还要几年财务自由、这个月的投资和花销"),
         ("钱都花到哪了？", "按分类、按月份看一整年，并标出值得注意的：最大的分类、订阅、花得最多的月份。",
          "crop-year.png", "这一年：按分类的花销和值得注意的地方"),
@@ -205,6 +223,9 @@ ZH = dict(
          "crop-port.png", "投资组合：按币种、资产类别和账户"),
         ("对账单都齐了吗？", "每份对账单哪个月到了、还差哪些，一目了然。",
          "crop-src.png", "对账单：每份每个月到了就是一个点")],
+    road_lab="FIRE 问答", road_h="走向财务自由，要先弄懂的几个问题",
+    road_lede="一页一个问题，一句话答案，带出处，还有可以自己试的计算器。",
+    road_more="看全部 FIRE 问答 →",
     banks_lab="支持哪些银行", banks_h="直接用银行提供的文件",
     banks=[("直接读取", ["RBC · PDF", "BMO · PDF", "Wealthsimple · 导出"]),
            ("下载成 OFX 或 QFX 格式", ["TD", "Scotiabank", "CIBC", "Tangerine", "大多数其他银行"]),
@@ -222,8 +243,8 @@ ZH = dict(
          ("数据存在哪里？", "存在你 Mac 上的一个文件夹里：普通的 CSV、JSON 文件和一个网页。FIRE蛙不会把你的财务数据"
           "发给任何人。只有一种情况例外：你自己开了 AI 辅助，而且用的是网上的 AI。这时商户名字会发给它。"
           "如果 AI 装在你自己的电脑上，就什么都不会发出去。文件夹需要你自己备份。"),
-         ("需要用 Claude 吗？", "不需要，app 可以单独使用。Claude Code 是另一种用法，适合处理 app 读不了的对账单、"
-          "海外账户，或者想直接用一句话提问。"),
+         ("我没打算提前退休，也能用吗？", "能。不设目标，它就是你花了多少、每月存下多少、没了工资存款能撑多久。"
+          "想看还要几年财务自由的时候，它一直在。"),
          ("哪些电脑能用？", "Mac 都能用：Apple 芯片的 Mac 一个安装包（macOS 11 及以上），Intel 芯片的 Mac 一个"
           "（macOS 10.15 及以上）。查法：左上角苹果菜单 →「关于本机」，看「芯片」或「处理器」那一行。Windows 还没有"
           "安装包，可以用 Python 运行（python3 app.py）。"),
@@ -256,6 +277,10 @@ a { color:inherit; }
 .top nav a { text-decoration:none; }
 .top nav a:hover { color:var(--ink); }
 @media (max-width:760px) { .top nav .sec { display:none; } }
+/* "FIRE questions" stays in the bar on a phone (2026-11-17): nothing in the bar wraps, and below
+   400px the wordmark gives way to the logo alone, which still goes home */
+.top a { white-space:nowrap; }
+@media (max-width:400px) { .top .brand { font-size:0; gap:0; } .top nav { gap:14px; font-size:14px; } }
 .lab { font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:0 0 10px; }
 .hero { display:grid; grid-template-columns:1fr 1.15fr; gap:48px; align-items:center; padding:64px 0 56px; }
 @media (max-width:980px) { .hero { grid-template-columns:1fr; gap:36px; padding:40px 0; } }
@@ -269,12 +294,30 @@ h1 { font-size:clamp(30px,3.3vw,44px); line-height:1.1; letter-spacing:-.025em; 
 .secondary { background:var(--pill); color:var(--ink); }
 .secondary:hover { background:var(--grid); }
 .fine { color:var(--muted); font-size:14px; margin:14px 0 0; max-width:36em; }
+/* On a phone (2026-11-21): nothing here can be installed and the demo wants a wide screen, so the
+   buttons give way to one line saying to open the site on a computer, a button that sends the link
+   on (the phone's share sheet, else the clipboard), and the picture moves up under the question. */
 .phone { display:none; }
-@media (max-width:799px) { .phone { display:block; } }
+.phone p { margin:0 0 12px; font-size:16px; color:var(--ink); }
+.phone button { font:inherit; border:0; cursor:pointer; }
+.phone .anyway { display:block; margin:14px 0 0; font-size:14px; color:var(--ink-2); }
+.phone .copied { margin:10px 0 0; font-size:14px; color:var(--ink-2); }
+.end .phone .copied { color:rgba(255,255,255,.85); }
+.end .phone .anyway { color:rgba(255,255,255,.75); }
+@media (max-width:799px) {
+  .phone { display:block; margin:22px 0 0; }
+  .actions, .mac { display:none; }
+  .hero { display:flex; flex-direction:column; gap:0; padding:28px 0 36px; }
+  .hero > div { display:contents; }
+  .hero > div > * { order:3; }
+  .hero > div > h1 { order:1; }
+  .hero .shot { order:2; margin:0 0 22px; }
+  .hero .lede { margin:0; }
+}
 .shot { margin:0; background:var(--page); border:1px solid var(--border); border-radius:14px; overflow:hidden;
         box-shadow:0 1px 2px rgba(46,44,41,.05), 0 12px 32px rgba(46,44,41,.09); }
 .shot img { display:block; width:100%; height:auto; }
-.points { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:0; padding:0; list-style:none; }
+.points { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:0; padding:0; list-style:none; }
 @media (max-width:760px) { .points { grid-template-columns:1fr; } }
 .points li { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; }
 .points b { display:block; font-size:17px; margin-bottom:6px; }
@@ -311,6 +354,16 @@ h2 { font-size:clamp(24px,3vw,32px); letter-spacing:-.015em; line-height:1.2; ma
                            .q:nth-child(even) .qt { order:0; } }
 .q h3 { font-size:24px; letter-spacing:-.01em; margin:0 0 8px; }
 .q p { color:var(--ink-2); margin:0; font-size:16px; }
+/* FIRE questions (2026-11-17, user 001): the published pages in the road's order, four at most,
+   each its question and its one-line answer, read from path.py so a page not yet written is never linked */
+.road-lede { color:var(--ink-2); font-size:17px; margin:-14px 0 24px; max-width:40em; }
+.roads { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:0; padding:0; list-style:none; }
+@media (max-width:760px) { .roads { grid-template-columns:1fr; } }
+.roads a { display:block; height:100%; background:var(--surface); border:1px solid var(--border); border-radius:12px;
+           padding:18px 20px; text-decoration:none; }
+.roads a:hover { border-color:rgba(46,44,41,.28); }
+.roads b { display:block; font-size:17px; margin-bottom:6px; }
+.roads span { color:var(--ink-2); font-size:15px; }
 .banks { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
 @media (max-width:760px) { .banks { grid-template-columns:1fr; } }
 .bank { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; }
@@ -331,6 +384,8 @@ h2 { font-size:clamp(24px,3vw,32px); letter-spacing:-.015em; line-height:1.2; ma
 .end .secondary { background:rgba(255,255,255,.12); color:#fff; }
 .end .secondary:hover { background:rgba(255,255,255,.2); }
 @media (max-width:600px) { .end { padding:28px 20px; } }
+.end .phone { margin:0; }
+.end .phone p { color:#fff; }
 footer { padding:36px 0 48px; color:var(--muted); font-size:14px; display:flex; flex-wrap:wrap; gap:20px; }
 footer a { color:var(--ink-2); }
 """
@@ -349,6 +404,11 @@ def page(t, base):
                                      + (' loading="lazy"' if lazy else "") + ">")
     btns = (f'<a class="btn primary" href="{DOWNLOAD}">{e(t["download"])}</a>'
             f'<a class="btn secondary" href="{up}dashboard.html">{e(t["demo"])}</a>')
+    onphone = (f'<div class="phone"><p><b>{e(t["phone"][0])}</b>{"" if t["lang"].startswith("zh") else " "}'
+               f'{e(t["phone"][1])}</p>'
+               f'<button class="btn primary" type="button" data-url="{url}" data-done="{e(t["phone"][3])}">'
+               f'{e(t["phone"][2])}</button><p class="copied" hidden>{e(t["phone"][5])}</p>'
+               f'<a class="anyway" href="{up}dashboard.html">{e(t["phone"][4])}</a></div>')
     out = [f"""<!doctype html>
 <!-- Built by docs/site/make.py; edit that, not this. -->
 <html lang="{t['lang']}">
@@ -376,11 +436,23 @@ def page(t, base):
       !/^#(setup|how|ai|banks|faq)$/.test(location.hash)) location.replace('{up}dashboard.html' + location.hash);
 </script>
 <style>{CSS}</style>
+<script>
+  // "Send yourself the link": the phone's share sheet where there is one, else copy it.
+  document.addEventListener('click', ev => {{
+    const b = ev.target.closest('.phone button'); if (!b) return;
+    const url = b.dataset.url, hint = b.nextElementSibling;
+    const done = () => {{ b.textContent = b.dataset.done; hint.hidden = false; }};
+    const ask = () => prompt(hint.textContent, url);
+    if (navigator.share) navigator.share({{url}}).catch(() => {{}});
+    else if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, ask);
+    else ask();
+  }});
+</script>
 </head>
 <body>
 <header class="top"><div class="wrap">
   <a class="brand" href="{up or './'}"><img src="{up}logo.svg" alt="">{e(t['name'])}</a>
-  <nav>{''.join(f'<a class="sec" href="{h}">{e(n)}</a>' for h, n in t['nav'])}<a href="{t['other']}" hreflang="{t['other_lang']}" lang="{t['other_lang']}">{t['other_name']}</a></nav>
+  <nav>{''.join(f'<a class="{"road" if h == "path/" else "sec"}" href="{h}">{e(n)}</a>' for h, n in t['nav'])}<a href="{t['other']}" hreflang="{t['other_lang']}" lang="{t['other_lang']}">{t['other_name']}</a></nav>
 </div></header>
 <main class="wrap">
   <div class="hero">
@@ -388,9 +460,9 @@ def page(t, base):
       <h1>{e(t['h1'])}</h1>
       <p class="lede">{e(t['lede'])}</p>
       <div class="actions">{btns}</div>
-      <p class="fine">{e(t['mac'][0])}<a href="{DOWNLOAD_INTEL}">{e(t['mac'][1])}</a>{e(t['mac'][2])}</p>
+      {onphone}
+      <p class="fine mac">{e(t['mac'][0])}<a href="{DOWNLOAD_INTEL}">{e(t['mac'][1])}</a>{e(t['mac'][2])}</p>
       <p class="fine">{e(t['fine'])}</p>
-      <p class="fine phone">{e(t['phone'])}</p>
     </div>
     <figure class="shot">{img('crop-fire.png', t['hero_alt'], lazy=False)}</figure>
   </div>
@@ -431,6 +503,14 @@ def page(t, base):
     </div>
   </section>
 
+  <section id="road">
+    <p class="lab">{e(t['road_lab'])}</p>
+    <h2>{e(t['road_h'])}</h2>
+    <p class="road-lede">{e(t['road_lede'])}</p>
+    <ul class="roads">{''.join(f'<li><a href="path/{s["slug"]}/"><b>{e(s[t["lang"][:2]]["title"])}</b><span>{e(s[t["lang"][:2]]["line"])}</span></a></li>' for s in road_stops()[:4])}</ul>
+    <a class="more" href="path/">{e(t['road_more'])}</a>
+  </section>
+
   <section id="banks">
     <p class="lab">{e(t['banks_lab'])}</p>
     <h2>{e(t['banks_h'])}</h2>
@@ -444,7 +524,7 @@ def page(t, base):
     <dl class="faq">{''.join(f'<div><dt>{e(q)}</dt><dd>{e(a)}</dd></div>' for q, a in t['faq'])}</dl>
   </section>
 
-  <div class="end"><h2>{e(t['end_h'])}</h2><div class="actions">{btns}</div></div>
+  <div class="end"><h2>{e(t['end_h'])}</h2><div class="actions">{btns}</div>{onphone}</div>
   <footer>{''.join(f'<a href="{h}">{e(n)}</a>' for h, n in t['foot'])}<a href="{t['other']}" hreflang="{t['other_lang']}" lang="{t['other_lang']}">{t['other_name']}</a></footer>
 </main>
 </body>
@@ -453,15 +533,21 @@ def page(t, base):
     return "".join(out)
 
 
+def road_stops():
+    """The published FIRE questions in the road's order, the same order path.py writes them in."""
+    return sorted(road.stops(REPO), key=lambda s: [int(x) for x in s["id"].split(".")])
+
+
 def build(dst, base):
     base = base.rstrip("/")
     os.makedirs(os.path.join(dst, "zh"), exist_ok=True)
     for t in (EN, ZH):
         with open(os.path.join(dst, t["path"], "index.html"), "w", encoding="utf-8") as f:
             f.write(page(t, base))
+    stops = road.build(dst, base, CSS, REPO, DOWNLOAD)
     with open(os.path.join(dst, "sitemap.xml"), "w", encoding="utf-8") as f:
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-                + "".join(f"  <url><loc>{base}/{p}</loc></url>\n" for p in ("", "zh/", "dashboard.html"))
+                + "".join(f"  <url><loc>{base}/{p}</loc></url>\n" for p in ["", "zh/", "dashboard.html"] + stops)
                 + "</urlset>\n")
     if not urlparse(base).path.strip("/"):
         with open(os.path.join(dst, "robots.txt"), "w", encoding="utf-8") as f:
@@ -469,6 +555,29 @@ def build(dst, base):
     shutil.copy(os.path.join(REPO, "docs", "logo.svg"), dst)
     shutil.copy(os.path.join(REPO, "dashboards", "finance_dashboard.html"), os.path.join(dst, "dashboard.html"))
     shutil.copytree(os.path.join(REPO, "docs", "screens"), os.path.join(dst, "screens"), dirs_exist_ok=True)
+    broken = dead_links(dst)
+    if broken:
+        raise SystemExit("links that point nowhere:\n  " + "\n  ".join(broken))
+
+
+def dead_links(dst):
+    """Every relative href and src in the built site that names no file: a page links only to a
+    page that was written (a stop not yet published is never linked)."""
+    bad = []
+    for d, _, files in os.walk(dst):
+        for n in files:
+            if not n.endswith(".html") or n == "dashboard.html":
+                continue
+            src = os.path.join(d, n)
+            for ref in re.findall(r'(?:href|src)="([^"#?]*)', open(src, encoding="utf-8").read()):
+                if not ref or re.match(r"[a-z]+:", ref):
+                    continue
+                target = os.path.normpath(os.path.join(d, ref))
+                if os.path.isdir(target) or ref.endswith("/"):
+                    target = os.path.join(target, "index.html")
+                if not os.path.exists(target):
+                    bad.append(f"{os.path.relpath(src, dst)} → {ref}")
+    return bad
 
 
 if __name__ == "__main__":

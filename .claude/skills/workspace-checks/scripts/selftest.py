@@ -505,6 +505,12 @@ def m_render_empty_card(r):
     # Home fills a card even when it has no number for it
     edit(r, main_dash(r), lambda s: s.replace("    const html = C[k]();\n    if(html) shown.push({k, html});",
                                               '    const html = C[k]() || StatCard("Empty", null);\n    shown.push({k, html});', 1))
+def m_render_one_plural(r):
+    # the Accounts card counts without looking: one account is "1 accounts"
+    edit(r, main_dash(r), lambda s: s.replace('" account" + (A.length === 1 ? "" : "s") + " at "', '" accounts at "', 1))
+def m_render_this_year(r):
+    # a sentence that says "this year" whatever year the page is showing
+    edit(r, main_dash(r), lambda s: s.replace('viewYear+" only, open months included. "', '"This year only, open months included. "', 1))
 def m_render_chart_capped(r):
     edit(r, main_dash(r),
          lambda s: s.replace("year-svg{width:100%;height:auto", "year-svg{width:100%;height:190px", 1))
@@ -591,6 +597,8 @@ CASES = [
     ("R3", "a chart pinned to a fixed height",              m_render_chart_capped,"render"),
     ("R6", "the sidebar cannot scroll in a short window",   m_render_sidebar_stuck,"render"),
     ("R7", "Home shows a card with no number",              m_render_empty_card,  "render"),
+    ("R7", "one of a thing, said with a plural",            m_render_one_plural,  "render"),
+    ("R7", "an earlier year called this year",              m_render_this_year,   "render"),
     ("R8", "the page's FIRE sum drifts from the build's",   m_render_fire_drift,  "render"),
     ("R9", "a long page that lists no sections",            m_render_long_page,   "render"),
 ]
