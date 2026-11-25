@@ -82,9 +82,11 @@ def not_in_fire(plan):
 
 
 def page_table(plan):
-    """What the page draws from: one entry per category, in this order."""
+    """What the page draws from: one entry per category, in this order; `n` the English name on
+    screen, `nz` the Chinese one (the page picks by its language, catName)."""
     g, off = groups(plan), not_in_fire(plan)
-    return [{"k": k, "n": n, "g": g[k], "c": f"var({c})", **({"noFire": True} if k in off else {})} for k, n, _, c in TABLE]
+    return [{"k": k, "n": n, "nz": LABEL_ZH.get(k, n), "g": g[k], "c": f"var({c})", **({"noFire": True} if k in off else {})}
+            for k, n, _, c in TABLE]
 
 
 # ---------------------------------------------------------------- a charge that repeats

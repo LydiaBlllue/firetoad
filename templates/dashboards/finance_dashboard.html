@@ -843,7 +843,8 @@ const DOC_LATEST = {};
 const CATS = [];
 const CCOL = Object.fromEntries(CATS.map(c=>[c.k,c.c]));
 const CGRP = Object.fromEntries(CATS.map(c=>[c.k,c.g]));
-const catName = k => (CATS.find(c => c.k === k) || {n:k}).n;
+// A category's name on screen in LANG (categories.py LABEL_ZH as `nz`); the key itself stays English.
+const catName = k => { const c = CATS.find(c => c.k === k); return !c ? k : LANG === "zh" && c.nz ? c.nz : c.n; };
 // Everyday is everything spent that is not a declared payment (`fx`, fixed.py, FINANCE.md §3a, 1.0.7):
 // a category says what a thing is, not whether it was promised.
 const inEveryday = e => !e.fx;
@@ -1256,16 +1257,16 @@ const GLOSSARY = {
   pay_yourself_first: {w:T("gloss.pay_yourself_first.w"), pos:T("gloss.pay_yourself_first.pos"), def:T("gloss.pay_yourself_first.def")},
   subscription:   {w:T("gloss.subscription.w"), pos:T("gloss.subscription.pos"), def:T("gloss.subscription.def")},
   median:         {w:T("gloss.median.w"), pos:T("gloss.median.pos"), def:T("gloss.median.def"), eg:T("gloss.median.eg")},
-  percentage_point: {w:T("gloss.percentage_point.w"), pos:T("gloss.median.pos"), def:T("gloss.percentage_point.def")},
+  percentage_point: {w:T("gloss.percentage_point.w"), pos:T("gloss.percentage_point.pos"), def:T("gloss.percentage_point.def")},
   inflation:      {w:T("gloss.inflation.w"), pos:T("gloss.inflation.pos"), def:T("gloss.inflation.def"), also:["real_return"]},
   tfsa:           {w:T("gloss.tfsa.w"), pos:T("gloss.tfsa.pos"), def:T("gloss.tfsa.def"), why:"registered", also:["contribution_room","rrsp"]},
   rrsp:           {w:T("gloss.rrsp.w"), pos:T("gloss.rrsp.pos"), def:T("gloss.rrsp.def"), why:"registered", also:["tfsa","taxed_to_take_out"]},
   fhsa:           {w:T("gloss.fhsa.w"), pos:T("gloss.fhsa.pos"), def:T("gloss.fhsa.def"), why:"registered", also:["tfsa","rrsp"]},
   non_registered: {w:T("gloss.non_registered.w"), pos:T("gloss.non_registered.pos"), def:T("gloss.non_registered.def")},
   contribution_room: {w:T("gloss.contribution_room.w"), pos:T("gloss.contribution_room.pos"), def:T("gloss.contribution_room.def")},
-  portfolio:      {w:T("gloss.portfolio.w"), pos:T("gloss.portfolio.pos"), def:T("gloss.portfolio.def"), here:T("gloss.portfolio.here"), also:["for_fire","asset_class"]},
+  portfolio:      {w:T("gloss.portfolio.w"), pos:T("gloss.portfolio.pos"), def:T("gloss.portfolio.def"), here:T("gloss.portfolio.here"), also:["asset_class","fire"]},
   asset_class:    {w:T("gloss.asset_class.w"), pos:T("gloss.asset_class.pos"), def:T("gloss.asset_class.def")},
-  asset_allocation: {w:T("gloss.asset_allocation.w"), pos:T("gloss.asset_class.pos"), def:T("gloss.asset_allocation.def"), also:["asset_class","target_band","rebalance"]},
+  asset_allocation: {w:T("gloss.asset_allocation.w"), pos:T("gloss.asset_allocation.pos"), def:T("gloss.asset_allocation.def"), also:["asset_class","target_band","rebalance"]},
   stock:          {w:T("gloss.stock.w"), pos:T("gloss.stock.pos"), def:T("gloss.stock.def")},
   bond:           {w:T("gloss.bond.w"), pos:T("gloss.bond.pos"), def:T("gloss.bond.def"), also:["t_bill"]},
   t_bill:         {w:T("gloss.t_bill.w"), pos:T("gloss.t_bill.pos"), def:T("gloss.t_bill.def"), also:["bond"]},
@@ -1303,7 +1304,6 @@ const GLOSSARY = {
   long_term_care: {w:T("gloss.long_term_care.w"), pos:T("gloss.long_term_care.pos"), def:T("gloss.long_term_care.def")},
   shortfall:      {w:T("gloss.shortfall.w"), pos:T("gloss.shortfall.pos"), def:T("gloss.shortfall.def"), also:["drawdown"]},
   // Words this page coined
-  for_fire:       {own:1, w:T("gloss.for_fire.w"), pos:T("gloss.for_fire.pos"), def:T("gloss.for_fire.def"), also:["portfolio","fire"]},
   set_aside:      {own:1, w:T("gloss.set_aside.w"), pos:T("gloss.set_aside.pos"), def:T("gloss.set_aside.def"), also:["promised_to_a_goal"]},
   cash:           {own:1, w:T("gloss.cash.w"), pos:T("gloss.cash.pos"), def:T("gloss.cash.def"), also:["spendable_today"]},
   cash_abroad:    {own:1, w:T("gloss.cash_abroad.w"), pos:T("gloss.cash_abroad.pos"), def:T("gloss.cash_abroad.def"), also:["held_abroad"]},
@@ -1328,7 +1328,7 @@ const GLOSSARY = {
   complete_to:    {own:1, w:T("gloss.complete_to.w"), pos:T("gloss.complete_to.pos"), def:T("gloss.complete_to.def")},
 };
 // The register's axes in the page's own words (Home's net-worth card, the Accounts table).
-const ROLE_TERM = {grow:"for_fire", "set-aside":"set_aside", buffer:"cash", owed:"owed_to_you", none:"other_assets"};
+const ROLE_TERM = {grow:"portfolio", "set-aside":"set_aside", buffer:"cash", owed:"owed_to_you", none:"other_assets"};
 const REACH_TERM = {today:"spendable_today", costs:"taxed_to_take_out", spoken:"promised_to_a_goal", lent:"lent_out", locked:"in_property", abroad:"held_abroad"};
 // The second layer of a concept entry: why it works and what people get wrong. Shown only on the
 // Glossary page, folded; the hover keeps the one-sentence entry. Several entries may share one.
@@ -1764,7 +1764,7 @@ function renderHome(){
   // A row opens in place to the accounts behind it; "where is my cash" should not need another page.
   const acctList = (rows, total) => '<div class="both-accts" hidden>' + rows.map(a =>
       '<div class="both-acct"><span>'+(a.i ? '<span class="i">'+a.i+'</span>' : "")+a.n
-      + (a.cur ? '<span class="a">'+a.cur+'</span>' : "") + (a.note ? '<span class="a">'+a.note+'</span>' : "") + (a.asof ? '<span class="a">'+dShort(a.asof)+'</span>' : "")+'</span>'
+      + (a.cur ? '<span class="a">'+a.cur+'</span>' : "") + (a.nt || a.note ? '<span class="a">'+(a.nt ? T(a.nt) : a.note)+'</span>' : "") + (a.asof ? '<span class="a">'+dShort(a.asof)+'</span>' : "")+'</span>'
       + '<span class="v num">'+fmt(a.v)+'</span><span class="p num">'+Math.round(pc(a.v, total))+'%</span></div>').join("") + '</div>';
   const opens = n => n ? ' role="button" tabindex="0" aria-expanded="false"' : "";
   const caret = n => n ? '<span class="caret">\u25B8</span>' : "";
@@ -1958,7 +1958,7 @@ function renderSplit(){
           ? T("budget.split.warn_no_pay", {amount: fmt(used)})
           : T("budget.split.warn_over", {used: fmt(used), income: fmt(PLAN.takeHome), gap: fmt(used - PLAN.takeHome)}))
       : "")
-    + (edited ? noteBox(TN("budget.split.edited", edited)) : "");
+    + (edited ? noteBox(TN(SET_MODE === "demo" ? "budget.split.edited_demo" : "budget.split.edited_saving", edited)) : "");
 }
 
 // The plan drawn as flows, with the step a bar cannot show: where the everyday amount actually went in
@@ -1978,7 +1978,7 @@ function drawFlow(){
   $("flowLab").textContent = short ? T("budget.flow.label.short") : ym ? T("budget.flow.label.month") : T("budget.flow.label.plan");
   const segs = alloc.filter(a => a.v > 0).concat(rest > 0 ? [UNALLOC(rest)] : []);
   const ev = ym ? monthOf(ym).filter(inEveryday) : [];
-  const net = CATS.map(c => ({k:c.k, n:c.n, c:c.c, v:ev.filter(e => e.category === c.k).reduce((s,e) => s + e.amount, 0)}));
+  const net = CATS.map(c => ({k:c.k, n:catName(c.k), c:c.c, v:ev.filter(e => e.category === c.k).reduce((s,e) => s + e.amount, 0)}));
   const byCat = net.filter(c => c.v > 0.5);
   const back = -net.filter(c => c.v < 0).reduce((s,c) => s + c.v, 0);
   const gross = byCat.reduce((s,c) => s + c.v, 0), spent = gross - back;
@@ -2143,7 +2143,7 @@ function renderYear(){
     '<div class="leg-row all'+(yearCat?"":" on")+'" data-cat=""><span class="nm">'+T("trends.year.legend.all")+'</span></div>'
     + CATS.filter(c => byMonthCat.some(a => a[c.k])).map(c =>
     '<div class="leg-row'+(yearCat===c.k?" on":(yearCat?" dim":""))+'" data-cat="'+c.k+'">'
-    +'<span class="dot" style="background:'+c.c+'"></span><span class="nm">'+c.n+'</span></div>').join("");
+    +'<span class="dot" style="background:'+c.c+'"></span><span class="nm">'+catName(c.k)+'</span></div>').join("");
   $("yearLegend").querySelectorAll(".leg-row[data-cat]").forEach(el =>
     el.onclick = () => { const k = el.dataset.cat; yearCat = (!k || yearCat === k) ? null : k; renderYear(); });
 }
@@ -2350,7 +2350,7 @@ function renderCatPage(){
           sel.med === null
             ? [T("cat.detail_vs_usual"), moreMonths(), "mut"]
             : [T("cat.detail_vs_usual"),
-               numx((over(sel) >= 0 ? "+" : "\u2212") + fmt(Math.abs(over(sel))), [[T("cat.vs_usual_sum_this"), fmt(sel.v)], [T("cat.vs_usual_sum_usual"), "\u2212"+fmt(sel.med)]],
+               numx((over(sel) >= 0 ? "+" : "\u2212") + fmt(Math.abs(over(sel))), [[T("cat.vs_usual_sum_this"), fmt(sel.v)], [T("cat.detail_its_median"), "\u2212"+fmt(sel.med)]],
                  T("cat.detail_usual_note", {n: win.length}).replace(/median|中位数/, w => term("median", w)), true),
                isHigh(sel) ? "hi" : ""]
         ])
@@ -2632,7 +2632,7 @@ function wireSettings(root){
 // Settings in sections (1.1.0): Your numbers — the rows above, under the four stage names — and
 // AI assist. The section shown is kept with the page's state (ss), so the panel can link to AI assist.
 let setSec = ST.ss === "ai" ? "ai" : "num";
-const SET_SECS = [["num", "Your numbers"], ["ai", "AI assist"]];
+const SET_SECS = [["num", T("set.sec_numbers")], ["ai", T("set.sec_ai")]];
 function renderSettings(){
   $("setNote").innerHTML = SET_MODE === "read" ? noteBox(T("set.note_read"))
     : SET_MODE === "demo" ? noteBox(T("set.note_demo")) : "";
@@ -2641,7 +2641,7 @@ function renderSettings(){
   $("setNav").querySelectorAll("[data-ss]").forEach(b => b.onclick = () => { setSec = b.dataset.ss; saveState(); renderSettings(); });
   $("setList").hidden = setSec !== "num";
   $("aiPane").hidden = setSec !== "ai";
-  $("setList").innerHTML = '<h2>Your numbers</h2>' + Object.keys(SET_STAGE).map(st => {
+  $("setList").innerHTML = '<h2>' + T("set.sec_numbers") + '</h2>' + Object.keys(SET_STAGE).map(st => {
     const rows = SETTINGS.filter(r => r.stage === st);
     return rows.length ? '<div class="set-grp"><h3>' + SET_STAGE[st] + '</h3>' + rows.map(r => {
       const meta = setMeta(r);
@@ -2660,30 +2660,36 @@ function renderSettings(){
 // as a file or as the demo it can only say where it works. The owner picks a service by name and
 // pastes a key; the address and the model are the tool's.
 let AI_ST = null, aiDraft = null, aiBusy = false;
-const AI_WHAT = "Suggests a category for a merchant the app does not know. You still choose each one.";
-const AI_SENT = "What is sent: the merchant as the statement prints it, and the names of the 15 categories. Never an amount, a date or an account.";
+const AI_WHAT = T("set.ai.what");
+const AI_SENT = T("set.ai.sent");
 const aiSvc = id => ((AI_ST && AI_ST.services) || []).find(x => x.id === id) || {};
 const setRowH = (n, why, ctl, meta) => '<div class="set-row"><div><div class="n">' + n + '</div><div class="why">' + why + '</div></div>'
   + '<div class="set-ctl">' + ctl + (meta ? '<div class="set-meta">' + meta + '</div>' : "") + '</div></div>';
-const toggleH = (on, off) => '<button class="tg' + (on ? " on" : "") + '" role="switch" aria-checked="' + on + '" aria-label="Use AI assist" data-ai="tg"' + (off ? " disabled" : "") + '><i></i></button>';
-const timesH = n => n === 0 ? "Not yet" : n === 1 ? "Once" : n === 2 ? "Twice" : n + " times";
+const toggleH = (on, off) => '<button class="tg' + (on ? " on" : "") + '" role="switch" aria-checked="' + on + '" aria-label="' + T("set.ai.use") + '" data-ai="tg"' + (off ? " disabled" : "") + '><i></i></button>';
+const timesH = n => n === 0 ? T("set.ai.times_zero") : n === 2 ? T("set.ai.times_two") : TN("set.ai.times", n);
+// one request in "What was sent": how many merchants, and what went wrong when something did
+const aiSent = x => {
+  const cnt = TN("set.ai.merchants", x.merchants.length);
+  const why = x.ok ? (x.cut ? "cut" : "") : ["key", "credit", "busy", "network"].includes(x.why) ? x.why : "none";
+  return why ? T("set.ai.with_status", {merchants: cnt, status: T("set.ai.why_" + why)}) : cnt;
+};
 function aiPost(path, body){
   aiBusy = true;
   return fetch(path, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body || {})})
     .then(res => res.json().then(j => { if(!res.ok || !j.ok) throw j.error || {}; AI_ST = j.data; aiDraft = null; }))
-    .catch(e => toast("Not saved" + (e.text ? ": " + e.text : ". The app did not answer.")))
+    .catch(e => toast(e.text ? T("set.toast_error", {error: e.text}) : T("set.ai.toast_no_answer")))
     .then(() => { aiBusy = false; renderAI(); });
 }
 function renderAI(){
   const el = $("aiPane");
-  let h = '<h2>AI assist</h2>';
+  let h = '<h2>' + T("set.sec_ai") + '</h2>';
   if(SET_MODE !== "save"){
-    el.innerHTML = h + setRowH("Use AI assist", AI_WHAT, toggleH(false, true), "") + '<p class="fine">AI assist works when this page is opened with the FIRE Toad app on your computer.</p>';
+    el.innerHTML = h + setRowH(T("set.ai.use"), AI_WHAT, toggleH(false, true), "") + '<p class="fine">' + T("set.ai.needs_app") + '</p>';
     return;
   }
   if(!AI_ST){
     el.innerHTML = h;
-    const noAnswer = '<p class="fine">The app did not answer.</p>';
+    const noAnswer = '<p class="fine">' + T("set.ai.no_answer") + '</p>';
     fetch("api/ai")
       .then(res => res.json())
       .then(j => { AI_ST = j.data || {}; renderAI(); })
@@ -2693,41 +2699,42 @@ function renderAI(){
   const st = AI_ST, cur = st.provider && st.provider !== "none" ? st.provider : null;
   const on = !!(aiDraft || st.enabled), svc = aiDraft ? aiDraft.svc : cur;
   const s = aiSvc(svc), ollama = st.ollama || [];
-  h += setRowH("Use AI assist", AI_WHAT, toggleH(on, aiBusy),
-    st.enabled && !aiDraft ? (s.key ? "Turning it off deletes the key" : "") : on ? (s.key ? "Paste a key to finish" : "") : "");
+  h += setRowH(T("set.ai.use"), AI_WHAT, toggleH(on, aiBusy),
+    st.enabled && !aiDraft ? (s.key ? T("set.ai.meta_off_deletes_key") : "") : on ? (s.key ? T("set.ai.meta_paste_key") : "") : "");
   if(on){
     const opts = (st.services || []).filter(x => x.id !== "ollama" || ollama.length || svc === "ollama");
     // a service set from the chat (any other OpenAI-compatible one) is shown as itself
-    if(svc && !opts.some(x => x.id === svc)) opts.unshift({id: svc, label: "Another service"});
-    h += setRowH("Service", svc === "ollama" ? "Works on this computer. Nothing is sent." : "The AI service your merchant names are sent to.",
-      '<select class="set-in" data-ai="svc" aria-label="Service">' + opts.map(x => '<option value="'+x.id+'"'+(x.id === svc ? " selected" : "")+'>'+(x.menu || x.label)+'</option>').join("") + '</select>');
+    if(svc && !opts.some(x => x.id === svc)) opts.unshift({id: svc, label: T("set.ai.service_other")});
+    h += setRowH(T("set.ai.service"), svc === "ollama" ? T("set.ai.service_local") : T("set.ai.service_why"),
+      '<select class="set-in" data-ai="svc" aria-label="' + T("set.ai.service") + '">' + opts.map(x => '<option value="'+x.id+'"'+(x.id === svc ? " selected" : "")+'>'+(x.menu || x.label)+'</option>').join("") + '</select>');
     if(svc === "ollama"){
-      h += setRowH("Model", "Installed in Ollama on this computer.",
-        ollama.length ? '<select class="set-in" data-ai="model" aria-label="Model" style="min-width:140px">' + ollama.map(m => '<option'+(m === st.model ? " selected" : "")+'>'+m+'</option>').join("") + '</select>'
-          : '<span class="num" style="color:var(--muted)">Ollama is not open</span>');
+      h += setRowH(T("set.ai.model"), T("set.ai.model_why"),
+        ollama.length ? '<select class="set-in" data-ai="model" aria-label="' + T("set.ai.model") + '" style="min-width:140px">' + ollama.map(m => '<option'+(m === st.model ? " selected" : "")+'>'+m+'</option>').join("") + '</select>'
+          : '<span class="num" style="color:var(--muted)">' + T("set.ai.ollama_closed") + '</span>');
     } else if(s.key){
+      const SEP = LANG === "zh" ? "" : " ";   // between two sentences: a space in English, none in Chinese
       const saved = st.enabled && cur === svc && st.keyStored && !(aiDraft && aiDraft.replace);
-      h += setRowH("API key", "From " + s.company + "." + (svc === "claude" ? " A Claude Pro plan does not come with one." : svc === "chatgpt" ? " A ChatGPT Plus plan does not come with one." : svc === "deepseek" ? " Its servers are in China." : "")
-          + (saved || !s.keyUrl ? "" : ' <a href="' + s.keyUrl + '" target="_blank" rel="noopener noreferrer">Get a key ↗</a>'),
-        saved ? '<div class="row2"><span class="num" style="color:var(--muted)">Saved</span><button class="pill" data-ai="replace">Replace</button></div>'
-          : '<div class="row2"><input class="set-in w-k" type="password" autocomplete="off" data-ai="key" placeholder="Paste your ' + s.company + ' API key" aria-label="API key"><button class="pill go" data-ai="save">Save</button></div>');
+      h += setRowH(T("set.ai.api_key"), T("set.ai.key_from", {company: s.company}) + (svc === "claude" ? SEP + T("set.ai.key_claude_plan") : svc === "chatgpt" ? SEP + T("set.ai.key_chatgpt_plan") : svc === "deepseek" ? SEP + T("set.ai.key_deepseek") : "")
+          + (saved || !s.keyUrl ? "" : SEP + '<a href="' + s.keyUrl + '" target="_blank" rel="noopener noreferrer">' + T("set.ai.get_key") + '</a>'),
+        saved ? '<div class="row2"><span class="num" style="color:var(--muted)">' + T("set.ai.saved") + '</span><button class="pill" data-ai="replace">' + T("set.ai.replace") + '</button></div>'
+          : '<div class="row2"><input class="set-in w-k" type="password" autocomplete="off" data-ai="key" placeholder="' + T("set.ai.key_ph", {company: s.company}) + '" aria-label="' + T("set.ai.api_key") + '"><button class="pill go" data-ai="save">' + T("set.ai.save") + '</button></div>');
     }
     if(svc && svc !== "ollama" && !(st.enabled && cur === svc && !aiDraft))
-      h += '<p class="fine">Once it is on, a merchant the app does not know is sent to ' + s.company + ' by name, to ask which category fits. Amounts, dates and accounts are not sent.</p>'
-        + '<p class="fine">How ' + s.company + ' keeps what it receives is up to its own terms. FIRE Toad cannot control that.</p>'
-        + '<p class="fine">A key is paid for in advance: you add credit first, and a month of merchants costs less than a cent.</p>';
-    if(svc === "ollama") h += '<p class="fine">Ollama has to be open when you import. When it is not, the import goes on without it.</p>';
+      h += '<p class="fine">' + T("set.ai.once_on", {company: s.company}) + '</p>'
+        + '<p class="fine">' + T("set.ai.terms", {company: s.company}) + '</p>'
+        + '<p class="fine">' + T("set.ai.prepaid") + '</p>';
+    if(svc === "ollama") h += '<p class="fine">' + T("set.ai.ollama_open") + '</p>';
   } else h += '<p class="fine">' + AI_SENT + '</p>';
   if(st.enabled && !aiDraft)
-    h += '<h3>Usage</h3>' + metaList([["Asked this month", timesH(st.askedThisMonth || 0)], st.since ? ["On since", dLong(st.since)] : null,
-      ["Merchants it suggested", String(st.suggested || 0)], ["Suggestions you kept", String(st.kept || 0)]]);
+    h += '<h3>' + T("set.ai.usage") + '</h3>' + metaList([[T("set.ai.asked_month"), timesH(st.askedThisMonth || 0)], st.since ? [T("set.ai.on_since"), dLong(st.since)] : null,
+      [T("set.ai.suggested"), String(st.suggested || 0)], [T("set.ai.kept"), String(st.kept || 0)]]);
   const hist = (st.history || []).filter(x => x.merchants.length);
   if(hist.length && !aiDraft){
-    h += '<h3>What was sent</h3><table class="dt"><tr><th>Day</th><th class="l">Sent to</th><th class="l">What</th></tr>'
+    h += '<h3>' + T("set.ai.history") + '</h3><table class="dt"><tr><th>' + T("set.ai.th_day") + '</th><th class="l">' + T("set.ai.th_to") + '</th><th class="l">' + T("set.ai.th_what") + '</th></tr>'
       + hist.map(x => '<tr><td class="nw">' + dLong(x.at) + '</td><td class="l">' + esc(x.to || x.service) + '</td><td class="what">'
-        + x.merchants.length + (x.merchants.length === 1 ? " merchant" : " merchants") + (x.ok ? (x.cut ? ", answer cut short" : "") : ", " + ({key: "key not accepted", credit: "no credit left", busy: "service busy", network: "no connection"}[x.why] || "no answer"))
-        + '<small>' + x.merchants.slice(0, 3).map(esc).join(", ") + (x.merchants.length > 3 ? ", and " + (x.merchants.length - 3) + " more" : "") + '</small></td></tr>').join("")
-      + '</table><p class="fine">The names of the 15 categories went with each one.</p>';
+        + aiSent(x)
+        + '<small>' + (x.merchants.length > 3 ? T("set.ai.more", {list: listJoin(x.merchants.slice(0, 3).map(esc)), n: x.merchants.length - 3}) : listJoin(x.merchants.map(esc))) + '</small></td></tr>').join("")
+      + '</table><p class="fine">' + T("set.ai.history_note") + '</p>';
   }
   el.innerHTML = h;
   const q = k => el.querySelector('[data-ai="' + k + '"]');
@@ -2863,7 +2870,7 @@ function renderFi(){
     : !txt ? T("fire.say_no_pace", sayV)
     : S.paceMonths ? TN("fire.say_pace_"+of, S.paceMonths, sayV) : T("fire.say_pace_"+of+"_plan", sayV);
   if(S.rate !== undefined){
-    const parts = S.jobs.map((j, i) => [j[0], j[1], i ? "#9a9890" : "var(--ink)"]).concat(S.free > 0.5 ? [[T("fire.no_job"), S.free, "#e8c27a"]] : []);
+    const parts = S.jobs.map((j, i) => [i ? j[0] : T("fire.job_invested"), j[1], i ? "#9a9890" : "var(--ink)"]).concat(S.free > 0.5 ? [[T("fire.no_job"), S.free, "#e8c27a"]] : []);
     const tot = Math.max(S.keep, parts.reduce((a,p) => a + p[1], 0)) || 1;
     $("fiKept").innerHTML = '<div class="sl">'+T("fire.kept_line", {keep: "<b>"+fmt(S.keep)+"</b>", pct: "<b>"+Math.round(S.rate*100)+"</b>"})+'</div>'
       + '<div class="kb">'+parts.filter(p => p[1] > 0).map(p => '<span style="width:'+(p[1]/tot*100)+'%;background:'+p[2]+'"></span>').join("")+'</div>'
@@ -2930,7 +2937,7 @@ function renderFire(){
   }
   const baseLock = cantChange("planBase");
   $("baseHero").innerHTML = T("fire.per_month", {amount: '<span class="'+(baseLock ? "" : "plan-edit ")+'num" id="planEdit" title="'+(baseLock || T("fire.click_to_change"))+'">'
-    + (unset("planBase") ? '<span class="unset">Not set</span>' : fmt(PLAN_BASE)) + '</span>'});
+    + (unset("planBase") ? '<span class="unset">'+T("set.not_set")+'</span>' : fmt(PLAN_BASE)) + '</span>'});
   // A change is saved as it is made (FINANCE.md §8e). Only the demo, which is nobody's data,
   // shows a change it does not keep, and says so.
   $("baseLab").innerHTML = term("planning_figure", T("base.planning_figure"));
@@ -2951,7 +2958,7 @@ function renderFire(){
            : T(drift >= 0 ? "fire.drift_above" : "fire.drift_below", {amount: fmt(Math.abs(measuredBase() - PLAN_BASE)), pct: Math.round(Math.abs(drift)*100)}),
          Math.abs(drift) > DRIFT_FLAG ? "hi" : ""],
     [T("fire.months_used"), usedM.length ? listJoin(usedM) : "\u2014"],
-    skipM.length ? [T("fire.months_left_out"), numx(listJoin(skipM.map(ymLabel)), [], skipM.map(m => ymFull(m)+": "+skipReason(m)).join(" ")), "mut"] : null
+    skipM.length ? [T("fire.months_left_out"), numx(listJoin(skipM.map(ymLabel)), [], skipM.map(m => T("base.months_left_out_tip", {month: ymFull(m), reason: skipReason(m)})).join(" ")), "mut"] : null
   ]) + (drift !== null && Math.abs(drift) > DRIFT_FLAG
     ? noteBox(T(drift > 0 ? "fire.drift_note_above" : "fire.drift_note_below", {pct: Math.round(Math.abs(drift)*100), amount: fmt(measuredBase()), target: fmt(measuredBase()*300)}))
     : "");
@@ -3907,7 +3914,7 @@ function renderYearInsights(){
   yes.filter(e => e.category === "Dining").forEach(e => { const m = shortName(e.note); byMer[m] = (byMer[m]||0) + e.amount; });
   const din = byCat["Dining"]||0, topMer = Object.entries(byMer).sort((a,b) => b[1]-a[1])[0];
   if(din > 0 && topMer && topMer[1] / din >= 0.25)
-    ins.push({s:"w", t:T("spend.ins_dining_merchant", {merchant: topMer[0], pct: Math.round(pc(topMer[1], din)), amount: fmt(topMer[1]), total: fmt(din)})});
+    ins.push({s:"w", t:T("spend.ins_dining_merchant", {merchant: topMer[0], category: catName("Dining"), pct: Math.round(pc(topMer[1], din)), amount: fmt(topMer[1]), total: fmt(din)})});
   const mt = MONTHS.filter(m => m.startsWith(yr)).map(m => ({m, v: monthTotal(m)})).filter(x => x.v > 0);
   // against a usual month itself (USUAL.month, an average), the figure the sentence names
   const peak = mt.length ? mt.reduce((a,b) => b.v > a.v ? b : a) : null, med = usualMonth() ? usualMonth().v : 0;

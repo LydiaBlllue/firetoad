@@ -782,7 +782,7 @@ def derive(d):
         # a card paid past zero is listed as money with why (1.0.7: "a credit card counted as money")
         return {"n": a.get("label") or a["name"], "i": "" if a.get("role") == "owed" else a.get("inst", ""),
                 "v": round(v), "asof": a.get("asof") or "", "cur": cur if cur != "CAD" else "",
-                **({"note": "credit in your favour"} if a.get("credit") else {})}
+                **({"nt": "nw.credit_note"} if a.get("credit") else {})}
     def part_accounts(role, where, total):
         """The accounts behind a row, largest first. Rounded per account, the dollar that can
         drift settled on the largest, so the list sums to the row it opens under."""
