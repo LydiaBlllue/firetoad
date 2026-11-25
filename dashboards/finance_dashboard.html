@@ -425,18 +425,18 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
         <polyline points="50,63 38,63 30,73 20,73"/><polyline points="50,63 62,63 70,73 80,73"/>
       </g>
     </svg>
-    <span class="wm"><span id="brandText">FIRE Toad</span><small id="brandOwner"></small></span>
+    <span class="wm"><span id="brandText" data-t="shell.brand">FIRE Toad</span><small id="brandOwner"></small></span>
   </button>
   <nav id="sideNav"></nav>
-    <a id="toPanel" class="to-panel" href="panel" hidden>Monthly import →</a>
-    <button id="sideSet" class="side-set" data-k="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>Settings</span></button>
+    <a id="toPanel" class="to-panel" href="panel" hidden data-t="shell.to_panel">Monthly import →</a>
+    <button id="sideSet" class="side-set" data-k="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span data-t="nav.set">Settings</span></button>
     <button id="sideLang" class="side-set side-lang" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><span id="sideLangText"></span></button>
     <div id="ver" class="ver"></div>
 </aside>
 <main class="main">
   <div class="pghead">
     <div><div class="eyebrow" id="pgSec"></div><h2 id="pgTitle"></h2><div class="pgsub" id="pgSub"></div></div>
-    <div class="ph-r"><div class="k">Net worth</div><div class="v" id="hdrNW"></div><div class="s" id="hdrSub"></div></div>
+    <div class="ph-r"><div class="k" data-t="shell.hdr_net_worth">Net worth</div><div class="v" id="hdrNW"></div><div class="s" id="hdrSub"></div></div>
   </div>
   <div class="pills" id="yearPills"></div>
   <div class="pills" id="pills"></div>
@@ -755,6 +755,57 @@ function T(k, v){
   if(v) s = s.replace(/\{(\w+)\}/g, (m, n) => (n in v ? v[n] : m));
   return s;
 }
+// ===== The words helpers: every page reads its words and dates through these, never by hand =====
+//   T(key, vars)        the string for LANG, {name} filled from vars.
+//   TN(key, n, vars)    a count: key_one / key.one when n is 1, else key_many / key.many (the
+//                       key itself when neither exists); {n} is filled with n unless vars says.
+//                       Chinese has no plural, but both keys exist and carry their own zh, so the
+//                       code branches on the count, never on the language, and never builds a
+//                       sentence from English pieces ("1 days").
+//   applyT(root)        fills [data-t] (innerHTML), [data-t-title], [data-t-aria] (aria-label) and
+//                       [data-t-ph] (placeholder) under root (default document). Run once at
+//                       load, before the first render; call it again on markup you insert that
+//                       carries data-t. Put data-t on an element whose whole content is the string.
+//   Dates (all take "YYYY-MM-DD" or "YYYY-MM"; en output is what the page always wrote):
+//   MN[i]               short month, 0-based: en "Oct", zh 「10月」 (common.month_*)
+//   MN1[i]              one-character month for a narrow column: en "O", zh 「10」
+//   ymLabel(ym)         month, with a short year only outside the current year: "Jun" / "Jun ’25";
+//                       zh 「6月」 / 「25年6月」
+//   ymShort(ym)         month with a short year always: "Jun ’25", zh 「25年6月」
+//   ymFull(ym)          month and year: "Jun 2026", zh 「2026年6月」
+//   yrTxt(y)            a year on its own: "2026", zh 「2026年」
+//   yrSpan(yr, months)  the months of a year the figures come from: "Aug–Sep 2026" / "2026",
+//                       zh 「2026年8月–9月」 / 「2026年」
+//   dLong(d)            month and day: "Oct 5", zh 「10月5日」
+//   dShort(d)           month and day, with the year only outside the current year:
+//                       "Oct 5" / "Oct 5, 2025", zh 「10月5日」 / 「2025年10月5日」
+//   dFull(d)            month, day and year always: "Oct 5, 2026", zh 「2026年10月5日」
+//   ordinal(n)          a day of the month: "26th", zh 「26日」
+//   ageTxt(a)           an age standing alone (axis, slider): "47", zh 「47 岁」. Not for a {age}
+//                       placeholder: the zh string already carries 岁.
+//   listJoin(a)         parallel nouns: "a, b, c", zh 「a、b、c」
+//   listAnd(a)          "a, b and c", zh 「a、b和c」
+// No weekday names anywhere. Never hand-format a date with MN and a space.
+function TN(k, n, v){
+  const f = n === 1 ? "one" : "many";
+  const key = [k + "_" + f, k + "." + f].find(x => STR[x]) || k;
+  return T(key, Object.assign({n: n}, v || {}));
+}
+function applyT(root){
+  (root || document).querySelectorAll("[data-t],[data-t-title],[data-t-aria],[data-t-ph]").forEach(el => {
+    const d = el.dataset;
+    if(d.t) el.innerHTML = T(d.t);
+    if(d.tTitle) el.title = T(d.tTitle);
+    if(d.tAria) el.setAttribute("aria-label", T(d.tAria));
+    if(d.tPh) el.placeholder = T(d.tPh);
+  });
+}
+// The markup is all above this script, so its words are filled here, before any code draws.
+applyT();
+const listJoin = a => a.join(LANG === "zh" ? "、" : ", ");
+const listAnd = a => a.length < 2 ? a.join("") : LANG === "zh" ? a.slice(0, -1).join("、") + "和" + a[a.length-1]
+  : a.slice(0, -1).join(", ") + " and " + a[a.length-1];
+const ageTxt = a => LANG === "zh" ? a + " 岁" : String(a);
 function setLang(l){
   if(!LANGS.includes(l) || l === LANG) return;
   try { localStorage.setItem("ftLang", l); } catch(e) {}
@@ -778,7 +829,8 @@ const WSDEP = [{"ym": "2026-01", "amt": 2300.0, "nRule": 2}, {"ym": "2026-02", "
 // be three separate literals — two magic numbers and one English sentence — and the sentence
 // could drift away from the numbers silently.
 const IMPORT_DAY = 1;
-const ordinal = d => d + (d % 10 === 1 && d !== 11 ? "st" : d % 10 === 2 && d !== 12 ? "nd"
+// A day of the month: "26th". Chinese has no suffix: 「26日」 (common.ordinal).
+const ordinal = d => LANG === "zh" ? T("common.ordinal", {n: d}) : d + (d % 10 === 1 && d !== 11 ? "st" : d % 10 === 2 && d !== 12 ? "nd"
                         : d % 10 === 3 && d !== 13 ? "rd" : "th");
 const STMT_END = {"BMO chq": "2026-09-05", "MC": "2026-08-20"};
 const LEDGER_THRU = {"bmo-chq-4471": "2026-09-05", "bmo-sav-9032": "2026-09-05"};
@@ -795,7 +847,8 @@ const catName = k => (CATS.find(c => c.k === k) || {n:k}).n;
 // Everyday is everything spent that is not a declared payment (`fx`, fixed.py, FINANCE.md §3a, 1.0.7):
 // a category says what a thing is, not whether it was promised.
 const inEveryday = e => !e.fx;
-const MN = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const MN = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"].map(m => T("common.month_" + m));
+const MN1 = MN.map((m, i) => LANG === "zh" ? String(i + 1) : m[0]);
 const SUB_KEYS = [{"name": "Amazon Prime", "amount": 10.99, "months": 8}, {"name": "Apple", "amount": 3.99, "months": 8}, {"name": "Goodlife Fitness", "amount": 32.99, "months": 8}, {"name": "Koodo Mobile", "amount": 45.2, "months": 8}, {"name": "Netflix", "amount": 18.99, "months": 8}, {"name": "Oc Transpo", "amount": 135.0, "months": 8}, {"name": "Rogers Internet", "amount": 75.0, "months": 8}, {"name": "Spotify", "amount": 11.29, "months": 8}];
 
 const $ = id => document.getElementById(id);
@@ -860,7 +913,7 @@ function DataTable(cols, rows, o){
   const cls = (col, i) => [col.a || (i ? "r" : "l"), col.m ? "m" : "", col.nw ? "nw" : "", col.num === false ? "" : "num"].filter(Boolean).join(" ");
   const head = '<tr>' + cols.map((col, i) => '<th class="'+(col.a || (i ? "r" : "l"))+'">'+col.h+'</th>').join("") + '</tr>';
   const body = rows.length ? rows.map(r => '<tr>' + cols.map((col, i) => '<td class="'+cls(col, i)+'">'+col.c(r)+'</td>').join("") + '</tr>').join("")
-    : '<tr><td class="empty" colspan="'+cols.length+'">'+(o.empty || "Nothing yet.")+'</td></tr>';
+    : '<tr><td class="empty" colspan="'+cols.length+'">'+(o.empty || T("common.empty"))+'</td></tr>';
   const foot = o.foot && rows.length ? '<tr class="tot">' + o.foot.map((h, i) => '<td class="'+cls(cols[i], i)+'">'+h+'</td>').join("") + '</tr>' : "";
   const inner = head + body + foot;
   return o.inner ? inner : '<table class="dt"'+(o.style ? ' style="'+o.style+'"' : '')+'>' + inner + '</table>';
@@ -877,9 +930,9 @@ const cmpOf = ym => monthOf(ym).filter(e => !e.yr).concat(
   SPENDING.filter(e => e.yr && e.currency === "CAD" && ymNum(ym) - ymNum(e.date) >= 0 && ymNum(ym) - ymNum(e.date) < 12)
           .map(e => Object.assign({}, e, {amount: e.amount / 12})));
 function ymShift(ym,d){let[y,m]=ym.split("-").map(Number);m+=d;if(m<1){m=12;y--}if(m>12){m=1;y++}return y+"-"+String(m).padStart(2,"0");}
-// Months from today as a label ("Aug 2039").
-const dTxt = m => { if(m === null) return "beyond 25y"; const [Y,M] = TODAY.slice(0,7).split("-").map(Number); const t = M-1+m, yy = Y + Math.floor(t/12); return MN[t%12]+" "+yy; };
-const ymLabel = ym => MN[Number(ym.slice(5))-1] + (ym.slice(0,4) !== TODAY.slice(0,4) ? " ’" + ym.slice(2,4) : "");
+// The date helpers are listed after T() at the top of this script; every one reads MN.
+const ymShort = ym => T("common.month_year_short", {mon: MN[Number(ym.slice(5,7))-1], yy: ym.slice(2,4)});
+const ymLabel = ym => ym.slice(0,4) !== TODAY.slice(0,4) ? ymShort(ym) : MN[Number(ym.slice(5,7))-1];
 // "Jun 2026", spelled out. ymLabel() abbreviates the year for any month outside the current one
 // ("Jun ’25"), which is right inside a cramped tooltip but doubles up everywhere the year is
 // written after it — with 2024 loaded, ymLabel(m)+" "+year rendered "Aug ’24 2024".
@@ -887,24 +940,31 @@ const ymLabel = ym => MN[Number(ym.slice(5))-1] + (ym.slice(0,4) !== TODAY.slice
 // zero for every denominator on this page (2026-09-09, found by the setup acceptance test).
 const pc = (a,b) => b ? (a/b)*100 : 0;
 const cap1 = t => t.charAt(0).toUpperCase()+t.slice(1);
-const ymFull = ym => MN[Number(ym.slice(5))-1] + " " + ym.slice(0,4);
+const ymFull = ym => T("common.month_year", {mon: MN[Number(ym.slice(5,7))-1], yyyy: ym.slice(0,4)});
+const yrTxt = y => LANG === "zh" ? y + "年" : String(y);
+// Month and day ("Oct 5"); in Chinese 「10月5日」, the day read through ordinal().
+const dLong = d => { const p = String(d).split("-"); return MN[Number(p[1])-1] + (LANG === "zh" ? ordinal(Number(p[2])) : " " + Number(p[2])); };
+const dFull = d => { const y = String(d).slice(0,4); return LANG === "zh" ? T("common.month_year", {mon: dLong(d), yyyy: y}) : dLong(d) + ", " + y; };
+const dShort = d => String(d).slice(0,4) !== TODAY.slice(0,4) ? dFull(d) : dLong(d);
 // What a year's figures cover, said as the months they come from: two months of a year are
 // "Aug–Sep 2026", not "2026" (2026-11-12, user 001: "Income in 2026" over two months read as a
 // year's). A whole year is the year.
 const yrSpan = (yr, months) => {
   const ms = [...new Set(months)].filter(m => m.startsWith(yr)).sort();
-  if(!ms.length || ms.length >= 12) return yr;
+  if(!ms.length || ms.length >= 12) return LANG === "zh" ? yrTxt(yr) : yr;
   const a = MN[Number(ms[0].slice(5))-1], b = MN[Number(ms[ms.length-1].slice(5))-1];
-  return (a === b ? a : a + "\u2013" + b) + " " + yr;
+  return a === b ? ymFull(ms[0]) : T("common.month_span", {mon1: a, mon2: b, yyyy: yr});
 };
 // A month past what every statement reaches is open for one of two reasons, said apart: the
 // calendar has not finished it, or it has and a statement for it has not come yet.
 const notInYet = ym => {
-  if(ym >= TODAY.slice(0,7)) return ymFull(ym)+" is still going, so its totals will rise.";
+  if(ym >= TODAY.slice(0,7)) return T("shell.month_still_going", {month: ymFull(ym)});
   // a month that has ended: which statements stop short of its last day, and where (feedback 103)
   const last = ym + "-" + String(new Date(Number(ym.slice(0,4)), Number(ym.slice(5,7)), 0).getDate()).padStart(2, "0");
-  const short = Object.entries(STMT_END).filter(([k, e]) => e && e < last).map(([k, e]) => k + (e >= ym + "-01" ? " to " + dLong(e) : ": nothing yet"));
-  return "Not every statement for "+ymFull(ym)+" is in yet"+(short.length ? " — "+short.join(", ") : "")+". Its totals will rise.";
+  const short = Object.entries(STMT_END).filter(([k, e]) => e && e < last).map(([k, e]) => e >= ym + "-01"
+    ? T("shell.month_missing_item_to", {account: k, date: dLong(e)}) : T("shell.month_missing_item_none", {account: k}));
+  return short.length ? T("shell.month_missing_list", {month: ymFull(ym), list: short.join(LANG === "zh" ? "，" : ", ")})
+    : T("shell.month_missing_nolist", {month: ymFull(ym)});
 };
 function daysElapsed(ym){
   if(ym === TODAY.slice(0,7)) return Number(TODAY.slice(8,10));
@@ -951,15 +1011,15 @@ const VERSION = "1.0.9";   // MAJOR.MINOR.PATCH — a change of technology moves
 // between the two dashboards, which is three places to miss when someone makes this theirs.
 // FIRE Toad is the product; the owner's name is the instance. Both are shown, neither typed
 // into markup: the name comes from findata/profile.json (the owner, 2026-09-10).
-const PRODUCT = "FIRE Toad";
-document.title = PRODUCT + (PROFILE.owner ? " · " + PROFILE.owner : "");
+const PRODUCT = T("shell.brand");
+document.title = PROFILE.owner ? T("shell.doc_title", {owner: PROFILE.owner}) : PRODUCT;
 addEventListener("DOMContentLoaded", () => {
   const b = document.getElementById("brandText"); if(b) b.textContent = PRODUCT;
   // The switch names the other language in that language, as the panel's does.
   const sl = document.getElementById("sideLang"), other = LANG === "zh" ? "en" : "zh";
   if(sl){ document.getElementById("sideLangText").textContent = other === "zh" ? "中文" : "English"; sl.onclick = () => setLang(other); }
   const o = document.getElementById("brandOwner"); if(o) o.textContent = PROFILE.owner || "";
-  const v = document.getElementById("ver");   if(v) v.textContent = "v" + VERSION;
+  const v = document.getElementById("ver");   if(v) v.textContent = T("shell.version", {version: VERSION});
   // served by the local app (its address carries /t/<token>/): the way back to the panel sits
   // at the foot of the sidebar; opened from disk there is no panel to go to (2026-11-08)
   const tp = document.getElementById("toPanel");
@@ -972,32 +1032,32 @@ const NAV = [
   // and out, plan, investing, monthly import), while setup, the import and the knowledge path each
   // sorted the product another way. Page keys never change, so an old link or a saved state
   // still lands. Home belongs to no stage: everyone opens on it.
-  {sec:"",          items:[{k:"home",  n:"Home",             t:"Home",                 d:""}]},
+  {sec:"",          items:[{k:"home",  n:T("nav.home"),      t:T("nav.home"),          d:""}]},
   // Get started: where the money is and where it went.
-  {sec:"Get started", items:[{k:"acct", n:"Accounts",        t:"Accounts",             d:""},
-                           {k:"cat",   n:"This month",       t:"This month",           d:""},
-                           {k:"trends",n:"Year",             t:"The year",             d:""},
-                           {k:"income",n:"Income",t:"Income", d:""},
-                           {k:"subs",  n:"Subscriptions",    t:"Subscriptions",        d:""},
-                           {k:"base",  n:"Monthly spending", t:"Monthly spending",     d:""}]},
+  {sec:T("nav.group_get_started"), items:[{k:"acct", n:T("nav.acct"), t:T("nav.acct"), d:""},
+                           {k:"cat",   n:T("nav.cat"),       t:T("nav.cat"),           d:""},
+                           {k:"trends",n:T("nav.trends"),    t:T("nav.trends_title"),  d:""},
+                           {k:"income",n:T("nav.income"),    t:T("nav.income"),        d:""},
+                           {k:"subs",  n:T("nav.subs"),      t:T("nav.subs"),          d:""},
+                           {k:"base",  n:T("nav.base"),      t:T("nav.base"),          d:""}]},
   // Set a goal: how much is needed, and how far off it is.
-  {sec:"Set a goal", items:[{k:"fire", n:"FIRE",             t:"FIRE",                 d:""}]},
+  {sec:T("nav.group_set_goal"), items:[{k:"fire", n:T("nav.fire"), t:T("nav.fire"),    d:""}]},
   // Stay on track: the monthly plan and the investments, month after month.
-  {sec:"Stay on track", items:[{k:"budget",n:"Budget",       t:"Budget",               d:""},
-                           {k:"port",  n:"Portfolio",        t:"Portfolio",            d:""},
-                           {k:"perf",  n:"Performance",      t:"Performance",          d:""},
-                           {k:"hold",  n:"Holdings",         t:"Holdings",             d:""},
-                           {k:"wsinc", n:"Investment income",t:"Investment income",    d:""}]},
+  {sec:T("nav.group_on_track"), items:[{k:"budget",n:T("nav.budget"), t:T("nav.budget"), d:""},
+                           {k:"port",  n:T("nav.port"),      t:T("nav.port"),          d:""},
+                           {k:"perf",  n:T("nav.perf"),      t:T("nav.perf"),          d:""},
+                           {k:"hold",  n:T("nav.hold"),      t:T("nav.hold"),          d:""},
+                           {k:"wsinc", n:T("nav.wsinc"),     t:T("nav.wsinc"),         d:""}]},
   // After FIRE: living on it.
-  {sec:"After FIRE", items:[{k:"coast",n:"Drawdown & care",  t:"Drawdown and care",    d:""}]},
+  {sec:T("nav.group_after_fire"), items:[{k:"coast",n:T("nav.coast"), t:T("nav.coast_title"), d:""}]},
   // Records and reference, for every stage, at the foot of the sidebar under the pages still
   // waiting for their data: what each update changed, which statements are in, the Glossary, and
   // Settings — what is the owner's to choose. Settings is drawn on its own at the very foot of
   // the sidebar, with a gear, below the way to the monthly import (1.1.0, #sideSet).
-  {sec:"",          items:[{k:"upd",   n:"Updates",          t:"Updates",              d:""},
-                           {k:"src",   n:"Statements",       t:"Statements",           d:""},
-                           {k:"gloss", n:"Glossary",         t:"Glossary",             d:"", ref:1},
-                           {k:"set",   n:"Settings",         t:"Settings",             d:"What is yours to choose. A change is saved as you make it."}]}
+  {sec:"",          items:[{k:"upd",   n:T("nav.upd"),       t:T("nav.upd"),           d:""},
+                           {k:"src",   n:T("nav.src"),       t:T("nav.src"),           d:""},
+                           {k:"gloss", n:T("nav.gloss"),     t:T("nav.gloss"),         d:"", ref:1},
+                           {k:"set",   n:T("nav.set"),       t:T("nav.set"),           d:""}]}
 ];
 const PAGES = NAV.flatMap(g => g.items);
 // The sections of a long page, listed under it in the sidebar (DESIGN.md §4): [the id of the
@@ -1043,19 +1103,20 @@ const INVESTED = () => PORTFOLIO > 0 || !!INVEST.investable;
 const FIRE_GOAL = true;
 const GOAL = () => FIRE_GOAL === true || (FIRE_GOAL === null && INVESTED());
 const WAITS = {
-  income: () => (INVEST.cashflow || []).length ? "" : "a chequing statement",
-  wsinc:  () => (WSINC || []).length ? "" : "a broker's activity",
-  port:   () => INVESTED() ? "" : "a broker's holdings",
-  perf:   () => INVESTED() ? "" : "a broker's holdings",
-  hold:   () => INVESTED() ? "" : "a broker's holdings",
+  income: () => (INVEST.cashflow || []).length ? "" : "shell.wait_chequing",
+  wsinc:  () => (WSINC || []).length ? "" : "shell.wait_broker_activity",
+  port:   () => INVESTED() ? "" : "shell.wait_broker_holdings",
+  perf:   () => INVESTED() ? "" : "shell.wait_broker_holdings",
+  hold:   () => INVESTED() ? "" : "shell.wait_broker_holdings",
   // The FIRE pages wait for a goal, not for money (1.0.1): someone saving toward FIRE with
   // nothing invested yet still has a target to read. Drawdown also waits for something invested,
   // so nobody with nothing invested reads that the money runs out.
   // and, since 1.0.5, for anyone it has a number for: three months of income and spending give
   // the years to financial independence without a goal (2026-11-15, user 001)
-  fire:   () => GOAL() || (SAVINGS.years && SAVINGS.years[1] !== null) ? "" : "a FIRE goal",
-  coast:  () => !GOAL() ? "a FIRE goal" : INVESTED() ? "" : "something invested",
+  fire:   () => GOAL() || (SAVINGS.years && SAVINGS.years[1] !== null) ? "" : "shell.wait_fire_goal",
+  coast:  () => !GOAL() ? "shell.wait_fire_goal" : INVESTED() ? "" : "shell.wait_invested",
 };
+// a WAITS entry is the key of the line under the page name ("with a chequing statement"), or ""
 const waitsFor = k => WAITS[k] ? WAITS[k]() : "";
 let waitOpen = false;
 // What is folded in the sidebar: a stage ("g:<name>") or the current page's sections ("p:<key>").
@@ -1069,13 +1130,13 @@ function drawNav(){
     : '<div class="subs">' + i.secs.map(x => '<button class="sub" data-sec="'+x[0]+'"><span>'+x[1]+'</span></button>').join("") + '</div>';
   const btn = i => '<button data-k="'+i.k+'" class="'+(i.k===curPage?"sel":"")+'"><span>'+i.n+'</span>'
     + (f[i.k] ? '<span class="dot-n" style="background:'+f[i.k]+'"></span>' : '')
-    + (i.k === curPage && (i.secs || []).length ? '<span class="tw'+(navShut.has("p:"+i.k) ? " shut" : "")+'" data-tog="p:'+i.k+'" title="Sections of this page">'+CHEV+'</span>' : '')
+    + (i.k === curPage && (i.secs || []).length ? '<span class="tw'+(navShut.has("p:"+i.k) ? " shut" : "")+'" data-tog="p:'+i.k+'" title="'+T("shell.sections_toggle")+'">'+CHEV+'</span>' : '')
     + '</button>' + subs(i);
   const waiting = PAGES.filter(i => waitsFor(i.k));
   if(waiting.some(i => i.k === curPage)) waitOpen = true;
-  const fold = !waiting.length ? "" : '<details class="wait"'+(waitOpen ? " open" : "")+'><summary class="sec">Waiting for data</summary>'
+  const fold = !waiting.length ? "" : '<details class="wait"'+(waitOpen ? " open" : "")+'><summary class="sec">'+T("shell.waiting_fold")+'</summary>'
     + '<div class="grp">' + waiting.map(i => '<button data-k="'+i.k+'" class="'+(i.k===curPage?"sel":"")+'"><span>'+i.n
-      + '<small>with '+waitsFor(i.k)+'</small></span></button>').join("") + '</div></details>';
+      + '<small>'+T(waitsFor(i.k))+'</small></span></button>').join("") + '</div></details>';
   $("sideNav").innerHTML = NAV.map((g, gi) => {
     if(gi === NAV.length - 1) return fold + '<div class="grp foot">' + g.items.filter(i => i.k !== "set").map(btn).join("") + '</div>';
     const items = g.items.filter(i => !waitsFor(i.k));
@@ -1311,13 +1372,13 @@ function term(key, text){
 function entryHtml(key){
   const g = GLOSSARY[key]; if(!g) return "";
   // A word the page coined is not a dictionary entry, and does not look like one.
-  if(g.own) return '<div class="own"><span class="own-k">A word on this page</span><div class="t-h"><b>'+g.w+'</b></div><p>'+g.def+'</p>'
-    + (g.eg ? '<p class="eg"><span class="k">Example</span>'+g.eg+'</p>' : "") + '</div>';
+  if(g.own) return '<div class="own"><span class="own-k">'+T("shell.term_own")+'</span><div class="t-h"><b>'+g.w+'</b></div><p>'+g.def+'</p>'
+    + (g.eg ? '<p class="eg"><span class="k">'+T("shell.term_example")+'</span>'+g.eg+'</p>' : "") + '</div>';
   return '<div class="t-h"><b>'+g.w+'</b><i>'+g.pos+'</i></div><p>'+g.def+'</p>'
     + (g.f ? '<p><span class="f">'+g.f+'</span></p>' : "")
-    + (g.eg ? '<p class="eg"><span class="k">Example</span>'+g.eg+'</p>' : "")
-    + (g.not ? '<p class="eg"><span class="k">Not to be confused with</span>'+g.not+'</p>' : "")
-    + (g.here ? '<p class="eg here"><span class="k">On this page</span>'+g.here+'</p>' : "");
+    + (g.eg ? '<p class="eg"><span class="k">'+T("shell.term_example")+'</span>'+g.eg+'</p>' : "")
+    + (g.not ? '<p class="eg"><span class="k">'+T("shell.term_not")+'</span>'+g.not+'</p>' : "")
+    + (g.here ? '<p class="eg here"><span class="k">'+T("shell.term_here")+'</span>'+g.here+'</p>' : "");
 }
 // A number with its working: hover or tap it for the sum behind it (DESIGN.md §5b′).
 function numx(html, rows, note, sum){
@@ -1328,7 +1389,7 @@ function numx(html, rows, note, sum){
 function calcHtml(c, total){
   const sum = c.s && c.r.length > 1 && total;
   return (c.r.length ? '<div class="calc">'+c.r.map(r => '<span>'+r[0]+'</span><span class="num">'+r[1]+'</span>').join("")
-      + (sum ? '<span class="t-rule"></span><span class="tot">Total</span><span class="num tot">'+total+'</span>' : "")+'</div>' : "")
+      + (sum ? '<span class="t-rule"></span><span class="tot">'+T("common.total")+'</span><span class="num tot">'+total+'</span>' : "")+'</div>' : "")
     + (c.n ? '<p class="cn">'+c.n+'</p>' : "");
 }
 function openTerm(key){
@@ -1374,7 +1435,7 @@ function hideTip(){ tip.style.opacity = 0; tip.classList.remove("sticky"); }
 // closes it.
 const calcOf = el => [calcHtml(JSON.parse(el.dataset.calc), el.textContent.split(" of ")[0]), "raw"];
 function openWord(ev, el){
-  showTip(ev, entryHtml(el.dataset.term) + '<a href="#" class="t-more" data-gl="'+el.dataset.term+'">In the Glossary \u2192</a>', "raw");
+  showTip(ev, entryHtml(el.dataset.term) + '<a href="#" class="t-more" data-gl="'+el.dataset.term+'">'+T("shell.term_more")+'</a>', "raw");
   tip.classList.add("sticky");
 }
 document.addEventListener("mouseover", ev => { const h = ev.target.closest?.(".numx"); if(h && !tip.classList.contains("sticky")) showTip(ev, ...calcOf(h)); });
@@ -1413,7 +1474,7 @@ function render(){
     const has = MONTHS.includes(m), part = has && m > covEnd;
     return '<button class="pill num'+(m===viewYM?" sel":"")+(part?" part":"")+'" data-m="'+m+'"'
       + (has ? "" : " disabled")
-      + ' title="'+(has ? (part ? "partial — not every card has reported this month" : "") : "no records in this month")+'">'
+      + ' title="'+(has ? (part ? T("shell.pill_partial_title") : "") : T("shell.pill_empty_title"))+'">'
       + MN[i] + (part ? " ·" : "") + '</button>';
   }).join("");
   $("pills").querySelectorAll(".pill:not([disabled])").forEach(b => b.onclick = () => { viewYM = b.dataset.m; render(); saveState(); });
@@ -3699,7 +3760,6 @@ function renderWsInc(){
 const IMPORTS = [{"date": "2026-09-06", "files": ["MasterCard statement to Aug 20", "Chequing and savings statements to Sep 5", "Holdings report of Sep 6", "Activities export of Sep 6"], "changed": [{"label": "Portfolio", "from": "$87,580", "to": "$90,000"}, {"label": "Spending in August", "from": "$0", "to": "$2,171"}], "noticed": [{"sev": "ok", "text": "Bonds are 16.6% of the portfolio, inside your 15–25% band."}, {"sev": "ok", "text": "August kept the rule: two deposits of $1,150 reached the TFSA on Aug 2 and Aug 17."}, {"sev": "ok", "text": "Every statement due has arrived. The next to close is the MasterCard on Sep 20."}], "judged": ["Filed the Hydro Ottawa payment as a bill."], "asked": ["What the unnamed $200 e-Transfer of Aug 11 was."]}];
 let updAt = 0;   // which update is read in full on the Updates page
 const DECISIONS = [{"added": "2026-09-06", "kind": "transfer", "what": "A $200 e-Transfer received on Aug 11 carries no sender you have named.", "default": "Other income", "source": "Chequing statement to Sep 5, Aug 11", "status": "open", "credit": {"ledger": "chequing.csv", "statement": "BMOCHQ4471/20260905", "date": "2026-08-11", "amount": 200.0, "description": "INTERACe-TransferReceived"}, "facts": {"kind": "credit", "amount": 200.0, "date": "2026-08-11", "sender": null}}, {"added": "2026-08-12", "kind": "merchant", "what": "STEAM PURCHASE SEATTLE, seen for the first time.", "default": "Shopping", "source": "MasterCard, Aug 3", "status": "confirmed", "answer": "Entertainment", "resolved": "2026-08-12"}];
-const dLong = d => { const p = String(d).split("-"); return MN[Number(p[1])-1] + " " + Number(p[2]); };
 
 // The sources that owe a month this year and have not delivered it. Shared by the filing grid
 // and the one-line summary under the net worth in the page header.
@@ -3740,7 +3800,7 @@ function overdueSources(){
 function headerLine(){
   const req = SOURCES.filter(r => !r.optional).map(r => DOC_LATEST[r.src]).filter(Boolean).sort();
   const last = (IMPORTS[0] || {}).date || Object.values(DOC_LATEST).filter(Boolean).sort().pop();
-  if(!req.length && !last) return "Nothing filed yet. Drop your first statements into inbox and say \u201cupdate dashboards\u201d.";
+  if(!req.length && !last) return T("shell.header_nothing_filed");
   // what still waits for an answer, and where to answer it: the panel when the local app serves
   // this page (its address carries /t/<token>/, and "panel" beside it is the panel), the app or
   // the chat when the file was opened from disk (2026-11-07)
@@ -3752,11 +3812,11 @@ function headerLine(){
   const served = location.protocol.startsWith("http") && /\/t\/[^/]+\//.test(location.pathname);
   const web = location.protocol.startsWith("http") && !served;
   const waiting = !open || web ? "" : (served
-    ? '<a class="hdr-wait" href="panel">' + open + " to categorize \u2192</a>"
-    : '<span class="hdr-wait">' + open + " to categorize \u2014 open FIRE Toad</span>");
-  return (req.length ? term("complete_to") + " " + dLong(req[0]) : "")
+    ? '<a class="hdr-wait" href="panel">' + T("shell.header_wait_link", {n: open}) + '</a>'
+    : '<span class="hdr-wait">' + T("shell.header_wait_file", {n: open}) + '</span>');
+  return (req.length ? term("complete_to", T("shell.header_complete_to", {date: dLong(req[0])})) : "")
     + (req.length && last ? '<span class="gap"></span>' : "")
-    + (last ? "Updated " + dLong(last) : "") + waiting;
+    + (last ? T("shell.header_updated", {date: dLong(last)}) : "") + waiting;
 }
 
 function renderUpdates(){
@@ -4063,9 +4123,9 @@ renderGlossary();
 // header band: the one number worth carrying on every page
 (function(){
   const owned = NWPARTS.reduce((a,r) => a + r.v, 0);
-  document.querySelector(".ph-r .k").innerHTML = term("net_worth", "Net worth");
-  $("hdrNW").innerHTML = numx(fmt(NW_GLOBAL), [["You own", fmt(owned)], ["You owe", "\u2212"+fmt(NW_DEBT)]], 
-    FOREIGN_CAD ? fmt(FOREIGN_CAD)+" of it is held abroad, converted at the "+dLong(FOREIGN.asof || TODAY).replace(" ", "\u00a0")+" rate." : "", true);
+  document.querySelector(".ph-r .k").innerHTML = term("net_worth", T("shell.nw_label"));
+  $("hdrNW").innerHTML = numx(fmt(NW_GLOBAL), [[T("shell.nw_you_own"), fmt(owned)], [T("shell.nw_you_owe"), "\u2212"+fmt(NW_DEBT)]], 
+    FOREIGN_CAD ? T("shell.nw_abroad_note", {amount: fmt(FOREIGN_CAD), date: dLong(FOREIGN.asof || TODAY).replace(" ", "\u00a0")}) : "", true);
   $("hdrSub").innerHTML = '<span class="hdr-line" tabindex="0">'+headerLine()+'</span>';
   $("hdrSub").querySelector(".hdr-line").onclick = ev => { if(!ev.target.closest(".term, .numx")) setPage("src"); };
   $("brand").onclick = () => setPage("home");

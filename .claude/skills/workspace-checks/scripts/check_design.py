@@ -225,8 +225,19 @@ def check(path):
     b_min = re.search(r'min-width:\s*(\d+)px', bodycss)
     nav = re.search(r'const NAV = \[(.*?)\n\];', src, re.S)
     if nav:
+        # The names are read through T("key") (2026-11-25, the page in two languages): the
+        # documents describe the English page, so each key is read as its `en` in strings.json.
+        nav_src = nav.group(1)
+        sp = os.path.join(root, "templates", "dashboards", "strings.json")
+        strs = json.load(open(sp, encoding="utf-8")) if os.path.exists(sp) else {}
+        for k in re.findall(r'T\("([^"]+)"\)', nav_src):
+            if k not in strs:
+                err("S4", f'NAV reads T("{k}"), which strings.json does not have')
+        nav_src = re.sub(r'T\("([^"]+)"\)',
+                         lambda m: json.dumps((strs.get(m.group(1)) or {}).get("en", m.group(1)), ensure_ascii=False),
+                         nav_src)
         real, top = {}, []
-        for sec, items in re.findall(r'\{sec:"([^"]*)",\s*items:\[(.*?)\]\}', nav.group(1), re.S):
+        for sec, items in re.findall(r'\{sec:"([^"]*)",\s*items:\[(.*?)\]\}', nav_src, re.S):
             names = re.findall(r'n:"([^"]+)"', items)
             # A group with no heading (Home at the top, the Glossary at the foot) is its pages.
             real[sec or "—"] = real.get(sec or "—", []) + names
