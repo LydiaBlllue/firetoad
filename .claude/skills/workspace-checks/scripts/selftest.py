@@ -86,7 +86,7 @@ def m_design_pages(r):
     edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Stay on track \| )[^·|]+·", r"\1Insights ·", s, count=1))
 def m_hand_card(r):
     # a stat card written by hand beside StatCard: the copy that drifts
-    edit(r, main_dash(r), lambda s: s.replace('StatCard("Total spent in "+yrSpan(viewYear, spendMonths), numx(fmt(spent), [], "After refunds."))',
+    edit(r, main_dash(r), lambda s: s.replace('StatCard(T("trends.total_spent_label", {span: yrSpan(viewYear, spendMonths)}), numx(fmt(spent), [], T("trends.total_spent_note")))',
          "'<div class=\"card\"><div class=\"lab\">Spent</div><div class=\"big num\">'+fmt(spent)+'</div></div>'", 1))
 def m_nav_orphan(r):
     edit(r, main_dash(r),
@@ -475,7 +475,7 @@ def m_decision_no_default(r):
 # real sentence the owner rejected on 2026-09-10.
 def m_first_person(r):
     edit(r, "templates/dashboards/finance_dashboard.html",
-         lambda s: s.replace('<div class="lab">Filed each month</div>',
+         lambda s: s.replace('<div class="lab" data-t="src.filed_each_month">Filed each month</div>',
                              '<div class="lab">What you dropped in, and when I last got it</div>', 1))
 
 def m_brand_mark_gone(r):
@@ -507,10 +507,12 @@ def m_render_empty_card(r):
                                               '    const html = C[k]() || StatCard("Empty", null);\n    shown.push({k, html});', 1))
 def m_render_one_plural(r):
     # the Accounts card counts without looking: one account is "1 accounts"
-    edit(r, main_dash(r), lambda s: s.replace('" account" + (A.length === 1 ? "" : "s") + " at "', '" accounts at "', 1))
+    # (the sentence is a key since 2026-11-25: the page always picks the plural one)
+    edit(r, main_dash(r), lambda s: s.replace('T("acct.card_net_worth_status_" + (A.length === 1 && insts.length <= 1 ? "one" : insts.length === 1 ? "one_inst" : "many")',
+                                              'T("acct.card_net_worth_status_many"', 1))
 def m_render_this_year(r):
     # a sentence that says "this year" whatever year the page is showing
-    edit(r, main_dash(r), lambda s: s.replace('viewYear+" only, open months included. "', '"This year only, open months included. "', 1))
+    edit(r, main_dash(r), lambda s: s.replace('T("trends.per_month_note", {year: viewYear})', '"This year only, open months included. "', 1))
 def m_render_chart_capped(r):
     edit(r, main_dash(r),
          lambda s: s.replace("year-svg{width:100%;height:auto", "year-svg{width:100%;height:190px", 1))

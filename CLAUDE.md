@@ -153,7 +153,7 @@ plants a committed flow the ledger never shows.
 
 ## The monthly import
 
-**Saying "update dashboards" means invoking the `update-dashboard` skill**
+**Saying "update dashboards" (更新看板, or the older 更新仪表盘) means invoking the `update-dashboard` skill**
 (`.claude/skills/update-dashboard/SKILL.md`). The order, the parsing trap in each source and the
 report template are all in that file. **Do not work from memory.**
 

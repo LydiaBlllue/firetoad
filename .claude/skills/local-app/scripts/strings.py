@@ -19,7 +19,7 @@ S = {
     # — header
     "subtitle": {"en": "This month's import", "zh": "本月导入"},
     "intro": {"en": "Once a month: get the files, put them here, import, categorize what is left. The highlighted step is where you are.", "zh": "每个月：拿到文件 → 放进来 → 导入 → 给剩下的归类。高亮的那一步就是你现在该做的。"},
-    "open_dash": {"en": "Open the dashboard ↗", "zh": "打开仪表盘 ↗"},
+    "open_dash": {"en": "Open the dashboard ↗", "zh": "打开看板 ↗"},
     "lang_other": {"en": "中文", "zh": "English"},
     "import_day": {"en": "your import day is the {day}", "zh": "你的导入日是每月 {day} 号"},
     # — the steps
@@ -499,7 +499,7 @@ W = {
     "w_build_it": {"en": "Build it", "zh": "开始生成"},
     "w_not_finished": {"en": "That did not finish.", "zh": "没有完成。"},
     "w_built": {"en": "Your page is ready.", "zh": "你的页面好了。"},
-    "w_open_dash": {"en": "Open the dashboard", "zh": "打开仪表盘"}, "w_panel": {"en": "Monthly import", "zh": "月度导入"},
+    "w_open_dash": {"en": "Open the dashboard", "zh": "打开看板"}, "w_panel": {"en": "Monthly import", "zh": "月度导入"},
     "w_details": {"en": "Details", "zh": "详情"},
     # the money screen: three amounts filled in, and what is left worked out (2026-11-12)
     "w_take": {"en": "Income a month", "zh": "每月收入"},
@@ -515,7 +515,7 @@ W = {
     # from what was really spent, so the two are named apart (2026-11-15, user 001)
     "w_rate": {"en": "Planned savings rate", "zh": "计划储蓄率"},
     "w_rate_hint": {"en": "From the numbers above. Your dashboard measures it from what you really spend.",
-                    "zh": "按上面这几个数算。仪表盘上的储蓄率按你实际花的算。"},
+                    "zh": "按上面这几个数算。看板上的储蓄率按你实际花的算。"},
     "w_invest_of": {"en": "Of that, to the broker", "zh": "其中转去券商"},
     "w_invest_over": {"en": "More than you keep", "zh": "比留下的多"},
     "w_goal_means": {"en": "Reached when your investments can pay 4% a year of what you spend.", "zh": "投资每年取 4% 就够你花时，就算达到。"},
