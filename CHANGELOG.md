@@ -11,6 +11,7 @@
   uses for that money, in place of Everyday money, which read like the plan's Everyday line. The
   panel's Chinese reads as a finance tool rather than speech: the account purposes are 日常资金,
   长期投资, 专款专用 and 非金融资产, and spending is 支出 throughout (每月日常支出, 每月规划支出).
+  In English, Owned, not money is now Non-financial assets.
 - **Bucket is now holding group** (持仓分组) in the glossary and the panel: a reader new to
   investing does not know what a bucket is. `rules.json` still calls them `buckets`; nothing moves.
   How it works said the Portfolio page splits by bucket; it has split by account since 1.0.9.
