@@ -31,7 +31,7 @@ TABLE = [
      "whyEn": "The day of the month your statements are all out.",
      "whyZh": "每个月对账单都出齐的那一天。"},
     {"key": "planBase", "kind": "money", "stage": "goal", "default": None, "min": 0, "max": 1_000_000,
-     "en": "Planning spend a month", "zh": "每月规划开销",
+     "en": "Planning spend a month", "zh": "每月规划支出",
      "whyEn": "What a month costs, for the FIRE target.",
      "whyZh": "算 FIRE 目标时，一个月按多少花销算。"},
     # 5% unless the owner says otherwise: about a 60/40 portfolio's century after inflation
@@ -50,7 +50,7 @@ TABLE = [
      "whyEn": "What you invest every month.",
      "whyZh": "每个月转去投资的钱。"},
     {"key": "everyday", "kind": "money", "stage": "track", "default": None, "min": 0, "max": 1_000_000,
-     "en": "Everyday a month", "zh": "每月日常开销",
+     "en": "Everyday a month", "zh": "每月日常支出",
      "whyEn": "The guilt-free amount, no categories.",
      "whyZh": "随便花、不分类别的额度。"},
 ]

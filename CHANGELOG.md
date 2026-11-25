@@ -7,9 +7,10 @@
   and a person with nothing set aside could read as inside their range. Saving toward an
   emergency fund stays a line of the plan, like any other goal. The emergency range left the
   Settings page with it; a range already stored is kept in `plan.json` and read by nothing.
-- **Setup and the panel call everyday accounts Cash on hand** (手头现金), the name the dashboard
-  uses for that money, in place of Everyday money, which read like the plan's Everyday line. In
-  Chinese, Planning spend on the Settings page is now 每月规划开销, matching 每月开销 and 日常开销.
+- **Setup and the panel call everyday accounts Cash on hand** (日常资金), the name the dashboard
+  uses for that money, in place of Everyday money, which read like the plan's Everyday line. The
+  panel's Chinese reads as a finance tool rather than speech: the account purposes are 日常资金,
+  长期投资, 专款专用 and 非金融资产, and spending is 支出 throughout (每月日常支出, 每月规划支出).
 - **Bucket is now holding group** (持仓分组) in the glossary and the panel: a reader new to
   investing does not know what a bucket is. `rules.json` still calls them `buckets`; nothing moves.
   How it works said the Portfolio page splits by bucket; it has split by account since 1.0.9.
