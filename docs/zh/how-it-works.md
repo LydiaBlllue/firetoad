@@ -15,7 +15,7 @@
 | | Monthly spending | 平常一个月花多少，计划用的是哪个数 |
 | Set a goal | FIRE | 离目标还有多远，哪年到 |
 | Stay on track | Budget | 每份工资做什么用，基金里有多少 |
-| | Portfolio | 投了多少，按币种、资产类别、分组怎么分布 |
+| | Portfolio | 投了多少，按币种、资产类别、账户怎么分布 |
 | | Performance | 和同一天买入一只基准基金相比表现如何 |
 | | Holdings | 每个持仓，按角色或按账户 |
 | | Investment income | 不卖任何东西，投资组合付给你多少，哪只持仓什么时候付 |

@@ -492,7 +492,7 @@ W = {
     "w_later": {"en": "You can add these later:", "zh": "这些可以以后再加："},
     "later_foreign": {"en": "Anything held in another currency.", "zh": "其他币种的账户。"},
     "later_counterparty": {"en": "Someone paying you back.", "zh": "有人在还你钱。"},
-    "later_buckets": {"en": "Your investing buckets and their target bands.", "zh": "投资分桶和目标区间。"},
+    "later_buckets": {"en": "How you group your holdings, and each group's target band.", "zh": "持仓怎么分组，以及每组的目标区间。"},
     "later_files": {"en": "Files that were not recognised.", "zh": "没认出来的文件。"},
     "w_build_hint": {"en": "It takes about a minute.", "zh": "大约一分钟。"},
     "w_building": {"en": "Building your page…", "zh": "正在生成你的页面…"},

@@ -15,7 +15,7 @@ The detail behind the [README](../README.md).
 | | Monthly spending | A usual month, and the figure your plan is built on |
 | Set a goal | FIRE | How far the portfolio is from the target, and when it gets there |
 | Stay on track | Budget | What each month's income is for, and what the funds hold |
-| | Portfolio | What is invested, by currency, by kind of asset and by bucket |
+| | Portfolio | What is invested, by currency, by kind of asset and by account |
 | | Performance | How it did against one benchmark fund bought on the same days |
 | | Holdings | Every position, by role or by account |
 | | Investment income | What the portfolio paid you before you sold anything, and which holding pays when |

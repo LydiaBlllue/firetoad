@@ -10,6 +10,9 @@
 - **Setup and the panel call everyday accounts Cash on hand** (手头现金), the name the dashboard
   uses for that money, in place of Everyday money, which read like the plan's Everyday line. In
   Chinese, Planning spend on the Settings page is now 每月规划开销, matching 每月开销 and 日常开销.
+- **Bucket is now holding group** (持仓分组) in the glossary and the panel: a reader new to
+  investing does not know what a bucket is. `rules.json` still calls them `buckets`; nothing moves.
+  How it works said the Portfolio page splits by bucket; it has split by account since 1.0.9.
 
 ## 1.1.0 — unreleased
 

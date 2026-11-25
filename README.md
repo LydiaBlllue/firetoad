@@ -122,7 +122,7 @@ AI assist (above) is turned on in the dashboard's Settings; the panel asks once 
 shops it could help with.
 
 Claude Code stays the other door: the chat, a statement no parser reads, the setup questions
-the screens do not cover (anything held abroad, a loan to a friend, your investing buckets).
+the screens do not cover (anything held abroad, a loan to a friend, how you group your holdings).
 
 ## Why you can trust it
 
