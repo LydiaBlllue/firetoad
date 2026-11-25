@@ -708,11 +708,11 @@ tr.grp.foldable:hover td{filter:brightness(.97)}
 
 <section data-pg="gloss" hidden>
 <div class="card" style="margin-bottom:10px">
-  <div class="lab">Finance terms</div>
+  <div class="lab" data-t="gloss.finance_terms">Finance terms</div>
   <div id="glossList"></div>
 </div>
 <div class="card" style="margin-bottom:10px">
-  <div class="lab">Words this page uses</div>
+  <div class="lab" data-t="gloss.own_words">Words this page uses</div>
   <div id="glossOwn"></div>
 </div>
 </section>
@@ -1247,83 +1247,85 @@ function fitFolds(){
 // A word in here is spelled this way on every page. `own` marks a word this page coined; its
 // entry says what it means here. `here` is one line on how this page uses a standard term.
 const GLOSSARY = {
-  net_worth:      {w:"net worth", pos:"noun", def:"What you own minus what you owe.", f:"assets − liabilities", eg:"A $500k home with a $300k mortgage adds $200k.", also:["assets","liabilities"]},
-  assets:         {w:"assets", pos:"noun", def:"Everything you own that has a money value: cash, investments, property, money others owe you.", also:["net_worth","liabilities"]},
-  liabilities:    {w:"liabilities", pos:"noun", def:"Everything you owe: card balances, loans, a mortgage.", also:["net_worth","assets"]},
-  liquidity:      {w:"liquidity", pos:"noun", def:"How quickly something can be turned into cash without losing value. Cash is the most liquid; a house is one of the least.", also:["spendable_today","held_abroad"]},
-  grace_period:   {w:"grace period", pos:"noun", def:"On a credit card, the days between the statement and the due date. Pay the whole balance in that window and no interest is charged."},
-  equity:         {w:"equity", pos:"noun", def:"The part of something you own outright once what is borrowed against it is taken off.", eg:"A $500k home with a $300k mortgage is $200k of equity.", also:["in_property"]},
-  pay_yourself_first: {w:"pay yourself first", pos:"phrase", def:"Moving your saving out on payday, before any spending, so saving does not depend on what is left over."},
-  subscription:   {w:"subscription", pos:"noun", def:"A charge that comes back at the same price month after month, whatever it buys: a phone plan as well as a streaming service. A purchase seen once is never one."},
-  median:         {w:"median", pos:"noun", def:"The middle value once a list is sorted. Unlike the average, one unusual month barely moves it.", eg:"The median of 1, 2 and 30 is 2."},
-  inflation:      {w:"inflation", pos:"noun", def:"The rise in prices over time, so the same money buys less each year.", also:["real_return"]},
-  tfsa:           {w:"TFSA", pos:"noun", def:"Tax-Free Savings Account. Investments grow tax-free and nothing is taxed when you take money out. How much you can put in is capped by your contribution room.", why:"registered", also:["contribution_room","rrsp"]},
-  rrsp:           {w:"RRSP", pos:"noun", def:"Registered Retirement Savings Plan. What you put in lowers your taxable income now; what you take out is taxed as income that year.", why:"registered", also:["tfsa","taxed_to_take_out"]},
-  fhsa:           {w:"FHSA", pos:"noun", def:"First Home Savings Account. What you put in is deductible like an RRSP; money taken out for a first home is tax-free like a TFSA. It stays open fifteen years at most.", why:"registered", also:["tfsa","rrsp"]},
-  non_registered: {w:"non-registered account", pos:"noun", def:"An ordinary investment account with no tax shelter. Dividends, interest and gains are taxed each year."},
-  contribution_room: {w:"contribution room", pos:"noun", def:"How much a registered account still lets you put in. Room you do not use carries forward."},
-  portfolio:      {w:"portfolio", pos:"noun", def:"All the investments a person holds, taken together.", here:"The accounts you hold to grow. Money set aside for a goal is not in it.", also:["for_fire","asset_class"]},
-  asset_class:    {w:"asset class", pos:"noun", def:"A group of investments that behave alike: stocks, bonds, cash, gold."},
-  stock:          {w:"stock", pos:"noun", def:"A share of ownership in a company. Its price follows the company’s prospects."},
-  bond:           {w:"bond", pos:"noun", def:"A loan to a government or a company that pays interest and returns the money on a set date.", also:["t_bill"]},
-  t_bill:         {w:"T-bill", pos:"noun", def:"Treasury bill: a government loan of a year or less, sold below its face value and repaid at face value.", also:["bond"]},
-  etf:            {w:"ETF", pos:"noun", def:"Exchange-traded fund: a basket of investments that trades on the stock market like a single stock.", also:["index_fund"]},
-  index_fund:     {w:"index fund", pos:"noun", def:"A fund that holds a whole market index instead of picking stocks, so it rises and falls with that market.", eg:"A fund that tracks the S&P 500.", also:["etf","core_satellite"]},
-  core_satellite: {w:"core and satellite", pos:"phrase", def:"Most of the money in broad index funds (the core), a smaller part in individual picks (the satellites).", also:["index_fund"]},
-  dry_powder:     {w:"dry powder", pos:"noun", def:"Cash or near-cash kept ready to invest when prices fall.", also:["target_band"]},
-  money_market:   {w:"money market fund", pos:"noun", def:"A fund that holds very short, very safe loans. It pays close to short-term interest rates and its price barely moves."},
-  target_band:    {w:"target band", pos:"noun", def:"The range a part of the portfolio may drift within before you rebalance.", eg:"A 40–45% band means rebalance below 40% or above 45%.", also:["rebalance"]},
-  rebalance:      {w:"rebalance", pos:"verb", def:"To buy and sell so each part of a portfolio is back at its target share.", also:["target_band"]},
-  benchmark:      {w:"benchmark", pos:"noun", def:"A standard investment you compare your own results against.", eg:"Did the portfolio beat a world index fund?", also:["total_return"]},
-  total_return:   {w:"total return", pos:"noun", def:"The change in price plus everything paid out, dividends and interest, over a period.", also:["dividend"]},
-  book_value:     {w:"book value", pos:"noun", def:"What you paid for an investment.", f:"market value − book value = gain", also:["market_value"]},
-  market_value:   {w:"market value", pos:"noun", def:"What an investment would sell for today.", also:["book_value"]},
-  dividend:       {w:"dividend", pos:"noun", def:"Part of a company’s profit paid out to its shareholders.", also:["withholding_tax"]},
-  securities_lending: {w:"securities lending", pos:"noun", def:"Your broker lends your shares to other traders and gives you part of the fee. The shares stay yours."},
-  withholding_tax:{w:"withholding tax", pos:"noun", def:"Tax taken out before a payment reaches you.", eg:"15% is usually kept from US dividends paid to Canadians.", also:["dividend"]},
-  exchange_rate:  {w:"exchange rate", pos:"noun", def:"How much of one currency buys one unit of another.", eg:"1.39 Canadian dollars to one US dollar."},
-  fire:           {w:"FIRE", pos:"noun", def:"Financial Independence, Retire Early: saving and investing until the returns can pay your living costs, so work becomes optional.", also:["fire_target","four_pct"]},
-  fire_target:    {w:"FIRE target", pos:"noun", def:"The portfolio that can pay your yearly spending indefinitely, by the 4% rule.", f:"yearly spending × 25", eg:"$40k a year needs $1M.", also:["four_pct","planning_figure"]},
-  four_pct:       {w:"4% rule", pos:"noun", def:"A finding from US market history: taking 4% of the portfolio in the first year, then the same amount raised with inflation, lasted at least 30 years in almost every past period.", why:"withdrawal", also:["fire_target","withdrawal_rate"]},
-  real_return:    {w:"real return", pos:"noun", def:"A return after inflation.", f:"≈ return − inflation", eg:"7% with 2% inflation is about 5% real.", also:["inflation","compound_growth"]},
-  compound_growth:{w:"compound growth", pos:"noun", def:"Growth earned on earlier growth, so money grows faster the longer it is left alone.", why:"compound", also:["real_return"]},
-  coast_fire:     {w:"coast FIRE", pos:"noun", def:"Having enough invested that, with nothing more added, growth alone reaches your target by the age you want to stop.", also:["fire_target"]},
-  drawdown:       {w:"drawdown", pos:"noun", def:"The years when you live off your investments by taking money out.", not:"a market drawdown, a fall from a peak", also:["withdrawal_rate","sequence_risk"]},
-  withdrawal_rate:{w:"withdrawal rate", pos:"noun", def:"How much you take out in a year, as a share of the portfolio.", f:"yearly withdrawal ÷ portfolio", also:["four_pct","drawdown"]},
-  sequence_risk:  {w:"sequence-of-returns risk", pos:"noun", def:"Bad years soon after you start taking money out do far more damage than the same bad years later on.", also:["drawdown","backtest"]},
-  backtest:       {w:"backtest", pos:"noun", def:"Running a plan through real past years to see how it would have done.", also:["sequence_risk"]},
-  rewards:        {w:"rewards", pos:"noun", def:"Money a card pays back for spending on it: cash back, or points turned into money. It counts as income but never as pay, and it stays on the card.", eg:"1% cash back on $2,000 of purchases is $20 of rewards.", not:"A refund, which gives back a purchase and comes off spending.", also:["investment_income"]},
-  investment_income: {w:"investment income", pos:"noun", def:"What your investments pay you while you still hold them: dividends, interest and securities lending, after any tax withheld.", eg:"A fund paying $40 of dividends, less $6 withheld, is $34 of investment income.", not:"A gain from selling, which is not paid until you sell.", also:["dividend","securities_lending","withholding_tax"]},
-  unrealized_gain:{w:"unrealized gain", pos:"noun", def:"How much more an investment is worth today than you paid for it, while you still hold it. It is not money until you sell.", f:"unrealized gain = market value \u2212 book value", eg:"Bought for $1,000, worth $1,200 today: a $200 unrealized gain.", also:["book_value","market_value"]},
-  card_interest:  {w:"card interest", pos:"noun", def:"What a credit card charges on a balance not paid off. Paying the whole statement balance by the due date means no interest on purchases; leaving part of it unpaid is what starts it.", not:"A fee, such as an annual fee, which is charged whatever you pay."},
-  cpp:            {w:"CPP", pos:"noun", def:"Canada Pension Plan: a monthly pension for life, paid for by the contributions taken from your pay. What you will get depends on how long and how much you contributed; your My Service Canada account shows an estimate.", also:["oas"]},
-  oas:            {w:"OAS", pos:"noun", def:"Old Age Security: a monthly pension from 65 for people who have lived in Canada long enough after 18, whatever they earned. A full pension needs 40 years of residence; fewer years give part of it, and a high income in retirement reduces it.", also:["cpp"]},
-  long_term_care: {w:"long-term care", pos:"noun", def:"Help with daily living in later life, at home or in a facility, usually paid for privately."},
-  shortfall:      {w:"shortfall", pos:"noun", def:"What is still to pay after the money set aside for it has run out. It says how much is missing, not where it would come from.", also:["drawdown"]},
+  net_worth:      {w:T("gloss.net_worth.w"), pos:T("gloss.net_worth.pos"), def:T("gloss.net_worth.def"), f:T("gloss.net_worth.f"), eg:T("gloss.net_worth.eg"), also:["assets","liabilities"]},
+  assets:         {w:T("gloss.assets.w"), pos:T("gloss.assets.pos"), def:T("gloss.assets.def"), also:["net_worth","liabilities"]},
+  liabilities:    {w:T("gloss.liabilities.w"), pos:T("gloss.liabilities.pos"), def:T("gloss.liabilities.def"), also:["net_worth","assets"]},
+  liquidity:      {w:T("gloss.liquidity.w"), pos:T("gloss.liquidity.pos"), def:T("gloss.liquidity.def"), also:["spendable_today","held_abroad"]},
+  grace_period:   {w:T("gloss.grace_period.w"), pos:T("gloss.grace_period.pos"), def:T("gloss.grace_period.def")},
+  equity:         {w:T("gloss.equity.w"), pos:T("gloss.equity.pos"), def:T("gloss.equity.def"), eg:T("gloss.equity.eg"), also:["in_property"]},
+  pay_yourself_first: {w:T("gloss.pay_yourself_first.w"), pos:T("gloss.pay_yourself_first.pos"), def:T("gloss.pay_yourself_first.def")},
+  subscription:   {w:T("gloss.subscription.w"), pos:T("gloss.subscription.pos"), def:T("gloss.subscription.def")},
+  median:         {w:T("gloss.median.w"), pos:T("gloss.median.pos"), def:T("gloss.median.def"), eg:T("gloss.median.eg")},
+  percentage_point: {w:T("gloss.percentage_point.w"), pos:T("gloss.median.pos"), def:T("gloss.percentage_point.def")},
+  inflation:      {w:T("gloss.inflation.w"), pos:T("gloss.inflation.pos"), def:T("gloss.inflation.def"), also:["real_return"]},
+  tfsa:           {w:T("gloss.tfsa.w"), pos:T("gloss.tfsa.pos"), def:T("gloss.tfsa.def"), why:"registered", also:["contribution_room","rrsp"]},
+  rrsp:           {w:T("gloss.rrsp.w"), pos:T("gloss.rrsp.pos"), def:T("gloss.rrsp.def"), why:"registered", also:["tfsa","taxed_to_take_out"]},
+  fhsa:           {w:T("gloss.fhsa.w"), pos:T("gloss.fhsa.pos"), def:T("gloss.fhsa.def"), why:"registered", also:["tfsa","rrsp"]},
+  non_registered: {w:T("gloss.non_registered.w"), pos:T("gloss.non_registered.pos"), def:T("gloss.non_registered.def")},
+  contribution_room: {w:T("gloss.contribution_room.w"), pos:T("gloss.contribution_room.pos"), def:T("gloss.contribution_room.def")},
+  portfolio:      {w:T("gloss.portfolio.w"), pos:T("gloss.portfolio.pos"), def:T("gloss.portfolio.def"), here:T("gloss.portfolio.here"), also:["for_fire","asset_class"]},
+  asset_class:    {w:T("gloss.asset_class.w"), pos:T("gloss.asset_class.pos"), def:T("gloss.asset_class.def")},
+  asset_allocation: {w:T("gloss.asset_allocation.w"), pos:T("gloss.asset_class.pos"), def:T("gloss.asset_allocation.def"), also:["asset_class","target_band","rebalance"]},
+  stock:          {w:T("gloss.stock.w"), pos:T("gloss.stock.pos"), def:T("gloss.stock.def")},
+  bond:           {w:T("gloss.bond.w"), pos:T("gloss.bond.pos"), def:T("gloss.bond.def"), also:["t_bill"]},
+  t_bill:         {w:T("gloss.t_bill.w"), pos:T("gloss.t_bill.pos"), def:T("gloss.t_bill.def"), also:["bond"]},
+  etf:            {w:T("gloss.etf.w"), pos:T("gloss.etf.pos"), def:T("gloss.etf.def"), also:["index_fund"]},
+  index_fund:     {w:T("gloss.index_fund.w"), pos:T("gloss.index_fund.pos"), def:T("gloss.index_fund.def"), eg:T("gloss.index_fund.eg"), also:["etf","core_satellite"]},
+  core_satellite: {w:T("gloss.core_satellite.w"), pos:T("gloss.core_satellite.pos"), def:T("gloss.core_satellite.def"), also:["index_fund"]},
+  dry_powder:     {w:T("gloss.dry_powder.w"), pos:T("gloss.dry_powder.pos"), def:T("gloss.dry_powder.def"), also:["target_band"]},
+  money_market:   {w:T("gloss.money_market.w"), pos:T("gloss.money_market.pos"), def:T("gloss.money_market.def")},
+  target_band:    {w:T("gloss.target_band.w"), pos:T("gloss.target_band.pos"), def:T("gloss.target_band.def"), eg:T("gloss.target_band.eg"), also:["rebalance"]},
+  rebalance:      {w:T("gloss.rebalance.w"), pos:T("gloss.rebalance.pos"), def:T("gloss.rebalance.def"), also:["target_band"]},
+  benchmark:      {w:T("gloss.benchmark.w"), pos:T("gloss.benchmark.pos"), def:T("gloss.benchmark.def"), eg:T("gloss.benchmark.eg"), also:["total_return"]},
+  total_return:   {w:T("gloss.total_return.w"), pos:T("gloss.total_return.pos"), def:T("gloss.total_return.def"), also:["dividend"]},
+  book_value:     {w:T("gloss.book_value.w"), pos:T("gloss.book_value.pos"), def:T("gloss.book_value.def"), f:T("gloss.book_value.f"), also:["market_value"]},
+  market_value:   {w:T("gloss.market_value.w"), pos:T("gloss.market_value.pos"), def:T("gloss.market_value.def"), also:["book_value"]},
+  dividend:       {w:T("gloss.dividend.w"), pos:T("gloss.dividend.pos"), def:T("gloss.dividend.def"), also:["withholding_tax"]},
+  securities_lending: {w:T("gloss.securities_lending.w"), pos:T("gloss.securities_lending.pos"), def:T("gloss.securities_lending.def")},
+  withholding_tax:{w:T("gloss.withholding_tax.w"), pos:T("gloss.withholding_tax.pos"), def:T("gloss.withholding_tax.def"), eg:T("gloss.withholding_tax.eg"), also:["dividend"]},
+  exchange_rate:  {w:T("gloss.exchange_rate.w"), pos:T("gloss.exchange_rate.pos"), def:T("gloss.exchange_rate.def"), eg:T("gloss.exchange_rate.eg")},
+  fire:           {w:T("gloss.fire.w"), pos:T("gloss.fire.pos"), def:T("gloss.fire.def"), also:["fire_target","four_pct"]},
+  fire_target:    {w:T("gloss.fire_target.w"), pos:T("gloss.fire_target.pos"), def:T("gloss.fire_target.def"), f:T("gloss.fire_target.f"), eg:T("gloss.fire_target.eg"), also:["four_pct","planning_figure"]},
+  four_pct:       {w:T("gloss.four_pct.w"), pos:T("gloss.four_pct.pos"), def:T("gloss.four_pct.def"), why:"withdrawal", also:["fire_target","withdrawal_rate"]},
+  real_return:    {w:T("gloss.real_return.w"), pos:T("gloss.real_return.pos"), def:T("gloss.real_return.def"), f:T("gloss.real_return.f"), eg:T("gloss.real_return.eg"), also:["inflation","compound_growth"]},
+  compound_growth:{w:T("gloss.compound_growth.w"), pos:T("gloss.compound_growth.pos"), def:T("gloss.compound_growth.def"), why:"compound", also:["real_return"]},
+  coast_fire:     {w:T("gloss.coast_fire.w"), pos:T("gloss.coast_fire.pos"), def:T("gloss.coast_fire.def"), also:["fire_target"]},
+  drawdown:       {w:T("gloss.drawdown.w"), pos:T("gloss.drawdown.pos"), def:T("gloss.drawdown.def"), not:T("gloss.drawdown.not"), also:["withdrawal_rate","sequence_risk"]},
+  withdrawal_rate:{w:T("gloss.withdrawal_rate.w"), pos:T("gloss.withdrawal_rate.pos"), def:T("gloss.withdrawal_rate.def"), f:T("gloss.withdrawal_rate.f"), also:["four_pct","drawdown"]},
+  sequence_risk:  {w:T("gloss.sequence_risk.w"), pos:T("gloss.sequence_risk.pos"), def:T("gloss.sequence_risk.def"), also:["drawdown","backtest"]},
+  backtest:       {w:T("gloss.backtest.w"), pos:T("gloss.backtest.pos"), def:T("gloss.backtest.def"), also:["sequence_risk"]},
+  rewards:        {w:T("gloss.rewards.w"), pos:T("gloss.rewards.pos"), def:T("gloss.rewards.def"), eg:T("gloss.rewards.eg"), not:T("gloss.rewards.not"), also:["investment_income"]},
+  investment_income: {w:T("gloss.investment_income.w"), pos:T("gloss.investment_income.pos"), def:T("gloss.investment_income.def"), eg:T("gloss.investment_income.eg"), not:T("gloss.investment_income.not"), also:["dividend","securities_lending","withholding_tax"]},
+  unrealized_gain:{w:T("gloss.unrealized_gain.w"), pos:T("gloss.unrealized_gain.pos"), def:T("gloss.unrealized_gain.def"), f:T("gloss.unrealized_gain.f"), eg:T("gloss.unrealized_gain.eg"), also:["book_value","market_value"]},
+  card_interest:  {w:T("gloss.card_interest.w"), pos:T("gloss.card_interest.pos"), def:T("gloss.card_interest.def"), not:T("gloss.card_interest.not")},
+  cpp:            {w:T("gloss.cpp.w"), pos:T("gloss.cpp.pos"), def:T("gloss.cpp.def"), also:["oas"]},
+  oas:            {w:T("gloss.oas.w"), pos:T("gloss.oas.pos"), def:T("gloss.oas.def"), also:["cpp"]},
+  long_term_care: {w:T("gloss.long_term_care.w"), pos:T("gloss.long_term_care.pos"), def:T("gloss.long_term_care.def")},
+  shortfall:      {w:T("gloss.shortfall.w"), pos:T("gloss.shortfall.pos"), def:T("gloss.shortfall.def"), also:["drawdown"]},
   // Words this page coined
-  for_fire:       {own:1, w:"For FIRE", pos:"on this page", def:"Money whose job is to grow until you stop working. FIRE progress is measured on it.", also:["portfolio","fire"]},
-  set_aside:      {own:1, w:"Set aside", pos:"on this page", def:"Money promised to a goal, such as a first home or a trip. It is left out of FIRE progress and out of dry powder.", also:["promised_to_a_goal"]},
-  cash:           {own:1, w:"Cash", pos:"on this page", def:"Bank and cash accounts you live on and can spend today.", also:["spendable_today"]},
-  cash_abroad:    {own:1, w:"Cash abroad", pos:"on this page", def:"Cash held in another country, in its own currency. It counts in net worth; spending it here takes conversion.", also:["held_abroad"]},
-  owed_to_you:    {own:1, w:"Owed to you", pos:"on this page", def:"Money you lent that has not come back yet.", also:["lent_out"]},
-  other_assets:   {own:1, w:"Other assets", pos:"on this page", def:"Things you own that are not money, such as a home or a car.", also:["in_property"]},
-  spendable_today:{own:1, w:"Spendable today", pos:"on this page", def:"Money you could spend today with no tax, no penalty and no wait.", also:["liquidity"]},
-  taxed_to_take_out: {own:1, w:"Taxed to take out", pos:"on this page", def:"Money you can take out at any time, but what you take is taxed as income that year.", eg:"An RRSP.", also:["rrsp","liquidity"]},
-  promised_to_a_goal: {own:1, w:"Promised to a goal", pos:"on this page", def:"Money you could take out, but only by giving up the goal it is set aside for.", also:["set_aside","liquidity"]},
-  lent_out:       {own:1, w:"Lent out", pos:"on this page", def:"Money someone owes you. It comes back on their schedule, not yours.", also:["owed_to_you"]},
-  in_property:    {own:1, w:"In property", pos:"on this page", def:"What a property is worth minus what is still owed on it. You reach it only by selling or borrowing against it.", also:["equity"]},
-  held_abroad:    {own:1, w:"Held abroad", pos:"on this page", def:"Money in another country. Bringing it home takes conversion, transfer limits and time.", also:["exchange_rate","liquidity"]},
-  planning_figure:{own:1, w:"planning figure", pos:"on this page", def:"The monthly spending your FIRE target is built on. You set it by hand; what you actually spend only calibrates it.", also:["fire_target"]},
-  savings_rate:   {own:1, w:"Savings rate", pos:"on this page", def:"The share of what you earn from work that is left after spending. It decides both how fast the money builds and how much a year of life after work costs, so it decides the years more than the pay does. Gifts, money paid back and the broker's own income are not counted as earned.", also:["kept","usual_month"]},
-  kept:           {own:1, w:"Kept", pos:"on this page", def:"Income minus spending over the same months. Money moved to savings or investments counts as kept.", also:["pay_yourself_first"]},
-  repayment:      {own:1, w:"Paid back", pos:"on this page", def:"Money someone returns on a loan you made. It lowers what they owe you, and it is never income.", also:["owed_to_you","lent_out"]},
-  bucket:         {own:1, w:"holding group", pos:"on this page", def:"A set of holdings your investing rules are written about, such as dry powder. A holding no other group names falls into the last one.", also:["dry_powder","target_band"]},
-  everyday:       {own:1, w:"Everyday", pos:"on this page", def:"The amount you set each month for day-to-day spending. Inside it, no purchase needs a reason. Bills and housing are not in it.", also:["pay_yourself_first"]},
-  committed:      {own:1, w:"committed payment", pos:"on this page", def:"A payment made every month before anything is chosen, such as rent, a mortgage or a loan.", also:["planning_figure"]},
-  fund:           {own:1, w:"fund", pos:"on this page", def:"A name you put on part of the money in one of your accounts, for something you are saving toward. Nothing is moved: the money stays where it is, and the plan can add to it each month.", also:["unallocated"]},
-  unallocated:    {own:1, w:"Unallocated", pos:"on this page", def:"What is left of income once every line of the plan is paid. It stays where the income landed.", also:["everyday"]},
-  usual_month:    {own:1, w:"A usual month", pos:"on this page", def:"What a month usually costs you: everything spent, averaged over your last full months, up to twelve, leaving out months you marked as unusual. A yearly charge counts as a twelfth each month.", also:["planning_figure"]},
-  complete_to:    {own:1, w:"Complete to", pos:"on this page", def:"The day every account’s numbers are in up to. After it, some accounts are still waiting for their next statement."},
+  for_fire:       {own:1, w:T("gloss.for_fire.w"), pos:T("gloss.for_fire.pos"), def:T("gloss.for_fire.def"), also:["portfolio","fire"]},
+  set_aside:      {own:1, w:T("gloss.set_aside.w"), pos:T("gloss.set_aside.pos"), def:T("gloss.set_aside.def"), also:["promised_to_a_goal"]},
+  cash:           {own:1, w:T("gloss.cash.w"), pos:T("gloss.cash.pos"), def:T("gloss.cash.def"), also:["spendable_today"]},
+  cash_abroad:    {own:1, w:T("gloss.cash_abroad.w"), pos:T("gloss.cash_abroad.pos"), def:T("gloss.cash_abroad.def"), also:["held_abroad"]},
+  owed_to_you:    {own:1, w:T("gloss.owed_to_you.w"), pos:T("gloss.owed_to_you.pos"), def:T("gloss.owed_to_you.def"), also:["lent_out"]},
+  other_assets:   {own:1, w:T("gloss.other_assets.w"), pos:T("gloss.other_assets.pos"), def:T("gloss.other_assets.def"), also:["in_property"]},
+  spendable_today:{own:1, w:T("gloss.spendable_today.w"), pos:T("gloss.spendable_today.pos"), def:T("gloss.spendable_today.def"), also:["liquidity"]},
+  taxed_to_take_out: {own:1, w:T("gloss.taxed_to_take_out.w"), pos:T("gloss.taxed_to_take_out.pos"), def:T("gloss.taxed_to_take_out.def"), eg:T("gloss.taxed_to_take_out.eg"), also:["rrsp","liquidity"]},
+  promised_to_a_goal: {own:1, w:T("gloss.promised_to_a_goal.w"), pos:T("gloss.promised_to_a_goal.pos"), def:T("gloss.promised_to_a_goal.def"), also:["set_aside","liquidity"]},
+  lent_out:       {own:1, w:T("gloss.lent_out.w"), pos:T("gloss.lent_out.pos"), def:T("gloss.lent_out.def"), also:["owed_to_you"]},
+  in_property:    {own:1, w:T("gloss.in_property.w"), pos:T("gloss.in_property.pos"), def:T("gloss.in_property.def"), also:["equity"]},
+  held_abroad:    {own:1, w:T("gloss.held_abroad.w"), pos:T("gloss.held_abroad.pos"), def:T("gloss.held_abroad.def"), also:["exchange_rate","liquidity"]},
+  planning_figure:{own:1, w:T("gloss.planning_figure.w"), pos:T("gloss.planning_figure.pos"), def:T("gloss.planning_figure.def"), also:["fire_target"]},
+  savings_rate:   {own:1, w:T("gloss.savings_rate.w"), pos:T("gloss.savings_rate.pos"), def:T("gloss.savings_rate.def"), also:["kept","usual_month"]},
+  kept:           {own:1, w:T("gloss.kept.w"), pos:T("gloss.kept.pos"), def:T("gloss.kept.def"), also:["pay_yourself_first"]},
+  repayment:      {own:1, w:T("gloss.repayment.w"), pos:T("gloss.repayment.pos"), def:T("gloss.repayment.def"), also:["owed_to_you","lent_out"]},
+  bucket:         {own:1, w:T("gloss.bucket.w"), pos:T("gloss.bucket.pos"), def:T("gloss.bucket.def"), also:["dry_powder","target_band"]},
+  everyday:       {own:1, w:T("gloss.everyday.w"), pos:T("gloss.everyday.pos"), def:T("gloss.everyday.def"), also:["pay_yourself_first"]},
+  committed:      {own:1, w:T("gloss.committed.w"), pos:T("gloss.committed.pos"), def:T("gloss.committed.def"), also:["planning_figure"]},
+  fund:           {own:1, w:T("gloss.fund.w"), pos:T("gloss.fund.pos"), def:T("gloss.fund.def"), also:["unallocated"]},
+  unallocated:    {own:1, w:T("gloss.unallocated.w"), pos:T("gloss.unallocated.pos"), def:T("gloss.unallocated.def"), also:["everyday"]},
+  usual_month:    {own:1, w:T("gloss.usual_month.w"), pos:T("gloss.usual_month.pos"), def:T("gloss.usual_month.def"), also:["planning_figure"]},
+  complete_to:    {own:1, w:T("gloss.complete_to.w"), pos:T("gloss.complete_to.pos"), def:T("gloss.complete_to.def")},
 };
 // The register's axes in the page's own words (Home's net-worth card, the Accounts table).
 const ROLE_TERM = {grow:"for_fire", "set-aside":"set_aside", buffer:"cash", owed:"owed_to_you", none:"other_assets"};
@@ -1332,36 +1334,36 @@ const REACH_TERM = {today:"spendable_today", costs:"taxed_to_take_out", spoken:"
 // Glossary page, folded; the hover keeps the one-sentence entry. Several entries may share one.
 const WHY = {
   registered: {p:[
-    "All three answer one question: when is the tax paid?",
-    "<b>TFSA: on the way in.</b> You put in money that has already been taxed. Growth and withdrawals are never taxed.",
-    "<b>RRSP: on the way out.</b> What you put in comes off this year’s taxable income. Everything you take out later is taxed as income in the year you take it.",
-    "<b>FHSA: never, if the money buys a first home.</b> It is deductible going in, like an RRSP, and tax-free coming out, like a TFSA. It is the only account with both, which is why it is limited to a first home, $8,000 a year and $40,000 in all.",
-    "<b>If the tax rate is the same at both ends, the TFSA and the RRSP come out identical.</b> Say you earn $1,000 and the tax rate is 30%. In a TFSA, $700 goes in, doubles to $1,400, and you take out $1,400. In an RRSP, $1,000 goes in, doubles to $2,000, and 30% is taxed on the way out: $1,400 again. The RRSP comes out ahead only when your rate on the way out is lower than your rate on the way in, and the TFSA comes out ahead when it is higher. (This assumes the RRSP’s tax refund is invested too.)"],
+    T("gloss.why.registered.p1"),
+    T("gloss.why.registered.p2"),
+    T("gloss.why.registered.p3"),
+    T("gloss.why.registered.p4"),
+    T("gloss.why.registered.p5")],
    wrong:[
-    "A TFSA is not only a savings account. It can hold stocks and funds.",
-    "Money taken out of a TFSA gives its room back, but not until 1 January. Putting it back in the same year can be an over-contribution, taxed at 1% a month.",
-    "Money taken out of an RRSP loses that room for good, and tax is withheld at the time.",
-    "FHSA room starts in the year you open the account. Earlier years do not count. FHSA money you do not use for a home can move to an RRSP without using RRSP room.",
-    "An RRSP has to become a RRIF or an annuity by the end of the year you turn 71."]},
+    T("gloss.why.registered.wrong1"),
+    T("gloss.why.registered.wrong2"),
+    T("gloss.why.registered.wrong3"),
+    T("gloss.why.registered.wrong4"),
+    T("gloss.why.registered.wrong5")]},
   withdrawal: {p:[
-    "Why not just withdraw the average return? Because the average is not what a retiree lives through. Money taken out during a crash means selling low, and those shares are gone before the recovery comes. So the safe rate is set by the <b>worst years in history to start</b>, not by the average year. In US history, the worst were retirements that began in the late 1960s, just before a decade of high inflation.",
-    "<b>The rule is about the first year.</b> You take 4% of the starting portfolio. After that you take the same dollar amount, raised with inflation, whatever markets do. It is not 4% of each year’s balance.",
-    "<b>Its limits.</b> It was tested on 30-year retirements, on a mix of US stocks and bonds, with no fees, using the history of one of the best-performing markets of the century. A longer retirement needs a lower rate: studies of 40- to 60-year retirements often land around 3–3.5%. ×25 is the same as 4%; ×30 is about 3.3%."],
+    T("gloss.why.withdrawal.p1"),
+    T("gloss.why.withdrawal.p2"),
+    T("gloss.why.withdrawal.p3")],
    wrong:[
-    "“4% lasts forever.” It was tested on 30 years.",
-    "“The rule says the money runs out at 30 years.” In many past periods there was more left after 30 years than at the start. 4% is the rate that survived the worst periods."]},
+    T("gloss.why.withdrawal.wrong1"),
+    T("gloss.why.withdrawal.wrong2")]},
   compound: {p:[
-    "Each year’s growth is earned on the whole balance, including the growth from earlier years. So the curve bends upward, and the late years add far more than the early ones.",
-    "<b>Example:</b> $10,000 growing 5% a year after inflation becomes $16,289 after 10 years, $26,533 after 20 and $43,219 after 30. <b>The last ten years add $16,686, more than the first twenty combined.</b> That is why time matters more than amount: a dollar invested ten years earlier gets an extra decade at the steep end of the curve.",
-    "<b>Rule of 72:</b> the years it takes to double ≈ 72 ÷ the yearly rate. At 5% that is about 14 years; at 8%, about 9.",
-    "<b>It works against you too.</b> A 1% yearly fee takes about a quarter of what you would have had after 30 years. Credit card interest compounds. So does inflation: at 2% a year, money loses half its buying power in about 36 years."],
+    T("gloss.why.compound.p1"),
+    T("gloss.why.compound.p2"),
+    T("gloss.why.compound.p3"),
+    T("gloss.why.compound.p4")],
    wrong:[
-    "Expecting a straight line. Compound growth describes the long-run average. Real markets get there through good years and bad ones."]},
+    T("gloss.why.compound.wrong1")]},
 };
 function whyHtml(key){
   const y = WHY[key]; if(!y) return "";
-  return '<details class="why"><summary>Why it works</summary>' + y.p.map(x => '<p>'+x+'</p>').join("")
-    + (y.wrong ? '<p class="k">What people get wrong</p><ul>' + y.wrong.map(x => '<li>'+x+'</li>').join("") + '</ul>' : "")
+  return '<details class="why"><summary>'+T("gloss.why.label_why")+'</summary>' + y.p.map(x => '<p>'+x+'</p>').join("")
+    + (y.wrong ? '<p class="k">'+T("gloss.why.label_wrong")+'</p><ul>' + y.wrong.map(x => '<li>'+x+'</li>').join("") + '</ul>' : "")
     + '</details>';
 }
 // A term on the page: dotted underline, hover for the entry, click for the Glossary page.
@@ -1402,10 +1404,11 @@ function renderGlossary(){
   const keys = Object.keys(GLOSSARY);
   const block = (list) => {
     let letter = "";
-    return list.sort((a,b) => GLOSSARY[a].w.toLowerCase().localeCompare(GLOSSARY[b].w.toLowerCase())).map(k => {
-      const g = GLOSSARY[k], L = g.w[0].toUpperCase(), head = L !== letter ? (letter = L, '<div class="gl-letter">'+L+'</div>') : "";
+    // Chinese headwords sort by pinyin and take no letter heads (a head per character is noise).
+    return list.sort((a,b) => GLOSSARY[a].w.toLowerCase().localeCompare(GLOSSARY[b].w.toLowerCase(), LANG === "zh" ? "zh-Hans-u-co-pinyin" : undefined)).map(k => {
+      const g = GLOSSARY[k], L = g.w[0].toUpperCase(), head = LANG !== "zh" && L !== letter ? (letter = L, '<div class="gl-letter">'+L+'</div>') : "";
       return head + '<div class="gl-entry" id="g-'+k+'">'+entryHtml(k) + (g.why ? whyHtml(g.why) : "")
-        + (g.also ? '<p class="also">See also '+g.also.map(a => term(a)).join(", ")+'</p>' : "") + '</div>';
+        + (g.also ? '<p class="also">'+T("gloss.see_also", {terms: listJoin(g.also.map(a => term(a)))})+'</p>' : "") + '</div>';
     }).join("");
   };
   $("glossList").innerHTML = block(keys.filter(k => !GLOSSARY[k].own));
