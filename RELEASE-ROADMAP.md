@@ -3,13 +3,13 @@
 What is coming, said as what you will be able to do. These are aims, not promises; what has
 already shipped is in [`CHANGELOG.md`](CHANGELOG.md).
 
-## Next — 1.1.0
+## Next
 
 - **What to do next, beside your own numbers.** The things worth understanding on the way —
   an emergency fund, fees, compounding, when to take a pension — set out in order, each in one
   sentence, with a formula or a chart, its source, and where you stand on it today.
 
-## 1.2.0
+## 1.3.0
 
 - **Income that needs no work, of every kind.** Rent from a property, royalties, a pension, an
   annuity: each counts toward the day work becomes optional, beside what your investments can
@@ -28,7 +28,6 @@ already shipped is in [`CHANGELOG.md`](CHANGELOG.md).
 - **A faster page and a sturdier store for your data**, still only on your own computer.
 - **Make it yours**: funds you name for what you are saving toward, and big purchases tracked on
   their own if you want them.
-- **The dashboard in Chinese.**
 
 ## Being considered
 

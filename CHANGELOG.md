@@ -1,6 +1,6 @@
 # Changelog
 
-## Next — unreleased (after 1.1.0; the number is set at release)
+## 1.2.0 — 2026-11-27
 
 - **The dashboard in Chinese** (看板中文). Every page, chart, hover, empty state, Glossary entry and
   Settings row has its English and Chinese side by side in `templates/dashboards/strings.json`
