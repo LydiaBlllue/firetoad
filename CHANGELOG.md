@@ -30,6 +30,12 @@
 - **Bucket is now holding group** (持仓分组) in the glossary and the panel: a reader new to
   investing does not know what a bucket is. `rules.json` still calls them `buckets`; nothing moves.
   How it works said the Portfolio page splits by bucket; it has split by account since 1.0.9.
+- **Settings says who charges for AI assist, and how**: you add credit with the company you
+  picked, and each time FIRE Toad asks, a little is taken from it at that company's prices. It no
+  longer gives a price ("less than a cent a month"), which did not hold for every company.
+- **The website**: "Every number adds up" is now the end of "No bank login", since reading the
+  statement itself is what lets the app check it against the totals the bank printed; the three
+  points sit in one row. The Chinese front page asks 离财务自由，还有几年？
 
 ## 1.1.0 — 2026-11-25
 
