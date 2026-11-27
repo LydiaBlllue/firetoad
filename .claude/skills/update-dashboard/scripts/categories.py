@@ -51,9 +51,9 @@ CATEGORIES = [k for k, *_ in TABLE]
 
 # What each category is called on a screen in the owner's language. The key stays English in the
 # data (merchants.json, spending.csv, the page's constants); only what is shown changes.
-LABEL_ZH = {"Grocery": "买菜", "Dining": "外食", "Housing": "住房", "Shopping": "购物", "Transport": "交通",
+LABEL_ZH = {"Grocery": "食品杂货", "Dining": "餐饮", "Housing": "住房", "Shopping": "购物", "Transport": "交通",
             "Software": "软件工具", "Bills": "账单", "Travel": "旅行", "Entertainment": "娱乐", "Health": "健康",
-            "Family": "家人礼物", "Cash": "现金", "Fees": "手续费利息", "Education": "教育", "Other": "其他"}
+            "Family": "家人赠与", "Cash": "现金", "Fees": "手续费与利息", "Education": "教育", "Other": "其他"}
 
 
 def label(key, lang="en"):
@@ -82,9 +82,11 @@ def not_in_fire(plan):
 
 
 def page_table(plan):
-    """What the page draws from: one entry per category, in this order."""
+    """What the page draws from: one entry per category, in this order; `n` the English name on
+    screen, `nz` the Chinese one (the page picks by its language, catName)."""
     g, off = groups(plan), not_in_fire(plan)
-    return [{"k": k, "n": n, "g": g[k], "c": f"var({c})", **({"noFire": True} if k in off else {})} for k, n, _, c in TABLE]
+    return [{"k": k, "n": n, "nz": LABEL_ZH.get(k, n), "g": g[k], "c": f"var({c})", **({"noFire": True} if k in off else {})}
+            for k, n, _, c in TABLE]
 
 
 # ---------------------------------------------------------------- a charge that repeats

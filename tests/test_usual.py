@@ -1,4 +1,4 @@
-"""usual.py — a usual month and the emergency fund's months (FINANCE.md §3a, §8d). One test per rule."""
+"""usual.py — a usual month (FINANCE.md §3a). One test per rule."""
 import unittest
 import _paths
 import usual
@@ -125,24 +125,6 @@ class TheConstant(unittest.TestCase):
         self.assertEqual(sorted(u["month"]), ["2025-04", "2025-05"])
         self.assertEqual(sorted(u["median"]), ["2025-04", "2025-05"])
         self.assertEqual(u["base"]["avg"], 100)
-
-
-class TheEmergencyFund(unittest.TestCase):
-
-    def test_months_covered_is_the_money_over_what_a_month_costs(self):
-        r = usual.runway(12000, 2000, 1000, 0, 500, {"v": 2500, "n": 6})
-        self.assertEqual((r["money"], r["cost"], r["months"], r["abroadMonths"]), (9000, 3000, 3, None))
-
-    def test_more_owed_than_held_is_zero_months_not_negative(self):
-        self.assertEqual(usual.runway(1000, 0, 4000, 0, 0, {"v": 1000, "n": 3})["months"], 0)
-
-    def test_money_abroad_is_a_second_answer(self):
-        r = usual.runway(3000, 0, 0, 3000, 0, {"v": 1000, "n": 3})
-        self.assertEqual((r["months"], r["abroadMonths"]), (3, 6))
-
-    def test_without_a_usual_month_there_are_no_months(self):
-        r = usual.runway(3000, 0, 0, 0, 0, None)
-        self.assertEqual((r["money"], r["cost"], r["months"]), (3000, None, None))
 
 
 if __name__ == "__main__":

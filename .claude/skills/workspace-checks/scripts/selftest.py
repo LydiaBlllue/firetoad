@@ -86,7 +86,7 @@ def m_design_pages(r):
     edit(r, "DESIGN.md", lambda s: re.sub(r"(\| Stay on track \| )[^·|]+·", r"\1Insights ·", s, count=1))
 def m_hand_card(r):
     # a stat card written by hand beside StatCard: the copy that drifts
-    edit(r, main_dash(r), lambda s: s.replace('StatCard("Total spent in "+yrSpan(viewYear, spendMonths), numx(fmt(spent), [], "After refunds."))',
+    edit(r, main_dash(r), lambda s: s.replace('StatCard(T("trends.total_spent_label", {span: yrSpan(viewYear, spendMonths)}), numx(fmt(spent), [], T("trends.total_spent_note")))',
          "'<div class=\"card\"><div class=\"lab\">Spent</div><div class=\"big num\">'+fmt(spent)+'</div></div>'", 1))
 def m_nav_orphan(r):
     edit(r, main_dash(r),
@@ -451,9 +451,15 @@ def m_chequing_no_spend_tag(r):
 def m_broker_gift_no_deposit(r):
     edit_json(r, layout.rel("plan.json"), lambda d: d.update(brokerGifts=[
         {"date": "2026-02-03", "amount": 12345.67, "currency": "CAD", "why": "planted"}]))
+def m_string_no_zh(r):
+    # A sentence added to the page in English only: the Chinese page would show English (S11).
+    def f(t):
+        d = json.loads(t); d["shell.hdr_net_worth"].pop("zh", None)
+        return json.dumps(d, ensure_ascii=False, indent=1)
+    edit(r, "templates/dashboards/strings.json", f)
 def m_setting_out_of_range(r):
-    # The emergency range with its ends swapped, typed into the file past setting.py's own check.
-    edit_json(r, layout.rel("plan.json"), lambda d: d.update(emergency={"low": 9, "high": 3}))
+    # A return after inflation no setting allows, typed into the file past setting.py's own check.
+    edit_json(r, layout.rel("plan.json"), lambda d: d.update(growth=50))
 def m_decision_no_default(r):
     # An empty queue (an owner with nothing waiting) gets one item planted without its default;
     # this used to index [0] and crash the whole selftest in such a workspace (2026-09-10).
@@ -469,7 +475,7 @@ def m_decision_no_default(r):
 # real sentence the owner rejected on 2026-09-10.
 def m_first_person(r):
     edit(r, "templates/dashboards/finance_dashboard.html",
-         lambda s: s.replace('<div class="lab">Filed each month</div>',
+         lambda s: s.replace('<div class="lab" data-t="src.filed_each_month">Filed each month</div>',
                              '<div class="lab">What you dropped in, and when I last got it</div>', 1))
 
 def m_brand_mark_gone(r):
@@ -501,10 +507,12 @@ def m_render_empty_card(r):
                                               '    const html = C[k]() || StatCard("Empty", null);\n    shown.push({k, html});', 1))
 def m_render_one_plural(r):
     # the Accounts card counts without looking: one account is "1 accounts"
-    edit(r, main_dash(r), lambda s: s.replace('" account" + (A.length === 1 ? "" : "s") + " at "', '" accounts at "', 1))
+    # (the sentence is a key since 2026-11-25: the page always picks the plural one)
+    edit(r, main_dash(r), lambda s: s.replace('T("acct.card_net_worth_status_" + (A.length === 1 && insts.length <= 1 ? "one" : insts.length === 1 ? "one_inst" : "many")',
+                                              'T("acct.card_net_worth_status_many"', 1))
 def m_render_this_year(r):
     # a sentence that says "this year" whatever year the page is showing
-    edit(r, main_dash(r), lambda s: s.replace('viewYear+" only, open months included. "', '"This year only, open months included. "', 1))
+    edit(r, main_dash(r), lambda s: s.replace('T("trends.per_month_note", {year: viewYear})', '"This year only, open months included. "', 1))
 def m_render_chart_capped(r):
     edit(r, main_dash(r),
          lambda s: s.replace("year-svg{width:100%;height:auto", "year-svg{width:100%;height:190px", 1))
@@ -587,6 +595,7 @@ CASES = [
     ("D29", "a gift declared in the broker with no such deposit", m_broker_gift_no_deposit, "find"),
     ("D30", "a chequing bill that never reached spending",  m_chequing_no_spend_tag, "find"),
     ("D31", "a setting outside the range its row allows",   m_setting_out_of_range, "find"),
+    ("S11", "a page sentence with no Chinese",              m_string_no_zh,       "dash"),
     ("R3", "a chart pinned to a fixed height",              m_render_chart_capped,"render"),
     ("R6", "the sidebar cannot scroll in a short window",   m_render_sidebar_stuck,"render"),
     ("R7", "Home shows a card with no number",              m_render_empty_card,  "render"),
@@ -2372,7 +2381,7 @@ def local_app_check(root, base):
     # one of the owner's numbers, changed the same on both sides (FINANCE.md §8e)
     stg = os.path.join(os.path.dirname(upd), "setting.py")
     if os.path.exists(stg):
-        r = subprocess.run([sys.executable, stg, ".", "emergency", "6", "9", "--write"], cwd=copies["cli"],
+        r = subprocess.run([sys.executable, stg, ".", "growth", "6", "--write"], cwd=copies["cli"],
                            capture_output=True, text=True, timeout=120)
         if r.returncode not in (0, 2):
             bad.append(f"setting.py exited {r.returncode}: " + " | ".join(r.stdout.strip().splitlines()[-2:]))
@@ -2464,11 +2473,11 @@ def local_app_check(root, base):
             if st != 200 or not (body.get("data") or {}).get("error"):
                 bad.append(f"POST /api/ocr with junk answered {st} without a reason")
         if os.path.exists(stg):
-            st, body = req("POST", tok + "/api/setting", {"key": "emergency", "value": [9, 6]})
+            st, body = req("POST", tok + "/api/setting", {"key": "growth", "value": 50})
             plan_now = json.load(open(layout.path(ws, "plan.json"), encoding="utf-8"))
-            if st != 400 or "emergency" in plan_now:
-                bad.append(f"a range with its ends swapped got {st} from POST /api/setting, not a refusal")
-            st, body = req("POST", tok + "/api/setting", {"key": "emergency", "value": [6, 9]})
+            if st != 400 or plan_now.get("growth") == 50:
+                bad.append(f"a return of 50% got {st} from POST /api/setting, not a refusal")
+            st, body = req("POST", tok + "/api/setting", {"key": "growth", "value": 6})
             if st != 200 or not (body.get("data") or {}).get("written"):
                 bad.append(f"POST /api/setting answered {st}: {str(body)[:120]}")
         st, body = req("POST", tok + "/api/import", {"write": True})

@@ -1,8 +1,8 @@
-"""usual.py — a usual month, and how long the money would last on it (FINANCE.md §3a, §8d).
+"""usual.py — a usual month (FINANCE.md §3a).
 
-Until 1.0.5 both were worked out in the page, so nothing outside the browser could read them:
-not a checker, not the panel, not a second front end. They are computed here, once, and the
-page is handed the result (the USUAL constant, and `money`, `cost`, `months` inside SAFETY).
+Until 1.0.5 it was worked out in the page, so nothing outside the browser could read it: not a
+checker, not the panel, not a second front end. It is computed here, once, and the page is
+handed the result (the USUAL constant).
 USUAL has three parts, all read off the same closed months: `month` (a usual month as of each
 month the page can be turned to), `median` (each category's median over the same window, what
 "more than usual" is measured against) and `base` (the average the planning figure is
@@ -155,14 +155,3 @@ def measured(spending, stmt_end, skip, today, ends):
     return {"month": by_month(spending, stmt_end, skip, today), "median": med,
             "base": baseline(spending, stmt_end, skip, today, ends)}
 
-
-def runway(today_money, invested, unsecured, abroad, repay, usual_now):
-    """The emergency fund's three numbers. The money is what could be spent today, less what in
-    it is invested and what is owed on no asset. A month costs the usual month plus the
-    repayments the plan pays today. Money abroad is a second answer, never folded in."""
-    money = (today_money or 0) - (invested or 0) - (unsecured or 0)
-    cost = usual_now["v"] + (repay or 0) if usual_now else None
-    cost = cost or None
-    return {"money": money, "cost": cost,
-            "months": max(0, money / cost) if cost else None,
-            "abroadMonths": max(0, (money + abroad) / cost) if cost and (abroad or 0) > 0 else None}

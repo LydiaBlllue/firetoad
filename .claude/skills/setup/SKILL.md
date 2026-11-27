@@ -238,10 +238,10 @@ the page shows is a sum of them.
 
 **Ask exactly one thing, and only if they invest:**
 
-> What are your buckets, and which one has a target range?
+> How do you group your holdings, and which group has a target range?
 
-A bucket is a name plus the tickers in it. Any bucket may carry a `target` like `[70, 80]`, and
-**that is the only thing this tool computes about your strategy**: where each banded bucket sits
+A holding group (a bucket in `rules.json`) is a name plus the tickers in it. Any group may carry a `target` like `[70, 80]`, and
+**that is the only thing this tool computes about your strategy**: where each banded group sits
 today and how far it has drifted. Everything else an investor believes — which account a holding
 belongs in, why they hold a position, when to add — stays prose on the Rules page, judged by
 them, because it is a judgement and not an arithmetic fact.

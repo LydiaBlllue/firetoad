@@ -206,6 +206,49 @@ async () => {
 """
 
 
+# R10: the page in Chinese (2026-11-25, the dashboard in two languages). Every page is drawn with
+# ?lang=zh at the narrowest and widest widths: nothing the English page would not show
+# (undefined, NaN), no key name on screen (a sentence the table lacks), and no sideways scroll,
+# since Chinese is wider per character and a long label can push a card out.
+ZH_PROBE = r"""
+async () => {
+  const keys = new Set(Object.keys(STR));
+  const rawOf = t => [...new Set((t.match(/\b[a-z]+(?:\.[a-z0-9_]+)+\b/g) || []).filter(x => keys.has(x)))];
+  const ks = [...new Set([...document.querySelectorAll('#sideNav button[data-k], #sideSet')].map(b => b.dataset.k))];
+  const pages = [];
+  for (const k of ks) {
+    setPage(k);
+    await new Promise(r => setTimeout(r, 40));
+    const s = document.querySelector('section[data-pg="' + k + '"]');
+    if (!s) continue;
+    const t = s.innerText;
+    pages.push({k, junk: [...new Set(t.match(/\b(undefined|NaN|\[object Object\])\b/g) || [])],
+                raw: rawOf(t), side: document.documentElement.scrollWidth - innerWidth});
+  }
+  setPage('home');
+  const chrome = (document.querySelector('.side') || {}).innerText + ' ' + (document.querySelector('.pghead') || {}).innerText;
+  return {lang: document.documentElement.lang, pages, chromeRaw: rawOf(chrome)};
+}
+"""
+
+
+def probe_zh(path):
+    from playwright.sync_api import sync_playwright
+    out, console = {}, []
+    with sync_playwright() as pw:
+        b = pw.chromium.launch()
+        for w in (WIDTHS[0], WIDTHS[-1]):
+            pg = b.new_page(viewport={"width": w, "height": TALL})
+            pg.on("console", lambda m: console.append(m.text) if m.type == "error" else None)
+            pg.on("pageerror", lambda e: console.append(str(e)))
+            pg.goto("file://" + os.path.abspath(path) + "?lang=zh")
+            pg.wait_for_timeout(400)
+            out[w] = pg.evaluate(ZH_PROBE)
+            pg.close()
+        b.close()
+    return out, console
+
+
 def states(src):
     """Each kind of owner this page can be made to show, as (name, html, what must wait)."""
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
@@ -420,6 +463,27 @@ def check(path):
             err("R7", f"{name}: Home shows {len(empty)} card(s) with no number", "conform")
     if made:
         note("R7", f"drawn for {len(made)} kinds of owner: " + "; ".join(n for n, _, _ in made))
+
+    # -- R10 the page in Chinese draws as fully as the English one ---------------------------
+    if "const STR = " in open(path, encoding="utf-8").read():
+        zres, zcons = probe_zh(path)
+        bad = 0
+        for w, r in zres.items():
+            if not r["lang"].startswith("zh"):
+                err("R10", f"{w}px: ?lang=zh did not switch the page to Chinese (html lang={r['lang']})"); bad += 1
+            for p in r["pages"]:
+                for j in p["junk"]:
+                    err("R10", f"{w}px, Chinese: page '{p['k']}' shows \"{j}\""); bad += 1
+                if p["raw"]:
+                    err("R10", f"{w}px, Chinese: page '{p['k']}' shows key names instead of sentences: {', '.join(p['raw'][:4])}"); bad += 1
+                if p["side"] > 1:
+                    err("R10", f"{w}px, Chinese: page '{p['k']}' scrolls {p['side']}px sideways", "conform"); bad += 1
+            if r["chromeRaw"]:
+                err("R10", f"{w}px, Chinese: the sidebar or header shows key names: {', '.join(r['chromeRaw'][:4])}"); bad += 1
+        for c in zcons:
+            err("R10", f"Chinese: console error — {c[:120]}"); bad += 1
+        if not bad:
+            note("R10", f"every page drawn in Chinese at {WIDTHS[0]} and {WIDTHS[-1]}px: no key names, no undefined, no sideways scroll")
 
     # R4 (a page should fill a screen) was retired 2026-10-29: Home is short on purpose, so the
     # rule warned on every run, and a warning nobody acts on teaches everyone to skip the output.

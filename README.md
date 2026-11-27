@@ -122,7 +122,7 @@ AI assist (above) is turned on in the dashboard's Settings; the panel asks once 
 shops it could help with.
 
 Claude Code stays the other door: the chat, a statement no parser reads, the setup questions
-the screens do not cover (anything held abroad, a loan to a friend, your investing buckets).
+the screens do not cover (anything held abroad, a loan to a friend, how you group your holdings).
 
 ## Why you can trust it
 
@@ -160,15 +160,15 @@ the screens do not cover (anything held abroad, a loan to a friend, your investi
 
 - **[How it works](docs/how-it-works.md)**: every page, the monthly run, the folder, and the
   checkers that keep the numbers honest.
-<!-- LINT:FAULTS n=70 -->
-  Four checkers hold every figure to its source; a selftest plants 70 faults to prove they still catch them.
+<!-- LINT:FAULTS n=71 -->
+  Four checkers hold every figure to its source; a selftest plants 71 faults to prove they still catch them.
 - **[Installing the app](docs/install.md)**: the download, the first launch, and what to do if macOS still asks.
 - **[Supported banks and brokers](docs/banks.md)**: which to use, which banks' files are read, which are confirmed on a real
   one, and how to download each.
 - **[Release roadmap](RELEASE-ROADMAP.md)** and **[Changelog](CHANGELOG.md)**.
 
-<!-- LINT:NAV main=19/4 minwidth=800 -->
-The page is 19 pages in 4 sidebar groups —
+<!-- LINT:NAV main=18/4 minwidth=800 -->
+The page is 18 pages in 4 sidebar groups —
 Home · Get started · Set a goal · Stay on track · After FIRE · Updates · Statements · Glossary · Settings
 — desktop only, at least 800px wide.
 

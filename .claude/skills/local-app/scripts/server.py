@@ -41,6 +41,8 @@ Routes (every API answer is {"ok": bool, "data" | "error": …, "took": seconds}
   POST /api/balance        balance.run(key, amount, asof, write) a balance no file carries; rebuilds
   POST /api/setting        setting.run(key, value, reset, write) one of the owner's numbers (settings.py), from the
                                                         dashboard's Settings page; answers when it is written
+  POST /api/lang           {"lang": "en" | "zh"}         the dashboard's language switch: written where the panel
+                                                        keeps its own (.firetoad/settings.json), so both follow
   POST /api/ocr            ocr.read(image, capture)     (multipart: key + image) the amounts Vision sees on a
                                                         screenshot, ranked by the account's capture line —
                                                         candidates only; the image is kept under .firetoad/shots/
@@ -702,6 +704,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     why = next((l.strip().lstrip("✗ ").strip() for l in res["lines"] if "✗" in l), "not written")
                     return self._json(400, False, {"type": "BadRequest", "text": why}, t0)
                 return self._json(200, True, verbs.public(res), t0)
+            elif path == "/api/lang":
+                if body.get("lang") not in ("en", "zh"):
+                    raise ValueError("lang must be en or zh")
+                return self._json(200, True, {"lang": app.lang({"lang": [body["lang"]]})}, t0)
             elif path == "/api/inbox":
                 return self._json(200, True, app.save_inbox(body.get("files") or []), t0)
             elif path == "/api/ocr":

@@ -377,6 +377,27 @@ def step5(lang, rec, base):
     return "".join(out)
 
 
+def rec_strings(lang, root):
+    """What the panel needs to say an import's changed and noticed lines in Chinese the way the
+    dashboard does: the record carries each line's key (`t`) and values (update.py `keyed`), and
+    the words are the dashboard's own, read from templates/dashboards/strings.json — `upd.rec.*`,
+    the month names and the day form — with the categories' Chinese names. {} in English: there
+    the panel shows the sentence the import stored, exactly as before."""
+    if lang != "zh":
+        return {}
+    for base in (root, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(HERE))))):
+        p = os.path.join(base, "templates", "dashboards", "strings.json")
+        if os.path.exists(p):
+            try:
+                table = json.load(open(p, encoding="utf-8"))
+            except (OSError, ValueError):
+                return {}
+            want = lambda k: k.startswith(("upd.rec.", "common.month_")) or k == "common.ordinal"
+            return {"s": {k: v["zh"] for k, v in table.items() if want(k) and isinstance(v, dict) and v.get("zh")},
+                    "cat": {c: categories.label(c, "zh") for c in categories.CATEGORIES}}
+    return {}
+
+
 # ---------------------------------------------------------------- the page
 def tool_notice(lang, tool):
     if not tool or tool.get("state") == "same":
@@ -491,6 +512,7 @@ def render(base, root, st, q, rec, job, held, tool=None, lang="en", first=False)
             "{{BUSY}}": busy,
             "{{SETTINGS}}": e(t(lang, "settings")), "{{MORE}}": e(t(lang, "more_h")),
             "{{JS}}": json.dumps(js_strings(lang), ensure_ascii=False).replace("</", "<\\/"),
+            "{{REC}}": json.dumps(rec_strings(lang, root), ensure_ascii=False).replace("</", "<\\/"),
             "{{QDATA}}": json.dumps(qdata(q, lang, doc_names(root), root), ensure_ascii=False).replace("</", "<\\/"),
             "{{VERSION}}": e((tool or {}).get("version") or "")}
     for k, v in fill.items():

@@ -370,9 +370,12 @@ def build(out):
         d.update(extra); return d
     accounts = [
         acc("BMO", f"…{ID['bmo_chq']}", "Primary Chequing", "Chequing", "CAD", bmo_bal, "2026-09-05", "banks.json", "chequing.csv", "Income, Cash flow, Spending, Bank cash", "bmo-chq-4471",
-            spendTag=f"BMO{ID['bmo_chq']}", stmtTag=f"BMOCHQ{ID['bmo_chq']}", stmtLabel="BMO chq"),
-        acc("BMO", f"…{ID['bmo_sav']}", "Savings Amplifier", "Savings", "CAD", sav_bal, "2026-09-05", "banks.json", "bmo_savings.csv", "Cash flow, Bank cash", "bmo-sav-9032", stmtTag=f"BMOSAV{ID['bmo_sav']}"),
-        acc("BMO", f"…{ID['bmo_mc']}", "MasterCard", "Credit card", "CAD", -mc_bal, "2026-08-20", "banks.json", None, "Spending, Debts", "bmo-mc-5518", spendTag=f"BMO{ID['bmo_mc']}", stmtLabel="MC"),
+            spendTag=f"BMO{ID['bmo_chq']}", stmtTag=f"BMOCHQ{ID['bmo_chq']}", stmtLabel="BMO chq",
+            zh=OrderedDict(kind="支票账户", stmtLabel="BMO 支票账户")),
+        acc("BMO", f"…{ID['bmo_sav']}", "Savings Amplifier", "Savings", "CAD", sav_bal, "2026-09-05", "banks.json", "bmo_savings.csv", "Cash flow, Bank cash", "bmo-sav-9032", stmtTag=f"BMOSAV{ID['bmo_sav']}",
+            zh=OrderedDict(kind="储蓄账户")),
+        acc("BMO", f"…{ID['bmo_mc']}", "MasterCard", "Credit card", "CAD", -mc_bal, "2026-08-20", "banks.json", None, "Spending, Debts", "bmo-mc-5518", spendTag=f"BMO{ID['bmo_mc']}", stmtLabel="MC",
+            zh=OrderedDict(kind="信用卡")),
         acc("Wealthsimple", ID["tfsa"], "TFSA", "TFSA", "CAD", r2(by_acct["TFSA"]), "2026-09-06", "holdings_latest.csv", None, "Portfolio, Dry powder, Net worth", "ws-tfsa"),
         acc("Wealthsimple", ID["rrsp"], "RRSP", "RRSP", "CAD", r2(by_acct["RRSP"]), "2026-09-06", "holdings_latest.csv", None, "Portfolio, Dry powder, Net worth", "ws-rrsp"),
     ]
@@ -380,11 +383,13 @@ def build(out):
         d = OrderedDict(key=key, ep=ep, file=file, closes=closes, feeds=feeds, covers=covers, tags=tags, into=into, reconcile=reconcile)
         d.update(extra); return d
     documents = [
-        doc(f"Chequing {ID['bmo_chq']}", "BMO", "<Month D, YYYY>.pdf", "5th", "Pay, transfers, cash flow", ["bmo-chq-4471"], ["BMO_CHQ4471"], "chequing.csv", "opening + in - out = closing", parser="bmo_banking"),
-        doc(f"Savings {ID['bmo_sav']}", "BMO", "<Month D, YYYY>-2.pdf", "5th", "Balance and savings ledger", ["bmo-sav-9032"], ["BMO_SAV9032"], "bmo_savings.csv", "balance chain closes", parser="bmo_banking", **{"from": "2026-01"}),
+        doc(f"Chequing {ID['bmo_chq']}", "BMO", "<Month D, YYYY>.pdf", "5th", "Pay, transfers, cash flow", ["bmo-chq-4471"], ["BMO_CHQ4471"], "chequing.csv", "opening + in - out = closing", parser="bmo_banking",
+            zh=OrderedDict(key=f"支票账户 {ID['bmo_chq']}")),
+        doc(f"Savings {ID['bmo_sav']}", "BMO", "<Month D, YYYY>-2.pdf", "5th", "Balance and savings ledger", ["bmo-sav-9032"], ["BMO_SAV9032"], "bmo_savings.csv", "balance chain closes", parser="bmo_banking", **{"from": "2026-01"},
+            zh=OrderedDict(key=f"储蓄账户 {ID['bmo_sav']}")),
         doc(f"MasterCard {ID['bmo_mc']}", "BMO", "<Month D, YYYY>.pdf", "20th", "Spending, plan, baseline", ["bmo-mc-5518"], ["BMO_MC5518"], "spending.csv", "parsed total = Purchases and other charges + interest + Fees", parser="bmo_mastercard"),
-        doc("Holdings", "Wealthsimple", "holdings-report-<date>.csv", "any time", "Portfolio, net worth", ["ws-tfsa", "ws-rrsp"], ["WS_HOLDINGS"], "holdings_latest.csv", "replaced wholesale", **{"from": "2026-06"}),
-        doc("Activities", "Wealthsimple", "activities-export-<date>.csv", "any time", "Dividends, trades, deposits", ["ws-tfsa", "ws-rrsp"], ["WS"], "ws_activities.csv", "deposits, distributions and trades", **{"from": "2026-06"}),
+        doc("Holdings", "Wealthsimple", "holdings-report-<date>.csv", "any time", "Portfolio, net worth", ["ws-tfsa", "ws-rrsp"], ["WS_HOLDINGS"], "holdings_latest.csv", "replaced wholesale", **{"from": "2026-06"}, zh=OrderedDict(key="持仓报告")),
+        doc("Activities", "Wealthsimple", "activities-export-<date>.csv", "any time", "Dividends, trades, deposits", ["ws-tfsa", "ws-rrsp"], ["WS"], "ws_activities.csv", "deposits, distributions and trades", **{"from": "2026-06"}, zh=OrderedDict(key="交易记录导出")),
     ]
     J("accounts.json", OrderedDict([
         ("asof_note", "The register of every place money sits (`accounts`) and every file dropped each month (`documents`). Balances here are COPIES of banks.json / holdings_latest.csv; check_data D14 re-derives them. Change the source file, not this one."),
@@ -398,9 +403,9 @@ def build(out):
     J("rules.json", OrderedDict([
         ("note", "Your investing rules, as data. ONE thing is computed: every bucket that carries a `target` is checked against that range, and the page reports the drift. Buckets are matched in order and the one marked catchAll takes whatever is left. `notes` are your own, shown with the status you gave them; `{mv:SYM}` in the text is filled from the holdings. `checkpoints` are dates you promised to look at something again."),
         ("buckets", [
-            OrderedDict([("key", "bonds"), ("name", "Bonds"), ("symbols", sorted(BONDS)), ("target", [15, 25])]),
-            OrderedDict([("key", "stocks"), ("name", "Stocks"), ("symbols", ["VEQT", "XAW"])]),
-            OrderedDict([("key", "other"), ("name", "Anything else"), ("catchAll", True)]),
+            OrderedDict([("key", "bonds"), ("name", "Bonds"), ("symbols", sorted(BONDS)), ("target", [15, 25]), ("zh", {"name": "债券"})]),
+            OrderedDict([("key", "stocks"), ("name", "Stocks"), ("symbols", ["VEQT", "XAW"]), ("zh", {"name": "股票"})]),
+            OrderedDict([("key", "other"), ("name", "Anything else"), ("catchAll", True), ("zh", {"name": "其他"})]),
         ]),
         ("maxHoldings", 10),
         # what an ETF holds, which the export cannot say
@@ -414,6 +419,7 @@ def build(out):
         ]),
         ("benchmark", OrderedDict([("symbol", "VT"), ("name", "Vanguard Total World Stock ETF"),
                                    ("why", "The whole world's stocks in one fund: what the same money would have earned with no choices at all."),
+                                   ("zh", {"why": "一只基金覆盖全球股票，代表不做任何选择时同样的资金可获得的回报。"}),
                                    ("asof", "2026-10-27")])),
     ]))
     J("funds.json", OrderedDict([
@@ -423,15 +429,20 @@ def build(out):
             # ledger shows on the 1st (D21 looks for it), and it stays after FIRE.
             flows=[
                 OrderedDict(key="pay", kind="income", name="Take-home pay", amount=int(P["pay"] * 2),
-                            note=f"Payroll of ${P['pay']:,.0f} twice a month. Investment income stays with the broker and is not counted."),
+                            note=f"Payroll of ${P['pay']:,.0f} twice a month. Investment income stays with the broker and is not counted.",
+                            zh=OrderedDict(name="税后收入", note=f"工资每月发放两次，每次 ${P['pay']:,.0f}。投资收入留在券商账户中，不计入。")),
                 OrderedDict(key="rent", kind="committed", name="Rent", amount=int(P["rent"]), afterFire="keep",
-                            note="Pre-authorized on the 1st, from chequing. Still there after FIRE."),
+                            note="Pre-authorized on the 1st, from chequing. Still there after FIRE.",
+                            zh=OrderedDict(name="房租", note="每月 1 日从支票账户预授权扣款。实现 FIRE 后仍需支付。")),
                 OrderedDict(key="invest", kind="saving", name="Invest", amount=P["invest"], to="broker",
-                            note="Off the top, before anything else — pay-yourself-first."),
+                            note="Off the top, before anything else — pay-yourself-first.",
+                            zh=OrderedDict(name="投资", note="收入到账后最先划转，先于其他各项，即先存后花。")),
                 OrderedDict(key="emergency", kind="saving", name="Emergency fund", amount=P["emergency"], to="bmo-sav-9032",
-                            note="To savings on the 5th."),
+                            note="To savings on the 5th.",
+                            zh=OrderedDict(name="应急金", note="每月 5 日转入储蓄账户。")),
                 OrderedDict(key="everyday", kind="everyday", name="Everyday", amount=P["everyday"],
-                            note="The guilt-free line. No categories and no caps below it."),
+                            note="The guilt-free line. No categories and no caps below it.",
+                            zh=OrderedDict(name="日常支出", note="可自由支配的部分，不再细分类别，也不设上限。")),
             ],
         )),
     ]))
@@ -443,12 +454,15 @@ def build(out):
     J("plan.json", OrderedDict([
         ("note", "Your planning assumptions. `planBase` is the monthly planning spend the FIRE target is built on (× 12 × 25); `skipMonths` are months excluded from every comparison, each with the reason the page shows. `retirement` holds the projection scenarios and the late-life care model; `descriptions` are your own one-liners under the net-worth parts (leave them out and the page describes each part from the register)."),
         ("planBase", int(P["rent"] + P["everyday"])),
-        ("skipMonths", OrderedDict([("2025-12", "Only the tail of the first card statement — 11 days, not a month")])),
+        ("skipMonths", OrderedDict([("2025-12", "Only the tail of the first card statement — 11 days, not a month"),
+                                   ("zh", {"2025-12": "仅有第一份信用卡对账单的最后 11 天，不足一个月"})])),
         # She said yes to FIRE at setup, and gave the estimates her My Service Canada account shows.
         ("fire", OrderedDict([("goal", True), ("asked", "2025-12-20")])),
         ("retirement", OrderedDict(list(RETIREMENT_DEFAULTS.items()) + [("pensions", [
-            OrderedDict([("name", "CPP"), ("monthly", 760), ("from", 65), ("asof", "2025-12-20"), ("source", "My Service Canada estimate")]),
-            OrderedDict([("name", "OAS"), ("monthly", 740), ("from", 65), ("asof", "2025-12-20"), ("source", "My Service Canada estimate")])])])),
+            OrderedDict([("name", "CPP"), ("monthly", 760), ("from", 65), ("asof", "2025-12-20"), ("source", "My Service Canada estimate"),
+                         ("zh", {"source": PENSION_SRC_ZH})]),
+            OrderedDict([("name", "OAS"), ("monthly", 740), ("from", 65), ("asof", "2025-12-20"), ("source", "My Service Canada estimate"),
+                         ("zh", {"source": PENSION_SRC_ZH})])])])),
     ]))
     J("foreign.json", OrderedDict([("asof", TODAY), ("currency", None), ("symbol", ""), ("label", "Foreign"),
                                    ("cadPerUnit", 0), ("total", 0),
@@ -484,15 +498,26 @@ def build(out):
             ("date", "2026-09-06"),
             ("files", ["MasterCard statement to Aug 20", "Chequing and savings statements to Sep 5",
                        "Holdings report of Sep 6", "Activities export of Sep 6"]),
-            ("changed", [{"label": "Portfolio", "from": f"${invested - BACK['2026-08-05']['port']:,.0f}", "to": f"${invested:,.0f}"},
-                         {"label": "Spending in August", "from": "$0", "to": f"${aug:,.0f}"}]),
+            ("changed", [{"label": "Portfolio", "from": f"${invested - BACK['2026-08-05']['port']:,.0f}", "to": f"${invested:,.0f}",
+                          "t": "upd.rec.chg_portfolio"},
+                         {"label": "Spending in August", "from": "$0", "to": f"${aug:,.0f}", "t": "upd.rec.chg_spending", "month": "2026-08"}]),
             ("noticed", [
-                dict(sev="ok", text=f"Bonds are {dry_pct}% of the portfolio, inside your 15–25% band."),
-                dict(sev="ok", text=f"August kept the rule: two deposits of ${P['invest']/2:,.0f} reached the TFSA on Aug 2 and Aug 17."),
-                dict(sev="ok", text="Every statement due has arrived. The next to close is the MasterCard on Sep 20."),
+                dict(sev="ok", text=f"Bonds are {dry_pct}% of the portfolio, inside your 15–25% band.",
+                     t="upd.rec.bonds_inside", pct=dry_pct, lo=15, hi=25),
+                dict(sev="ok", text=f"August kept the rule: two deposits of ${P['invest']/2:,.0f} reached the TFSA on Aug 2 and Aug 17.",
+                     t="upd.rec.deposits_kept", month="2026-08", amount=f"${P['invest']/2:,.0f}", acct="TFSA",
+                     d1="2026-08-02", d2="2026-08-17"),
+                dict(sev="ok", text="Every statement due has arrived. The next to close is the MasterCard on Sep 20.",
+                     t="upd.rec.all_arrived", doc="MasterCard", on="2026-09-20"),
             ]),
             ("judged", ["Filed the Hydro Ottawa payment as a bill."]),
             ("asked", ["What the unnamed $200 e-Transfer of Aug 11 was."]),
+            # the same sentences as keys and values, by position, the way update.py writes them
+            ("judgedT", [{"t": "upd.rec.j_bill", "payee": "Hydro Ottawa"}]),
+            ("filesT", [{"t": "upd.rec.f_statement", "doc": "MasterCard", "upto": "2026-08-20"},
+                        {"t": "upd.rec.f_chq_sav", "upto": "2026-09-05"},
+                        {"t": "upd.rec.f_holdings", "on": "2026-09-06"},
+                        {"t": "upd.rec.f_activities", "on": "2026-09-06"}]),
         ])])]))
     J("decisions.json", OrderedDict([
         ("note", NOTE_DEC),
@@ -540,17 +565,24 @@ def build(out):
     return dict(P=P, net_worth=net_worth, invested=r2(invested), dry_pct=dry_pct, tickers=tickers, n_acts=len(acts))
 
 
+# Where her CPP and OAS estimates come from, in Chinese (an owner label's optional zh, DESIGN.md §5b″).
+PENSION_SRC_ZH = "加拿大服务局 My Service Canada 账户中的估算"
+
 # The late-life care model and the projection scenarios a new workspace starts with. These are
 # published Canadian figures, not anybody's decision; the owner changes them in plan.json.
 RETIREMENT_DEFAULTS = OrderedDict([
     ("scenarios", [dict(r=0.03, c="#9ec5f4", n="3% real"), dict(r=0.05, c="#2a78d6", n="5% real"), dict(r=0.07, c="#104281", n="7% real")]),
     ("horizon", 25), ("anchorYear", 2026), ("lifeTo", 95), ("coastR", 0.05),
     ("homeCare", dict(k="Light care at home", v=4200, esc=0.015,
-                      d="Around 4 hours a day of a PSW at roughly $35/hr — meals, cleaning, some personal care. Bought by the hour, so it climbs with wages")),
+                      d="Around 4 hours a day of a PSW at roughly $35/hr — meals, cleaning, some personal care. Bought by the hour, so it climbs with wages",
+                      zh=dict(k="居家轻度护理", d="每天约 4 小时的个人护理员（PSW）服务，每小时约 $35，包括备餐、清洁和部分个人护理。按小时计费，因此随工资上涨"))),
     ("ltcTiers", [
-        dict(k="Public · basic", v=2100, esc=0.003, d="Shared room in a public long-term-care home. Province-set co-payment for accommodation only — the care itself is publicly funded. A rate reduction exists if income is low. Long waitlist"),
-        dict(k="Public · private", v=3000, esc=0.003, d="Private room in the same public system. Same capped pricing, longer wait"),
-        dict(k="Private home", v=6500, esc=0.015, d="Private retirement residence with a care package. No waitlist and no subsidy, and priced like any other private service, so it climbs with wages")]),
+        dict(k="Public · basic", v=2100, esc=0.003, d="Shared room in a public long-term-care home. Province-set co-payment for accommodation only — the care itself is publicly funded. A rate reduction exists if income is low. Long waitlist",
+             zh=dict(k="公立 · 多人间", d="公立长期护理院的多人间。仅住宿费用按省政府规定的标准自付，护理本身由政府出资。低收入者可申请减免。轮候时间长")),
+        dict(k="Public · private", v=3000, esc=0.003, d="Private room in the same public system. Same capped pricing, longer wait",
+             zh=dict(k="公立 · 单人间", d="同一公立体系中的单人间。同样实行限价，轮候时间更长")),
+        dict(k="Private home", v=6500, esc=0.015, d="Private retirement residence with a care package. No waitlist and no subsidy, and priced like any other private service, so it climbs with wages",
+             zh=dict(k="私立机构", d="提供护理服务的私立养老院。无需轮候，也没有补贴，价格与其他私人服务一样随工资上涨"))]),
 ])
 
 

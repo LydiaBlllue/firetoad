@@ -1,5 +1,42 @@
 # Changelog
 
+## 1.2.0 — 2026-11-27
+
+- **The dashboard in Chinese** (看板中文). Every page, chart, hover, empty state, Glossary entry and
+  Settings row has its English and Chinese side by side in `templates/dashboards/strings.json`
+  (about 1,100 sentences); the page reads them through `T()`. It opens in the language the panel
+  uses, and a switch under Settings (中文 / English) changes it in place and tells the app, so the
+  panel follows. The live demo opens in the language of the site page it was opened from. Dates,
+  months, plurals and lists are written each language's way; the 15 categories use their Chinese
+  names. What the owner typed is shown as typed.
+- **The English was read again on the way**: one name for one thing (Portfolio, Fixed costs,
+  Planned spending, Cash on hand, Monthly average, Surplus, Savings goals, Data as of, Cash to
+  invest, Available now, Taxable on withdrawal…), no metaphors (pot, dry powder, no slack), and
+  finance terms a newcomer may not know get a Glossary entry (asset allocation, percentage point).
+  Facts checked against canada.ca: non-registered gains are taxed when sold, unused FHSA room
+  carries forward only up to $8,000, an RRSP closes by 71.
+- **New checks**: S11 (every sentence in both languages, same placeholders) and R10 (every page
+  drawn in Chinese at 800 and 1760px); selftest plants a sentence with no Chinese.
+- **The Emergency fund page is gone, and so is Home's Months covered card.** It counted every
+  account that could be spent today, so next month's rent in chequing read as an emergency fund,
+  and a person with nothing set aside could read as inside their range. Saving toward an
+  emergency fund stays a line of the plan, like any other goal. The emergency range left the
+  Settings page with it; a range already stored is kept in `plan.json` and read by nothing.
+- **Setup and the panel call everyday accounts Cash on hand** (日常资金), the name the dashboard
+  uses for that money, in place of Everyday money, which read like the plan's Everyday line. The
+  panel's Chinese reads as a finance tool rather than speech: the account purposes are 日常资金,
+  长期投资, 专款专用 and 非金融资产, and spending is 支出 throughout (每月日常支出, 每月规划支出).
+  Take-home pay on the Settings page is 每月税后收入. In English, Growing is now Long-term investments and Owned, not money is Non-financial assets.
+- **Bucket is now holding group** (持仓分组) in the glossary and the panel: a reader new to
+  investing does not know what a bucket is. `rules.json` still calls them `buckets`; nothing moves.
+  How it works said the Portfolio page splits by bucket; it has split by account since 1.0.9.
+- **Settings says who charges for AI assist, and how**: you add credit with the company you
+  picked, and each time FIRE Toad asks, a little is taken from it at that company's prices. It no
+  longer gives a price ("less than a cent a month"), which did not hold for every company.
+- **The website**: "Every number adds up" is now the end of "No bank login", since reading the
+  statement itself is what lets the app check it against the totals the bank printed; the three
+  points sit in one row. The Chinese front page asks 离财务自由，还有几年？
+
 ## 1.1.0 — 2026-11-25
 
 - **AI assist** (AI 辅助), off until you turn it on: for a merchant the app does not know, it

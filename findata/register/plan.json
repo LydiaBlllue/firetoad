@@ -2,7 +2,10 @@
   "note": "Your planning assumptions. `planBase` is the monthly planning spend the FIRE target is built on (× 12 × 25); `skipMonths` are months excluded from every comparison, each with the reason the page shows. `retirement` holds the projection scenarios and the late-life care model; `descriptions` are your own one-liners under the net-worth parts (leave them out and the page describes each part from the register).",
   "planBase": 2950,
   "skipMonths": {
-    "2025-12": "Only the tail of the first card statement — 11 days, not a month"
+    "2025-12": "Only the tail of the first card statement — 11 days, not a month",
+    "zh": {
+      "2025-12": "仅有第一份信用卡对账单的最后 11 天，不足一个月"
+    }
   },
   "fire": {
     "goal": true,
@@ -34,26 +37,42 @@
       "k": "Light care at home",
       "v": 4200,
       "esc": 0.015,
-      "d": "Around 4 hours a day of a PSW at roughly $35/hr — meals, cleaning, some personal care. Bought by the hour, so it climbs with wages"
+      "d": "Around 4 hours a day of a PSW at roughly $35/hr — meals, cleaning, some personal care. Bought by the hour, so it climbs with wages",
+      "zh": {
+        "k": "居家轻度护理",
+        "d": "每天约 4 小时的个人护理员（PSW）服务，每小时约 $35，包括备餐、清洁和部分个人护理。按小时计费，因此随工资上涨"
+      }
     },
     "ltcTiers": [
       {
         "k": "Public · basic",
         "v": 2100,
         "esc": 0.003,
-        "d": "Shared room in a public long-term-care home. Province-set co-payment for accommodation only — the care itself is publicly funded. A rate reduction exists if income is low. Long waitlist"
+        "d": "Shared room in a public long-term-care home. Province-set co-payment for accommodation only — the care itself is publicly funded. A rate reduction exists if income is low. Long waitlist",
+        "zh": {
+          "k": "公立 · 多人间",
+          "d": "公立长期护理院的多人间。仅住宿费用按省政府规定的标准自付，护理本身由政府出资。低收入者可申请减免。轮候时间长"
+        }
       },
       {
         "k": "Public · private",
         "v": 3000,
         "esc": 0.003,
-        "d": "Private room in the same public system. Same capped pricing, longer wait"
+        "d": "Private room in the same public system. Same capped pricing, longer wait",
+        "zh": {
+          "k": "公立 · 单人间",
+          "d": "同一公立体系中的单人间。同样实行限价，轮候时间更长"
+        }
       },
       {
         "k": "Private home",
         "v": 6500,
         "esc": 0.015,
-        "d": "Private retirement residence with a care package. No waitlist and no subsidy, and priced like any other private service, so it climbs with wages"
+        "d": "Private retirement residence with a care package. No waitlist and no subsidy, and priced like any other private service, so it climbs with wages",
+        "zh": {
+          "k": "私立机构",
+          "d": "提供护理服务的私立养老院。无需轮候，也没有补贴，价格与其他私人服务一样随工资上涨"
+        }
       }
     ],
     "pensions": [
@@ -62,14 +81,20 @@
         "monthly": 760,
         "from": 65,
         "asof": "2025-12-20",
-        "source": "My Service Canada estimate"
+        "source": "My Service Canada estimate",
+        "zh": {
+          "source": "加拿大服务局 My Service Canada 账户中的估算"
+        }
       },
       {
         "name": "OAS",
         "monthly": 740,
         "from": 65,
         "asof": "2025-12-20",
-        "source": "My Service Canada estimate"
+        "source": "My Service Canada estimate",
+        "zh": {
+          "source": "加拿大服务局 My Service Canada 账户中的估算"
+        }
       }
     ]
   }

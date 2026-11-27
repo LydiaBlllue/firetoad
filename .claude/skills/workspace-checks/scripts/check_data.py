@@ -609,7 +609,9 @@ def check(root):
         def walk(node, path):
             if isinstance(node, dict):
                 for k, v in node.items():
-                    if k.startswith("zh_") or k == "asof_note":
+                    # `zh` is an owner label's optional Chinese ({"name": …, "zh": {"name": …}}),
+                    # shown only when the page is in Chinese (DESIGN.md §5b″)
+                    if k.startswith("zh_") or k in ("asof_note", "zh"):
                         continue
                     walk(v, path + "." + k)
             elif isinstance(node, list):
@@ -617,7 +619,7 @@ def check(root):
                     walk(v, path + f"[{i}]")
             elif isinstance(node, str) and han.search(node):
                 err("D13", f"funds.json{path} is rendered on an English-only page but contains "
-                           f"Chinese -- move the reason to a zh_ field", "conform")
+                           f"Chinese -- put the Chinese in a zh object beside it", "conform")
         walk(fj, "")
         plan = fj["plan"]
         # Schema 5: the plan is flows. Each row needs a kind the tool knows and an amount; the

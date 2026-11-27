@@ -11,12 +11,12 @@ def files(plan=None, flows=None, profile=None):
 
 class Reading(unittest.TestCase):
 
-    def test_a_range_never_given_is_the_default(self):
-        self.assertEqual(settings.value("emergency", files()), [3, 6])
-        self.assertIsNone(settings.stored("emergency", files()))
+    def test_a_value_never_given_is_the_default(self):
+        self.assertEqual(settings.value("importDay", files()), 1)
+        self.assertIsNone(settings.stored("importDay", files()))
 
-    def test_a_stored_range_wins_over_the_default(self):
-        self.assertEqual(settings.value("emergency", files({"emergency": {"low": 6, "high": 9}})), [6, 9])
+    def test_a_stored_value_wins_over_the_default(self):
+        self.assertEqual(settings.value("importDay", files(profile={"importDay": 26})), 26)
 
     def test_a_plan_figure_is_read_from_its_flow(self):
         f = files(flows=[{"kind": "income", "amount": 4300}, {"kind": "saving", "amount": 700, "to": "broker"},
@@ -39,21 +39,6 @@ class Reading(unittest.TestCase):
 
 
 class Checking(unittest.TestCase):
-
-    def test_a_range_needs_its_lower_end_first(self):
-        self.assertEqual(settings.check("emergency", [6, 9]), ([6, 9], None))
-        self.assertIsNone(settings.check("emergency", [9, 6])[0])
-
-    def test_a_range_can_be_one_number_twice_but_not_zero_to_zero(self):
-        self.assertEqual(settings.check("emergency", [6, 6])[0], [6, 6])
-        self.assertIsNone(settings.check("emergency", [0, 0])[0])
-
-    def test_a_range_stays_inside_the_rows_limits(self):
-        self.assertIsNone(settings.check("emergency", [3, 37])[0])
-        self.assertIsNone(settings.check("emergency", [-1, 6])[0])
-
-    def test_a_range_reads_from_words(self):
-        self.assertEqual(settings.check("emergency", "6 to 9")[0], [6, 9])
 
     def test_money_reads_the_way_it_is_typed(self):
         self.assertEqual(settings.check("planBase", "$3,600")[0], 3600)
@@ -93,14 +78,12 @@ class Writing(unittest.TestCase):
         self.assertEqual(f["funds.json"]["plan"]["flows"], [{"key": "invest", "kind": "saving", "name": "Invest", "to": "broker", "amount": 500}])
         self.assertEqual(settings.value("invest", f), 500)
 
-    def test_going_back_to_the_default_removes_the_stored_range(self):
+    def test_going_back_to_the_default_writes_the_default(self):
         f = files()
-        settings.write("emergency", [6, 9], f, "2026-01-02")
-        self.assertEqual(settings.value("emergency", f), [6, 9])
-        settings.reset("emergency", f, "2026-01-03")
-        self.assertNotIn("emergency", f["plan.json"])
-        self.assertNotIn("changed", f["plan.json"])
-        self.assertEqual(settings.value("emergency", f), [3, 6])
+        settings.write("importDay", 26, f, "2026-01-02")
+        self.assertEqual(settings.value("importDay", f), 26)
+        settings.reset("importDay", f, "2026-01-03")
+        self.assertEqual(settings.value("importDay", f), 1)
 
     def test_a_figure_with_no_default_cannot_go_back(self):
         with self.assertRaises(ValueError):
@@ -110,10 +93,10 @@ class Writing(unittest.TestCase):
 class ThePagesRows(unittest.TestCase):
 
     def test_every_row_of_the_table_reaches_the_page_with_its_value(self):
-        f = files({"planBase": 3000, "emergency": {"low": 6, "high": 9}, "changed": {"emergency": "2026-01-02"}})
+        f = files({"planBase": 3000, "changed": {"importDay": "2026-01-02"}}, profile={"importDay": 26})
         rows = {r["key"]: r for r in settings.rows(f)}
         self.assertEqual(set(rows), {r["key"] for r in settings.TABLE})
-        self.assertEqual((rows["emergency"]["v"], rows["emergency"]["isDef"], rows["emergency"]["changed"]), ([6, 9], False, "2026-01-02"))
+        self.assertEqual((rows["importDay"]["v"], rows["importDay"]["isDef"], rows["importDay"]["changed"]), (26, False, "2026-01-02"))
         self.assertEqual((rows["planBase"]["v"], rows["planBase"]["isDef"]), (3000, False))
         self.assertTrue(settings.rows(files())[0]["isDef"])
 
@@ -121,16 +104,6 @@ class ThePagesRows(unittest.TestCase):
         for r in settings.TABLE:
             self.assertTrue(all(r.get(k) for k in ("en", "zh", "whyEn", "whyZh")), r["key"])
             self.assertIn(r["stage"], settings.STAGES)
-
-
-class TheEmergencyRange(unittest.TestCase):
-
-    def test_the_edges_belong_to_the_range(self):
-        s = lambda m: settings.emergency_state(m, [3, 6])
-        self.assertEqual([s(2.9), s(3), s(4.5), s(6), s(6.1)], ["below", "inside", "inside", "inside", "above"])
-
-    def test_months_that_cannot_be_known_have_no_state(self):
-        self.assertIsNone(settings.emergency_state(None, [3, 6]))
 
 
 class TheReturn(unittest.TestCase):

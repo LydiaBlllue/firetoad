@@ -121,21 +121,21 @@
   hand-aligned table heading written outside them; the two grouped tables not yet moved (Accounts,
   Statements) say so on their line. In 2.0 the two become the component library's Card and Table.
 
-<!-- LINT:PAGES pages=19 sections=4 -->
-- **The pages**: 19 pages under 4 sidebar sections, **one per stage of the way to FIRE** (2026-11-13, user 001: grouped by how far along the owner is, not by topic; until then the sections were Money in & out, Plan, Investing and Monthly import). **Lint rule S4 checks this table against
+<!-- LINT:PAGES pages=18 sections=4 -->
+- **The pages**: 18 pages under 4 sidebar sections, **one per stage of the way to FIRE** (2026-11-13, user 001: grouped by how far along the owner is, not by topic; until then the sections were Money in & out, Plan, Investing and Monthly import). **Lint rule S4 checks this table against
   `NAV`**, so changing the navigation means changing this table too — and the page count, the
   sidebar list and the minimum width stated in `README.md`, and every path the README hands the
   reader:
   | Section | Pages |
   |---|---|
   | — | Home (four cards, net worth in one card, net worth over time). It belongs to no stage |
-  | Get started | Accounts · This month · Year · Income · Subscriptions · Monthly spending · Emergency fund |
+  | Get started | Accounts · This month · Year · Income · Subscriptions · Monthly spending |
   | Set a goal | FIRE |
   | Stay on track | Budget · Portfolio · Performance · Holdings · Investment income |
   | After FIRE | Drawdown & care |
-  | — | Updates, Statements and the Glossary: records and reference, for every stage, at the foot of the sidebar, under the pages still waiting for their data; then Settings, alone, with a gear |
+  | — | Updates, Statements and the Glossary: records and reference, for every stage, at the foot of the sidebar, under the pages still waiting for their data; then Settings, alone, with a gear; under it the language switch (a globe and the other language's own name, 中文 or English — 2026-11-25) |
 
-  **What a page waits for** (`WAITS`): Income and Emergency fund a chequing statement; Portfolio,
+  **What a page waits for** (`WAITS`): Income a chequing statement; Portfolio,
   Performance and Holdings a broker's holdings; Investment income a broker's activity; FIRE a FIRE
   goal or a number for it (years to financial independence: a target and money reaching the
   broker, 1.0.5); Drawdown & care a FIRE goal and something invested. A page that waits is folded under
@@ -166,7 +166,7 @@
   purchase, otherwise the newest one the statements reach. What is left of Everyday is This
   month's to say, 2026-11-03). Invested, no goal: Portfolio · Years · Invested. Nothing invested:
   Years, when there is a number for it. The rest fill from one list, in order, taking only a card with a
-  number: Card interest (only when a statement charged some) · Total spent in \<month\> · Months covered ·
+  number: Card interest (only when a statement charged some) · Total spent in \<month\> ·
   Kept this year · A year of subscriptions · Biggest category. So no owner sees an empty card.
 - **Net worth in one card, cut both ways at once**: one row per `role`, cash split by where it
   is — For FIRE / Set aside / Cash / Cash in \<abroad\> / Owed to you / Other assets (only for
@@ -219,7 +219,7 @@
 - **Portfolio**: the stat cards, the three ways the portfolio splits — by currency, by kind of
   asset, by account (each as the broker names it, a fund abroad by its institution; 1.0.9, in place
   of the buckets) — and the exchange-rate card that goes with the by-currency split. The dry-powder
-  card is there only when a bucket has a target band.
+  card is there only when a holding group has a target band.
 - **Performance**: *Against \<benchmark\>* — the same money bought into the fund `rules.json`
   `benchmark` names, on the days it actually went in, drawn as that fund's daily line against the
   growth accounts' snapshots, dashed marks where money moved; three stat cards (your growth
@@ -236,15 +236,8 @@
 
 ### Plan
 
-- **Emergency fund** (1.0.1): three cards — Months covered, The money, A usual month — each
-  opening its sum, then where the money is, what is *Due now* (taken off the money) and what is
-  *Paid over time* (listed, not taken off: its payment is in a usual month); money abroad only in
-  the line under Months covered (FINANCE.md §8d). Since 1.0.5 a fourth block, **Your range**: the
-  owner's own months (three to six until changed), drawn as a band on one scale with a mark where
-  the money stands, and changeable in place. Under Months covered the page says *Below your
-  range*, *Inside your range* or *Above your range*; below, one line says how much more reaches
-  the lower end, above, how much is beyond the upper end. Nothing else: no advice on what to do
-  with it, and no colour beyond the one word.
+- **No Emergency fund page** (2026-11-24): counting everything that could be spent today
+  counted next month's rent as an emergency fund. Saving toward one is a line of the plan.
 
 - **Budget** — *is my plan holding?* It follows the month cursor and the year (1.0.6). First the
   answer, **Everyday, month by month** (everyday spending against today's everyday amount, the
@@ -288,7 +281,7 @@
   American history and the stretches overlap. Only the years of taking money out are replayed;
   the first day's pot is the steady path's.
 - **One name for a month's spending** (2026-11-05, the owner): **A usual month** is the average of
-  up to twelve full months, unusual ones left out — on Monthly spending, Emergency fund, Investment
+  up to twelve full months, unusual ones left out — on Monthly spending, Investment
   income and This month's comparison. *Spent a month in <year>* (Year) is only that year's
   average and says so; the **Planning figure** is the one the FIRE target is built on.
 - **Monthly spending** (was Spending baseline): *A usual month* on top, then the planning figure against what is really spent, with a 12-month bar
@@ -368,8 +361,7 @@
   nothing is being typed. A row that differs from its default says the day it was changed and
   offers the way back; a refused or unsaved change puts the old number back and says why in one
   line at the foot of the window.
-- **The same control on the number's own page.** The emergency range is changed on Emergency
-  fund, planning spend on Monthly spending, the two plan figures on Budget — one value, one
+- **The same control on the number's own page.** Planning spend is changed on Monthly spending, the two plan figures on Budget — one value, one
   script, wherever it is typed.
 - **Opened as a file, the numbers are read, not changed**: the controls are greyed and one line
   says to open the page with the app. The demo is nobody's data, so there a change is shown and
@@ -453,6 +445,28 @@ the owner's own prose in the data:
 
 The prose fields of `imports.json`, `decisions.json`, `plan.json` and `rules.json` reach the page
 too, and the import writes them to the same rules (update-dashboard, Step 7).
+
+## 5b″. Two languages (2026-11-25)
+
+- Every sentence the page shows is a key in `templates/dashboards/strings.json` with `en` and `zh`
+  side by side, read through `T(key, vars)` / `TN(key, n, vars)` (plurals: `_one` / `_many`) or a
+  `data-t` attribute on static markup. Nothing on screen is typed into the page code. **S11** holds
+  it: every key the page reads exists, both languages are there, both fill the same placeholders.
+- Never build a Chinese sentence from English pieces: the whole sentence is one key, values go in
+  as `{placeholders}`. Dates and lists go through the helpers (`dLong`, `ymFull`, `listJoin`…),
+  never `MN + " " + year`.
+- Chinese is written the way a bank or brokerage app writes it, not spoken (the owner,
+  2026-11-25): 支出 not 开销, 尚未 not 还没, 看板 never 仪表盘. A finance term a newcomer may not know
+  is used and given a Glossary entry, not paraphrased.
+- The page opens in `?lang=`, else the language this browser last switched to, else the panel's
+  language at build time (`LANG_DEFAULT`). Switching reloads the page; served by the app it first
+  POSTs `api/lang`, so the panel follows. **R10** draws every page in Chinese at the narrowest and
+  widest widths: no key names on screen, no undefined, no sideways scroll.
+- What the owner typed (account names, plan lines, holding groups, care tiers) is shown as typed,
+  in either language — unless the record carries its own Chinese beside it, an optional
+  `"zh": {"<field>": "<中文>"}` (`{"name": "Emergency fund", "zh": {"name": "应急金"}}`; in a map
+  such as `skipMonths` the zh object is keyed like the map). The page's `own(o, field)` shows it
+  in Chinese; without it nothing changes. The demo owner's labels carry one (`tools/demo.py`).
 
 ## 5b′. Words on a card
 

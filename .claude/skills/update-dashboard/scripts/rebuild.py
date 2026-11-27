@@ -28,13 +28,12 @@ import layout                              # where each findata file lives (sche
 import loans                               # what a borrower still owes, read from the ledgers -- one place
 import categories                          # the spending categories and their groups -- one place
 import verbs                               # the shape run() returns, shared by every script a month goes through
-import usual                               # a usual month and the emergency fund's months -- computed once, here
+import usual                               # a usual month -- computed once, here
 import settings                            # the numbers that are the owner's to choose -- one table
 import fixed                               # which spending rows are a declared committed payment
 import fire                                # the FIRE target, progress and months to go -- computed once, here
 import savings                             # the savings rate and the years it takes -- computed once, here
 import drawdown                            # living on the portfolio and late-life care, at the plan's own ages
-import debts as debt_rules                 # when a debt has to be paid: now, or over time
 
 MAIN_NAMES = ("ly_finance_dashboard.html", "finance_dashboard.html")   # an owner's copy, or the template's
 INV_NAME = "investment_dashboard.html"
@@ -88,6 +87,12 @@ PART_ROWS = (
     ("none", "all", "Other assets", "#b7bfba",
      "Things you own that are not money, such as a home or a car, at the value you last stated."),
 )
+# The page reads each row's words from the string table (templates/dashboards/strings.json) by key:
+# `t` the label, `qt` the definition; "k" stays the English label, which plan.json's descriptions
+# are keyed by. A reach row's key is "reach.<value>", its generic line "reach.<value>.desc".
+PART_KEY = {("grow", "all"): "nw.part.for_fire", ("set-aside", "all"): "nw.part.set_aside",
+            ("buffer", "home"): "nw.part.cash", ("buffer", "abroad"): "nw.part.cash_abroad",
+            ("owed", "all"): "nw.part.owed", ("none", "all"): "nw.part.other"}
 REACH_ROWS = (("today", "Spendable today", "#1baf7a"), ("costs", "Taxed to take out", "#eda100"),
               ("spoken", "Promised to a goal", "#eb6834"), ("lent", "Lent out", "#e87ba4"),
               ("locked", "In property", "#c98500"), ("abroad", "Held abroad", "#4a3aa7"))
@@ -179,6 +184,7 @@ def load(root):
         raise SystemExit(f"findata/ is schema {have}, newer than this tool ({SCHEMA}) — sync a newer tool")
     d["card_interest"] = rd("card_interest.csv")   # absent until the first import after 1.0.1
     d["clock"] = clock(root)[0].isoformat()     # the date age is measured from (clock.py)
+    d["strings"] = page_strings(root)            # the page's sentences, both languages, and its language
     return d
 
 
@@ -336,7 +342,8 @@ def benchmark_run(d):
     while fi < len(flows):
         units += flows[fi][1] / cad(flows[fi][0]); fi += 1
     shadow = round(units * cad(t1))
-    return {"symbol": sym, "name": bench.get("name", sym), "why": bench.get("why", ""),
+    zh = {k: v for k, v in (bench.get("zh") or {}).items() if k in ("name", "why") and v}   # DESIGN.md §5b″
+    return {"symbol": sym, "name": bench.get("name", sym), "why": bench.get("why", ""), **({"zh": zh} if zh else {}),
             "from": t0, "to": t1, "start": round(snaps[0]["cadInv"]), "end": round(snaps[-1]["cadInv"]),
             "put": round(sum(f[1] for f in flows)), "flows": flows, "shadow": shadow,
             "benchRet": round(cad(t1) / cad(t0) - 1, 4), "path": path,
@@ -352,6 +359,7 @@ def clean(obj):
 # ---------------------------------------------------------------- derivations
 def derive(d):
     out, rate = {}, d["rate"]
+    out["STR"], out["LANG_DEFAULT"] = d["strings"]
     accs = d["accounts"]["accounts"]
     port, earm, dry = account_sets(d)
     mv, bv, sym = holdings_by_account(d)
@@ -459,8 +467,12 @@ def derive(d):
     out["HOME_CARE"] = ret.get("homeCare", {})
     # Government pensions (1.0.1): CPP and OAS as the owner's own statement estimates them, in
     # today's dollars a month, from the age each starts. They pay part of what the drawdown takes.
+    # An owner label may carry its Chinese beside it ({"zh": {"source": "…"}}, DESIGN.md §5b″); the
+    # page's own() picks it in Chinese. Renamed fields keep their zh under the page's names.
+    zh_as = lambda o, names: ({"zh": {k: o["zh"][f] for f, k in names.items() if (o.get("zh") or {}).get(f)}}
+                              if any((o.get("zh") or {}).get(f) for f in names) else {})
     out["PENSIONS"] = [{"k": p["name"], "v": p["monthly"], "from": p.get("from", 65), "asof": p.get("asof", ""),
-                        "src": p.get("source", "")}
+                        "src": p.get("source", ""), **zh_as(p, {"name": "k", "source": "src"})}
                        for p in ret.get("pensions", []) if p.get("monthly") is not None]
     out["LTC_TIERS"] = ret.get("ltcTiers", [])
 
@@ -557,7 +569,8 @@ def derive(d):
         m0 = spend[0]["date"][:7]
         late = sorted({e["acct"] for e in spend if e["date"].startswith(m0) and e.get("acct") and start.get(e["acct"], "") > m0 + "-01"})
         if late and m0 not in out["MONTH_SKIP"]:
-            out["MONTH_SKIP"] = dict(out["MONTH_SKIP"], **{m0: "Not every statement covers it from the 1st (" + ", ".join(late) + ")"})
+            # the page's own sentence, as a key the page reads in its language (the owner's reasons are strings)
+            out["MONTH_SKIP"] = dict(out["MONTH_SKIP"], **{m0: {"t": "base.skip_partial_first", "accounts": late}})
     by_key = {a["key"]: a for a in accs}
     acts_latest = max((r["effective_date"] for r in d["acts"]), default=None)
     bank_asof = {x["account"]: x.get("asof") for x in bank["assets"] + bank["debts"]}
@@ -705,8 +718,11 @@ def derive(d):
     # debts by name. It used to read "MasterCard and Visa, both inside the grace period" for
     # everyone, mortgage holders included (2026-09-10, found by a test owner with a mortgage).
     debts = [a["name"] for a, _ in liabs]
-    dn = (", ".join(debts[:-1]) + " and " + debts[-1]) if len(debts) > 1 else (debts[0] if debts else "")
-    out["DEBT_NOTE"] = plan.get("descriptions", {}).get("debt") or ((dn + " — the balances owed today") if dn else "Nothing owed")
+    # Without the owner's words it is a key and the names, so the page says it in its language.
+    out["DEBT_NOTE"] = plan.get("descriptions", {}).get("debt") or ({"t": "nw.debt_note", "debts": debts} if debts else {"t": "nw.debt_none"})
+    _debt_zh = ((plan.get("descriptions") or {}).get("zh") or {}).get("debt")
+    if isinstance(out["DEBT_NOTE"], str) and _debt_zh:
+        out["DEBT_NOTE"] = {"s": out["DEBT_NOTE"], "zh": {"s": _debt_zh}}
     fgn_label = fj.get("label") or "Foreign"
 
     # One line under each row. The owner's own words if plan.json carries them (keyed by the
@@ -744,6 +760,13 @@ def derive(d):
         for a, _ in rows:
             by.setdefault(a["inst"], []).append(a.get("label") or a["name"])
         return "; ".join(", ".join(v) + " at " + k for k, v in by.items())
+    def accounts_by_inst(role, where):
+        """The same accounts as [institution, [names]] pairs, which the page words as nw.accounts_at."""
+        by = collections.OrderedDict()
+        for a, v in assets:
+            if a.get("role") == role and (where == "all" or (a.get("reach") == "abroad") == (where == "abroad")):
+                by.setdefault(a["inst"], []).append(a.get("label") or a["name"])
+        return [[k, v] for k, v in by.items()]
     def part_value(role, where):
         return by_role[role] if where == "all" else (role_ca[role] if where == "home" else role_ab.get(role, 0))
     reach_lab = {r: (lab, c) for r, lab, c in REACH_ROWS}
@@ -767,7 +790,7 @@ def derive(d):
         # a card paid past zero is listed as money with why (1.0.7: "a credit card counted as money")
         return {"n": a.get("label") or a["name"], "i": "" if a.get("role") == "owed" else a.get("inst", ""),
                 "v": round(v), "asof": a.get("asof") or "", "cur": cur if cur != "CAD" else "",
-                **({"note": "credit in your favour"} if a.get("credit") else {})}
+                **({"nt": "nw.credit_note"} if a.get("credit") else {})}
     def part_accounts(role, where, total):
         """The accounts behind a row, largest first. Rounded per account, the dollar that can
         drift settled on the largest, so the list sums to the row it opens under."""
@@ -786,46 +809,24 @@ def derive(d):
         if not names:
             continue
         lab = lab.replace("{abroad}", fgn_label)
-        out["NWPARTS"].append({"k": lab, "role": role, "v": part_value(role, where), "c": c, "q": q,
-                               "d": desc.get("nwparts", {}).get(lab, names),
+        own = desc.get("nwparts", {}).get(lab)
+        own_zh = (desc.get("nwparts", {}).get("zh") or {}).get(lab) if own else None
+        out["NWPARTS"].append({"k": lab, "t": PART_KEY[(role, where)], "qt": PART_KEY[(role, where)] + ".def",
+                               "role": role, "v": part_value(role, where), "c": c, "q": q,
+                               "d": own or names, **({"zh": {"d": own_zh}} if own_zh else {}),
+                               **({} if own or role == "owed" else {"dg": accounts_by_inst(role, where)}),
                                "by": part_by_reach(role, where, part_value(role, where)),
                                "accts": part_accounts(role, where, part_value(role, where))})
-    out["REACH"] = [{"k": lab, "r": r, "v": by_reach[r], "c": c, "d": desc.get("reach", {}).get(lab, generic_reach[lab])}
+    out["REACH"] = [{"k": lab, "t": "reach." + r, "r": r, "v": by_reach[r], "c": c,
+                     **({"d": desc["reach"][lab], **({"zh": {"d": desc["reach"]["zh"][lab]}}
+                                                    if (desc["reach"].get("zh") or {}).get(lab) else {})}
+                        if lab in desc.get("reach", {}) else {"d": generic_reach[lab], "dt": "reach." + r + ".desc"})}
                     for r, lab, c in REACH_ROWS if r in reach_present]
-    # The Emergency fund (FINANCE.md §8d): the money it counts is Home's own "Spendable today" row,
-    # less what is owed on no asset, so the two pages cannot disagree. Money abroad is a line of
-    # its own and investments are never in it. What a month costs is the page's: the spending
-    # baseline, measured there, plus the repayments the plan pays today.
-    def listed(rows, total):
-        rows = sorted((one_account(a, v) for a, v in rows if round(v)), key=lambda x: -x["v"])
-        if rows:
-            rows[0]["v"] += total - sum(x["v"] for x in rows)
-        return rows
-    # A TFSA is spendable today, but it is invested: Spendable today less what in it is held to
-    # grow, so the step from Home's row to this one is on the page.
-    # What is taken off the money is what is due now (a card's bill). A debt paid over time is
-    # not taken off: its monthly payment is in what a month costs (debts.py, FINANCE.md §8d).
-    due_now, due_later = debt_rules.unsecured(liabs, by_key)
-    unsecured = round(sum(v for _, v in due_now))
-    ft = flow_totals(d["funds"]["plan"])
-    paid = debt_rules.paid_by(d["funds"]["plan"].get("flows"))
-    inv_today = round(sum(v for a, v in ca if a.get("reach") == "today" and a.get("role") == "grow"))
-    out["SAFETY"] = {"today": by_reach["today"], "invested": inv_today, "abroad": by_reach["abroad"], "unsecured": unsecured,
-                     "accts": listed([(a, v) for a, v in ca if a.get("reach") == "today" and a.get("role") != "grow"],
-                                     by_reach["today"] - inv_today),
-                     "debts": listed(due_now, unsecured),
-                     # paid over time: listed, not subtracted; `paid` says the plan carries its payment
-                     "later": [dict(one_account(a, v), paid=a["key"] in paid) for a, v in sorted(due_later, key=lambda x: -x[1]) if round(v)],
-                     "repay": ft["repayNow"],
-                     "repayRows": [{"n": f.get("name") or f.get("pays"), "v": f.get("amount") or 0}
-                                   for f in ft["committedNow"] if f.get("pays")]}
-    # A usual month, as of every month the page can be turned to, and what the emergency fund
-    # comes to on today's (usual.py). Both were the page's own arithmetic until 1.0.5; computed
-    # here, a checker or a second front end reads the same numbers the page shows.
+    # A usual month, as of every month the page can be turned to (usual.py). It was the page's
+    # own arithmetic until 1.0.5; computed here, a checker or a second front end reads the same
+    # number the page shows.
     out["USUAL"] = usual.measured(out["SPENDING"], out["STMT_END"], out["MONTH_SKIP"], today,
                                   [c["k"] for c in out["CATS"] if c.get("noFire")])
-    out["SAFETY"].update(usual.runway(by_reach["today"], inv_today, unsecured, by_reach["abroad"], ft["repayNow"],
-                                      out["USUAL"]["month"].get(today[:7])))
     # The numbers that are the owner's to choose, each with its value now (settings.py).
     out["SETTINGS"] = settings.rows({"plan.json": plan, "funds.json": d["funds"], "profile.json": prof})
     # What each card statement charged in interest (1.0.1): a fact the import keeps, one row per
@@ -894,7 +895,10 @@ def derive(d):
     # the story of an update lives in the record and nowhere else on the page.
     out["IMPORTS"] = sorted(
         [{"date": r["date"], "files": r.get("files", []), "changed": r.get("changed", []),
-          "noticed": r.get("noticed", []), "judged": r.get("judged", []), "asked": r.get("asked", [])}
+          "noticed": r.get("noticed", []), "judged": r.get("judged", []), "asked": r.get("asked", []),
+          # the same sentences as keys and values, by position (records since 2026-11-25); the page
+          # says a sentence by its key when it has one, else in the English the record stored
+          **{k: r[k] for k in ("judgedT", "filesT") if r.get(k)}}
          for r in d["imports"]["imports"]], key=lambda r: r["date"], reverse=True)
     out["DECISIONS"] = [{k: v for k, v in x.items()} for x in d["decisions"]["decisions"]]
 
@@ -945,6 +949,29 @@ def derive(d):
                              "class": CLASS_OF_FUND.get(a["type"])}
                             for a in fgn_fund_rows]}
     return out
+
+
+def page_strings(root):
+    """Every sentence the page shows, in both languages (templates/dashboards/strings.json, one
+    row per key: {"en": ..., "zh": ...}), and the language the page opens in: the panel's
+    (.firetoad/settings.json `lang`), else profile.json `lang`, else English. The page can still
+    be switched in place; ?lang= on its address wins (the panel's link carries it)."""
+    sp = os.path.join(root, "templates", "dashboards", "strings.json")
+    try:
+        table = json.load(open(sp, encoding="utf-8"))
+    except (OSError, ValueError):
+        table = {}
+    lang = None
+    for p in (os.path.join(layout.state_dir(root), "settings.json"),
+              os.path.join(root, "findata", "register", "profile.json")):
+        try:
+            v = json.load(open(p, encoding="utf-8")).get("lang")
+        except (OSError, ValueError, AttributeError):
+            v = None
+        if v in ("en", "zh"):
+            lang = v
+            break
+    return table, lang or "en"
 
 
 # Which file each constant lives in. Everything not listed is the main dashboard's.
