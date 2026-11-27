@@ -4272,12 +4272,12 @@
   "zh": "全部导入记录"
  },
  "upd.files_many": {
-  "en": "{n} files: {files}",
-  "zh": "{n} 个文件：{files}"
+  "en": "Imported {n} files: {files}",
+  "zh": "本次导入 {n} 个文件：{files}"
  },
  "upd.files_one": {
-  "en": "{n} file: {files}",
-  "zh": "{n} 个文件：{files}"
+  "en": "Imported {n} file: {files}",
+  "zh": "本次导入 {n} 个文件：{files}"
  },
  "upd.newest_suffix": {
   "en": "{date} — the newest update",
@@ -4348,28 +4348,28 @@
   "zh": "待投现金占 {pct}%，超出 {lo}–{hi}% 的目标区间。下次投入资金时请进行再平衡。"
  },
  "upd.rec.f_activities": {
-  "en": "Activities export of {on}",
-  "zh": "{on}的交易记录导出"
+  "en": "transaction history (exported {on})",
+  "zh": "交易记录（{on}导出）"
  },
  "upd.rec.f_chq_sav": {
-  "en": "Chequing and savings statements to {upto}",
-  "zh": "截至 {upto}的支票账户和储蓄账户对账单"
+  "en": "chequing and savings statements (to {upto})",
+  "zh": "支票账户和储蓄账户对账单（截至 {upto}）"
  },
  "upd.rec.f_holdings": {
-  "en": "Holdings report of {on}",
-  "zh": "{on}的持仓报告"
+  "en": "holdings report ({on})",
+  "zh": "持仓报告（{on}）"
  },
  "upd.rec.f_ledger": {
-  "en": "{who}’s ledger of {on}",
+  "en": "ledger from {who} ({on})",
   "zh": "{who} 的往来记录（{on}）"
  },
  "upd.rec.f_statement": {
-  "en": "{doc} statement to {upto}",
-  "zh": "截至 {upto}的 {doc} 对账单"
+  "en": "{doc} statement (to {upto})",
+  "zh": "{doc} 对账单（截至 {upto}）"
  },
  "upd.rec.f_statement_again": {
-  "en": "{doc} statement to {upto} (again)",
-  "zh": "截至 {upto}的 {doc} 对账单（重复提交）"
+  "en": "{doc} statement (to {upto}, submitted again)",
+  "zh": "{doc} 对账单（截至 {upto}，重复提交）"
  },
  "upd.rec.holdings_many": {
   "en": "{n} holdings: past {max} the Holdings page draws slowly.",
