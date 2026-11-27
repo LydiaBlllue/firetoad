@@ -3648,8 +3648,8 @@
   "zh": "开启后，应用无法识别的商户会以名称发送给 {company}，以确定适用的类别。不会发送金额、日期和账户。"
  },
  "set.ai.prepaid": {
-  "en": "A key is paid for in advance: you add credit first, and a month of merchants costs less than a cent.",
-  "zh": "API 密钥需预先充值，一个月的商户查询费用不到 1 美分。"
+  "en": "A key is paid for in advance: you add credit with {company} first, and each time FIRE Toad asks, a little is taken from it, at {company}'s prices.",
+  "zh": "API 密钥需预先充值：先在 {company} 充值，FIRE蛙 每次查询时，按 {company} 的定价从余额中扣除少量费用。"
  },
  "set.ai.replace": {
   "en": "Replace",

@@ -2731,7 +2731,7 @@ function renderAI(){
     if(svc && svc !== "ollama" && !(st.enabled && cur === svc && !aiDraft))
       h += '<p class="fine">' + T("set.ai.once_on", {company: s.company}) + '</p>'
         + '<p class="fine">' + T("set.ai.terms", {company: s.company}) + '</p>'
-        + '<p class="fine">' + T("set.ai.prepaid") + '</p>';
+        + '<p class="fine">' + T("set.ai.prepaid", {company: s.company}) + '</p>';
     if(svc === "ollama") h += '<p class="fine">' + T("set.ai.ollama_open") + '</p>';
   } else h += '<p class="fine">' + AI_SENT + '</p>';
   if(st.enabled && !aiDraft)
