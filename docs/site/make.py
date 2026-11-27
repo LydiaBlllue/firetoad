@@ -61,10 +61,10 @@ EN = dict(
     lede=("Once a month, drop your bank statements into a folder. FIRE Toad reads them on your Mac, "
           "checks that each one adds up, and works out what you spend, what you keep, and how many years "
           "until financial independence — then how long the money lasts once you stop, with CPP and OAS counted."),
-    demo="Try the live demo", download="Download for Apple silicon", download_intel="Download for Intel Mac",
-    mac=("Free. Not sure which Mac you have? Open the Apple menu, then About This Mac. A line that says "
-         "Chip means Apple silicon. A line that says Processor means Intel. The Apple silicon download "
-         "needs macOS 11 or later, the Intel one macOS 10.15 or later."),
+    demo="Try the live demo", get="Free download for Mac",
+    download=("Apple silicon", "macOS 11 or later"), download_intel=("Intel", "macOS 10.15 or later"),
+    mac=("Which Mac do I have?", "Open the Apple menu, then About This Mac. A line that says Chip means "
+         "Apple silicon. A line that says Processor means Intel."),
     fine=(f"The demo shows {DEMO['first']}'s money — a made-up {DEMO['age']}-year-old in {DEMO['city']}. "
           "Nothing to install. The app is signed and notarised by Apple, works in English and Chinese, "
           "and is free and open source (MIT)."),
@@ -182,9 +182,10 @@ ZH = dict(
     h1="离财务自由，还有几年？",
     lede=("每个月把银行对账单放进一个文件夹。FIRE蛙在你的 Mac 上逐份读取、核对金额，算出你花多少、存下多少、"
           "还要几年财务自由，再算停工以后钱能撑多久，CPP 和 OAS 也算进去。"),
-    demo="看在线演示", download="下载 Apple 芯片版", download_intel="下载 Intel 版",
-    mac=("免费。不确定自己的 Mac 是哪种？点左上角苹果菜单，再点「关于本机」。有「芯片」那一行的是 Apple 芯片，"
-         "有「处理器」那一行的是 Intel。Apple 芯片版要 macOS 11 及以上，Intel 版要 macOS 10.15 及以上。"),
+    demo="看在线演示", get="免费下载 Mac 版",
+    download=("Apple 芯片", "macOS 11 及以上"), download_intel=("Intel 芯片", "macOS 10.15 及以上"),
+    mac=("我的 Mac 是哪种？", "点左上角苹果菜单，再点「关于本机」。有「芯片」那一行的是 Apple 芯片，"
+         "有「处理器」那一行的是 Intel。"),
     fine=(f"演示里是 {DEMO['first']} 的钱：一位住在{CITY_ZH.get(DEMO['city'], DEMO['city'])}的 {DEMO['age']} 岁上班族，"
           "人物是虚构的。不用安装，打开就能看。app 已通过 Apple 签名和公证，支持中英文，免费开源（MIT）。"),
     phone=("目前只支持 Mac 下载。", "目前没有手机版和 Windows 版。在线演示用任何电脑的浏览器都能看；手机屏幕太窄，要左右滑动。",
@@ -310,6 +311,19 @@ h1 { font-size:clamp(30px,3.3vw,44px); line-height:1.1; letter-spacing:-.025em; 
 .secondary { background:var(--pill); color:var(--ink); }
 .secondary:hover { background:var(--grid); }
 .fine { color:var(--muted); font-size:14px; margin:14px 0 0; max-width:36em; }
+/* The two downloads: one row, equal widths, the kind of Mac on the first line and the system it
+   needs on the second, under one line that says what they are. */
+.dl { flex:0 0 100%; display:grid; grid-template-columns:repeat(2, minmax(0, 210px)); gap:10px; }
+.dl p { grid-column:1 / -1; margin:0 0 -2px; font-size:14px; font-weight:600; color:var(--ink-2); }
+.dl .btn { display:flex; align-items:center; gap:11px; padding:11px 16px; }
+.dl svg { flex:none; opacity:.85; }
+.dl b, .dl small { display:block; }
+.dl b { font-weight:600; line-height:1.25; }
+.dl small { font-size:12.5px; font-weight:400; opacity:.78; line-height:1.3; }
+.end .dl p { color:rgba(255,255,255,.8); }
+details.mac summary { cursor:pointer; width:fit-content; color:var(--ink-2); text-decoration:underline; text-underline-offset:3px; list-style:none; }
+details.mac summary::-webkit-details-marker { display:none; }
+details.mac p { margin:8px 0 0; }
 /* On a phone (2026-11-21): nothing here can be installed and the demo wants a wide screen, so the
    buttons give way to one line saying to open the site on a computer, a button that sends the link
    on (the phone's share sheet, else the clipboard), and the picture moves up under the question. */
@@ -424,8 +438,16 @@ def page(t, base):
     panel = lambda i: f"{t['panel']}-{i}.png"   # the app's monthly panel at step i, taken by tools/demo.py
     img = lambda f, alt, lazy=True: (f'<img src="{up}screens/{f}" alt="{e(alt)}"'
                                      + (' loading="lazy"' if lazy else "") + ">")
-    btns = (f'<a class="btn primary" href="{DOWNLOAD}" data-goatcounter-click="download-mac">{e(t["download"])}</a>'
-            f'<a class="btn primary" href="{DOWNLOAD_INTEL}" data-goatcounter-click="download-intel">{e(t["download_intel"])}</a>'
+    # One button for each kind of Mac (2026-11-27, user 001): a browser cannot tell the page which
+    # chip a Mac has, so the page cannot pick; the owner does, and neither download is small print.
+    arrow = ('<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 2v8.5M4.2 7.2 8 11l3.8-3.8'
+             'M3 13.5h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+    dl = lambda href, click, kind, words: (
+        f'<a class="btn {kind}" href="{href}" data-goatcounter-click="{click}" aria-label="{e(t["get"])}: {e(words[0])}">'
+        f'{arrow}<span><b>{e(words[0])}</b><small>{e(words[1])}</small></span></a>')
+    btns = (f'<div class="dl"><p>{e(t["get"])}</p>'
+            + dl(DOWNLOAD, "download-mac", "primary", t["download"])
+            + dl(DOWNLOAD_INTEL, "download-intel", "primary", t["download_intel"]) + '</div>'
             f'<a class="btn secondary" href="{demo}" data-goatcounter-click="open-demo">{e(t["demo"])}</a>')
     onphone = (f'<div class="phone"><p><b>{e(t["phone"][0])}</b>{"" if t["lang"].startswith("zh") else " "}'
                f'{e(t["phone"][1])}</p>'
@@ -485,7 +507,7 @@ def page(t, base):
       <p class="lede">{e(t['lede'])}</p>
       <div class="actions">{btns}</div>
       {onphone}
-      <p class="fine mac">{e(t['mac'])}</p>
+      <details class="fine mac"><summary>{e(t['mac'][0])}</summary><p>{e(t['mac'][1])}</p></details>
       <p class="fine">{code(e(t['fine']), 0)}</p>
     </div>
     <figure class="shot">{img('crop-fire.png', t['hero_alt'], lazy=False)}</figure>
