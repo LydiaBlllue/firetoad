@@ -4316,7 +4316,7 @@
   "zh": "{month}转入券商 {amount}，计划为 {planned}。请尽快补足差额。"
  },
  "upd.rec.chg_dry_powder": {
-  "en": "Dry powder",
+  "en": "Cash to invest",
   "zh": "待投现金"
  },
  "upd.rec.chg_holdings": {
@@ -4340,11 +4340,11 @@
   "zh": "{month}按计划执行：两笔各 {amount} 的存款已于 {d1}和{d2}转入 {acct}。"
  },
  "upd.rec.dry_inside": {
-  "en": "Dry powder is {pct}%, inside your {lo}–{hi}% band.",
+  "en": "Cash to invest is {pct}% of the portfolio, inside your {lo}–{hi}% band.",
   "zh": "待投现金占 {pct}%，在 {lo}–{hi}% 的目标区间内。"
  },
  "upd.rec.dry_outside": {
-  "en": "Dry powder is {pct}%, outside your {lo}–{hi}% band. Rebalance when you next add money.",
+  "en": "Cash to invest is {pct}% of the portfolio, outside your {lo}–{hi}% band. Rebalance when you next add money.",
   "zh": "待投现金占 {pct}%，超出 {lo}–{hi}% 的目标区间。下次投入资金时请进行再平衡。"
  },
  "upd.rec.f_activities": {

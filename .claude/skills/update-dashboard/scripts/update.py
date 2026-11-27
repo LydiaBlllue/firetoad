@@ -1357,7 +1357,7 @@ def changed_lines(before, after, sp_before, sp_after):
     if b["netWorth"] != a["netWorth"]:
         out.append(keyed({"label": "Net worth", "from": money(b["netWorth"]), "to": money(a["netWorth"])}, "upd.rec.chg_net_worth"))
     if b["dryPct"] != a["dryPct"]:
-        out.append(keyed({"label": "Dry powder", "from": f"{b['dryPct']}%", "to": f"{a['dryPct']}%"}, "upd.rec.chg_dry_powder"))
+        out.append(keyed({"label": "Cash to invest", "from": f"{b['dryPct']}%", "to": f"{a['dryPct']}%"}, "upd.rec.chg_dry_powder"))
     if b["holdings"] != a["holdings"]:
         out.append(keyed({"label": "Holdings", "from": b["holdings"], "to": a["holdings"]}, "upd.rec.chg_holdings"))
     for ym in sorted(set(sp_after) | set(sp_before)):
@@ -1376,7 +1376,7 @@ def noticed_lines(ws, out, plan):
             lo, hi = bkt["target"]
             ok = lo <= inv["dryPct"] <= hi
             lines.append(keyed({"sev": "ok" if ok else "warn",
-                                "text": f"Dry powder is {inv['dryPct']}%, {'inside' if ok else 'outside'} your {lo}–{hi}% band."
+                                "text": f"Cash to invest is {inv['dryPct']}% of the portfolio, {'inside' if ok else 'outside'} your {lo}–{hi}% band."
                                         + ("" if ok else " Rebalance when you next add money.")},
                                "upd.rec.dry_inside" if ok else "upd.rec.dry_outside", pct=inv['dryPct'], lo=lo, hi=hi))
     # No limit on how many holdings is the owner's (2026-10-26, again 2026-11-16): the page says
