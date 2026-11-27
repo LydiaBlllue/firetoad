@@ -33,6 +33,15 @@ GH = "https://github.com/lydiablllue/firetoad"
 # name that never changes (since 1.0.7), so the button downloads the newest one directly.
 DOWNLOAD = GH + "/releases/latest/download/FIRE-Toad.dmg"
 DOWNLOAD_INTEL = GH + "/releases/latest/download/FIRE-Toad-Intel.dmg"   # from 1.0.9 on
+# Visits are counted, on the site only (2026-11-25, the owner): GoatCounter, no cookies and nothing
+# that tells one visitor from another, so no consent banner. The app and its demo page count
+# nothing; a click on Download or on the demo is counted here, as an event. Empty turns it off.
+COUNTER = "firetoad"
+
+
+def counter_tag():
+    return (f'<script data-goatcounter="https://{COUNTER}.goatcounter.com/count" async '
+            f'src="https://gc.zgo.at/count.js"></script>') if COUNTER else ""
 
 # The demo's person is the one tools/demo.py invents; the page names her from there.
 sys.path.insert(0, os.path.join(REPO, "tools"))
@@ -414,8 +423,8 @@ def page(t, base):
     panel = lambda i: f"{t['panel']}-{i}.png"   # the app's monthly panel at step i, taken by tools/demo.py
     img = lambda f, alt, lazy=True: (f'<img src="{up}screens/{f}" alt="{e(alt)}"'
                                      + (' loading="lazy"' if lazy else "") + ">")
-    btns = (f'<a class="btn primary" href="{DOWNLOAD}">{e(t["download"])}</a>'
-            f'<a class="btn secondary" href="{demo}">{e(t["demo"])}</a>')
+    btns = (f'<a class="btn primary" href="{DOWNLOAD}" data-goatcounter-click="download-mac">{e(t["download"])}</a>'
+            f'<a class="btn secondary" href="{demo}" data-goatcounter-click="open-demo">{e(t["demo"])}</a>')
     onphone = (f'<div class="phone"><p><b>{e(t["phone"][0])}</b>{"" if t["lang"].startswith("zh") else " "}'
                f'{e(t["phone"][1])}</p>'
                f'<button class="btn primary" type="button" data-url="{url}" data-done="{e(t["phone"][3])}">'
@@ -448,6 +457,7 @@ def page(t, base):
       !/^#(setup|how|ai|banks|faq)$/.test(location.hash)) location.replace('{demo}' + location.hash);
 </script>
 <style>{CSS}</style>
+{counter_tag()}
 <script>
   // "Send yourself the link": the phone's share sheet where there is one, else copy it.
   document.addEventListener('click', ev => {{
@@ -473,7 +483,7 @@ def page(t, base):
       <p class="lede">{e(t['lede'])}</p>
       <div class="actions">{btns}</div>
       {onphone}
-      <p class="fine mac">{e(t['mac'][0])}<a href="{DOWNLOAD_INTEL}">{e(t['mac'][1])}</a>{e(t['mac'][2])}</p>
+      <p class="fine mac">{e(t['mac'][0])}<a href="{DOWNLOAD_INTEL}" data-goatcounter-click="download-intel">{e(t['mac'][1])}</a>{e(t['mac'][2])}</p>
       <p class="fine">{code(e(t['fine']), 0)}</p>
     </div>
     <figure class="shot">{img('crop-fire.png', t['hero_alt'], lazy=False)}</figure>
@@ -554,7 +564,7 @@ def build(dst, base):
     for t in (EN, ZH):
         with open(os.path.join(dst, t["path"], "index.html"), "w", encoding="utf-8") as f:
             f.write(page(t, base))
-    stops = road.build(dst, base, CSS, REPO, DOWNLOAD)
+    stops = road.build(dst, base, CSS, REPO, DOWNLOAD, counter_tag())
     with open(os.path.join(dst, "sitemap.xml"), "w", encoding="utf-8") as f:
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
                 + "".join(f"  <url><loc>{base}/{p}</loc></url>\n" for p in ["", "zh/", "dashboard.html"] + stops)

@@ -360,7 +360,7 @@ section.stage { padding:0; margin:40px 0 0; }
 """
 
 
-def head(lang, title, desc, url, alt_en, alt_zh, up, css, ld=None):
+def head(lang, title, desc, url, alt_en, alt_zh, up, css, ld=None, counter=""):
     return f"""<!doctype html>
 <!-- Built by docs/site/make.py and docs/site/path.py; edit those, not this. -->
 <html lang="{lang}">
@@ -381,6 +381,7 @@ def head(lang, title, desc, url, alt_en, alt_zh, up, css, ld=None):
 <meta property="og:url" content="{url}">
 {'<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False) + '</script>' if ld else ''}
 <style>{css}{CSS}</style>
+{counter}
 </head>
 <body>"""
 
@@ -392,7 +393,7 @@ def top(lang, up, other_href, w):
 </div></header>"""
 
 
-def stop_page(st, lang, base, css, published, download):
+def stop_page(st, lang, base, css, published, download, counter=""):
     w, t = WORDS[lang], st[lang]
     up = "../../../" if lang == "zh" else "../../"
     pre = f"{base}/{'zh/' if lang == 'zh' else ''}"
@@ -408,7 +409,7 @@ def stop_page(st, lang, base, css, published, download):
     ld = {"@context": "https://schema.org", "@type": "Article", "headline": t["title"], "description": t["desc"],
           "inLanguage": lang, "url": url, "dateModified": "2026-11", "publisher": {"@type": "Organization", "name": "FIRE Toad"}}
     other = f"../../{'../' if lang == 'zh' else 'zh/'}path/{st['slug']}/"
-    return (head(lang, t["title"], t["desc"], url, alt_en, alt_zh, up, css, ld) + top(lang, up, other, w) + f"""
+    return (head(lang, t["title"], t["desc"], url, alt_en, alt_zh, up, css, ld, counter) + top(lang, up, other, w) + f"""
 <main class="wrap"><div class="pg"><div class="art">
   <p class="crumb"><a href="../">{e(w['road'])}</a> › <a href="../#{w['anchors'][st['stage']]}">{e(w['stages'][st['stage']])}</a></p>
   <h1>{e(t['title'])}</h1>
@@ -417,7 +418,7 @@ def stop_page(st, lang, base, css, published, download):
   {t['body']}
   {f'<h2>{e(w["src"])}</h2><ul class="src">{src}</ul>' if src else ''}
   <h2>{e(w['limits'])}</h2><ul class="src">{lim}</ul>
-  <div class="cta"><p>{e(w['cta'])}</p><div class="actions"><a class="btn primary" href="{download}">{e(w['download'])}</a><a class="btn secondary" href="{up}dashboard.html?lang={lang}">{e(w['demo'])}</a></div></div>
+  <div class="cta"><p>{e(w['cta'])}</p><div class="actions"><a class="btn primary" href="{download}" data-goatcounter-click="download-mac">{e(w['download'])}</a><a class="btn secondary" href="{up}dashboard.html?lang={lang}" data-goatcounter-click="open-demo">{e(w['demo'])}</a></div></div>
   <nav class="side-n"><h3>{e(w['stages'][st['stage']])}</h3>{side}</nav>
   <div class="pn">{pn}</div>
   <p class="checked">{e(CHECKED[lang])}</p>
@@ -429,7 +430,7 @@ def stop_page(st, lang, base, css, published, download):
 """)
 
 
-def index_page(lang, base, css, published, download):
+def index_page(lang, base, css, published, download, counter=""):
     w = WORDS[lang]
     up = "../../" if lang == "zh" else "../"
     url = f"{base}/{'zh/' if lang == 'zh' else ''}path/"
@@ -440,20 +441,20 @@ def index_page(lang, base, css, published, download):
             lis = "".join(f'<li><a href="{s["slug"]}/">{e(s[lang]["title"])}</a><span>{e(s[lang]["line"])}</span></li>' for s in rows)
             parts.append(f'<section class="stage" id="{w["anchors"][k]}"><h2>{e(name)}</h2><p class="q">{e(w["stage_q"][k])}</p><ul class="stops">{lis}</ul></section>')
     other = "../../path/" if lang == "zh" else "../zh/path/"
-    return (head(lang, w["road"], w["index_lede"], url, f"{base}/path/", f"{base}/zh/path/", up, css) + top(lang, up, other, w) + f"""
+    return (head(lang, w["road"], w["index_lede"], url, f"{base}/path/", f"{base}/zh/path/", up, css, counter=counter) + top(lang, up, other, w) + f"""
 <main class="wrap"><div class="art" style="max-width:760px">
   <p class="crumb">FIRE Toad</p>
   <h1>{e(w['road'])}</h1>
   <p class="lede">{e(w['index_lede'])}</p>
   {''.join(parts)}
-  <div class="cta" style="margin-bottom:56px"><p>{e(w['index_cta'])}</p><div class="actions"><a class="btn primary" href="{download}">{e(w['download'])}</a><a class="btn secondary" href="{up}dashboard.html?lang={lang}">{e(w['demo'])}</a></div></div>
+  <div class="cta" style="margin-bottom:56px"><p>{e(w['index_cta'])}</p><div class="actions"><a class="btn primary" href="{download}" data-goatcounter-click="download-mac">{e(w['download'])}</a><a class="btn secondary" href="{up}dashboard.html?lang={lang}" data-goatcounter-click="open-demo">{e(w['demo'])}</a></div></div>
 </div></main>
 </body>
 </html>
 """)
 
 
-def build(dst, base, css, repo, download):
+def build(dst, base, css, repo, download, counter=""):
     """Write every published stop and the index in both languages under dst; return the addresses
     for the sitemap, relative to the site's root."""
     published = sorted(stops(repo), key=lambda s: [int(x) for x in s["id"].split(".")])
@@ -462,12 +463,12 @@ def build(dst, base, css, repo, download):
         root = os.path.join(dst, "zh" if lang == "zh" else "", "path")
         os.makedirs(root, exist_ok=True)
         with open(os.path.join(root, "index.html"), "w", encoding="utf-8") as f:
-            f.write(index_page(lang, base, css, published, download))
+            f.write(index_page(lang, base, css, published, download, counter))
         urls.append(f"{'zh/' if lang == 'zh' else ''}path/")
         for st in published:
             d = os.path.join(root, st["slug"])
             os.makedirs(d, exist_ok=True)
             with open(os.path.join(d, "index.html"), "w", encoding="utf-8") as f:
-                f.write(stop_page(st, lang, base, css, published, download))
+                f.write(stop_page(st, lang, base, css, published, download, counter))
             urls.append(f"{'zh/' if lang == 'zh' else ''}path/{st['slug']}/")
     return urls
