@@ -3888,7 +3888,7 @@ function renderUpdates(){
     + r.noticed.map(x => { const g = SYM[x.sev] || SYM.warn; return '<div class="alert-row"><span class="sym '+g[1]+'">'+g[0]+'</span><span>'+recT(x, x.text)+'</span></div>'; }).join("")
     + (r.judged.length ? '<div class="cap" style="margin-top:8px">'+T("upd.decided")+'</div>' + r.judged.map((t, i) => '<div class="alert-row"><span class="sym" style="color:var(--muted)">\u25cf</span><span>'+recT((r.judgedT || [])[i], t)+'</span></div>').join("") : "")
     + (r.asked.length ? '<div class="alert-row" style="margin-top:6px"><span class="sym" style="color:#c98500">?</span><span>'+TN(r !== IMPORTS[0] ? "upd.asked_older" : waiting ? "upd.asked_latest_waiting" : "upd.asked_latest_none", r.asked.length, {w: waiting})+'</span></div>' : "")
-    + (r.files.length ? '<div class="cap" style="margin-top:8px">'+TN("upd.files", r.files.length, {files: r.files.map((f, i) => recT((r.filesT || [])[i], f)).join(" \u00b7 ")})+'</div>' : "") + '</div>';
+    + (r.files.length ? '<div class="cap" style="margin-top:8px">'+TN("upd.files", r.files.length, {files: listJoin(r.files.map((f, i) => recT((r.filesT || [])[i], f)))})+'</div>' : "") + '</div>';
   const nw = r => { const c = r.changed.find(c => /net worth/i.test(c.label)); return c ? c.from+" \u2192 "+c.to : "\u2014"; };
   $("updList").innerHTML = IMPORTS.length ? latest(shown)
     + (IMPORTS.length > 1 ? '<div class="card upd-all" style="margin-bottom:10px"><div class="lab">'+T("upd.every")+'</div>'
