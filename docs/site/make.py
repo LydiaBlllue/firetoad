@@ -61,9 +61,10 @@ EN = dict(
     lede=("Once a month, drop your bank statements into a folder. FIRE Toad reads them on your Mac, "
           "checks that each one adds up, and works out what you spend, what you keep, and how many years "
           "until financial independence — then how long the money lasts once you stop, with CPP and OAS counted."),
-    demo="Try the live demo", download="Download for Mac — free",
-    mac=("For Macs with Apple silicon, macOS 11 or later. Intel Mac (macOS 10.15 or later)? ",
-         "Download the Intel version", "."),
+    demo="Try the live demo", download="Download for Apple silicon", download_intel="Download for Intel Mac",
+    mac=("Free. Not sure which Mac you have? Open the Apple menu, then About This Mac. A line that says "
+         "Chip means Apple silicon. A line that says Processor means Intel. The Apple silicon download "
+         "needs macOS 11 or later, the Intel one macOS 10.15 or later."),
     fine=(f"The demo shows {DEMO['first']}'s money — a made-up {DEMO['age']}-year-old in {DEMO['city']}. "
           "Nothing to install. The app is signed and notarised by Apple, works in English and Chinese, "
           "and is free and open source (MIT)."),
@@ -181,9 +182,9 @@ ZH = dict(
     h1="离财务自由，还有几年？",
     lede=("每个月把银行对账单放进一个文件夹。FIRE蛙在你的 Mac 上逐份读取、核对金额，算出你花多少、存下多少、"
           "还要几年财务自由，再算停工以后钱能撑多久，CPP 和 OAS 也算进去。"),
-    demo="看在线演示", download="免费下载 Mac 版",
-    mac=("适用于 Apple 芯片的 Mac，macOS 11 及以上。Intel 芯片的 Mac（macOS 10.15 及以上）请",
-         "下载 Intel 版", "。"),
+    demo="看在线演示", download="下载 Apple 芯片版", download_intel="下载 Intel 版",
+    mac=("免费。不确定自己的 Mac 是哪种？点左上角苹果菜单，再点「关于本机」。有「芯片」那一行的是 Apple 芯片，"
+         "有「处理器」那一行的是 Intel。Apple 芯片版要 macOS 11 及以上，Intel 版要 macOS 10.15 及以上。"),
     fine=(f"演示里是 {DEMO['first']} 的钱：一位住在{CITY_ZH.get(DEMO['city'], DEMO['city'])}的 {DEMO['age']} 岁上班族，"
           "人物是虚构的。不用安装，打开就能看。app 已通过 Apple 签名和公证，支持中英文，免费开源（MIT）。"),
     phone=("目前只支持 Mac 下载。", "目前没有手机版和 Windows 版。在线演示用任何电脑的浏览器都能看；手机屏幕太窄，要左右滑动。",
@@ -424,6 +425,7 @@ def page(t, base):
     img = lambda f, alt, lazy=True: (f'<img src="{up}screens/{f}" alt="{e(alt)}"'
                                      + (' loading="lazy"' if lazy else "") + ">")
     btns = (f'<a class="btn primary" href="{DOWNLOAD}" data-goatcounter-click="download-mac">{e(t["download"])}</a>'
+            f'<a class="btn primary" href="{DOWNLOAD_INTEL}" data-goatcounter-click="download-intel">{e(t["download_intel"])}</a>'
             f'<a class="btn secondary" href="{demo}" data-goatcounter-click="open-demo">{e(t["demo"])}</a>')
     onphone = (f'<div class="phone"><p><b>{e(t["phone"][0])}</b>{"" if t["lang"].startswith("zh") else " "}'
                f'{e(t["phone"][1])}</p>'
@@ -483,7 +485,7 @@ def page(t, base):
       <p class="lede">{e(t['lede'])}</p>
       <div class="actions">{btns}</div>
       {onphone}
-      <p class="fine mac">{e(t['mac'][0])}<a href="{DOWNLOAD_INTEL}" data-goatcounter-click="download-intel">{e(t['mac'][1])}</a>{e(t['mac'][2])}</p>
+      <p class="fine mac">{e(t['mac'])}</p>
       <p class="fine">{code(e(t['fine']), 0)}</p>
     </div>
     <figure class="shot">{img('crop-fire.png', t['hero_alt'], lazy=False)}</figure>
