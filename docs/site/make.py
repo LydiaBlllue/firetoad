@@ -310,6 +310,8 @@ h1 { font-size:clamp(30px,3.3vw,44px); line-height:1.1; letter-spacing:-.025em; 
 .primary:hover { background:var(--btn-hover); }
 .secondary { background:var(--pill); color:var(--ink); }
 .secondary:hover { background:var(--grid); }
+.line { color:var(--ink); box-shadow:inset 0 0 0 1.5px var(--grid); }
+.line:hover { background:var(--pill); }
 .fine { color:var(--muted); font-size:14px; margin:14px 0 0; max-width:36em; }
 /* The two downloads: one row, equal widths, the kind of Mac on the first line and the system it
    needs on the second, under one line that says what they are. */
@@ -413,6 +415,8 @@ h2 { font-size:clamp(24px,3vw,32px); letter-spacing:-.015em; line-height:1.2; ma
 .end .primary:hover { background:var(--pill); }
 .end .secondary { background:rgba(255,255,255,.12); color:#fff; }
 .end .secondary:hover { background:rgba(255,255,255,.2); }
+.end .line { color:#fff; box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.4); }
+.end .line:hover { background:rgba(255,255,255,.12); }
 @media (max-width:600px) { .end { padding:28px 20px; } }
 .end .phone { margin:0; }
 .end .phone p { color:#fff; }
@@ -438,7 +442,9 @@ def page(t, base):
     panel = lambda i: f"{t['panel']}-{i}.png"   # the app's monthly panel at step i, taken by tools/demo.py
     img = lambda f, alt, lazy=True: (f'<img src="{up}screens/{f}" alt="{e(alt)}"'
                                      + (' loading="lazy"' if lazy else "") + ">")
-    btns = (downloads(t) + f'<a class="btn secondary" href="{demo}" data-goatcounter-click="open-demo">{e(t["demo"])}</a>')
+    # The demo comes first (user 001, 2026-11-27): it needs no install, and most visitors look before
+    # they download. It is outlined, so it does not read as a third download.
+    btns = (f'<a class="btn line" href="{demo}" data-goatcounter-click="open-demo">{e(t["demo"])}</a>' + downloads(t))
     onphone = (f'<div class="phone"><p><b>{e(t["phone"][0])}</b>{"" if t["lang"].startswith("zh") else " "}'
                f'{e(t["phone"][1])}</p>'
                f'<button class="btn primary" type="button" data-url="{url}" data-done="{e(t["phone"][3])}">'
