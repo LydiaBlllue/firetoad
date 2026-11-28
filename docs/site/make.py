@@ -162,6 +162,8 @@ EN = dict(
           "one for Intel (macOS 10.15 or later). To check which you have: Apple menu → About This Mac, "
           "the Chip or Processor line. There is no Windows download yet; there it runs from Python "
           "(python3 app.py)."),
+         ("Is the download safe?", "It is signed and notarised by Apple, which means Apple has checked it "
+          "for known malware. macOS asks only once whether to open it. The code is public, so anyone can check."),
          ("My bank isn't on the list.", "Download your transactions as OFX or QFX (the Quicken or "
           "Money option) — most Canadian banks offer it. If yours doesn't, use a CSV, or type in the "
           "balance once a month.")],
@@ -260,6 +262,8 @@ ZH = dict(
          ("哪些电脑能用？", "Mac 都能用：Apple 芯片的 Mac 一个安装包（macOS 11 及以上），Intel 芯片的 Mac 一个"
           "（macOS 10.15 及以上）。查法：左上角苹果菜单 →「关于本机」，看「芯片」或「处理器」那一行。Windows 还没有"
           "安装包，可以用 Python 运行（python3 app.py）。"),
+         ("下载的安装包安全吗？", "安装包经过 Apple 签名和公证，Apple 检查过里面没有已知的恶意软件。"
+          "第一次打开时 macOS 只会问一次是否打开。代码公开，谁都可以检查。"),
          ("我的银行不在列表里怎么办？", "把交易记录下载成 OFX 或 QFX 格式（选 Quicken 或 Money 那一项），"
           "加拿大大多数银行都支持。实在不行，也可以用 CSV，或者每月手动填一次余额。")],
     end_h="先用示例数据试试看。",
