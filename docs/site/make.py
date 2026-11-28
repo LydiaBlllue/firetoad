@@ -65,9 +65,6 @@ EN = dict(
     download=("Apple silicon", "macOS 11 or later"), download_intel=("Intel", "macOS 10.15 or later"),
     mac=("Which Mac do I have?", "Open the Apple menu, then About This Mac. A line that says Chip means "
          "Apple silicon. A line that says Processor means Intel."),
-    fine=(f"The demo shows {DEMO['first']}'s money — a made-up {DEMO['age']}-year-old in {DEMO['city']}. "
-          "Nothing to install. The app is signed and notarised by Apple, works in English and Chinese, "
-          "and is free and open source (MIT)."),
     phone=("For now, FIRE Toad is a download for Mac only.", "There is no phone or Windows version. "
            "The live demo opens in any computer's browser; on a phone it is too narrow and scrolls sideways.",
            "Send yourself the link", "Link copied", "Open the demo anyway",
@@ -186,8 +183,6 @@ ZH = dict(
     download=("Apple 芯片", "macOS 11 及以上"), download_intel=("Intel 芯片", "macOS 10.15 及以上"),
     mac=("我的 Mac 是哪种？", "点左上角苹果菜单，再点「关于本机」。有「芯片」那一行的是 Apple 芯片，"
          "有「处理器」那一行的是 Intel。"),
-    fine=(f"演示里是 {DEMO['first']} 的钱：一位住在{CITY_ZH.get(DEMO['city'], DEMO['city'])}的 {DEMO['age']} 岁上班族，"
-          "人物是虚构的。不用安装，打开就能看。app 已通过 Apple 签名和公证，支持中英文，免费开源（MIT）。"),
     phone=("目前只支持 Mac 下载。", "目前没有手机版和 Windows 版。在线演示用任何电脑的浏览器都能看；手机屏幕太窄，要左右滑动。",
            "把链接发给自己", "链接已复制", "仍在手机上看演示",
            "粘贴到微信或邮件里发给自己，再在 Mac 上打开。"),
@@ -515,7 +510,6 @@ def page(t, base):
       <div class="actions">{btns}</div>
       {onphone}
       <details class="fine mac"><summary>{e(t['mac'][0])}</summary><p>{e(t['mac'][1])}</p></details>
-      <p class="fine">{code(e(t['fine']), 0)}</p>
     </div>
     <figure class="shot win">{img('crop-fire.png', t['hero_alt'], lazy=False)}</figure>
   </div>
