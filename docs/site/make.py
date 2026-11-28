@@ -280,7 +280,10 @@ CSS = """
         --btn:#4d4842; --btn-hover:#3d3934; --band:#3a3733; }
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; }
-body { margin:0; background:var(--page); color:var(--ink);
+/* A little depth (2026-11-27): paper grain over the page, and a soft light behind the top. */
+body { margin:0; color:var(--ink); background:var(--page) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .18 0 0 0 0 .17 0 0 0 0 .16 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+       background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .18 0 0 0 0 .17 0 0 0 0 .16 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"), radial-gradient(900px 520px at 72% 60px, #f8f6f2 0, rgba(248,246,242,0) 70%);
+       background-repeat:repeat, no-repeat;
        font:16px/1.55 system-ui,-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB",sans-serif; }
 a { color:inherit; }
 .wrap { max-width:1120px; margin:0 auto; padding:0 24px; }
@@ -301,16 +304,19 @@ a { color:inherit; }
 .lab { font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:0 0 10px; }
 .hero { display:grid; grid-template-columns:1fr 1.15fr; gap:48px; align-items:center; padding:64px 0 56px; }
 @media (max-width:980px) { .hero { grid-template-columns:1fr; gap:36px; padding:40px 0; } }
-h1 { font-size:clamp(30px,3.3vw,44px); line-height:1.1; letter-spacing:-.025em; margin:0 0 18px; }
+h1 { font-size:clamp(32px,3.8vw,50px); line-height:1.08; letter-spacing:-.03em; margin:0 0 20px; text-wrap:balance; }
 :lang(zh) h1, :lang(zh-CN) h1 { letter-spacing:0; line-height:1.25; }
 .lede { color:var(--ink-2); font-size:18px; margin:0 0 26px; max-width:34em; }
 .actions { display:flex; flex-wrap:wrap; gap:10px; }
-.btn { display:inline-block; border-radius:9px; padding:12px 18px; font-size:16px; font-weight:600; text-decoration:none; }
-.primary { background:var(--btn); color:#fff; }
+.btn { display:inline-block; border-radius:10px; padding:12px 18px; font-size:16px; font-weight:600; text-decoration:none;
+       transition:background .15s, box-shadow .15s, transform .1s; }
+.btn:active { transform:translateY(1px); }
+.primary { background:linear-gradient(#5a544d, #443f3a); color:#fff;
+           box-shadow:inset 0 1px 0 rgba(255,255,255,.16), 0 1px 2px rgba(46,44,41,.3), 0 6px 14px -4px rgba(46,44,41,.28); }
 .primary:hover { background:var(--btn-hover); }
-.secondary { background:var(--pill); color:var(--ink); }
+.secondary { background:var(--pill); color:var(--ink); box-shadow:inset 0 1px 0 rgba(255,255,255,.55), 0 1px 2px rgba(46,44,41,.1); }
 .secondary:hover { background:var(--grid); }
-.line { color:var(--ink); box-shadow:inset 0 0 0 1.5px var(--grid); }
+.line { color:var(--ink); background:var(--surface); box-shadow:inset 0 0 0 1px var(--grid), 0 1px 2px rgba(46,44,41,.08); }
 .line:hover { background:var(--pill); }
 .fine { color:var(--muted); font-size:14px; margin:14px 0 0; max-width:36em; }
 /* The two downloads: one row, equal widths, the kind of Mac on the first line and the system it
@@ -348,6 +354,11 @@ details.mac p { margin:8px 0 0; }
 }
 .shot { margin:0; background:var(--page); border:1px solid var(--border); border-radius:14px; overflow:hidden;
         box-shadow:0 1px 2px rgba(46,44,41,.05), 0 12px 32px rgba(46,44,41,.09); }
+/* The top picture sits in a window: a title bar with its three dots, and a longer shadow. */
+.shot.win { border-radius:12px; box-shadow:0 0 0 1px rgba(46,44,41,.04), 0 2px 4px rgba(46,44,41,.06), 0 14px 28px -6px rgba(46,44,41,.12), 0 40px 70px -20px rgba(46,44,41,.28); }
+.shot.win::before { content:""; display:block; height:30px; border-bottom:1px solid var(--border);
+  background:radial-gradient(circle 5px at 18px 50%, #d9d4cc 98%, transparent) , radial-gradient(circle 5px at 36px 50%, #d9d4cc 98%, transparent),
+             radial-gradient(circle 5px at 54px 50%, #d9d4cc 98%, transparent), linear-gradient(#f9f8f5, #f1efeb); }
 .shot img { display:block; width:100%; height:auto; }
 .points { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:0; padding:0; list-style:none; }
 @media (max-width:980px) { .points { grid-template-columns:1fr; } }
@@ -413,9 +424,9 @@ h2 { font-size:clamp(24px,3vw,32px); letter-spacing:-.015em; line-height:1.2; ma
 .end h2 { margin:0; color:#fff; font-size:clamp(22px,2.6vw,28px); }
 .end .primary { background:#fff; color:var(--ink); }
 .end .primary:hover { background:var(--pill); }
-.end .secondary { background:rgba(255,255,255,.12); color:#fff; }
+.end .secondary { background:rgba(255,255,255,.12); color:#fff; box-shadow:none; }
 .end .secondary:hover { background:rgba(255,255,255,.2); }
-.end .line { color:#fff; box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.4); }
+.end .line { color:#fff; background:transparent; box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.4); }
 .end .line:hover { background:rgba(255,255,255,.12); }
 @media (max-width:600px) { .end { padding:28px 20px; } }
 .end .phone { margin:0; }
@@ -506,7 +517,7 @@ def page(t, base):
       <details class="fine mac"><summary>{e(t['mac'][0])}</summary><p>{e(t['mac'][1])}</p></details>
       <p class="fine">{code(e(t['fine']), 0)}</p>
     </div>
-    <figure class="shot">{img('crop-fire.png', t['hero_alt'], lazy=False)}</figure>
+    <figure class="shot win">{img('crop-fire.png', t['hero_alt'], lazy=False)}</figure>
   </div>
   <ul class="points">{''.join(f'<li><b>{e(a)}</b><span>{e(b)}</span></li>' for a, b in t['points'])}</ul>
 
