@@ -30,7 +30,7 @@ CHECKED = {"en": "Checked against these sources in November 2026.", "zh": "2026 
 # ---------------------------------------------------------------- what the site says around a stop
 WORDS = {
     "en": dict(road="FIRE questions", prev="Before this", next="Next stop", why="Why it matters",
-               src="Sources", limits="Before you rely on it", download="Download for Mac — free",
+               src="Sources", limits="Before you rely on it",
                demo="See it on sample data", other="中文", how="About the app",
                cta=("FIRE Toad works these out with your own numbers: your target, the age your pensions "
                     "start paying part of the bill, your savings rate. It runs on your Mac; your statements "
@@ -44,7 +44,7 @@ WORDS = {
                stage_q=["Where does my money go, and will I be all right?", "How much do I need, and how long will it take?",
                         "How do I keep going each month?", "How do I live on it?"]),
     "zh": dict(road="FIRE 问答", prev="上一站", next="下一站", why="为什么要紧", src="出处",
-               limits="用之前要知道", download="下载 Mac 版，免费", demo="先看演示数据", other="English", how="关于这个 app",
+               limits="用之前要知道", demo="先看演示数据", other="English", how="关于这个 app",
                cta="FIRE Toad 用你自己的数算这些：你的目标、你的养老金几岁开始替组合付一部分开销、你的储蓄率。它在你的 Mac 上运行，对账单不会离开你的电脑。",
                index_lede="走向财务自由要懂的事，一页一个问题，每页带出处。先上线了几页，其余的核对完出处一页一页加。",
                index_cta="FIRE Toad 用你的对账单算出你自己的目标、离财务自由几年和储蓄率。它在你的 Mac 上运行，对账单不会离开你的电脑。",
@@ -347,6 +347,7 @@ CSS = """
 .src li b { color:var(--ink); font-weight:600; }
 .cta { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; margin:34px 0 0; }
 .cta p { margin:0 0 14px; }
+.cta .dl p { margin:0 0 -2px; }
 .pn { display:flex; justify-content:space-between; gap:16px; margin:34px 0 0; padding:18px 0 0; border-top:1px solid var(--grid); font-size:15.5px; }
 .pn a { text-decoration:none; color:var(--ink-2); } .pn a b { color:var(--ink); }
 .checked { font-size:14px; color:var(--muted); margin:18px 0 56px; }
@@ -418,7 +419,7 @@ def stop_page(st, lang, base, css, published, download, counter=""):
   {t['body']}
   {f'<h2>{e(w["src"])}</h2><ul class="src">{src}</ul>' if src else ''}
   <h2>{e(w['limits'])}</h2><ul class="src">{lim}</ul>
-  <div class="cta"><p>{e(w['cta'])}</p><div class="actions"><a class="btn primary" href="{download}" data-goatcounter-click="download-mac">{e(w['download'])}</a><a class="btn secondary" href="{up}dashboard.html?lang={lang}" data-goatcounter-click="open-demo">{e(w['demo'])}</a></div></div>
+  <div class="cta"><p>{e(w['cta'])}</p><div class="actions">{download[lang]}<a class="btn secondary" href="{up}dashboard.html?lang={lang}" data-goatcounter-click="open-demo">{e(w['demo'])}</a></div></div>
   <nav class="side-n"><h3>{e(w['stages'][st['stage']])}</h3>{side}</nav>
   <div class="pn">{pn}</div>
   <p class="checked">{e(CHECKED[lang])}</p>
@@ -447,7 +448,7 @@ def index_page(lang, base, css, published, download, counter=""):
   <h1>{e(w['road'])}</h1>
   <p class="lede">{e(w['index_lede'])}</p>
   {''.join(parts)}
-  <div class="cta" style="margin-bottom:56px"><p>{e(w['index_cta'])}</p><div class="actions"><a class="btn primary" href="{download}" data-goatcounter-click="download-mac">{e(w['download'])}</a><a class="btn secondary" href="{up}dashboard.html?lang={lang}" data-goatcounter-click="open-demo">{e(w['demo'])}</a></div></div>
+  <div class="cta" style="margin-bottom:56px"><p>{e(w['index_cta'])}</p><div class="actions">{download[lang]}<a class="btn secondary" href="{up}dashboard.html?lang={lang}" data-goatcounter-click="open-demo">{e(w['demo'])}</a></div></div>
 </div></main>
 </body>
 </html>

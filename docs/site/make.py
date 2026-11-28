@@ -438,17 +438,7 @@ def page(t, base):
     panel = lambda i: f"{t['panel']}-{i}.png"   # the app's monthly panel at step i, taken by tools/demo.py
     img = lambda f, alt, lazy=True: (f'<img src="{up}screens/{f}" alt="{e(alt)}"'
                                      + (' loading="lazy"' if lazy else "") + ">")
-    # One button for each kind of Mac (2026-11-27, user 001): a browser cannot tell the page which
-    # chip a Mac has, so the page cannot pick; the owner does, and neither download is small print.
-    arrow = ('<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 2v8.5M4.2 7.2 8 11l3.8-3.8'
-             'M3 13.5h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>')
-    dl = lambda href, click, kind, words: (
-        f'<a class="btn {kind}" href="{href}" data-goatcounter-click="{click}" aria-label="{e(t["get"])}: {e(words[0])}">'
-        f'{arrow}<span><b>{e(words[0])}</b><small>{e(words[1])}</small></span></a>')
-    btns = (f'<div class="dl"><p>{e(t["get"])}</p>'
-            + dl(DOWNLOAD, "download-mac", "primary", t["download"])
-            + dl(DOWNLOAD_INTEL, "download-intel", "primary", t["download_intel"]) + '</div>'
-            f'<a class="btn secondary" href="{demo}" data-goatcounter-click="open-demo">{e(t["demo"])}</a>')
+    btns = (downloads(t) + f'<a class="btn secondary" href="{demo}" data-goatcounter-click="open-demo">{e(t["demo"])}</a>')
     onphone = (f'<div class="phone"><p><b>{e(t["phone"][0])}</b>{"" if t["lang"].startswith("zh") else " "}'
                f'{e(t["phone"][1])}</p>'
                f'<button class="btn primary" type="button" data-url="{url}" data-done="{e(t["phone"][3])}">'
@@ -582,13 +572,30 @@ def road_stops():
     return sorted(road.stops(REPO), key=lambda s: [int(x) for x in s["id"].split(".")])
 
 
+def downloads(t):
+    """The two download buttons under their one label, for the front page and the question pages.
+
+    One button for each kind of Mac (2026-11-27, user 001): a browser cannot tell the page which chip
+    a Mac has, so the page cannot pick and the owner does. Apple silicon is the dark one, because most
+    Macs sold since 2020 have it; Intel is a full button beside it, lighter, and not small print."""
+    e = html.escape
+    arrow = ('<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M8 2v8.5M4.2 7.2 8 11l3.8-3.8'
+             'M3 13.5h10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+    dl = lambda href, click, kind, words: (
+        f'<a class="btn {kind}" href="{href}" data-goatcounter-click="{click}" aria-label="{e(t["get"])}: {e(words[0])}">'
+        f'{arrow}<span><b>{e(words[0])}</b><small>{e(words[1])}</small></span></a>')
+    return (f'<div class="dl"><p>{e(t["get"])}</p>'
+            + dl(DOWNLOAD, "download-mac", "primary", t["download"])
+            + dl(DOWNLOAD_INTEL, "download-intel", "secondary", t["download_intel"]) + '</div>')
+
+
 def build(dst, base):
     base = base.rstrip("/")
     os.makedirs(os.path.join(dst, "zh"), exist_ok=True)
     for t in (EN, ZH):
         with open(os.path.join(dst, t["path"], "index.html"), "w", encoding="utf-8") as f:
             f.write(page(t, base))
-    stops = road.build(dst, base, CSS, REPO, DOWNLOAD, counter_tag())
+    stops = road.build(dst, base, CSS, REPO, {"en": downloads(EN), "zh": downloads(ZH)}, counter_tag())
     with open(os.path.join(dst, "sitemap.xml"), "w", encoding="utf-8") as f:
         f.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
                 + "".join(f"  <url><loc>{base}/{p}</loc></url>\n" for p in ["", "zh/", "dashboard.html"] + stops)
